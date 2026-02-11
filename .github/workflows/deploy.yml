@@ -87,9 +87,9 @@ jobs:
             npm install --production
 
             # 5. Database Logic (Prisma)
-            # DATABASE_URL must be in .env now
-            npx prisma generate
-            npx prisma db push --accept-data-loss
+            # --- 5. Generate Prisma Client (Force version to match package.json) ---
+            npx prisma@5.22.0 generate
+            npx prisma@5.22.0 db push --accept-data-loss
 
             # 6. Restart App
             pm2 restart discord-bot || pm2 start dist/index.js --name "discord-bot"
