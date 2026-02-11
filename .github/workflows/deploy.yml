@@ -18,7 +18,7 @@ jobs:
           envs: DISCORD_TOKEN,CLIENT_ID,GUILD_ID,APIKEY_WEATHER,GEMINI_API_KEY,GOOGLE_TTS_API_KEY,MONGODB_URI,DISCORD_CHANNEL_ID,SYSTEM_PROMPT,BEAUTY_CHANNEL_ID,BEAUTY_INTERVAL_MINUTES,ADMIN_ID,AUTO_REPLY_PROMPT,PORT,ADMIN_USERNAME,ADMIN_PASSWORD,JWT_SECRET,DATABASE_URL
           script: |
             # 1. Navigate to Project Directory (UPDATE THIS PATH)
-            cd /path/to/your/discord_gpt_bot
+            cd /var/www/ChatDVT-discord-bot
 
             # 2. Pull Latest Code
             git pull origin main
