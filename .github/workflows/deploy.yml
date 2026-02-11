@@ -17,14 +17,33 @@ jobs:
           port: 22
           envs: DISCORD_TOKEN,CLIENT_ID,GUILD_ID,APIKEY_WEATHER,GEMINI_API_KEY,GOOGLE_TTS_API_KEY,MONGODB_URI,DISCORD_CHANNEL_ID,SYSTEM_PROMPT,BEAUTY_CHANNEL_ID,BEAUTY_INTERVAL_MINUTES,ADMIN_ID,AUTO_REPLY_PROMPT,PORT,ADMIN_USERNAME,ADMIN_PASSWORD,JWT_SECRET,DATABASE_URL
           script: |
-            # 1. Navigate to Project Directory (UPDATE THIS PATH)
+            # --- 0. Environment Setup (Fix for "command not found") ---
+            # Explicitly load profile to get PATH
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+            [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
+            [ -s "$HOME/.bashrc" ] && source "$HOME/.bashrc"
+            [ -s "$HOME/.profile" ] && source "$HOME/.profile"
+
+            # Auto-install Node.js 20 if missing
+            if ! command -v node &> /dev/null; then
+                echo "Installing Node.js 20..."
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+            fi
+
+            # Auto-install PM2 if missing
+            if ! command -v pm2 &> /dev/null; then
+                echo "Installing PM2..."
+                sudo npm install -g pm2
+            fi
+
+            # --- 1. Navigate to Project Directory (UPDATE THIS PATH) ---
             cd /var/www/ChatDVT-discord-bot
 
-            # 2. Pull Latest Code
+            # --- 2. Pull Latest Code ---
             git pull origin main
 
-            # 3. Generate .env file dynamically using Node.js (Safe for multi-line strings)
-            # We use Node to avoid complex shell escaping issues with prompts
+            # --- 3. Generate .env file dynamically ---
             node -e "
               const fs = require('fs');
               const keys = [
@@ -37,7 +56,6 @@ jobs:
               let content = '';
               for (const key of keys) {
                 if (process.env[key]) {
-                  // Write strictly as KEY=VALUE
                   content += \`\${key}=\${process.env[key]}\n\`;
                 }
               }
@@ -45,20 +63,20 @@ jobs:
               console.log('.env file updated successfully');
             "
 
-            # 4. Install Dependencies
+            # --- 4. Install Dependencies ---
             npm install
 
-            # 5. Generate Prisma Client
+            # --- 5. Generate Prisma Client ---
             npx prisma generate
-            npx prisma db push --accept-data-loss # Ensure DB schema is sync
+            npx prisma db push --accept-data-loss
 
-            # 6. Build Project
+            # --- 6. Build Project ---
             npm run build
 
-            # 7. Restart Application via PM2
+            # --- 7. Restart Application via PM2 ---
             pm2 restart discord-bot || pm2 start npm --name "discord-bot" -- run start
+            pm2 save
         env:
-          # Map GitHub Secrets to Environment Variables
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           GUILD_ID: ${{ secrets.GUILD_ID }}
