@@ -6,6 +6,7 @@ import { cleanContent } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
+import { LoggerService } from './logger';
 
 // Helper to escape markdown (same as before)
 function escapeMarkdown(text: string): string {
@@ -117,13 +118,12 @@ class GeminiService {
       try {
           const systemInstruction = await this.getSystemPrompt(guildId, userId);
           
+          
           // --- LOGGING FOR DEBUGGING ---
-          console.log("--- GEMINI DEBUG ---");
-          console.log(`[UserID: ${userId}] Message: "${messageContent}"`);
-          console.log(`[System Prompt Preview]: ${systemInstruction.substring(0, 200)}...`);
+          await LoggerService.debug(`[UserID: ${userId}] Message: "${messageContent}"`);
+          // await LoggerService.debug(`[System Prompt Preview]: ${systemInstruction.substring(0, 200)}...`);
           // Uncomment to see full prompt
           // console.log(`[System Prompt Full]:`, systemInstruction);
-          console.log("--------------------");
 
           // Fetch Chat History
           const logs = await prisma.chatLog.findMany({
@@ -149,6 +149,7 @@ class GeminiService {
 
           const result = await retryWithBackoff(() => chatSession.sendMessage(parts));
           const responseText = result.response.text();
+          await LoggerService.info(`Generative Response Success`, { length: responseText.length, preview: responseText.substring(0, 50) });
           
           let cleanResponse = responseText;
           if (message && message.channel) {
@@ -164,7 +165,7 @@ class GeminiService {
 
           return cleanResponse;
       } catch (error: any) {
-          console.error("Gemini Chat Error:", error);
+          await LoggerService.error("Gemini Chat Error", error);
           if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
           return "Xin lỗi, tôi đang gặp sự cố kết nối với não bộ.";
       }

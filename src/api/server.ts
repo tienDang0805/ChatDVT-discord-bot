@@ -407,6 +407,21 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
 import path from 'path';
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
 
+// --- System Logs Endpoint ---
+app.get('/api/system-logs', async (req, res) => {
+    try {
+        const logs = await prisma.systemLog.findMany({
+            orderBy: { timestamp: 'desc' },
+            take: 100
+        });
+        res.json(logs);
+    } catch (error) {
+        console.error("Error fetching system logs:", error);
+        res.status(500).json({ error: "Failed to fetch logs" });
+    }
+});
+
+// Serve Static Frontend (MUST BE LAST)
 app.use(express.static(CLIENT_BUILD_PATH));
 
 app.get('*', (req, res) => {

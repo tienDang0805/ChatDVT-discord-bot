@@ -91,8 +91,8 @@ jobs:
             npx prisma@5.22.0 generate
             npx prisma@5.22.0 db push --accept-data-loss
 
-            # 6. Restart App
-            pm2 restart discord-bot || pm2 start dist/index.js --name "discord-bot"
+            # 6. Restart App (Force update environment variables)
+            pm2 restart discord-bot --update-env || pm2 start dist/index.js --name "discord-bot"
             pm2 save
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}

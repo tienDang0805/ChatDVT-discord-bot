@@ -162,7 +162,110 @@ export const ControlCenter = () => {
                         </button>
                     </div>
                 </div>
+                </div>
             </div>
+
+            {/* System Logs */}
+            <SystemLogViewer />
         </div>
     );
 };
+
+// Sub-component for Logs
+const SystemLogViewer = () => {
+    const [logs, setLogs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [autoRefresh, setAutoRefresh] = useState(false);
+
+    const fetchLogs = async () => {
+        setLoading(true);
+        try {
+            const data = await import('../api').then(m => m.getSystemLogs());
+            setLogs(data);
+        } catch (error) {
+            console.error(error);
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchLogs();
+        const interval = setInterval(() => {
+            if (autoRefresh) fetchLogs();
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [autoRefresh]);
+
+    return (
+        <div className="bg-surface rounded-2xl border border-slate-700/50 p-6 space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">System Logs (Debug)</h3>
+                        <p className="text-sm text-slate-400">View internal errors and AI responses</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-3">
+                   <button 
+                        onClick={() => setAutoRefresh(!autoRefresh)}
+                        className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${autoRefresh ? 'bg-green-500/10 border-green-500/50 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                    >
+                        Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
+                    </button>
+                    <button 
+                        onClick={fetchLogs}
+                        disabled={loading}
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-white"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="border-b border-slate-700/50 text-slate-400 text-sm">
+                            <th className="p-3 font-medium">Time</th>
+                            <th className="p-3 font-medium">Level</th>
+                            <th className="p-3 font-medium">Message</th>
+                            <th className="p-3 font-medium">Metadata</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/50">
+                        {logs.map((log) => (
+                            <tr key={log.id} className="text-sm hover:bg-white/5 transition-colors">
+                                <td className="p-3 text-slate-400 whitespace-nowrap">
+                                    {new Date(log.timestamp).toLocaleTimeString()}
+                                </td>
+                                <td className="p-3">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
+                                        log.level === 'error' ? 'bg-red-500/10 text-red-400' :
+                                        log.level === 'warn' ? 'bg-yellow-500/10 text-yellow-400' :
+                                        'bg-blue-500/10 text-blue-400'
+                                    }`}>
+                                        {log.level}
+                                    </span>
+                                </td>
+                                <td className="p-3 text-slate-200 font-mono text-xs md:text-sm break-all max-w-md">
+                                    {log.message}
+                                </td>
+                                <td className="p-3 text-slate-400 font-mono text-xs max-w-xs truncate">
+                                    {log.metadata}
+                                </td>
+                            </tr>
+                        ))}
+                        {logs.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="p-8 text-center text-slate-500">
+                                    No logs found.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>

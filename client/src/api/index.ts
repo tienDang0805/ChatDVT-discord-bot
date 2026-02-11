@@ -46,5 +46,6 @@ export const getUsageDistribution = async () => (await api.get('/stats/usage-dis
 export const getGuildChannels = async (guildId: string) => (await api.get(`/guilds/${guildId}/channels`)).data;
 export const sendAnnouncement = async (guildId: string, data: any) => (await api.post(`/guilds/${guildId}/announce`, data)).data;
 export const leaveGuild = async (guildId: string) => (await api.delete(`/guilds/${guildId}`)).data;
+export const getSystemLogs = async () => (await api.get('/system-logs')).data;
 
 export default api;

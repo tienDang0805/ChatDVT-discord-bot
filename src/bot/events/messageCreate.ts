@@ -3,6 +3,7 @@ import { bot } from '../client';
 import { geminiService } from '../services/gemini';
 import { pkGameService } from '../services/pk';
 import { prisma } from '../../database/prisma';
+import { LoggerService } from '../services/logger';
 
 const IGNORE_PREFIXES = ['!', '/', '-'];
 
@@ -34,6 +35,7 @@ export const messageCreate = async (message: Message) => {
   if (message.guild && message.channel.type === ChannelType.GuildText) {
       const permissions = message.channel.permissionsFor(bot.user!);
       if (!permissions?.has('SendMessages') || !permissions?.has('ViewChannel')) {
+        await LoggerService.warn(`[MessageCreate] Missing permissions in channel ${message.channel.id}`, { guild: message.guild.id });
         return;
       }
   }
@@ -108,6 +110,7 @@ export const messageCreate = async (message: Message) => {
 
     // 3. Send Response
     if (responseText) {
+       await LoggerService.info(`Sending response`, { channel: message.channel.id, length: responseText.length });
        const API_LIMIT = 2000;
        if (responseText.length > API_LIMIT) {
            const chunks = responseText.match(new RegExp(`.{1,${API_LIMIT}}`, 'g')) || [];
@@ -121,6 +124,8 @@ export const messageCreate = async (message: Message) => {
                await (message.channel as any).send(responseText);
            }
        }
+    } else {
+        await LoggerService.warn(`[MessageCreate] Empty responseText received from GeminiService.`);
     }
 
   } catch (error) {
