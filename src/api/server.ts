@@ -233,12 +233,6 @@ app.post('/api/prompts', async (req, res) => {
                 create: { guildId, systemPrompts: promptsStr, activeModules: '{}' }
             });
             res.json(config); // Should return parsed? Previous code returned mongoose doc.
-            // But frontend expects object? 
-            // Previous code: res.json(config);
-            // Let's return parsed to be safe if frontend needs it, but mostly it refreshes.
-            // Mongoose 'config' is object. Prisma 'config' has string. 
-            // We should return string, or modify frontend? Frontend likely expects object map.
-            // I should return JSON.
             return;
         }
 
