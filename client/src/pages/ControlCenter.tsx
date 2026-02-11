@@ -162,7 +162,6 @@ export const ControlCenter = () => {
                         </button>
                     </div>
                 </div>
-                </div>
             </div>
 
             {/* System Logs */}
@@ -269,3 +268,5 @@ const SystemLogViewer = () => {
                 </table>
             </div>
         </div>
+    );
+};
