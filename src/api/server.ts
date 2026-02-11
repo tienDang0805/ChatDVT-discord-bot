@@ -403,6 +403,16 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
     }
 });
 
+// --- Serve React Frontend (MUST BE LAST) ---
+import path from 'path';
+const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
+
+app.use(express.static(CLIENT_BUILD_PATH));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
+});
+
 export const startApiServer = () => { 
   app.listen(PORT, () => {
     console.log(`✅ Web Server running at http://localhost:${PORT}`);
