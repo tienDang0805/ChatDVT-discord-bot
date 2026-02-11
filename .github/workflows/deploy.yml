@@ -15,23 +15,66 @@ jobs:
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
           port: 22
+          # Pass ALL secrets as environment variables to the remote shell
+          envs: DISCORD_TOKEN,CLIENT_ID,GUILD_ID,APIKEY_WEATHER,GEMINI_API_KEY,GOOGLE_TTS_API_KEY,MONGODB_URI,DISCORD_CHANNEL_ID,SYSTEM_PROMPT,BEAUTY_CHANNEL_ID,BEAUTY_INTERVAL_MINUTES,ADMIN_ID,AUTO_REPLY_PROMPT,PORT,ADMIN_USERNAME,ADMIN_PASSWORD,JWT_SECRET,DATABASE_URL
           script: |
-            # 1. Navigate to Project Directory
-            # IMPORTANT: Change this path to your actual project folder on VM
+            # 1. Navigate to Project Directory (UPDATE THIS PATH)
             cd /path/to/your/discord_gpt_bot
 
             # 2. Pull Latest Code
-            # This will NOT optimize/overwrite bot.db due to .gitignore
             git pull origin main
 
-            # 3. Install Dependencies
+            # 3. Generate .env file dynamically using Node.js (Safe for multi-line strings)
+            # We use Node to avoid complex shell escaping issues with prompts
+            node -e "
+              const fs = require('fs');
+              const keys = [
+                'DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'APIKEY_WEATHER', 
+                'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
+                'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
+                'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
+                'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL'
+              ];
+              let content = '';
+              for (const key of keys) {
+                if (process.env[key]) {
+                  // Write strictly as KEY=VALUE
+                  content += \`\${key}=\${process.env[key]}\n\`;
+                }
+              }
+              fs.writeFileSync('.env', content);
+              console.log('.env file updated successfully');
+            "
+
+            # 4. Install Dependencies
             npm install
 
-            # 4. Generate Prisma Client
+            # 5. Generate Prisma Client
             npx prisma generate
+            npx prisma db push --accept-data-loss # Ensure DB schema is sync
 
-            # 5. Build Project
+            # 6. Build Project
             npm run build
 
-            # 6. Restart Application via PM2
+            # 7. Restart Application via PM2
             pm2 restart discord-bot || pm2 start npm --name "discord-bot" -- run start
+        env:
+          # Map GitHub Secrets to Environment Variables
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GUILD_ID: ${{ secrets.GUILD_ID }}
+          APIKEY_WEATHER: ${{ secrets.APIKEY_WEATHER }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          SYSTEM_PROMPT: ${{ secrets.SYSTEM_PROMPT }}
+          BEAUTY_CHANNEL_ID: ${{ secrets.BEAUTY_CHANNEL_ID }}
+          BEAUTY_INTERVAL_MINUTES: ${{ secrets.BEAUTY_INTERVAL_MINUTES }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
+          AUTO_REPLY_PROMPT: ${{ secrets.AUTO_REPLY_PROMPT }}
+          PORT: ${{ secrets.PORT }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
