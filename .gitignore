@@ -1,0 +1,25 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+dist/
+build/
+.env
+.DS_Store
+.vscode/
+src/data/chatHistory.json
+temp/
+README.md
+src/README.md
+src/README.md
+README.md
+
+# Database (Local)
+*.db
+prisma/*.db
+server-dist/
+#legacy 
+_LEGACY_BACKUP
+
+

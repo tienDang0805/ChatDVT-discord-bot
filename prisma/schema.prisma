@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model ChatLog {
+  id        Int      @id @default(autoincrement())
+  guildId   String
+  userId    String
+  username  String
+  content   String
+  response  String
+  type      String   // 'chat', 'image', 'video', 'voice'
+  createdAt DateTime @default(now())
+
+  @@index([guildId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model UserIdentity {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  nickname  String   @default("")
+  signature String   @default("")
+  updatedAt DateTime @updatedAt
+}
+
+model GuildConfig {
+  id            Int      @id @default(autoincrement())
+  guildId       String   @unique
+  systemPrompts String   // JSON string
+  activeModules String   // JSON string
+  updatedAt     DateTime @updatedAt
+}
+
+model BotConfig {
+  id            Int      @id @default(autoincrement())
+  key           String   @unique // 'global'
+  systemPrompts String   // JSON string
+  features      String   // JSON string
+  updatedAt     DateTime @updatedAt
+}
+
+model Pet {
+  id              Int      @id @default(autoincrement())
+  ownerId         String
+  name            String
+  species         String
+  description     String
+  rarity          String
+  element         String
+  stats           String   // JSON
+  skills          String   // JSON
+  traits          String   // JSON
+  imageBasePrompt String
+  imageData       String   // Base64
+  status          String   // JSON
+  evolutionStage  Int      @default(1)
+  level           Int      @default(1)
+  exp             Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model UserEggCooldown {
+  id              Int      @id @default(autoincrement())
+  userId          String   @unique
+  dailyCount      Int      @default(0)
+  lastEggOpenTime DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

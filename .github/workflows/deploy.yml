@@ -1,0 +1,37 @@
+name: Deploy to Alibaba VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Navigate to Project Directory
+            # IMPORTANT: Change this path to your actual project folder on VM
+            cd /path/to/your/discord_gpt_bot
+
+            # 2. Pull Latest Code
+            # This will NOT optimize/overwrite bot.db due to .gitignore
+            git pull origin main
+
+            # 3. Install Dependencies
+            npm install
+
+            # 4. Generate Prisma Client
+            npx prisma generate
+
+            # 5. Build Project
+            npm run build
+
+            # 6. Restart Application via PM2
+            pm2 restart discord-bot || pm2 start npm --name "discord-bot" -- run start

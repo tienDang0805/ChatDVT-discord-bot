@@ -1,0 +1,122 @@
+# .github/workflows/deploy.yml
+name: Deploy Discord Bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            echo ">>> Kích hoạt môi trường NVM và Node.js..."
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            echo ">>> Di chuyển đến thư mục dự án..."
+            cd ${{ secrets.PROJECT_PATH }}
+
+            echo ">>> Đặt lại trạng thái Git cục bộ để tránh xung đột..."
+            git fetch origin
+            git reset --hard origin/main 
+
+            echo ">>> Kéo code mới nhất từ nhánh main..."
+            git checkout main
+            git pull origin main
+
+            echo ">>> Sử dụng Node.js phiên bản 22..."
+            nvm use 22
+
+            echo ">>> Cài đặt các gói phụ thuộc..."
+            npm install
+
+            echo ">>> Tạo file .env từ GitHub Secrets..."
+            cat <<EOF > src/.env
+            AUTO_REPLY_PROMPT='${{ secrets.AUTO_REPLY_PROMPT }}'
+            ADMIN_ID=${{ secrets.ADMIN_ID }}
+            DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
+            CLIENT_ID=${{ secrets.CLIENT_ID }}
+            GUILD_ID=${{ secrets.GUILD_ID }}
+            APIKEY_WEATHER=${{ secrets.APIKEY_WEATHER }}
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            GOOGLE_TTS_API_KEY=${{ secrets.GOOGLE_TTS_API_KEY }}
+            MONGODB_URI=${{ secrets.MONGODB_URI }}
+            DISCORD_CHANNEL_ID=${{ secrets.DISCORD_CHANNEL_ID }}
+            SYSTEM_PROMPT='${{ secrets.SYSTEM_PROMPT }}'
+            CORE_RULES='${{ secrets.CORE_RULES }}'
+
+            EOF
+
+            echo ">>> Khởi động lại bot bằng PM2..."
+            pm2 restart racoon-discord || pm2 start index.js --name "racoon-discord"
+            pm2 save
+            echo "✅ Bot đã được triển khai và khởi động lại!"
+
+            echo ">>> Tạo và chạy script gửi thông báo Discord..."
+            # SỬA LỖI 1: Thêm dấu nháy đơn '' vào 'EOF_NODE_SCRIPT'
+            # Điều này ngăn shell (bash) cố gắng đọc các biến bên trong script JavaScript
+            cat << 'EOF_NODE_SCRIPT' > send_deploy_notification.js
+            const { Client, GatewayIntentBits } = require("discord.js");
+            const dotenv = require("dotenv");
+            dotenv.config({ path: './src/.env' });
+
+            const token = process.env.DISCORD_TOKEN;
+            const channelId = process.env.DISCORD_CHANNEL_ID;
+            const commitSha = process.env.GITHUB_SHA ? process.env.GITHUB_SHA.substring(0, 7) : "N/A";
+            const repoUrl = `https://github.com/${process.env.GITHUB_REPOSITORY}`;
+            const commitUrl = `${repoUrl}/commit/${process.env.GITHUB_SHA}`;
+            const actor = process.env.GITHUB_ACTOR || "Unknown";
+
+            if (!token || !channelId) {
+                console.error("Lỗi: Thiếu DISCORD_TOKEN hoặc DISCORD_CHANNEL_ID trong file .env");
+                process.exit(1);
+            }
+
+            const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+            client.once("ready", async () => {
+                try {
+                    const channel = await client.channels.fetch(channelId);
+                    if (channel && channel.isTextBased()) {
+                        // SỬA LỖI 2: Dùng một template string duy nhất, đa dòng
+                        // Cách này sạch sẽ và tránh được lỗi cú pháp
+                        const message = `🚀 **Triển khai thành công!**
+                        **Người triển khai:** \`${actor}\`
+                        **Commit:** [${commitSha}](${commitUrl})
+                        Bot đã được cập nhật và khởi động lại.`;
+
+                        await channel.send(message);
+                        console.log("Đã gửi thông báo triển khai thành công.");
+                    } else {
+                        console.error(`Không tìm thấy kênh hoặc kênh không phải là kênh văn bản: ${channelId}`);
+                    }
+                } catch (error) {
+                    console.error("Lỗi khi gửi tin nhắn Discord:", error);
+                } finally {
+                    client.destroy();
+                }
+            });
+
+            client.login(token).catch(err => {
+                console.error("Lỗi đăng nhập Discord:", err);
+                process.exit(1);
+            });
+            EOF_NODE_SCRIPT
+
+            sleep 5
+            GITHUB_SHA="${{ github.sha }}" GITHUB_REPOSITORY="${{ github.repository }}" GITHUB_ACTOR="${{ github.actor }}" node ./send_deploy_notification.js
+
+            rm send_deploy_notification.js
