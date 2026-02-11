@@ -5,10 +5,43 @@ on:
     branches: ["main"]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # --- BUILD ON GITHUB RUNNER (FASTER) ---
+      - name: Install Dependencies & Build
+        run: |
+          npm install
+          npm run build # Builds Backend (tsc) AND Frontend (client)
+
+      # --- REMOVE NODE_MODULES (To save transfer time) ---
+      # We will install PROD dependencies on server
+      - name: Cleanup dev dependencies
+        run: rm -rf node_modules client/node_modules
+
+      # --- DEPLOY FILES VIA SCP ---
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          # Copy built artifacts and necessary files
+          source: "dist/,client/dist/,package.json,package-lock.json,prisma/"
+          target: "/var/www/ChatDVT-discord-bot"
+          strip_components: 0
+
+      # --- SSH TO SERVER (Runtime Setup) ---
+      - name: SSH Remote Commands
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VM_HOST }}
@@ -17,33 +50,21 @@ jobs:
           port: 22
           envs: DISCORD_TOKEN,CLIENT_ID,GUILD_ID,APIKEY_WEATHER,GEMINI_API_KEY,GOOGLE_TTS_API_KEY,MONGODB_URI,DISCORD_CHANNEL_ID,SYSTEM_PROMPT,BEAUTY_CHANNEL_ID,BEAUTY_INTERVAL_MINUTES,ADMIN_ID,AUTO_REPLY_PROMPT,PORT,ADMIN_USERNAME,ADMIN_PASSWORD,JWT_SECRET,DATABASE_URL
           script: |
-            # --- 0. Environment Setup (Fix for "command not found") ---
-            # Explicitly load profile to get PATH
+            # 1. Environment Setup
             export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
             [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
-            [ -s "$HOME/.bashrc" ] && source "$HOME/.bashrc"
-            [ -s "$HOME/.profile" ] && source "$HOME/.profile"
 
-            # Auto-install Node.js 20 if missing
+            # Auto-install Node/PM2 if missing (Safety check)
             if ! command -v node &> /dev/null; then
-                echo "Installing Node.js 20..."
                 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
                 sudo apt-get install -y nodejs
-            fi
-
-            # Auto-install PM2 if missing
-            if ! command -v pm2 &> /dev/null; then
-                echo "Installing PM2..."
                 sudo npm install -g pm2
             fi
 
-            # --- 1. Navigate to Project Directory (UPDATE THIS PATH) ---
+            # 2. Go to project folder
             cd /var/www/ChatDVT-discord-bot
 
-            # --- 2. Pull Latest Code ---
-            git pull origin main
-
-            # --- 3. Generate .env file dynamically ---
+            # 3. Generate .env (Crucial)
             node -e "
               const fs = require('fs');
               const keys = [
@@ -60,21 +81,18 @@ jobs:
                 }
               }
               fs.writeFileSync('.env', content);
-              console.log('.env file updated successfully');
             "
 
-            # --- 4. Install Dependencies ---
-            npm install
+            # 4. Install Output Dependencies (Only Production)
+            npm install --production
 
-            # --- 5. Generate Prisma Client ---
+            # 5. Database Logic (Prisma)
+            # DATABASE_URL must be in .env now
             npx prisma generate
             npx prisma db push --accept-data-loss
 
-            # --- 6. Build Project ---
-            npm run build
-
-            # --- 7. Restart Application via PM2 ---
-            pm2 restart discord-bot || pm2 start npm --name "discord-bot" -- run start
+            # 6. Restart App
+            pm2 restart discord-bot || pm2 start dist/index.js --name "discord-bot"
             pm2 save
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
