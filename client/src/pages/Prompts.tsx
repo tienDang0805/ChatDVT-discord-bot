@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { getPrompts, updatePrompts, getGuilds } from '../api';
-import { Save, RefreshCw, AlertCircle, CheckCircle2, Server } from 'lucide-react';
+import api from '../api';
+import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit } from 'lucide-react';
 import { clsx } from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const Prompts = () => {
     const [config, setConfig] = useState<any>(null);
@@ -12,6 +14,32 @@ export const Prompts = () => {
     
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState<string>('global');
+    const [activeTab, setActiveTab] = useState<string>('global');
+
+    // Live Preview States
+    const [previewMode, setPreviewMode] = useState<boolean>(false);
+    const [previewText, setPreviewText] = useState<string>('');
+    const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
+
+    // Fetch Preview when tab or mode changes
+    useEffect(() => {
+        if (previewMode) {
+            fetchPreviewText(activeTab, selectedGuild);
+        }
+    }, [activeTab, previewMode, selectedGuild, config]);
+
+    const fetchPreviewText = async (feature: string, guildId: string) => {
+        try {
+            setLoadingPreview(true);
+            const res = await api.get(`/prompts/preview?feature=${feature}&guildId=${guildId}`);
+            setPreviewText(res.data.text || '');
+        } catch (err) {
+            console.error("Failed to load preview");
+            setPreviewText("Error loading preview...");
+        } finally {
+            setLoadingPreview(false);
+        }
+    };
 
     useEffect(() => {
         fetchGuilds();
@@ -31,13 +59,7 @@ export const Prompts = () => {
         try {
             setLoading(true);
             const data = await getPrompts(guildId);
-            // Data might be the full object or just the prompts map depending on backend
-            // Our backend returns the prompt object directly for standardized keys
-            // But if it returns the full GuildConfig document, we need to extract .systemPrompts
-            // The API we wrote returns `res.json(config.systemPrompts)` or `res.json(guildConfig.systemPrompts)`
-            // So `data` should be the prompts object.
             
-            // Normalize data if fields are missing (e.g. new keys added to code but not in DB)
             const normalizedDefaults = {
                 global: "", quiz: "", catchTheWord: "", pet: "", pkGame: "", videoAnalysis: "", imageAnalysis: ""
             };
@@ -61,115 +83,267 @@ export const Prompts = () => {
         try {
             setSaving(true);
             await updatePrompts({ systemPrompts: config }, selectedGuild);
-            setSuccess(`Saved for ${selectedGuild === 'global' ? 'Global' : 'Selected Server'}!`);
+            setSuccess(`Đã lưu cấu hình Prompts cho ${selectedGuild === 'global' ? 'Global Default' : 'Máy chủ hiện tại'}!`);
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError('Failed to save changes.');
+            setError('Thất bại khi lưu cấu hình.');
+            setTimeout(() => setError(''), 3000);
         } finally {
             setSaving(false);
         }
     };
 
-    const handleChange = (key: string, value: string) => {
+    const handleChange = (value: string) => {
         setConfig((prev: any) => ({
             ...prev,
-            [key]: value
+            [activeTab]: value
         }));
     };
 
-    const promptKeys = [
-        { key: 'global', label: 'Global / Personailty', desc: 'Main personality for chat.' },
-        { key: 'quiz', label: 'Quiz Host', desc: 'Personality for Quiz Game.' },
-        { key: 'catchTheWord', label: 'Catch The Word Host', desc: 'Personality for Catch The Word.' },
-        { key: 'pkGame', label: 'PK Battle Referee', desc: 'Referee personality for PK Game.' },
-        { key: 'pet', label: 'Pet System', desc: 'Pet interactions.' },
-        { key: 'imageAnalysis', label: 'Image Analysis', desc: 'Instructions for analyzing images.' },
-        { key: 'videoAnalysis', label: 'Video Analysis', desc: 'Instructions for analyzing videos.' },
+    const promptCategories = [
+        { 
+            id: 'core', 
+            label: 'Hệ Thống Lõi', 
+            icon: BrainCircuit,
+            items: [
+                { key: 'global', label: 'Tương Tác Chính (Global)', desc: 'Tính cách gốc và quy tắc giao tiếp của Bot.' }
+            ]
+        },
+        { 
+            id: 'minigames', 
+            label: 'Trò Chơi (Minigames)', 
+            icon: Gamepad2,
+            items: [
+                { key: 'quiz', label: 'Trắc Nghiệm (Quiz)', desc: 'Nhân cách MC dẫn chương trình Quiz.' },
+                { key: 'catchTheWord', label: 'Đuổi Hình Bắt Chữ', desc: 'Nhân cách MC Đuổi Hình Bắt Chữ.' },
+                { key: 'pkGame', label: 'PK Đại Chiến', desc: 'Nhân cách Trọng tài thi đấu PK.' },
+            ]
+        },
+        { 
+            id: 'features', 
+            label: 'Tính Năng Bổ Trợ', 
+            icon: MessageSquare,
+            items: [
+                { key: 'pet', label: 'Hệ thống Thú Cưng', desc: 'Bản sắc giao tiếp khi tương tác Pet.' },
+                { key: 'imageAnalysis', label: 'Phân tích Ảnh (Vision)', desc: 'Cách bot mô tả khi thấy ảnh.' },
+                { key: 'videoAnalysis', label: 'Phân tích Video', desc: 'Cách bot tóm tắt khi xem video.' },
+            ]
+        }
     ];
 
-    if (loading && !config) return <div className="text-white p-8">Loading...</div>;
+    if (loading && !config) return (
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+            <div className="flex flex-col items-center gap-3">
+                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                 <div className="text-slate-400 font-mono text-sm">LOADING_PROMPTS_CORE...</div>
+            </div>
+        </div>
+    );
+
+    // Tìm thông tin của Tab đang active
+    const activeItem = promptCategories.flatMap(c => c.items).find(i => i.key === activeTab);
 
     return (
-        <div className="space-y-6">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+        <div className="space-y-6 animate-fade-in relative max-h-full flex flex-col h-[calc(100vh-6rem)]">
+            {/* Background Glows */}
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 bg-primary/5 rounded-[100%] blur-3xl pointer-events-none" />
+
+            {/* Header section (Sticky) */}
+            <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2 border-b border-slate-700/30">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        Prompt Engineering
+                    <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                        <Terminal className="text-primary" size={28} />
+                        Prompt Studio
                     </h1>
-                    <p className="text-slate-400 mt-2">Manage the AI's personality and instructions.</p>
+                    <p className="text-slate-400 mt-2">IDE Controller điều chỉnh hệ thống tư duy của Gemini.</p>
                 </div>
                 
-                <div className="flex items-center gap-4 bg-surface p-2 rounded-xl border border-slate-700">
-                    <div className="flex items-center gap-2 px-3 text-slate-300">
-                        <Server size={18} />
-                        <span className="text-sm font-medium hidden md:inline">Scope:</span>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10 w-full xl:w-auto">
+                    {/* Server Select */}
+                    <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl border border-slate-700/50 shadow-inner flex-1 xl:flex-none">
+                        <div className="pl-3 text-slate-400">
+                            <Server size={18} />
+                        </div>
+                        <select 
+                            value={selectedGuild} 
+                            onChange={handleServerChange}
+                            className="bg-transparent border-none text-white text-sm font-medium focus:ring-0 w-full min-w-[200px] cursor-pointer"
+                        >
+                            <option value="global" className="bg-slate-800">🌐 Global Core (Mặc định)</option>
+                            {guilds.map(g => (
+                                <option key={g.id} value={g.id} className="bg-slate-800">🏠 {g.name}</option>
+                            ))}
+                        </select>
                     </div>
-                    <select 
-                        value={selectedGuild} 
-                        onChange={handleServerChange}
-                        className="bg-background border border-slate-600 text-white text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5 min-w-[200px]"
-                    >
-                        <option value="global">🌐 Global Defaults</option>
-                        {guilds.map(g => (
-                            <option key={g.id} value={g.id}>{g.name}</option>
-                        ))}
-                    </select>
-                </div>
 
-                <div className="flex gap-3">
-                    <button 
-                        onClick={() => fetchPrompts(selectedGuild)} 
-                        className="p-2 text-slate-400 hover:text-white bg-surface hover:bg-slate-700/50 rounded-lg transition-colors"
-                        title="Refresh"
-                    >
-                        <RefreshCw size={20} />
-                    </button>
-                    <button 
-                        onClick={handleSave} 
-                        disabled={saving}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-all"
-                    >
-                        <Save size={18} />
-                        {saving ? 'Saving...' : 'Save Changes'}
-                    </button>
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setPreviewMode(!previewMode)}
+                            className={clsx(
+                                "flex items-center gap-2 px-4 py-2.5 border rounded-xl font-medium transition-all",
+                                previewMode 
+                                    ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]" 
+                                    : "bg-surface border-slate-700/50 text-slate-400 hover:text-white"
+                            )}
+                        >
+                            <BrainCircuit size={18} />
+                            {previewMode ? 'Tắt Preview' : 'Live Preview'}
+                        </button>
+                        <button 
+                            onClick={() => fetchPrompts(selectedGuild)} 
+                            className="p-2.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-xl transition-colors"
+                            title="Tải Lại Data"
+                        >
+                            <RefreshCw size={18} className={clsx(loading && "animate-spin")} />
+                        </button>
+                        <button 
+                            onClick={handleSave} 
+                            disabled={saving}
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] active:scale-95 disabled:opacity-50"
+                        >
+                            <Save size={18} />
+                            {saving ? 'Đang Compile...' : 'Lưu Thay Đổi'}
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl flex items-center gap-3">
-                    <AlertCircle size={20} />
-                    {error}
-                </div>
-            )}
+            {/* Notification Toasts */}
+            <AnimatePresence>
+                {(error || success) && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`absolute top-24 left-1/2 -translate-x-1/2 z-50 p-3 rounded-xl flex items-center gap-3 shadow-2xl ${
+                            success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        }`}
+                    >
+                        {success ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                        <span className="font-semibold text-sm">{success || error}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {success && (
-                <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex items-center gap-3">
-                    <CheckCircle2 size={20} />
-                    {success}
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {promptKeys.map(({ key, label, desc }) => (
-                    <div key={key} className={clsx("bg-surface rounded-xl border border-slate-700/50 p-6", key === 'global' && "lg:col-span-2 ring-1 ring-primary/20", selectedGuild !== 'global' && !config[key] && "opacity-75")}>
-                        <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                {label}
-                                {key === 'global' && <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-xs">Core</span>}
-                            </h3>
-                            <p className="text-sm text-slate-400">{desc}</p>
-                            {selectedGuild !== 'global' && !config[key] && (
-                                <p className="text-xs text-amber-400 mt-1">Using Global Default</p>
-                            )}
+            {/* Main IDE Layout */}
+            <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative z-10">
+                
+                {/* File Explorer (Sidebar L) */}
+                <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1">
+                    {promptCategories.map((category) => (
+                        <div key={category.id} className="space-y-1">
+                            <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                <category.icon size={14} />
+                                {category.label}
+                            </div>
+                            <div className="space-y-1 pl-2 border-l border-slate-700/30 ml-3">
+                                {category.items.map((item) => {
+                                    const isActive = activeTab === item.key;
+                                    const hasCustomData = selectedGuild !== 'global' && !!config?.[item.key];
+                                    
+                                    return (
+                                        <button
+                                            key={item.key}
+                                            onClick={() => setActiveTab(item.key)}
+                                            className={clsx(
+                                                "w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between group",
+                                                isActive 
+                                                    ? "bg-primary/10 text-primary" 
+                                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                                            )}
+                                        >
+                                            <span className="truncate">{item.label}</span>
+                                            {/* Indicator for configured override on Server */}
+                                            {hasCustomData && !isActive && (
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Chứa cấu hình ghi đè" />
+                                            )}
+                                            {isActive && (
+                                                <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <textarea 
-                            value={config ? (config[key] || '') : ''} 
-                            onChange={(e) => handleChange(key, e.target.value)}
-                            className="w-full h-48 bg-background/50 border border-slate-700 rounded-lg p-4 text-slate-200 focus:outline-none focus:border-primary transition-colors font-mono text-sm resize-none"
-                            placeholder={selectedGuild === 'global' ? `Enter default prompt...` : `Enter server-specific prompt (leave empty to use global)...`}
-                        />
+                    ))}
+                </div>
+
+                {/* Editor Surface (Main Right) */}
+                <div className="flex-1 flex flex-col bg-[#0f111a] border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-shadow transition-colors">
+                    
+                    {/* Editor Tab Bar */}
+                    <div className="flex items-center bg-[#1a1d27] border-b border-slate-700/50 px-2 py-[2px]">
+                        <div className="flex items-center gap-2 bg-[#0f111a] px-4 py-2 border-t-2 border-primary rounded-t-lg">
+                            <Terminal size={14} className="text-primary" />
+                            <span className="text-sm font-mono text-slate-200">{activeTab}.prompt</span>
+                        </div>
+                        <div className="flex-1"></div>
+                        <div className="px-4 flex items-center gap-2 text-xs font-mono text-slate-500">
+                             {selectedGuild === 'global' ? '🌐 Global Context' : '🏠 Server Override Context'}
+                        </div>
                     </div>
-                ))}
+
+                    {/* Editor Status Meta */}
+                    <div className="bg-[#151822] px-6 py-3 border-b border-slate-800/80 flex items-center justify-between">
+                         <div>
+                             <h3 className="text-white font-medium">{activeItem?.label}</h3>
+                             <p className="text-xs text-slate-400 mt-0.5">{activeItem?.desc}</p>
+                         </div>
+                         {selectedGuild !== 'global' && !config?.[activeTab] && (
+                             <span className="px-2 py-1 bg-amber-500/10 text-amber-500 text-xs rounded-md border border-amber-500/20 font-medium">
+                                 Đang dùng Global Mặc Định
+                             </span>
+                         )}
+                    </div>
+
+                    {/* The Code Area */}
+                    <div className="flex-1 relative cursor-text">
+                        {/* Line Numbers Fake (Decorative) */}
+                        <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#1a1d27]/30 border-r border-slate-800 flex flex-col items-end py-4 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none">
+                            {[...Array(20)].map((_, i) => (
+                                <div key={i} className="leading-6 opacity-50">{i + 1}</div>
+                            ))}
+                        </div>
+                        
+                        {previewMode ? (
+                            <div className="w-full h-full p-4 pl-16 overflow-y-auto custom-scrollbar">
+                                {loadingPreview ? (
+                                    <div className="flex items-center gap-3 text-emerald-400 mt-2 font-mono text-sm animate-pulse">
+                                        <RefreshCw size={16} className="animate-spin" /> Compiling Prompt...
+                                    </div>
+                                ) : (
+                                    <pre className="font-mono text-[14px] leading-6 whitespace-pre-wrap">
+                                        <span className="text-emerald-300/80">{previewText}</span>
+                                    </pre>
+                                )}
+                            </div>
+                        ) : (
+                            <textarea 
+                                value={config ? (config[activeTab] || '') : ''} 
+                                onChange={(e) => handleChange(e.target.value)}
+                                className="w-full h-full bg-transparent text-slate-300 font-mono text-[14px] leading-6 p-4 pl-16 focus:outline-none resize-none custom-scrollbar"
+                                placeholder={selectedGuild === 'global' ? `// Nhập Prompt cho ${activeItem?.label} tại đây...` : `// Ghi đè Prompt riêng cho máy chủ này.\n// Nếu bỏ trống, bot sẽ dùng Global Context.`}
+                                spellCheck={false}
+                            />
+                        )}
+                    </div>
+                    
+                    {/* Editor Footer */}
+                    <div className="px-4 py-1.5 bg-[#1a1d27] border-t border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                         <div className="flex items-center gap-4">
+                             {previewMode ? (
+                                 <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Compiled View</span>
+                             ) : (
+                                 <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Schema Valid</span>
+                             )}
+                             <span>UTF-8</span>
+                             <span>Markdown</span>
+                         </div>
+                         <span>EvoVerse IDE.</span>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

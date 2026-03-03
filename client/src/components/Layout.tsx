@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ScrollText, Settings, Bot, LogOut } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import api from '../api';
 
 const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
   const location = useLocation();
@@ -25,17 +26,51 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: stri
 };
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
+  const [botInfo, setBotInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchBotInfo = async () => {
+      try {
+        const response = await api.get('/bot-info');
+        if (response.data) setBotInfo(response.data);
+      } catch (error) {
+        console.error("Failed to load bot info", error);
+      }
+    };
+    fetchBotInfo();
+  }, []);
+
   return (
     <div className="flex h-screen bg-background overflow-hidden font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-surface border-r border-slate-700/50 flex flex-col p-4">
-        <div className="flex items-center gap-3 px-4 py-6 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-lg">
-            <Bot size={24} />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg text-white">EvoVerse AI</h1>
-            <p className="text-xs text-slate-400">Hybrid Monolith Bot</p>
+      <aside className="w-64 bg-surface border-r border-slate-700/50 flex flex-col p-4 relative z-10">
+        {/* Glow Effect Top Left */}
+        <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex items-center gap-3 px-4 py-6 mb-6 relative z-10 group cursor-default">
+          {botInfo?.avatar ? (
+             <div className="relative">
+                <div className="absolute inset-0 bg-primary/30 rounded-full blur-md animate-pulse"></div>
+                <img 
+                   src={botInfo.avatar} 
+                   alt="Bot Avatar" 
+                   className="w-12 h-12 rounded-full border-2 border-slate-700/80 shadow-xl object-cover relative z-10 transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-surface rounded-full z-20 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
+             </div>
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]">
+               <Bot size={28} />
+            </div>
+          )}
+          
+          <div className="flex-1 overflow-hidden">
+            <h1 className="font-bold text-lg text-white truncate transition-colors group-hover:text-primary">
+                {botInfo?.globalName || botInfo?.username || 'EvoVerse AI'}
+            </h1>
+            <p className="text-xs text-slate-400 truncate">
+               {botInfo?.id ? `ID: ${botInfo.id}` : 'Hybrid Monolith Bot'}
+            </p>
           </div>
         </div>
 

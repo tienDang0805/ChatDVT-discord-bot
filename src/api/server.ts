@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { prisma } from '../database/prisma';
 import { bot } from '../bot/client';
+import { geminiService } from '../bot/services/gemini';
 import jwt from 'jsonwebtoken';
 
 const app = express();
@@ -175,6 +176,27 @@ app.get('/api/dashboard/stats', async (req, res) => {
         });
     } catch (error) {
          res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// --- Bot Info API ---
+app.get('/api/bot-info', async (req, res) => {
+    try {
+        if (!bot.user) {
+            res.status(503).json({ error: 'Bot is not ready yet' });
+            return;
+        }
+
+        res.json({
+            id: bot.user.id,
+            username: bot.user.username,
+            globalName: bot.user.globalName || bot.user.username,
+            avatar: bot.user.displayAvatarURL({ size: 128 }),
+            status: 'online'
+        });
+    } catch (error) {
+        console.error("Fetch Bot Info Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -408,6 +430,23 @@ app.post('/api/prompts', async (req, res) => {
         res.json(config);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Preview Prompt API
+app.get('/api/prompts/preview', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        const feature = req.query.feature as string || 'global';
+        const compiledPrompt = await geminiService.getSystemPrompt(
+            guildId === 'global' ? '' : guildId,
+            'preview_user', // mock userId
+            feature
+        );
+        res.json({ text: compiledPrompt });
+    } catch (error) {
+         console.error(error);
+         res.status(500).json({ error: 'Failed to preview prompt' });
     }
 });
 

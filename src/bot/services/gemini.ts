@@ -64,7 +64,7 @@ class GeminiService {
   }
 
   // --- Dynamic System Prompt ---
-  private async getSystemPrompt(guildId: string, userId: string, feature: string = 'global'): Promise<string> {
+  public async getSystemPrompt(guildId: string, userId: string, feature: string = 'global'): Promise<string> {
     let finalPrompt = "";
 
     // 1. Check Guild Config
