@@ -219,6 +219,49 @@ app.post('/api/identity/:userId', async (req, res) => {
     }
 });
 
+// 2.5 User Identity List Route
+app.get('/api/identities/list', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        if (!guildId) {
+            res.status(400).json({ error: 'Missing guildId query parameter' });
+            return;
+        }
+
+        const guild = await bot.guilds.fetch(guildId).catch(() => null);
+        if (!guild) {
+             res.status(404).json({ error: 'Guild not found or bot not in guild' });
+             return;
+        }
+
+        const members = await guild.members.fetch();
+        // Filter ra user thật, bỏ qua Bot
+        const humanMembers = members.filter(m => !m.user.bot);
+        
+        // Lấy toàn bộ Identities có trong DB
+        const dbIdentities = await prisma.userIdentity.findMany();
+        const identityMap = new Map(dbIdentities.map(i => [i.userId, i]));
+
+        const results = humanMembers.map(member => {
+            const dbInfo = identityMap.get(member.user.id);
+            return {
+                id: member.user.id,
+                username: member.user.username,
+                globalName: member.user.globalName || member.user.username,
+                avatar: member.user.displayAvatarURL({ size: 128 }),
+                serverNickname: member.nickname,
+                dbNickname: dbInfo?.nickname || '',
+                dbSignature: dbInfo?.signature || ''
+            };
+        });
+
+        res.json(Array.from(results.values()));
+    } catch (error) {
+        console.error("Fetch Identity List Error:", error);
+        res.status(500).json({ error: 'Failed to fetch identity list' });
+    }
+});
+
 // 3. Bot Persona Route (GET)
 app.get('/api/bot-persona', async (req, res) => {
     try {
