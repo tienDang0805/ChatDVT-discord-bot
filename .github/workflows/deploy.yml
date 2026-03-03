@@ -107,8 +107,8 @@ jobs:
             npm install --production
 
             # 5. Database Logic (Prisma)
-            # Ensure SQLite database directory has correct permissions
-            sudo chmod -R 777 prisma/
+            # Ensure SQLite database directory has correct permissions (without sudo to avoid password prompt hang)
+            chmod -R 777 prisma/ || true
 
             # --- 5. Generate Prisma Client (Force version to match package.json) ---
             npx prisma@5.22.0 generate
