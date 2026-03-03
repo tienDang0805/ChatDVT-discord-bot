@@ -111,17 +111,24 @@ export const messageCreate = async (message: Message) => {
     // 3. Send Response
     if (responseText) {
        await LoggerService.info(`Sending response`, { channel: message.channel.id, length: responseText.length });
-       const API_LIMIT = 2000;
-       if (responseText.length > API_LIMIT) {
-           const chunks = responseText.match(new RegExp(`.{1,${API_LIMIT}}`, 'g')) || [];
-           for (const chunk of chunks) {
-               if ('send' in message.channel) {
-                   await (message.channel as any).send(chunk);
-               }
-           }
+       const API_LIMIT = 1900;
+       
+       if (responseText.length <= API_LIMIT) {
+           await message.reply({ content: responseText, allowedMentions: { repliedUser: false } });
        } else {
-           if ('send' in message.channel) {
-               await (message.channel as any).send(responseText);
+           const chunks: string[] = [];
+           for (let i = 0; i < responseText.length; i += API_LIMIT) {
+               chunks.push(responseText.substring(i, i + API_LIMIT));
+           }
+
+           // Gửi tin nhắn đầu tiên bằng reply (giữ Thread Context)
+           const firstMessage = await message.reply({ content: chunks[0], allowedMentions: { repliedUser: false } });
+
+           // Gửi các tin nhắn tiếp theo nối tiếp nhau
+           for (let i = 1; i < chunks.length; i++) {
+               if ('send' in firstMessage.channel) {
+                   await (firstMessage.channel as any).send(chunks[i]);
+               }
            }
        }
     } else {
