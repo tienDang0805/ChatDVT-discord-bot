@@ -27,73 +27,26 @@ jobs:
       - name: Cleanup dev dependencies
         run: rm -rf node_modules client/node_modules
 
-      # --- DEPLOY FILES VIA SCP ---
-      - name: Copy Files to Server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: 22
-          # Copy built artifacts and necessary files
-          source: "dist/,client/dist/,package.json,package-lock.json,prisma/"
-          target: "/var/www/ChatDVT-discord-bot"
-          strip_components: 0
-
-      # --- SSH TO SERVER (Runtime Setup) ---
-      - name: SSH Remote Commands
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VM_HOST }}
-          username: ${{ secrets.VM_USERNAME }}
-          key: ${{ secrets.VM_SSH_KEY }}
-          port: 22
-          envs: DISCORD_TOKEN,CLIENT_ID,GUILD_ID,APIKEY_WEATHER,GEMINI_API_KEY,GOOGLE_TTS_API_KEY,MONGODB_URI,DISCORD_CHANNEL_ID,SYSTEM_PROMPT,BEAUTY_CHANNEL_ID,BEAUTY_INTERVAL_MINUTES,ADMIN_ID,AUTO_REPLY_PROMPT,PORT,ADMIN_USERNAME,ADMIN_PASSWORD,JWT_SECRET,DATABASE_URL
-          script: |
-            # 1. Environment Setup
-            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-            [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
-
-            # Auto-install Node/PM2 if missing (Safety check)
-            if ! command -v node &> /dev/null; then
-                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                sudo apt-get install -y nodejs
-                sudo npm install -g pm2
-            fi
-
-            # 2. Go to project folder
-            cd /var/www/ChatDVT-discord-bot
-
-            # 3. Generate .env (Crucial)
-            node -e "
-              const fs = require('fs');
-              const keys = [
-                'DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'APIKEY_WEATHER', 
-                'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
-                'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
-                'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
-                'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL'
-              ];
-              let content = '';
-              for (const key of keys) {
-                if (process.env[key]) {
-                 content += \`\${key}=\${JSON.stringify(process.env[key])}\n\`;
-                }
+      # --- GENERATE .env FILE LOCALLY ---
+      - name: Generate .env File locally
+        run: |
+          node -e "
+            const fs = require('fs');
+            const keys = [
+              'DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'APIKEY_WEATHER', 
+              'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
+              'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
+              'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
+              'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL'
+            ];
+            let content = '';
+            for (const key of keys) {
+              if (process.env[key]) {
+                content += key + '=' + JSON.stringify(process.env[key]) + '\n';
               }
-              fs.writeFileSync('.env', content);
-            "
-
-            # 4. Install Output Dependencies (Only Production)
-            npm install --production
-
-            # 5. Database Logic (Prisma)
-            # --- 5. Generate Prisma Client (Force version to match package.json) ---
-            npx prisma@5.22.0 generate
-            npx prisma@5.22.0 db push --accept-data-loss
-
-            # 6. Restart App (Force update environment variables)
-            pm2 restart discord-bot --update-env || pm2 start dist/index.js --name "discord-bot"
-            pm2 save
+            }
+            fs.writeFileSync('.env', content);
+          "
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
@@ -113,3 +66,51 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # --- DEPLOY FILES VIA SCP ---
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          # Copy built artifacts and necessary files + .env
+          source: "dist/,client/dist/,package.json,package-lock.json,prisma/,.env"
+          target: "/var/www/ChatDVT-discord-bot"
+          strip_components: 0
+
+      # --- SSH TO SERVER (Runtime Setup) ---
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Environment Setup
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+            [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
+
+            # Auto-install Node/PM2 if missing (Safety check)
+            if ! command -v node &> /dev/null; then
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+                sudo npm install -g pm2
+            fi
+
+            # 2. Go to project folder
+            cd /var/www/ChatDVT-discord-bot
+
+            # 4. Install Output Dependencies (Only Production)
+            npm install --production
+
+            # 5. Database Logic (Prisma)
+            # --- 5. Generate Prisma Client (Force version to match package.json) ---
+            npx prisma@5.22.0 generate
+            npx prisma@5.22.0 db push --accept-data-loss
+
+            # 6. Restart App (Force update environment variables)
+            pm2 restart discord-bot --update-env || pm2 start dist/index.js --name "discord-bot"
+            pm2 save
