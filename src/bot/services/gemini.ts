@@ -65,19 +65,28 @@ class GeminiService {
 
   // --- Dynamic System Prompt ---
   public async getSystemPrompt(guildId: string, userId: string, feature: string = 'global'): Promise<string> {
-    let finalPrompt = "";
+    let finalPromptData: any = null;
 
     // 1. Check Guild Config
     const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
     if (guildConfig) {
-        const prompts = JSON.parse(guildConfig.systemPrompts) as any;
-        if (prompts && prompts[feature] && prompts[feature].trim() !== "") {
-            finalPrompt = prompts[feature];
+        try {
+            const prompts = JSON.parse(guildConfig.systemPrompts) as any;
+            if (prompts && prompts[feature]) {
+                const featureData = prompts[feature];
+                if (typeof featureData === 'string' && featureData.trim() !== "") {
+                     finalPromptData = featureData;
+                } else if (typeof featureData === 'object' && Object.keys(featureData).length > 0) {
+                     finalPromptData = featureData;
+                }
+            }
+        } catch (e) {
+            console.error("Error parsing guild prompts", e);
         }
     }
 
     // 2. Fallback to Global Bot Config
-    if (!finalPrompt) {
+    if (!finalPromptData) {
         let globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
         if (!globalConfig) {
              // Init if missing
@@ -98,8 +107,25 @@ class GeminiService {
                 }
             });
         }
-        const prompts = JSON.parse(globalConfig.systemPrompts) as any;
-        finalPrompt = prompts[feature] || prompts.global;
+        try {
+            const prompts = JSON.parse(globalConfig.systemPrompts) as any;
+            finalPromptData = prompts[feature] || prompts.global;
+        } catch (e) {
+            console.error("Error parsing global prompts", e);
+            finalPromptData = "";
+        }
+    }
+
+    // Compile Prompt Data to Markdown
+    let compiledPromptText = "";
+    if (typeof finalPromptData === 'string') {
+        compiledPromptText = finalPromptData;
+    } else if (typeof finalPromptData === 'object' && finalPromptData !== null) {
+        for (const [key, value] of Object.entries(finalPromptData)) {
+            if (value && typeof value === 'string' && value.trim() !== "") {
+                compiledPromptText += `\n# ${key.toUpperCase()}\n${value}\n`;
+            }
+        }
     }
 
     // 3. User Identity Context
@@ -149,7 +175,7 @@ class GeminiService {
 
     const coreRules = `\n# CÁC QUY TẮC BẤT BIẾN:\n${process.env.CORE_RULES || ''}`;
 
-    return `${finalPrompt}\n${userContext}${personaContext}\n${coreRules}`;
+    return `${compiledPromptText}\n${userContext}${personaContext}\n${coreRules}`;
   }
 
   // --- Chat Logic ---

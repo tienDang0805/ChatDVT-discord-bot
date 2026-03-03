@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getPrompts, updatePrompts, getGuilds } from '../api';
 import api from '../api';
-import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit } from 'lucide-react';
+import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, Plus, Trash2, FileJson } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,21 +17,21 @@ export const Prompts = () => {
     const [activeTab, setActiveTab] = useState<string>('global');
 
     // Live Preview States
-    const [previewMode, setPreviewMode] = useState<boolean>(false);
+    const [viewMode, setViewMode] = useState<'edit' | 'preview' | 'raw'>('edit');
     const [previewText, setPreviewText] = useState<string>('');
     const [loadingPreview, setLoadingPreview] = useState<boolean>(false);
 
     // Fetch Preview when tab or mode changes
     useEffect(() => {
-        if (previewMode) {
-            fetchPreviewText(activeTab, selectedGuild);
+        if (viewMode !== 'edit') {
+            fetchPreviewText(activeTab, selectedGuild, viewMode === 'raw');
         }
-    }, [activeTab, previewMode, selectedGuild, config]);
+    }, [activeTab, viewMode, selectedGuild, config]);
 
-    const fetchPreviewText = async (feature: string, guildId: string) => {
+    const fetchPreviewText = async (feature: string, guildId: string, isRaw: boolean) => {
         try {
             setLoadingPreview(true);
-            const res = await api.get(`/prompts/preview?feature=${feature}&guildId=${guildId}`);
+            const res = await api.get(`/prompts/preview?feature=${feature}&guildId=${guildId}${isRaw ? '&raw=true' : ''}`);
             setPreviewText(res.data.text || '');
         } catch (err) {
             console.error("Failed to load preview");
@@ -93,11 +93,36 @@ export const Prompts = () => {
         }
     };
 
-    const handleChange = (value: string) => {
-        setConfig((prev: any) => ({
-            ...prev,
-            [activeTab]: value
-        }));
+    // Structured Form Builder Handlers
+    const currentData = config?.[activeTab];
+    const parsedData = typeof currentData === 'string'
+        ? (currentData.trim() ? { "Core": currentData } : {})
+        : (currentData || {});
+
+    const handleUpdateBlock = (oldKey: string, newKey: string, value: string) => {
+        setConfig((prev: any) => {
+            const data = { ...parsedData };
+            if (oldKey !== newKey) delete data[oldKey];
+            data[newKey] = value;
+            return { ...prev, [activeTab]: data };
+        });
+    };
+
+    const handleAddBlock = () => {
+        setConfig((prev: any) => {
+            const data = { ...parsedData };
+            const newKey = `Block_${Object.keys(data).length + 1}`;
+            data[newKey] = "";
+            return { ...prev, [activeTab]: data };
+        });
+    };
+
+    const handleRemoveBlock = (key: string) => {
+        setConfig((prev: any) => {
+            const data = { ...parsedData };
+            delete data[key];
+            return { ...prev, [activeTab]: data };
+        });
     };
 
     const promptCategories = [
@@ -178,18 +203,35 @@ export const Prompts = () => {
 
                     {/* Actions */}
                     <div className="flex gap-2">
-                        <button
-                            onClick={() => setPreviewMode(!previewMode)}
-                            className={clsx(
-                                "flex items-center gap-2 px-4 py-2.5 border rounded-xl font-medium transition-all",
-                                previewMode 
-                                    ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]" 
-                                    : "bg-surface border-slate-700/50 text-slate-400 hover:text-white"
-                            )}
-                        >
-                            <BrainCircuit size={18} />
-                            {previewMode ? 'Tắt Preview' : 'Live Preview'}
-                        </button>
+                        <div className="flex bg-[#1a1d27] rounded-xl border border-slate-700/50 p-1">
+                            <button
+                                onClick={() => setViewMode('edit')}
+                                className={clsx(
+                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    viewMode === 'edit' ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                )}
+                            >
+                                <Terminal size={14} /> Builder
+                            </button>
+                            <button
+                                onClick={() => setViewMode('preview')}
+                                className={clsx(
+                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    viewMode === 'preview' ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                )}
+                            >
+                                <BrainCircuit size={14} /> Preview
+                            </button>
+                            <button
+                                onClick={() => setViewMode('raw')}
+                                className={clsx(
+                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    viewMode === 'raw' ? "bg-amber-500/20 text-amber-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                )}
+                            >
+                                <FileJson size={14} /> Raw
+                            </button>
+                        </div>
                         <button 
                             onClick={() => fetchPrompts(selectedGuild)} 
                             className="p-2.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-xl transition-colors"
@@ -306,33 +348,60 @@ export const Prompts = () => {
                             ))}
                         </div>
                         
-                        {previewMode ? (
-                            <div className="w-full h-full p-4 pl-16 overflow-y-auto custom-scrollbar">
+                        {viewMode === 'edit' ? (
+                            <div className="w-full h-full p-4 pl-12 overflow-y-auto custom-scrollbar space-y-4">
+                                {Object.entries(parsedData).map(([key, value], idx) => (
+                                    <div key={idx} className="bg-[#1a1d27] border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-primary/50 transition-colors">
+                                        <div className="flex items-center justify-between bg-[#151822] px-3 py-2 border-b border-slate-700/50">
+                                            <input 
+                                                type="text"
+                                                value={key}
+                                                onChange={(e) => handleUpdateBlock(key, e.target.value, value as string)}
+                                                className="bg-transparent text-sm font-bold text-emerald-400 focus:outline-none w-1/2 placeholder-slate-600 uppercase"
+                                                placeholder="TÊN NHÃN (VD: VAI TRÒ)"
+                                            />
+                                            <button onClick={() => handleRemoveBlock(key)} className="text-slate-500 hover:text-red-400 transition-colors">
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            value={value as string}
+                                            onChange={(e) => handleUpdateBlock(key, key, e.target.value)}
+                                            className="w-full bg-transparent text-slate-300 font-mono text-[13px] leading-6 p-3 focus:outline-none resize-y min-h-[100px]"
+                                            placeholder="Nội dung nhắc lệnh..."
+                                            spellCheck={false}
+                                        />
+                                    </div>
+                                ))}
+                                
+                                <button 
+                                    onClick={handleAddBlock}
+                                    className="w-full py-3 border border-dashed border-slate-700 text-slate-400 rounded-xl hover:border-primary/50 hover:text-primary transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                                >
+                                    <Plus size={16} /> Thêm Khối Lệnh Mới
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="w-full h-full p-4 pl-12 overflow-y-auto custom-scrollbar">
                                 {loadingPreview ? (
                                     <div className="flex items-center gap-3 text-emerald-400 mt-2 font-mono text-sm animate-pulse">
                                         <RefreshCw size={16} className="animate-spin" /> Compiling Prompt...
                                     </div>
                                 ) : (
                                     <pre className="font-mono text-[14px] leading-6 whitespace-pre-wrap">
-                                        <span className="text-emerald-300/80">{previewText}</span>
+                                        <span className={viewMode === 'raw' ? "text-amber-300/80" : "text-emerald-300/80"}>
+                                            {previewText}
+                                        </span>
                                     </pre>
                                 )}
                             </div>
-                        ) : (
-                            <textarea 
-                                value={config ? (config[activeTab] || '') : ''} 
-                                onChange={(e) => handleChange(e.target.value)}
-                                className="w-full h-full bg-transparent text-slate-300 font-mono text-[14px] leading-6 p-4 pl-16 focus:outline-none resize-none custom-scrollbar"
-                                placeholder={selectedGuild === 'global' ? `// Nhập Prompt cho ${activeItem?.label} tại đây...` : `// Ghi đè Prompt riêng cho máy chủ này.\n// Nếu bỏ trống, bot sẽ dùng Global Context.`}
-                                spellCheck={false}
-                            />
                         )}
                     </div>
                     
                     {/* Editor Footer */}
                     <div className="px-4 py-1.5 bg-[#1a1d27] border-t border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
                          <div className="flex items-center gap-4">
-                             {previewMode ? (
+                             {viewMode !== 'edit' ? (
                                  <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Compiled View</span>
                              ) : (
                                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Schema Valid</span>

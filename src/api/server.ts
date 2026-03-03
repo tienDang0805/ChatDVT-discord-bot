@@ -438,12 +438,25 @@ app.get('/api/prompts/preview', async (req, res) => {
     try {
         const guildId = req.query.guildId as string;
         const feature = req.query.feature as string || 'global';
+        const raw = req.query.raw === 'true';
+        
         const compiledPrompt = await geminiService.getSystemPrompt(
             guildId === 'global' ? '' : guildId,
             'preview_user', // mock userId
             feature
         );
-        res.json({ text: compiledPrompt });
+        
+        if (raw) {
+            const payload = {
+                systemInstruction: {
+                    role: 'system',
+                    parts: [{ text: compiledPrompt }]
+                }
+            };
+            res.json({ text: JSON.stringify(payload, null, 2) });
+        } else {
+            res.json({ text: compiledPrompt });
+        }
     } catch (error) {
          console.error(error);
          res.status(500).json({ error: 'Failed to preview prompt' });
