@@ -1,20 +1,5 @@
-// @ts-ignore
-import { ReadableStream } from 'web-streams-polyfill/ponyfill';
-// @ts-ignore
-globalThis.ReadableStream = ReadableStream;
-
-import fetch from 'node-fetch';
-// @ts-ignore
-if (!globalThis.fetch) {
-    // @ts-ignore
-    globalThis.fetch = fetch;
-    // @ts-ignore
-    globalThis.Headers = fetch.Headers;
-    // @ts-ignore
-    globalThis.Request = fetch.Request;
-    // @ts-ignore
-    globalThis.Response = fetch.Response;
-}
+// Note: Node 18+ natively supports fetch and ReadableStream
+// Do not override global fetch with node-fetch to avoid deadlock on Linux.
 
 import { bot } from './bot/client';
 import { startApiServer } from './api/server';
