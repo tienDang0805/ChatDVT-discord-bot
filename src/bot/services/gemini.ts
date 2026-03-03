@@ -108,9 +108,26 @@ class GeminiService {
     if (nickname) userContext += `\nBiệt danh: ${nickname} (Hãy gọi họ bằng tên này)`;
     if (signature) userContext += `\nBio: ${signature}`;
 
+    // 4. Bot Persona Context
+    let personaContext = "";
+    const personaConfig = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+    if (personaConfig) {
+        try {
+            const p = JSON.parse(personaConfig.systemPrompts);
+            personaContext = `\n\n# NHÂN CÁCH CỦA BẠN (BOT PERSONA):
+- Danh tính (Bạn là ai?): ${p.identity || "Trợ lý AI"}
+- Mục đích (Bạn làm gì?): ${p.purpose || "Hỗ trợ người dùng"}
+- Sở thích (Bạn thích gì?): ${p.hobbies || "Không có"}
+- Tính cách (Hành vi của bạn?): ${p.personality || "Thân thiện"}
+- Giọng văn (Cách bạn giao tiếp?): ${p.writing_style || "Tự nhiên"}`;
+        } catch (e) {
+            console.error("Error parsing persona info:", e);
+        }
+    }
+
     const coreRules = `\n# CÁC QUY TẮC BẤT BIẾN:\n${process.env.CORE_RULES || ''}`;
 
-    return `${finalPrompt}\n${userContext}\n${coreRules}`;
+    return `${finalPrompt}\n${userContext}${personaContext}\n${coreRules}`;
   }
 
   // --- Chat Logic ---

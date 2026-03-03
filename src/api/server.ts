@@ -179,6 +179,94 @@ app.get('/api/dashboard/stats', async (req, res) => {
 });
 
 // --- Dynamic Features API ---
+import { userIdentityService } from '../bot/services/identity';
+
+// 1. User Identity Route (GET)
+app.get('/api/identity/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const identity = await userIdentityService.getOrCreateIdentity(userId);
+        res.json({
+            userId: identity.userId,
+            nickname: identity.nickname,
+            signature: identity.signature
+        });
+    } catch (error) {
+        console.error("Fetch Identity Error:", error);
+        res.status(500).json({ error: 'Failed to fetch identity' });
+    }
+});
+
+// 2. User Identity Route (POST)
+app.post('/api/identity/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { nickname, signature } = req.body;
+        
+        const updated = await userIdentityService.updateIdentity(userId, { 
+            nickname: nickname || '', 
+            signature: signature || '' 
+        });
+        
+        res.json({
+            userId: updated.userId,
+            nickname: updated.nickname,
+            signature: updated.signature
+        });
+    } catch (error) {
+         console.error("Update Identity Error:", error);
+         res.status(500).json({ error: 'Failed to update identity' });
+    }
+});
+
+// 3. Bot Persona Route (GET)
+app.get('/api/bot-persona', async (req, res) => {
+    try {
+        const config = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+        if (config) {
+            res.json(JSON.parse(config.systemPrompts)); // Re-use systemPrompts column to store persona JSON
+        } else {
+            res.json({
+                identity: "Tôi là trợ lý AI ảo được tạo ra bởi Admin.",
+                purpose: "Hỗ trợ người dùng trong server giải trí, quản lý và hỏi đáp.",
+                hobbies: "Thích đọc sách, tìm hiểu công nghệ và chơi game.",
+                personality: "Thân thiện, vui vẻ, thích dùng emoji và đôi khi hơi nhây.",
+                writing_style: "Ngắn gọn, súc tích, dễ hiểu. Luôn dạ vâng với người lớn tuổi."
+            });
+        }
+    } catch (error) {
+        console.error("Fetch Persona Error:", error);
+        res.status(500).json({ error: 'Failed to fetch persona' });
+    }
+});
+
+// 4. Bot Persona Route (POST)
+app.post('/api/bot-persona', async (req, res) => {
+    try {
+        const { identity, purpose, hobbies, personality, writing_style } = req.body;
+        
+        const personaData = {
+            identity: identity || '',
+            purpose: purpose || '',
+            hobbies: hobbies || '',
+            personality: personality || '',
+            writing_style: writing_style || ''
+        };
+
+        const personaStr = JSON.stringify(personaData);
+
+        const config = await prisma.botConfig.upsert({
+            where: { key: 'persona' },
+            update: { systemPrompts: personaStr }, // Save JSON in this existing varchar field
+            create: { key: 'persona', systemPrompts: personaStr, features: '{}' }
+        });
+
+        res.json({ success: true, data: JSON.parse(config.systemPrompts) });
+    } catch (error) {
+        console.error("Update Persona Error:", error);
+        res.status(500).json({ error: 'Failed to update persona' });
+    }
+});
 
 app.get('/api/prompts', async (req, res) => {
     try {

@@ -42,6 +42,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         <nav className="flex-1 space-y-2">
           <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
           <NavItem to="/prompts" icon={Bot} label="Prompts" />
+          <NavItem to="/identity" icon={ScrollText} label="User Identity" />
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" />

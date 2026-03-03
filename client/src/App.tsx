@@ -9,6 +9,8 @@ import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
 import { Navigate, useLocation } from 'react-router-dom';
 
+import { Identity } from './pages/Identity';
+
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
   const token = localStorage.getItem('token');
@@ -30,9 +32,10 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/logs" element={<Logs />} />
                 <Route path="/prompts" element={<Prompts />} />
+                <Route path="/identity" element={<Identity />} />
                 <Route path="/control" element={<ControlCenter />} />
+                <Route path="/logs" element={<Logs />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </Layout>
