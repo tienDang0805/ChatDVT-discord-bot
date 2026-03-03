@@ -68,16 +68,17 @@ jobs:
             node -e "
               const fs = require('fs');
               const keys = [
+                'DATABASE_URL',
                 'DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'APIKEY_WEATHER', 
                 'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
                 'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
                 'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
-                'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL'
+                'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 
               ];
               let content = '';
               for (const key of keys) {
                 if (process.env[key]) {
-                  content += \`\${key}=\${process.env[key]}\n\`;
+                 content += \`\${key}=\${JSON.stringify(process.env[key])}\n\`;
                 }
               }
               fs.writeFileSync('.env', content);
