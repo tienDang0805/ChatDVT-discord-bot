@@ -108,21 +108,43 @@ class GeminiService {
     if (nickname) userContext += `\nBiệt danh: ${nickname} (Hãy gọi họ bằng tên này)`;
     if (signature) userContext += `\nBio: ${signature}`;
 
-    // 4. Bot Persona Context
+    // 4. Bot Persona Context (Guild-Level Priority > Global)
     let personaContext = "";
-    const personaConfig = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
-    if (personaConfig) {
-        try {
-            const p = JSON.parse(personaConfig.systemPrompts);
-            personaContext = `\n\n# NHÂN CÁCH CỦA BẠN (BOT PERSONA):
-- Danh tính (Bạn là ai?): ${p.identity || "Trợ lý AI"}
-- Mục đích (Bạn làm gì?): ${p.purpose || "Hỗ trợ người dùng"}
-- Sở thích (Bạn thích gì?): ${p.hobbies || "Không có"}
-- Tính cách (Hành vi của bạn?): ${p.personality || "Thân thiện"}
-- Giọng văn (Cách bạn giao tiếp?): ${p.writing_style || "Tự nhiên"}`;
-        } catch (e) {
-            console.error("Error parsing persona info:", e);
+    let personaData = null;
+
+    // A. Thử bốc thử từ GuildConfig (ưu tiên cá nhân hóa Server)
+    if (guildId) {
+        const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+        if (guildConfig) {
+            try {
+                const modules = JSON.parse(guildConfig.activeModules) as any;
+                if (modules.persona) personaData = modules.persona;
+            } catch (e) {
+                 console.error("Error parsing guild persona info:", e);
+            }
         }
+    }
+
+    // B. Nếu Guild chưa set Persona, Fallback mút từ Global (BotConfig)
+    if (!personaData) {
+        const personaConfig = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+        if (personaConfig) {
+            try {
+                personaData = JSON.parse(personaConfig.systemPrompts);
+            } catch (e) {
+                console.error("Error parsing global persona info:", e);
+            }
+        }
+    }
+
+    // C. Chuẩn hoá Persona Prompt
+    if (personaData) {
+        personaContext = `\n\n# NHÂN CÁCH CỦA BẠN (BOT PERSONA):
+- Danh tính (Bạn là ai?): ${personaData.identity || "Trợ lý AI"}
+- Mục đích (Bạn làm gì?): ${personaData.purpose || "Hỗ trợ người dùng"}
+- Sở thích (Bạn thích gì?): ${personaData.hobbies || "Không có"}
+- Tính cách (Hành vi của bạn?): ${personaData.personality || "Thân thiện"}
+- Giọng văn (Cách bạn giao tiếp?): ${personaData.writing_style || "Tự nhiên"}`;
     }
 
     const coreRules = `\n# CÁC QUY TẮC BẤT BIẾN:\n${process.env.CORE_RULES || ''}`;

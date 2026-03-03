@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, Bot } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Bot, Server } from 'lucide-react';
 import api from '../api';
 
 export const Settings = () => {
@@ -10,6 +10,9 @@ export const Settings = () => {
         personality: '',
         writing_style: ''
     });
+    
+    const [guilds, setGuilds] = useState<any[]>([]);
+    const [selectedGuild, setSelectedGuild] = useState<string>('global');
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -18,10 +21,25 @@ export const Settings = () => {
         setTimeout(() => setMessage(null), 3000);
     };
 
+    // Load Guilds on Mount
+    useEffect(() => {
+        const fetchGuilds = async () => {
+             try {
+                 const res = await api.get('/guilds');
+                 if (res.data) setGuilds(res.data);
+             } catch (e) {
+                 console.error("Failed to fetch guilds:", e);
+             }
+        };
+        fetchGuilds();
+    }, []);
+
+    // Load Persona when Guild changes
     useEffect(() => {
         const fetchPersona = async () => {
             try {
-                const response = await api.get('/bot-persona');
+                const url = selectedGuild === 'global' ? '/bot-persona' : `/bot-persona?guildId=${selectedGuild}`;
+                const response = await api.get(url);
                 if (response.data) {
                     setPersona(response.data);
                 }
@@ -30,7 +48,7 @@ export const Settings = () => {
             }
         };
         fetchPersona();
-    }, []);
+    }, [selectedGuild]);
 
     const handleChange = (field: keyof typeof persona, value: string) => {
         setPersona(prev => ({ ...prev, [field]: value }));
@@ -39,8 +57,9 @@ export const Settings = () => {
     const handleSave = async () => {
         setLoading(true);
         try {
-            await api.post('/bot-persona', persona);
-            showMessage('success', 'Đã lưu cấu hình nhân cách Bot thành công!');
+            const payload = { ...persona, guildId: selectedGuild };
+            await api.post('/bot-persona', payload);
+            showMessage('success', `Đã lưu cấu hình nhân cách Bot cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
         } catch (error) {
             console.error("Failed to save persona:", error);
             showMessage('error', 'Có lỗi xảy ra khi lưu cấu hình.');
@@ -86,6 +105,26 @@ export const Settings = () => {
                     <Save size={18} />
                     {loading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                 </button>
+            </div>
+
+            {/* Selector */}
+            <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
+                 <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
+                     <Server size={24} />
+                 </div>
+                 <div className="flex-1">
+                     <label className="block text-sm font-medium text-slate-300 mb-2">Chọn Máy Chủ Để Áp Dụng (Per-Server)</label>
+                     <select 
+                         value={selectedGuild}
+                         onChange={(e) => setSelectedGuild(e.target.value)}
+                         className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                     >
+                         <option value="global">🌍 Dùng Chung (Global - Mặc định)</option>
+                         {guilds.map((g: any) => (
+                             <option key={g.id} value={g.id}>🏠 {g.name}</option>
+                         ))}
+                     </select>
+                 </div>
             </div>
 
             {/* Messages */}

@@ -222,9 +222,26 @@ app.post('/api/identity/:userId', async (req, res) => {
 // 3. Bot Persona Route (GET)
 app.get('/api/bot-persona', async (req, res) => {
     try {
-        const config = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
-        if (config) {
-            res.json(JSON.parse(config.systemPrompts)); // Re-use systemPrompts column to store persona JSON
+        const guildId = req.query.guildId as string;
+        let personaStr = null;
+
+        if (guildId && guildId !== 'global') {
+            const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            if (guildConfig) {
+                // Thử check xem trong chuỗi activeModules có nhét persona không
+                const modules = JSON.parse(guildConfig.activeModules) as any;
+                if (modules.persona) personaStr = JSON.stringify(modules.persona);
+            }
+        }
+
+        // Nếu guildId không có, Hoặc có nhưng chưa có thiết lập persona => Lấy của Global
+        if (!personaStr) {
+            const config = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+            if (config) personaStr = config.systemPrompts;
+        }
+
+        if (personaStr) {
+            res.json(JSON.parse(personaStr));
         } else {
             res.json({
                 identity: "Tôi là trợ lý AI ảo được tạo ra bởi Admin.",
@@ -243,7 +260,7 @@ app.get('/api/bot-persona', async (req, res) => {
 // 4. Bot Persona Route (POST)
 app.post('/api/bot-persona', async (req, res) => {
     try {
-        const { identity, purpose, hobbies, personality, writing_style } = req.body;
+        const { identity, purpose, hobbies, personality, writing_style, guildId } = req.body;
         
         const personaData = {
             identity: identity || '',
@@ -255,13 +272,29 @@ app.post('/api/bot-persona', async (req, res) => {
 
         const personaStr = JSON.stringify(personaData);
 
+        if (guildId && guildId !== 'global') {
+            // Lưu vào GuildConfig
+            let guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            let modules = guildConfig ? JSON.parse(guildConfig.activeModules) : {};
+            modules.persona = personaData;
+
+            const updatedConfig = await prisma.guildConfig.upsert({
+                where: { guildId },
+                update: { activeModules: JSON.stringify(modules) },
+                create: { guildId, systemPrompts: '{}', activeModules: JSON.stringify(modules) }
+            });
+            res.json({ success: true, data: personaData, source: 'guild' });
+            return;
+        }
+
+        // Lưu vào Global (BotConfig)
         const config = await prisma.botConfig.upsert({
             where: { key: 'persona' },
             update: { systemPrompts: personaStr }, // Save JSON in this existing varchar field
             create: { key: 'persona', systemPrompts: personaStr, features: '{}' }
         });
 
-        res.json({ success: true, data: JSON.parse(config.systemPrompts) });
+        res.json({ success: true, data: JSON.parse(config.systemPrompts), source: 'global' });
     } catch (error) {
         console.error("Update Persona Error:", error);
         res.status(500).json({ error: 'Failed to update persona' });

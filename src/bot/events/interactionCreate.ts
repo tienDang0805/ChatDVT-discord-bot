@@ -3,6 +3,7 @@ import { userIdentityService } from '../services/identity';
 import { quizService } from '../services/quiz';
 import { ctwService } from '../services/ctw';
 import { petService } from '../services/pet';
+import { prisma } from '../../database/prisma';
 
 export async function handleInteraction(interaction: Interaction) {
   try {
@@ -78,6 +79,36 @@ export async function handleInteraction(interaction: Interaction) {
 
               await userIdentityService.updateIdentity(interaction.user.id, { nickname, signature });
               await interaction.editReply("✅ Đã cập nhật danh tính thành công!");
+          }
+
+          if (interaction.customId === 'persona_setting_modal') {
+              await interaction.deferReply({ ephemeral: true });
+              const guildId = interaction.guildId;
+              if (!guildId) {
+                  await interaction.editReply("❌ Tính năng này chỉ dành cho máy chủ.");
+                  return;
+              }
+
+              const personaData = {
+                  identity: interaction.fields.getTextInputValue('persona_identity') || '',
+                  purpose: interaction.fields.getTextInputValue('persona_purpose') || '',
+                  hobbies: interaction.fields.getTextInputValue('persona_hobbies') || '',
+                  personality: interaction.fields.getTextInputValue('persona_personality') || '',
+                  writing_style: interaction.fields.getTextInputValue('persona_style') || ''
+              };
+
+              // Lưu vào DB theo Server Level
+              let guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+              let modules = guildConfig ? JSON.parse(guildConfig.activeModules) : {};
+              modules.persona = personaData;
+
+              await prisma.guildConfig.upsert({
+                  where: { guildId },
+                  update: { activeModules: JSON.stringify(modules) },
+                  create: { guildId, systemPrompts: '{}', activeModules: JSON.stringify(modules) }
+              });
+
+              await interaction.editReply("✅ **Lưu Thành Công!**\nBạn đã cập nhật tuỳ chỉnh Nhân Cách Bot cho riêng máy chủ này.\nBot sẽ áp dụng ngay vào tin nhắn tiếp theo.");
           }
           if (interaction.customId === 'quiz_setup_modal') {
               await interaction.deferReply();
