@@ -224,10 +224,12 @@ class GeminiService {
               take: 20
           });
 
-          const history = logs.reverse().map(log => ({
-              role: log.userId === 'BOT' ? 'model' : 'user',
-              parts: [{ text: log.content }]
-          }));
+          const history = logs.reverse().map(log => {
+              if (log.userId === 'BOT') {
+                  return { role: 'model', parts: [{ text: log.response || ' ' }] };
+              }
+              return { role: 'user', parts: [{ text: log.content || ' ' }] };
+          });
 
           const parts: Part[] = [{ text: messageContent }];
 
@@ -281,10 +283,12 @@ class GeminiService {
               orderBy: { createdAt: 'desc' },
               take: 10
           });
-          const history = logs.reverse().map(log => ({
-               role: log.userId === 'BOT' ? 'model' : 'user',
-               parts: [{ text: log.content }]
-          }));
+          const history = logs.reverse().map(log => {
+               if (log.userId === 'BOT') {
+                   return { role: 'model', parts: [{ text: log.response || ' ' }] };
+               }
+               return { role: 'user', parts: [{ text: log.content || ' ' }] };
+          });
           
            const userDetails = {
               role: 'user',
