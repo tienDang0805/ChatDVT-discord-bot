@@ -133,6 +133,10 @@ class GeminiService {
         const headingPrefix = '#'.repeat(Math.min(depth, 6)); // max ###### heading
         
         if (typeof data === 'object') {
+             if (data['__rootText'] && typeof data['__rootText'] === 'string' && data['__rootText'].trim() !== '') {
+                 md += `${data['__rootText']}\n`;
+             }
+
              for (const [key, value] of Object.entries(data)) {
                   // Skip system flow metadata attributes if any exist
                   if (key.startsWith('__')) continue; 
