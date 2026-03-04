@@ -4,7 +4,7 @@ import api from '../api';
 import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FlowEditor } from './FlowEditor';
+import { TreeEditor } from './TreeEditor';
 
 export const Prompts = () => {
     const [config, setConfig] = useState<any>(null);
@@ -333,7 +333,7 @@ export const Prompts = () => {
                         
                         {viewMode === 'edit' ? (
                             <div className="absolute inset-0 z-0">
-                                <FlowEditor 
+                                <TreeEditor 
                                     initialJson={parsedData} 
                                     onChange={handleUpdateFlow} 
                                 />
