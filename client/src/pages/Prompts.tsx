@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { getPrompts, updatePrompts, getGuilds } from '../api';
 import api from '../api';
-import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson, Copy, ClipboardPaste, Globe } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TreeEditor } from './TreeEditor';
@@ -91,6 +92,40 @@ export const Prompts = () => {
             setTimeout(() => setError(''), 3000);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleCopyPrompt = async () => {
+        try {
+            const currentData = config?.[activeTab];
+            const jsonStr = JSON.stringify(currentData || {}, null, 2);
+            await navigator.clipboard.writeText(jsonStr);
+            toast.success('Đã copy Prompt hiện tại vào Clipboard!');
+        } catch (err) {
+             toast.error('Lỗi khi copy!');
+        }
+    };
+
+    const handlePastePrompt = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            const pastedJson = JSON.parse(text);
+            handleUpdateFlow(pastedJson);
+            toast.success('Đã dán (Paste) thành công vào Tree Editor!');
+        } catch (err) {
+            toast.error('Dữ liệu Clipboard không phải là JSON hợp lệ!');
+        }
+    };
+
+    const handleSyncToGlobal = async () => {
+        if (!window.confirm("Bê cấu hình của Tab này đè lên Global Default? Tương lai mọi Máy chủ sẽ xài format mới này!")) return;
+        try {
+            const currentData = config?.[activeTab];
+            const globalPayload = { [activeTab]: currentData };
+            await updatePrompts({ systemPrompts: globalPayload }, 'global');
+            toast.success(`Đã đồng bộ [${activeTab}] lên Global!`);
+        } catch (err) {
+            toast.error("Lỗi khi đồng bộ Global.");
         }
     };
 
@@ -298,14 +333,41 @@ export const Prompts = () => {
                 <div className="flex-1 flex flex-col bg-[#0f111a] border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-shadow transition-colors">
                     
                     {/* Editor Tab Bar */}
-                    <div className="flex items-center bg-[#1a1d27] border-b border-slate-700/50 px-2 py-[2px]">
-                        <div className="flex items-center gap-2 bg-[#0f111a] px-4 py-2 border-t-2 border-primary rounded-t-lg">
+                    <div className="flex items-center bg-[#1a1d27] border-b border-slate-700/50 px-2 py-1 gap-2">
+                        <div className="flex items-center gap-2 bg-[#0f111a] px-4 py-1.5 border-t-2 border-primary rounded-t-lg">
                             <Terminal size={14} className="text-primary" />
                             <span className="text-sm font-mono text-slate-200">{activeTab}.prompt</span>
                         </div>
                         <div className="flex-1"></div>
-                        <div className="px-4 flex items-center gap-2 text-xs font-mono text-slate-500">
-                             {selectedGuild === 'global' ? '🌐 Global Context' : '🏠 Server Override Context'}
+                        
+                        {/* Utilities Toolbar */}
+                        <div className="flex items-center gap-1.5 px-2">
+                            {selectedGuild !== 'global' && (
+                                <button
+                                    onClick={handleSyncToGlobal}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-colors rounded-lg text-xs font-medium border border-indigo-500/20 mr-2"
+                                    title="Lưu cấu hình Tab này vào hệ thống Global (Mặc định cho mọi bot mới)"
+                                >
+                                    <Globe size={14} /> Use as Global
+                                </button>
+                            )}
+                            <div className="flex items-center bg-slate-800/50 rounded-lg p-0.5 border border-slate-700/50">
+                                <button
+                                    onClick={handleCopyPrompt}
+                                    className="p-1.5 text-slate-400 hover:text-emerald-400 rounded-md hover:bg-slate-700/50 transition-colors"
+                                    title="Copy khối Prompt này"
+                                >
+                                    <Copy size={14} />
+                                </button>
+                                <div className="w-px h-4 bg-slate-700"></div>
+                                <button
+                                    onClick={handlePastePrompt}
+                                    className="p-1.5 text-slate-400 hover:text-amber-400 rounded-md hover:bg-slate-700/50 transition-colors"
+                                    title="Paste (Dán) khối Prompt"
+                                >
+                                    <ClipboardPaste size={14} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
