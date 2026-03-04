@@ -325,15 +325,18 @@ export const Prompts = () => {
                     {/* The Code Area */}
                     <div className="flex-1 relative cursor-text overflow-hidden bg-[#0d0f16]">
                         {/* Line Numbers Fake (Decorative) */}
-                        <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#1a1d27]/40 border-r border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
-                            {[...Array(50)].map((_, i) => (
-                                <div key={i} className="leading-7 opacity-50">{i + 1}</div>
-                            ))}
-                        </div>
+                        {viewMode !== 'edit' && (
+                            <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#1a1d27]/40 border-r border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
+                                {[...Array(50)].map((_, i) => (
+                                    <div key={i} className="leading-7 opacity-50">{i + 1}</div>
+                                ))}
+                            </div>
+                        )}
                         
                         {viewMode === 'edit' ? (
-                            <div className="absolute inset-0 z-0">
+                            <div className="absolute inset-0 z-0 bg-[#0d0f16]">
                                 <TreeEditor 
+                                    key={activeTab}
                                     initialJson={parsedData} 
                                     onChange={handleUpdateFlow} 
                                 />

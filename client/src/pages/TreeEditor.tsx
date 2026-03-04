@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Maximize, Minimize } from 'lucide-react';
+import TextareaAutosize from 'react-textarea-autosize';
 
 // --- DATA TYPES ---
 export type TreeNodeData = {
@@ -71,8 +72,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
     
     // Auto-resize textarea
     const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        e.target.style.height = 'auto';
-        e.target.style.height = `${e.target.scrollHeight}px`;
         onUpdate(node.id, { text: e.target.value });
     };
 
@@ -128,11 +127,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                       {/* Nội dung (Có thể ẩn nếu Collapse) */}
                       {node.isExpanded && (
                            <div className="p-1 relative">
-                                <textarea
+                                <TextareaAutosize
                                     value={node.text}
                                     onChange={handleTextareaInput}
-                                    style={{ height: 'auto', minHeight: '60px' }}
-                                    ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                                    minRows={2}
                                     className="w-full bg-transparent text-slate-300 font-sans text-[15px] leading-7 p-3 focus:outline-none resize-none overflow-hidden"
                                     placeholder={hasChildren ? "Mô tả ngắn của khối cha (Ít dùng)..." : "Nội dung văn bản Prompt..."}
                                     spellCheck={false}
@@ -170,9 +168,14 @@ interface TreeEditorProps {
 export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange }) => {
     const [nodes, setNodes] = useState<TreeNodeData[]>([]);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const internalChangeRef = useRef(false);
 
     // Khởi tạo gốc
     useEffect(() => {
+        if (internalChangeRef.current) {
+            internalChangeRef.current = false;
+            return;
+        }
         let initialNodes = jsonToTree(initialJson);
         if (initialNodes.length === 0) {
              initialNodes = [{
@@ -189,6 +192,7 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
     // Lắng nghe thay đổi gửi ra ngoài
     useEffect(() => {
         const timer = setTimeout(() => {
+             internalChangeRef.current = true;
              onChange(treeToJson(nodes));
         }, 300);
         return () => clearTimeout(timer);
