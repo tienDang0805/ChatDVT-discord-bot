@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { getPrompts, updatePrompts, getGuilds } from '../api';
+import { getPrompts, updatePrompts, getGuilds, resetChatHistory } from '../api';
 import api from '../api';
 import toast from 'react-hot-toast';
-import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson, Copy, ClipboardPaste, Globe } from 'lucide-react';
+import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson, Copy, ClipboardPaste, Globe, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TreeEditor } from './TreeEditor';
@@ -126,6 +126,19 @@ export const Prompts = () => {
             toast.success(`Đã đồng bộ [${activeTab}] lên Global!`);
         } catch (err) {
             toast.error("Lỗi khi đồng bộ Global.");
+        }
+    };
+
+    const handleResetMemory = async () => {
+        if (!window.confirm(`⚠️ CẢNH BÁO: Hành động này sẽ Tẩy Lão Toàn Bộ (Xóa Lịch Sử Chat) của Bot ở Cụm Server hiện tại.\n\nBạn có chắc chắn muốn cho Bot quên hết chuyện quá khứ?`)) return;
+        try {
+            setSaving(true);
+            await resetChatHistory(selectedGuild);
+            toast.success('Đã tẩy não Bot thành công! Mọi ký ức đã bị xoá sổ.');
+        } catch (err) {
+            toast.error('Có lỗi xảy ra khi tẩy não Bot.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -257,6 +270,19 @@ export const Prompts = () => {
                         >
                             <RefreshCw size={18} className={clsx(loading && "animate-spin")} />
                         </button>
+                        
+                        {/* Nút Xóa Trí Nhớ - Chỉ hiệu lực ở Server */}
+                        {selectedGuild !== 'global' && (
+                            <button 
+                                onClick={handleResetMemory}
+                                disabled={saving}
+                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl font-medium transition-colors disabled:opacity-50"
+                                title="Xóa toàn bộ Lịch sử Chat ở Server này"
+                            >
+                                <Trash2 size={16} /> Reset Não
+                            </button>
+                        )}
+
                         <button 
                             onClick={handleSave} 
                             disabled={saving}

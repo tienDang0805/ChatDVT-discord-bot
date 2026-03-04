@@ -47,5 +47,6 @@ export const getGuildChannels = async (guildId: string) => (await api.get(`/guil
 export const sendAnnouncement = async (guildId: string, data: any) => (await api.post(`/guilds/${guildId}/announce`, data)).data;
 export const leaveGuild = async (guildId: string) => (await api.delete(`/guilds/${guildId}`)).data;
 export const getSystemLogs = async () => (await api.get('/system-logs')).data;
+export const resetChatHistory = async (guildId: string) => (await api.delete(`/prompts/history/${guildId}`)).data;
 
 export default api;

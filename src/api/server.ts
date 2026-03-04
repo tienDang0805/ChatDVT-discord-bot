@@ -463,6 +463,26 @@ app.get('/api/prompts/preview', async (req, res) => {
     }
 });
 
+// Reset Chat History
+app.delete('/api/prompts/history/:guildId', async (req, res) => {
+    try {
+        const guildId = req.params.guildId;
+        if (!guildId || guildId === 'global') {
+            res.status(400).json({ error: 'Invalid guildId. Cannot reset global history.' });
+            return;
+        }
+        
+        await prisma.chatLog.deleteMany({
+            where: { guildId }
+        });
+        
+        res.json({ success: true, message: `Chat history for server ${guildId} has been reset.` });
+    } catch (error) {
+        console.error("Error resetting history:", error);
+        res.status(500).json({ error: 'Failed to reset chat history' });
+    }
+});
+
 // Get Connected Guilds
 app.get('/api/guilds', (req, res) => {
     try {
