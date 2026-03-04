@@ -116,17 +116,32 @@ class GeminiService {
         }
     }
 
-    // Compile Prompt Data to Markdown
-    let compiledPromptText = "";
-    if (typeof finalPromptData === 'string') {
-        compiledPromptText = finalPromptData;
-    } else if (typeof finalPromptData === 'object' && finalPromptData !== null) {
-        for (const [key, value] of Object.entries(finalPromptData)) {
-            if (value && typeof value === 'string' && value.trim() !== "") {
-                compiledPromptText += `\n# ${key.toUpperCase()}\n${value}\n`;
-            }
+    // Recursive Markdown Compiler for Node-based hierarchy
+    const compileToMarkdown = (data: any, depth: number = 1): string => {
+        if (!data) return '';
+        if (typeof data === 'string') return data.trim() !== '' ? `${data}\n` : '';
+        
+        let md = '';
+        const headingPrefix = '#'.repeat(Math.min(depth, 6)); // max ###### heading
+        
+        if (typeof data === 'object') {
+             for (const [key, value] of Object.entries(data)) {
+                  // Skip system flow metadata attributes if any exist
+                  if (key.startsWith('__')) continue; 
+                  
+                  if (typeof value === 'string' && value.trim() !== "") {
+                      md += `\n${headingPrefix} ${key.toUpperCase()}\n${value}\n`;
+                  } else if (typeof value === 'object' && value !== null) {
+                      // It's a nested node, create heading and recurse
+                      md += `\n${headingPrefix} ${key.toUpperCase()}\n`;
+                      md += compileToMarkdown(value, depth + 1);
+                  }
+             }
         }
-    }
+        return md;
+    };
+
+    let compiledPromptText = compileToMarkdown(finalPromptData);
 
     // 3. User Identity Context
     const { nickname, signature } = await userIdentityService.getIdentityForPrompt(userId);
