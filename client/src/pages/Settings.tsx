@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, Bot, Server } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, Bot, Server, Key, Eye, EyeOff } from 'lucide-react';
 import api from '../api';
 
 export const Settings = () => {
@@ -10,6 +10,8 @@ export const Settings = () => {
         personality: '',
         writing_style: ''
     });
+    const [apiKey, setApiKey] = useState('');
+    const [showApiKey, setShowApiKey] = useState(false);
     
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState<string>('global');
@@ -36,18 +38,25 @@ export const Settings = () => {
 
     // Load Persona when Guild changes
     useEffect(() => {
-        const fetchPersona = async () => {
+        const fetchData = async () => {
             try {
                 const url = selectedGuild === 'global' ? '/bot-persona' : `/bot-persona?guildId=${selectedGuild}`;
                 const response = await api.get(url);
                 if (response.data) {
                     setPersona(response.data);
                 }
+                
+                // Fetch API Key
+                const keyUrl = selectedGuild === 'global' ? '/gemini-api-key' : `/gemini-api-key?guildId=${selectedGuild}`;
+                const keyRes = await api.get(keyUrl);
+                if (keyRes.data) {
+                    setApiKey(keyRes.data.apiKey || '');
+                }
             } catch (error) {
-                console.error("Failed to fetch persona:", error);
+                console.error("Failed to fetch data:", error);
             }
         };
-        fetchPersona();
+        fetchData();
     }, [selectedGuild]);
 
     const handleChange = (field: keyof typeof persona, value: string) => {
@@ -59,9 +68,13 @@ export const Settings = () => {
         try {
             const payload = { ...persona, guildId: selectedGuild };
             await api.post('/bot-persona', payload);
-            showMessage('success', `Đã lưu cấu hình nhân cách Bot cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
+            
+            // Save API Key
+            await api.post('/gemini-api-key', { apiKey, guildId: selectedGuild });
+            
+            showMessage('success', `Đã lưu cấu hình Tâm Trí & API Key cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
         } catch (error) {
-            console.error("Failed to save persona:", error);
+            console.error("Failed to save data:", error);
             showMessage('error', 'Có lỗi xảy ra khi lưu cấu hình.');
         } finally {
             setLoading(false);
@@ -136,6 +149,38 @@ export const Settings = () => {
                     <p className="font-medium">{message.text}</p>
                 </div>
             )}
+
+            {/* API Key Configuration */}
+            <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl" />
+                <div className="flex items-center gap-3 mb-2">
+                    <Key size={24} className="text-amber-400" />
+                    <div>
+                        <h2 className="text-lg font-semibold text-white">Gemini API Key</h2>
+                        <p className="text-sm text-slate-400">
+                            {selectedGuild === 'global' 
+                                ? 'Key AI dùng chung cho toàn bộ hệ thống (Mặc định).' 
+                                : 'Key AI tách biệt và độc lập cho Server này (Ưu tiên dùng thay thế Key Global).'}
+                        </p>
+                    </div>
+                </div>
+                <div className="relative z-10">
+                    <input
+                        type={showApiKey ? 'text' : 'password'}
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Nhập API Key API (Bắt đầu với AIza... Hoặc bỏ trống để dùng Mặc định)"
+                        className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3.5 text-white font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                    >
+                        {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                </div>
+            </div>
 
             <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-6">
                  {renderTextarea(

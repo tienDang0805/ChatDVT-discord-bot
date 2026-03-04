@@ -29,38 +29,46 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 10
 }
 
 class GeminiService {
-  private genAI: GoogleGenerativeAI;
-  private model: GenerativeModel;
-  private imageModel: GenerativeModel;
-  private autoReplyModel: GenerativeModel;
+  constructor() {}
 
-  constructor() {
-    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    
-    const safetySettings = [
-      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-    ];
+  private async getApiKey(guildId?: string | null): Promise<string> {
+      let apiKey = process.env.GEMINI_API_KEY || '';
+      try {
+          if (guildId && guildId !== 'global') {
+              const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+              if (guildConfig && guildConfig.geminiApiKey) {
+                  return guildConfig.geminiApiKey;
+              }
+          }
+          const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+          if (globalConfig && globalConfig.geminiApiKey) {
+              return globalConfig.geminiApiKey;
+          }
+      } catch (e) {
+          console.error("Error fetching dynamic API Key, falling back to ENV", e);
+      }
+      return apiKey;
+  }
 
-    this.model = this.genAI.getGenerativeModel({
-      model: GEMINI_CHAT_CONFIG.modelName,
-      generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
-      safetySettings,
-    });
+  private async getModel(guildId?: string | null, type: 'chat' | 'image' | 'logic' | 'search' = 'chat', customConfig?: any): Promise<GenerativeModel> {
+      const apiKey = await this.getApiKey(guildId);
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const safetySettings = [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+      ];
 
-    this.imageModel = this.genAI.getGenerativeModel({
-      model: IMAGEN_MODEL, 
-      generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
-      safetySettings,
-    });
-    
-    this.autoReplyModel = this.genAI.getGenerativeModel({
-       model: GEMINI_CHAT_CONFIG.modelName,
-       generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
-       safetySettings,
-    });
+      if (type === 'image') {
+          return genAI.getGenerativeModel({ model: IMAGEN_MODEL, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+      } else if (type === 'logic') {
+          return genAI.getGenerativeModel({ model: GEMINI_LOGIC_CONFIG.modelName, generationConfig: customConfig || GEMINI_LOGIC_CONFIG.generationConfig, safetySettings });
+      } else if (type === 'search') {
+          return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, tools: [{ googleSearch: {} } as any], generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+      }
+      
+      return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
   }
 
   // --- Dynamic System Prompt ---
@@ -219,7 +227,9 @@ class GeminiService {
 
           const parts: Part[] = [{ text: messageContent }];
 
-          const chatSession = this.model.startChat({
+          const model = await this.getModel(guildId, 'chat');
+
+          const chatSession = model.startChat({
               history: history as any, // Cast to any to avoid strict type issues with simple structure
               systemInstruction: {
                 role: 'system',
@@ -280,7 +290,8 @@ class GeminiService {
               ]
            };
 
-           const result = await retryWithBackoff(() => this.model.generateContent({
+           const model = await this.getModel(guildId, 'chat');
+           const result = await retryWithBackoff(() => model.generateContent({
                systemInstruction,
                contents: [
                    ...history as any, 
@@ -316,7 +327,8 @@ class GeminiService {
          }
 
           const systemInstruction = await this.getSystemPrompt(guildId, userId);
-          const result = await retryWithBackoff(() => this.model.generateContent({
+          const model = await this.getModel(guildId, 'chat');
+          const result = await retryWithBackoff(() => model.generateContent({
              systemInstruction: {
                 role: 'system',
                 parts: [{ text: systemInstruction }]
@@ -344,9 +356,10 @@ class GeminiService {
   }
 
   // --- Image Generation (Imagen) ---
-  public async generateImage(prompt: string): Promise<{ success: boolean; imageBuffer?: Buffer; textResponse?: string; error?: string }> {
+  public async generateImage(prompt: string, guildId?: string): Promise<{ success: boolean; imageBuffer?: Buffer; textResponse?: string; error?: string }> {
       try {
-          const result = await retryWithBackoff(() => this.imageModel.generateContent({
+          const imageModel = await this.getModel(guildId, 'image');
+          const result = await retryWithBackoff(() => imageModel.generateContent({
               contents: [{ role: 'user', parts: [{ text: prompt }] }],
               generationConfig: { responseModalities: ["IMAGE", "TEXT"] } as any
           }));
@@ -372,9 +385,9 @@ class GeminiService {
   }
 
   // --- TTS (Audio Generation) ---
-  public async generateAudioWithContext(text: string, voiceName: string = 'Kore'): Promise<{ success: boolean; filePath?: string; text: string; error?: string }> {
+  public async generateAudioWithContext(text: string, voiceName: string = 'Kore', guildId?: string): Promise<{ success: boolean; filePath?: string; text: string; error?: string }> {
      try {
-         const apiKey = process.env.GEMINI_API_KEY;
+         const apiKey = await this.getApiKey(guildId);
          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
          
          const payload = {
@@ -408,13 +421,9 @@ class GeminiService {
   }
 
   // --- Search Tool ---
-  public async chatWithSearch(userId: string, query: string): Promise<{ success: boolean; response: string; error?: string }> {
+  public async chatWithSearch(userId: string, query: string, guildId?: string): Promise<{ success: boolean; response: string; error?: string }> {
       try {
-           const searchModel = this.genAI.getGenerativeModel({
-              model: GEMINI_CHAT_CONFIG.modelName,
-              tools: [{ googleSearch: {} } as any],
-              generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
-           });
+           const searchModel = await this.getModel(guildId, 'search');
            
            const chat = searchModel.startChat();
            const result = await retryWithBackoff(() => chat.sendMessage(query));
@@ -426,12 +435,13 @@ class GeminiService {
   }
 
   // --- Auto Reply ---
-  public async generateAutoReply(messageContent: string, senderName: string): Promise<string> {
+  public async generateAutoReply(messageContent: string, senderName: string, guildId?: string): Promise<string> {
       try {
           const userPrompt = `Kẻ tên "${senderName}" vừa nhắn: "${messageContent}". Hãy chửi nó và đuổi nó đi ngay.`;
           const systemInstruction = process.env.AUTO_REPLY_PROMPT || "Mày là trợ lý thô lỗ. Luôn đuổi người khác đi.";
           
-          const result = await retryWithBackoff(() => this.autoReplyModel.generateContent({
+          const autoReplyModel = await this.getModel(guildId, 'chat');
+          const result = await retryWithBackoff(() => autoReplyModel.generateContent({
               systemInstruction,
               contents: [{ role: 'user', parts: [{ text: userPrompt }] }]
           }));
@@ -443,12 +453,9 @@ class GeminiService {
   }
 
   // --- PK Game Logic ---
-  public async generatePKResponse(prompt: string): Promise<any> {
+  public async generatePKResponse(prompt: string, guildId?: string): Promise<any> {
       try {
-           const pkModel = this.genAI.getGenerativeModel({
-                model: GEMINI_LOGIC_CONFIG.modelName,
-                generationConfig: { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" },
-           });
+           const pkModel = await this.getModel(guildId, 'logic', { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" });
            
            const result = await retryWithBackoff(() => pkModel.generateContent(prompt));
            const text = result.response.text();
@@ -460,7 +467,7 @@ class GeminiService {
   }
   
   // --- Generic JSON Generation ---
-  public async generateJSON<T>(prompt: string, schema?: any): Promise<T> {
+  public async generateJSON<T>(prompt: string, schema?: any, guildId?: string): Promise<T> {
       try {
           const config: any = {
               responseMimeType: "application/json",
@@ -469,10 +476,7 @@ class GeminiService {
               config.responseSchema = schema;
           }
 
-          const model = this.genAI.getGenerativeModel({
-              model: GEMINI_LOGIC_CONFIG.modelName,
-              generationConfig: config
-          });
+          const model = await this.getModel(guildId, 'logic', config);
 
           const result = await retryWithBackoff(() => model.generateContent(prompt));
           const text = result.response.text();
@@ -503,7 +507,8 @@ class GeminiService {
          if (audioUrl.endsWith('.wav')) mimeType = 'audio/wav';
 
           const systemInstruction = await this.getSystemPrompt(guildId, userId);
-           const result = await retryWithBackoff(() => this.model.generateContent({
+          const model = await this.getModel(guildId, 'chat');
+          const result = await retryWithBackoff(() => model.generateContent({
              systemInstruction: {
                 role: 'system',
                 parts: [{ text: systemInstruction }]

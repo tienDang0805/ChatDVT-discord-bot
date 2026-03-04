@@ -233,34 +233,37 @@ export const Prompts = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap justify-end gap-2 w-full lg:w-auto">
                         <div className="flex bg-[#1a1d27] rounded-xl border border-slate-700/50 p-1">
                             <button
                                 onClick={() => setViewMode('edit')}
                                 className={clsx(
-                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
                                     viewMode === 'edit' ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
                                 )}
+                                title="Builder"
                             >
-                                <Terminal size={14} /> Builder
+                                <Terminal size={14} /> <span className="hidden 2xl:inline">Builder</span>
                             </button>
                             <button
                                 onClick={() => setViewMode('preview')}
                                 className={clsx(
-                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
                                     viewMode === 'preview' ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
                                 )}
+                                title="Preview"
                             >
-                                <BrainCircuit size={14} /> Preview
+                                <BrainCircuit size={14} /> <span className="hidden 2xl:inline">Preview</span>
                             </button>
                             <button
                                 onClick={() => setViewMode('raw')}
                                 className={clsx(
-                                    "px-4 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
+                                    "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
                                     viewMode === 'raw' ? "bg-amber-500/20 text-amber-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
                                 )}
+                                title="Raw View"
                             >
-                                <FileJson size={14} /> Raw
+                                <FileJson size={14} /> <span className="hidden 2xl:inline">Raw</span>
                             </button>
                         </div>
                         <button 
@@ -276,7 +279,7 @@ export const Prompts = () => {
                             <button 
                                 onClick={handleResetMemory}
                                 disabled={saving}
-                                className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl font-medium transition-colors disabled:opacity-50"
+                                className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
                                 title="Xóa toàn bộ Lịch sử Chat ở Server này"
                             >
                                 <Trash2 size={16} /> Reset Não
@@ -286,10 +289,10 @@ export const Prompts = () => {
                         <button 
                             onClick={handleSave} 
                             disabled={saving}
-                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] active:scale-95 disabled:opacity-50"
+                            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] active:scale-95 disabled:opacity-50 whitespace-nowrap"
                         >
                             <Save size={18} />
-                            {saving ? 'Đang Compile...' : 'Lưu Thay Đổi'}
+                            {saving ? 'Compile...' : 'Lưu Thay Đổi'}
                         </button>
                     </div>
                 </div>

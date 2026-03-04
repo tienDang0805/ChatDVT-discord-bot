@@ -284,6 +284,56 @@ app.get('/api/identities/list', async (req, res) => {
     }
 });
 
+// 2.8 Gemini API Key Route (GET)
+app.get('/api/gemini-api-key', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        let apiKey = '';
+
+        if (guildId && guildId !== 'global') {
+            const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            if (guildConfig && guildConfig.geminiApiKey) {
+                apiKey = guildConfig.geminiApiKey;
+            }
+        } else {
+            const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+            if (globalConfig && globalConfig.geminiApiKey) {
+                apiKey = globalConfig.geminiApiKey;
+            }
+        }
+        res.json({ apiKey });
+    } catch (error) {
+        console.error("Fetch API Key Error:", error);
+        res.status(500).json({ error: 'Failed to fetch API key' });
+    }
+});
+
+// 2.9 Gemini API Key Route (POST)
+app.post('/api/gemini-api-key', async (req, res) => {
+    try {
+        const { guildId, apiKey } = req.body;
+        
+        if (guildId && guildId !== 'global') {
+            await prisma.guildConfig.upsert({
+                where: { guildId },
+                update: { geminiApiKey: apiKey || null },
+                create: { guildId, systemPrompts: '{}', activeModules: '{}', geminiApiKey: apiKey || null }
+            });
+        } else {
+            await prisma.botConfig.upsert({
+                where: { key: 'global' },
+                update: { geminiApiKey: apiKey || null },
+                create: { key: 'global', systemPrompts: '{}', features: '{}', geminiApiKey: apiKey || null }
+            });
+        }
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Update API Key Error:", error);
+        res.status(500).json({ error: 'Failed to update API key' });
+    }
+});
+
 // 3. Bot Persona Route (GET)
 app.get('/api/bot-persona', async (req, res) => {
     try {

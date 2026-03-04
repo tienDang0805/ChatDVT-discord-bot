@@ -48,5 +48,7 @@ export const sendAnnouncement = async (guildId: string, data: any) => (await api
 export const leaveGuild = async (guildId: string) => (await api.delete(`/guilds/${guildId}`)).data;
 export const getSystemLogs = async () => (await api.get('/system-logs')).data;
 export const resetChatHistory = async (guildId: string) => (await api.delete(`/prompts/history/${guildId}`)).data;
+export const getGeminiApiKey = async (guildId: string = 'global') => (await api.get(`/gemini-api-key?guildId=${guildId}`)).data;
+export const updateGeminiApiKey = async (data: { apiKey: string }, guildId: string = 'global') => (await api.post('/gemini-api-key', { ...data, guildId })).data;
 
 export default api;

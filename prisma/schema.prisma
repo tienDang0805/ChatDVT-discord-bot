@@ -38,6 +38,7 @@ model GuildConfig {
   guildId       String   @unique
   systemPrompts String   // JSON string
   activeModules String   // JSON string
+  geminiApiKey  String?
   updatedAt     DateTime @updatedAt
 }
 
@@ -46,6 +47,7 @@ model BotConfig {
   key           String   @unique // 'global'
   systemPrompts String   // JSON string
   features      String   // JSON string
+  geminiApiKey  String?
   updatedAt     DateTime @updatedAt
 }
 
