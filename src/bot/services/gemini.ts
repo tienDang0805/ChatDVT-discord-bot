@@ -224,11 +224,14 @@ class GeminiService {
               take: 20
           });
 
-          const history = logs.reverse().map(log => {
-              if (log.userId === 'BOT') {
-                  return { role: 'model', parts: [{ text: log.response || ' ' }] };
-              }
-              return { role: 'user', parts: [{ text: log.content || ' ' }] };
+          const history: any[] = [];
+          logs.reverse().forEach(log => {
+               if (log.content) {
+                    history.push({ role: 'user', parts: [{ text: log.content }] });
+               }
+               if (log.response) {
+                    history.push({ role: 'model', parts: [{ text: log.response }] });
+               }
           });
 
           const parts: Part[] = [{ text: messageContent }];
@@ -283,11 +286,14 @@ class GeminiService {
               orderBy: { createdAt: 'desc' },
               take: 10
           });
-          const history = logs.reverse().map(log => {
-               if (log.userId === 'BOT') {
-                   return { role: 'model', parts: [{ text: log.response || ' ' }] };
+          const history: any[] = [];
+          logs.reverse().forEach(log => {
+               if (log.content) {
+                    history.push({ role: 'user', parts: [{ text: log.content }] });
                }
-               return { role: 'user', parts: [{ text: log.content || ' ' }] };
+               if (log.response) {
+                    history.push({ role: 'model', parts: [{ text: log.response }] });
+               }
           });
           
            const userDetails = {
@@ -429,13 +435,44 @@ class GeminiService {
   }
 
   // --- Search Tool ---
-  public async chatWithSearch(userId: string, query: string, guildId?: string): Promise<{ success: boolean; response: string; error?: string }> {
+  public async chatWithSearch(userId: string, username: string, query: string, guildId: string = 'global'): Promise<{ success: boolean; response: string; error?: string }> {
       try {
+           const systemInstruction = await this.getSystemPrompt(guildId, userId);
+           
+           // Fetch History
+           const logs = await prisma.chatLog.findMany({
+               where: { guildId },
+               orderBy: { createdAt: 'desc' },
+               take: 20
+           });
+           
+           const history: any[] = [];
+           logs.reverse().forEach(log => {
+                if (log.content) history.push({ role: 'user', parts: [{ text: log.content }] });
+                if (log.response) history.push({ role: 'model', parts: [{ text: log.response }] });
+           });
+
            const searchModel = await this.getModel(guildId, 'search');
            
-           const chat = searchModel.startChat();
-           const result = await retryWithBackoff(() => chat.sendMessage(query));
-           return { success: true, response: result.response.text() };
+           const chat = searchModel.startChat({
+               history: history as any,
+               systemInstruction: {
+                 role: 'system',
+                 parts: [{ text: systemInstruction }]
+               }
+           });
+           
+           const result = await retryWithBackoff(() => chat.sendMessage([{ text: query }]));
+           const responseText = result.response.text();
+           
+           // Save User Search Message
+           await prisma.chatLog.create({
+               data: {
+                 guildId, userId, username, content: `[SEARCH] ${query}`, response: responseText, type: 'search'
+               }
+           });
+
+           return { success: true, response: responseText };
       } catch (error: any) {
           console.error("Search Error:", error);
           return { success: false, response: "", error: error.message };
