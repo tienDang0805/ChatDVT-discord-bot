@@ -17,7 +17,7 @@ import type {
   Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Plus, Trash2, GripHorizontal } from 'lucide-react';
+import { Plus, Trash2, GripHorizontal, Maximize, Minimize } from 'lucide-react';
 
 // === KIỂU DỮ LIỆU CUSTOM NODE ===
 export type PromptNodeData = {
@@ -25,6 +25,7 @@ export type PromptNodeData = {
     text: string;
     onChange: (id: string, field: 'label' | 'text', value: string) => void;
     onDelete: (id: string) => void;
+    onEdit: (id: string, text: string, label: string) => void;
 };
 
 // === CUSTOM NODE UI ===
@@ -53,19 +54,16 @@ const PromptBlockNode = ({ id, data }: { id: string, data: PromptNodeData }) => 
                 </button>
             </div>
             
-            <div className="p-3 bg-[#171a24]">
-                <textarea 
-                    className="w-full bg-transparent text-slate-200 font-sans text-sm leading-relaxed focus:outline-none resize-none break-words nodrag custom-scrollbar"
-                    style={{ minHeight: '80px' }}
-                    value={data.text}
-                    onChange={(e) => {
-                        data.onChange(id, 'text', e.target.value);
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                    }}
-                    placeholder="Nhập nội dung vào đây..."
-                    spellCheck={false}
-                />
+            <div className="p-3 bg-[#171a24] cursor-text" onClick={() => data.onEdit(id, data.text, data.label)}>
+                <div className="w-full h-20 text-slate-400 font-sans text-sm leading-relaxed overflow-hidden text-ellipsis whitespace-pre-wrap flex items-center justify-center border border-dashed border-slate-700/50 rounded-lg hover:border-primary/50 hover:text-slate-300 transition-colors bg-[#11131a]">
+                     {data.text ? (
+                         <div className="w-full h-full p-2 text-left opacity-80 pointer-events-none">
+                              {data.text.length > 80 ? data.text.substring(0, 80) + '...' : data.text}
+                         </div>
+                     ) : (
+                         <span className="flex items-center gap-2 text-xs italic opacity-50"><Plus size={14}/> Click để soạn thảo</span>
+                     )}
+                </div>
             </div>
 
             {/* Output handle (to children) */}
@@ -181,6 +179,10 @@ interface Props {
 export const FlowEditor: React.FC<Props> = ({ initialJson, onChange }) => {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [edges, setEdges] = useState<Edge[]>([]);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    
+    // State cho Modal (lưu cả id và text tạm thời đang gõ)
+    const [editingNode, setEditingNode] = useState<{id: string, text: string, label: string} | null>(null);
 
     // Init state from parsed JSON
     useEffect(() => {
@@ -191,7 +193,8 @@ export const FlowEditor: React.FC<Props> = ({ initialJson, onChange }) => {
              data: {
                  ...node.data,
                  onChange: handleNodeDataChange,
-                 onDelete: handleNodeDelete
+                 onDelete: handleNodeDelete,
+                 onEdit: handleOpenEditModal
              }
          }));
          setNodes(mappedNodes);
@@ -250,18 +253,30 @@ export const FlowEditor: React.FC<Props> = ({ initialJson, onChange }) => {
         setEdges((eds) => eds.filter(e => e.source !== id && e.target !== id));
     };
 
+    const handleOpenEditModal = (id: string, text: string, label: string) => {
+        setEditingNode({ id, text, label });
+    };
+
+    const handleSaveModal = () => {
+        if (editingNode) {
+            handleNodeDataChange(editingNode.id, 'text', editingNode.text);
+            handleNodeDataChange(editingNode.id, 'label', editingNode.label);
+            setEditingNode(null);
+        }
+    };
+
     const handleAddFloatingNode = () => {
          const newNode: Node = {
              id: `node_${Math.random().toString(36).substring(7)}`,
              type: 'promptBlock',
              position: { x: 50, y: 50 },
-             data: { label: 'NEW_BLOCK', text: '', onChange: handleNodeDataChange, onDelete: handleNodeDelete }
+             data: { label: 'NEW_BLOCK', text: '', onChange: handleNodeDataChange, onDelete: handleNodeDelete, onEdit: handleOpenEditModal }
          };
          setNodes(nds => [...nds, newNode]);
     };
 
     return (
-        <div style={{ width: '100%', height: '100%' }} className="relative bg-[#0d0f16]">
+        <div style={{ width: '100%', height: '100%' }} className={`bg-[#0d0f16] transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50 h-screen w-screen' : 'relative'}`}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -276,7 +291,7 @@ export const FlowEditor: React.FC<Props> = ({ initialJson, onChange }) => {
                 <Controls className="bg-[#1a1d27] border-slate-700/50 fill-slate-300" />
             </ReactFlow>
 
-            {/* Helper UI Buttons */}
+             {/* Helper UI Buttons */}
             <div className="absolute top-4 left-4 z-10 flex gap-2">
                  <button 
                      onClick={handleAddFloatingNode}
@@ -284,10 +299,65 @@ export const FlowEditor: React.FC<Props> = ({ initialJson, onChange }) => {
                  >
                      <Plus size={16} /> Bốc Khối Mới
                  </button>
+                 <button 
+                     onClick={() => setIsFullscreen(!isFullscreen)}
+                     className="bg-[#1a1d27]/90 hover:bg-[#252a38] text-slate-300 px-3 py-2 rounded-xl flex items-center gap-2 text-sm font-bold shadow-lg border border-slate-700/50 transition-all"
+                     title="Toàn Màn Hình"
+                 >
+                     {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+                 </button>
                  <div className="bg-[#1a1d27]/80 backdrop-blur-md px-4 py-2 rounded-xl border border-slate-700/50 text-xs text-slate-400 font-mono flex items-center shadow-lg">
                       💡 Kéo chuột từ cục màu xanh lá tròn xuống cục vuông ở Node khác để nối.
                  </div>
             </div>
+
+            {/* Modal Edit / Popup Siêu To Khổng Lồ */}
+            {editingNode && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+                     <div className="bg-[#1a1d27] border border-slate-700/80 rounded-2xl w-full max-w-5xl h-[80vh] flex flex-col shadow-2xl overflow-hidden ring-1 ring-white/10">
+                          {/* Modal Header */}
+                          <div className="flex items-center justify-between px-6 py-4 bg-[#13151c] border-b border-slate-700/80">
+                               <div className="flex-1 mr-4">
+                                   <p className="text-xs text-slate-500 font-mono mb-1 uppercase tracking-wider">Tên Mảng Dữ Liệu (NODE KEY)</p>
+                                   <input 
+                                        type="text"
+                                        value={editingNode.label}
+                                        onChange={(e) => setEditingNode(prev => prev ? {...prev, label: e.target.value} : null)}
+                                        className="bg-[#0f111a] text-lg font-bold text-emerald-400 w-1/2 px-3 py-2 rounded-lg border border-slate-700/50 focus:border-primary/50 focus:outline-none transition-colors"
+                                        placeholder="Tên Nhãn (VD: VAI_TRO)"
+                                   />
+                               </div>
+                               <button 
+                                    onClick={() => setEditingNode(null)}
+                                    className="px-4 py-2 border border-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors bg-slate-800/50 hover:bg-slate-700"
+                               >
+                                    Đóng (Hủy)
+                               </button>
+                               <button 
+                                    onClick={handleSaveModal}
+                                    className="px-6 py-2 ml-3 bg-primary text-white font-bold rounded-lg shadow-lg hover:shadow-primary/30 hover:-translate-y-0.5 transition-all"
+                               >
+                                    Chốt Lưu
+                               </button>
+                          </div>
+                          
+                          {/* Modal Body / Editor */}
+                          <div className="flex-1 bg-[#0d0f16] flex flex-col p-6">
+                              <p className="text-xs text-slate-500 font-mono mb-2 flex items-center gap-2">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                  TEXT CONTENT (NỘI DUNG PROMPT)
+                              </p>
+                              <textarea 
+                                  className="w-full flex-1 bg-[#13151c] text-slate-200 font-sans text-[15px] leading-8 p-6 rounded-xl border border-slate-700/50 focus:border-primary/50 focus:ring-1 focus:ring-primary/20 focus:outline-none resize-none custom-scrollbar"
+                                  value={editingNode.text}
+                                  onChange={(e) => setEditingNode(prev => prev ? {...prev, text: e.target.value} : null)}
+                                  placeholder="Gõ thoải mái vào đây, càng dài càng tốt..."
+                                  spellCheck={false}
+                              />
+                          </div>
+                     </div>
+                </div>
+            )}
             
         </div>
     );
