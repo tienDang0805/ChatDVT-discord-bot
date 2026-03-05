@@ -256,7 +256,15 @@ app.get('/api/identities/list', async (req, res) => {
              return;
         }
 
-        const members = await guild.members.fetch();
+        let members;
+        try {
+            // Cố gắng fetch mới nhất (cần Privileged Intent: Server Members)
+            members = await guild.members.fetch();
+        } catch (err: any) {
+            console.warn(`[API /list] Fetch members failed: ${err.message}. Fallback to cache.`);
+            members = guild.members.cache;
+        }
+        
         // Filter ra user thật, bỏ qua Bot
         const humanMembers = members.filter(m => !m.user.bot);
         
