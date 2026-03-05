@@ -3,8 +3,8 @@ import fs from 'fs';
 import path from 'path';
 
 export async function handleReady(client: Client) {
-    console.log(`✅ Logged in as ${client.user?.tag}!`);
-    console.log(`🆔 Bot ID: ${client.user?.id}`);
+   // console.log(`✅ Logged in as ${client.user?.tag}!`);
+    //console.log(`🆔 Bot ID: ${client.user?.id}`);
 
     client.user?.setActivity('Waiting for user input...', { type: ActivityType.Listening });
 
@@ -41,7 +41,7 @@ export async function handleReady(client: Client) {
              Routes.applicationCommands(client.user?.id!),
              { body: currentCommands }
         );
-        console.log(`✅ Successfully registered ${currentCommands.length} global commands.`);
+       // console.log(`✅ Successfully registered ${currentCommands.length} global commands.`);
         
     } catch (error) {
         console.error("Command Registration Error:", error);

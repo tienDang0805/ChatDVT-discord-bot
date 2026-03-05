@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Users, MessageSquare, Zap, TrendingUp, PieChart as PieIcon } from 'lucide-react';
-import { getDashboardStats, getGuilds, getTopUsers, getActivityHistory, getUsageDistribution } from '../api';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RechartsTooltip } from 'recharts';
-
+import { Activity, Users, MessageSquare, Zap } from 'lucide-react';
+import { getDashboardStats, getGuilds, getTopUsers } from '../api';
 const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
@@ -29,30 +27,22 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
   </motion.div>
 );
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-
 export const Dashboard = () => {
   const [stats, setStats] = useState<any>({ totalUsers: 0, messagesToday: 0, avgResponseTime: "0s", uptime: 0 });
   const [guilds, setGuilds] = useState<any[]>([]);
   const [topUsers, setTopUsers] = useState<any[]>([]);
-  const [activityHistory, setActivityHistory] = useState<any[]>([]);
-  const [usageDistribution, setUsageDistribution] = useState<any[]>([]);
 
   useEffect(() => {
       const fetchData = async () => {
           try {
-              const [statsData, guildsData, usersData, activityData, usageData] = await Promise.all([
+              const [statsData, guildsData, usersData] = await Promise.all([
                   getDashboardStats(),
                   getGuilds(),
-                  getTopUsers(),
-                  getActivityHistory(),
-                  getUsageDistribution()
+                  getTopUsers()
               ]);
               setStats(statsData);
               setGuilds(guildsData);
               setTopUsers(usersData);
-              setActivityHistory(activityData);
-              setUsageDistribution(usageData);
           } catch (err) {
               console.error("Failed to fetch dashboard data", err);
           }
@@ -86,83 +76,6 @@ export const Dashboard = () => {
         <StatCard title="Uptime" value={formatUptime(stats.uptime)} icon={Activity} color="violet" delay={0.4} />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Activity Chart */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="lg:col-span-2 bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-6 shadow-2xl ring-1 ring-black/5 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
-          >
-              <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><TrendingUp size={20} /></div>
-                  <h3 className="text-lg font-bold text-foreground">Activity Trends (7 Days)</h3>
-              </div>
-              <div className="h-[300px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                    <AreaChart data={activityHistory}>
-                        <defs>
-                            <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                        <Tooltip 
-                            contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }}
-                            itemStyle={{ color: '#fff' }}
-                        />
-                        <Area type="monotone" dataKey="count" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
-                    </AreaChart>
-                </ResponsiveContainer>
-              </div>
-          </motion.div>
-
-          {/* Distribution Pie Chart */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-6 shadow-2xl ring-1 ring-black/5 hover:-translate-y-1 transition-transform duration-500"
-          >
-              <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><PieIcon size={20} /></div>
-                  <h3 className="text-lg font-bold text-foreground">Usage Distribution</h3>
-              </div>
-              <div className="h-[300px] w-full relative min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                    <PieChart>
-                        <Pie
-                            data={usageDistribution}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="value"
-                        >
-                            {usageDistribution.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <RechartsTooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#fff' }} />
-                    </PieChart>
-                </ResponsiveContainer>
-                {/* Legend Overlay or Center Text could go here */}
-                <div className="absolute bottom-0 left-0 w-full flex justify-center gap-4 text-xs text-slate-400">
-                    {usageDistribution.slice(0, 3).map((entry, index) => (
-                        <div key={index} className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                            {entry.name}
-                        </div>
-                    ))}
-                </div>
-              </div>
-          </motion.div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Connected Servers */}
