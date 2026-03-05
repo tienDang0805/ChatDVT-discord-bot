@@ -227,7 +227,8 @@ class GeminiService {
           const history: any[] = [];
           logs.reverse().forEach(log => {
                if (log.content) {
-                    history.push({ role: 'user', parts: [{ text: log.content }] });
+                    const userPrefix = log.username ? `[${log.username}]: ` : "";
+                    history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
                }
                if (log.response) {
                     history.push({ role: 'model', parts: [{ text: log.response }] });
@@ -289,7 +290,8 @@ class GeminiService {
           const history: any[] = [];
           logs.reverse().forEach(log => {
                if (log.content) {
-                    history.push({ role: 'user', parts: [{ text: log.content }] });
+                    const userPrefix = log.username ? `[${log.username}]: ` : "";
+                    history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
                }
                if (log.response) {
                     history.push({ role: 'model', parts: [{ text: log.response }] });
@@ -448,7 +450,10 @@ class GeminiService {
            
            const history: any[] = [];
            logs.reverse().forEach(log => {
-                if (log.content) history.push({ role: 'user', parts: [{ text: log.content }] });
+                if (log.content) {
+                    const userPrefix = log.username ? `[${log.username}]: ` : "";
+                    history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
+                }
                 if (log.response) history.push({ role: 'model', parts: [{ text: log.response }] });
            });
 
