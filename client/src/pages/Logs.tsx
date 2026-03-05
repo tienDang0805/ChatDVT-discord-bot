@@ -54,7 +54,7 @@ export const Logs = () => {
                         <Filter className="text-primary" size={24} />
                         History Logs
                     </h2>
-                    <p className="text-slate-400 text-sm">View interaction history between users and the bot.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">View interaction history between users and the bot.</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -62,7 +62,7 @@ export const Logs = () => {
                     <div className="relative">
                         <Server className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <select 
-                            className="bg-surface/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none hover:bg-slate-700/50 transition-colors cursor-pointer appearance-none min-w-[180px]"
+                            className="bg-background border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer appearance-none min-w-[180px]"
                             value={selectedGuild}
                             onChange={(e) => setSelectedGuild(e.target.value)}
                         >
@@ -80,7 +80,7 @@ export const Logs = () => {
                         </div>
                         <input 
                             type="text" 
-                            className="bg-surface/80 border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none placeholder-slate-500 min-w-[240px]" 
+                            className="bg-background border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none placeholder:text-slate-400 dark:placeholder-slate-500 min-w-[240px]" 
                             placeholder="Search content or user..." 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -89,10 +89,10 @@ export const Logs = () => {
                 </div>
             </div>
             
-            <div className="bg-surface/80 rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
+            <div className="bg-surface/80 rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-surface/90 text-slate-400 border-b border-slate-700/50">
+                        <thead className="bg-slate-50 dark:bg-surface/90 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700/50">
                             <tr>
                                 <th className="p-4 font-medium">Type</th>
                                 <th className="p-4 font-medium">User</th>
@@ -101,20 +101,20 @@ export const Logs = () => {
                                 <th className="p-4 font-medium">Time</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-700/50">
+                        <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="p-12 text-center text-slate-400">Loading history...</td>
+                                    <td colSpan={5} className="p-12 text-center text-slate-500 dark:text-slate-400">Loading history...</td>
                                 </tr>
                             ) : logs.length > 0 ? (
                                 logs.map((log) => (
-                                    <tr key={log._id || log.id} className="hover:bg-slate-700/20 transition-colors group">
+                                    <tr key={log._id || log.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors group">
                                         <td className="p-4 whitespace-nowrap">
                                             <span className={clsx("px-2.5 py-1 rounded-md text-xs font-semibold uppercase tracking-wide", {
-                                                'bg-blue-500/10 text-blue-400 border border-blue-500/20': log.type === 'chat',
-                                                'bg-amber-500/10 text-amber-400 border border-amber-500/20': log.type === 'image',
-                                                'bg-purple-500/10 text-purple-400 border border-purple-500/20': log.type === 'voice',
-                                                'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20': !['chat', 'image', 'voice'].includes(log.type)
+                                                'bg-blue-100 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20': log.type === 'chat',
+                                                'bg-amber-100 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20': log.type === 'image',
+                                                'bg-purple-100 text-purple-600 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20': log.type === 'voice',
+                                                'bg-emerald-100 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20': !['chat', 'image', 'voice'].includes(log.type)
                                             })}>
                                                 {log.type || 'CHAT'}
                                             </span>
@@ -125,13 +125,13 @@ export const Logs = () => {
                                                 <span className="text-xs text-slate-500">{log.userId}</span>
                                             </div>
                                         </td>
-                                        <td className="p-4 text-slate-300 max-w-[200px] md:max-w-xs">
+                                        <td className="p-4 text-slate-700 dark:text-slate-300 max-w-[200px] md:max-w-xs">
                                             <div className="truncate group-hover:whitespace-normal group-hover:break-words transition-all duration-300">
                                                 {log.content}
                                             </div>
                                         </td>
-                                        <td className="p-4 text-slate-300 max-w-[200px] md:max-w-xs">
-                                            <div className="truncate text-slate-400 group-hover:text-slate-300 group-hover:whitespace-normal group-hover:break-words transition-all duration-300">
+                                        <td className="p-4 text-slate-700 dark:text-slate-300 max-w-[200px] md:max-w-xs">
+                                            <div className="truncate text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-slate-300 group-hover:whitespace-normal group-hover:break-words transition-all duration-300">
                                                 {log.response}
                                             </div>
                                         </td>
@@ -151,22 +151,22 @@ export const Logs = () => {
 
                 {/* Pagination */}
                 {!loading && logs.length > 0 && (
-                    <div className="flex items-center justify-between p-4 border-t border-slate-700/50 bg-surface/80">
-                        <div className="text-sm text-slate-400">
+                    <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-surface/80">
+                        <div className="text-sm text-slate-500 dark:text-slate-400">
                             Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span>
                         </div>
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-lg hover:bg-slate-200 text-slate-500 dark:hover:bg-slate-700/50 dark:text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft size={20} />
                             </button>
                             <button 
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages}
-                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-lg hover:bg-slate-200 text-slate-500 dark:hover:bg-slate-700/50 dark:text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight size={20} />
                             </button>

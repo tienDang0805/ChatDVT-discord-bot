@@ -102,20 +102,20 @@ export const ControlCenter = () => {
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
                     <Megaphone className="text-emerald-400" /> Server Control Panel
                 </h2>
-                <p className="text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* LEFT COLUMN: Server & Channel Selection */}
                 <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
+                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
                         <h3 className="text-lg font-bold text-foreground mb-4">1. Select Target</h3>
                         
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-slate-400 mb-2">Discord Server</label>
+                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Discord Server</label>
                             <select 
-                                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-emerald-500 transition-colors"
+                                className="w-full bg-background border border-slate-300 dark:bg-slate-900/50 dark:border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-emerald-500 transition-colors"
                                 value={selectedGuild}
                                 onChange={(e) => setSelectedGuild(e.target.value)}
                             >
@@ -125,9 +125,9 @@ export const ControlCenter = () => {
                         </div>
 
                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <label className="block text-sm font-medium text-slate-400 mb-2">Text Channels</label>
+                            <label className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">Text Channels</label>
                             {!selectedGuild ? (
-                                <div className="text-center p-6 bg-white/5 rounded-xl border border-dashed border-slate-700 text-slate-500 text-sm">
+                                <div className="text-center p-6 bg-slate-50 dark:bg-white/5 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 text-sm">
                                     Select a server to view channels
                                 </div>
                             ) : Object.keys(groupedChannels).length === 0 ? (
@@ -137,18 +137,18 @@ export const ControlCenter = () => {
                                     {Object.entries(groupedChannels).map(([category, chans]) => (
                                         <div key={category}>
                                             <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
-                                                <div className="h-px bg-slate-800 flex-1"></div>
+                                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                                                 {category}
-                                                <div className="h-px bg-slate-800 flex-1"></div>
+                                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                                             </div>
                                             <div className="space-y-1">
                                                 {chans.map(c => (
                                                     <button
                                                         key={c.id}
                                                         onClick={() => setSelectedChannel(c.id)}
-                                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${selectedChannel === c.id ? 'bg-emerald-500/20 text-emerald-400 font-medium' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200'}`}
+                                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${selectedChannel === c.id ? 'bg-emerald-100 text-emerald-700 font-medium dark:bg-emerald-500/20 dark:text-emerald-400' : 'hover:bg-slate-100 text-slate-600 hover:text-slate-900 dark:hover:bg-white/5 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                                     >
-                                                        <span className="text-slate-600 font-mono">#</span> {c.name}
+                                                        <span className="text-slate-400 dark:text-slate-600 font-mono">#</span> {c.name}
                                                     </button>
                                                 ))}
                                             </div>
@@ -162,21 +162,21 @@ export const ControlCenter = () => {
 
                 {/* RIGHT COLUMN: Composer & Preview */}
                 <div className="lg:col-span-8 space-y-6">
-                    <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col">
+                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-foreground">2. Compose Message</h3>
                             
                             {/* Message Type Toggle */}
-                            <div className="flex items-center bg-slate-900/50 p-1 rounded-xl border border-slate-700/50">
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50">
                                 <button
                                     onClick={() => setIsEmbed(false)}
-                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${!isEmbed ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${!isEmbed ? 'bg-white text-slate-900 shadow-sm dark:bg-white/10 dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                                 >
                                     Normal Text
                                 </button>
                                 <button
                                     onClick={() => setIsEmbed(true)}
-                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isEmbed ? 'bg-emerald-500/20 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isEmbed ? 'bg-emerald-100 text-emerald-700 shadow-sm dark:bg-emerald-500/20 dark:text-emerald-400' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                                 >
                                     Rich Embed
                                 </button>
@@ -188,7 +188,7 @@ export const ControlCenter = () => {
                             {!isEmbed && (
                                 <div>
                                     <textarea 
-                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-foreground outline-none focus:border-emerald-500 transition-colors placeholder-slate-600 min-h-[150px] resize-y"
+                                        className="w-full bg-background border border-slate-300 dark:bg-slate-900/50 dark:border-slate-700 rounded-xl p-4 text-foreground outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-400 dark:placeholder-slate-600 min-h-[150px] resize-y"
                                         placeholder="Type your message here... You can use standard Discord markdown (*italics*, **bold**, `code`)"
                                         value={content}
                                         onChange={(e) => setContent(e.target.value)}
@@ -197,23 +197,23 @@ export const ControlCenter = () => {
                             )}
 
                             {isEmbed && (
-                                <div className="space-y-4 bg-slate-900/30 p-5 rounded-2xl border border-slate-700/50">
+                                <div className="space-y-4 bg-slate-50 dark:bg-slate-900/30 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/50">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div className="md:col-span-3">
-                                            <label className="block text-xs font-medium text-slate-400 mb-1">Embed Title</label>
+                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Embed Title</label>
                                             <input 
                                                 type="text"
-                                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                                className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
                                                 placeholder="e.g., Server Update Announcement"
                                                 value={embedTitle}
                                                 onChange={(e) => setEmbedTitle(e.target.value)}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-400 mb-1">Color (Hex)</label>
+                                            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Color (Hex)</label>
                                             <input 
                                                 type="color"
-                                                className="w-full h-[42px] bg-background border border-slate-700 rounded-lg p-1 cursor-pointer"
+                                                className="w-full h-[42px] bg-background border border-slate-300 dark:border-slate-700 rounded-lg p-1 cursor-pointer"
                                                 value={embedColor}
                                                 onChange={(e) => setEmbedColor(e.target.value)}
                                             />
@@ -221,9 +221,9 @@ export const ControlCenter = () => {
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Description</label>
                                         <textarea 
-                                            className="w-full bg-background border border-slate-700 rounded-lg p-3 text-foreground outline-none focus:border-emerald-500 min-h-[100px] text-sm"
+                                            className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-lg p-3 text-foreground outline-none focus:border-emerald-500 min-h-[100px] text-sm"
                                             placeholder="Detailed announcement text..."
                                             value={embedDesc}
                                             onChange={(e) => setEmbedDesc(e.target.value)}
@@ -231,13 +231,13 @@ export const ControlCenter = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1">Image URL (Optional)</label>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Image URL (Optional)</label>
                                         <div className="flex gap-2">
                                             <div className="flex-1 relative">
                                                 <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                                                 <input 
                                                     type="text"
-                                                    className="w-full bg-background border border-slate-700 rounded-lg py-2.5 pl-9 pr-3 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                                    className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-lg py-2.5 pl-9 pr-3 text-foreground outline-none focus:border-emerald-500 text-sm"
                                                     placeholder="https://example.com/image.png"
                                                     value={embedImage}
                                                     onChange={(e) => setEmbedImage(e.target.value)}
@@ -248,10 +248,10 @@ export const ControlCenter = () => {
                                     
                                     {/* Optional Content for Embed (can be sent above the embed) */}
                                     <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1">Normal Text Above Embed (Optional)</label>
+                                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Normal Text Above Embed (Optional)</label>
                                         <input 
                                             type="text"
-                                            className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                            className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
                                             placeholder="Hey @everyone, check this out!"
                                             value={content}
                                             onChange={(e) => setContent(e.target.value)}
@@ -262,7 +262,7 @@ export const ControlCenter = () => {
                         </div>
 
                         {/* Discord Preview Simulator */}
-                        <div className="mt-6 pt-6 border-t border-slate-700/50">
+                        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700/50">
                             <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Live Preview Simulator</h4>
                             <div className="bg-[#313338] rounded-xl p-4 flex gap-4 min-h-[100px]">
                                 {/* Avatar Mock */}
@@ -317,16 +317,16 @@ export const ControlCenter = () => {
 
                     {/* Quick History */}
                     {history.length > 0 && (
-                        <div className="bg-background/80 rounded-2xl border border-white/5 p-4">
+                        <div className="bg-surface/80 rounded-2xl border border-slate-200 dark:border-white/5 p-4">
                             <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
                                 <Clock size={14} /> Recent Transmissions
                             </h4>
                             <div className="space-y-2">
                                 {history.map(h => (
-                                    <div key={h.id} className="flex items-center justify-between bg-white/5 p-2 px-3 rounded-lg text-sm">
+                                    <div key={h.id} className="flex items-center justify-between bg-slate-100 dark:bg-white/5 p-2 px-3 rounded-lg text-sm">
                                         <div className="flex items-center gap-3 truncate">
-                                            <span className="text-emerald-400 font-mono text-xs">#{h.channel}</span>
-                                            <span className="text-slate-300 truncate">{h.preview}</span>
+                                            <span className="text-emerald-500 dark:text-emerald-400 font-mono text-xs">#{h.channel}</span>
+                                            <span className="text-slate-700 dark:text-slate-300 truncate">{h.preview}</span>
                                         </div>
                                         <span className="text-slate-500 text-xs shrink-0 pl-2">{h.time}</span>
                                     </div>
@@ -338,15 +338,15 @@ export const ControlCenter = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-red-500/10 rounded-3xl border border-red-500/10 p-6 ring-1 ring-black/5 max-w-xl">
+            <div className="bg-red-50 dark:bg-red-500/10 rounded-3xl border border-red-200 dark:border-red-500/10 p-6 ring-1 ring-black/5 max-w-xl">
                 <div className="flex items-center gap-3 border-b border-red-500/20 pb-4 mb-4">
                     <AlertTriangle className="text-red-500" />
                     <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
                 </div>
-                <p className="text-slate-400 text-sm mb-4">Make the bot leave a server permanently. Proceed with caution.</p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">Make the bot leave a server permanently. Proceed with caution.</p>
                 <div className="flex gap-4">
                     <select 
-                        className="flex-1 bg-background border border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-red-500 transition-colors"
+                        className="flex-1 bg-background border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-red-500 transition-colors"
                         value={selectedGuild}
                         onChange={(e) => setSelectedGuild(e.target.value)}
                     >

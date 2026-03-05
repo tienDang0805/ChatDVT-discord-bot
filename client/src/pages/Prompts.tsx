@@ -204,19 +204,19 @@ export const Prompts = () => {
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 bg-primary/10 rounded-[100%] blur-[120px] pointer-events-none mix-blend-screen" />
 
             {/* Header section (Sticky) */}
-            <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-4 border-b border-white/10 dark:border-white/5">
+            <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-4 border-b border-slate-200 dark:border-white/5">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <Terminal className="text-primary" size={28} />
                         Prompt Studio
                     </h1>
-                    <p className="text-slate-400 mt-2">IDE Controller điều chỉnh hệ thống tư duy của Gemini.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">IDE Controller điều chỉnh hệ thống tư duy của Gemini.</p>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10 w-full xl:w-auto">
                     {/* Server Select */}
-                    <div className="flex items-center gap-3 bg-surface/80 p-1.5 rounded-xl border border-slate-700/50 flex-1 xl:flex-none">
-                        <div className="pl-3 text-slate-400">
+                    <div className="flex items-center gap-3 bg-background border border-slate-300 dark:bg-surface/80 p-1.5 rounded-xl dark:border-slate-700/50 flex-1 xl:flex-none">
+                        <div className="pl-3 text-slate-500 dark:text-slate-400">
                             <Server size={18} />
                         </div>
                         <select 
@@ -224,21 +224,21 @@ export const Prompts = () => {
                             onChange={handleServerChange}
                             className="bg-transparent border-none text-foreground text-sm font-medium focus:ring-0 w-full min-w-[200px] cursor-pointer"
                         >
-                            <option value="global" className="bg-surface">🌐 Global Core (Mặc định)</option>
+                            <option value="global" className="bg-background dark:bg-surface">🌐 Global Core (Mặc định)</option>
                             {guilds.map(g => (
-                                <option key={g.id} value={g.id} className="bg-surface">🏠 {g.name}</option>
+                                <option key={g.id} value={g.id} className="bg-background dark:bg-surface">🏠 {g.name}</option>
                             ))}
                         </select>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-wrap justify-end gap-2 w-full lg:w-auto">
-                        <div className="flex bg-surface rounded-xl border border-slate-700/50 p-1">
+                        <div className="flex bg-slate-100 border border-slate-200 dark:bg-surface rounded-xl dark:border-slate-700/50 p-1">
                             <button
                                 onClick={() => setViewMode('edit')}
                                 className={clsx(
                                     "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                                    viewMode === 'edit' ? "bg-slate-700 text-foreground shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                    viewMode === 'edit' ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-foreground" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                                 )}
                                 title="Builder"
                             >
@@ -248,7 +248,7 @@ export const Prompts = () => {
                                 onClick={() => setViewMode('preview')}
                                 className={clsx(
                                     "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                                    viewMode === 'preview' ? "bg-emerald-500/20 text-emerald-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                    viewMode === 'preview' ? "bg-emerald-100 text-emerald-600 shadow-sm dark:bg-emerald-500/20 dark:text-emerald-400" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                                 )}
                                 title="Preview"
                             >
@@ -258,7 +258,7 @@ export const Prompts = () => {
                                 onClick={() => setViewMode('raw')}
                                 className={clsx(
                                     "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                                    viewMode === 'raw' ? "bg-amber-500/20 text-amber-400 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                    viewMode === 'raw' ? "bg-amber-100 text-amber-600 shadow-sm dark:bg-amber-500/20 dark:text-amber-400" : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                                 )}
                                 title="Raw View"
                             >
@@ -267,7 +267,7 @@ export const Prompts = () => {
                         </div>
                         <button 
                             onClick={() => fetchPrompts(selectedGuild)} 
-                            className="p-2.5 text-slate-400 hover:text-foreground bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-xl transition-colors"
+                            className="p-2.5 text-slate-500 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 border border-slate-300 dark:text-slate-400 dark:hover:text-foreground dark:bg-slate-800/50 dark:hover:bg-slate-700 dark:border-slate-700/50 rounded-xl transition-colors"
                             title="Tải Lại Data"
                         >
                             <RefreshCw size={18} className={clsx(loading && "animate-spin")} />
@@ -278,7 +278,7 @@ export const Prompts = () => {
                             <button 
                                 onClick={handleResetMemory}
                                 disabled={saving}
-                                className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/20 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
+                                className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500 hover:bg-red-100 hover:border-red-300 dark:hover:text-white dark:border-red-500/20 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
                                 title="Xóa toàn bộ Lịch sử Chat ở Server này"
                             >
                                 <Trash2 size={16} /> Reset Não
@@ -311,14 +311,14 @@ export const Prompts = () => {
             <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative z-10 w-full">
                 
                 {/* File Explorer (Sidebar L) */}
-                <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1 bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-4 ring-1 ring-black/5 h-full">
+                <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1 bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-4 ring-1 ring-black/5 h-full">
                     {promptCategories.map((category) => (
                         <div key={category.id} className="space-y-1">
                             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
                                 <category.icon size={14} />
                                 {category.label}
                             </div>
-                            <div className="space-y-1 pl-2 border-l border-slate-700/30 ml-3">
+                            <div className="space-y-1 pl-2 border-l border-slate-200 dark:border-slate-700/30 ml-3">
                                 {category.items.map((item) => {
                                     const isActive = activeTab === item.key;
                                     const hasCustomData = selectedGuild !== 'global' && !!config?.[item.key];
@@ -331,7 +331,7 @@ export const Prompts = () => {
                                                 "w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-between group",
                                                 isActive 
                                                     ? "bg-primary/10 text-primary" 
-                                                    : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-200"
+                                                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-200"
                                             )}
                                         >
                                             <span className="truncate">{item.label}</span>
@@ -351,13 +351,13 @@ export const Prompts = () => {
                 </div>
 
                 {/* Editor Surface (Main Right) */}
-                <div className="flex-1 flex flex-col bg-surface/80 border border-white/10 dark:border-white/5 rounded-3xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all ring-1 ring-black/5">
+                <div className="flex-1 flex flex-col bg-surface/80 border border-slate-200 dark:border-white/5 rounded-3xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all ring-1 ring-black/5">
                     
                     {/* Editor Tab Bar */}
-                    <div className="flex items-center bg-surface border-b border-slate-700/50 px-2 py-1 gap-2">
+                    <div className="flex items-center bg-slate-50 dark:bg-surface border-b border-slate-200 dark:border-slate-700/50 px-2 py-1 gap-2">
                         <div className="flex items-center gap-2 bg-background/50 px-4 py-1.5 border-t-2 border-primary rounded-t-lg">
                             <Terminal size={14} className="text-primary" />
-                            <span className="text-sm font-mono text-slate-200">{activeTab}.prompt</span>
+                            <span className="text-sm font-mono text-slate-700 dark:text-slate-200">{activeTab}.prompt</span>
                         </div>
                         <div className="flex-1"></div>
                         
@@ -372,18 +372,18 @@ export const Prompts = () => {
                                     <Globe size={14} /> Use as Global
                                 </button>
                             )}
-                            <div className="flex items-center bg-slate-800/50 rounded-lg p-0.5 border border-slate-700/50">
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-800/50 rounded-lg p-0.5 border border-slate-200 dark:border-slate-700/50">
                                 <button
                                     onClick={handleCopyPrompt}
-                                    className="p-1.5 text-slate-400 hover:text-emerald-400 rounded-md hover:bg-slate-700/50 transition-colors"
+                                    className="p-1.5 text-slate-500 hover:text-emerald-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-emerald-400 rounded-md dark:hover:bg-slate-700/50 transition-colors"
                                     title="Copy khối Prompt này"
                                 >
                                     <Copy size={14} />
                                 </button>
-                                <div className="w-px h-4 bg-slate-700"></div>
+                                <div className="w-px h-4 bg-slate-300 dark:bg-slate-700"></div>
                                 <button
                                     onClick={handlePastePrompt}
-                                    className="p-1.5 text-slate-400 hover:text-amber-400 rounded-md hover:bg-slate-700/50 transition-colors"
+                                    className="p-1.5 text-slate-500 hover:text-amber-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-amber-400 rounded-md dark:hover:bg-slate-700/50 transition-colors"
                                     title="Paste (Dán) khối Prompt"
                                 >
                                     <ClipboardPaste size={14} />
@@ -393,10 +393,10 @@ export const Prompts = () => {
                     </div>
 
                     {/* Editor Status Meta */}
-                    <div className="bg-surface px-6 py-3 border-b border-slate-800/80 flex items-center justify-between">
+                    <div className="bg-white dark:bg-surface px-6 py-3 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
                          <div>
                              <h3 className="text-foreground font-medium">{activeItem?.label}</h3>
-                             <p className="text-xs text-slate-400 mt-0.5">{activeItem?.desc}</p>
+                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{activeItem?.desc}</p>
                          </div>
                          {selectedGuild !== 'global' && !config?.[activeTab] && (
                              <span className="px-2 py-1 bg-amber-500/10 text-amber-500 text-xs rounded-md border border-amber-500/20 font-medium">
@@ -409,7 +409,7 @@ export const Prompts = () => {
                     <div className="flex-1 relative cursor-text overflow-hidden bg-background">
                         {/* Line Numbers Fake (Decorative) */}
                         {viewMode !== 'edit' && (
-                            <div className="absolute left-0 top-0 bottom-0 w-12 bg-surface/40 border-r border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
+                            <div className="absolute left-0 top-0 bottom-0 w-12 bg-slate-50 dark:bg-surface/40 border-r border-slate-200 dark:border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
                                 {[...Array(50)].map((_, i) => (
                                     <div key={i} className="leading-7 opacity-50">{i + 1}</div>
                                 ))}
@@ -432,7 +432,7 @@ export const Prompts = () => {
                                     </div>
                                 ) : (
                                     <pre className="font-mono text-[14px] leading-7 whitespace-pre-wrap">
-                                        <span className={viewMode === 'raw' ? "text-amber-300/90" : "text-emerald-300/90"}>
+                                        <span className={viewMode === 'raw' ? "text-amber-600 dark:text-amber-300/90" : "text-emerald-600 dark:text-emerald-300/90"}>
                                             {previewText}
                                         </span>
                                     </pre>
@@ -442,7 +442,7 @@ export const Prompts = () => {
                     </div>
                     
                     {/* Editor Footer */}
-                    <div className="px-4 py-1.5 bg-surface border-t border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                    <div className="px-4 py-1.5 bg-slate-50 dark:bg-surface border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
                          <div className="flex items-center gap-4">
                              {viewMode !== 'edit' ? (
                                  <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Compiled View</span>

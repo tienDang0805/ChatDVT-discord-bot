@@ -6,7 +6,7 @@ export async function handleReady(client: Client) {
    // console.log(`✅ Logged in as ${client.user?.tag}!`);
     //console.log(`🆔 Bot ID: ${client.user?.id}`);
 
-    client.user?.setActivity('Waiting for user input...', { type: ActivityType.Listening });
+    client.user?.setActivity('Nần ná na na anh Đặng Văn Tiến ,....', { type: ActivityType.Listening });
 
     // --- Command Registration ---
     // Note: Usually better to do this in a separate deploy script or here on startup

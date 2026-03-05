@@ -84,17 +84,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
             >
                  {depth > 0 && (
                      <div 
-                         className="absolute left-0 top-0 bottom-[-16px] border-l-2 border-slate-700/30 rounded-bl-xl"
-                         style={{ left: `${(depth - 1) * 28 + 14}px`, width: '14px', borderBottom: '2px solid rgba(51, 65, 85, 0.3)' }}
+                         className="absolute left-0 top-0 bottom-[-16px] border-l-2 border-slate-300 dark:border-slate-700/30 rounded-bl-xl text-slate-300 dark:text-slate-700/30"
+                         style={{ left: `${(depth - 1) * 28 + 14}px`, width: '14px', borderBottom: '2px solid currentColor' }}
                      />
                  )}
                  
-                 <div className="flex-1 bg-[#1a1d27] border border-slate-700/50 rounded-xl overflow-hidden focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all hover:bg-[#1f2334]">
+                 <div className="flex-1 bg-white dark:bg-[#1a1d27] border border-slate-300 dark:border-slate-700/50 rounded-xl overflow-hidden focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20 transition-all hover:bg-slate-50 dark:hover:bg-[#1f2334]">
                       {/* Băng Khóa/Tên */}
-                      <div className="flex items-center px-3 py-2 bg-[#151822] border-b border-slate-700/50">
+                      <div className="flex items-center px-3 py-2 bg-slate-50 dark:bg-[#151822] border-b border-slate-200 dark:border-slate-700/50">
                            <button 
                                onClick={() => onUpdate(node.id, { isExpanded: !node.isExpanded })}
-                               className="p-1 mr-1 text-slate-500 hover:text-emerald-400 bg-slate-800/50 rounded hover:bg-slate-700 transition"
+                               className="p-1 mr-1 text-slate-500 hover:text-emerald-500 dark:hover:text-emerald-400 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800/50 rounded dark:hover:bg-slate-700 transition"
                            >
                                {node.isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                            </button>
@@ -102,7 +102,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                            <input 
                                value={node.label}
                                onChange={(e) => onUpdate(node.id, { label: e.target.value })}
-                               className="flex-1 bg-transparent text-[14px] font-bold text-emerald-400 focus:outline-none placeholder-slate-600 tracking-wide uppercase"
+                               className="flex-1 bg-transparent text-[14px] font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none placeholder:text-slate-400 dark:placeholder-slate-600 tracking-wide uppercase"
                                placeholder="TÊN KHỐI (VD: ROOT)"
                            />
                            
@@ -116,7 +116,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                                </button>
                                <button 
                                    onClick={() => onDelete(node.id)}
-                                   className="p-1.5 text-slate-500 hover:text-white bg-slate-800 hover:bg-red-500 rounded transition-colors"
+                                   className="p-1.5 text-slate-500 hover:text-red-500 dark:hover:text-white bg-slate-200 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500 rounded transition-colors"
                                    title="Xóa cả dòng họ khối này"
                                >
                                    <Trash2 size={13} />
@@ -131,7 +131,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                                     value={node.text}
                                     onChange={handleTextareaInput}
                                     minRows={2}
-                                    className="w-full bg-transparent text-slate-300 font-sans text-[15px] leading-7 p-3 focus:outline-none resize-none overflow-hidden"
+                                    className="w-full bg-transparent text-slate-700 dark:text-slate-300 font-sans text-[15px] leading-7 p-3 focus:outline-none resize-none overflow-hidden"
                                     placeholder={hasChildren ? "Mô tả ngắn của khối cha (Ít dùng)..." : "Nội dung văn bản Prompt..."}
                                     spellCheck={false}
                                 />
@@ -265,12 +265,12 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
     };
 
     return (
-        <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50 bg-[#0d0f16] flex flex-col w-screen h-screen' : 'absolute inset-0 bg-[#0d0f16] flex flex-col'}`}>
+        <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-50 dark:bg-[#0d0f16] flex flex-col w-screen h-screen' : 'absolute inset-0 bg-transparent flex flex-col'}`}>
             {/* Header Control */}
-            <div className="flex-shrink-0 flex items-center justify-between p-4 bg-[#11131a] border-b border-slate-700/50">
+            <div className="flex-shrink-0 flex items-center justify-between p-4 bg-white dark:bg-[#11131a] border-b border-slate-200 dark:border-slate-700/50">
                  <div className="flex items-center gap-3">
                      <FileText size={18} className="text-emerald-400" />
-                     <h2 className="text-[15px] font-bold text-slate-200">Data Tree Editor</h2>
+                     <h2 className="text-[15px] font-bold text-slate-700 dark:text-slate-200">Data Tree Editor</h2>
                  </div>
                  <div className="flex gap-2">
                      <button onClick={handleAddRoot} className="flex items-center gap-2 px-4 py-2 bg-primary/90 hover:bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-all">
@@ -278,7 +278,7 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
                      </button>
                      <button 
                          onClick={() => setIsFullscreen(!isFullscreen)} 
-                         className="flex items-center gap-2 px-3 py-2 bg-[#1a1d27] border border-slate-600 text-slate-300 hover:text-white rounded-xl shadow-lg hover:bg-slate-700 transition-all"
+                         className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-[#1a1d27] border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-xl shadow-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
                          title="Full Screen"
                      >
                          {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}

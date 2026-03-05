@@ -83,12 +83,12 @@ export const Settings = () => {
 
     const renderTextarea = (label: string, field: keyof typeof persona, placeholder: string, desc: string) => (
         <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">{label}</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
             <textarea
                 value={persona[field]}
                 onChange={(e) => handleChange(field, e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-24 bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+                className="w-full h-24 bg-background border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
             />
             <p className="text-xs text-slate-500">{desc}</p>
         </div>
@@ -97,7 +97,7 @@ export const Settings = () => {
     return (
         <div className="space-y-8 pb-12">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 relative overflow-hidden ring-1 ring-black/5">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/80 p-8 rounded-3xl border border-slate-200 dark:border-white/5 relative overflow-hidden ring-1 ring-black/5">
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
                 
                 <div className="flex items-center gap-4">
@@ -106,7 +106,7 @@ export const Settings = () => {
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold text-foreground tracking-tight">Bot Persona (Nhân Cách AI)</h1>
-                        <p className="text-slate-400 mt-1">Thiết lập tính cách, mục đích và giọng điệu chung cho Bot.</p>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1">Thiết lập tính cách, mục đích và giọng điệu chung cho Bot.</p>
                     </div>
                 </div>
 
@@ -121,16 +121,16 @@ export const Settings = () => {
             </div>
 
             {/* Selector */}
-            <div className="bg-surface/80 p-6 rounded-3xl border border-white/10 dark:border-white/5 flex items-center gap-4 ring-1 ring-black/5">
-                 <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
+            <div className="bg-surface/80 p-6 rounded-3xl border border-slate-200 dark:border-white/5 flex items-center gap-4 ring-1 ring-black/5">
+                 <div className="p-3 bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 rounded-lg">
                      <Server size={24} />
                  </div>
                  <div className="flex-1">
-                     <label className="block text-sm font-medium text-slate-300 mb-2">Chọn Máy Chủ Để Áp Dụng (Per-Server)</label>
+                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chọn Máy Chủ Để Áp Dụng (Per-Server)</label>
                      <select 
                          value={selectedGuild}
                          onChange={(e) => setSelectedGuild(e.target.value)}
-                         className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                         className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                      >
                          <option value="global">🌍 Dùng Chung (Global - Mặc định)</option>
                          {guilds.map((g: any) => (
@@ -153,13 +153,13 @@ export const Settings = () => {
             )}
 
             {/* API Key Configuration */}
-            <div className="bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 space-y-4 relative overflow-hidden ring-1 ring-black/5 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-shadow duration-500">
+            <div className="bg-surface/80 p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-4 relative overflow-hidden ring-1 ring-black/5 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-shadow duration-500">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-xl" />
                 <div className="flex items-center gap-3 mb-2">
-                    <Key size={24} className="text-amber-400" />
+                    <Key size={24} className="text-amber-500 dark:text-amber-400" />
                     <div>
                         <h2 className="text-lg font-semibold text-foreground">Gemini API Key</h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
                             {selectedGuild === 'global' 
                                 ? 'Key AI dùng chung cho toàn bộ hệ thống (Mặc định).' 
                                 : 'Key AI tách biệt và độc lập cho Server này (Ưu tiên dùng thay thế Key Global).'}
@@ -172,19 +172,19 @@ export const Settings = () => {
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                         placeholder="Nhập API Key API (Bắt đầu với AIza... Hoặc bỏ trống để dùng Mặc định)"
-                        className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3.5 text-foreground font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
+                        className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3.5 text-foreground font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
                     />
                     <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors p-1"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors p-1"
                     >
                         {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                 </div>
             </div>
 
-            <div className="bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.05)] transition-shadow duration-500">
+            <div className="bg-surface/80 p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.05)] transition-shadow duration-500">
                  {renderTextarea(
                      "1. Danh tính (Bot là ai?)", 
                      "identity", 
@@ -217,11 +217,11 @@ export const Settings = () => {
                  )}
             </div>
             
-            <div className="bg-red-500/10 rounded-3xl p-8 border border-red-500/10 ring-1 ring-black/5">
-                <h3 className="text-lg font-bold mb-4 text-red-400 flex items-center gap-2">
+            <div className="bg-red-50 dark:bg-red-500/10 rounded-3xl p-8 border border-red-200 dark:border-red-500/10 ring-1 ring-black/5">
+                <h3 className="text-lg font-bold mb-4 text-red-500 dark:text-red-400 flex items-center gap-2">
                     <AlertCircle size={20} /> Dangerous Zone
                 </h3>
-                <button className="px-4 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
+                <button className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 dark:border-red-500/50 dark:text-red-500 dark:hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
                     Reset Factory (Sẽ gọi lệnh xóa DB - Chưa hỗ trợ)
                 </button>
             </div>
