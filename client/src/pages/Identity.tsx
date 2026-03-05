@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, UserCircle, AlertCircle, CheckCircle2, Server, Edit3, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import api from '../api';
 
 export const Identity = () => {
@@ -94,11 +95,20 @@ export const Identity = () => {
     }
   };
 
-  return (
-    <div className="space-y-6 animate-fade-in relative">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }} 
+        animate={{ opacity: 1 }} 
+        className="space-y-8 animate-fade-in relative pb-12"
+      >
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl relative overflow-hidden ring-1 ring-black/5"
+        >
+          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
         
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
@@ -109,20 +119,29 @@ export const Identity = () => {
             <p className="text-slate-400 mt-1">Cài đặt Biệt Danh và Chữ Ký cá nhân cho người dùng cụ thể</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Messages */}
       {message && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 animate-fade-in-up ${
-          message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-        }`}>
+        <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`p-4 rounded-xl flex items-center gap-3 shadow-lg ${
+                message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
+            }`}
+        >
           {message.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
           <p className="font-medium">{message.text}</p>
-        </div>
+        </motion.div>
       )}
 
       {/* Select Server Bar */}
-      <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.5 }}
+        className="bg-surface/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl flex items-center gap-4 ring-1 ring-black/5"
+      >
             <div className="p-3 bg-purple-500/10 text-purple-400 rounded-lg">
                 <Server size={24} />
             </div>
@@ -139,10 +158,15 @@ export const Identity = () => {
                     {guilds.length === 0 && <option value="">Đang tải...</option>}
                 </select>
             </div>
-      </div>
+      </motion.div>
 
       {/* User Grid */}
-      <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg min-h-[400px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="bg-surface/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl min-h-[400px] ring-1 ring-black/5"
+      >
          <h2 className="text-lg font-semibold text-foreground mb-6">2. Danh Sách Thành Viên ({users.length})</h2>
          
          {fetchingUsers ? (
@@ -206,12 +230,17 @@ export const Identity = () => {
                  ))}
              </div>
          )}
-      </div>
+      </motion.div>
 
       {/* Edit Modal / Right Panel Overlay */}
       {editingUser && (
            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-surface/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-surface/70 backdrop-blur-3xl border border-white/10 dark:border-white/5 shadow-2xl rounded-3xl w-full max-w-lg overflow-hidden ring-1 ring-black/5"
+                >
                     <div className="flex justify-between items-center p-6 border-b border-slate-700/50 bg-slate-800/20">
                         <div className="flex items-center gap-3">
                             <img 
@@ -270,9 +299,9 @@ export const Identity = () => {
                             {loading ? 'Đang lưu...' : 'Lưu Danh Tính'}
                         </button>
                     </div>
-                </div>
+                </motion.div>
            </div>
       )}
-    </div>
+    </motion.div>
   );
 };

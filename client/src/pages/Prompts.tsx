@@ -200,12 +200,21 @@ export const Prompts = () => {
     const activeItem = promptCategories.flatMap(c => c.items).find(i => i.key === activeTab);
 
     return (
-        <div className="space-y-6 animate-fade-in relative max-h-full flex flex-col h-[calc(100vh-6rem)]">
+        <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="space-y-6 relative max-h-full flex flex-col h-[calc(100vh-6rem)]"
+        >
             {/* Background Glows */}
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 bg-primary/5 rounded-[100%] blur-3xl pointer-events-none" />
+            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 bg-primary/10 rounded-[100%] blur-[120px] pointer-events-none mix-blend-screen" />
 
             {/* Header section (Sticky) */}
-            <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2 border-b border-slate-700/30">
+            <motion.header 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-4 border-b border-white/10 dark:border-white/5"
+            >
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <Terminal className="text-primary" size={28} />
@@ -296,7 +305,7 @@ export const Prompts = () => {
                         </button>
                     </div>
                 </div>
-            </header>
+            </motion.header>
 
             {/* Notification Toasts */}
             <AnimatePresence>
@@ -316,10 +325,15 @@ export const Prompts = () => {
             </AnimatePresence>
 
             {/* Main IDE Layout */}
-            <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative z-10">
+            <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative z-10 w-full">
                 
                 {/* File Explorer (Sidebar L) */}
-                <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1">
+                <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1, duration: 0.5 }}
+                    className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1 bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-4 shadow-2xl ring-1 ring-black/5 h-full"
+                >
                     {promptCategories.map((category) => (
                         <div key={category.id} className="space-y-1">
                             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -356,10 +370,15 @@ export const Prompts = () => {
                             </div>
                         </div>
                     ))}
-                </div>
+                </motion.div>
 
                 {/* Editor Surface (Main Right) */}
-                <div className="flex-1 flex flex-col bg-background/50 border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-shadow transition-colors">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="flex-1 flex flex-col bg-surface/40 backdrop-blur-3xl border border-white/10 dark:border-white/5 shadow-2xl rounded-3xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all ring-1 ring-black/5"
+                >
                     
                     {/* Editor Tab Bar */}
                     <div className="flex items-center bg-surface border-b border-slate-700/50 px-2 py-1 gap-2">
@@ -462,9 +481,9 @@ export const Prompts = () => {
                          </div>
                          <span>EvoVerse IDE.</span>
                     </div>
-                </div>
+                </motion.div>
 
             </div>
-        </div>
+        </motion.div>
     );
 };

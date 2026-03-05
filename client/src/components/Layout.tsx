@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -29,6 +30,7 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: stri
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [botInfo, setBotInfo] = useState<any>(null);
   const { theme, toggleTheme } = useTheme();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchBotInfo = async () => {
@@ -43,13 +45,20 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans relative">
-      {/* Background ambient light effects */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
-      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none translate-y-1/2" />
+    <div className="flex h-screen bg-background overflow-hidden font-sans relative selection:bg-primary/30 selection:text-primary">
+      {/* Background ambient light effects (The Orbs 2026 UI) */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[130px] pointer-events-none -translate-y-1/2 translate-x-1/3 animate-blob mix-blend-screen dark:mix-blend-color-dodge" />
+      <div 
+         className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[150px] pointer-events-none translate-y-1/3 animate-blob mix-blend-screen dark:mix-blend-color-dodge" 
+         style={{ animationDelay: '2s' }}
+      />
+      <div 
+         className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px] pointer-events-none -translate-x-1/2 -translate-y-1/2 animate-blob mix-blend-screen dark:mix-blend-color-dodge"
+         style={{ animationDelay: '4s' }}
+      />
 
       {/* Sidebar */}
-      <aside className="w-64 bg-surface/80 backdrop-blur-xl border-r border-slate-700/50 flex flex-col p-4 relative z-10 transition-colors duration-300">
+      <aside className="w-64 bg-surface/70 backdrop-blur-2xl border-r border-slate-700/50 flex flex-col p-4 relative z-20 transition-colors duration-500">
         {/* Glow Effect Top Left */}
         <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -121,10 +130,19 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto min-w-0">
-        <div className="max-w-7xl mx-auto p-8">
-            {children}
-        </div>
+      <main className="flex-1 overflow-y-auto min-w-0 z-10 relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 15, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -15, filter: 'blur(8px)' }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="max-w-7xl mx-auto p-8 min-h-full"
+          >
+              {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );

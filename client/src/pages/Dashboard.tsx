@@ -8,8 +8,8 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
   <motion.div 
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ delay }}
-    className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-sm relative overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:-translate-y-1 hover:border-primary/30"
+    transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+    className="bg-surface/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(var(--color-primary),0.2)] hover:border-primary/40 ring-1 ring-black/5"
   >
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <Icon size={64} className={`text-${color}-500`} />
@@ -24,7 +24,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
       </div>
     </div>
     <div className="w-full bg-slate-700/30 h-1.5 rounded-full overflow-hidden relative z-10">
-        <div className={`h-full bg-${color}-500 w-[70%] shadow-[0_0_10px_rgba(var(--${color}-500),0.5)]`}></div> 
+        <div className={`h-full bg-${color}-500 w-[70%] shadow-[0_0_15px_rgba(var(--color-${color}),0.8)]`}></div> 
     </div>
   </motion.div>
 );
@@ -92,8 +92,8 @@ export const Dashboard = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="lg:col-span-2 bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="lg:col-span-2 bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-6 shadow-2xl ring-1 ring-black/5 mix-blend-luminosity hover:mix-blend-normal transition-all duration-500"
           >
               <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><TrendingUp size={20} /></div>
@@ -125,8 +125,8 @@ export const Dashboard = () => {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
+            transition={{ delay: 0.6, duration: 0.6 }}
+            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-6 shadow-2xl ring-1 ring-black/5 hover:-translate-y-1 transition-transform duration-500"
           >
               <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><PieIcon size={20} /></div>
@@ -169,8 +169,8 @@ export const Dashboard = () => {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.7 }}
-            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden"
+            transition={{ delay: 0.7, duration: 0.6 }}
+            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden shadow-2xl ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.1)] transition-shadow duration-500"
           >
             <div className="p-6 border-b border-slate-700/50 flex justify-between items-center">
               <h3 className="font-bold text-lg text-foreground">Connected Servers</h3>
@@ -200,8 +200,8 @@ export const Dashboard = () => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8 }}
-            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden"
+            transition={{ delay: 0.8, duration: 0.6 }}
+            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden shadow-2xl ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-shadow duration-500"
           >
             <div className="p-6 border-b border-slate-700/50">
               <h3 className="font-bold text-lg text-white text-emerald-400">Top Active Users</h3>

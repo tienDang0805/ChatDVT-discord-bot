@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getGuilds, getGuildChannels, sendAnnouncement, leaveGuild } from '../api';
 import { Megaphone, Trash2, Send, AlertTriangle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const ControlCenter = () => {
     const [guilds, setGuilds] = useState<any[]>([]);
@@ -51,17 +52,26 @@ export const ControlCenter = () => {
     };
 
     return (
-        <div className="space-y-8">
-            <div>
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-8 pb-12"
+        >
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-3">
                     <AlertTriangle className="text-orange-400" /> Control Center
                 </h2>
                 <p className="text-slate-400 mt-2">Manage server interactions and broadcasts.</p>
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Announcement Panel */}
-                <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 space-y-6">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-8 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.1)] transition-shadow duration-500"
+                >
                     <div className="flex items-center gap-3 border-b border-slate-700/50 pb-4">
                         <Megaphone className="text-blue-400" />
                         <h3 className="text-xl font-bold text-foreground">Broadcast Announcement</h3>
@@ -129,10 +139,15 @@ export const ControlCenter = () => {
                             {loading ? 'Sending...' : <><Send size={18} /> Send Announcement</>}
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Danger Zone */}
-                <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-red-500/20 p-6 space-y-6 h-fit">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="bg-red-500/5 backdrop-blur-2xl rounded-3xl border border-red-500/10 shadow-2xl p-8 space-y-6 h-fit ring-1 ring-black/5"
+                >
                     <div className="flex items-center gap-3 border-b border-red-500/20 pb-4">
                         <AlertTriangle className="text-red-500" />
                         <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
@@ -161,12 +176,12 @@ export const ControlCenter = () => {
                            <Trash2 size={18} /> Leave Server
                         </button>
                     </div>
-                </div>
+                </motion.div>
             </div>
 
             {/* System Logs */}
             <SystemLogViewer />
-        </div>
+        </motion.div>
     );
 };
 
@@ -196,7 +211,12 @@ const SystemLogViewer = () => {
     }, [autoRefresh]);
 
     return (
-        <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 space-y-6">
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-8 space-y-6 ring-1 ring-black/5 overflow-hidden"
+        >
             <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
@@ -267,6 +287,6 @@ const SystemLogViewer = () => {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </motion.div>
     );
 };
