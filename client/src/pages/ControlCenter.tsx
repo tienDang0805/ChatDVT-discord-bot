@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { getGuilds, getGuildChannels, sendAnnouncement, leaveGuild } from '../api';
-import { Megaphone, Trash2, Send, AlertTriangle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../api';
+import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const ControlCenter = () => {
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState('');
     const [channels, setChannels] = useState<any[]>([]);
     const [selectedChannel, setSelectedChannel] = useState('');
-    const [title, setTitle] = useState('');
-    const [message, setMessage] = useState('');
+    
+    // Compose State
+    const [content, setContent] = useState('');
+    const [isEmbed, setIsEmbed] = useState(false);
+    const [embedTitle, setEmbedTitle] = useState('');
+    const [embedDesc, setEmbedDesc] = useState('');
+    const [embedColor, setEmbedColor] = useState('#10B981'); // Emerald
+    const [embedImage, setEmbedImage] = useState('');
+
     const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
     const [loading, setLoading] = useState(false);
+    const [history, setHistory] = useState<any[]>([]);
 
     useEffect(() => {
         getGuilds().then(setGuilds).catch(console.error);
@@ -21,20 +29,58 @@ export const ControlCenter = () => {
         if (selectedGuild) {
             getGuildChannels(selectedGuild).then(setChannels).catch(console.error);
             setSelectedChannel('');
+        } else {
+            setChannels([]);
         }
     }, [selectedGuild]);
 
+    // Group channels by parentCategory
+    const groupedChannels = channels.reduce((acc, channel) => {
+        const cat = channel.parentName || 'Uncategorized';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(channel);
+        return acc;
+    }, {} as Record<string, any[]>);
+
     const handleSend = async () => {
-        if (!selectedGuild || !selectedChannel || !message) return;
+        if (!selectedGuild || !selectedChannel) return;
+        if (!content && !isEmbed) return;
+        if (isEmbed && !embedTitle && !embedDesc) return;
+
         setLoading(true);
         setStatus(null);
         try {
-            await sendAnnouncement(selectedGuild, { channelId: selectedChannel, title, message });
-            setStatus({ type: 'success', msg: 'Announcement sent successfully!' });
-            setTitle('');
-            setMessage('');
-        } catch (error) {
-            setStatus({ type: 'error', msg: 'Failed to send announcement.' });
+            let embedData = undefined;
+            if (isEmbed) {
+                embedData = {
+                    title: embedTitle,
+                    description: embedDesc,
+                    color: parseInt(embedColor.replace('#', ''), 16),
+                    image: embedImage ? { url: embedImage } : undefined,
+                };
+            }
+
+            await sendControlMessage(selectedGuild, selectedChannel, content, embedData);
+            
+            setStatus({ type: 'success', msg: 'Message dispatched successfully!' });
+            
+            // Add to local history
+            const channelName = channels.find(c => c.id === selectedChannel)?.name || selectedChannel;
+            setHistory(prev => [{
+                id: Date.now(),
+                channel: channelName,
+                preview: isEmbed ? `[Embed] ${embedTitle}` : content.substring(0, 30) + '...',
+                time: new Date().toLocaleTimeString()
+            }, ...prev].slice(0, 5));
+
+            setContent('');
+            if(isEmbed) {
+               setEmbedTitle('');
+               setEmbedDesc('');
+               setEmbedImage('');
+            }
+        } catch (error: any) {
+            setStatus({ type: 'error', msg: error.response?.data?.error || 'Failed to send message.' });
         }
         setLoading(false);
     };
@@ -58,235 +104,292 @@ export const ControlCenter = () => {
             className="space-y-8 pb-12"
         >
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent flex items-center gap-3">
-                    <AlertTriangle className="text-orange-400" /> Control Center
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
+                    <Megaphone className="text-emerald-400" /> Server Control Panel
                 </h2>
-                <p className="text-slate-400 mt-2">Manage server interactions and broadcasts.</p>
+                <p className="text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Announcement Panel */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* LEFT COLUMN: Server & Channel Selection */}
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-8 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.1)] transition-shadow duration-500"
+                    className="lg:col-span-4 space-y-6"
                 >
-                    <div className="flex items-center gap-3 border-b border-slate-700/50 pb-4">
-                        <Megaphone className="text-blue-400" />
-                        <h3 className="text-xl font-bold text-foreground">Broadcast Announcement</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-1">Target Server</label>
-                                <select 
-                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors"
-                                    value={selectedGuild}
-                                    onChange={(e) => setSelectedGuild(e.target.value)}
-                                >
-                                    <option value="">Select Server</option>
-                                    {guilds.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-400 mb-1">Target Channel</label>
-                                <select 
-                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors"
-                                    value={selectedChannel}
-                                    onChange={(e) => setSelectedChannel(e.target.value)}
-                                    disabled={!selectedGuild}
-                                >
-                                    <option value="">Select Text Channel</option>
-                                    {channels.map(c => <option key={c.id} value={c.id}>#{c.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Title (Optional)</label>
-                            <input 
-                                type="text"
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors placeholder-slate-600"
-                                placeholder="e.g. System Update v2.0"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Message Content</label>
-                            <textarea 
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors placeholder-slate-600 h-32 resize-none"
-                                placeholder="Enter your announcement here..."
-                                value={message}
-                                onChange={(e) => setMessage(e.target.value)}
-                            ></textarea>
-                        </div>
+                    <div className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
+                        <h3 className="text-lg font-bold text-foreground mb-4">1. Select Target</h3>
                         
-                        {status && (
-                            <div className={`p-3 rounded-lg text-sm ${status.type === 'success' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                                {status.msg}
-                            </div>
-                        )}
-
-                        <button 
-                            onClick={handleSend}
-                            disabled={loading || !selectedGuild || !selectedChannel || !message}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? 'Sending...' : <><Send size={18} /> Send Announcement</>}
-                        </button>
-                    </div>
-                </motion.div>
-
-                {/* Danger Zone */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="bg-red-500/5 backdrop-blur-2xl rounded-3xl border border-red-500/10 shadow-2xl p-8 space-y-6 h-fit ring-1 ring-black/5"
-                >
-                    <div className="flex items-center gap-3 border-b border-red-500/20 pb-4">
-                        <AlertTriangle className="text-red-500" />
-                        <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
-                    </div>
-
-                    <p className="text-slate-400 text-sm">Actions here are irreversible. Proceed with caution.</p>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-400 mb-1">Select Server to Leave</label>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-400 mb-2">Discord Server</label>
                             <select 
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-red-500 transition-colors"
+                                className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-emerald-500 transition-colors"
                                 value={selectedGuild}
                                 onChange={(e) => setSelectedGuild(e.target.value)}
                             >
-                                <option value="">Select Server</option>
+                                <option value="">-- Choose a Server --</option>
                                 {guilds.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                             </select>
                         </div>
 
-                        <button 
-                            onClick={handleLeave}
-                            disabled={!selectedGuild}
-                            className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                           <Trash2 size={18} /> Leave Server
-                        </button>
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            <label className="block text-sm font-medium text-slate-400 mb-2">Text Channels</label>
+                            {!selectedGuild ? (
+                                <div className="text-center p-6 bg-white/5 rounded-xl border border-dashed border-slate-700 text-slate-500 text-sm">
+                                    Select a server to view channels
+                                </div>
+                            ) : Object.keys(groupedChannels).length === 0 ? (
+                                <div className="text-center p-6 text-slate-500 text-sm">No text channels found.</div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {Object.entries(groupedChannels).map(([category, chans]) => (
+                                        <div key={category}>
+                                            <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
+                                                <div className="h-px bg-slate-800 flex-1"></div>
+                                                {category}
+                                                <div className="h-px bg-slate-800 flex-1"></div>
+                                            </div>
+                                            <div className="space-y-1">
+                                                {chans.map(c => (
+                                                    <button
+                                                        key={c.id}
+                                                        onClick={() => setSelectedChannel(c.id)}
+                                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center gap-2 ${selectedChannel === c.id ? 'bg-emerald-500/20 text-emerald-400 font-medium' : 'hover:bg-white/5 text-slate-400 hover:text-slate-200'}`}
+                                                    >
+                                                        <span className="text-slate-600 font-mono">#</span> {c.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
+                </motion.div>
+
+                {/* RIGHT COLUMN: Composer & Preview */}
+                <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="lg:col-span-8 space-y-6"
+                >
+                    <div className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-6 ring-1 ring-black/5 flex flex-col">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-foreground">2. Compose Message</h3>
+                            
+                            {/* Message Type Toggle */}
+                            <div className="flex items-center bg-slate-900/50 p-1 rounded-xl border border-slate-700/50">
+                                <button
+                                    onClick={() => setIsEmbed(false)}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${!isEmbed ? 'bg-white/10 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Normal Text
+                                </button>
+                                <button
+                                    onClick={() => setIsEmbed(true)}
+                                    className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${isEmbed ? 'bg-emerald-500/20 text-emerald-400 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Rich Embed
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Composer Form */}
+                        <div className="space-y-4">
+                            {!isEmbed && (
+                                <div>
+                                    <textarea 
+                                        className="w-full bg-slate-900/50 border border-slate-700 rounded-xl p-4 text-foreground outline-none focus:border-emerald-500 transition-colors placeholder-slate-600 min-h-[150px] resize-y"
+                                        placeholder="Type your message here... You can use standard Discord markdown (*italics*, **bold**, `code`)"
+                                        value={content}
+                                        onChange={(e) => setContent(e.target.value)}
+                                    ></textarea>
+                                </div>
+                            )}
+
+                            {isEmbed && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    className="space-y-4 bg-slate-900/30 p-5 rounded-2xl border border-slate-700/50"
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="md:col-span-3">
+                                            <label className="block text-xs font-medium text-slate-400 mb-1">Embed Title</label>
+                                            <input 
+                                                type="text"
+                                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                                placeholder="e.g., Server Update Announcement"
+                                                value={embedTitle}
+                                                onChange={(e) => setEmbedTitle(e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-400 mb-1">Color (Hex)</label>
+                                            <input 
+                                                type="color"
+                                                className="w-full h-[42px] bg-background border border-slate-700 rounded-lg p-1 cursor-pointer"
+                                                value={embedColor}
+                                                onChange={(e) => setEmbedColor(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Description</label>
+                                        <textarea 
+                                            className="w-full bg-background border border-slate-700 rounded-lg p-3 text-foreground outline-none focus:border-emerald-500 min-h-[100px] text-sm"
+                                            placeholder="Detailed announcement text..."
+                                            value={embedDesc}
+                                            onChange={(e) => setEmbedDesc(e.target.value)}
+                                        ></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Image URL (Optional)</label>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 relative">
+                                                <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                                                <input 
+                                                    type="text"
+                                                    className="w-full bg-background border border-slate-700 rounded-lg py-2.5 pl-9 pr-3 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                                    placeholder="https://example.com/image.png"
+                                                    value={embedImage}
+                                                    onChange={(e) => setEmbedImage(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Optional Content for Embed (can be sent above the embed) */}
+                                    <div>
+                                        <label className="block text-xs font-medium text-slate-400 mb-1">Normal Text Above Embed (Optional)</label>
+                                        <input 
+                                            type="text"
+                                            className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-emerald-500 text-sm"
+                                            placeholder="Hey @everyone, check this out!"
+                                            value={content}
+                                            onChange={(e) => setContent(e.target.value)}
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        {/* Discord Preview Simulator */}
+                        <div className="mt-6 pt-6 border-t border-slate-700/50">
+                            <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">Live Preview Simulator</h4>
+                            <div className="bg-[#313338] rounded-xl p-4 flex gap-4 min-h-[100px]">
+                                {/* Avatar Mock */}
+                                <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                    <Bot size={20} className="text-emerald-500" />
+                                </div>
+                                <div className="flex-1 space-y-1 overflow-hidden">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-medium text-[15px]">ChatDVT</span>
+                                        <span className="bg-[#5865F2] text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                                            <CheckCircle size={10} /> BOT
+                                        </span>
+                                        <span className="text-[#949BA4] text-xs">Today at {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                    </div>
+                                    
+                                    {/* Normal Content Preview */}
+                                    {content && <p className="text-[#DBDEE1] whitespace-pre-wrap text-[15px] leading-relaxed">{content}</p>}
+                                    
+                                    {/* Embed Preview */}
+                                    {isEmbed && (embedTitle || embedDesc || embedImage) && (
+                                        <div className="mt-2 pl-3 border-l-4 rounded-r-lg bg-[#2B2D31] p-3 max-w-xl" style={{ borderLeftColor: embedColor }}>
+                                            {embedTitle && <div className="text-white font-bold mb-1">{embedTitle}</div>}
+                                            {embedDesc && <div className="text-[#DBDEE1] text-sm whitespace-pre-wrap mb-2">{embedDesc}</div>}
+                                            {embedImage && <img src={embedImage} alt="Preview" className="max-w-full rounded-lg max-h-64 object-cover" />}
+                                        </div>
+                                    )}
+
+                                    {!content && !isEmbed && <p className="text-slate-500 italic text-sm">Start typing to see preview...</p>}
+                                    {isEmbed && !content && !embedTitle && !embedDesc && !embedImage && <p className="text-slate-500 italic text-sm">Fill embed details to see preview...</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                             {status && (
+                                <div className={`flex items-center gap-2 p-3 rounded-xl text-sm w-full sm:w-auto ${status.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                                    {status.type === 'success' ? <CheckCircle size={16}/> : <AlertTriangle size={16}/>}
+                                    {status.msg}
+                                </div>
+                            )}
+                            <div className="flex-1"></div>
+                            <button 
+                                onClick={handleSend}
+                                disabled={loading || !selectedGuild || !selectedChannel || (!content && !isEmbed) || (isEmbed && !embedTitle && !embedDesc)}
+                                className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-foreground font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+                            >
+                                {loading ? 'Transmitting...' : <><Send size={18} /> Send to Server</>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Quick History */}
+                    {history.length > 0 && (
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                            className="bg-background/40 backdrop-blur-md rounded-2xl border border-white/5 p-4"
+                        >
+                            <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                                <Clock size={14} /> Recent Transmissions
+                            </h4>
+                            <div className="space-y-2">
+                                {history.map(h => (
+                                    <div key={h.id} className="flex items-center justify-between bg-white/5 p-2 px-3 rounded-lg text-sm">
+                                        <div className="flex items-center gap-3 truncate">
+                                            <span className="text-emerald-400 font-mono text-xs">#{h.channel}</span>
+                                            <span className="text-slate-300 truncate">{h.preview}</span>
+                                        </div>
+                                        <span className="text-slate-500 text-xs shrink-0 pl-2">{h.time}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
                 </motion.div>
             </div>
 
-            {/* System Logs */}
-            <SystemLogViewer />
-        </motion.div>
-    );
-};
-
-// Sub-component for Logs
-const SystemLogViewer = () => {
-    const [logs, setLogs] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [autoRefresh, setAutoRefresh] = useState(false);
-
-    const fetchLogs = async () => {
-        setLoading(true);
-        try {
-            const data = await import('../api').then(m => m.getSystemLogs());
-            setLogs(data);
-        } catch (error) {
-            console.error(error);
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        fetchLogs();
-        const interval = setInterval(() => {
-            if (autoRefresh) fetchLogs();
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [autoRefresh]);
-
-    return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-8 space-y-6 ring-1 ring-black/5 overflow-hidden"
-        >
-            <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-foreground">System Logs (Debug)</h3>
-                        <p className="text-sm text-slate-400">View internal errors and AI responses</p>
-                    </div>
+            {/* Danger Zone */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-red-500/5 backdrop-blur-2xl rounded-3xl border border-red-500/10 shadow-2xl p-6 ring-1 ring-black/5 max-w-xl"
+            >
+                <div className="flex items-center gap-3 border-b border-red-500/20 pb-4 mb-4">
+                    <AlertTriangle className="text-red-500" />
+                    <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
                 </div>
-                <div className="flex items-center gap-3">
-                   <button 
-                        onClick={() => setAutoRefresh(!autoRefresh)}
-                        className={`text-sm px-3 py-1.5 rounded-lg border transition-colors ${autoRefresh ? 'bg-green-500/10 border-green-500/50 text-green-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                <p className="text-slate-400 text-sm mb-4">Make the bot leave a server permanently. Proceed with caution.</p>
+                <div className="flex gap-4">
+                    <select 
+                        className="flex-1 bg-background border border-slate-700 rounded-xl p-3 text-foreground outline-none focus:border-red-500 transition-colors"
+                        value={selectedGuild}
+                        onChange={(e) => setSelectedGuild(e.target.value)}
                     >
-                        Auto-refresh: {autoRefresh ? 'ON' : 'OFF'}
-                    </button>
+                        <option value="">Select Server</option>
+                        {guilds.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                    </select>
                     <button 
-                        onClick={fetchLogs}
-                        disabled={loading}
-                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-foreground"
+                        onClick={handleLeave}
+                        disabled={!selectedGuild}
+                        className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/50 text-red-500 font-bold px-6 rounded-xl flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
+                        <Trash2 size={18} /> Leave
                     </button>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b border-slate-700/50 text-slate-400 text-sm">
-                            <th className="p-3 font-medium">Time</th>
-                            <th className="p-3 font-medium">Level</th>
-                            <th className="p-3 font-medium">Message</th>
-                            <th className="p-3 font-medium">Metadata</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-700/50">
-                        {logs.map((log) => (
-                            <tr key={log.id} className="text-sm hover:bg-white/5 transition-colors">
-                                <td className="p-3 text-slate-400 whitespace-nowrap">
-                                    {new Date(log.timestamp).toLocaleTimeString()}
-                                </td>
-                                <td className="p-3">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${
-                                        log.level === 'error' ? 'bg-red-500/10 text-red-400' :
-                                        log.level === 'warn' ? 'bg-yellow-500/10 text-yellow-400' :
-                                        'bg-blue-500/10 text-blue-400'
-                                    }`}>
-                                        {log.level}
-                                    </span>
-                                </td>
-                                <td className="p-3 text-slate-200 font-mono text-xs md:text-sm break-all max-w-md">
-                                    {log.message}
-                                </td>
-                                <td className="p-3 text-slate-400 font-mono text-xs max-w-xs truncate">
-                                    {log.metadata}
-                                </td>
-                            </tr>
-                        ))}
-                        {logs.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="p-8 text-center text-slate-500">
-                                    No logs found.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
         </motion.div>
     );
 };

@@ -51,8 +51,7 @@ export const resetChatHistory = async (guildId: string) => (await api.delete(`/p
 export const getGeminiApiKey = async (guildId: string = 'global') => (await api.get(`/gemini-api-key?guildId=${guildId}`)).data;
 export const updateGeminiApiKey = async (data: { apiKey: string }, guildId: string = 'global') => (await api.post('/gemini-api-key', { ...data, guildId })).data;
 
-// Terminal Endpoints
-export const getTerminalChannels = async (guildId: string) => (await api.get(`/terminal/channels?guildId=${guildId}`)).data;
-export const executeTerminalCommand = async (guildId: string, command: string, args: string[]) => (await api.post('/terminal/execute', { guildId, command, args })).data;
+// Control Panel Endpoints
+export const sendControlMessage = async (guildId: string, channelId: string, content: string, embed?: any) => (await api.post('/control-panel/send-message', { guildId, channelId, content, embed })).data;
 
 export default api;

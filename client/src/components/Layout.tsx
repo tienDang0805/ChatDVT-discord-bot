@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, TerminalSquare } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -113,7 +113,6 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" />
-          <NavItem to="/terminal" icon={TerminalSquare} label="🔴 Live Console" />
 
           {/* Spacer */}
           <div className="flex-1" />
