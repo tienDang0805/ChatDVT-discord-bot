@@ -247,8 +247,7 @@ app.get('/api/identities/list', async (req, res) => {
     try {
         const guildId = req.query.guildId as string;
         if (!guildId) {
-            res.status(400).json({ error: 'Missing guildId query parameter' });
-            return;
+            return res.json([]); // Return empty array instead of 400 to prevent Axios crashes when navigating to Identity tab without selecting server yet.
         }
 
         const guild = await bot.guilds.fetch(guildId).catch(() => null);

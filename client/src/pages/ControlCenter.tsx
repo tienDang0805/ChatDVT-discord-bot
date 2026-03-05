@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../api';
-import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock } from 'lucide-react';
+import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ControlCenter = () => {
