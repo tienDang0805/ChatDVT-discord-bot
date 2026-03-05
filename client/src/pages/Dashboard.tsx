@@ -100,7 +100,7 @@ export const Dashboard = () => {
                   <h3 className="text-lg font-bold text-foreground">Activity Trends (7 Days)</h3>
               </div>
               <div className="h-[300px] w-full min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                     <AreaChart data={activityHistory}>
                         <defs>
                             <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
@@ -133,7 +133,7 @@ export const Dashboard = () => {
                   <h3 className="text-lg font-bold text-foreground">Usage Distribution</h3>
               </div>
               <div className="h-[300px] w-full relative min-w-0">
-                <ResponsiveContainer width="100%" height="100%" minWidth={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                     <PieChart>
                         <Pie
                             data={usageDistribution}
