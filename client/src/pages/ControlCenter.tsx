@@ -61,10 +61,10 @@ export const ControlCenter = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Announcement Panel */}
-                <div className="bg-surface rounded-2xl border border-slate-700/50 p-6 space-y-6">
+                <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 space-y-6">
                     <div className="flex items-center gap-3 border-b border-slate-700/50 pb-4">
                         <Megaphone className="text-blue-400" />
-                        <h3 className="text-xl font-bold text-white">Broadcast Announcement</h3>
+                        <h3 className="text-xl font-bold text-foreground">Broadcast Announcement</h3>
                     </div>
 
                     <div className="space-y-4">
@@ -72,7 +72,7 @@ export const ControlCenter = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Target Server</label>
                                 <select 
-                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-white outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors"
                                     value={selectedGuild}
                                     onChange={(e) => setSelectedGuild(e.target.value)}
                                 >
@@ -83,7 +83,7 @@ export const ControlCenter = () => {
                             <div>
                                 <label className="block text-sm font-medium text-slate-400 mb-1">Target Channel</label>
                                 <select 
-                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-white outline-none focus:border-primary transition-colors"
+                                    className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors"
                                     value={selectedChannel}
                                     onChange={(e) => setSelectedChannel(e.target.value)}
                                     disabled={!selectedGuild}
@@ -98,7 +98,7 @@ export const ControlCenter = () => {
                             <label className="block text-sm font-medium text-slate-400 mb-1">Title (Optional)</label>
                             <input 
                                 type="text"
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-white outline-none focus:border-primary transition-colors placeholder-slate-600"
+                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors placeholder-slate-600"
                                 placeholder="e.g. System Update v2.0"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
@@ -108,7 +108,7 @@ export const ControlCenter = () => {
                         <div>
                             <label className="block text-sm font-medium text-slate-400 mb-1">Message Content</label>
                             <textarea 
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-white outline-none focus:border-primary transition-colors placeholder-slate-600 h-32 resize-none"
+                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-primary transition-colors placeholder-slate-600 h-32 resize-none"
                                 placeholder="Enter your announcement here..."
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
@@ -124,7 +124,7 @@ export const ControlCenter = () => {
                         <button 
                             onClick={handleSend}
                             disabled={loading || !selectedGuild || !selectedChannel || !message}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-foreground font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Sending...' : <><Send size={18} /> Send Announcement</>}
                         </button>
@@ -132,7 +132,7 @@ export const ControlCenter = () => {
                 </div>
 
                 {/* Danger Zone */}
-                <div className="bg-surface rounded-2xl border border-red-500/20 p-6 space-y-6 h-fit">
+                <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-red-500/20 p-6 space-y-6 h-fit">
                     <div className="flex items-center gap-3 border-b border-red-500/20 pb-4">
                         <AlertTriangle className="text-red-500" />
                         <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
@@ -144,7 +144,7 @@ export const ControlCenter = () => {
                         <div>
                             <label className="block text-sm font-medium text-slate-400 mb-1">Select Server to Leave</label>
                             <select 
-                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-white outline-none focus:border-red-500 transition-colors"
+                                className="w-full bg-background border border-slate-700 rounded-lg p-2.5 text-foreground outline-none focus:border-red-500 transition-colors"
                                 value={selectedGuild}
                                 onChange={(e) => setSelectedGuild(e.target.value)}
                             >
@@ -196,14 +196,14 @@ const SystemLogViewer = () => {
     }, [autoRefresh]);
 
     return (
-        <div className="bg-surface rounded-2xl border border-slate-700/50 p-6 space-y-6">
+        <div className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-white">System Logs (Debug)</h3>
+                        <h3 className="text-xl font-bold text-foreground">System Logs (Debug)</h3>
                         <p className="text-sm text-slate-400">View internal errors and AI responses</p>
                     </div>
                 </div>
@@ -217,7 +217,7 @@ const SystemLogViewer = () => {
                     <button 
                         onClick={fetchLogs}
                         disabled={loading}
-                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-white"
+                        className="p-2 hover:bg-white/5 rounded-lg transition-colors text-slate-400 hover:text-foreground"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
                     </button>

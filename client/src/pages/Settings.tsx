@@ -88,7 +88,7 @@ export const Settings = () => {
                 value={persona[field]}
                 onChange={(e) => handleChange(field, e.target.value)}
                 placeholder={placeholder}
-                className="w-full h-24 bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+                className="w-full h-24 bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
             />
             <p className="text-xs text-slate-500">{desc}</p>
         </div>
@@ -97,7 +97,7 @@ export const Settings = () => {
     return (
         <div className="space-y-6 animate-fade-in pb-12">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
                 
                 <div className="flex items-center gap-4">
@@ -105,7 +105,7 @@ export const Settings = () => {
                         <Bot size={28} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">Bot Persona (Nhân Cách AI)</h1>
+                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Bot Persona (Nhân Cách AI)</h1>
                         <p className="text-slate-400 mt-1">Thiết lập tính cách, mục đích và giọng điệu chung cho Bot.</p>
                     </div>
                 </div>
@@ -113,7 +113,7 @@ export const Settings = () => {
                 <button
                     onClick={handleSave}
                     disabled={loading}
-                    className="bg-accent hover:bg-accent/90 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                    className="bg-accent hover:bg-accent/90 text-foreground px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 active:scale-95 flex items-center gap-2 disabled:opacity-50"
                 >
                     <Save size={18} />
                     {loading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
@@ -121,7 +121,7 @@ export const Settings = () => {
             </div>
 
             {/* Selector */}
-            <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
+            <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
                  <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
                      <Server size={24} />
                  </div>
@@ -130,7 +130,7 @@ export const Settings = () => {
                      <select 
                          value={selectedGuild}
                          onChange={(e) => setSelectedGuild(e.target.value)}
-                         className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                         className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                      >
                          <option value="global">🌍 Dùng Chung (Global - Mặc định)</option>
                          {guilds.map((g: any) => (
@@ -151,12 +151,12 @@ export const Settings = () => {
             )}
 
             {/* API Key Configuration */}
-            <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-4 relative overflow-hidden">
+            <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-4 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl" />
                 <div className="flex items-center gap-3 mb-2">
                     <Key size={24} className="text-amber-400" />
                     <div>
-                        <h2 className="text-lg font-semibold text-white">Gemini API Key</h2>
+                        <h2 className="text-lg font-semibold text-foreground">Gemini API Key</h2>
                         <p className="text-sm text-slate-400">
                             {selectedGuild === 'global' 
                                 ? 'Key AI dùng chung cho toàn bộ hệ thống (Mặc định).' 
@@ -170,7 +170,7 @@ export const Settings = () => {
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
                         placeholder="Nhập API Key API (Bắt đầu với AIza... Hoặc bỏ trống để dùng Mặc định)"
-                        className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3.5 text-white font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
+                        className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3.5 text-foreground font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
                     />
                     <button
                         type="button"
@@ -182,7 +182,7 @@ export const Settings = () => {
                 </div>
             </div>
 
-            <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-6">
+            <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg space-y-6">
                  {renderTextarea(
                      "1. Danh tính (Bot là ai?)", 
                      "identity", 
@@ -215,8 +215,8 @@ export const Settings = () => {
                  )}
             </div>
             
-            <div className="bg-surface rounded-xl p-6 border border-slate-700/50">
-                <h3 className="text-lg font-bold mb-4 text-white">Dangerous Zone</h3>
+            <div className="bg-surface/60 backdrop-blur-md rounded-xl p-6 border border-slate-700/50">
+                <h3 className="text-lg font-bold mb-4 text-foreground">Dangerous Zone</h3>
                 <button className="px-4 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
                     Reset Factory (Sẽ gọi lệnh xóa DB - Chưa hỗ trợ)
                 </button>

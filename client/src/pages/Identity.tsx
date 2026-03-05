@@ -97,7 +97,7 @@ export const Identity = () => {
   return (
     <div className="space-y-6 animate-fade-in relative">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-xl relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
         
         <div className="flex items-center gap-4">
@@ -105,7 +105,7 @@ export const Identity = () => {
             <UserCircle size={28} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Custom Identity (Danh Tính)</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Custom Identity (Danh Tính)</h1>
             <p className="text-slate-400 mt-1">Cài đặt Biệt Danh và Chữ Ký cá nhân cho người dùng cụ thể</p>
           </div>
         </div>
@@ -122,7 +122,7 @@ export const Identity = () => {
       )}
 
       {/* Select Server Bar */}
-      <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
+      <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg flex items-center gap-4">
             <div className="p-3 bg-purple-500/10 text-purple-400 rounded-lg">
                 <Server size={24} />
             </div>
@@ -131,7 +131,7 @@ export const Identity = () => {
                 <select 
                     value={selectedGuild}
                     onChange={(e) => setSelectedGuild(e.target.value)}
-                    className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                    className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 >
                     {guilds.map((g: any) => (
                         <option key={g.id} value={g.id}>🏠 {g.name}</option>
@@ -142,8 +142,8 @@ export const Identity = () => {
       </div>
 
       {/* User Grid */}
-      <div className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-lg min-h-[400px]">
-         <h2 className="text-lg font-semibold text-white mb-6">2. Danh Sách Thành Viên ({users.length})</h2>
+      <div className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-lg min-h-[400px]">
+         <h2 className="text-lg font-semibold text-foreground mb-6">2. Danh Sách Thành Viên ({users.length})</h2>
          
          {fetchingUsers ? (
              <div className="flex justify-center items-center h-40 text-slate-400">
@@ -180,7 +180,7 @@ export const Identity = () => {
                                 className="w-16 h-16 rounded-full ring-2 ring-slate-700/50 object-cover"
                              />
                              <div>
-                                 <h3 className="text-white font-medium truncate w-full px-2">
+                                 <h3 className="text-foreground font-medium truncate w-full px-2">
                                      {user.globalName || user.username}
                                  </h3>
                                  <p className="text-xs text-slate-400 font-mono mt-0.5">{user.id}</p>
@@ -198,7 +198,7 @@ export const Identity = () => {
 
                          {/* Hover Edit Overlay */}
                          <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="flex items-center gap-2 text-white bg-primary px-4 py-2 rounded-full text-sm font-medium shadow-lg">
+                              <span className="flex items-center gap-2 text-foreground bg-primary px-4 py-2 rounded-full text-sm font-medium shadow-lg">
                                   <Edit3 size={16} /> Chỉnh Sửa
                               </span>
                          </div>
@@ -211,7 +211,7 @@ export const Identity = () => {
       {/* Edit Modal / Right Panel Overlay */}
       {editingUser && (
            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-                <div className="bg-surface border border-slate-700 shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="bg-surface/60 backdrop-blur-md border border-slate-700 shadow-2xl rounded-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
                     <div className="flex justify-between items-center p-6 border-b border-slate-700/50 bg-slate-800/20">
                         <div className="flex items-center gap-3">
                             <img 
@@ -220,11 +220,11 @@ export const Identity = () => {
                                 className="w-10 h-10 rounded-full"
                             />
                             <div>
-                                <h2 className="text-lg font-bold text-white leading-tight">Chỉnh sửa Danh tính</h2>
+                                <h2 className="text-lg font-bold text-foreground leading-tight">Chỉnh sửa Danh tính</h2>
                                 <p className="text-sm text-slate-400">@{editingUser.username}</p>
                             </div>
                         </div>
-                        <button onClick={closeEditor} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors">
+                        <button onClick={closeEditor} className="p-2 text-slate-400 hover:text-foreground hover:bg-slate-700/50 rounded-lg transition-colors">
                             <X size={20} />
                         </button>
                     </div>
@@ -237,7 +237,7 @@ export const Identity = () => {
                             value={nickname}
                             onChange={(e) => setNickname(e.target.value)}
                             placeholder="Ví dụ: Đại Ca, Sếp, Chó Con..."
-                            className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                            className="w-full bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                             />
                             <p className="text-xs text-slate-500">Bot sẽ gọi người này bằng tên hiển thị ở đây thây vì tên tài khoản.</p>
                         </div>
@@ -248,7 +248,7 @@ export const Identity = () => {
                             value={signature}
                             onChange={(e) => setSignature(e.target.value)}
                             placeholder="Ví dụ: Thằng này rất thích ăn phở, học dốt toán..."
-                            className="w-full h-32 bg-background border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors font-mono text-sm resize-none"
+                            className="w-full h-32 bg-background border border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors font-mono text-sm resize-none"
                             />
                             <p className="text-xs text-slate-500">Mô tả về người này để AI nhớ. (Ghi chú chi tiết về tính cách, sở thích, tuổi...)</p>
                         </div>
@@ -257,14 +257,14 @@ export const Identity = () => {
                     <div className="p-6 border-t border-slate-700/50 bg-slate-800/20 flex justify-end gap-3">
                         <button 
                             onClick={closeEditor}
-                            className="px-5 py-2.5 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+                            className="px-5 py-2.5 rounded-xl font-medium text-slate-300 hover:text-foreground hover:bg-slate-700 transition-colors"
                         >
                             Hủy bỏ
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={loading}
-                            className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25 active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                            className="bg-primary hover:bg-primary/90 text-foreground px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-primary/25 active:scale-95 flex items-center gap-2 disabled:opacity-50"
                         >
                             <Save size={18} />
                             {loading ? 'Đang lưu...' : 'Lưu Danh Tính'}

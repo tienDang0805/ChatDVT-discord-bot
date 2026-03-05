@@ -207,7 +207,7 @@ export const Prompts = () => {
             {/* Header section (Sticky) */}
             <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-2 border-b border-slate-700/30">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                    <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <Terminal className="text-primary" size={28} />
                         Prompt Studio
                     </h1>
@@ -223,23 +223,23 @@ export const Prompts = () => {
                         <select 
                             value={selectedGuild} 
                             onChange={handleServerChange}
-                            className="bg-transparent border-none text-white text-sm font-medium focus:ring-0 w-full min-w-[200px] cursor-pointer"
+                            className="bg-transparent border-none text-foreground text-sm font-medium focus:ring-0 w-full min-w-[200px] cursor-pointer"
                         >
-                            <option value="global" className="bg-slate-800">🌐 Global Core (Mặc định)</option>
+                            <option value="global" className="bg-surface">🌐 Global Core (Mặc định)</option>
                             {guilds.map(g => (
-                                <option key={g.id} value={g.id} className="bg-slate-800">🏠 {g.name}</option>
+                                <option key={g.id} value={g.id} className="bg-surface">🏠 {g.name}</option>
                             ))}
                         </select>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-wrap justify-end gap-2 w-full lg:w-auto">
-                        <div className="flex bg-[#1a1d27] rounded-xl border border-slate-700/50 p-1">
+                        <div className="flex bg-surface rounded-xl border border-slate-700/50 p-1">
                             <button
                                 onClick={() => setViewMode('edit')}
                                 className={clsx(
                                     "px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2",
-                                    viewMode === 'edit' ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200"
+                                    viewMode === 'edit' ? "bg-slate-700 text-foreground shadow-sm" : "text-slate-400 hover:text-slate-200"
                                 )}
                                 title="Builder"
                             >
@@ -268,7 +268,7 @@ export const Prompts = () => {
                         </div>
                         <button 
                             onClick={() => fetchPrompts(selectedGuild)} 
-                            className="p-2.5 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-xl transition-colors"
+                            className="p-2.5 text-slate-400 hover:text-foreground bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-xl transition-colors"
                             title="Tải Lại Data"
                         >
                             <RefreshCw size={18} className={clsx(loading && "animate-spin")} />
@@ -359,11 +359,11 @@ export const Prompts = () => {
                 </div>
 
                 {/* Editor Surface (Main Right) */}
-                <div className="flex-1 flex flex-col bg-[#0f111a] border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-shadow transition-colors">
+                <div className="flex-1 flex flex-col bg-background/50 border border-slate-700/50 shadow-2xl rounded-2xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-shadow transition-colors">
                     
                     {/* Editor Tab Bar */}
-                    <div className="flex items-center bg-[#1a1d27] border-b border-slate-700/50 px-2 py-1 gap-2">
-                        <div className="flex items-center gap-2 bg-[#0f111a] px-4 py-1.5 border-t-2 border-primary rounded-t-lg">
+                    <div className="flex items-center bg-surface border-b border-slate-700/50 px-2 py-1 gap-2">
+                        <div className="flex items-center gap-2 bg-background/50 px-4 py-1.5 border-t-2 border-primary rounded-t-lg">
                             <Terminal size={14} className="text-primary" />
                             <span className="text-sm font-mono text-slate-200">{activeTab}.prompt</span>
                         </div>
@@ -401,9 +401,9 @@ export const Prompts = () => {
                     </div>
 
                     {/* Editor Status Meta */}
-                    <div className="bg-[#151822] px-6 py-3 border-b border-slate-800/80 flex items-center justify-between">
+                    <div className="bg-surface px-6 py-3 border-b border-slate-800/80 flex items-center justify-between">
                          <div>
-                             <h3 className="text-white font-medium">{activeItem?.label}</h3>
+                             <h3 className="text-foreground font-medium">{activeItem?.label}</h3>
                              <p className="text-xs text-slate-400 mt-0.5">{activeItem?.desc}</p>
                          </div>
                          {selectedGuild !== 'global' && !config?.[activeTab] && (
@@ -414,10 +414,10 @@ export const Prompts = () => {
                     </div>
 
                     {/* The Code Area */}
-                    <div className="flex-1 relative cursor-text overflow-hidden bg-[#0d0f16]">
+                    <div className="flex-1 relative cursor-text overflow-hidden bg-background">
                         {/* Line Numbers Fake (Decorative) */}
                         {viewMode !== 'edit' && (
-                            <div className="absolute left-0 top-0 bottom-0 w-12 bg-[#1a1d27]/40 border-r border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
+                            <div className="absolute left-0 top-0 bottom-0 w-12 bg-surface/40 border-r border-slate-800 flex flex-col items-end py-6 pr-3 font-mono text-xs text-slate-600 select-none pointer-events-none z-10">
                                 {[...Array(50)].map((_, i) => (
                                     <div key={i} className="leading-7 opacity-50">{i + 1}</div>
                                 ))}
@@ -425,7 +425,7 @@ export const Prompts = () => {
                         )}
                         
                         {viewMode === 'edit' ? (
-                            <div className="absolute inset-0 z-0 bg-[#0d0f16]">
+                            <div className="absolute inset-0 z-0 bg-background">
                                 <TreeEditor 
                                     key={activeTab}
                                     initialJson={parsedData} 
@@ -433,7 +433,7 @@ export const Prompts = () => {
                                 />
                             </div>
                         ) : (
-                            <div className="absolute inset-0 p-6 pl-16 overflow-y-auto custom-scrollbar bg-[#0f111a]">
+                            <div className="absolute inset-0 p-6 pl-16 overflow-y-auto custom-scrollbar bg-background">
                                 {loadingPreview ? (
                                     <div className="flex items-center gap-3 text-emerald-400 font-mono text-sm animate-pulse">
                                         <RefreshCw size={16} className="animate-spin" /> Fetching latest configs...
@@ -450,7 +450,7 @@ export const Prompts = () => {
                     </div>
                     
                     {/* Editor Footer */}
-                    <div className="px-4 py-1.5 bg-[#1a1d27] border-t border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                    <div className="px-4 py-1.5 bg-surface border-t border-slate-700/50 flex items-center justify-between text-[11px] font-mono text-slate-500">
                          <div className="flex items-center gap-4">
                              {viewMode !== 'edit' ? (
                                  <span className="flex items-center gap-1.5 text-emerald-400"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Compiled View</span>

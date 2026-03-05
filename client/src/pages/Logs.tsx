@@ -62,7 +62,7 @@ export const Logs = () => {
                     <div className="relative">
                         <Server className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                         <select 
-                            className="bg-surface border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none hover:bg-slate-700/50 transition-colors cursor-pointer appearance-none min-w-[180px]"
+                            className="bg-surface/60 backdrop-blur-md border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none hover:bg-slate-700/50 transition-colors cursor-pointer appearance-none min-w-[180px]"
                             value={selectedGuild}
                             onChange={(e) => setSelectedGuild(e.target.value)}
                         >
@@ -80,7 +80,7 @@ export const Logs = () => {
                         </div>
                         <input 
                             type="text" 
-                            className="bg-surface border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none placeholder-slate-500 min-w-[240px]" 
+                            className="bg-surface/60 backdrop-blur-md border border-slate-700 text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none placeholder-slate-500 min-w-[240px]" 
                             placeholder="Search content or user..." 
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -89,10 +89,10 @@ export const Logs = () => {
                 </div>
             </div>
             
-            <div className="bg-surface rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
+            <div className="bg-surface/60 backdrop-blur-md rounded-xl border border-slate-700/50 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-900/50 text-slate-400 border-b border-slate-700/50">
+                        <thead className="bg-surface/40 backdrop-blur-sm text-slate-400 border-b border-slate-700/50">
                             <tr>
                                 <th className="p-4 font-medium">Type</th>
                                 <th className="p-4 font-medium">User</th>
@@ -119,7 +119,7 @@ export const Logs = () => {
                                                 {log.type || 'CHAT'}
                                             </span>
                                         </td>
-                                        <td className="p-4 font-medium text-white whitespace-nowrap">
+                                        <td className="p-4 font-medium text-foreground whitespace-nowrap">
                                             <div className="flex flex-col">
                                                 <span>{log.username}</span>
                                                 <span className="text-xs text-slate-500">{log.userId}</span>
@@ -151,22 +151,22 @@ export const Logs = () => {
 
                 {/* Pagination */}
                 {!loading && logs.length > 0 && (
-                    <div className="flex items-center justify-between p-4 border-t border-slate-700/50 bg-slate-900/20">
+                    <div className="flex items-center justify-between p-4 border-t border-slate-700/50 bg-surface/30 backdrop-blur-sm">
                         <div className="text-sm text-slate-400">
-                            Page <span className="font-medium text-white">{page}</span> of <span className="font-medium text-white">{totalPages}</span>
+                            Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span>
                         </div>
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => setPage(p => Math.max(1, p - 1))}
                                 disabled={page === 1}
-                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronLeft size={20} />
                             </button>
                             <button 
                                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                 disabled={page === totalPages}
-                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="p-2 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                                 <ChevronRight size={20} />
                             </button>

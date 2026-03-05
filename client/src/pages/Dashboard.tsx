@@ -9,7 +9,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="bg-surface p-6 rounded-2xl border border-slate-700/50 shadow-sm relative overflow-hidden group"
+    className="bg-surface/60 backdrop-blur-md p-6 rounded-2xl border border-slate-700/50 shadow-sm relative overflow-hidden group transition-all duration-300 hover:shadow-primary/20 hover:-translate-y-1 hover:border-primary/30"
   >
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <Icon size={64} className={`text-${color}-500`} />
@@ -17,7 +17,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
     <div className="flex items-start justify-between mb-4 relative z-10">
       <div>
         <p className="text-slate-400 text-sm font-medium mb-1">{title}</p>
-        <h3 className="text-2xl font-bold text-white">{value}</h3>
+        <h3 className="text-2xl font-bold text-foreground">{value}</h3>
       </div>
       <div className={`p-3 rounded-xl bg-${color}-500/10 text-${color}-400`}>
         <Icon size={20} />
@@ -72,7 +72,7 @@ export const Dashboard = () => {
   return (
     <div className="space-y-8 pb-8">
       <div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-slate-400 bg-clip-text text-transparent">
           System Overview
         </h2>
         <p className="text-slate-400 mt-2">Real-time metrics from your bot instance.</p>
@@ -93,11 +93,11 @@ export const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="lg:col-span-2 bg-surface rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
+            className="lg:col-span-2 bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
           >
               <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><TrendingUp size={20} /></div>
-                  <h3 className="text-lg font-bold text-white">Activity Trends (7 Days)</h3>
+                  <h3 className="text-lg font-bold text-foreground">Activity Trends (7 Days)</h3>
               </div>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -126,11 +126,11 @@ export const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-surface rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
+            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 p-6 shadow-lg shadow-black/20"
           >
               <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400"><PieIcon size={20} /></div>
-                  <h3 className="text-lg font-bold text-white">Usage Distribution</h3>
+                  <h3 className="text-lg font-bold text-foreground">Usage Distribution</h3>
               </div>
               <div className="h-[300px] w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
@@ -170,10 +170,10 @@ export const Dashboard = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-surface rounded-2xl border border-slate-700/50 overflow-hidden"
+            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden"
           >
             <div className="p-6 border-b border-slate-700/50 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-white">Connected Servers</h3>
+              <h3 className="font-bold text-lg text-foreground">Connected Servers</h3>
               <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">{guilds.length} Active</span>
             </div>
             <div className="p-4 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -182,12 +182,12 @@ export const Dashboard = () => {
                        {guild.icon ? (
                            <img src={guild.icon} alt={guild.name} className="w-10 h-10 rounded-full" />
                        ) : (
-                           <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-white font-bold">
+                           <div className="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-foreground font-bold">
                                {guild.name.charAt(0)}
                            </div>
                        )}
                        <div>
-                           <h4 className="font-medium text-white">{guild.name}</h4>
+                           <h4 className="font-medium text-foreground">{guild.name}</h4>
                            <p className="text-xs text-slate-400">{guild.memberCount} members</p>
                        </div>
                    </div>
@@ -201,7 +201,7 @@ export const Dashboard = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.8 }}
-            className="bg-surface rounded-2xl border border-slate-700/50 overflow-hidden"
+            className="bg-surface/60 backdrop-blur-md rounded-2xl border border-slate-700/50 overflow-hidden"
           >
             <div className="p-6 border-b border-slate-700/50">
               <h3 className="font-bold text-lg text-white text-emerald-400">Top Active Users</h3>
@@ -214,7 +214,7 @@ export const Dashboard = () => {
                                 {index + 1}
                             </span>
                             <div>
-                                <h4 className="font-medium text-white">{user.username || `User ${user._id.slice(0, 5)}...`}</h4>
+                                <h4 className="font-medium text-foreground">{user.username || `User ${user._id.slice(0, 5)}...`}</h4>
                                 <p className="text-xs text-slate-500">Last active: {new Date(user.lastActive).toLocaleDateString()}</p>
                             </div>
                         </div>

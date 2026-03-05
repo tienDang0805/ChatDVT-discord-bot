@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import api from '../api';
+import { useTheme } from '../contexts/ThemeContext';
 
 const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
   const location = useLocation();
@@ -27,6 +28,7 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: stri
 
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [botInfo, setBotInfo] = useState<any>(null);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchBotInfo = async () => {
@@ -41,9 +43,13 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans">
+    <div className="flex h-screen bg-background overflow-hidden font-sans relative">
+      {/* Background ambient light effects */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-1/4 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none translate-y-1/2" />
+
       {/* Sidebar */}
-      <aside className="w-64 bg-surface border-r border-slate-700/50 flex flex-col p-4 relative z-10">
+      <aside className="w-64 bg-surface/80 backdrop-blur-xl border-r border-slate-700/50 flex flex-col p-4 relative z-10 transition-colors duration-300">
         {/* Glow Effect Top Left */}
         <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -81,19 +87,31 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" />
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          <button 
+            onClick={toggleTheme}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-primary/10 hover:text-primary transition-all w-full text-left mt-auto mb-2 group"
+          >
+            {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
+            <span className="font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+
           <button 
             onClick={() => {
               localStorage.removeItem('token');
               window.location.href = '/login';
             }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full text-left mt-auto"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all w-full text-left"
           >
             <LogOut size={20} />
             <span className="font-medium">Logout</span>
           </button>
         </nav>
 
-        <div className="mt-auto px-4 py-4 border-t border-slate-700/50">
+        <div className="mt-4 px-4 py-4 border-t border-slate-700/50">
           <div className="text-xs text-slate-500">
             v2.0.0 (Hybrid)
             <br />
