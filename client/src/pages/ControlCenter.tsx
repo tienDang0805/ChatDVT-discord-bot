@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../api';
 import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export const ControlCenter = () => {
     const [guilds, setGuilds] = useState<any[]>([]);
@@ -98,28 +97,19 @@ export const ControlCenter = () => {
     };
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-8 pb-12"
-        >
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="space-y-8 pb-12">
+            <div>
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
                     <Megaphone className="text-emerald-400" /> Server Control Panel
                 </h2>
                 <p className="text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
-            </motion.div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 {/* LEFT COLUMN: Server & Channel Selection */}
-                <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="lg:col-span-4 space-y-6"
-                >
-                    <div className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
                         <h3 className="text-lg font-bold text-foreground mb-4">1. Select Target</h3>
                         
                         <div className="mb-4">
@@ -168,16 +158,11 @@ export const ControlCenter = () => {
                             )}
                         </div>
                     </div>
-                </motion.div>
+                </div>
 
                 {/* RIGHT COLUMN: Composer & Preview */}
-                <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                    className="lg:col-span-8 space-y-6"
-                >
-                    <div className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl p-6 ring-1 ring-black/5 flex flex-col">
+                <div className="lg:col-span-8 space-y-6">
+                    <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-foreground">2. Compose Message</h3>
                             
@@ -212,11 +197,7 @@ export const ControlCenter = () => {
                             )}
 
                             {isEmbed && (
-                                <motion.div 
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    className="space-y-4 bg-slate-900/30 p-5 rounded-2xl border border-slate-700/50"
-                                >
+                                <div className="space-y-4 bg-slate-900/30 p-5 rounded-2xl border border-slate-700/50">
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div className="md:col-span-3">
                                             <label className="block text-xs font-medium text-slate-400 mb-1">Embed Title</label>
@@ -276,7 +257,7 @@ export const ControlCenter = () => {
                                             onChange={(e) => setContent(e.target.value)}
                                         />
                                     </div>
-                                </motion.div>
+                                </div>
                             )}
                         </div>
 
@@ -336,10 +317,7 @@ export const ControlCenter = () => {
 
                     {/* Quick History */}
                     {history.length > 0 && (
-                        <motion.div 
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="bg-background/40 backdrop-blur-md rounded-2xl border border-white/5 p-4"
-                        >
+                        <div className="bg-background/80 rounded-2xl border border-white/5 p-4">
                             <h4 className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
                                 <Clock size={14} /> Recent Transmissions
                             </h4>
@@ -354,18 +332,13 @@ export const ControlCenter = () => {
                                     </div>
                                 ))}
                             </div>
-                        </motion.div>
+                        </div>
                     )}
-                </motion.div>
+                </div>
             </div>
 
             {/* Danger Zone */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-red-500/5 backdrop-blur-2xl rounded-3xl border border-red-500/10 shadow-2xl p-6 ring-1 ring-black/5 max-w-xl"
-            >
+            <div className="bg-red-500/10 rounded-3xl border border-red-500/10 p-6 ring-1 ring-black/5 max-w-xl">
                 <div className="flex items-center gap-3 border-b border-red-500/20 pb-4 mb-4">
                     <AlertTriangle className="text-red-500" />
                     <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>
@@ -388,8 +361,8 @@ export const ControlCenter = () => {
                         <Trash2 size={18} /> Leave
                     </button>
                 </div>
-            </motion.div>
+            </div>
 
-        </motion.div>
+        </div>
     );
 };

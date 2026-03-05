@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { Activity, Users, MessageSquare, Zap } from 'lucide-react';
 import { getDashboardStats, getGuilds, getTopUsers } from '../api';
-const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-    className="bg-surface/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl relative overflow-hidden group transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_0_40px_rgba(var(--color-primary),0.2)] hover:border-primary/40 ring-1 ring-black/5"
-  >
+const StatCard = ({ title, value, icon: Icon, color }: any) => (
+  <div className="bg-surface/80 p-6 rounded-3xl border border-white/10 dark:border-white/5 relative overflow-hidden group ring-1 ring-black/5">
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
         <Icon size={64} className={`text-${color}-500`} />
     </div>
@@ -24,7 +18,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }: any) => (
     <div className="w-full bg-slate-700/30 h-1.5 rounded-full overflow-hidden relative z-10">
         <div className={`h-full bg-${color}-500 w-[70%] shadow-[0_0_15px_rgba(var(--color-${color}),0.8)]`}></div> 
     </div>
-  </motion.div>
+  </div>
 );
 
 export const Dashboard = () => {
@@ -70,21 +64,16 @@ export const Dashboard = () => {
 
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Users" value={stats.totalUsers} icon={Users} color="blue" delay={0.1} />
-        <StatCard title="Messages Today" value={stats.messagesToday} icon={MessageSquare} color="emerald" delay={0.2} />
-        <StatCard title="Active Servers" value={guilds.length} icon={Zap} color="amber" delay={0.3} />
-        <StatCard title="Uptime" value={formatUptime(stats.uptime)} icon={Activity} color="violet" delay={0.4} />
+        <StatCard title="Total Users" value={stats.totalUsers} icon={Users} color="blue" />
+        <StatCard title="Messages Today" value={stats.messagesToday} icon={MessageSquare} color="emerald" />
+        <StatCard title="Active Servers" value={guilds.length} icon={Zap} color="amber" />
+        <StatCard title="Uptime" value={formatUptime(stats.uptime)} icon={Activity} color="violet" />
       </div>
 
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Connected Servers */}
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden shadow-2xl ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.1)] transition-shadow duration-500"
-          >
+          <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
             <div className="p-6 border-b border-slate-700/50 flex justify-between items-center">
               <h3 className="font-bold text-lg text-foreground">Connected Servers</h3>
               <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary">{guilds.length} Active</span>
@@ -107,15 +96,10 @@ export const Dashboard = () => {
                ))}
                {guilds.length === 0 && <p className="text-slate-500 text-center py-4">No servers connected.</p>}
             </div>
-          </motion.div>
+          </div>
 
           {/* Top Users */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
-            className="bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden shadow-2xl ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)] transition-shadow duration-500"
-          >
+          <div className="bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
             <div className="p-6 border-b border-slate-700/50">
               <h3 className="font-bold text-lg text-white text-emerald-400">Top Active Users</h3>
             </div>
@@ -138,7 +122,7 @@ export const Dashboard = () => {
                     </div>
                 ))}
             </div>
-          </motion.div>
+          </div>
       </div>
     </div>
   );

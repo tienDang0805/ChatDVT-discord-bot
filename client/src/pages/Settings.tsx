@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, Bot, Server, Key, Eye, EyeOff } from 'lucide-react';
-import { motion } from 'framer-motion';
 import api from '../api';
 
 export const Settings = () => {
@@ -96,18 +95,9 @@ export const Settings = () => {
     );
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="space-y-8 pb-12"
-        >
+        <div className="space-y-8 pb-12">
             {/* Header */}
-            <motion.div 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl relative overflow-hidden ring-1 ring-black/5"
-            >
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 relative overflow-hidden ring-1 ring-black/5">
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-primary to-accent" />
                 
                 <div className="flex items-center gap-4">
@@ -128,15 +118,10 @@ export const Settings = () => {
                     <Save size={18} />
                     {loading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
                 </button>
-            </motion.div>
+            </div>
 
             {/* Selector */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="bg-surface/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl flex items-center gap-4 ring-1 ring-black/5"
-            >
+            <div className="bg-surface/80 p-6 rounded-3xl border border-white/10 dark:border-white/5 flex items-center gap-4 ring-1 ring-black/5">
                  <div className="p-3 bg-blue-500/10 text-blue-400 rounded-lg">
                      <Server size={24} />
                  </div>
@@ -153,30 +138,23 @@ export const Settings = () => {
                          ))}
                      </select>
                  </div>
-            </motion.div>
+            </div>
 
             {/* Messages */}
             {message && (
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className={`p-4 rounded-xl flex items-center gap-3 shadow-lg ${
+                <div 
+                    className={`p-4 rounded-xl flex items-center gap-3 shadow-sm ${
                         message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
                     }`}
                 >
                     {message.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
                     <p className="font-medium">{message.text}</p>
-                </motion.div>
+                </div>
             )}
 
             {/* API Key Configuration */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="bg-surface/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl space-y-4 relative overflow-hidden ring-1 ring-black/5 hover:shadow-[0_0_40px_rgba(245,158,11,0.15)] transition-shadow duration-500"
-            >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl" />
+            <div className="bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 space-y-4 relative overflow-hidden ring-1 ring-black/5 hover:shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-shadow duration-500">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-xl" />
                 <div className="flex items-center gap-3 mb-2">
                     <Key size={24} className="text-amber-400" />
                     <div>
@@ -204,14 +182,9 @@ export const Settings = () => {
                         {showApiKey ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                 </div>
-            </motion.div>
+            </div>
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="bg-surface/40 backdrop-blur-2xl p-8 rounded-3xl border border-white/10 dark:border-white/5 shadow-2xl space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_40px_rgba(var(--color-primary),0.1)] transition-shadow duration-500"
-            >
+            <div className="bg-surface/80 p-8 rounded-3xl border border-white/10 dark:border-white/5 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.05)] transition-shadow duration-500">
                  {renderTextarea(
                      "1. Danh tính (Bot là ai?)", 
                      "identity", 
@@ -242,21 +215,16 @@ export const Settings = () => {
                      "Ví dụ: Dùng nhiều emoji, câu ngắn gọn, xưng hô 'mình/bạn'...", 
                      "Quy chuẩn về phong cách ngôn ngữ khi trả lời tin nhắn."
                  )}
-            </motion.div>
+            </div>
             
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="bg-red-500/5 backdrop-blur-2xl rounded-3xl p-8 border border-red-500/10 shadow-2xl ring-1 ring-black/5"
-            >
+            <div className="bg-red-500/10 rounded-3xl p-8 border border-red-500/10 ring-1 ring-black/5">
                 <h3 className="text-lg font-bold mb-4 text-red-400 flex items-center gap-2">
                     <AlertCircle size={20} /> Dangerous Zone
                 </h3>
                 <button className="px-4 py-2 border border-red-500/50 text-red-500 hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
                     Reset Factory (Sẽ gọi lệnh xóa DB - Chưa hỗ trợ)
                 </button>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 };

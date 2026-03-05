@@ -4,7 +4,6 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson, Copy, ClipboardPaste, Globe, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { motion, AnimatePresence } from 'framer-motion';
 import { TreeEditor } from './TreeEditor';
 
 export const Prompts = () => {
@@ -200,21 +199,12 @@ export const Prompts = () => {
     const activeItem = promptCategories.flatMap(c => c.items).find(i => i.key === activeTab);
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="space-y-6 relative max-h-full flex flex-col h-[calc(100vh-6rem)]"
-        >
+        <div className="space-y-6 relative max-h-full flex flex-col h-[calc(100vh-6rem)]">
             {/* Background Glows */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-3/4 h-1/2 bg-primary/10 rounded-[100%] blur-[120px] pointer-events-none mix-blend-screen" />
 
             {/* Header section (Sticky) */}
-            <motion.header 
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-4 border-b border-white/10 dark:border-white/5"
-            >
+            <header className="flex-shrink-0 flex flex-col xl:flex-row xl:items-end justify-between gap-6 pb-4 border-b border-white/10 dark:border-white/5">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
                         <Terminal className="text-primary" size={28} />
@@ -225,7 +215,7 @@ export const Prompts = () => {
                 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10 w-full xl:w-auto">
                     {/* Server Select */}
-                    <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-md p-1.5 rounded-xl border border-slate-700/50 shadow-inner flex-1 xl:flex-none">
+                    <div className="flex items-center gap-3 bg-surface/80 p-1.5 rounded-xl border border-slate-700/50 flex-1 xl:flex-none">
                         <div className="pl-3 text-slate-400">
                             <Server size={18} />
                         </div>
@@ -305,35 +295,23 @@ export const Prompts = () => {
                         </button>
                     </div>
                 </div>
-            </motion.header>
+            </header>
 
             {/* Notification Toasts */}
-            <AnimatePresence>
-                {(error || success) && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className={`absolute top-24 left-1/2 -translate-x-1/2 z-50 p-3 rounded-xl flex items-center gap-3 shadow-2xl ${
-                            success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
-                        }`}
-                    >
-                        {success ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-                        <span className="font-semibold text-sm">{success || error}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {(error || success) && (
+                <div className={`absolute top-24 left-1/2 -translate-x-1/2 z-50 p-3 rounded-xl flex items-center gap-3 shadow-md ${
+                    success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                }`}>
+                    {success ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+                    <span className="font-semibold text-sm">{success || error}</span>
+                </div>
+            )}
 
             {/* Main IDE Layout */}
             <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-0 relative z-10 w-full">
                 
                 {/* File Explorer (Sidebar L) */}
-                <motion.div 
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1, duration: 0.5 }}
-                    className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1 bg-surface/40 backdrop-blur-2xl rounded-3xl border border-white/10 dark:border-white/5 p-4 shadow-2xl ring-1 ring-black/5 h-full"
-                >
+                <div className="w-full md:w-64 flex-shrink-0 flex flex-col gap-4 overflow-y-auto custom-scrollbar pb-4 pr-1 bg-surface/80 rounded-3xl border border-white/10 dark:border-white/5 p-4 ring-1 ring-black/5 h-full">
                     {promptCategories.map((category) => (
                         <div key={category.id} className="space-y-1">
                             <div className="flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -370,15 +348,10 @@ export const Prompts = () => {
                             </div>
                         </div>
                     ))}
-                </motion.div>
+                </div>
 
                 {/* Editor Surface (Main Right) */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5 }}
-                    className="flex-1 flex flex-col bg-surface/40 backdrop-blur-3xl border border-white/10 dark:border-white/5 shadow-2xl rounded-3xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all ring-1 ring-black/5"
-                >
+                <div className="flex-1 flex flex-col bg-surface/80 border border-white/10 dark:border-white/5 rounded-3xl overflow-hidden group focus-within:ring-1 focus-within:ring-primary/50 transition-all ring-1 ring-black/5">
                     
                     {/* Editor Tab Bar */}
                     <div className="flex items-center bg-surface border-b border-slate-700/50 px-2 py-1 gap-2">
@@ -477,13 +450,13 @@ export const Prompts = () => {
                                  <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Schema Valid</span>
                              )}
                              <span>UTF-8</span>
+                             <span>UTF-8</span>
                              <span>Markdown</span>
                          </div>
                          <span>EvoVerse IDE.</span>
                     </div>
-                </motion.div>
-
+                </div>
             </div>
-        </motion.div>
+        </div>
     );
 };
