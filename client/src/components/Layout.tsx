@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, TerminalSquare } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,6 +43,23 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     };
     fetchBotInfo();
   }, []);
+
+  // Update Favicon and Title dynamically based on Bot Info
+  useEffect(() => {
+    if (botInfo?.avatar) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = botInfo.avatar;
+    }
+    
+    if (botInfo?.globalName || botInfo?.username) {
+        document.title = `${botInfo.globalName || botInfo.username} | ChatDVT`;
+    }
+  }, [botInfo]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden font-sans relative selection:bg-primary/30 selection:text-primary">
@@ -96,6 +113,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" />
+          <NavItem to="/terminal" icon={TerminalSquare} label="🔴 Live Console" />
 
           {/* Spacer */}
           <div className="flex-1" />

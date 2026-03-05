@@ -1,4 +1,5 @@
 import express from 'express';
+import { ChannelType, TextChannel } from 'discord.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { prisma } from '../database/prisma';
@@ -692,6 +693,66 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
 // --- Serve React Frontend (MUST BE LAST) ---
 import path from 'path';
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
+
+// --- Terminal Live Console API ---
+app.get('/api/terminal/channels', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        if (!guildId) return res.status(400).json({ error: 'Missing guildId' });
+        
+        const guild = bot.guilds.cache.get(guildId);
+        if (!guild) return res.status(404).json({ error: 'Guild not found in cache' });
+
+        const channels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText);
+        const results = channels.map(c => ({
+            id: c.id,
+            name: c.name
+        }));
+        
+        res.json(results);
+    } catch (error) {
+        console.error("Terminal fetch channels error:", error);
+        res.status(500).json({ error: 'Failed to fetch channels' });
+    }
+});
+
+app.post('/api/terminal/execute', async (req, res) => {
+    try {
+        const { guildId, command, args } = req.body;
+        if (!guildId || !command) return res.status(400).json({ error: 'Invalid payload' });
+
+        // Simulate network latency for a cool effect if needed?
+        // Let's just respond immediately with output
+        
+        switch (command.toLowerCase()) {
+            case 'ping':
+                const latency = bot.ws.ping;
+                return res.json({ output: `Pong! API Latency is ${latency}ms.` });
+                
+            case 'say':
+                if (!args || args.length < 2) {
+                    return res.json({ output: 'Error: missing arguments. Usage: say <channel_id> <message>' });
+                }
+                const channelId = args[0];
+                const content = args.slice(1).join(' ');
+                
+                const channel = bot.channels.cache.get(channelId);
+                if (!channel || channel.type !== ChannelType.GuildText) {
+                    return res.json({ output: `Error: Channel ${channelId} not found or is not a text channel.` });
+                }
+                
+                await (channel as TextChannel).send(content);
+                return res.json({ output: `Message dispatched successfully to #${channel.name}.` });
+                
+            default:
+                return res.json({ output: `Command not found: ${command}. Type 'help' for a list of commands.` });
+        }
+
+    } catch (error) {
+        console.error("Terminal execution error:", error);
+        res.status(500).json({ error: 'Execution failed: ' + (error as Error).message });
+    }
+});
 
 // --- System Logs Endpoint ---
 app.get('/api/system-logs', async (req, res) => {

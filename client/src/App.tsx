@@ -10,6 +10,7 @@ import { Login } from './pages/Login';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { Identity } from './pages/Identity';
+import { TerminalConsole } from './pages/TerminalConsole';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -37,6 +38,7 @@ function App() {
                 <Route path="/control" element={<ControlCenter />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/terminal" element={<TerminalConsole />} />
               </Routes>
             </Layout>
          </RequireAuth>
