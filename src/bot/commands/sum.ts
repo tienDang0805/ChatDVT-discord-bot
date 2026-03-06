@@ -28,7 +28,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
            return interaction.editReply('Không thể đọc tin nhắn trong kênh này.');
       }
 
-      const messages = await channel.messages.fetch({ limit: limit + 1 }); // +1 the command itself
+      let messages;
+      try {
+          messages = await channel.messages.fetch({ limit: limit + 1 }); // +1 the command itself
+      } catch (fetchError) {
+          console.error("Fetch Messages Error:", fetchError);
+          return interaction.editReply('Bot không có quyền đọc lịch sử tin nhắn hoặc kênh này bị hạn chế.');
+      }
       
       // Lọc bỏ tin nhắn của bot hoặc các tin nhắn hệ thống (tuỳ chọn)
       const validMessages = messages
@@ -45,11 +51,23 @@ export async function execute(interaction: ChatInputCommandInteraction) {
            return `[${nickname}]: ${m.cleanContent}`;
       }).join('\n');
 
-      await LoggerService.info(`Summing ${validMessages.size} messages in ${channel.name} by ${interaction.user.username}`);
+      try {
+          // Ghi nặc danh hoặc dùng an toàn
+          await LoggerService.info(`Summing ${validMessages.size} messages by ${interaction.user.username}`);
+      } catch (logErr) {
+          console.error("Logger Error:", logErr);
+      }
 
       const summary = await geminiService.summarizeMessages(interaction.guildId, interaction.user.id, formattedChat);
 
-      await interaction.editReply({ content: summary });
+      let safeSummary = summary;
+      if (!safeSummary || safeSummary.trim() === '') {
+          safeSummary = 'Tôi không thể tóm tắt đoạn hội thoại này.';
+      } else if (safeSummary.length > 2000) {
+          safeSummary = safeSummary.substring(0, 1995) + '...';
+      }
+
+      await interaction.editReply({ content: safeSummary });
 
   } catch (error) {
       console.error(error);
