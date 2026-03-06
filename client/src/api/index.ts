@@ -47,12 +47,12 @@ export const updateListCdrState = async (state: boolean) => {
 
 // --- PET MANAGEMENT ---
 export const getPets = async () => {
-    const res = await api.get('/api/pets');
+    const res = await api.get('/pets');
     return res.data;
 };
 
 export const deletePet = async (petId: number) => {
-    const res = await api.delete(`/api/pets/${petId}`);
+    const res = await api.delete(`/pets/${petId}`);
     return res.data;
 };
 export const getGuilds = async () => (await api.get('/guilds')).data;

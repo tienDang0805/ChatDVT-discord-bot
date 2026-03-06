@@ -117,6 +117,11 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
           if (imageResult.imageBuffer) {
                files.push({ attachment: imageResult.imageBuffer, name: 'pet.png' });
                embed.setImage('attachment://pet.png');
+          } else if (imageUrl.startsWith('data:image')) {
+               const base64Data = imageUrl.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
+               const buffer = Buffer.from(base64Data, 'base64');
+               files.push({ attachment: buffer, name: 'pet.png' });
+               embed.setImage('attachment://pet.png');
           }
 
           await interaction.followUp({ embeds: [embed], files });
@@ -174,10 +179,12 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
       const files = [];
       const firstPet = pets[0];
       if (firstPet.imageData && firstPet.imageData.startsWith('data:image')) {
-          const base64Data = firstPet.imageData.replace(/^data:image\/png;base64,/, "");
+          const base64Data = firstPet.imageData.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
           const buffer = Buffer.from(base64Data, 'base64');
           files.push({ attachment: buffer, name: 'pet.png' });
           embed.setImage('attachment://pet.png');
+      } else if (firstPet.imageData.startsWith('http')) {
+          embed.setImage(firstPet.imageData);
       }
 
       const petListString = pets.map((p: any, i: number) => `**${i+1}. ${p.name}** (${p.rarity}) - Lv.${p.level}`).join('\n');
