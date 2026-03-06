@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel, HarmCategory, HarmBlockThreshold, Part } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { GEMINI_CHAT_CONFIG, GEMINI_LOGIC_CONFIG, IMAGEN_MODEL, DEFAULT_SYSTEM_PROMPT } from '../../config/constants';
 import { prisma } from '../../database/prisma';
 import { userIdentityService } from './identity';
@@ -374,26 +375,29 @@ class GeminiService {
   // --- Image Generation (Imagen) ---
   public async generateImage(prompt: string, guildId?: string): Promise<{ success: boolean; imageBuffer?: Buffer; textResponse?: string; error?: string }> {
       try {
-          const imageModel = await this.getModel(guildId, 'image');
-          const result = await retryWithBackoff(() => imageModel.generateContent({
-              contents: [{ role: 'user', parts: [{ text: prompt }] }],
-              generationConfig: { responseModalities: ["IMAGE", "TEXT"] } as any
+          const apiKey = await this.getApiKey(guildId);
+          const ai = new GoogleGenAI({ apiKey });
+
+          const response = await retryWithBackoff(() => ai.models.generateImages({
+              model: 'imagen-4.0-generate-001',
+              prompt: prompt,
+              config: {
+                  numberOfImages: 1,
+                  aspectRatio: "1:1"
+              }
           }));
 
-          const parts = result.response.candidates?.[0]?.content?.parts;
-          let imageBuffer: Buffer | undefined;
-          let textResponse = "";
-
-          if (parts) {
-              for (const part of parts) {
-                  if (part.text) textResponse += part.text + "\n";
-                  if (part.inlineData) imageBuffer = Buffer.from(part.inlineData.data, 'base64');
-              }
+          if (!response.generatedImages || response.generatedImages.length === 0) {
+              return { success: false, textResponse: "Không tạo được ảnh.", error: "No image returned" };
           }
 
-          if (!imageBuffer) return { success: false, textResponse: textResponse || "Không tạo được ảnh.", error: "No image" };
+          const imgBytes = response.generatedImages[0].image?.imageBytes;
+          if (!imgBytes) {
+              return { success: false, textResponse: "Không tạo được ảnh.", error: "No image bytes returned" };
+          }
+          const imageBuffer = Buffer.from(imgBytes, "base64");
 
-          return { success: true, imageBuffer, textResponse: textResponse.trim() };
+          return { success: true, imageBuffer, textResponse: "" };
       } catch (error: any) {
           console.error("Generate Image Error:", error);
           return { success: false, error: error.message };
