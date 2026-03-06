@@ -484,6 +484,30 @@ class GeminiService {
       }
   }
 
+  // --- Summarize Messages ---
+  public async summarizeMessages(guildId: string, userId: string, messagesText: string): Promise<string> {
+      try {
+          const systemInstruction = await this.getSystemPrompt(guildId, userId);
+          const model = await this.getModel(guildId, 'chat');
+          
+          const prompt = `Dưới đây là một cuộc hội thoại gần đây trong nhóm:\n\n${messagesText}\n\nHãy đọc kỹ và tóm tắt lại nội dung chính của cuộc trò chuyện trên một cách ngắn gọn, súc tích và dễ hiểu nhất. Vui lòng giữ đúng nhân cách và giọng điệu của bạn (dựa theo các luật lệ và phần mô tả nhân cách ở trên) khi trả lời.`;
+
+          const result = await retryWithBackoff(() => model.generateContent({
+              systemInstruction: {
+                role: 'system',
+                parts: [{ text: systemInstruction }]
+              },
+              contents: [{ role: 'user', parts: [{ text: prompt }] }]
+          }));
+
+          return result.response.text();
+      } catch (error: any) {
+          console.error("Summarize Error:", error);
+          if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
+          return "Xin lỗi, tôi đang gặp lỗi khi cố gắng tóm tắt đoạn chat này.";
+      }
+  }
+
   // --- Auto Reply ---
   public async generateAutoReply(messageContent: string, senderName: string, guildId?: string): Promise<string> {
       try {

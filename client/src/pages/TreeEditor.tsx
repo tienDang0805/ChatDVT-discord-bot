@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Maximize, Minimize } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 
@@ -264,8 +265,8 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
          ]);
     };
 
-    return (
-        <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-50 dark:bg-[#0d0f16] flex flex-col w-screen h-screen' : 'absolute inset-0 bg-transparent flex flex-col'}`}>
+    const content = (
+        <div className={`transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-[99999] bg-slate-50 dark:bg-[#0d0f16] flex flex-col w-screen h-screen' : 'absolute inset-0 bg-transparent flex flex-col'}`}>
             {/* Header Control */}
             <div className="flex-shrink-0 flex items-center justify-between p-4 bg-white dark:bg-[#11131a] border-b border-slate-200 dark:border-slate-700/50">
                  <div className="flex items-center gap-3">
@@ -308,4 +309,10 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
             </div>
         </div>
     );
+
+    if (isFullscreen) {
+        return createPortal(content, document.body);
+    }
+
+    return content;
 };
