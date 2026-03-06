@@ -20,7 +20,15 @@ export async function handleInteraction(interaction: Interaction) {
 
           // --- Pet Egg Picking ---
           if (customId.startsWith('egg_pick_')) {
-               const choiceIndex = parseInt(customId.replace('egg_pick_', ''));
+               const parts = customId.split('_');
+               const choiceIndex = parseInt(parts[2]);
+               const ownerId = parts[3];
+               
+               if (interaction.user.id !== ownerId) {
+                   await interaction.reply({ content: "❌ Trứng này không phải phần thưởng của bạn!", ephemeral: true });
+                   return;
+               }
+
                await petService.handleEggSelection(interaction, choiceIndex);
                return;
           }

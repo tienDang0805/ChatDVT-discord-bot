@@ -769,13 +769,6 @@ app.get('/api/system-logs', async (req, res) => {
     }
 });
 
-// Serve Static Frontend (MUST BE LAST)
-app.use(express.static(CLIENT_BUILD_PATH));
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
-});
-
 // --- Pet Management API ---
 app.get('/api/pets', authenticateToken, async (req, res) => {
     try {
@@ -812,6 +805,13 @@ app.delete('/api/pets/:id', authenticateToken, async (req, res) => {
         console.error("Error deleting pet:", error);
         res.status(500).json({ error: 'Failed to delete pet' });
     }
+});
+
+// Serve Static Frontend (MUST BE LAST)
+app.use(express.static(CLIENT_BUILD_PATH));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
 });
 
 export const startApiServer = () => { 

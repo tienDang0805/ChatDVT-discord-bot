@@ -40,9 +40,9 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
 
      // 3. UI Buttons
      const row = new ActionRowBuilder().addComponents(
-         new ButtonBuilder().setCustomId(`egg_pick_0`).setLabel(`1. ${eggNames[0]}`).setStyle(ButtonStyle.Primary),
-         new ButtonBuilder().setCustomId(`egg_pick_1`).setLabel(`2. ${eggNames[1]}`).setStyle(ButtonStyle.Success),
-         new ButtonBuilder().setCustomId(`egg_pick_2`).setLabel(`3. ${eggNames[2]}`).setStyle(ButtonStyle.Danger)
+         new ButtonBuilder().setCustomId(`egg_pick_0_${userId}`).setLabel(`1. ${eggNames[0]}`).setStyle(ButtonStyle.Primary),
+         new ButtonBuilder().setCustomId(`egg_pick_1_${userId}`).setLabel(`2. ${eggNames[1]}`).setStyle(ButtonStyle.Success),
+         new ButtonBuilder().setCustomId(`egg_pick_2_${userId}`).setLabel(`3. ${eggNames[2]}`).setStyle(ButtonStyle.Danger)
      );
 
      await interaction.editReply({ 
@@ -76,7 +76,7 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
           const petData = await this.generatePetData(chosenEgg);
           
           // STRICT CHIBI IMAGEN PROMPT
-          const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.description_en_keywords}`;
+          const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.imageprompt_pet}`;
           const imageResult = await geminiService.generateImage(imagePrompt);
           
           let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if failed
@@ -145,7 +145,7 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 "element": "Fire/Water/...",
 "species": "Tên loài",
 "description_vi": "Mô tả tiếng Việt (2-3 câu)",
-"description_en_keywords": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
+"imageprompt_pet": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
 "base_stats": { "hp": 100, "mp": 50, "atk": 10, "def": 10, "int": 10, "spd": 10 },
 "skills": [ { "name": "", "description": "", "cost": 0, "type": "Physical", "power": 0 } ],
 "traits": [ { "name": "", "description": "" } ]
@@ -171,10 +171,19 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
           .setDescription(`Bạn đang sở hữu ${pets.length} sinh vật.`)
           .setColor(0x00AE86);
 
+      const files = [];
+      const firstPet = pets[0];
+      if (firstPet.imageData && firstPet.imageData.startsWith('data:image')) {
+          const base64Data = firstPet.imageData.replace(/^data:image\/png;base64,/, "");
+          const buffer = Buffer.from(base64Data, 'base64');
+          files.push({ attachment: buffer, name: 'pet.png' });
+          embed.setImage('attachment://pet.png');
+      }
+
       const petListString = pets.map((p: any, i: number) => `**${i+1}. ${p.name}** (${p.rarity}) - Lv.${p.level}`).join('\n');
       embed.setDescription(embed.data.description + "\n\n" + petListString);
 
-      return { embeds: [embed] };
+      return { embeds: [embed], files };
   }
   
   public async showReleasePetMenu(interaction: any) {
