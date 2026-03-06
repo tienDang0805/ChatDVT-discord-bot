@@ -30,10 +30,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       let messages;
       try {
-          messages = await channel.messages.fetch({ limit: limit + 1 }); // +1 the command itself
-      } catch (fetchError) {
+          const fetchLimit = Math.min(limit + 1, 100);
+          messages = await channel.messages.fetch({ limit: fetchLimit });
+      } catch (fetchError: any) {
           console.error("Fetch Messages Error:", fetchError);
-          return interaction.editReply('Bot không có quyền đọc lịch sử tin nhắn hoặc kênh này bị hạn chế.');
+          const errorMsg = fetchError?.message || 'Lỗi không xác định từ Discord';
+          return interaction.editReply(`Bot không có quyền đọc lịch sử tin nhắn hoặc kênh này bị hạn chế.\nChi tiết lỗi: \`${errorMsg}\``);
       }
       
       // Lọc bỏ tin nhắn của bot hoặc các tin nhắn hệ thống (tuỳ chọn)
