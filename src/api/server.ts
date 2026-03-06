@@ -6,6 +6,10 @@ import { prisma } from '../database/prisma';
 import { bot } from '../bot/client';
 import { geminiService } from '../bot/services/gemini';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+
+// Multer Config
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -707,9 +711,15 @@ import path from 'path';
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
 
 // --- Server Control Panel API ---
-app.post('/api/control-panel/send-message', async (req, res) => {
+app.post('/api/control-panel/send-message', upload.array('files', 10), async (req, res) => {
     try {
-        const { guildId, channelId, content, embed } = req.body;
+        let { guildId, channelId, content, embed } = req.body;
+        
+        // If content and embed are sent via FormData, they arrive as strings. We must parse embed.
+        if (typeof embed === 'string') {
+             try { embed = JSON.parse(embed); } catch(e) {}
+        }
+        
         if (!guildId || !channelId) return res.status(400).json({ error: 'Missing guildId or channelId' });
         
         const guild = bot.guilds.cache.get(guildId);
@@ -721,11 +731,18 @@ app.post('/api/control-panel/send-message', async (req, res) => {
         }
         
         const payload: any = {};
-        if (content) payload.content = content;
-        if (embed) payload.embeds = [embed];
+        if (content && content.trim() !== '') payload.content = content;
+        if (embed && Object.keys(embed).length > 0) payload.embeds = [embed];
         
-        if (!payload.content && !payload.embeds) {
-            return res.status(400).json({ error: 'Message cannot be empty.' });
+        // Process uploaded files into Discord Attachments
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+             payload.files = req.files.map(f => {
+                 return { attachment: f.buffer, name: f.originalname };
+             });
+        }
+        
+        if (!payload.content && !payload.embeds && !payload.files?.length) {
+            return res.status(400).json({ error: 'Message cannot be completely empty.' });
         }
 
         await (channel as TextChannel).send(payload);

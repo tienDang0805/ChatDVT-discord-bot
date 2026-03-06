@@ -52,6 +52,22 @@ export const getGeminiApiKey = async (guildId: string = 'global') => (await api.
 export const updateGeminiApiKey = async (data: { apiKey: string }, guildId: string = 'global') => (await api.post('/gemini-api-key', { ...data, guildId })).data;
 
 // Control Panel Endpoints
-export const sendControlMessage = async (guildId: string, channelId: string, content: string, embed?: any) => (await api.post('/control-panel/send-message', { guildId, channelId, content, embed })).data;
+export const sendControlMessage = async (guildId: string, channelId: string, content: string, embed?: any, files?: File[]) => {
+    const formData = new FormData();
+    formData.append('guildId', guildId);
+    formData.append('channelId', channelId);
+    if (content) formData.append('content', content);
+    if (embed) formData.append('embed', JSON.stringify(embed));
+    
+    if (files && files.length > 0) {
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+    }
+
+    return (await api.post('/control-panel/send-message', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    })).data;
+};
 
 export default api;

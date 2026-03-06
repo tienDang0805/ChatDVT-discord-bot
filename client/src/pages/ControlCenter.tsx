@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../api';
-import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot } from 'lucide-react';
+import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot, Paperclip, X } from 'lucide-react';
 
 export const ControlCenter = () => {
     const [guilds, setGuilds] = useState<any[]>([]);
@@ -15,6 +15,10 @@ export const ControlCenter = () => {
     const [embedDesc, setEmbedDesc] = useState('');
     const [embedColor, setEmbedColor] = useState('#10B981'); // Emerald
     const [embedImage, setEmbedImage] = useState('');
+    
+    // File Attachments State
+    const [attachments, setAttachments] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
     const [loading, setLoading] = useState(false);
@@ -43,8 +47,8 @@ export const ControlCenter = () => {
 
     const handleSend = async () => {
         if (!selectedGuild || !selectedChannel) return;
-        if (!content && !isEmbed) return;
-        if (isEmbed && !embedTitle && !embedDesc) return;
+        if (!content && !isEmbed && attachments.length === 0) return;
+        if (isEmbed && !embedTitle && !embedDesc && !embedImage) return;
 
         setLoading(true);
         setStatus(null);
@@ -59,7 +63,7 @@ export const ControlCenter = () => {
                 };
             }
 
-            await sendControlMessage(selectedGuild, selectedChannel, content, embedData);
+            await sendControlMessage(selectedGuild, selectedChannel, content, embedData, attachments);
             
             setStatus({ type: 'success', msg: 'Message dispatched successfully!' });
             
@@ -78,6 +82,7 @@ export const ControlCenter = () => {
                setEmbedDesc('');
                setEmbedImage('');
             }
+            setAttachments([]);
         } catch (error: any) {
             setStatus({ type: 'error', msg: error.response?.data?.error || 'Failed to send message.' });
         }
@@ -94,6 +99,18 @@ export const ControlCenter = () => {
         } catch (error) {
             setStatus({ type: 'error', msg: 'Failed to leave server.' });
         }
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const newFiles = Array.from(e.target.files);
+            setAttachments(prev => [...prev, ...newFiles].slice(0, 10)); // Max 10 files limit by Discord
+        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    const removeAttachment = (index: number) => {
+         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
     return (
@@ -193,6 +210,38 @@ export const ControlCenter = () => {
                                         value={content}
                                         onChange={(e) => setContent(e.target.value)}
                                     ></textarea>
+                                    
+                                    {/* Direct File Upload Zone */}
+                                    <div className="mt-4 p-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer flex flex-col items-center justify-center gap-2"
+                                         onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <input 
+                                            type="file" 
+                                            multiple 
+                                            className="hidden" 
+                                            ref={fileInputRef}
+                                            onChange={handleFileChange}
+                                        />
+                                        <Paperclip className="text-slate-400" size={24} />
+                                        <p className="text-sm font-medium text-slate-500 text-center">
+                                            Lick or Drag & Drop files here <br/>
+                                            <span className="text-xs font-normal opacity-70">(Max 10 files. Images, Videos, Audio)</span>
+                                        </p>
+                                    </div>
+
+                                    {/* Uploaded Files Preview Chips */}
+                                    {attachments.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {attachments.map((file, idx) => (
+                                                 <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700/50">
+                                                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate max-w-[150px]">{file.name}</span>
+                                                      <button onClick={(e) => { e.stopPropagation(); removeAttachment(idx); }} className="text-slate-400 hover:text-red-500">
+                                                          <X size={14} />
+                                                      </button>
+                                                 </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -307,7 +356,7 @@ export const ControlCenter = () => {
                             <div className="flex-1"></div>
                             <button 
                                 onClick={handleSend}
-                                disabled={loading || !selectedGuild || !selectedChannel || (!content && !isEmbed) || (isEmbed && !embedTitle && !embedDesc)}
+                                disabled={loading || !selectedGuild || !selectedChannel || (!content && !isEmbed && attachments.length === 0) || (isEmbed && !embedTitle && !embedDesc && !embedImage)}
                                 className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-foreground font-bold py-3 px-8 rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
                             >
                                 {loading ? 'Transmitting...' : <><Send size={18} /> Send to Server</>}
