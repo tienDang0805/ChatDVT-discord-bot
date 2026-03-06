@@ -18,6 +18,13 @@ export async function handleInteraction(interaction: Interaction) {
       if (interaction.isButton()) {
           const customId = interaction.customId;
 
+          // --- Pet Egg Picking ---
+          if (customId.startsWith('egg_pick_')) {
+               const choiceIndex = parseInt(customId.replace('egg_pick_', ''));
+               await petService.handleEggSelection(interaction, choiceIndex);
+               return;
+          }
+
           // --- Identity ---
           if (customId === 'edit_identity') {
               const modal = new ModalBuilder()

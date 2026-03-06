@@ -34,4 +34,4 @@ export const GEMINI_LOGIC_CONFIG = {
   }
 };
 
-export const IMAGEN_MODEL = "imagen-3.0-generate-001"; // User code had "imagen-4.0-generate-001", preserving.
+export const IMAGEN_MODEL = "imagen-4.0-generate-001"; // User code had "imagen-4.0-generate-001", preserving.

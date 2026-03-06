@@ -96,6 +96,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/prompts" icon={Bot} label="Prompts" />
           <NavItem to="/identity" icon={ScrollText} label="User Identity" />
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
+          <NavItem to="/pets" icon={Bot} label="Pet Management" />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" />
 

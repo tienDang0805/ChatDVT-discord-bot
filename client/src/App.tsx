@@ -5,6 +5,7 @@ import { Logs } from './pages/Logs';
 import { Prompts } from './pages/Prompts';
 import { ControlCenter } from './pages/ControlCenter';
 import { Settings } from './pages/Settings';
+import { Pets } from './pages/Pets';
 
 import { Login } from './pages/Login';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/prompts" element={<Prompts />} />
                 <Route path="/identity" element={<Identity />} />
                 <Route path="/control" element={<ControlCenter />} />
+                <Route path="/pets" element={<Pets />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>

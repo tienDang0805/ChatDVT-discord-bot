@@ -39,6 +39,22 @@ export const updateBotConfig = async (guildId: string, data: any) => (await api.
 // New Endpoints
 export const getPrompts = async (guildId: string = 'global') => (await api.get(`/prompts?guildId=${guildId}`)).data;
 export const updatePrompts = async (data: any, guildId: string = 'global') => (await api.post('/prompts', { ...data, guildId })).data;
+export const updateListCdrState = async (state: boolean) => {
+    // ...
+    // Using a simple endpoint for now if available
+    // throw new Error("Not implemented yet.");
+};
+
+// --- PET MANAGEMENT ---
+export const getPets = async () => {
+    const res = await api.get('/api/pets');
+    return res.data;
+};
+
+export const deletePet = async (petId: number) => {
+    const res = await api.delete(`/api/pets/${petId}`);
+    return res.data;
+};
 export const getGuilds = async () => (await api.get('/guilds')).data;
 export const getTopUsers = async () => (await api.get('/stats/users')).data;
 export const getActivityHistory = async () => (await api.get('/stats/activity-history')).data;

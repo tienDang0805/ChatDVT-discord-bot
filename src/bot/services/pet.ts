@@ -4,96 +4,127 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 
 class PetService {
   
-  // --- Egg Hatching ---
+  // Temporary memory store for 3-egg selections
+  private eggChoicesCache: Map<string, string[]> = new Map();
+
+  // --- Egg Hatching (Step 1: Start) ---
   public async beginHatchingProcess(interaction: any) {
      const userId = interaction.user.id;
      
-     // Upsert logic for cooldown using Prisma
-     // Check if exists
-     let cooldown = await prisma.userEggCooldown.findUnique({ where: { userId } });
-     
-     if (!cooldown) {
-         cooldown = await prisma.userEggCooldown.create({
-             data: { userId, dailyCount: 0, lastEggOpenTime: new Date() }
-         });
+     // 1. Enforce 1-Pet Limit
+     const existingPet = await prisma.pet.findFirst({ where: { ownerId: userId } });
+     if (existingPet) {
+         return interaction.editReply("❌ Bạn đã sở hữu một sinh vật rồi! Vui lòng dùng `/pet list` để xem hoặc `/pet release` để phóng sinh trước khi ấp trứng mới.");
      }
 
-     const now = new Date();
-     const lastTime = new Date(cooldown.lastEggOpenTime);
-     const isSameDay = now.getDate() === lastTime.getDate() && 
-                       now.getMonth() === lastTime.getMonth() && 
-                       now.getFullYear() === lastTime.getFullYear();
+     // 2. Generate 3 Random Eggs
+     await interaction.editReply("🌟 Đang liên kết với Gene-Sys... Đang tìm kiếm 3 quả trứng tiềm năng...");
      
-     if (isSameDay && cooldown.dailyCount >= 3) {
-         return interaction.editReply("❌ Bạn đã hết lượt ấp trứng hôm nay! (Tối đa 3 lần/ngày)");
-     }
-     
-     let newDailyCount = cooldown.dailyCount;
-     if (!isSameDay) {
-         newDailyCount = 0; // Reset
-     }
-     newDailyCount += 1;
+     const prompt = `Bạn là Gene-Sys. Hãy tạo ra 3 cái tên Cực Kì Sáng Tạo và Ngầu cho 3 Quả Trứng Sinh Vật Huyền Bí. 
+Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khác):
+["Trứng X", "Trứng Y", "Trứng Z"]`;
 
-     // Update cooldown
-     await prisma.userEggCooldown.update({
-         where: { userId },
-         data: { dailyCount: newDailyCount, lastEggOpenTime: new Date() }
-     });
-
-     const eggTypes = ["Trứng Gió Lốc", "Trứng Nham Thạch", "Trứng Ngàn Hoa", "Trứng Bóng Đêm", "Trứng Thủy Tinh", "Trứng Kim Loại"];
-     const eggType = eggTypes[Math.floor(Math.random() * eggTypes.length)];
-     
-     await interaction.editReply(`🥚 Đang ấp **${eggType}**... Vui lòng đợi Gene-Sys phân tích...`);
-
+     let eggNames = [];
      try {
-         const petData = await this.generatePetData(eggType);
-         const imageResult = await geminiService.generateImage(petData.description_en_keywords);
-         let imageUrl = "";
-         if (imageResult.success && imageResult.imageBuffer) {
-             imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+         const jsonRes = await geminiService.generateJSON(prompt);
+         if (Array.isArray(jsonRes) && jsonRes.length >= 3) {
+             eggNames = [jsonRes[0], jsonRes[1], jsonRes[2]];
+         } else {
+             throw new Error("Invalid output");
          }
-
-         // Save to DB (Prisma)
-         const newPet = await prisma.pet.create({
-             data: {
-                 ownerId: userId,
-                 name: petData.species,
-                 species: petData.species,
-                 description: petData.description_vi,
-                 rarity: petData.rarity,
-                 element: petData.element,
-                 stats: JSON.stringify(petData.base_stats),
-                 skills: JSON.stringify(petData.skills),
-                 traits: JSON.stringify(petData.traits),
-                 imageBasePrompt: petData.description_en_keywords,
-                 imageData: imageUrl,
-                 status: JSON.stringify({ stamina: 100, hunger: 100 }),
-                 evolutionStage: 1
-             }
-         });
-
-         const embed = new EmbedBuilder()
-             .setTitle(`🎉 Chúc mừng! Trứng đã nở ra **${newPet.species}**!`)
-             .setDescription(newPet.description)
-             .setColor(this.getRarityColor(newPet.rarity))
-             .addFields(
-                 { name: "Độ hiếm", value: newPet.rarity, inline: true },
-                 { name: "Hệ", value: newPet.element, inline: true },
-                 { name: "Stats", value: `HP: ${petData.base_stats.hp} | ATK: ${petData.base_stats.atk} | DEF: ${petData.base_stats.def}`, inline: false }
-             );
-
-        const files = [];
-        if (imageResult.imageBuffer) {
-             files.push({ attachment: imageResult.imageBuffer, name: 'pet.png' });
-             embed.setImage('attachment://pet.png');
-        }
-
-         await interaction.editReply({ content: ' ', embeds: [embed], files });
-
-     } catch (error) {
-         console.error("Hatching Error:", error);
-         await interaction.editReply("❌ Có lỗi xảy ra trong quá trình ấp trứng. Vui lòng thử lại sau.");
+     } catch(e) {
+         eggNames = ["Trứng Rồng Lửa", "Trứng Thủy Quái", "Trứng Tinh Võng"];
      }
+
+     this.eggChoicesCache.set(userId, eggNames);
+
+     // 3. UI Buttons
+     const row = new ActionRowBuilder().addComponents(
+         new ButtonBuilder().setCustomId(`egg_pick_0`).setLabel(`1. ${eggNames[0]}`).setStyle(ButtonStyle.Primary),
+         new ButtonBuilder().setCustomId(`egg_pick_1`).setLabel(`2. ${eggNames[1]}`).setStyle(ButtonStyle.Success),
+         new ButtonBuilder().setCustomId(`egg_pick_2`).setLabel(`3. ${eggNames[2]}`).setStyle(ButtonStyle.Danger)
+     );
+
+     await interaction.editReply({ 
+         content: `🥚 **Gene-Sys đã tìm thấy 3 quả trứng!** Hãy chọn 1 quả trứng bạn muốn ấp:`, 
+         components: [row] 
+     });
+  }
+
+  // --- Egg Hatching (Step 2: Pick) ---
+  public async handleEggSelection(interaction: any, choiceIndex: number) {
+      await interaction.deferUpdate(); // Acknowledge button
+      
+      const userId = interaction.user.id;
+      const choices = this.eggChoicesCache.get(userId);
+      
+      if (!choices || !choices[choiceIndex]) {
+          return interaction.followUp({ content: "Trứng này đã hỏng hoặc phiên giao dịch hết hạn! Vui lòng gõ lại lệnh `/pet start`.", ephemeral: true });
+      }
+
+      const existingPet = await prisma.pet.findFirst({ where: { ownerId: userId } });
+      if (existingPet) {
+          return interaction.followUp({ content: "❌ Bạn đã sở hữu sinh vật rồi!", ephemeral: true });
+      }
+
+      const chosenEgg = choices[choiceIndex];
+      this.eggChoicesCache.delete(userId); // Consume choice
+
+      await interaction.editReply({ content: `🧬 Đang ấp **${chosenEgg}**... Vui lòng đợi Gene-Sys phân tích gen...\n*(Lưu ý: Sinh ảnh có thể mất 15-20 giây)*`, components: [] });
+
+      try {
+          const petData = await this.generatePetData(chosenEgg);
+          
+          // STRICT CHIBI IMAGEN PROMPT
+          const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.description_en_keywords}`;
+          const imageResult = await geminiService.generateImage(imagePrompt);
+          
+          let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if failed
+          if (imageResult.success && imageResult.imageBuffer) {
+              imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+          }
+
+          // Save to DB (Prisma)
+          const newPet = await prisma.pet.create({
+              data: {
+                  ownerId: userId,
+                  name: petData.species,
+                  species: petData.species,
+                  description: petData.description_vi,
+                  rarity: petData.rarity,
+                  element: petData.element,
+                  stats: JSON.stringify(petData.base_stats),
+                  skills: JSON.stringify(petData.skills),
+                  traits: JSON.stringify(petData.traits),
+                  imageBasePrompt: imagePrompt,
+                  imageData: imageUrl,
+                  status: JSON.stringify({ stamina: 100, hunger: 100 }),
+                  evolutionStage: 1
+              }
+          });
+
+          const embed = new EmbedBuilder()
+              .setTitle(`🎉 Chúc mừng! **${chosenEgg}** đã nở ra **${newPet.species}**!`)
+              .setDescription(newPet.description)
+              .setColor(this.getRarityColor(newPet.rarity))
+              .addFields(
+                  { name: "Độ hiếm", value: newPet.rarity, inline: true },
+                  { name: "Hệ", value: newPet.element, inline: true },
+                  { name: "Stats", value: `HP: ${petData.base_stats.hp} | ATK: ${petData.base_stats.atk} | DEF: ${petData.base_stats.def}`, inline: false }
+              );
+
+          const files = [];
+          if (imageResult.imageBuffer) {
+               files.push({ attachment: imageResult.imageBuffer, name: 'pet.png' });
+               embed.setImage('attachment://pet.png');
+          }
+
+          await interaction.followUp({ embeds: [embed], files });
+
+      } catch (error) {
+          console.error("Hatching Error:", error);
+          await interaction.followUp({ content: "❌ Có lỗi xảy ra trong quá trình gen. Vui lòng thử lại sau.", ephemeral: true });
+      }
   }
 
   // --- Generate Pet Logic ---
@@ -114,7 +145,7 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 "element": "Fire/Water/...",
 "species": "Tên loài",
 "description_vi": "Mô tả tiếng Việt (2-3 câu)",
-"description_en_keywords": "Từ khóa tiếng Anh để vẽ ảnh (chibi, cute, ...)",
+"description_en_keywords": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
 "base_stats": { "hp": 100, "mp": 50, "atk": 10, "def": 10, "int": 10, "spd": 10 },
 "skills": [ { "name": "", "description": "", "cost": 0, "type": "Physical", "power": 0 } ],
 "traits": [ { "name": "", "description": "" } ]
@@ -147,7 +178,15 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
   }
   
   public async showReleasePetMenu(interaction: any) {
-      return { content: "Chức năng thả pet đang bảo trì." };
+      const userId = interaction.user.id;
+      const pet = await prisma.pet.findFirst({ where: { ownerId: userId } });
+      
+      if (!pet) {
+          return interaction.editReply("🕸️ Bạn chưa có pet nào để phóng sinh.");
+      }
+
+      await prisma.pet.delete({ where: { id: pet.id } });
+      return interaction.editReply(`Trái tim bạn đau nhói... Bạn đã phóng sinh **${pet.name}** về với tự nhiên thành công. Bạn dọn dẹp lại chuồng trống để sẵn sàng cho sinh vật mới.`);
   }
 
   private getRarityColor(rarity: string): any {

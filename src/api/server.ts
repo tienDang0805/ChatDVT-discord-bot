@@ -776,6 +776,44 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
 });
 
+// --- Pet Management API ---
+app.get('/api/pets', authenticateToken, async (req, res) => {
+    try {
+        const pets = await prisma.pet.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
+        
+        // Enrich owner nickname if possible
+        const userIds = pets.map(p => p.ownerId);
+        const identities = await prisma.userIdentity.findMany({
+            where: { userId: { in: userIds } }
+        });
+        
+        const identityMap = new Map(identities.map(id => [id.userId, id.nickname]));
+        
+        const enrichedPets = pets.map(pet => ({
+            ...pet,
+            ownerNickname: identityMap.get(pet.ownerId) || 'Unknown'
+        }));
+        
+        res.json(enrichedPets);
+    } catch (error: any) {
+        console.error("Error fetching pets:", error);
+        res.status(500).json({ error: 'Failed to fetch pets' });
+    }
+});
+
+app.delete('/api/pets/:id', authenticateToken, async (req, res) => {
+    try {
+        const petId = parseInt(req.params.id);
+        await prisma.pet.delete({ where: { id: petId } });
+        res.json({ success: true, message: 'Pet released successfully.' });
+    } catch (error: any) {
+        console.error("Error deleting pet:", error);
+        res.status(500).json({ error: 'Failed to delete pet' });
+    }
+});
+
 export const startApiServer = () => { 
   app.listen(PORT, () => {
     console.log(`✅ Web Server running at http://localhost:${PORT}`);
