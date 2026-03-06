@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../api';
-import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot, Paperclip, X } from 'lucide-react';
+import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot, Paperclip, X, File as FileIcon } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
 
 export const ControlCenter = () => {
     const [guilds, setGuilds] = useState<any[]>([]);
@@ -17,7 +18,7 @@ export const ControlCenter = () => {
     const [embedImage, setEmbedImage] = useState('');
     
     // File Attachments State
-    const [attachments, setAttachments] = useState<File[]>([]);
+    const [attachments, setAttachments] = useState<{ file: File; id: string; preview?: string }[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
@@ -63,7 +64,8 @@ export const ControlCenter = () => {
                 };
             }
 
-            await sendControlMessage(selectedGuild, selectedChannel, content, embedData, attachments);
+            const filesToSend = attachments.map(a => a.file);
+            await sendControlMessage(selectedGuild, selectedChannel, content, embedData, filesToSend);
             
             setStatus({ type: 'success', msg: 'Message dispatched successfully!' });
             
@@ -82,6 +84,9 @@ export const ControlCenter = () => {
                setEmbedDesc('');
                setEmbedImage('');
             }
+            
+            // Cleanup object URLs to avoid memory leak
+            attachments.forEach(a => { if (a.preview) URL.revokeObjectURL(a.preview); });
             setAttachments([]);
         } catch (error: any) {
             setStatus({ type: 'error', msg: error.response?.data?.error || 'Failed to send message.' });
@@ -101,16 +106,63 @@ export const ControlCenter = () => {
         }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            const newFiles = Array.from(e.target.files);
-            setAttachments(prev => [...prev, ...newFiles].slice(0, 10)); // Max 10 files limit by Discord
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files) return;
+        
+        const files = Array.from(e.target.files);
+        const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+        let newAttachments: { file: File, id: string; preview?: string }[] = [];
+
+        for (const file of files) {
+            if (file.size > MAX_FILE_SIZE) {
+                alert(`File ${file.name} is too large. The limit is 25MB per file.`);
+                continue;
+            }
+
+            const id = Math.random().toString(36).substring(2, 9);
+            let processedFile = file;
+            let preview: string | undefined = undefined;
+
+            if (file.type.startsWith('image/')) {
+                try {
+                    // Compress and convert to JPEG
+                    const options = {
+                        maxSizeMB: 5,
+                        maxWidthOrHeight: 1920,
+                        useWebWorker: true,
+                        fileType: 'image/jpeg'
+                    };
+                    processedFile = await imageCompression(file, options);
+                    
+                    // The compressed file might lose its name/type, so let's enforce .jpg mapping
+                    const originalName = file.name;
+                    const nameParts = originalName.split('.');
+                    nameParts.pop(); // remove original ext
+                    const newName = nameParts.join('.') + '.jpg';
+                    
+                    processedFile = new File([processedFile], newName, { type: 'image/jpeg' });
+                    preview = URL.createObjectURL(processedFile);
+                } catch (error) {
+                    console.error('Error compressing image:', error);
+                    preview = URL.createObjectURL(file); // fallback
+                }
+            } else if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+               // Optional: Can't easily compress video in client, just accept it
+            }
+
+            newAttachments.push({ file: processedFile, id, preview });
         }
+
+        setAttachments(prev => [...prev, ...newAttachments].slice(0, 10)); // Max 10 limit by Discord
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    const removeAttachment = (index: number) => {
-         setAttachments(prev => prev.filter((_, i) => i !== index));
+    const removeAttachment = (idToRemove: string) => {
+         setAttachments(prev => {
+             const toRemove = prev.find(a => a.id === idToRemove);
+             if (toRemove?.preview) URL.revokeObjectURL(toRemove.preview);
+             return prev.filter(a => a.id !== idToRemove);
+         });
     };
 
     return (
@@ -231,11 +283,21 @@ export const ControlCenter = () => {
 
                                     {/* Uploaded Files Preview Chips */}
                                     {attachments.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            {attachments.map((file, idx) => (
-                                                 <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700/50">
-                                                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300 truncate max-w-[150px]">{file.name}</span>
-                                                      <button onClick={(e) => { e.stopPropagation(); removeAttachment(idx); }} className="text-slate-400 hover:text-red-500">
+                                        <div className="flex flex-wrap gap-3 mt-4">
+                                            {attachments.map((att) => (
+                                                 <div key={att.id} className="relative group rounded-xl border border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/50 overflow-hidden min-w-[120px] max-w-[200px] flex gap-2 p-2 items-center">
+                                                      {att.preview ? (
+                                                          <img src={att.preview} alt={att.file.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                                                      ) : (
+                                                          <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                                                              <FileIcon size={20} className="text-slate-400" />
+                                                          </div>
+                                                      )}
+                                                      <div className="flex flex-col flex-1 truncate pr-6">
+                                                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate" title={att.file.name}>{att.file.name}</span>
+                                                          <span className="text-[10px] text-slate-500">{(att.file.size / (1024*1024)).toFixed(2)} MB</span>
+                                                      </div>
+                                                      <button onClick={(e) => { e.stopPropagation(); removeAttachment(att.id); }} className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-white/80 dark:bg-black/50 text-slate-400 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
                                                           <X size={14} />
                                                       </button>
                                                  </div>
