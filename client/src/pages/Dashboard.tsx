@@ -54,8 +54,8 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 pb-8">
-      <div>
+    <div className="space-y-6 md:space-y-8 pb-8">
+      <div className="px-2 md:px-0">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-slate-500 dark:to-slate-400 bg-clip-text text-transparent">
           System Overview
         </h2>
@@ -74,7 +74,7 @@ export const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Connected Servers */}
           <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700/50 flex justify-between items-center">
+            <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700/50 flex justify-between items-center">
               <h3 className="font-bold text-lg text-foreground">Connected Servers</h3>
               <span className="text-xs px-2 py-1 rounded bg-primary/10 text-primary dark:bg-primary/20">{guilds.length} Active</span>
             </div>
@@ -100,7 +100,7 @@ export const Dashboard = () => {
 
           {/* Top Users */}
           <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700/50">
+            <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700/50">
               <h3 className="font-bold text-lg text-emerald-600 dark:text-emerald-400">Top Active Users</h3>
             </div>
             <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">

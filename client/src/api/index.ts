@@ -45,6 +45,16 @@ export const updateListCdrState = async (state: boolean) => {
     // throw new Error("Not implemented yet.");
 };
 
+export const getFeatures = async () => {
+    const res = await api.get('/features');
+    return res.data;
+};
+
+export const updateFeatures = async (data: any) => {
+    const res = await api.post('/features', data);
+    return res.data;
+};
+
 // --- PET MANAGEMENT ---
 export const getPets = async () => {
     const res = await api.get('/pets');

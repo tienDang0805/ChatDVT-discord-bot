@@ -166,19 +166,19 @@ export const ControlCenter = () => {
     };
 
     return (
-        <div className="space-y-8 pb-12">
-            <div>
+        <div className="space-y-6 md:space-y-8 pb-12 w-full max-w-[100vw] overflow-x-hidden">
+            <div className="px-2 md:px-0">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
                     <Megaphone className="text-emerald-400" /> Server Control Panel
                 </h2>
                 <p className="text-slate-500 dark:text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
                 
                 {/* LEFT COLUMN: Server & Channel Selection */}
-                <div className="lg:col-span-4 space-y-6">
-                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
+                <div className="lg:col-span-4 space-y-6 md:space-y-8">
+                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-4 md:p-6 ring-1 ring-black/5 flex flex-col h-full max-h-[70vh]">
                         <h3 className="text-lg font-bold text-foreground mb-4">1. Select Target</h3>
                         
                         <div className="mb-4">
@@ -203,7 +203,7 @@ export const ControlCenter = () => {
                                 <div className="text-center p-6 text-slate-500 text-sm">No text channels found.</div>
                             ) : (
                                 <div className="space-y-4">
-                                    {Object.entries(groupedChannels).map(([category, chans]) => (
+                                    {Object.entries(groupedChannels).map(([category, chans]: [string, any]) => (
                                         <div key={category}>
                                             <div className="text-xs font-bold text-slate-500 uppercase mb-2 flex items-center gap-2">
                                                 <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
@@ -211,7 +211,7 @@ export const ControlCenter = () => {
                                                 <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                                             </div>
                                             <div className="space-y-1">
-                                                {chans.map(c => (
+                                                {chans.map((c: any) => (
                                                     <button
                                                         key={c.id}
                                                         onClick={() => setSelectedChannel(c.id)}
@@ -230,8 +230,8 @@ export const ControlCenter = () => {
                 </div>
 
                 {/* RIGHT COLUMN: Composer & Preview */}
-                <div className="lg:col-span-8 space-y-6">
-                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-6 ring-1 ring-black/5 flex flex-col">
+                <div className="lg:col-span-8 space-y-6 md:space-y-8">
+                    <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 p-4 md:p-6 ring-1 ring-black/5 flex flex-col">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-foreground">2. Compose Message</h3>
                             
@@ -449,7 +449,7 @@ export const ControlCenter = () => {
             </div>
 
             {/* Danger Zone */}
-            <div className="bg-red-50 dark:bg-red-500/10 rounded-3xl border border-red-200 dark:border-red-500/10 p-6 ring-1 ring-black/5 max-w-xl">
+            <div className="bg-red-50 dark:bg-red-500/10 rounded-3xl border border-red-200 dark:border-red-500/10 p-4 md:p-6 ring-1 ring-black/5 max-w-xl">
                 <div className="flex items-center gap-3 border-b border-red-500/20 pb-4 mb-4">
                     <AlertTriangle className="text-red-500" />
                     <h3 className="text-xl font-bold text-red-500">Danger Zone</h3>

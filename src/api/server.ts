@@ -429,6 +429,48 @@ app.post('/api/bot-persona', async (req, res) => {
     }
 });
 
+// --- System Features Toggle Route ---
+app.get('/api/features', async (req, res) => {
+    try {
+        const config = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        if (config && config.features) {
+            res.json(JSON.parse(config.features));
+        } else {
+            res.json({});
+        }
+    } catch (error) {
+        console.error("Fetch Features Error:", error);
+        res.status(500).json({ error: 'Failed to fetch features' });
+    }
+});
+
+app.post('/api/features', async (req, res) => {
+    try {
+        const payload = req.body;
+        
+        let config = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        let currentFeatures = {};
+        
+        if (config && config.features) {
+             try { currentFeatures = JSON.parse(config.features); } catch(e){}
+        }
+
+        const newFeatures = { ...currentFeatures, ...payload };
+        const newFeaturesStr = JSON.stringify(newFeatures);
+
+        const updatedConfig = await prisma.botConfig.upsert({
+            where: { key: 'global' },
+            update: { features: newFeaturesStr },
+            create: { key: 'global', systemPrompts: '{}', features: newFeaturesStr }
+        });
+
+        res.json({ success: true, data: JSON.parse(updatedConfig.features) });
+    } catch (error) {
+        console.error("Update Features Error:", error);
+        res.status(500).json({ error: 'Failed to update features' });
+    }
+});
+
 app.get('/api/prompts', async (req, res) => {
     try {
         const guildId = req.query.guildId as string;

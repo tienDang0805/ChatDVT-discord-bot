@@ -75,13 +75,28 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
       try {
           const petData = await this.generatePetData(chosenEgg);
           
-          // STRICT CHIBI IMAGEN PROMPT
+          // Check Global Feature Toggles
+          const botConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+          let disablePetImage = false;
+          if (botConfig && botConfig.features) {
+               try {
+                   const features = JSON.parse(botConfig.features);
+                   disablePetImage = !!features.disablePetImage;
+               } catch (e) {}
+          }
+
+          let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if disabled/failed
           const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.imageprompt_pet}`;
-          const imageResult = await geminiService.generateImage(imagePrompt);
-          
-          let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if failed
-          if (imageResult.success && imageResult.imageBuffer) {
-              imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+          let imageResult: { success: boolean; imageBuffer?: Buffer | undefined; textResponse?: string; error?: string } = { success: false, imageBuffer: undefined };
+
+          if (!disablePetImage) {
+              // STRICT CHIBI IMAGEN PROMPT
+              imageResult = await geminiService.generateImage(imagePrompt);
+              if (imageResult.success && imageResult.imageBuffer) {
+                  imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+              }
+          } else {
+              imageUrl = "https://i.imgur.com/3q123b3.png"; // Placeholder for Disabled Image
           }
 
           // Save to DB (Prisma)

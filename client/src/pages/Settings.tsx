@@ -13,6 +13,9 @@ export const Settings = () => {
     const [apiKey, setApiKey] = useState('');
     const [showApiKey, setShowApiKey] = useState(false);
     
+    // Feature Toggles state
+    const [disablePetImage, setDisablePetImage] = useState(false);
+
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState<string>('global');
     const [loading, setLoading] = useState(false);
@@ -29,8 +32,14 @@ export const Settings = () => {
              try {
                  const res = await api.get('/guilds');
                  if (res.data) setGuilds(res.data);
+                 
+                 // Fetch Initial Global Features
+                 const featureRes = await api.get('/features');
+                 if (featureRes.data) {
+                     setDisablePetImage(!!featureRes.data.disablePetImage);
+                 }
              } catch (e) {
-                 console.error("Failed to fetch guilds:", e);
+                 console.error("Failed to fetch guilds or features:", e);
              }
         };
         fetchGuilds();
@@ -70,7 +79,14 @@ export const Settings = () => {
             await api.post('/bot-persona', payload);
             
             // Save API Key
-            await api.post('/gemini-api-key', { apiKey, guildId: selectedGuild });
+            if (apiKey !== undefined) {
+                await api.post('/gemini-api-key', { apiKey, guildId: selectedGuild });
+            }
+            
+            // Save Features (Currently Global ONLY)
+            if (selectedGuild === 'global') {
+                await api.post('/features', { disablePetImage });
+            }
             
             showMessage('success', `Đã lưu cấu hình Tâm Trí & API Key cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
         } catch (error) {
@@ -210,12 +226,46 @@ export const Settings = () => {
                      "Quy định cách phản ứng và cảm xúc của bot."
                  )}
                  {renderTextarea(
-                     "5. Giọng văn (Giao tiếp)", 
+                 "5. Giọng văn (Giao tiếp)", 
                      "writing_style", 
                      "Ví dụ: Dùng nhiều emoji, câu ngắn gọn, xưng hô 'mình/bạn'...", 
                      "Quy chuẩn về phong cách ngôn ngữ khi trả lời tin nhắn."
                  )}
             </div>
+            
+            {/* Feature Toggles */}
+            {selectedGuild === 'global' && (
+                <div className="bg-surface/80 p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(236,72,153,0.05)] transition-shadow duration-500">
+                    <div className="flex items-center gap-3 border-b border-slate-200 dark:border-white/5 pb-4 mb-4">
+                         <div className="w-10 h-10 rounded-lg bg-pink-500/10 text-pink-500 flex items-center justify-center">
+                             <CheckCircle2 size={24} />
+                         </div>
+                         <div>
+                             <h2 className="text-xl font-bold text-foreground">Global Feature Toggles</h2>
+                             <p className="text-slate-500 dark:text-slate-400 text-sm">Bật / Tắt tính năng cho toàn hệ thống.</p>
+                         </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/5">
+                        <div className="flex-1 pr-4">
+                            <h3 className="font-semibold text-foreground text-md">🚫 Tắt chức năng Sinh Ảnh Pet (Imagen)</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Khi bật công tắc này, AI sẽ tạm thời ngừng gọi API Imagen 4 (tránh hao tốn credit/tiền phí). Pet mới nở sẽ dùng ảnh mặc định. Stats và Info vẫn tạo bằng Gemini như thường.</p>
+                        </div>
+                        <button
+                            onClick={() => setDisablePetImage(!disablePetImage)}
+                            className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                                disablePetImage ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'
+                            }`}
+                        >
+                            <span 
+                                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${
+                                    disablePetImage ? 'translate-x-9' : 'translate-x-1'
+                                }`} 
+                            />
+                        </button>
+                    </div>
+                </div>
+            )}
             
             <div className="bg-red-50 dark:bg-red-500/10 rounded-3xl p-8 border border-red-200 dark:border-red-500/10 ring-1 ring-black/5">
                 <h3 className="text-lg font-bold mb-4 text-red-500 dark:text-red-400 flex items-center gap-2">

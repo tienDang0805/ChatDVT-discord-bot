@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, Menu, X } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import api from '../api';
 import { useTheme } from '../contexts/ThemeContext';
 
-const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => {
+const NavItem = ({ to, icon: Icon, label, onClick }: { to: string; icon: any; label: string; onClick?: () => void }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
 
   return (
     <Link
       to={to}
+      onClick={onClick}
       className={twMerge(
         "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
         isActive 
@@ -29,6 +30,7 @@ const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: stri
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [botInfo, setBotInfo] = useState<any>(null);
   const { theme, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const fetchBotInfo = async () => {
@@ -60,9 +62,49 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   }, [botInfo]);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans relative selection:bg-primary/30 selection:text-primary">
+    <div className="flex flex-col md:flex-row h-screen bg-background overflow-hidden font-sans relative selection:bg-primary/30 selection:text-primary">
+      
+      {/* Mobile Top Header */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-slate-50 dark:bg-surface border-b border-slate-200 dark:border-slate-700/50 z-30">
+        <div className="flex items-center gap-3">
+          {botInfo?.avatar ? (
+             <img src={botInfo.avatar} alt="Bot Avatar" className="w-8 h-8 rounded-full border border-slate-300 dark:border-slate-700/80 object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white text-xs">
+               <Bot size={16} />
+            </div>
+          )}
+          <span className="font-bold text-foreground">ChatDVT</span>
+        </div>
+        <button 
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="p-2 -mr-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* Mobile Back-Drop Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-50 dark:bg-surface border-r border-slate-200 dark:border-slate-700/50 flex flex-col p-4 relative z-20 transition-colors duration-500">
+      <aside className={clsx(
+        "fixed md:relative inset-y-0 left-0 w-64 bg-slate-50 dark:bg-surface border-r border-slate-200 dark:border-slate-700/50 flex flex-col p-4 z-50 transition-transform duration-300 shadow-2xl md:shadow-none",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
+        
+        {/* Mobile Close Button inside Sidebar */}
+        <button 
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="md:hidden absolute top-4 right-4 p-2 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors"
+        >
+          <X size={20} />
+        </button>
 
         <div className="flex items-center gap-3 px-4 py-6 mb-6 relative z-10 group cursor-default">
           {botInfo?.avatar ? (
@@ -91,14 +133,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2">
-          <NavItem to="/" icon={LayoutDashboard} label="Dashboard" />
-          <NavItem to="/prompts" icon={Bot} label="Prompts" />
-          <NavItem to="/identity" icon={ScrollText} label="User Identity" />
-          <NavItem to="/control" icon={LayoutDashboard} label="Control Center" />
-          <NavItem to="/pets" icon={Bot} label="Pet Management" />
-          <NavItem to="/logs" icon={ScrollText} label="Chat Logs" />
-          <NavItem to="/settings" icon={Settings} label="Identity & Config" />
+        <nav className="flex-1 space-y-2 mt-4 md:mt-0">
+          <NavItem to="/" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/prompts" icon={Bot} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/pets" icon={Bot} label="Pet Management" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
 
           {/* Spacer */}
           <div className="flex-1" />
@@ -134,7 +176,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto min-w-0 z-10 relative">
-        <div className="max-w-7xl mx-auto p-8 min-h-full">
+        <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 min-h-[calc(100vh-64px)] md:min-h-full">
             {children}
         </div>
       </main>
