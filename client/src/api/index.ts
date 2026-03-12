@@ -65,6 +65,16 @@ export const deletePet = async (petId: number) => {
     const res = await api.delete(`/pets/${petId}`);
     return res.data;
 };
+
+export const addCoin = async (userId: string, amount: number) => {
+    const res = await api.post(`/users/${userId}/add-coin`, { amount });
+    return res.data;
+};
+
+export const getInventory = async (userId: string) => {
+    const res = await api.get(`/inventory/${userId}`);
+    return res.data;
+};
 export const getGuilds = async () => (await api.get('/guilds')).data;
 export const getTopUsers = async () => (await api.get('/stats/users')).data;
 export const getActivityHistory = async () => (await api.get('/stats/activity-history')).data;

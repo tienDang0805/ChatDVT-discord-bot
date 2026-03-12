@@ -790,6 +790,31 @@ app.get('/api/inventory/:userId', async (req, res) => {
     }
 });
 
+app.post('/api/users/:userId/add-coin', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const { amount } = req.body;
+        
+        // Ensure identity exists
+        let identity = await prisma.userIdentity.findUnique({ where: { userId } });
+        if (!identity) {
+            identity = await prisma.userIdentity.create({
+                data: { userId, nickname: 'Unknown', signature: '' }
+            });
+        }
+
+        const updated = await prisma.userIdentity.update({
+            where: { userId },
+            data: { money: { increment: amount } }
+        });
+        
+        res.json({ success: true, money: updated.money });
+    } catch (error) {
+        console.error("Add coin error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 // --- Serve React Frontend (MUST BE LAST) ---
 import path from 'path';
