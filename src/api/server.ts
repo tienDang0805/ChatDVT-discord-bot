@@ -775,11 +775,12 @@ app.get('/api/pets/:userId', async (req, res) => {
     }
 });
 
-app.get('/api/inventory/:userId', async (req, res) => {
+ // --- Inventory API ---
+app.get('/api/inventory/:userId', authenticateToken, async (req, res) => {
     try {
         const userId = req.params.userId;
-        const identity = await prisma.userIdentity.findUnique({ where: { userId } });
-        const items = await prisma.inventoryItem.findMany({ where: { userId } });
+        const items = await (prisma as any).inventoryItem.findMany({ where: { userId } });
+        const identity = await (prisma as any).userIdentity.findUnique({ where: { userId } });
         
         res.json({
             money: identity?.money || 0,
@@ -796,14 +797,14 @@ app.post('/api/users/:userId/add-coin', async (req, res) => {
         const { amount } = req.body;
         
         // Ensure identity exists
-        let identity = await prisma.userIdentity.findUnique({ where: { userId } });
+        let identity = await (prisma as any).userIdentity.findUnique({ where: { userId } });
         if (!identity) {
-            identity = await prisma.userIdentity.create({
+            identity = await (prisma as any).userIdentity.create({
                 data: { userId, nickname: 'Unknown', signature: '' }
             });
         }
 
-        const updated = await prisma.userIdentity.update({
+        const updated = await (prisma as any).userIdentity.update({
             where: { userId },
             data: { money: { increment: amount } }
         });
@@ -812,6 +813,50 @@ app.post('/api/users/:userId/add-coin', async (req, res) => {
     } catch (error) {
         console.error("Add coin error:", error);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/api/users/list', authenticateToken, async (req, res) => {
+    try {
+        const identities = await (prisma as any).userIdentity.findMany({
+            // No strict order by money yet due to types, we'll sort in memory
+        });
+        
+        // Fetch pets to map to users
+        const pets = await prisma.pet.findMany();
+        const petMap = new Map();
+        pets.forEach(p => {
+             if (!petMap.has(p.ownerId)) petMap.set(p.ownerId, []);
+             petMap.get(p.ownerId).push(p);
+        });
+
+        const enrichedUsers = identities.map((id: any) => ({
+            ...id,
+            pets: petMap.get(id.userId) || []
+        }));
+        
+        res.json(enrichedUsers);
+    } catch (error) {
+        console.error("Fetch users error:", error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+app.delete('/api/users/:userId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        // Delete related data first (Pets, Inventory, Cooldown)
+        await prisma.pet.deleteMany({ where: { ownerId: userId } });
+        await (prisma as any).inventoryItem.deleteMany({ where: { userId } });
+        await (prisma as any).userEggCooldown.deleteMany({ where: { userId } });
+        
+        // Delete identity
+        await (prisma as any).userIdentity.delete({ where: { userId } });
+        
+        res.json({ success: true, message: 'User data wiped successfully.' });
+    } catch (error) {
+        console.error("Delete user error:", error);
+        res.status(500).json({ error: 'Failed to delete user' });
     }
 });
 

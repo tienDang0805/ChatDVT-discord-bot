@@ -75,6 +75,17 @@ export const getInventory = async (userId: string) => {
     const res = await api.get(`/inventory/${userId}`);
     return res.data;
 };
+
+export const getUsers = async () => {
+    const res = await api.get('/users/list');
+    return res.data;
+};
+
+export const deleteUser = async (userId: string) => {
+    const res = await api.delete(`/users/${userId}`);
+    return res.data;
+};
+
 export const getGuilds = async () => (await api.get('/guilds')).data;
 export const getTopUsers = async () => (await api.get('/stats/users')).data;
 export const getActivityHistory = async () => (await api.get('/stats/activity-history')).data;

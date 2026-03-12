@@ -135,10 +135,11 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
         <nav className="flex-1 space-y-2 mt-4 md:mt-0">
           <NavItem to="/" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/prompts" icon={Bot} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/prompts" icon={ScrollText} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/pets" icon={Bot} label="Pet Hub" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/pets" icon={Bot} label="Pet Management" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
 

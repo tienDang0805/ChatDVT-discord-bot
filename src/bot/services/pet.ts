@@ -17,7 +17,36 @@ class PetService {
          return interaction.editReply("❌ Bạn đã sở hữu một sinh vật rồi! Vui lòng dùng `/pet list` để xem hoặc `/pet release` để phóng sinh trước khi ấp trứng mới.");
      }
 
-     // 2. Generate 3 Random Eggs
+     // 2. Enforce 1-Egg-Per-Day Limit
+     const today = new Date();
+     today.setHours(0, 0, 0, 0);
+
+     const cooldown = await prisma.userEggCooldown.findUnique({ where: { userId } });
+     
+     if (cooldown) {
+         if (cooldown.lastEggOpenTime >= today) {
+             if (cooldown.dailyCount >= 1) { // 1 egg per day
+                  const tomorrow = new Date(today);
+                  tomorrow.setDate(tomorrow.getDate() + 1);
+                  const timeUntilReset = Math.floor((tomorrow.getTime() - new Date().getTime()) / 1000 / 60 / 60);
+                  
+                  return interaction.editReply(`❌ Sức mạnh của Gene-Sys cần thời gian phục hồi! Bạn đã ấp trứng hôm nay rồi. Hãy quay lại sau khoảng **${timeUntilReset} giờ** nữa.`);
+             }
+         } else {
+             // Reset count for new day (We will increment it when they actually pick an egg)
+             await prisma.userEggCooldown.update({
+                 where: { userId },
+                 data: { dailyCount: 0 }
+             });
+         }
+     } else {
+         // Create initial record
+         await prisma.userEggCooldown.create({
+             data: { userId, dailyCount: 0, lastEggOpenTime: new Date(0) } // Set to old date initially
+         });
+     }
+
+     // 3. Generate 3 Random Eggs
      await interaction.editReply("🌟 Đang liên kết với Gene-Sys... Đang tìm kiếm 3 quả trứng tiềm năng...");
      
      const prompt = `Bạn là Gene-Sys. Hãy tạo ra 3 cái tên Cực Kì Sáng Tạo và Ngầu cho 3 Quả Trứng Sinh Vật Huyền Bí. 
@@ -118,6 +147,12 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
               }
           });
 
+          // Mark Daily Cooldown
+          await prisma.userEggCooldown.update({
+              where: { userId },
+              data: { dailyCount: 1, lastEggOpenTime: new Date() }
+          });
+
           const embed = new EmbedBuilder()
               .setTitle(`🎉 Chúc mừng! **${chosenEgg}** đã nở ra **${newPet.species}**!`)
               .setDescription(newPet.description)
@@ -137,6 +172,8 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
                const buffer = Buffer.from(base64Data, 'base64');
                files.push({ attachment: buffer, name: 'pet.png' });
                embed.setImage('attachment://pet.png');
+          } else if (imageUrl.startsWith('http')) {
+               embed.setImage(imageUrl);
           }
 
           await interaction.followUp({ embeds: [embed], files });
@@ -258,18 +295,18 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 
       try {
           // Prepare data for AI
-          const aiInput = {
-              name: pet.name,
-              species: pet.species,
-              description: pet.description,
-              lore: pet.lore || '',
-              rarity: pet.rarity,
-              element: pet.element,
-              stats: JSON.parse(pet.stats),
-              skills: JSON.parse(pet.skills),
-              traits: JSON.parse(pet.traits),
-              evolutionStage: pet.evolutionStage
-          };
+           const aiInput = {
+               name: pet.name,
+               species: pet.species,
+               description: pet.description,
+               lore: pet.lore || '',
+               rarity: pet.rarity,
+               element: pet.element,
+               stats: JSON.parse(pet.stats as string),
+               skills: JSON.parse(pet.skills as string),
+               traits: JSON.parse(pet.traits as string),
+               evolutionStage: pet.evolutionStage
+           };
 
           const prompt = `[Bối Cảnh & Vai Trò]
 Bạn là **"Gene-Sys"**. Nhiệm vụ của bạn là TIẾN HÓA sinh vật sau lên một bậc ngầu hơn.
@@ -327,7 +364,7 @@ ${JSON.stringify(aiInput, null, 2)}
               }
 
               // Update Pet
-              await tx.pet.update({
+              await (tx as any).pet.update({
                   where: { id: pet.id },
                   data: {
                       species: evolvedData.species,
