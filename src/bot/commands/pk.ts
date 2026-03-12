@@ -1,23 +1,33 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, User } from 'discord.js';
 import { pkGameService } from '../services/pk';
 
 export const data = new SlashCommandBuilder()
   .setName('pk')
-  .setDescription('Game Đối Kháng Giọng Nói')
-  .addSubcommand(sub => sub.setName('start').setDescription('Tạo phòng đấu mới'))
-  .addSubcommand(sub => sub.setName('join').setDescription('Tham gia phòng đấu'));
+  .setDescription('Thách đấu Pet với người chơi khác')
+  .addUserOption(option => 
+      option.setName('target')
+          .setDescription('Người chơi bạn muốn thách đấu')
+          .setRequired(true)
+  );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const subcommand = interaction.options.getSubcommand();
+  const targetUser = interaction.options.getUser('target', true);
 
-  if (subcommand === 'start') {
-      if (!interaction.guildId) return;
-      const res = pkGameService.startNewGame(interaction.guildId);
-      await interaction.reply({ content: res.message, ephemeral: !res.success });
-  } 
-  else if (subcommand === 'join') {
-      if (!interaction.guildId) return;
-      const res = pkGameService.joinGame(interaction.guildId, interaction.user);
-      await interaction.reply({ content: res.message, ephemeral: !res.success });
+  if (targetUser.id === interaction.user.id) {
+      await interaction.reply({ content: "❌ Bạn không thể tự thách đấu với chính mình!", ephemeral: true });
+      return;
+  }
+  if (targetUser.bot) {
+      await interaction.reply({ content: "❌ Bạn không thể thách đấu với Bot!", ephemeral: true });
+      return;
+  }
+
+  await interaction.deferReply();
+  const res = await pkGameService.simulateBattle(interaction.user.id, targetUser.id);
+  
+  if (!res.success) {
+      await interaction.editReply(res.message || "Có lỗi xảy ra.");
+  } else {
+      await interaction.editReply({ embeds: res.embeds });
   }
 }

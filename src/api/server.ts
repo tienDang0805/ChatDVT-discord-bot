@@ -749,6 +749,48 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
     }
 });
 
+// --- RPG Client APIs ---
+app.get('/api/pets/:userId', async (req, res) => {
+    try {
+        const pet = await prisma.pet.findFirst({
+            where: { ownerId: req.params.userId }
+        });
+        
+        if (!pet) {
+            return res.status(404).json({ error: 'Pet not found' });
+        }
+
+        // Parse JSON fields
+        const formattedPet = {
+            ...pet,
+            stats: JSON.parse(pet.stats),
+            skills: JSON.parse(pet.skills),
+            traits: JSON.parse(pet.traits),
+            status: JSON.parse(pet.status)
+        };
+        
+        res.json(formattedPet);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+app.get('/api/inventory/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const identity = await prisma.userIdentity.findUnique({ where: { userId } });
+        const items = await prisma.inventoryItem.findMany({ where: { userId } });
+        
+        res.json({
+            money: identity?.money || 0,
+            items: items
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+
 // --- Serve React Frontend (MUST BE LAST) ---
 import path from 'path';
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');

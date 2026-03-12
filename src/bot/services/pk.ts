@@ -1,148 +1,101 @@
-import { geminiService } from './gemini';
-
-interface IPlayer {
-  id: string;
-  name: string;
-  hp: number;
-  maxHp: number;
-}
-
-interface IGameSession {
-  players: IPlayer[];
-  status: "waiting" | "in-progress" | "ended";
-  turn: number;
-  log: string[];
-}
+import { prisma } from '../../database/prisma';
+import { EmbedBuilder } from 'discord.js';
 
 class PKGameService {
-  private sessions: Map<string, IGameSession> = new Map();
-  // In a real bot, we would have Map<guildId, Session>, but legacy was singleton/global or per-instance?
-  // User's legacy code used `this.gameSession = null`, implying one game per bot instance strictly or relying on singleton.
-  // We will keep it simple as legacy did, or ideally per guild if we want improvement. 
-  // Let's stick to legacy SINGLE instance for now to be safe, or upgrade to Map if easy.
-  // The new code structure uses a singleton export `pkGameService`.
-  // To support multiple servers, we SHOULD use a Map. But legacy might have been simple.
-  // Let's upgrade to Map to be safe for a "Vip Pro" bot.
-  
-  public isGameActive(guildId: string): boolean {
-      const session = this.sessions.get(guildId);
-      return session !== undefined && session.status !== "ended";
-  }
+    public async simulateBattle(player1Id: string, player2Id: string) {
+        const pet1 = await prisma.pet.findFirst({ where: { ownerId: player1Id } });
+        const pet2 = await prisma.pet.findFirst({ where: { ownerId: player2Id } });
 
-  public startNewGame(guildId: string) {
-      if (this.isGameActive(guildId)) {
-          return { success: false, message: "❌ Hiện đang có một trận đấu PK đang diễn ra. Vui lòng đợi!" };
-      }
-      this.sessions.set(guildId, {
-          players: [],
-          status: "waiting",
-          turn: 0,
-          log: []
-      });
-      return { success: true, message: "Một trận đấu PK mới đã được tạo! Hai người chơi dùng `/pk join` để tham gia." };
-  }
+        if (!pet1) return { success: false, message: `❌ Bạn chưa có sinh vật nào để chiến đấu!` };
+        if (!pet2) return { success: false, message: `❌ Đối thủ chưa có sinh vật nào để chiến đấu!` };
 
-  public joinGame(guildId: string, user: any) {
-      const session = this.sessions.get(guildId);
-      if (!session || session.status !== "waiting") {
-          return { success: false, message: "❌ Không có trận đấu nào đang chờ hoặc đã quá 2 người rồi." };
-      }
-      if (session.players.length >= 2) {
-          return { success: false, message: "❌ Đã có đủ 2 người chơi rồi." };
-      }
-      if (session.players.some(p => p.id === user.id)) {
-          return { success: false, message: "❌ Bạn đã tham gia rồi." };
-      }
+        let stats1: any = {}, skills1: any[] = [], traits1: any[] = [];
+        let stats2: any = {}, skills2: any[] = [], traits2: any[] = [];
 
-      const newPlayer: IPlayer = {
-          id: user.id,
-          name: user.globalName || user.username,
-          hp: 100,
-          maxHp: 100
-      };
-      session.players.push(newPlayer);
+        try {
+            stats1 = JSON.parse(pet1.stats);
+            skills1 = JSON.parse(pet1.skills);
+            traits1 = JSON.parse(pet1.traits);
+            
+            stats2 = JSON.parse(pet2.stats);
+            skills2 = JSON.parse(pet2.skills);
+            traits2 = JSON.parse(pet2.traits);
+        } catch (e) {
+            return { success: false, message: `❌ Lỗi đọc dữ liệu sinh vật.` };
+        }
 
-      if (session.players.length === 2) {
-          session.status = "in-progress";
-          session.turn = Math.floor(Math.random() * 2);
-          const p1 = session.players[0];
-          const p2 = session.players[1];
-          return { success: true, message: `Trận đấu bắt đầu giữa ${p1.name} và ${p2.name}! Lượt của **${session.players[session.turn].name}**.` };
-      }
-      return { success: true, message: `${user.globalName || user.username} đã tham gia! Cần thêm ${2 - session.players.length} người nữa.` };
-  }
+        let hp1 = stats1.hp || 100;
+        let hp2 = stats2.hp || 100;
+        const maxHp1 = hp1;
+        const maxHp2 = hp2;
+        
+        let turnLog = [];
+        let p1Turn = (stats1.spd || 10) >= (stats2.spd || 10);
+        
+        const MAX_TURNS = 20; // To prevent infinite loops
+        let currentTurn = 1;
 
-  public async processTurn(guildId: string, user: any, actionDescription: string) {
-      const session = this.sessions.get(guildId);
-      if (!session || session.status !== "in-progress") {
-          return { success: false, message: "❌ Không có trận đấu nào đang diễn ra." };
-      }
+        // Auto combat engine
+        while (hp1 > 0 && hp2 > 0 && currentTurn <= MAX_TURNS) {
+            // Determine active and target
+            const attacker = p1Turn ? 1 : 2;
+            const attackerPet = p1Turn ? pet1 : pet2;
+            const defenderPet = p1Turn ? pet2 : pet1;
+            const attackerStats = p1Turn ? stats1 : stats2;
+            const defenderStats = p1Turn ? stats2 : stats1;
+            const attackerSkills = p1Turn ? skills1 : skills2;
+            const attackerTraits = p1Turn ? traits1 : traits2;
 
-      const currentPlayer = session.players[session.turn];
-      if (currentPlayer.id !== user.id) {
-          return { success: false, message: `❌ Chưa đến lượt của bạn, ${user.globalName || user.username}. Lượt của **${currentPlayer.name}**.` };
-      }
+            // Passive check (Lore-based passive: below 30% HP -> ATK x 1.5)
+            let currentAtk = attackerStats.atk || 10;
+            const hpRatio = (p1Turn ? hp1 : hp2) / (p1Turn ? maxHp1 : maxHp2);
+            let traitTriggered = '';
 
-      const opponentPlayer = session.players[(session.turn + 1) % 2];
+            if (hpRatio < 0.3 && attackerTraits.length > 0) {
+                 const traitName = attackerTraits[0].name || "Nội Tại Giấu Kín";
+                 currentAtk = Math.floor(currentAtk * 1.5);
+                 traitTriggered = ` [*${traitName} kích hoạt*]`;
+            }
 
-      try {
-          // Note: In legacy, audioUrl was passed. Here we assume 'actionDescription' IS the text or we need audio.
-          // If actionDescription is a URL, handle it? 
-          // For now, let's assume we pass text. If logic requires audio-to-text, we need that service.
-          // The user mentioned "Prompt đỉnh cao đâu", so we MUST use the legacy prompt.
-          
-          // Legacy prompt expects "audioTranscript"
-          const audioTranscript = actionDescription; // logic simplification for now
+            // Pick random skill
+            const skill = attackerSkills.length > 0 ? attackerSkills[Math.floor(Math.random() * attackerSkills.length)] : { name: "Đánh thường", power: 10 };
+            
+            // Damage calculation: (ATK * Skill Power / 10) - DEF
+            let damage = Math.floor(((currentAtk * (skill.power || 20)) / 15) - ((defenderStats.def || 10) * 0.5));
+            if (damage < 1) damage = 1; // Minimum damage
 
-          const gamePrompt = `
-          Bối cảnh: Trận đấu PK giữa ${currentPlayer.name} (HP: ${currentPlayer.hp}/${currentPlayer.maxHp}) và ${opponentPlayer.name} (HP: ${opponentPlayer.hp}/${opponentPlayer.maxHp}).
-          Lượt của ${currentPlayer.name}.
-          Hành động của ${currentPlayer.name}: "${audioTranscript}".
-          Hãy tạo một kịch bản sinh động mô tả hành động này, tính toán sát thương hợp lý (10-30 HP).
-          JSON: { "description": "...", "damage": "number" }`;
+            // Apply damage
+            if (p1Turn) {
+                hp2 -= damage;
+            } else {
+                hp1 -= damage;
+            }
 
-          const result: any = await geminiService.generateJSON(gamePrompt);
-          const damage = parseInt(result.damage) || 0;
+            turnLog.push(`🥊 **Turn ${currentTurn}**: **${attackerPet.name}** dùng \`${skill.name}\`${traitTriggered} gây **${damage}** sát thương lên **${defenderPet.name}**!`);
+            
+            p1Turn = !p1Turn; // Swap turn
+            currentTurn++;
+        }
 
-          opponentPlayer.hp -= damage;
-          if (opponentPlayer.hp < 0) opponentPlayer.hp = 0;
+        const isDraw = hp1 > 0 && hp2 > 0;
+        const p1Won = hp1 > 0 && hp2 <= 0;
+        const winner = isDraw ? null : (p1Won ? pet1 : pet2);
+        
+        const embed = new EmbedBuilder()
+            .setTitle(`⚔️ Báo Cáo Trận Đấu: ${pet1.name} vs ${pet2.name}`)
+            .setColor(isDraw ? 0xFFFF00 : (p1Won ? 0x00FF00 : 0xFF0000))
+            .setDescription(turnLog.join('\n'));
 
-          session.log.push(result.description);
-          session.turn = (session.turn + 1) % 2;
+        if (isDraw) {
+            embed.addFields({ name: '🏆 KẾT QUẢ', value: `Trận đấu hòa vì hết ${MAX_TURNS} lượt!` });
+        } else {
+            embed.addFields({ name: '🏆 KẾT QUẢ', value: `Vinh quang thuộc về **${winner?.name}**!` });
+        }
+        
+        embed.addFields({ name: 'Tình trạng HP', value: `**${pet1.name}**: ${Math.max(hp1, 0)}/${maxHp1}\n**${pet2.name}**: ${Math.max(hp2, 0)}/${maxHp2}` });
 
-          const turnMessage = `
-          **--- Lượt đấu ---**
-          ${result.description}
-          ${currentPlayer.name}: ${currentPlayer.hp}/${currentPlayer.maxHp} HP
-          ${opponentPlayer.name}: ${opponentPlayer.hp}/${opponentPlayer.maxHp} HP
-          ---
-          Lượt tiếp theo là của **${session.players[session.turn].name}**.`;
-
-          if (opponentPlayer.hp <= 0) {
-              return this.endGame(guildId, currentPlayer, opponentPlayer, turnMessage); // Fixed signature
-          }
-
-          return { success: true, message: turnMessage };
-
-      } catch (error) {
-          console.error('PK Turn Error:', error);
-          return { success: false, message: "Lỗi xử lý lượt đấu." };
-      }
-  }
-
-  private endGame(guildId: string, winner: IPlayer | null, loser: IPlayer | null, finalTurnMessage: string | null) {
-      const session = this.sessions.get(guildId);
-      if (!session) return { success: false, message: "No game." };
-      
-      session.status = "ended";
-      
-      let msg = "🎉 **Trận đấu PK đã kết thúc!**\n";
-      if (finalTurnMessage) msg += finalTurnMessage + '\n';
-      if (winner && loser) msg += `Chúc mừng **${winner.name}** đã đánh bại **${loser.name}**!`;
-      
-      this.sessions.delete(guildId);
-      return { success: true, message: msg };
-  }
+        return { success: true, embeds: [embed] };
+    }
 }
 
 export const pkGameService = new PKGameService();

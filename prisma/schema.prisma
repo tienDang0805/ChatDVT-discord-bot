@@ -30,7 +30,21 @@ model UserIdentity {
   userId    String   @unique
   nickname  String   @default("")
   signature String   @default("")
+  money     Int      @default(0)
   updatedAt DateTime @updatedAt
+}
+
+model InventoryItem {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  itemId    String
+  itemType  String
+  name      String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model GuildConfig {
@@ -68,6 +82,7 @@ model Pet {
   evolutionStage  Int      @default(1)
   level           Int      @default(1)
   exp             Int      @default(0)
+  lore            String   @default("")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

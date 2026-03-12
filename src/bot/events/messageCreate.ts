@@ -1,7 +1,6 @@
 import { Events, Message, ChannelType } from 'discord.js';
 import { bot } from '../client';
 import { geminiService } from '../services/gemini';
-import { pkGameService } from '../services/pk';
 import { prisma } from '../../database/prisma';
 import { LoggerService } from '../services/logger';
 
@@ -49,22 +48,7 @@ export const messageCreate = async (message: Message) => {
        await (message.channel as any).sendTyping();
   }
 
-  // --- PK GAME LOGIC ---
-  if (pkGameService.isGameActive(message.guild.id)) {
-     const isCommand = IGNORE_PREFIXES.some(prefix => message.content.startsWith(prefix));
-     if (!isCommand) {
-         if (message.content.trim().length > 0) {
-             const res = await pkGameService.processTurn(message.guild.id, message.author, message.content);
-             if (res.success) {
-                 await message.reply(res.message);
-                 return;
-             } else if (res.message.includes("Chưa đến lượt")) {
-                 // Silent
-             }
-         }
-     }
-  }
-  // ---------------------
+
 
   try {
     // 1. Get Guild Config (Optional check, mainly for active modules if we implemented them)

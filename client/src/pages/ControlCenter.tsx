@@ -29,7 +29,7 @@ export const ControlCenter = () => {
         getGuilds().then(setGuilds).catch(console.error);
     }, []);
 
-    useEffect(() => {
+    useEffect(() => {   
         if (selectedGuild) {
             getGuildChannels(selectedGuild).then(setChannels).catch(console.error);
             setSelectedChannel('');
