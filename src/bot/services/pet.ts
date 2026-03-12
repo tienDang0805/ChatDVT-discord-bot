@@ -239,7 +239,10 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
           embed.setImage(firstPet.imageData);
       }
 
-      const petListString = pets.map((p: any, i: number) => `**${i+1}. ${p.name}** (${p.rarity}) - Lv.${p.level}`).join('\n');
+      const petListString = pets.map((p: any, i: number) => {
+          const maxExp = p.level * 100;
+          return `**${i+1}. ${p.name}** (${p.rarity}) - Lv.${p.level} | EXP: ${p.exp}/${maxExp}`;
+      }).join('\n');
       embed.setDescription(embed.data.description + "\n\n" + petListString);
 
       return { embeds: [embed], files };

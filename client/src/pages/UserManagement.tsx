@@ -273,7 +273,16 @@ export const UserManagement = () => {
                                                             <span className="text-xs font-bold px-2 py-0.5 roundedbg-slate-200 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Lv.{pet.level}</span>
                                                          </h4>
                                                      </div>
-                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 truncate line-clamp-1">{pet.description}</p>
+                                                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 truncate line-clamp-1">{pet.description}</p>
+                                                     
+                                                     {/* EXP Mini Tracker */}
+                                                     <div className="flex items-center gap-2 mb-3">
+                                                         <span className="text-[10px] font-bold text-slate-400 w-8 shrink-0">EXP</span>
+                                                         <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex">
+                                                             <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (pet.exp / (pet.level * 100)) * 100)}%` }}></div>
+                                                         </div>
+                                                         <span className="text-[10px] font-mono text-slate-500 shrink-0 w-12 text-right">{pet.exp}/{pet.level * 100}</span>
+                                                     </div>
                                                      
                                                      {/* Mini Stats Grid */}
                                                      <div className="grid grid-cols-4 gap-2 text-center">

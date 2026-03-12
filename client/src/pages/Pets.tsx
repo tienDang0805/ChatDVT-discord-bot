@@ -133,14 +133,28 @@ export const Pets = () => {
                                 </div>
                                 
                                 <div className="p-6 flex-1 flex flex-col">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{pet.name}</h3>
-                                        <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 font-bold px-2 py-1 rounded-lg shrink-0">
-                                            Lv.{pet.level}
-                                        </span>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-slate-900 dark:text-white truncate">{pet.name}</h3>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400 text-xs px-2 py-0.5 rounded font-bold">
+                                                Lv.{pet.level}
+                                            </span>
+                                            <span className="text-xs text-slate-500 truncate">
+                                                {pet.species} • {pet.element}
+                                            </span>
+                                        </div>
+                                        {/* EXP Progress Mini Bar */}
+                                        <div className="mt-2 flex items-center gap-2 mb-4">
+                                            <div className="text-[10px] font-bold text-slate-500 w-8 shrink-0">EXP</div>
+                                            <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                                <div 
+                                                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                                                    style={{ width: `${Math.min(100, (pet.exp / (pet.level * 100)) * 100)}%` }}
+                                                />
+                                            </div>
+                                            <div className="text-[10px] font-mono text-slate-500 w-12 text-right shrink-0">{pet.exp}/{pet.level * 100}</div>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2 leading-relaxed">{pet.description}</p>
-                                    
                                     <div className="mt-auto space-y-4">
                                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50">
                                              <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-700 pb-2">Chủ Sở Hữu</div>
