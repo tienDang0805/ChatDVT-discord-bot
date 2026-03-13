@@ -30,34 +30,25 @@ interface PetSnapshot {
 }
 
 const TURN_TIMEOUT_MS = 45_000;
-const MAX_ROUNDS = 25;
+const MAX_ROUNDS = 10;
 
 function parsePet(pet: any): PetSnapshot {
     const stats = JSON.parse(pet.stats || '{}');
     const skills = JSON.parse(pet.skills || '[]');
     const traits = JSON.parse(pet.traits || '[]');
 
-    const baseHp = stats.hp || 100;
-    const baseMp = stats.mp || 80;
-    const baseAtk = stats.atk || 10;
-    const baseDef = stats.def || 10;
-    const baseSpd = stats.spd || 10;
-
-    const hpMultiplier = 3.5;
-    const scaledHp = Math.floor(baseHp * hpMultiplier);
-
     return {
         id: pet.id,
         ownerId: pet.ownerId,
         name: pet.name,
         species: pet.species,
-        hp: scaledHp,
-        maxHp: scaledHp,
-        mp: baseMp,
-        maxMp: baseMp,
-        atk: baseAtk,
-        def: baseDef,
-        spd: baseSpd,
+        hp: stats.hp || 100,
+        maxHp: stats.hp || 100,
+        mp: stats.mp || 80,
+        maxMp: stats.mp || 80,
+        atk: stats.atk || 10,
+        def: stats.def || 10,
+        spd: stats.spd || 10,
         skills,
         traits,
         imageData: pet.imageData || '',
@@ -75,9 +66,9 @@ function calcDamage(attacker: PetSnapshot, defender: PetSnapshot, skill: any): {
 
     const power = skill?.power || 10;
 
-    const rawDamage = (attacker.atk * power) / 50;
+    const rawDamage = (attacker.atk * power) / 20;
 
-    const defReduction = defender.def / (defender.def + 80);
+    const defReduction = defender.def / (defender.def + 150);
     let damage = Math.max(1, Math.floor(rawDamage * (1 - defReduction)));
 
     const variance = Math.floor(damage * 0.15);
@@ -253,8 +244,8 @@ export class PkService {
 
                 currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
                 round++;
-                p1.mp = Math.min(p1.maxMp, p1.mp + 10);
-                p2.mp = Math.min(p2.maxMp, p2.mp + 10);
+                p1.mp = Math.min(p1.maxMp, p1.mp + 15);
+                p2.mp = Math.min(p2.maxMp, p2.mp + 15);
             }
 
             if (p1.hp <= 0) return 'p2';
