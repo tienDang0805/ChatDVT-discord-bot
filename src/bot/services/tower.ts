@@ -1,5 +1,6 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, Message } from 'discord.js';
 import { prisma } from '../../database/prisma';
+import { petService } from './pet';
 
 const TOWER_COOLDOWN_HOURS = 12;
 const MAX_FLOORS = 100;
@@ -166,7 +167,6 @@ export class TowerService {
                     lastClimb: new Date()
                 }
             });
-            if (totalExp > 0) await tx.pet.update({ where: { id: pet.id }, data: { exp: { increment: totalExp } } });
             if (totalCoins > 0) await tx.userIdentity.update({ where: { userId }, data: { money: { increment: totalCoins } } });
             if (chestItems > 0) {
                 const existing = await tx.inventoryItem.findFirst({ where: { userId, itemId: 'rare_chest' } });
@@ -174,6 +174,18 @@ export class TowerService {
                 else await tx.inventoryItem.create({ data: { userId, itemId: 'rare_chest', itemType: 'chest', name: 'Rương Hiếm', quantity: chestItems } });
             }
         });
+
+        // Handle Level up outside transaction to keep it simple
+        if (totalExp > 0) {
+            const { levelsGained, messages } = await petService.addExpAndLevelUp(pet.id, totalExp);
+            if (levelsGained > 0) {
+                 const levelEmbed = new EmbedBuilder()
+                    .setTitle('🎉 THÚ CƯNG THĂNG CẤP TỪ THÁP')
+                    .setColor(0x00FF00)
+                    .setDescription(messages.join('\n'));
+                 await interaction.followUp({ embeds: [levelEmbed] });
+            }
+        }
     }
 }
 

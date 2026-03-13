@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } from 'discord.js';
 import { prisma } from '../../database/prisma';
+import { petService } from '../services/pet';
 
 export const data = new SlashCommandBuilder()
   .setName('rank')
@@ -11,6 +12,7 @@ export const data = new SlashCommandBuilder()
               { name: '⭐ Level Pet',    value: 'level' },
               { name: '💰 Giàu Nhất',   value: 'coin'  },
               { name: '🏰 Leo Tháp',    value: 'tower' },
+              { name: '⚔️ Lực Chiến',    value: 'power' },
           )
           .setRequired(false)
   );
@@ -24,7 +26,8 @@ async function buildLevelBoard(): Promise<EmbedBuilder> {
 
     const lines = await Promise.all(pets.map(async (p, i) => {
         const id = await prisma.userIdentity.findUnique({ where: { userId: p.ownerId } });
-        return `${MEDALS[i]} **${p.name}** (${id?.nickname || p.ownerId.slice(0, 8)}) — Lv.**${p.level}** | ${p.exp}/${p.level * 100} EXP`;
+        const maxExp = petService.getRequiredExp(p.level, p.rarity);
+        return `${MEDALS[i]} **${p.name}** (${id?.nickname || p.ownerId.slice(0, 8)}) — Lv.**${p.level}** | ${p.exp.toLocaleString()}/${maxExp.toLocaleString()} EXP`;
     }));
     embed.setDescription(lines.join('\n'));
     return embed;
@@ -52,6 +55,24 @@ async function buildTowerBoard(): Promise<EmbedBuilder> {
     return embed;
 }
 
+async function buildPowerBoard(): Promise<EmbedBuilder> {
+    const pets = await prisma.pet.findMany();
+    const withPower = pets.map(p => ({
+        pet: p,
+        power: petService.calcCombatPower(p)
+    })).sort((a,b) => b.power - a.power).slice(0, 10);
+
+    const embed = new EmbedBuilder().setTitle('⚔️ Top 10 — Lực Chiến Tối Cao').setColor(0xE11D48);
+    if (!withPower.length) { embed.setDescription('Chưa có dữ liệu.'); return embed; }
+
+    const lines = await Promise.all(withPower.map(async (item, i) => {
+        const id = await prisma.userIdentity.findUnique({ where: { userId: item.pet.ownerId } });
+        return `${MEDALS[i]} **${item.pet.name}** (${id?.nickname || item.pet.ownerId.slice(0, 8)}) — ⚔️ **${item.power.toLocaleString()} CP**`;
+    }));
+    embed.setDescription(lines.join('\n'));
+    return embed;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const type = interaction.options.getString('type') || 'level';
@@ -59,6 +80,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   let embed: EmbedBuilder;
   if (type === 'coin')  embed = await buildCoinBoard();
   else if (type === 'tower') embed = await buildTowerBoard();
+  else if (type === 'power') embed = await buildPowerBoard();
   else embed = await buildLevelBoard();
 
   embed.setFooter({ text: 'Dùng /rank type:... để xem BXH khác' });

@@ -16,21 +16,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (category === 'pet') {
       const embed = new EmbedBuilder()
           .setTitle('📖 Sổ Tay Hướng Dẫn: Sinh Vật Huyền Bí')
-          .setDescription('Chào mừng bạn đến với hệ thống Pet RPG (Gene-Sys). Dưới đây là các lệnh bạn có thể sử dụng:')
+          .setDescription('Chào mừng bạn đến với hệ thống Pet RPG (Gene-Sys). Dưới đây là các lệnh bạn có thể sử dụng được chia theo danh mục:')
           .setColor(0x00A0FF)
           .addFields(
-              { name: '🥚 `/pet start`', value: 'Ấp trứng sinh vật mới (tối đa 1 lần/ngày, và chỉ 1 thú cưng/người).', inline: false },
-              { name: '🐾 `/pet list`', value: 'Xem sinh vật: Cấp độ, EXP hiện tại / EXP cần để lên cấp tiếp.', inline: false },
-              { name: '🌱 `/pet evolve`', value: 'Dùng `evo_stone` để tiến hóa. Yêu cầu đủ cấp & Đá Tiến Hóa.', inline: false },
-              { name: '🔓 `/pet release`', value: 'Phóng sinh thú cưng hiện tại để có thể ấp trứng mới.', inline: false },
-              { name: '⚔️ `/farm`', value: 'Cày cuốc nhận EXP + Coin, 10% cơ hội rơi item. Cooldown 1 phút.', inline: false },
-              { name: '🏰 `/tower`', value: '**[MỚI]** Leo Tháp 10 tầng — chọn lên tiếp hoặc rút lui sau mỗi tầng. Cooldown 12 giờ.', inline: false },
-              { name: '🥊 `/pk <@user>`', value: '**[MỚI]** Chiến đấu Turn-Based — bấm nút chọn kỹ năng từng lượt như Pokémon!', inline: false },
-              { name: '🏆 `/rank [type]`', value: '**[MỚI]** BXH: `level` (Pet mạnh nhất), `coin` (giàu nhất), `tower` (leo cao nhất).', inline: false },
-              { name: '🛒 `/shop`', value: '8 vật phẩm: Đá EXP Nhỏ/Vừa/Lớn, Bình HP/MP, Đá Tiến Hóa, Rương Hiếm.', inline: false },
-              { name: '💳 `/buy <item_id> [qty]`', value: 'Mua vật phẩm từ shop bằng Coin.', inline: false },
-              { name: '🎒 `/inventory`', value: 'Xem túi đồ và số dư Coin.', inline: false },
-              { name: '🪄 `/use <item_id> [qty]`', value: '**[MỚI]** Đá EXP tự tính và lên NHIỀU cấp liên tiếp nếu đủ EXP!', inline: false }
+              { name: '🐣 TÂN THỦ & CƠ BẢN', value: '`> /pet start:` Ấp trứng sinh vật từ AI.\n`> /pet list:` Xem cấp độ, EXP, lực chiến và chỉ số sinh vật.\n`> /daily:` Nhận quà, xu và EXP mỗi ngày.\n`> /inventory:` Xem kho đồ và số dư xu.\n`> /pet release:` Phóng sinh thú cưng hiện tại.', inline: false },
+              { name: '⚔️ CHIẾN ĐẤU & PHIÊU LƯU', value: '`> /journey:` Gửi thú cưng đi du ngoạn tìm vàng, EXP và săn trứng hiếm (Hồi chiêu 4h).\n`> /tower:` Tham gia leo tháp vô tận để thử thách lực chiến.\n`> /pk <@user>:` Chiến đấu lật bài theo lượt với người chơi khác.', inline: false },
+              { name: '🛒 CỬA HÀNG & NÂNG CẤP', value: '`> /shop:` Cửa hàng vật phẩm, mua bình máu, mana, đá thuộc tính và các loại trứng.\n`> /buy <id_item> [sl]:` Mua vật phẩm từ cửa hàng.\n`> /use <id_item> [sl]:` Dùng vật phẩm (VD: cắn EXP, đá thuộc tính tĩnh, ấp trứng).\n`> /pet evolve:` Đột phá tiến hóa sinh vật (Cần đá tiến hóa và đạt cấp yêu cầu).', inline: false },
+              { name: '🏆 VINH DANH & XẾP HẠNG', value: '`> /rank [type]:` Xem bảng xếp hạng toàn server (Power, Level, Tower, Coin).\n`> /claim_rank:` Nhận thưởng dựa trên vị trí top server cuối tuần.', inline: false }
           )
           .setFooter({ text: 'Dự án Gene-Sys: Mở khóa sức mạnh AI' });
 

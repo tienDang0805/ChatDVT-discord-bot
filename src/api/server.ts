@@ -816,6 +816,24 @@ app.post('/api/users/:userId/add-coin', async (req, res) => {
     }
 });
 
+// --- ADMIN API ---
+app.delete('/api/admin/cooldown/:userId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const cooldown = await (prisma as any).userEggCooldown.findUnique({ where: { userId } });
+        
+        if (!cooldown) {
+             return res.status(404).json({ error: 'Không tìm thấy dữ liệu Cooldown của người này.' });
+        }
+
+        await (prisma as any).userEggCooldown.delete({ where: { userId } });
+        res.json({ success: true, message: 'Đã xóa Cooldown ấp trứng thành công!' });
+    } catch (error) {
+        console.error("Reset cooldown error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 app.get('/api/users/list', authenticateToken, async (req, res) => {
     try {
         const identities = await prisma.userIdentity.findMany({ orderBy: { money: 'desc' } });

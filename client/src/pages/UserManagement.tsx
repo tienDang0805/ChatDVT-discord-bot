@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, deleteUser, addCoin } from '../api';
-import { Trash2, Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles } from 'lucide-react';
+import { getUsers } from '../api';
+import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles } from 'lucide-react';
 
 export const UserManagement = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -9,8 +9,6 @@ export const UserManagement = () => {
     
     // Modal State
     const [selectedUser, setSelectedUser] = useState<any>(null);
-    const [addCoinAmount, setAddCoinAmount] = useState<number>(1000);
-    const [isAddingCoin, setIsAddingCoin] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -25,38 +23,6 @@ export const UserManagement = () => {
             console.error(error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleDeleteUser = async (userId: string, nickname: string) => {
-        if (!confirm(`CẢNH BÁO: Xóa user "${nickname}" sẽ xóa TẤT CẢ Thú cưng, Túi đồ và dữ liệu cày cuốc. Bạn có chắc chắn không?`)) return;
-        try {
-            await deleteUser(userId);
-            setUsers(users.filter(u => u.userId !== userId));
-            if (selectedUser?.userId === userId) setSelectedUser(null);
-            alert("Đã xóa User thành công.");
-        } catch (error) {
-            console.error("Failed to delete user", error);
-            alert("Xóa User thất bại.");
-        }
-    };
-
-    const handleAddCoin = async () => {
-        if (!selectedUser) return;
-        setIsAddingCoin(true);
-        try {
-            const res = await addCoin(selectedUser.userId, addCoinAmount);
-            if (res.success) {
-                // Update local state
-                setUsers(users.map(u => u.userId === selectedUser.userId ? { ...u, money: res.money } : u));
-                setSelectedUser({ ...selectedUser, money: res.money });
-                alert(`Đã thêm thành công! Tổng số dư mới của ${selectedUser.nickname}: ${res.money} Coins`);
-            }
-        } catch (error) {
-            console.error("Failed to add coin", error);
-            alert("Lỗi khi thêm coin");
-        } finally {
-            setIsAddingCoin(false);
         }
     };
 
@@ -157,14 +123,9 @@ export const UserManagement = () => {
                                             <button 
                                                 onClick={() => setSelectedUser(user)}
                                                 className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-500/30 inline-flex items-center gap-2 text-sm font-medium"
+                                                title="Xem Chi Tiết"
                                             >
                                                 <Info size={16} /> Chi Tiết
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteUser(user.userId, user.nickname)}
-                                                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-500/30 inline-flex items-center gap-2 text-sm font-medium"
-                                            >
-                                                <Trash2 size={16} /> WIPE
                                             </button>
                                         </td>
                                     </tr>
@@ -206,30 +167,11 @@ export const UserManagement = () => {
                              </div>
 
                              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
-                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Tài Tính & Kinh Tế</h3>
+                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Tài Chính & Kinh Tế</h3>
                                  <div className="flex justify-between items-center mb-4">
                                      <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Số dư hiện tại</span>
                                      <div className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-500 font-black text-xl">
                                          <Coins size={20} /> {selectedUser.money.toLocaleString()}
-                                     </div>
-                                 </div>
-                                 
-                                 <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
-                                     <label className="block text-xs font-bold text-slate-500 mb-2">Bơm Tiền Trực Tiếp</label>
-                                     <div className="flex gap-2">
-                                         <input 
-                                             type="number" 
-                                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                             value={addCoinAmount}
-                                             onChange={(e) => setAddCoinAmount(Number(e.target.value))}
-                                         />
-                                         <button 
-                                             onClick={handleAddCoin}
-                                             disabled={isAddingCoin}
-                                             className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold px-4 py-2 rounded-xl transition-colors shadow-lg shadow-blue-500/20 text-sm shrink-0"
-                                         >
-                                             {isAddingCoin ? 'Đang Xử Lý...' : 'Nạp'}
-                                         </button>
                                      </div>
                                  </div>
                              </div>
@@ -275,13 +217,10 @@ export const UserManagement = () => {
                                                      </div>
                                                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 truncate line-clamp-1">{pet.description}</p>
                                                      
-                                                     {/* EXP Mini Tracker */}
+                                                     {/* EXP Mini Tracker - Placeholder since logic moves to backend scale */}
                                                      <div className="flex items-center gap-2 mb-3">
                                                          <span className="text-[10px] font-bold text-slate-400 w-8 shrink-0">EXP</span>
-                                                         <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden flex">
-                                                             <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, (pet.exp / (pet.level * 100)) * 100)}%` }}></div>
-                                                         </div>
-                                                         <span className="text-[10px] font-mono text-slate-500 shrink-0 w-12 text-right">{pet.exp}/{pet.level * 100}</span>
+                                                         <span className="text-[10px] font-mono text-slate-500 shrink-0 w-12">{pet.exp.toLocaleString()}</span>
                                                      </div>
                                                      
                                                      {/* Mini Stats Grid */}

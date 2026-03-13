@@ -9,6 +9,7 @@ import {
     Message
 } from 'discord.js';
 import { prisma } from '../../database/prisma';
+import { petService } from './pet';
 
 interface PetSnapshot {
     id: number;
@@ -53,14 +54,33 @@ function parsePet(pet: any): PetSnapshot {
     };
 }
 
-function calcDamage(attacker: PetSnapshot, defender: PetSnapshot, skill: any): number {
-    const power = skill?.power || 10;
-    let dmg = Math.max(1, Math.floor((attacker.atk * power / 15) - (defender.def * 0.5)));
-    const critRoll = Math.random();
-    if (critRoll < 0.1) {
-        dmg = Math.floor(dmg * 1.5);
+function calcDamage(attacker: PetSnapshot, defender: PetSnapshot, skill: any): { damage: number, isCrit: boolean, isMiss: boolean } {
+    // 1. Evasion (Miss) Check based on Speed
+    // If Atk SPD < Def SPD, high chance to miss. Max 40% miss chance.
+    let missChance = 0.05; // Base 5% miss
+    if (defender.spd > attacker.spd) {
+        missChance += Math.min(0.35, (defender.spd - attacker.spd) * 0.01);
     }
-    return dmg;
+    const isMiss = Math.random() < missChance;
+    if (isMiss) return { damage: 0, isCrit: false, isMiss: true };
+
+    // 2. Base Damage & Defense Mitigation
+    const power = skill?.power || 10;
+    const baseDamage = attacker.atk * (power / 10);
+    // Defense Mitigation Formula: 100 / (100 + DEF). High DEF blocks % damage, but not to 0.
+    const mitigation = 100 / (100 + defender.def);
+    let damage = Math.max(1, Math.floor(baseDamage * mitigation) + Math.floor(Math.random() * 5));
+
+    // 3. Critical Hit Check based on Speed
+    // Base 5% crit. +1% per 10 SPD.
+    const critChance = 0.05 + (attacker.spd * 0.001); 
+    const critRoll = Math.random();
+    const isCrit = critRoll < critChance;
+    if (isCrit) {
+        damage = Math.floor(damage * 1.5);
+    }
+
+    return { damage, isCrit, isMiss };
 }
 
 function buildStatusBar(current: number, max: number, size = 10): string {
@@ -159,21 +179,28 @@ export class PkService {
             let skillName = 'Tấn Công Thường';
             let mpCost = 0;
             let isCrit = false;
+            let isMiss = false;
 
             if (customId === `${prefix}_normal`) {
-                damage = Math.max(1, Math.floor(attacker.atk * 0.8 - defender.def * 0.3) + Math.floor(Math.random() * 5));
+                const res = calcDamage(attacker, defender, { power: 10 });
+                damage = res.damage;
+                isCrit = res.isCrit;
+                isMiss = res.isMiss;
             } else if (customId.startsWith(`${prefix}_skill_`)) {
                 const skillIdx = parseInt(customId.replace(`${prefix}_skill_`, ''));
                 const skill = attacker.skills[skillIdx];
                 if (skill && attacker.mp >= (skill.cost || 10)) {
                     mpCost = skill.cost || 10;
                     skillName = skill.name;
-                    const rawDmg = calcDamage(attacker, defender, skill);
-                    const critRoll = Math.random();
-                    isCrit = critRoll < 0.1;
-                    damage = isCrit ? Math.floor(rawDmg * 1.5) : rawDmg;
+                    const res = calcDamage(attacker, defender, skill);
+                    damage = res.damage;
+                    isCrit = res.isCrit;
+                    isMiss = res.isMiss;
                 } else {
-                    damage = Math.max(1, Math.floor(attacker.atk * 0.8 - defender.def * 0.3));
+                    const res = calcDamage(attacker, defender, { power: 10 });
+                    damage = res.damage;
+                    isCrit = res.isCrit;
+                    isMiss = res.isMiss;
                     skillName = 'Tấn Công Thường (không đủ MP)';
                 }
             }
@@ -181,7 +208,11 @@ export class PkService {
             attacker.mp = Math.max(0, attacker.mp - mpCost);
             defender.hp = Math.max(0, defender.hp - damage);
 
-            log.push(`${isCrit ? '💥 CRIT! ' : ''}**${attacker.name}** dùng **${skillName}** → -${damage} HP cho ${defender.name}${mpCost ? ` (-${mpCost} MP)` : ''}`);
+            if (isMiss) {
+                log.push(`💨 **${defender.name}** đã né được chiêu **${skillName}** của ${attacker.name}!`);
+            } else {
+                log.push(`${isCrit ? '💥 CRIT! ' : ''}**${attacker.name}** dùng **${skillName}** → -${damage} HP cho ${defender.name}${mpCost ? ` (-${mpCost} MP)` : ''}`);
+            }
         };
 
         const runTurns = async (): Promise<'p1' | 'p2' | 'timeout'> => {
@@ -231,9 +262,13 @@ export class PkService {
 
         if (winnerId) {
             await prisma.$transaction(async (tx) => {
-                await tx.pet.update({ where: { id: winnerPet.id }, data: { exp: { increment: expReward } } });
                 await tx.userIdentity.update({ where: { userId: winnerId }, data: { money: { increment: coinReward } } });
             });
+            // Handle Pet EXP recursively
+            const { levelsGained, messages } = await petService.addExpAndLevelUp(winnerPet.id, expReward);
+            if (levelsGained > 0) {
+                 log.push(...messages);
+            }
         }
 
         const resultEmbed = new EmbedBuilder()

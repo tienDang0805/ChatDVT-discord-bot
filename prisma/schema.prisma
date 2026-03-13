@@ -26,12 +26,14 @@ model ChatLog {
 }
 
 model UserIdentity {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique
-  nickname  String   @default("")
-  signature String   @default("")
-  money     Float    @default(0)
-  updatedAt DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  userId          String   @unique
+  nickname        String   @default("")
+  signature       String   @default("")
+  money           Float    @default(0)
+  lastDaily       DateTime?
+  lastRankReward  DateTime?
+  updatedAt       DateTime @updatedAt
 }
 
 model InventoryItem {

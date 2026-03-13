@@ -7,10 +7,19 @@ export const SHOP_ITEMS = [
     { id: 'exp_stone_md', name: 'Đá EXP Vừa',   type: 'consumable', price: 500,  description: '💎 Tăng **150 EXP** cho sinh vật.', emoji: '🔵', expGain: 150 },
     { id: 'exp_stone_lg', name: 'Đá EXP Lớn',   type: 'consumable', price: 1200, description: '💎 Tăng **400 EXP** cho sinh vật.', emoji: '🟣', expGain: 400 },
     { id: 'exp_potion',   name: 'Bình EXP Nhỏ', type: 'consumable', price: 100,  description: '🧪 Tăng **50 EXP** cho sinh vật.', emoji: '🧪', expGain: 50  },
+    { id: 'fire_crystal', name: 'Khoáng Hỏa', type: 'elemental', price: 1500, description: '🔥 Vĩnh viễn tăng **+5 ATK** cho sinh vật.', emoji: '🔥', expGain: 0 },
+    { id: 'water_crystal', name: 'Đá Băng', type: 'elemental', price: 1500, description: '💧 Vĩnh viễn tăng **+20 HP** cho sinh vật.', emoji: '💧', expGain: 0 },
+    { id: 'earth_crystal', name: 'Hạt Giống Thổ', type: 'elemental', price: 1500, description: '🌿 Vĩnh viễn tăng **+5 DEF** cho sinh vật.', emoji: '🌿', expGain: 0 },
+    { id: 'wind_crystal', name: 'Lông Vũ Phong', type: 'elemental', price: 1500, description: '🌪️ Vĩnh viễn tăng **+3 SPD** cho sinh vật.', emoji: '🌪️', expGain: 0 },
     { id: 'hp_potion',    name: 'Bình Hồi Phục', type: 'battle',    price: 300,  description: '❤️ Hồi **+50 HP** trong PK.', emoji: '❤️', expGain: 0   },
     { id: 'mp_potion',    name: 'Bình MP',       type: 'battle',    price: 250,  description: '💙 Hồi **+50 MP** trong PK.', emoji: '💙', expGain: 0   },
     { id: 'evo_stone',    name: 'Đá Tiến Hóa',  type: 'evolution', price: 2000, description: '🔮 Dùng để tiến hóa sinh vật lên bậc tiếp theo.', emoji: '🔮', expGain: 0 },
     { id: 'rare_chest',   name: 'Rương Hiếm',   type: 'chest',     price: 3000, description: '📦 Mở ngẫu nhiên EXP lớn hoặc vật phẩm quý.', emoji: '📦', expGain: 0 },
+    { id: 'egg_random',   name: 'Trứng Kì Bí',  type: 'egg',       price: 1500, description: '🥚 Ấp ngẫu nhiên ra mọi độ hiếm (Tỷ lệ Vàng cực thấp).', emoji: '🥚', expGain: 0 },
+    { id: 'egg_normal',   name: 'Trứng Sắt Cán', type: 'egg',       price: 500,  description: '🪨 Trứng bình dân, 100% nở ra sinh vật Normal.', emoji: '🪨', expGain: 0 },
+    { id: 'egg_magic',    name: 'Trứng Ma Thuật', type: 'egg',      price: 2000, description: '🔮 Trứng hội tụ mana, 100% nở ra sinh vật Magic.', emoji: '🔮', expGain: 0 },
+    { id: 'egg_rare',     name: 'Trứng Huyền Bí', type: 'egg',      price: 5000, description: '🌌 Trứng phát quang, 100% nở ra sinh vật Rare.', emoji: '🌌', expGain: 0 },
+    { id: 'stamina_potion', name: 'Bình Thể Lực', type: 'consumable', price: 300, description: '🍖 Cấp phát **+30 Thể Lực** cho thú cưng đi farm.', emoji: '🍖', expGain: 0 },
 ];
 
 class ShopService {
@@ -29,9 +38,11 @@ class ShopService {
 
         const catNames: Record<string, string> = {
             consumable: '⚗️ Vật Phẩm EXP',
+            elemental: '💎 Đá Thuộc Tính',
             battle: '⚔️ Vật Phẩm Chiến Đấu',
             evolution: '🧬 Tiến Hóa',
-            chest: '📦 Rương Đặc Biệt'
+            chest: '📦 Rương Đặc Biệt',
+            egg: '🥚 Cửa Hàng Trứng'
         };
 
         for (const [type, items] of Object.entries(categories)) {

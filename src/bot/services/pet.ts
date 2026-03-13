@@ -7,6 +7,148 @@ class PetService {
   // Temporary memory store for 3-egg selections
   private eggChoicesCache: Map<string, string[]> = new Map();
 
+  // --- Core Game Logic ---
+  public getRequiredExp(level: number, rarity: string): number {
+      // Exponential base scale: Level ^ 1.5 * 50
+      const baseExp = Math.floor(Math.pow(level, 1.5) * 50);
+      
+      // Rarity multiplier adds difficulty
+      let multiplier = 1.0;
+      switch (rarity) {
+          case 'Legend': multiplier = 1.5; break;
+          case 'Unique': multiplier = 1.3; break;
+          case 'Rare': multiplier = 1.1; break;
+          case 'Normal': multiplier = 0.9; break; // Slightly easier to level up normal
+      }
+      return Math.floor(baseExp * multiplier);
+  }
+
+  // Base stats per level based on rarity
+  private STAT_BONUS_MAP: Record<string, { hp: number, atk: number, def: number, spd: number }> = {
+      'Legend': { hp: 10, atk: 4, def: 3, spd: 2 },
+      'Unique': { hp: 8, atk: 3, def: 2, spd: 1 },
+      'Rare': { hp: 6, atk: 2, def: 2, spd: 1 },
+      'Magic': { hp: 5, atk: 2, def: 1, spd: 1 },
+      'Normal': { hp: 4, atk: 1, def: 1, spd: 0 },
+  };
+
+  private applyStatBonus(stats: any, levelsGained: number, rarity: string) {
+      const bonus = this.STAT_BONUS_MAP[rarity] || this.STAT_BONUS_MAP['Normal'];
+      stats.hp = (stats.hp || 0) + (bonus.hp * levelsGained);
+      stats.atk = (stats.atk || 0) + (bonus.atk * levelsGained);
+      stats.def = (stats.def || 0) + (bonus.def * levelsGained);
+      stats.spd = (stats.spd || 0) + (bonus.spd * levelsGained);
+      return stats;
+  }
+
+  public async addExpAndLevelUp(petId: number, expToAdd: number): Promise<{ pet: any, messages: string[], levelsGained: number }> {
+      const pet = await prisma.pet.findUnique({ where: { id: petId } });
+      if (!pet) throw new Error("Pet not found");
+
+      let currentExp = pet.exp + expToAdd;
+      let currentLevel = pet.level;
+      let reqExp = this.getRequiredExp(currentLevel, pet.rarity);
+      let levelsGained = 0;
+      let stats = {};
+      try { stats = JSON.parse(pet.stats as string); } catch(e) {}
+
+      while (currentExp >= reqExp) {
+          currentExp -= reqExp;
+          currentLevel++;
+          levelsGained++;
+          reqExp = this.getRequiredExp(currentLevel, pet.rarity);
+      }
+
+      const messages: string[] = [];
+      if (levelsGained > 0) {
+          stats = this.applyStatBonus(stats, levelsGained, pet.rarity);
+          messages.push(`🎉 **${pet.name}** thăng cấp lên Lv.${currentLevel}! (Chỉ số tăng mạnh theo hệ ${pet.rarity})`);
+      }
+
+      const updatedPet = await prisma.pet.update({
+          where: { id: petId },
+          data: {
+              level: currentLevel,
+              exp: currentExp,
+              stats: JSON.stringify(stats)
+          }
+      });
+
+      return { pet: updatedPet, messages, levelsGained };
+  }
+
+  // --- Stamina System ---
+  public async getStamina(pet: any): Promise<{ stamina: number, maxStamina: number, saved: boolean, newStatus: any }> {
+      let status: any = { stamina: 100, lastStaminaUpdate: Date.now() };
+      try { 
+          if (pet.status) {
+              const parsed = JSON.parse(pet.status);
+              status = { ...status, ...parsed };
+          }
+      } catch(e) {}
+
+      const maxStamina = 100;
+      if (status.stamina >= maxStamina) {
+          status.stamina = maxStamina;
+          status.lastStaminaUpdate = Date.now();
+          return { stamina: maxStamina, maxStamina, saved: false, newStatus: status };
+      }
+
+      const now = Date.now();
+      const lastUpdate = status.lastStaminaUpdate || now;
+      const timeDiff = now - lastUpdate;
+      const minsPassed = Math.floor(timeDiff / 60000);
+      const staminaGained = Math.floor(minsPassed / 5); // +1 per 5 mins
+
+      let saved = false;
+      if (staminaGained > 0) {
+          status.stamina = Math.min(maxStamina, status.stamina + staminaGained);
+          status.lastStaminaUpdate = lastUpdate + (staminaGained * 5 * 60000); // preserve remainder
+          saved = true;
+          
+          // Auto-save if just checking so UI shows correctly without manual action sometimes
+          await prisma.pet.update({
+              where: { id: pet.id },
+              data: { status: JSON.stringify(status) }
+          });
+      }
+
+      return { stamina: status.stamina, maxStamina, saved, newStatus: status };
+  }
+
+  public async consumeStamina(petId: number, amount: number): Promise<boolean> {
+      const pet = await prisma.pet.findUnique({ where: { id: petId } });
+      if (!pet) return false;
+
+      const { stamina, newStatus } = await this.getStamina(pet);
+      if (stamina < amount) return false;
+
+      newStatus.stamina -= amount;
+      if (newStatus.stamina < 100 && !newStatus.lastStaminaUpdate) {
+          newStatus.lastStaminaUpdate = Date.now();
+      }
+
+      await prisma.pet.update({
+          where: { id: petId },
+          data: { status: JSON.stringify(newStatus) }
+      });
+      return true;
+  }
+
+  public async restoreStamina(petId: number, amount: number) {
+      const pet = await prisma.pet.findUnique({ where: { id: petId } });
+      if (!pet) return;
+      const { maxStamina, newStatus } = await this.getStamina(pet);
+      newStatus.stamina = Math.min(maxStamina, newStatus.stamina + amount);
+      if (newStatus.stamina === maxStamina) {
+          newStatus.lastStaminaUpdate = Date.now();
+      }
+      await prisma.pet.update({
+          where: { id: petId },
+          data: { status: JSON.stringify(newStatus) }
+      });
+  }
+
   // --- Egg Hatching (Step 1: Start) ---
   public async beginHatchingProcess(interaction: any) {
      const userId = interaction.user.id;
@@ -102,79 +244,13 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
       await interaction.editReply({ content: `🧬 Đang ấp **${chosenEgg}**... Vui lòng đợi Gene-Sys phân tích gen...\n*(Lưu ý: Sinh ảnh có thể mất 15-20 giây)*`, components: [] });
 
       try {
-          const petData = await this.generatePetData(chosenEgg);
-          
-          // Check Global Feature Toggles
-          const botConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
-          let disablePetImage = false;
-          if (botConfig && botConfig.features) {
-               try {
-                   const features = JSON.parse(botConfig.features);
-                   disablePetImage = !!features.disablePetImage;
-               } catch (e) {}
-          }
-
-          let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if disabled/failed
-          const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.imageprompt_pet}`;
-          let imageResult: { success: boolean; imageBuffer?: Buffer | undefined; textResponse?: string; error?: string } = { success: false, imageBuffer: undefined };
-
-          if (!disablePetImage) {
-              // STRICT CHIBI IMAGEN PROMPT
-              imageResult = await geminiService.generateImage(imagePrompt);
-              if (imageResult.success && imageResult.imageBuffer) {
-                  imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
-              }
-          } else {
-              imageUrl = "https://i.imgur.com/3q123b3.png"; // Placeholder for Disabled Image
-          }
-
-          // Save to DB (Prisma)
-          const newPet = await prisma.pet.create({
-              data: {
-                  ownerId: userId,
-                  name: petData.species,
-                  species: petData.species,
-                  description: petData.description_vi,
-                  rarity: petData.rarity,
-                  element: petData.element,
-                  stats: JSON.stringify(petData.base_stats),
-                  skills: JSON.stringify(petData.skills),
-                  traits: JSON.stringify(petData.traits),
-                  imageBasePrompt: imagePrompt,
-                  imageData: imageUrl,
-                  status: JSON.stringify({ stamina: 100, hunger: 100 }),
-                  evolutionStage: 1
-              }
-          });
+          const { newPet, embed, files } = await this.hatchEggToDB(userId, chosenEgg);
 
           // Mark Daily Cooldown
           await prisma.userEggCooldown.update({
               where: { userId },
               data: { dailyCount: 1, lastEggOpenTime: new Date() }
           });
-
-          const embed = new EmbedBuilder()
-              .setTitle(`🎉 Chúc mừng! **${chosenEgg}** đã nở ra **${newPet.species}**!`)
-              .setDescription(newPet.description)
-              .setColor(this.getRarityColor(newPet.rarity))
-              .addFields(
-                  { name: "Độ hiếm", value: newPet.rarity, inline: true },
-                  { name: "Hệ", value: newPet.element, inline: true },
-                  { name: "Stats", value: `HP: ${petData.base_stats.hp} | ATK: ${petData.base_stats.atk} | DEF: ${petData.base_stats.def}`, inline: false }
-              );
-
-          const files = [];
-          if (imageResult.imageBuffer) {
-               files.push({ attachment: imageResult.imageBuffer, name: 'pet.png' });
-               embed.setImage('attachment://pet.png');
-          } else if (imageUrl.startsWith('data:image')) {
-               const base64Data = imageUrl.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
-               const buffer = Buffer.from(base64Data, 'base64');
-               files.push({ attachment: buffer, name: 'pet.png' });
-               embed.setImage('attachment://pet.png');
-          } else if (imageUrl.startsWith('http')) {
-               embed.setImage(imageUrl);
-          }
 
           await interaction.followUp({ embeds: [embed], files });
 
@@ -184,22 +260,107 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
       }
   }
 
+  public async hatchEggToDB(userId: string, eggName: string, forcedRarity?: string) {
+      const petData = await this.generatePetData(eggName, forcedRarity);
+      
+      // Check Global Feature Toggles
+      const botConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+      let disablePetImage = false;
+      if (botConfig && botConfig.features) {
+           try {
+               const features = JSON.parse(botConfig.features);
+               disablePetImage = !!features.disablePetImage;
+           } catch (e) {}
+      }
+
+      let imageUrl = "https://via.placeholder.com/256"; // Fallback URL if disabled/failed
+      const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.imageprompt_pet}`;
+      let imageResult: { success: boolean; imageBuffer?: Buffer | undefined; textResponse?: string; error?: string } = { success: false, imageBuffer: undefined };
+
+      if (!disablePetImage) {
+          // STRICT CHIBI IMAGEN PROMPT
+          imageResult = await geminiService.generateImage(imagePrompt);
+          if (imageResult.success && imageResult.imageBuffer) {
+              imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+          }
+      } else {
+          imageUrl = "https://i.imgur.com/3q123b3.png"; // Placeholder for Disabled Image
+      }
+
+      // Save to DB (Prisma)
+      const newPet = await prisma.pet.create({
+          data: {
+              ownerId: userId,
+              name: petData.species,
+              species: petData.species,
+              description: petData.description_vi,
+              rarity: petData.rarity,
+              element: petData.element,
+              stats: JSON.stringify(petData.base_stats),
+              skills: JSON.stringify(petData.skills),
+              traits: JSON.stringify(petData.traits),
+              imageBasePrompt: imagePrompt,
+              imageData: imageUrl,
+              status: JSON.stringify({ stamina: 100, hunger: 100 }),
+              evolutionStage: 1
+          }
+      });
+
+      const embed = new EmbedBuilder()
+          .setTitle(`🎉 Chúc mừng! **${eggName}** đã nở ra **${newPet.species}**!`)
+          .setDescription(newPet.description)
+          .setColor(this.getRarityColor(newPet.rarity))
+          .addFields(
+              { name: "Độ hiếm", value: newPet.rarity, inline: true },
+              { name: "Hệ", value: newPet.element, inline: true },
+              { name: "Stats", value: `HP: ${petData.base_stats.hp} | ATK: ${petData.base_stats.atk} | DEF: ${petData.base_stats.def}`, inline: false }
+          );
+
+      const files = [];
+      if (imageResult.imageBuffer) {
+           files.push({ attachment: imageResult.imageBuffer, name: 'pet.png' });
+           embed.setImage('attachment://pet.png');
+      } else if (imageUrl.startsWith('data:image')) {
+           const base64Data = imageUrl.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
+           const buffer = Buffer.from(base64Data, 'base64');
+           files.push({ attachment: buffer, name: 'pet.png' });
+           embed.setImage('attachment://pet.png');
+      } else if (imageUrl.startsWith('http')) {
+           embed.setImage(imageUrl);
+      }
+
+      return { newPet, embed, files };
+  }
+
   // --- Generate Pet Logic ---
-  private async generatePetData(eggType: string): Promise<any> {
+  private async generatePetData(eggType: string, forcedRarity?: string): Promise<any> {
+    let rarity = 'Normal';
+    
+    if (forcedRarity) {
+        rarity = forcedRarity;
+    } else {
+        const roll = Math.floor(Math.random() * 100);
+        if (roll < 1) rarity = 'Legend'; // 1%
+        else if (roll < 5) rarity = 'Unique'; // 4%
+        else if (roll < 20) rarity = 'Rare'; // 15%
+        else if (roll < 50) rarity = 'Magic'; // 30%
+        else rarity = 'Normal'; // 50%
+    }
+
     const prompt = `[Bối Cảnh & Vai Trò]
 Bạn là **"Gene-Sys"**, chuyên gia sinh học giả tưởng.
 Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 
 [Quy Trình Sáng Tạo]
 1. Phân tích trứng để chọn chủng tộc, nguyên tố.
-2. Chọn độ hiếm (Normal 50%, Magic 30%, Rare 15%, Unique 4%, Legend 1%).
-3. Phân bổ chỉ số hợp lý.
+2. Độ hiếm BẮT BUỘC LÀ: **${rarity}**. Dựa vào độ hiếm này để phân bổ sức mạnh tương ứng.
+3. Phân bổ chỉ số hợp lý (Legend thì stat cao hơn Normal).
 4. Tạo skill (2-4 kỹ năng) và trait (1-4 nội tại).
 
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON]
 {
-"rarity": "Normal/Magic/Rare/Unique/Legend",
-"element": "Fire/Water/...",
+"rarity": "${rarity}",
+"element": "Fire/Water/Earth/Wind/Electric/Dark/Light...",
 "species": "Tên loài",
 "description_vi": "Mô tả tiếng Việt (2-3 câu)",
 "imageprompt_pet": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
@@ -209,6 +370,20 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 }`;
 
     return await geminiService.generateJSON(prompt);
+  }
+
+  // --- Calculate Combat Power ---
+  public calcCombatPower(pet: any, statsInfo?: any, skillsInfo?: any[]): number {
+      let stats = statsInfo;
+      let skills = skillsInfo;
+      if (!stats) try { stats = JSON.parse(pet.stats as string); } catch(e) { stats = { hp: 100, atk: 10, def: 10, spd: 10 }; }
+      if (!skills) try { skills = JSON.parse(pet.skills as string); } catch(e) { skills = []; }
+      
+      let baseCp = (stats.hp * 0.2) + (stats.atk * 1.5) + (stats.def * 1.2) + (stats.spd * 1) + ((stats.int || 0) * 1.2);
+      let skillPower = 0;
+      (skills || []).forEach((s: any) => skillPower += (s.power || 0));
+      
+      return Math.floor(baseCp + skillPower + (pet.level * 10));
   }
 
   // --- List Pets ---
@@ -225,19 +400,20 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
       }
 
       // 2. Phân tích dữ liệu Stats & Skills
-      let stats: any = {};
+      let stats: any = { hp: 100, atk: 10, def: 10, spd: 10, int: 10, mp: 80 };
       let skills: any[] = [];
-      try { stats = JSON.parse(pet.stats as string); } catch(e) {}
-      try { skills = JSON.parse(pet.skills as string); } catch(e) {}
+      try { stats = JSON.parse(pet.stats as string) || stats; } catch(e) {}
+      try { skills = JSON.parse(pet.skills as string) || []; } catch(e) {}
 
-      const maxExp = pet.level * 100;
+      const maxExp = this.getRequiredExp(pet.level, pet.rarity);
+      const combatPower = this.calcCombatPower(pet, stats, skills);
       
       const embed = new EmbedBuilder()
           .setTitle(`🌟 THÔNG TIN SINH VẬT`)
           .setDescription(`**${pet.name}**\n*${pet.species}* — Bậc **${pet.evolutionStage}/10**\n\n${pet.description}`)
           .setColor(this.getRarityColor(pet.rarity))
           .addFields(
-              { name: "Cấp độ & Kinh nghiệm", value: `Lv.**${pet.level}** (${pet.exp}/${maxExp} EXP)`, inline: false },
+              { name: "Cấp độ & Kinh nghiệm", value: `Lv.**${pet.level}** (${pet.exp.toLocaleString()}/${maxExp.toLocaleString()} EXP)\n⚔️ **Lực Chiến: ${combatPower.toLocaleString()}**`, inline: false },
               { name: "Thuộc tính", value: `Độ hiếm: **${pet.rarity}** | Hệ: **${pet.element}**`, inline: false },
               { name: "Chỉ số cơ bản", value: `❤️ HP: ${stats.hp || 100}\n⚔️ ATK: ${stats.atk || 10}\n🛡️ DEF: ${stats.def || 10}\n⚡ SPD: ${stats.spd || 10}`, inline: true },
               { name: "Phép thuật / MP", value: `💙 MP: ${stats.mp || 80}\n🧠 INT: ${stats.int || 10}`, inline: true }
@@ -303,8 +479,8 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
           return { content: `❌ **${pet.name}** đã đạt cảnh giới tối đa (Bậc 10) và không thể tiến hóa thêm.` };
       }
 
-      // Check level requirement
-      const reqLevel = pet.evolutionStage * 10;
+      // Check level requirement (Evolve requires intervals of 30)
+      const reqLevel = pet.evolutionStage * 30;
       if (pet.level < reqLevel) {
           return { content: `❌ **${pet.name}** cần đạt cấp **${reqLevel}** để tiến hóa lên bậc ${pet.evolutionStage + 1}. (Hiện tại: Lv.${pet.level})` };
       }
