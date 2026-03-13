@@ -127,3 +127,14 @@ model TowerProgress {
   lastClimb DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model UserItemPurchaseLog {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  itemId       String
+  quantity     Int      @default(0)
+  purchaseDate DateTime @default(now()) // Stored as just the Date (truncated to Day) to track daily resets easily
+  
+  @@unique([userId, itemId, purchaseDate])
+  @@index([userId])
+}

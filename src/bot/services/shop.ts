@@ -60,6 +60,23 @@ class ShopService {
         if (!item) return { success: false, message: '❌ Không tìm thấy vật phẩm này trong cửa hàng.' };
         if (quantity <= 0) return { success: false, message: '❌ Số lượng không hợp lệ.' };
 
+        // Daily Limit Check for Stamina Potions
+        if (itemId === 'stamina_potion') {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const purchaseLog = await prisma.userItemPurchaseLog.findUnique({
+                where: { userId_itemId_purchaseDate: { userId, itemId, purchaseDate: today } }
+            });
+
+            const boughtToday = purchaseLog?.quantity || 0;
+            const limit = 10;
+            
+            if (boughtToday + quantity > limit) {
+                return { success: false, message: `❌ Giới hạn mỗi ngày chỉ được mua tối đa **${limit} Bình Thể Lực**. Hôm nay bạn đã mua **${boughtToday} bình**, không thể mua thêm **${quantity} bình** nữa.` };
+            }
+        }
+
         const totalPrice = item.price * quantity;
         const identity = await userIdentityService.getOrCreateIdentity(userId);
         if (identity.money < totalPrice) {
@@ -73,6 +90,17 @@ class ShopService {
                 await tx.inventoryItem.update({ where: { id: existingItem.id }, data: { quantity: { increment: quantity } } });
             } else {
                 await tx.inventoryItem.create({ data: { userId, itemId: item.id, itemType: item.type, name: item.name, quantity } });
+            }
+
+            // Update Purchase Log if applicable
+            if (itemId === 'stamina_potion') {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                await tx.userItemPurchaseLog.upsert({
+                    where: { userId_itemId_purchaseDate: { userId, itemId, purchaseDate: today } },
+                    update: { quantity: { increment: quantity } },
+                    create: { userId, itemId, purchaseDate: today, quantity }
+                });
             }
         });
 
