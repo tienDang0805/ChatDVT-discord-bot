@@ -213,37 +213,57 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 
   // --- List Pets ---
   public async showPetList(interaction: any) {
+      // 1. Lấy thông tin Pet
       const userId = interaction.user.id;
-      const pets = await prisma.pet.findMany({
+      const pet = await prisma.pet.findFirst({
           where: { ownerId: userId },
           orderBy: { createdAt: 'desc' }
       });
 
-      if (pets.length === 0) {
-          return { content: "🕸️ Bạn chưa có pet nào. Hãy dùng `/pet start` để ấp trứng!" };
+      if (!pet) {
+          return { content: "🕸️ Bạn chưa có sinh vật nào. Hãy dùng `/pet start` để ấp trứng!" };
       }
 
+      // 2. Phân tích dữ liệu Stats & Skills
+      let stats: any = {};
+      let skills: any[] = [];
+      try { stats = JSON.parse(pet.stats as string); } catch(e) {}
+      try { skills = JSON.parse(pet.skills as string); } catch(e) {}
+
+      const maxExp = pet.level * 100;
+      
       const embed = new EmbedBuilder()
-          .setTitle(`🐾 Chuồng thú của ${interaction.user.username}`)
-          .setDescription(`Bạn đang sở hữu ${pets.length} sinh vật.`)
-          .setColor(0x00AE86);
+          .setTitle(`🌟 THÔNG TIN SINH VẬT`)
+          .setDescription(`**${pet.name}**\n*${pet.species}* — Bậc **${pet.evolutionStage}/10**\n\n${pet.description}`)
+          .setColor(this.getRarityColor(pet.rarity))
+          .addFields(
+              { name: "Cấp độ & Kinh nghiệm", value: `Lv.**${pet.level}** (${pet.exp}/${maxExp} EXP)`, inline: false },
+              { name: "Thuộc tính", value: `Độ hiếm: **${pet.rarity}** | Hệ: **${pet.element}**`, inline: false },
+              { name: "Chỉ số cơ bản", value: `❤️ HP: ${stats.hp || 100}\n⚔️ ATK: ${stats.atk || 10}\n🛡️ DEF: ${stats.def || 10}\n⚡ SPD: ${stats.spd || 10}`, inline: true },
+              { name: "Phép thuật / MP", value: `💙 MP: ${stats.mp || 80}\n🧠 INT: ${stats.int || 10}`, inline: true }
+          );
+
+      if (skills.length > 0) {
+          const skillText = skills.map(s => `🔹 **${s.name}**: ${s.description} (Power: ${s.power || 0}, MP: ${s.cost || 10})`).join('\n');
+          embed.addFields({ name: `Kỹ Năng (${skills.length}/4)`, value: skillText, inline: false });
+      } else {
+          embed.addFields({ name: "Kỹ Năng", value: "Sinh vật chưa học được kỹ năng nào.", inline: false });
+      }
+
+      if (pet.lore) {
+          embed.addFields({ name: "Truyền thuyết", value: `*${pet.lore}*`, inline: false });
+      }
+      embed.setFooter({ text: "Dùng /pet evolve để tiến hóa, /pk để chiến đấu." });
 
       const files = [];
-      const firstPet = pets[0];
-      if (firstPet.imageData && firstPet.imageData.startsWith('data:image')) {
-          const base64Data = firstPet.imageData.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
+      if (pet.imageData && pet.imageData.startsWith('data:image')) {
+          const base64Data = pet.imageData.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
           const buffer = Buffer.from(base64Data, 'base64');
           files.push({ attachment: buffer, name: 'pet.png' });
           embed.setImage('attachment://pet.png');
-      } else if (firstPet.imageData.startsWith('http')) {
-          embed.setImage(firstPet.imageData);
+      } else if (pet.imageData && pet.imageData.startsWith('http')) {
+          embed.setImage(pet.imageData);
       }
-
-      const petListString = pets.map((p: any, i: number) => {
-          const maxExp = p.level * 100;
-          return `**${i+1}. ${p.name}** (${p.rarity}) - Lv.${p.level} | EXP: ${p.exp}/${maxExp}`;
-      }).join('\n');
-      embed.setDescription(embed.data.description + "\n\n" + petListString);
 
       return { embeds: [embed], files };
   }
@@ -277,6 +297,10 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 
       if (!pet) {
           return { content: "🕸️ Bạn chưa có pet nào! Dùng `/pet start` để ấp trứng." };
+      }
+
+      if (pet.evolutionStage >= 10) {
+          return { content: `❌ **${pet.name}** đã đạt cảnh giới tối đa (Bậc 10) và không thể tiến hóa thêm.` };
       }
 
       // Check level requirement
@@ -317,12 +341,12 @@ Sinh vật hiện tại:
 ${JSON.stringify(aiInput, null, 2)}
 
 [Yêu Cầu Thay Đổi]
-1. Nâng cấp "species" thành hình dạng trưởng thành/ngầu hơn (ví dụ: Rồng Con -> Rồng Lửa Khổng Lồ).
-2. Viết lại "description_vi" và "lore" để mô tả sự tiến hóa này mạnh mẽ ra sao.
-3. imageprompt_pet: Tạo prompt tiếng Anh dạng "Super cute extreme chibi monster..." nhưng thêm các đặc điểm trưởng thành, ngầu hơn.
-4. "skills": Giữ nguyên mảng skills cũ và TẠO THÊM 1 kỹ năng tấn công mới mạnh hơn.
-5. "traits": Nâng cấp mô tả của trait cũ cho ngầu hơn (nếu đổi tên thì phải giữ ý nghĩa).
-6. "stats": Tăng tất cả chỉ số (hp, atk, def, spd) lên khoảng 1.5 - 2 lần. Phải chắc chắn trả về là số Number, không phải String.
+1. Nâng cấp "species" thành hình dạng trưởng thành/ngầu hơn.
+2. Viết lại "description_vi" và "lore" mô tả sự vĩ đại này. Bắt buộc dài hơn 2 câu.
+3. imageprompt_pet: Tạo visual representation mô tả cực chi tiết bằng TIẾNG ANH.
+4. "skills": TRẢ VỀ CHÍNH XÁC MẢNG JSON CỦA BẠN. TẠO THÊM 1 skill tấn công mới mạnh hơn và gộp vào mảng "skills" cũ. Hệ thống sẽ tự động gọt bỏ skill cũ nhất nếu vượt quá 4.
+5. "traits": Nâng cấp mô tả của trait hiện tại cho ngầu hơn (nếu đổi tên phải giữ ý nghĩa).
+6. "stats": Tăng tất cả chỉ số lên khoảng 1.5 - 2 lần. BẮT BUỘC trả về number.
 
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON HỢP LỆ]
 {
@@ -359,23 +383,27 @@ ${JSON.stringify(aiInput, null, 2)}
 
           // Consume Stone & Update Pet
           await prisma.$transaction(async (tx) => {
-              // Deduct item
               if (evoStone.quantity === 1) {
                   await tx.inventoryItem.delete({ where: { id: evoStone.id } });
               } else {
                   await tx.inventoryItem.update({ where: { id: evoStone.id }, data: { quantity: { decrement: 1 } } });
               }
 
-              // Update Pet
+              // Filter max 4 skills
+              let newSkillsArray = evolvedData.skills;
+              if (newSkillsArray && newSkillsArray.length > 4) {
+                 newSkillsArray = newSkillsArray.slice(-4); // Keep the latest 4 skills
+              }
+
               await (tx as any).pet.update({
                   where: { id: pet.id },
                   data: {
                       species: evolvedData.species,
-                      name: evolvedData.species, // Rename fully
+                      name: evolvedData.species, 
                       description: evolvedData.description_vi,
                       lore: evolvedData.lore,
                       stats: JSON.stringify(evolvedData.stats),
-                      skills: JSON.stringify(evolvedData.skills),
+                      skills: JSON.stringify(newSkillsArray),
                       traits: JSON.stringify(evolvedData.traits),
                       imageBasePrompt: evolvedData.imageprompt_pet,
                       imageData: imageUrl,

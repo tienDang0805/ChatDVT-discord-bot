@@ -46,7 +46,7 @@ async function buildTowerBoard(): Promise<EmbedBuilder> {
 
     const lines = await Promise.all(records.map(async (r, i) => {
         const id = await prisma.userIdentity.findUnique({ where: { userId: r.userId } });
-        return `${MEDALS[i]} **${id?.nickname || r.userId.slice(0, 8)}** — 🏰 Tầng **${r.maxFloor}/10**`;
+        return `${MEDALS[i]} **${id?.nickname || r.userId.slice(0, 8)}** — 🏰 Tầng **${r.maxFloor}/100**`;
     }));
     embed.setDescription(lines.join('\n'));
     return embed;

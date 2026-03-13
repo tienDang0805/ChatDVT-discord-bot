@@ -30,7 +30,7 @@ model UserIdentity {
   userId    String   @unique
   nickname  String   @default("")
   signature String   @default("")
-  money     Int      @default(0)
+  money     Float    @default(0)
   updatedAt DateTime @updatedAt
 }
 

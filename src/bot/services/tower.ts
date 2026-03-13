@@ -2,7 +2,7 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentTy
 import { prisma } from '../../database/prisma';
 
 const TOWER_COOLDOWN_HOURS = 12;
-const MAX_FLOORS = 10;
+const MAX_FLOORS = 100;
 
 function generateMob(floor: number) {
     const mobNames = [
@@ -12,25 +12,28 @@ function generateMob(floor: number) {
         ['Thần Thú', 'Ác Ma Cánh'],
         ['Chúa Tể Bóng Tối', 'Rồng Cổ Đại']
     ];
-    const tier = Math.floor((floor - 1) / 2);
+    const tier = Math.floor((floor - 1) / 10); // Change tier every 10 floors instead of 2
     const namePool = mobNames[Math.min(tier, mobNames.length - 1)];
     const name = namePool[Math.floor(Math.random() * namePool.length)];
-    const scale = 1 + (floor - 1) * 0.25;
+    
+    // Scale much slower to allow climbing 100 floors (0.08 multiplier instead of 0.25)
+    // Floor 100 scale = 1 + 99 * 0.08 = 8.92x stats
+    const scale = 1 + (floor - 1) * 0.08; 
     return {
         name,
         floor,
-        hp: Math.floor((80 + floor * 20) * scale),
-        maxHp: Math.floor((80 + floor * 20) * scale),
-        atk: Math.floor((8 + floor * 3) * scale),
-        def: Math.floor((5 + floor * 2) * scale),
+        hp: Math.floor((80 + floor * 5) * scale),
+        maxHp: Math.floor((80 + floor * 5) * scale),
+        atk: Math.floor((8 + floor * 1) * scale),
+        def: Math.floor((5 + floor * 1.5) * scale),
     };
 }
 
 function floorReward(floor: number) {
     return {
-        exp:   50 + floor * 30,
-        coins: 80 + floor * 50,
-        isChest: floor % 5 === 0,
+        exp:   50 + floor * 10,
+        coins: 80 + floor * 15,
+        isChest: floor % 10 === 0, // Rare Chest every 10 floors
     };
 }
 
