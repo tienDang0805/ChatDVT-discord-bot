@@ -103,3 +103,25 @@ model SystemLog {
   metadata  String?  // JSON string
   timestamp DateTime @default(now())
 }
+
+model PkBattle {
+  id        Int      @id @default(autoincrement())
+  player1Id String
+  player2Id String
+  winnerId  String?
+  log       String   // JSON array of turn logs
+  status    String   @default("pending") // pending, ongoing, finished
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([player1Id])
+  @@index([player2Id])
+}
+
+model TowerProgress {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  maxFloor  Int      @default(0)
+  lastClimb DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -818,27 +818,24 @@ app.post('/api/users/:userId/add-coin', async (req, res) => {
 
 app.get('/api/users/list', authenticateToken, async (req, res) => {
     try {
-        const identities = await (prisma as any).userIdentity.findMany({
-            // No strict order by money yet due to types, we'll sort in memory
-        });
-        
-        // Fetch pets to map to users
+        const identities = await prisma.userIdentity.findMany({ orderBy: { money: 'desc' } });
         const pets = await prisma.pet.findMany();
-        const petMap = new Map();
+        const petMap = new Map<string, any[]>();
         pets.forEach(p => {
              if (!petMap.has(p.ownerId)) petMap.set(p.ownerId, []);
-             petMap.get(p.ownerId).push(p);
+             petMap.get(p.ownerId)!.push(p);
         });
 
         const enrichedUsers = identities.map((id: any) => ({
             ...id,
+            money: id.money || 0,
             pets: petMap.get(id.userId) || []
         }));
         
         res.json(enrichedUsers);
     } catch (error) {
         console.error("Fetch users error:", error);
-        res.status(500).json({ error: 'Failed to fetch users' });
+        res.status(500).json({ error: 'Failed to fetch users', detail: (error as Error).message });
     }
 });
 
@@ -926,27 +923,51 @@ app.get('/api/system-logs', async (req, res) => {
 // --- Pet Management API ---
 app.get('/api/pets', authenticateToken, async (req, res) => {
     try {
-        const pets = await prisma.pet.findMany({
-            orderBy: { createdAt: 'desc' }
-        });
-        
-        // Enrich owner nickname if possible
-        const userIds = pets.map(p => p.ownerId);
-        const identities = await prisma.userIdentity.findMany({
-            where: { userId: { in: userIds } }
-        });
-        
+        const pets = await prisma.pet.findMany({ orderBy: { createdAt: 'desc' } });
+        const userIds = [...new Set(pets.map(p => p.ownerId))];
+        const identities = await prisma.userIdentity.findMany({ where: { userId: { in: userIds } } });
         const identityMap = new Map(identities.map(id => [id.userId, id.nickname]));
-        
-        const enrichedPets = pets.map(pet => ({
-            ...pet,
-            ownerNickname: identityMap.get(pet.ownerId) || 'Unknown'
-        }));
-        
+        const enrichedPets = pets.map(pet => ({ ...pet, ownerNickname: identityMap.get(pet.ownerId) || 'Unknown' }));
         res.json(enrichedPets);
     } catch (error: any) {
         console.error("Error fetching pets:", error);
-        res.status(500).json({ error: 'Failed to fetch pets' });
+        res.status(500).json({ error: 'Failed to fetch pets', detail: error.message });
+    }
+});
+
+app.get('/api/leaderboard', authenticateToken, async (req, res) => {
+    try {
+        const type = req.query.type as string || 'level';
+        if (type === 'coin') {
+            const data = await prisma.userIdentity.findMany({ orderBy: { money: 'desc' }, take: 10 });
+            return res.json(data);
+        } else if (type === 'tower') {
+            const data = await prisma.towerProgress.findMany({ orderBy: { maxFloor: 'desc' }, take: 10 });
+            const enriched = await Promise.all(data.map(async (r: any) => {
+                const id = await prisma.userIdentity.findUnique({ where: { userId: r.userId } });
+                return { ...r, nickname: id?.nickname || r.userId };
+            }));
+            return res.json(enriched);
+        } else {
+            const data = await prisma.pet.findMany({ orderBy: [{ level: 'desc' }, { exp: 'desc' }], take: 10 });
+            const enriched = await Promise.all(data.map(async (p: any) => {
+                const id = await prisma.userIdentity.findUnique({ where: { userId: p.ownerId } });
+                return { ...p, ownerNickname: id?.nickname || p.ownerId };
+            }));
+            return res.json(enriched);
+        }
+    } catch (error: any) {
+        console.error('Leaderboard error:', error);
+        res.status(500).json({ error: 'Failed to fetch leaderboard', detail: error.message });
+    }
+});
+
+app.get('/api/tower/:userId', authenticateToken, async (req, res) => {
+    try {
+        const progress = await prisma.towerProgress.findUnique({ where: { userId: req.params.userId } });
+        res.json(progress || { maxFloor: 0, lastClimb: null });
+    } catch (error: any) {
+        res.status(500).json({ error: 'Failed to fetch tower progress', detail: error.message });
     }
 });
 
