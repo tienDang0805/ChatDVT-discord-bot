@@ -792,28 +792,7 @@ app.get('/api/inventory/:userId', authenticateToken, async (req, res) => {
 });
 
 app.post('/api/users/:userId/add-coin', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const { amount } = req.body;
-        
-        // Ensure identity exists
-        let identity = await (prisma as any).userIdentity.findUnique({ where: { userId } });
-        if (!identity) {
-            identity = await (prisma as any).userIdentity.create({
-                data: { userId, nickname: 'Unknown', signature: '' }
-            });
-        }
-
-        const updated = await (prisma as any).userIdentity.update({
-            where: { userId },
-            data: { money: { increment: amount } }
-        });
-        
-        res.json({ success: true, money: updated.money });
-    } catch (error) {
-        console.error("Add coin error:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+    res.status(403).json({ error: 'Tính năng này đã bị tắt.' });
 });
 
 // --- ADMIN API ---

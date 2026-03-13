@@ -107,6 +107,36 @@ class ShopService {
         return { success: true, message: `✅ Mua thành công **${quantity}x ${item.emoji} ${item.name}** với giá **${totalPrice} Coin**!` };
     }
 
+    public async sellItem(userId: string, itemId: string, quantity: number = 1) {
+        const item = SHOP_ITEMS.find(i => i.id === itemId);
+        if (!item) return { success: false, message: '❌ Vật phẩm không tồn tại trong hệ thống.' };
+        if (quantity <= 0) return { success: false, message: '❌ Số lượng không hợp lệ.' };
+
+        if (item.type === 'egg') {
+            return { success: false, message: '❌ Không thể bán lại Trứng.' };
+        }
+
+        const inventoryItem = await prisma.inventoryItem.findFirst({ where: { userId, itemId } });
+        if (!inventoryItem || inventoryItem.quantity < quantity) {
+            return { success: false, message: `❌ Bạn không có đủ **${item.name}** để bán. Hiện có: **${inventoryItem?.quantity || 0}**.` };
+        }
+
+        const SELL_RATE = 0.4;
+        const sellPrice = Math.floor(item.price * SELL_RATE) * quantity;
+
+        await prisma.$transaction(async (tx) => {
+            await tx.userIdentity.update({ where: { userId }, data: { money: { increment: sellPrice } } });
+
+            if (inventoryItem.quantity === quantity) {
+                await tx.inventoryItem.delete({ where: { id: inventoryItem.id } });
+            } else {
+                await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: quantity } } });
+            }
+        });
+
+        return { success: true, message: `✅ Đã bán **${quantity}x ${item.emoji} ${item.name}** và nhận **${sellPrice} Coin** 💰 (40% giá gốc).` };
+    }
+
     public async getInventory(userId: string) {
         const items = await prisma.inventoryItem.findMany({ where: { userId } });
         const identity = await prisma.userIdentity.findUnique({ where: { userId } });

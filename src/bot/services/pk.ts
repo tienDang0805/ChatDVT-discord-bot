@@ -26,58 +26,69 @@ interface PetSnapshot {
     skills: any[];
     traits: any[];
     imageData: string;
+    level: number;
 }
 
 const TURN_TIMEOUT_MS = 45_000;
+const MAX_ROUNDS = 25;
 
 function parsePet(pet: any): PetSnapshot {
     const stats = JSON.parse(pet.stats || '{}');
     const skills = JSON.parse(pet.skills || '[]');
     const traits = JSON.parse(pet.traits || '[]');
-    const hp = stats.hp || 100;
-    const mp = stats.mp || 80;
+
+    const baseHp = stats.hp || 100;
+    const baseMp = stats.mp || 80;
+    const baseAtk = stats.atk || 10;
+    const baseDef = stats.def || 10;
+    const baseSpd = stats.spd || 10;
+
+    const hpMultiplier = 3.5;
+    const scaledHp = Math.floor(baseHp * hpMultiplier);
+
     return {
         id: pet.id,
         ownerId: pet.ownerId,
         name: pet.name,
         species: pet.species,
-        hp,
-        maxHp: hp,
-        mp,
-        maxMp: mp,
-        atk: stats.atk || 10,
-        def: stats.def || 10,
-        spd: stats.spd || 10,
+        hp: scaledHp,
+        maxHp: scaledHp,
+        mp: baseMp,
+        maxMp: baseMp,
+        atk: baseAtk,
+        def: baseDef,
+        spd: baseSpd,
         skills,
         traits,
-        imageData: pet.imageData || ''
+        imageData: pet.imageData || '',
+        level: pet.level || 1
     };
 }
 
 function calcDamage(attacker: PetSnapshot, defender: PetSnapshot, skill: any): { damage: number, isCrit: boolean, isMiss: boolean } {
-    // 1. Evasion (Miss) Check based on Speed
-    // If Atk SPD < Def SPD, high chance to miss. Max 40% miss chance.
-    let missChance = 0.05; // Base 5% miss
+    let missChance = 0.05;
     if (defender.spd > attacker.spd) {
-        missChance += Math.min(0.35, (defender.spd - attacker.spd) * 0.01);
+        missChance += Math.min(0.30, (defender.spd - attacker.spd) * 0.005);
     }
     const isMiss = Math.random() < missChance;
     if (isMiss) return { damage: 0, isCrit: false, isMiss: true };
 
-    // 2. Base Damage & Defense Mitigation
     const power = skill?.power || 10;
-    const baseDamage = attacker.atk * (power / 10);
-    // Defense Mitigation Formula: 100 / (100 + DEF). High DEF blocks % damage, but not to 0.
-    const mitigation = 100 / (100 + defender.def);
-    let damage = Math.max(1, Math.floor(baseDamage * mitigation) + Math.floor(Math.random() * 5));
 
-    // 3. Critical Hit Check based on Speed
-    // Base 5% crit. +1% per 10 SPD.
-    const critChance = 0.05 + (attacker.spd * 0.001); 
-    const critRoll = Math.random();
-    const isCrit = critRoll < critChance;
+    const rawDamage = (attacker.atk * power) / 50;
+
+    const defReduction = defender.def / (defender.def + 80);
+    let damage = Math.max(1, Math.floor(rawDamage * (1 - defReduction)));
+
+    const variance = Math.floor(damage * 0.15);
+    damage += Math.floor(Math.random() * (variance * 2 + 1)) - variance;
+
+    damage = Math.max(1, damage);
+
+    const critChance = 0.08 + (attacker.spd * 0.0008);
+    const isCrit = Math.random() < critChance;
     if (isCrit) {
-        damage = Math.floor(damage * 1.5);
+        damage = Math.floor(damage * 1.4);
     }
 
     return { damage, isCrit, isMiss };
@@ -96,13 +107,13 @@ function buildBattleEmbed(p1: PetSnapshot, p2: PetSnapshot, turn: 'p1' | 'p2', l
         .setColor(turn === 'p1' ? 0x3B82F6 : 0xEF4444)
         .addFields(
             {
-                name: `🔵 ${p1.name} (Lv. ?)`,
-                value: `❤️ ${buildStatusBar(p1.hp, p1.maxHp)} ${p1.hp}/${p1.maxHp}\n💙 ${buildStatusBar(p1.mp, p1.maxMp)} ${p1.mp}/${p1.maxMp}`,
+                name: `🔵 ${p1.name} (Lv.${p1.level})`,
+                value: `❤️ ${buildStatusBar(p1.hp, p1.maxHp)} ${p1.hp}/${p1.maxHp}\n💙 ${buildStatusBar(p1.mp, p1.maxMp)} ${p1.mp}/${p1.maxMp}\n⚔️ ATK: ${p1.atk} | 🛡️ DEF: ${p1.def} | 💨 SPD: ${p1.spd}`,
                 inline: true
             },
             {
-                name: `🔴 ${p2.name} (Lv. ?)`,
-                value: `❤️ ${buildStatusBar(p2.hp, p2.maxHp)} ${p2.hp}/${p2.maxHp}\n💙 ${buildStatusBar(p2.mp, p2.maxMp)} ${p2.mp}/${p2.maxMp}`,
+                name: `🔴 ${p2.name} (Lv.${p2.level})`,
+                value: `❤️ ${buildStatusBar(p2.hp, p2.maxHp)} ${p2.hp}/${p2.maxHp}\n💙 ${buildStatusBar(p2.mp, p2.maxMp)} ${p2.mp}/${p2.maxMp}\n⚔️ ATK: ${p2.atk} | 🛡️ DEF: ${p2.def} | 💨 SPD: ${p2.spd}`,
                 inline: true
             },
             {
@@ -216,7 +227,7 @@ export class PkService {
         };
 
         const runTurns = async (): Promise<'p1' | 'p2' | 'timeout'> => {
-            while (p1.hp > 0 && p2.hp > 0 && round <= 20) {
+            while (p1.hp > 0 && p2.hp > 0 && round <= MAX_ROUNDS) {
                 const attacker = currentTurn === 'p1' ? p1 : p2;
                 const defender  = currentTurn === 'p1' ? p2 : p1;
                 const prefix    = currentTurn;
@@ -242,8 +253,8 @@ export class PkService {
 
                 currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
                 round++;
-                p1.mp = Math.min(p1.maxMp, p1.mp + 15);
-                p2.mp = Math.min(p2.maxMp, p2.mp + 15);
+                p1.mp = Math.min(p1.maxMp, p1.mp + 10);
+                p2.mp = Math.min(p2.maxMp, p2.mp + 10);
             }
 
             if (p1.hp <= 0) return 'p2';
@@ -264,7 +275,6 @@ export class PkService {
             await prisma.$transaction(async (tx) => {
                 await tx.userIdentity.update({ where: { userId: winnerId }, data: { money: { increment: coinReward } } });
             });
-            // Handle Pet EXP recursively
             const { levelsGained, messages } = await petService.addExpAndLevelUp(winnerPet.id, expReward);
             if (levelsGained > 0) {
                  log.push(...messages);

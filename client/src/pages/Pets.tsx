@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPets, deletePet, addCoin, getInventory } from '../api';
+import { getPets, deletePet, getInventory } from '../api';
 import { Trash2, ShieldAlert, Sparkles, AlertCircle, Info, X, Coins, Zap, Shield, Heart } from 'lucide-react';
 
 export const Pets = () => {
@@ -7,8 +7,7 @@ export const Pets = () => {
     const [loading, setLoading] = useState(true);
     const [selectedPet, setSelectedPet] = useState<any>(null);
     const [inventoryInfo, setInventoryInfo] = useState<{money: number, items: any[]}>({ money: 0, items: [] });
-    const [addCoinAmount, setAddCoinAmount] = useState<number>(1000);
-    const [isAddingCoin, setIsAddingCoin] = useState(false);
+
 
     const openPetModal = async (pet: any) => {
         setSelectedPet(pet);
@@ -24,22 +23,7 @@ export const Pets = () => {
         setSelectedPet(null);
     };
 
-    const handleAddCoin = async () => {
-        if (!selectedPet) return;
-        setIsAddingCoin(true);
-        try {
-            const res = await addCoin(selectedPet.ownerId, addCoinAmount);
-            if (res.success) {
-                setInventoryInfo(prev => ({ ...prev, money: res.money }));
-                alert(`Đã thêm thành công! Tổng số dư mới: ${res.money} Coins`);
-            }
-        } catch (error) {
-            console.error("Failed to add coin", error);
-            alert("Lỗi khi thêm coin");
-        } finally {
-            setIsAddingCoin(false);
-        }
-    };
+
 
     const fetchPets = async () => {
         try {
@@ -239,24 +223,7 @@ export const Pets = () => {
                                     <span className="text-lg font-black text-yellow-600 dark:text-yellow-400">{inventoryInfo.money}</span>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Nạp Coin cho User</label>
-                                    <div className="flex gap-2">
-                                        <input 
-                                            type="number" 
-                                            className="w-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 rounded-xl text-sm border-none focus:ring-2 focus:ring-purple-500"
-                                            value={addCoinAmount}
-                                            onChange={(e) => setAddCoinAmount(Number(e.target.value))}
-                                        />
-                                        <button 
-                                            onClick={handleAddCoin}
-                                            disabled={isAddingCoin}
-                                            className="bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-colors shadow-md shadow-purple-500/20"
-                                        >
-                                            {isAddingCoin ? 'Đang nạp...' : 'Nạp'}
-                                        </button>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
 
