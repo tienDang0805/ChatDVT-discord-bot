@@ -78,7 +78,7 @@ class ShopService {
         }
 
         const totalPrice = item.price * quantity;
-        const identity = await userIdentityService.getOrCreateIdentity(userId);
+        const identity = await userIdentityService.getOrCreateIdentity(userId, true);
         if (identity.money < totalPrice) {
             return { success: false, message: `❌ Không đủ tiền! Cần **${totalPrice} Coin** nhưng bạn chỉ có **${identity.money} Coin**.` };
         }
@@ -103,6 +103,8 @@ class ShopService {
                 });
             }
         });
+
+        userIdentityService.invalidateCache(userId);
 
         return { success: true, message: `✅ Mua thành công **${quantity}x ${item.emoji} ${item.name}** với giá **${totalPrice} Coin**!` };
     }
@@ -133,6 +135,8 @@ class ShopService {
                 await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: quantity } } });
             }
         });
+
+        userIdentityService.invalidateCache(userId);
 
         return { success: true, message: `✅ Đã bán **${quantity}x ${item.emoji} ${item.name}** và nhận **${sellPrice} Coin** 💰 (40% giá gốc).` };
     }

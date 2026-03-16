@@ -1,6 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, Message } from 'discord.js';
 import { prisma } from '../../database/prisma';
 import { petService } from './pet';
+import { userIdentityService } from './identity';
 
 const TOWER_COOLDOWN_HOURS = 12;
 const MAX_FLOORS = 100;
@@ -174,6 +175,8 @@ export class TowerService {
                 else await tx.inventoryItem.create({ data: { userId, itemId: 'rare_chest', itemType: 'chest', name: 'Rương Hiếm', quantity: chestItems } });
             }
         });
+
+        if (totalCoins > 0) userIdentityService.invalidateCache(userId);
 
         // Handle Level up outside transaction to keep it simple
         if (totalExp > 0) {

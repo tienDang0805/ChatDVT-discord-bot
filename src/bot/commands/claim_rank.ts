@@ -2,6 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from '
 import { prisma } from '../../database/prisma';
 import { SHOP_ITEMS } from '../services/shop';
 import { petService } from '../services/pet';
+import { userIdentityService } from '../services/identity';
 
 interface RankReward {
     coins: number;
@@ -136,6 +137,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       await addItem('exp_stone_lg', totalExpStoneLg);
       await addItem('evo_stone', totalEvoStone);
   });
+
+  userIdentityService.invalidateCache(userId);
 
   const rewardLines: string[] = [];
   if (totalCoins > 0) rewardLines.push(`💰 **+${totalCoins.toLocaleString()} Coin**`);

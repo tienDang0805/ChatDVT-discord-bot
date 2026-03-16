@@ -8,7 +8,6 @@ class FarmService {
     private COOLDOWN_TIME = 60 * 1000; // 1 minute
 
     public async farm(userId: string) {
-        // Cooldown check
         const lastFarm = this.cooldowns.get(userId);
         if (lastFarm && Date.now() - lastFarm < this.COOLDOWN_TIME) {
             const timeLeft = Math.ceil((this.COOLDOWN_TIME - (Date.now() - lastFarm)) / 1000);
@@ -20,22 +19,18 @@ class FarmService {
             return { success: false, message: '❌ Bạn chưa có sinh vật nào để đi farm! Hãy dùng `/pet start`.' };
         }
 
-        // Random rewards
-        const expGained = Math.floor(Math.random() * 21) + 10; // 10-30
-        const moneyGained = Math.floor(Math.random() * 41) + 10; // 10-50
+        const expGained = Math.floor(Math.random() * 21) + 10;
+        const moneyGained = Math.floor(Math.random() * 41) + 10;
 
-        // Random Drop (10% chance)
         let droppedItem = null;
         if (Math.random() < 0.1) {
             droppedItem = SHOP_ITEMS[Math.floor(Math.random() * SHOP_ITEMS.length)];
         }
 
-        // Apply Level Up
         let newExp = pet.exp + expGained;
         let newLevel = pet.level;
         let statsChanged = false;
         
-        // Parse current stats
         let stats: any = {};
         try { stats = JSON.parse(pet.stats); } catch(e) {}
         
@@ -47,17 +42,14 @@ class FarmService {
             newExp -= expNeeded;
             leveledUp = true;
             
-            // Generate stats increase
-            stats.hp = (stats.hp || 100) + Math.floor(Math.random() * 11) + 5; // +5 to 15
-            stats.atk = (stats.atk || 10) + Math.floor(Math.random() * 4) + 2; // +2 to 5
+            stats.hp = (stats.hp || 100) + Math.floor(Math.random() * 11) + 5;
+            stats.atk = (stats.atk || 10) + Math.floor(Math.random() * 4) + 2;
             stats.def = (stats.def || 10) + Math.floor(Math.random() * 4) + 2;
             stats.spd = (stats.spd || 10) + Math.floor(Math.random() * 3) + 1;
             statsChanged = true;
         }
 
-        // Update DB
         await prisma.$transaction(async (tx) => {
-            // Update Pet
             await tx.pet.update({
                 where: { id: pet.id },
                 data: {
@@ -67,13 +59,11 @@ class FarmService {
                 }
             });
 
-            // Update Money
             await tx.userIdentity.update({
                 where: { userId },
                 data: { money: { increment: moneyGained } }
             });
 
-            // Add drop item if any
             if (droppedItem) {
                 const existingItem = await tx.inventoryItem.findFirst({ where: { userId, itemId: droppedItem.id } });
                 if (existingItem) {
@@ -94,6 +84,8 @@ class FarmService {
                 }
             }
         });
+
+        userIdentityService.invalidateCache(userId);
 
         // Set Cooldown
         this.cooldowns.set(userId, Date.now());

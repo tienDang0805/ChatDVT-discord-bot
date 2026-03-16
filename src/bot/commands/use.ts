@@ -2,6 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from '
 import { prisma } from '../../database/prisma';
 import { SHOP_ITEMS } from '../services/shop';
 import { petService } from '../services/pet';
+import { userIdentityService } from '../services/identity';
 
 export const data = new SlashCommandBuilder()
   .setName('use')
@@ -149,6 +150,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
               else await tx.inventoryItem.create({ data: { userId, itemId: itemDropped.id, itemType: itemDropped.type, name: itemDropped.name, quantity: 1 } });
           }
       });
+
+      if (coinsGain > 0) userIdentityService.invalidateCache(userId);
 
       const embed = new EmbedBuilder()
           .setTitle('📦 Mở Rương Hiếm!')

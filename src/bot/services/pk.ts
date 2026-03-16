@@ -10,6 +10,7 @@ import {
 } from 'discord.js';
 import { prisma } from '../../database/prisma';
 import { petService } from './pet';
+import { userIdentityService } from './identity';
 
 interface PetSnapshot {
     id: number;
@@ -266,6 +267,7 @@ export class PkService {
             await prisma.$transaction(async (tx) => {
                 await tx.userIdentity.update({ where: { userId: winnerId }, data: { money: { increment: coinReward } } });
             });
+            userIdentityService.invalidateCache(winnerId);
             const { levelsGained, messages } = await petService.addExpAndLevelUp(winnerPet.id, expReward);
             if (levelsGained > 0) {
                  log.push(...messages);

@@ -1,5 +1,6 @@
 import { prisma } from '../../database/prisma';
 import { petService } from './pet';
+import { userIdentityService } from './identity';
 import { EmbedBuilder } from 'discord.js';
 
 const JOURNEY_COOLDOWN_HOURS = 4;
@@ -98,6 +99,8 @@ export class JourneyService {
                 else await tx.inventoryItem.create({ data: { userId, itemId: 'stamina_potion', itemType: 'consumable', name: 'Bình Thể Lực', quantity: 1 } });
             }
         });
+
+        userIdentityService.invalidateCache(userId);
 
         if (chestDropped) logEntries.push(`📦 Vô tình nhặt được **1x Rương Hiếm**!`);
         if (eggDropped) logEntries.push(`🥚 KỲ TÍCH! Tìm được **1x ${eggDropped}**!`);

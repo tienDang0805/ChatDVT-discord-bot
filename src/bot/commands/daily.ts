@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { prisma } from '../../database/prisma';
 import { SHOP_ITEMS } from '../services/shop';
+import { userIdentityService } from '../services/identity';
 
 export const data = new SlashCommandBuilder()
   .setName('daily')
@@ -69,6 +70,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           }
       }
   });
+
+  userIdentityService.invalidateCache(userId);
 
   const embed = new EmbedBuilder()
       .setTitle('📅 ĐIỂM DANH THÀNH CÔNG!')

@@ -25,15 +25,19 @@ class UserIdentityService {
     }, 10 * 60 * 1000); // Run every 10 minutes
   }
 
-  public async getOrCreateIdentity(userId: string): Promise<any> {
+  public invalidateCache(userId: string) {
+    this.identityCache.delete(userId);
+  }
+
+  public async getOrCreateIdentity(userId: string, skipCache = false): Promise<any> {
     try {
-      // 1. Check cache
-      const cached = this.identityCache.get(userId);
-      if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
-        return cached.data;
+      if (!skipCache) {
+        const cached = this.identityCache.get(userId);
+        if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
+          return cached.data;
+        }
       }
 
-      // 2. Query DB
       let identity = await prisma.userIdentity.findUnique({ where: { userId } });
       
       if (!identity) {
@@ -46,7 +50,6 @@ class UserIdentityService {
         });
       }
 
-      // 3. Update cache
       this.identityCache.set(userId, {
         data: identity,
         timestamp: Date.now()
