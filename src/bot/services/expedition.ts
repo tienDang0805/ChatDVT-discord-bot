@@ -1,7 +1,7 @@
 import { prisma } from '../../database/prisma';
 import { petService, PetSnapshot, parsePet } from './pet';
 import { userIdentityService } from './identity';
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, ButtonInteraction, Message } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, ButtonInteraction, Message } from 'discord.js';
 import { SHOP_ITEMS } from './shop';
 
 const EXPEDITION_COOLDOWN_MS = 30 * 60 * 1000;
@@ -299,28 +299,10 @@ class ExpeditionService {
                 .addFields(
                     { name: `🔵 ${pet.name} (Lv.${pet.level})`, value: `❤️ ${buildStatusBar(pet.hp, pet.maxHp)} ${pet.hp}/${pet.maxHp}\n💙 ${buildStatusBar(pet.mp, pet.maxMp)} ${pet.mp}/${pet.maxMp}\n⚔️ ATK: ${pet.atk} | 🛡️ DEF: ${pet.def}`, inline: true },
                     { name: `🔴 ${boss.name} (Lv.${boss.level})`, value: `❤️ ${buildStatusBar(boss.hp, boss.maxHp)} ${boss.hp}/${boss.maxHp}\n💙 ${buildStatusBar(boss.mp, boss.maxMp)} ${boss.mp}/${boss.maxMp}\n⚔️ ATK: ${boss.atk} | 🛡️ DEF: ${boss.def}`, inline: true },
-                    { name: `📋 Log (vòng ${r})`, value: logArray.slice(-4).join('\n') || '—', inline: false }
+                    { name: `📋 Log Trận Nhánh (Vòng ${r})`, value: logArray.slice(-6).join('\n') || '—', inline: false }
                 )
-                .setFooter({ text: `Lượt: ${activeName} (Max 50 vòng)` });
+                .setFooter({ text: `Auto-Combat Resolution (Tối đa 50 lượt)` });
         };
-
-        const buildSkillButtons = (p: PetSnapshot) => {
-            const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-            const row1 = new ActionRowBuilder<ButtonBuilder>();
-            
-            p.skills.slice(0, 4).forEach((skill: any, i: number) => {
-                const mpCost = skill.cost || 10;
-                row1.addComponents(
-                    new ButtonBuilder().setCustomId(`pvp_skill_${i}`).setLabel(`⚡ ${skill.name} (-${mpCost} MP)`).setStyle(p.mp >= mpCost ? ButtonStyle.Primary : ButtonStyle.Danger).setDisabled(p.mp < mpCost)
-                );
-            });
-            rows.push(row1);
-            return rows;
-        };
-
-        const resultEmbed = buildBattleEmbed(currentTurn, log, round);
-        const actionRow = currentTurn === 'pet' ? buildSkillButtons(pet) : [];
-        const battleMsg = await interaction.editReply({ embeds: [resultEmbed], components: actionRow }) as Message;
 
         while (pet.hp > 0 && boss.hp > 0 && round <= 50) {
             let damage = 0;
@@ -330,47 +312,31 @@ class ExpeditionService {
             let isMiss = false;
 
             if (currentTurn === 'pet') {
-                const updatedEmbed = buildBattleEmbed(currentTurn, log, round);
-                const rows = buildSkillButtons(pet);
-                await battleMsg.edit({ embeds: [updatedEmbed], components: rows });
-
-                try {
-                    const btn = await battleMsg.awaitMessageComponent({
-                        componentType: ComponentType.Button,
-                        filter: (i) => i.user.id === userId && i.customId.startsWith('pvp_'),
-                        time: 30_000
-                    });
-                    await btn.deferUpdate();
-
-                    const cId = btn.customId;
-                    if (cId.startsWith('pvp_skill_')) {
-                        const idx = parseInt(cId.replace('pvp_skill_', ''));
-                        const s = pet.skills[idx];
-                        if (s && pet.mp >= (s.cost || 10)) {
-                            mpCost = s.cost || 10; skillName = s.name;
-                            const res = calcDamage(pet, boss, s);
-                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                        } else {
-                            const res = calcDamage(pet, boss, { power: 10 });
-                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                            skillName = 'Hụt Hơi (Không đủ MP)';
-                        }
-                    }
-
-                    pet.mp = Math.max(0, pet.mp - mpCost);
-                    boss.hp = Math.max(0, boss.hp - damage);
-
-                    if (isMiss) log.push(`💨 **${boss.name}** đã né được chiêu **${skillName}** của ${pet.name}!`);
-                    else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${pet.name}** dùng **${skillName}** → -${damage} HP cho ${boss.name}`);
-                } catch {
-                    log.push(`⏰ **${pet.name}** không hành động — vấp ngã mất lượt!`);
-                }
-            } else {
-                // Boss AI Turn
-                await new Promise(r => setTimeout(r, 1500)); // Delay for dramatic effect
                 let chosenSkill = null;
-                const availableBossSkills = boss.skills.filter(s => boss.mp >= (s.cost || 10));
-                
+                const availableSkills = pet.skills.filter((s:any) => pet.mp >= (s.cost || 10));
+                if (availableSkills.length > 0 && Math.random() < 0.8) {
+                    chosenSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                }
+
+                if (chosenSkill) {
+                    mpCost = chosenSkill.cost || 10;
+                    skillName = chosenSkill.name;
+                    const res = calcDamage(pet, boss, chosenSkill);
+                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                } else {
+                    const res = calcDamage(pet, boss, { power: 10 });
+                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                    if (pet.mp < 10 && availableSkills.length === 0) skillName = 'Hụt Hơi (Không đủ MP)';
+                }
+
+                pet.mp = Math.max(0, pet.mp - mpCost);
+                boss.hp = Math.max(0, boss.hp - damage);
+
+                if (isMiss) log.push(`💨 **${boss.name}** đã né được chiêu **${skillName}** của ${pet.name}!`);
+                else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${pet.name}** dùng **${skillName}** → -${damage} HP cho ${boss.name}`);
+            } else {
+                let chosenSkill = null;
+                const availableBossSkills = boss.skills.filter((s:any) => boss.mp >= (s.cost || 10));
                 if (availableBossSkills.length > 0 && Math.random() < 0.6) {
                     chosenSkill = availableBossSkills[Math.floor(Math.random() * availableBossSkills.length)];
                 }
@@ -389,7 +355,7 @@ class ExpeditionService {
                 pet.hp = Math.max(0, pet.hp - damage);
 
                 if (isMiss) log.push(`💨 **${pet.name}** đã né được đòn **${skillName}** của ${boss.name}!`);
-                else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${boss.name}** gầm thét dùng **${skillName}** → -${damage} HP cho bạn`);
+                else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${boss.name}** dùng **${skillName}** → -${damage} HP cho bạn`);
             }
 
             if (pet.hp <= 0 || boss.hp <= 0) break;
@@ -400,9 +366,7 @@ class ExpeditionService {
             boss.mp = Math.min(boss.maxMp, boss.mp + 10);
         }
 
-        // Final result evaluation
         if (pet.hp <= 0 || round > 50) {
-            // Thua phạt 5 mins cooldown
             await prisma.expeditionProgress.update({
                 where: { userId },
                 data: { lastAttempt: new Date(Date.now() - EXPEDITION_COOLDOWN_MS + (5 * 60 * 1000)) } 
@@ -413,21 +377,16 @@ class ExpeditionService {
                 .setDescription(`**${pet.name}** đã gục ngã trước sự áp đảo của **${stage.bossName}**!`)
                 .setFooter({ text: 'Thất bại... Phạt Cooldown 5 phút!' });
 
-            await battleMsg.edit({ embeds: [defeatEmbed], components: [] });
-            return { content: null }; // Request finished
+            await interaction.editReply({ embeds: [defeatEmbed], components: [] });
+            return { content: null };
         } else {
-            // Thắng, thưởng, không cooldown (vào ải kế tiếp luôn)
-            
+            const rewardPayload = await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚔️ Chiến Thắng Máu Lửa!');
             const victoryEmbed = buildBattleEmbed(currentTurn, log, round)
                 .setTitle(`🎉 HUYỀN THOẠI! — Boss Gục Ngã`)
                 .setDescription(`**${boss.name}** đã bị tiêu diệt! Chuẩn bị nhận thưởng...`);
             
-            await battleMsg.edit({ embeds: [victoryEmbed], components: [] });
-            
-            // Wait 2s then send reward
-            await new Promise(r => setTimeout(r, 2000));
-            const rewardPayload = await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚔️ Thắng trận Oanh Liệt!');
-            await interaction.editReply({ embeds: rewardPayload.embeds, components: rewardPayload.components });
+            // Merge embeds: show combat log AND reward embed
+            await interaction.editReply({ embeds: [victoryEmbed, rewardPayload.embeds[0]], components: rewardPayload.components });
             return { content: null };
         }
     }
