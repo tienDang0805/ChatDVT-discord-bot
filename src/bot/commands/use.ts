@@ -17,34 +17,47 @@ export const data = new SlashCommandBuilder()
           .setDescription('Số lượng muốn sử dụng (mặc định: 1)')
           .setRequired(false)
           .setMinValue(1)
+  )
+  .addBooleanOption(option =>
+      option.setName('use_all')
+          .setDescription('Sử dụng TẤT CẢ số lượng đang có của vật phẩm này!')
+          .setRequired(false)
   );
 
 // Base stats per level based on rarity
-const STAT_BONUS_MAP: Record<string, { hp: number, atk: number, def: number, spd: number }> = {
-    'Legend': { hp: 10, atk: 4, def: 3, spd: 2 },
-    'Unique': { hp: 8, atk: 3, def: 2, spd: 1 },
-    'Rare': { hp: 6, atk: 2, def: 2, spd: 1 },
-    'Magic': { hp: 5, atk: 2, def: 1, spd: 1 },
-    'Normal': { hp: 4, atk: 1, def: 1, spd: 0 },
+const STAT_BONUS_MAP: Record<string, { hp: number, mp: number, atk: number, def: number, spd: number, int: number }> = {
+    'Legend': { hp: 10, mp: 5, atk: 4, def: 3, spd: 2, int: 3 },
+    'Unique': { hp: 8, mp: 4, atk: 3, def: 2, spd: 1, int: 2 },
+    'Rare': { hp: 6, mp: 3, atk: 2, def: 2, spd: 1, int: 1 },
+    'Magic': { hp: 5, mp: 2, atk: 2, def: 1, spd: 1, int: 1 },
+    'Normal': { hp: 4, mp: 1, atk: 1, def: 1, spd: 0, int: 0 },
 };
 
 function applyStatBonus(stats: any, levelsGained: number, rarity: string) {
     const bonus = STAT_BONUS_MAP[rarity] || STAT_BONUS_MAP['Normal'];
     stats.hp = (stats.hp || 0) + (bonus.hp * levelsGained);
+    stats.mp = (stats.mp || 80) + (bonus.mp * levelsGained);
     stats.atk = (stats.atk || 0) + (bonus.atk * levelsGained);
     stats.def = (stats.def || 0) + (bonus.def * levelsGained);
     stats.spd = (stats.spd || 0) + (bonus.spd * levelsGained);
+    stats.int = (stats.int || 10) + (bonus.int * levelsGained);
     return stats;
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const itemId   = interaction.options.getString('item_id', true).trim().toLowerCase();
-  const quantity = interaction.options.getInteger('quantity') || 1;
+  let quantity = interaction.options.getInteger('quantity') || 1;
+  const useAll = interaction.options.getBoolean('use_all') || false;
   const userId   = interaction.user.id;
 
   await interaction.deferReply();
 
   const inventoryItem = await prisma.inventoryItem.findFirst({ where: { userId, itemId } });
+  
+  if (useAll && inventoryItem && inventoryItem.quantity > 0) {
+      quantity = inventoryItem.quantity;
+  }
+
   if (!inventoryItem || inventoryItem.quantity < quantity) {
       await interaction.editReply(`❌ Bạn không có đủ **${quantity}x ${itemId}**! (Hiện có: ${inventoryItem?.quantity || 0})`);
       return;

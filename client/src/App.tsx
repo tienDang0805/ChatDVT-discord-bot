@@ -12,6 +12,7 @@ import { Login } from './pages/Login';
 import { Navigate, useLocation } from 'react-router-dom';
 
 import { Identity } from './pages/Identity';
+import { PetLandingPage } from './pages/PetLandingPage';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -28,6 +29,7 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 function App() {
   return (
     <Routes>
+       <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/login" element={<Login />} />
        <Route path="/*" element={
          <RequireAuth>

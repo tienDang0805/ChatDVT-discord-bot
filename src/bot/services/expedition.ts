@@ -210,79 +210,221 @@ class ExpeditionService {
         const prog = await this.getProgress(userId);
         const cooldownMs = prog.lastAttempt.getTime() - Date.now() + EXPEDITION_COOLDOWN_MS;
         if (cooldownMs > 0) {
-            return { content: `⏳ Sinh vật đang phục hồi sau trận đánh! Còn **${Math.ceil(cooldownMs / 60000)} phút** nữa.` };
+            return { content: `⏳ Sinh vật đang phục hồi! Còn **${Math.ceil(cooldownMs / 60000)} phút** nữa.` };
         }
 
-        const nextStageId = prog.maxStage + 1;
+        let nextStageId = prog.maxStage + 1;
         if (nextStageId > 100) {
             return { content: '🎉 **Bạn đã chinh phục toàn bộ 100 ải Viễn Chinh!** Thật phi thường!' };
         }
 
-        const stage = getStageById(nextStageId)!;
-        const petCP = petService.calcCombatPower(petInfo);
-        const ratio = petCP / stage.requiredCP;
+        await interaction.editReply({ content: '⏳ Đang quét Viễn Chinh liên hoàn... Xin chờ giây lát!' });
 
-        // Auto Pass Check (Out CP x2)
-        if (ratio >= 2.0) {
-            // Mới: Bỏ qua cooldown 30p khi thắng để qua ải ngay lập tức
-            return await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚡ Áp đảo hoàn toàn! (Auto Pass)');
+        let currentPetCP = petService.calcCombatPower(petInfo);
+        const pet = parsePet(petInfo);
+
+        let totalExp = 0;
+        let totalCoin = 0;
+        const droppedItems: string[] = [];
+        let stagesCleared = 0;
+        const combatLogs: string[] = []; 
+        let defeatStage: StageData | null = null;
+        let isDefeat = false;
+        let newCleared = JSON.parse(prog.clearedStages);
+
+        const petBuffs = { critBonus: 0, dodgeBonus: 0, hpRegenPct: 0, atkBoost: 0, defBoost: 0 };
+        for (const t of pet.traits) {
+            const v = typeof t.value === 'number' ? t.value : 0;
+            if (t.type === 'crit') petBuffs.critBonus += v;
+            else if (t.type === 'dodge') petBuffs.dodgeBonus += v;
+            else if (t.type === 'hp_regen') petBuffs.hpRegenPct += v;
+            else if (t.type === 'atk_boost') petBuffs.atkBoost += v;
+            else if (t.type === 'def_boost') petBuffs.defBoost += v;
         }
 
-        // --- PVE MANUAL COMBAT LOGIC ---
-        const pet = parsePet(petInfo);
-        
-        // Define Boss Snapshot
-        const bossStats = {
-            hp: Math.floor(stage.requiredCP * 0.25),
-            mp: 100,
-            atk: Math.floor(stage.requiredCP * 0.15),
-            def: Math.floor(stage.requiredCP * 0.1),
-            spd: Math.floor(stage.requiredCP * 0.1)
-        };
-        const boss: PetSnapshot = {
-            ownerId: 'boss',
-            name: `❖ ${stage.bossName}`,
-            hp: bossStats.hp,
-            maxHp: bossStats.hp,
-            mp: bossStats.mp,
-            maxMp: bossStats.mp,
-            atk: bossStats.atk,
-            def: bossStats.def,
-            spd: bossStats.spd,
-            skills: [{ name: 'Sóng Tử Thần', power: 15, cost: 20 }, { name: 'Thống Khổ Trảm', power: 12, cost: 10 }],
-            traits: [],
-            imageData: '',
-            level: Math.floor(stage.requiredCP / 20)
-        };
+        const bossBuffs = { critBonus: 0, dodgeBonus: 0, hpRegenPct: 0, atkBoost: 0, defBoost: 0 };
 
-        const log: string[] = [];
-        let round = 1;
-        let currentTurn: 'pet' | 'boss' = pet.spd >= boss.spd ? 'pet' : 'boss';
-
-        log.push(`**Trận chiến bắt đầu!** Ải ${stage.id} — ${stage.name}`);
-        log.push(`🔰 Lượt đầu: **${currentTurn === 'pet' ? pet.name : boss.name}**`);
-
-        // Helper functions for Combat
-        const calcDamage = (attacker: PetSnapshot, defender: PetSnapshot, skill: any) => {
-            let missChance = 0.05;
+        const calcDamage = (attacker: PetSnapshot, defender: PetSnapshot, skill: any, aBuffs: any, dBuffs: any) => {
+            let missChance = 0.05 + dBuffs.dodgeBonus;
             if (defender.spd > attacker.spd) missChance += Math.min(0.30, (defender.spd - attacker.spd) * 0.005);
             if (Math.random() < missChance) return { damage: 0, isCrit: false, isMiss: true };
 
             const power = skill?.power || 10;
-            const rawDamage = (attacker.atk * power) / 20;
-            const defReduction = defender.def / (defender.def + 150);
+            const effAtk = attacker.atk * (1 + aBuffs.atkBoost);
+            const rawDamage = (effAtk * power) / 20;
+
+            const effDef = defender.def * (1 + dBuffs.defBoost);
+            const defReduction = effDef / (effDef + 150);
             let damage = Math.max(1, Math.floor(rawDamage * (1 - defReduction)));
             
             const variance = Math.floor(damage * 0.15);
             damage += Math.floor(Math.random() * (variance * 2 + 1)) - variance;
             damage = Math.max(1, damage);
 
-            const critChance = 0.08 + (attacker.spd * 0.0008);
+            const critChance = 0.08 + (attacker.spd * 0.0008) + aBuffs.critBonus;
             const isCrit = Math.random() < critChance;
             if (isCrit) damage = Math.floor(damage * 1.4);
 
             return { damage, isCrit, isMiss: false };
         };
+
+        while (pet.hp > 0 && nextStageId <= 100) {
+            const stage = getStageById(nextStageId)!;
+            const ratio = currentPetCP / stage.requiredCP;
+
+            const bossStats = {
+                hp: Math.floor(stage.requiredCP * 0.25),
+                mp: 100,
+                atk: Math.floor(stage.requiredCP * 0.15),
+                def: Math.floor(stage.requiredCP * 0.1),
+                spd: Math.floor(stage.requiredCP * 0.1)
+            };
+            const boss: PetSnapshot = {
+                ownerId: 'boss',
+                name: `❖ ${stage.bossName}`,
+                species: 'boss',
+                hp: bossStats.hp, maxHp: bossStats.hp,
+                mp: bossStats.mp, maxMp: bossStats.mp,
+                atk: bossStats.atk, def: bossStats.def, spd: bossStats.spd,
+                skills: [{ name: 'Sóng Tử Thần', power: 15, cost: 20 }, { name: 'Thống Khổ Trảm', power: 12, cost: 10 }],
+                traits: [], imageData: '', level: Math.floor(stage.requiredCP / 20)
+            };
+
+            const log: string[] = [];
+            let round = 1;
+            let currentTurn: 'pet' | 'boss' = pet.spd >= boss.spd ? 'pet' : 'boss';
+
+            if (ratio >= 2.0) {
+                log.push(`⚡ Áp đảo hoàn toàn! (Auto Pass Ải ${stage.id})`);
+                boss.hp = 0;
+            } else {
+                while (pet.hp > 0 && boss.hp > 0 && round <= 50) {
+                    let damage = 0;
+                    let skillName = 'Tấn Công Thường';
+                    let mpCost = 0;
+                    let isCrit = false;
+                    let isMiss = false;
+
+                    if (currentTurn === 'pet') {
+                        let chosenSkill = null;
+                        const availableSkills = pet.skills.filter((s:any) => pet.mp >= (s.cost || 10));
+                        if (availableSkills.length > 0 && Math.random() < 0.8) {
+                            chosenSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                        }
+
+                        if (chosenSkill) {
+                            mpCost = chosenSkill.cost || 10;
+                            skillName = chosenSkill.name;
+                            const res = calcDamage(pet, boss, chosenSkill, petBuffs, bossBuffs);
+                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                        } else {
+                            const res = calcDamage(pet, boss, { power: 10 }, petBuffs, bossBuffs);
+                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                            if (pet.mp < 10 && availableSkills.length === 0) skillName = 'Hụt Hơi (Không đủ MP)';
+                        }
+
+                        pet.mp = Math.max(0, pet.mp - mpCost);
+                        boss.hp = Math.max(0, boss.hp - damage);
+
+                        if (isMiss) log.push(`💨 **${boss.name}** đã né được chiêu **${skillName}** của ${pet.name}!`);
+                        else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${pet.name}** dùng **${skillName}** → -${damage} HP cho ${boss.name}`);
+                    } else {
+                        let chosenSkill = null;
+                        const availableBossSkills = boss.skills.filter((s:any) => boss.mp >= (s.cost || 10));
+                        if (availableBossSkills.length > 0 && Math.random() < 0.6) {
+                            chosenSkill = availableBossSkills[Math.floor(Math.random() * availableBossSkills.length)];
+                        }
+
+                        if (chosenSkill) {
+                            mpCost = chosenSkill.cost || 10;
+                            skillName = chosenSkill.name;
+                            const res = calcDamage(boss, pet, chosenSkill, bossBuffs, petBuffs);
+                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                        } else {
+                            const res = calcDamage(boss, pet, { power: 10 }, bossBuffs, petBuffs);
+                            damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
+                        }
+
+                        boss.mp = Math.max(0, boss.mp - mpCost);
+                        pet.hp = Math.max(0, pet.hp - damage);
+
+                        if (isMiss) log.push(`💨 **${pet.name}** đã né được đòn **${skillName}** của ${boss.name}!`);
+                        else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${boss.name}** dùng **${skillName}** → -${damage} HP cho bạn`);
+                    }
+
+                    if (pet.hp <= 0 || boss.hp <= 0) break;
+                    currentTurn = currentTurn === 'pet' ? 'boss' : 'pet';
+                    round++;
+                    pet.mp = Math.min(pet.maxMp, pet.mp + 10);
+                    boss.mp = Math.min(boss.maxMp, boss.mp + 10);
+                    
+                    if (petBuffs.hpRegenPct > 0) pet.hp = Math.min(pet.maxHp, pet.hp + Math.floor(pet.maxHp * petBuffs.hpRegenPct));
+                }
+            }
+
+            if (pet.hp <= 0 || round > 50) {
+                isDefeat = true;
+                defeatStage = stage;
+                combatLogs.push(...log.slice(-6));
+                break;
+            } else {
+                stagesCleared++;
+                const isFirstClear = !newCleared.includes(stage.id);
+                if (isFirstClear) newCleared.push(stage.id);
+
+                const coinMult = isFirstClear ? 3 : 1;
+                const expMult  = isFirstClear ? 3 : 1;
+                totalCoin += Math.floor((stage.coinBase + Math.random() * stage.coinBase * 0.3) * coinMult);
+                totalExp  += Math.floor((stage.expBase  + Math.random() * stage.expBase  * 0.3) * expMult);
+                const droppedItemId = rollDrop(stage.dropPool, stage.dropChance * (isFirstClear ? 2 : 1));
+                if (droppedItemId) droppedItems.push(droppedItemId);
+
+                pet.hp = Math.min(pet.maxHp, pet.hp + Math.floor(pet.maxHp * 0.2));
+                pet.mp = Math.min(pet.maxMp, pet.mp + 50);
+
+                prog.maxStage = Math.max(prog.maxStage, stage.id);
+                nextStageId++;
+            }
+        }
+
+        if (stagesCleared > 0) {
+            await prisma.expeditionProgress.update({
+                where: { userId },
+                data: {
+                    maxStage: prog.maxStage,
+                    clearedStages: JSON.stringify(newCleared)
+                }
+            });
+        }
+
+        let levelUpMsgs: string[] = [];
+        if (totalCoin > 0 || totalExp > 0 || droppedItems.length > 0) {
+            await prisma.$transaction(async (tx) => {
+                if (totalCoin > 0) await tx.userIdentity.update({ where: { userId }, data: { money: { increment: totalCoin } } });
+                
+                for (const itemId of droppedItems) {
+                    const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+                    if (shopItem) {
+                        const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: itemId } });
+                        if (exist) await tx.inventoryItem.update({ where: { id: exist.id }, data: { quantity: { increment: 1 } } });
+                        else await tx.inventoryItem.create({ data: { userId, itemId: shopItem.id, itemType: shopItem.type, name: shopItem.name, quantity: 1 } });
+                    }
+                }
+            });
+            userIdentityService.invalidateCache(userId);
+
+            if (totalExp > 0) {
+                const { levelsGained, messages } = await petService.addExpAndLevelUp(petInfo.id, totalExp);
+                if (levelsGained > 0) levelUpMsgs = messages;
+            }
+        }
+
+        if (isDefeat) {
+            await prisma.expeditionProgress.update({
+                where: { userId },
+                data: { lastAttempt: new Date(Date.now() - EXPEDITION_COOLDOWN_MS + (5 * 60 * 1000)) } 
+            });
+        }
 
         const buildStatusBar = (current: number, max: number, size = 10) => {
             const filled = Math.round((current / max) * size);
@@ -290,179 +432,40 @@ class ExpeditionService {
             return '█'.repeat(Math.max(0, filled)) + '░'.repeat(empty);
         };
 
-        const buildBattleEmbed = (turn: 'pet' | 'boss', logArray: string[], r: number) => {
-            const activeName = turn === 'pet' ? pet.name : boss.name;
-            return new EmbedBuilder()
-                .setTitle(`⚔️ Viễn Chinh — Vòng ${r}`)
-                .setColor(turn === 'pet' ? 0x3B82F6 : 0xEF4444)
-                .setDescription(`*${stage.lore}*`)
-                .addFields(
-                    { name: `🔵 ${pet.name} (Lv.${pet.level})`, value: `❤️ ${buildStatusBar(pet.hp, pet.maxHp)} ${pet.hp}/${pet.maxHp}\n💙 ${buildStatusBar(pet.mp, pet.maxMp)} ${pet.mp}/${pet.maxMp}\n⚔️ ATK: ${pet.atk} | 🛡️ DEF: ${pet.def}`, inline: true },
-                    { name: `🔴 ${boss.name} (Lv.${boss.level})`, value: `❤️ ${buildStatusBar(boss.hp, boss.maxHp)} ${boss.hp}/${boss.maxHp}\n💙 ${buildStatusBar(boss.mp, boss.maxMp)} ${boss.mp}/${boss.maxMp}\n⚔️ ATK: ${boss.atk} | 🛡️ DEF: ${boss.def}`, inline: true },
-                    { name: `📋 Log Trận Nhánh (Vòng ${r})`, value: logArray.slice(-6).join('\n') || '—', inline: false }
-                )
-                .setFooter({ text: `Auto-Combat Resolution (Tối đa 50 lượt)` });
-        };
-
-        while (pet.hp > 0 && boss.hp > 0 && round <= 50) {
-            let damage = 0;
-            let skillName = 'Tấn Công Thường';
-            let mpCost = 0;
-            let isCrit = false;
-            let isMiss = false;
-
-            if (currentTurn === 'pet') {
-                let chosenSkill = null;
-                const availableSkills = pet.skills.filter((s:any) => pet.mp >= (s.cost || 10));
-                if (availableSkills.length > 0 && Math.random() < 0.8) {
-                    chosenSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
-                }
-
-                if (chosenSkill) {
-                    mpCost = chosenSkill.cost || 10;
-                    skillName = chosenSkill.name;
-                    const res = calcDamage(pet, boss, chosenSkill);
-                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                } else {
-                    const res = calcDamage(pet, boss, { power: 10 });
-                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                    if (pet.mp < 10 && availableSkills.length === 0) skillName = 'Hụt Hơi (Không đủ MP)';
-                }
-
-                pet.mp = Math.max(0, pet.mp - mpCost);
-                boss.hp = Math.max(0, boss.hp - damage);
-
-                if (isMiss) log.push(`💨 **${boss.name}** đã né được chiêu **${skillName}** của ${pet.name}!`);
-                else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${pet.name}** dùng **${skillName}** → -${damage} HP cho ${boss.name}`);
-            } else {
-                let chosenSkill = null;
-                const availableBossSkills = boss.skills.filter((s:any) => boss.mp >= (s.cost || 10));
-                if (availableBossSkills.length > 0 && Math.random() < 0.6) {
-                    chosenSkill = availableBossSkills[Math.floor(Math.random() * availableBossSkills.length)];
-                }
-
-                if (chosenSkill) {
-                    mpCost = chosenSkill.cost || 10;
-                    skillName = chosenSkill.name;
-                    const res = calcDamage(boss, pet, chosenSkill);
-                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                } else {
-                    const res = calcDamage(boss, pet, { power: 10 });
-                    damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                }
-
-                boss.mp = Math.max(0, boss.mp - mpCost);
-                pet.hp = Math.max(0, pet.hp - damage);
-
-                if (isMiss) log.push(`💨 **${pet.name}** đã né được đòn **${skillName}** của ${boss.name}!`);
-                else log.push(`${isCrit ? '💥 CRIT! ' : ''}**${boss.name}** dùng **${skillName}** → -${damage} HP cho bạn`);
-            }
-
-            if (pet.hp <= 0 || boss.hp <= 0) break;
-
-            currentTurn = currentTurn === 'pet' ? 'boss' : 'pet';
-            round++;
-            pet.mp = Math.min(pet.maxMp, pet.mp + 10);
-            boss.mp = Math.min(boss.maxMp, boss.mp + 10);
-        }
-
-        if (pet.hp <= 0 || round > 50) {
-            await prisma.expeditionProgress.update({
-                where: { userId },
-                data: { lastAttempt: new Date(Date.now() - EXPEDITION_COOLDOWN_MS + (5 * 60 * 1000)) } 
-            });
-
-            const defeatEmbed = buildBattleEmbed(currentTurn, log, round)
-                .setTitle(`💀 Thất Bại — ${stage.name}`)
-                .setDescription(`**${pet.name}** đã gục ngã trước sự áp đảo của **${stage.bossName}**!`)
-                .setFooter({ text: 'Thất bại... Phạt Cooldown 5 phút!' });
-
-            await interaction.editReply({ embeds: [defeatEmbed], components: [] });
-            return { content: null };
-        } else {
-            const rewardPayload = await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚔️ Chiến Thắng Máu Lửa!');
-            const victoryEmbed = buildBattleEmbed(currentTurn, log, round)
-                .setTitle(`🎉 HUYỀN THOẠI! — Boss Gục Ngã`)
-                .setDescription(`**${boss.name}** đã bị tiêu diệt! Chuẩn bị nhận thưởng...`);
-            
-            // Merge embeds: show combat log AND reward embed
-            await interaction.editReply({ embeds: [victoryEmbed, rewardPayload.embeds[0]], components: rewardPayload.components });
-            return { content: null };
-        }
-    }
-
-    private async handleVictory(userId: string, pet: any, stage: StageData, prog: any, petCP: number, titleExtra: string) {
-        const isFirstClear = !JSON.parse(prog.clearedStages).includes(stage.id);
-        const coinMult = isFirstClear ? 3 : 1;
-        const expMult  = isFirstClear ? 3 : 1;
-        const coinReward = Math.floor((stage.coinBase + Math.random() * stage.coinBase * 0.3) * coinMult);
-        const expReward  = Math.floor((stage.expBase  + Math.random() * stage.expBase  * 0.3) * expMult);
-        const droppedItemId = rollDrop(stage.dropPool, stage.dropChance * (isFirstClear ? 2 : 1));
-
-        const newCleared = isFirstClear
-            ? [...JSON.parse(prog.clearedStages), stage.id]
-            : JSON.parse(prog.clearedStages);
-
-        await prisma.$transaction(async (tx) => {
-            await tx.expeditionProgress.update({
-                where: { userId },
-                data: {
-                    maxStage: Math.max(prog.maxStage, stage.id),
-                    clearedStages: JSON.stringify(newCleared),
-                }
-            });
-            await tx.userIdentity.update({ where: { userId }, data: { money: { increment: coinReward } } });
-
-            if (droppedItemId) {
-                const shopItem = SHOP_ITEMS.find(i => i.id === droppedItemId);
-                if (shopItem) {
-                    const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: droppedItemId } });
-                    if (exist) await tx.inventoryItem.update({ where: { id: exist.id }, data: { quantity: { increment: 1 } } });
-                    else await tx.inventoryItem.create({ data: { userId, itemId: shopItem.id, itemType: shopItem.type, name: shopItem.name, quantity: 1 } });
-                }
-            }
-        });
-
-        userIdentityService.invalidateCache(userId);
-        const { levelsGained, messages } = await petService.addExpAndLevelUp(pet.id, expReward);
-        const nextUp = getStageById(stage.id + 1);
-
-        const rewardLines = [
-            `🪙 **+${coinReward.toLocaleString()} Coin**${isFirstClear ? ' 🆕×3 (First Clear!)' : ''}`,
-            `✨ **+${expReward.toLocaleString()} EXP**${isFirstClear ? ' 🆕×3' : ''}`,
-        ];
-        if (droppedItemId) {
-            const si = SHOP_ITEMS.find(i => i.id === droppedItemId);
-            rewardLines.push(`🎁 **1x ${si?.emoji || '📦'} ${si?.name || droppedItemId}** (drop!)`);
-        }
-        if (levelsGained > 0) rewardLines.push(...messages);
-
         const embed = new EmbedBuilder()
-            .setTitle(`⚔️ CHIẾN THẮNG${isFirstClear ? ' 🌟 KHAI PHÁ MỚI' : ''}! — ${stage.name}`)
-            .setColor(isFirstClear ? 0xFFD700 : 0x00AE86)
-            .setDescription(`**${titleExtra}**\n\n*${stage.lore}*`)
+            .setTitle(isDefeat ? `💀 Dừng Chân Tại Ải ${defeatStage!.id}` : `🎉 QUÉT VIỄN CHINH HOÀN TẤT`)
+            .setColor(isDefeat ? 0xEF4444 : 0x3B82F6)
+            .setDescription(isDefeat ? `**${pet.name}** đã ngã gục trước **${defeatStage!.bossName}** và cần nghỉ ngơi 5 phút!` : `**${pet.name}** đã quét sạch chiến dịch với sức chiến đấu bền bỉ!`)
             .addFields(
-                { name: '🎁 Phần Thưởng', value: rewardLines.join('\n'), inline: false },
-                { name: '⚔️ CP', value: `${petCP.toLocaleString()}`, inline: true },
-                { name: '🏆 Tiến Độ', value: `Ải ${stage.id}/100`, inline: true }
+                { name: '📊 Tiến Độ', value: `Vượt qua: **${stagesCleared} ải**\nẢi cao nhất: **${prog.maxStage}/100**`, inline: true },
+                { name: `🔵 ${pet.name} (Tình trạng)`, value: `❤️ HP: ${buildStatusBar(pet.hp, pet.maxHp)} ${pet.hp}/${pet.maxHp}\n💙 MP: ${buildStatusBar(pet.mp, pet.maxMp)} ${pet.mp}/${pet.maxMp}`, inline: true },
             );
 
-        const components = [];
-        if (nextUp) {
-            embed.addFields({ name: '▶️ Ải Tiếp Theo', value: `${nextUp.name} (CP cần: ${nextUp.requiredCP.toLocaleString()})`, inline: false });
-            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('expedition_next')
-                    .setLabel('⚔️ Tiến Lên Ải Tiếp Theo')
-                    .setStyle(ButtonStyle.Primary)
-            );
-            components.push(row);
-        } else {
-            embed.addFields({ name: '🎉 HOÀN THÀNH', value: 'Bạn đã chinh phục toàn bộ Viễn Chinh!', inline: false });
+        if (isDefeat && combatLogs.length > 0) {
+             embed.addFields({ name: `📋 Log Trận Nhánh Kẹt Lại`, value: combatLogs.join('\n') || '—', inline: false });
         }
 
-        embed.setFooter({ text: 'Bạn có thể tiến thẳng vào ải tiếp theo ngay lập tức!' });
-        return { embeds: [embed], components };
+        const rewardLines = [];
+        if (totalCoin > 0) rewardLines.push(`🪙 **+${totalCoin.toLocaleString()} Coin**`);
+        if (totalExp > 0) rewardLines.push(`✨ **+${totalExp.toLocaleString()} EXP**`);
+        if (droppedItems.length > 0) {
+            const counts: Record<string, number> = {};
+            droppedItems.forEach(i => counts[i] = (counts[i] || 0) + 1);
+            Object.entries(counts).forEach(([id, qty]) => {
+                const si = SHOP_ITEMS.find(i => i.id === id);
+                rewardLines.push(`🎁 **${qty}x ${si?.emoji || '📦'} ${si?.name || id}**`);
+            });
+        }
+        if (levelUpMsgs.length > 0) rewardLines.push(...levelUpMsgs);
+
+        if (rewardLines.length > 0) {
+            embed.addFields({ name: '🎁 Tổng Thu Hoạch', value: rewardLines.join('\n'), inline: false });
+        } else {
+            embed.addFields({ name: '🎁 Tổng Thu Hoạch', value: 'Không có phần thưởng nào', inline: false });
+        }
+
+        await interaction.editReply({ content: null, embeds: [embed], components: [] });
+        return { content: null };
     }
 
     public async showStageInfo(stageId: number) {

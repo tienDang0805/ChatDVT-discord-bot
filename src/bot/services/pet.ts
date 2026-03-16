@@ -24,20 +24,22 @@ class PetService {
   }
 
   // Base stats per level based on rarity
-  private STAT_BONUS_MAP: Record<string, { hp: number, atk: number, def: number, spd: number }> = {
-      'Legend': { hp: 10, atk: 4, def: 3, spd: 2 },
-      'Unique': { hp: 8, atk: 3, def: 2, spd: 1 },
-      'Rare': { hp: 6, atk: 2, def: 2, spd: 1 },
-      'Magic': { hp: 5, atk: 2, def: 1, spd: 1 },
-      'Normal': { hp: 4, atk: 1, def: 1, spd: 0 },
+  private STAT_BONUS_MAP: Record<string, { hp: number, mp: number, atk: number, def: number, spd: number, int: number }> = {
+      'Legend': { hp: 10, mp: 5, atk: 4, def: 3, spd: 2, int: 3 },
+      'Unique': { hp: 8, mp: 4, atk: 3, def: 2, spd: 1, int: 2 },
+      'Rare': { hp: 6, mp: 3, atk: 2, def: 2, spd: 1, int: 1 },
+      'Magic': { hp: 5, mp: 2, atk: 2, def: 1, spd: 1, int: 1 },
+      'Normal': { hp: 4, mp: 1, atk: 1, def: 1, spd: 0, int: 0 },
   };
 
   private applyStatBonus(stats: any, levelsGained: number, rarity: string) {
       const bonus = this.STAT_BONUS_MAP[rarity] || this.STAT_BONUS_MAP['Normal'];
       stats.hp = (stats.hp || 0) + (bonus.hp * levelsGained);
+      stats.mp = (stats.mp || 80) + (bonus.mp * levelsGained); // Fix MP not scaling
       stats.atk = (stats.atk || 0) + (bonus.atk * levelsGained);
       stats.def = (stats.def || 0) + (bonus.def * levelsGained);
       stats.spd = (stats.spd || 0) + (bonus.spd * levelsGained);
+      stats.int = (stats.int || 10) + (bonus.int * levelsGained); // Fix INT not scaling
       return stats;
   }
 
@@ -355,7 +357,8 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 1. Phân tích trứng để chọn chủng tộc, nguyên tố.
 2. Độ hiếm BẮT BUỘC LÀ: **${rarity}**. Dựa vào độ hiếm này để phân bổ sức mạnh tương ứng.
 3. Phân bổ chỉ số hợp lý (Legend thì stat cao hơn Normal).
-4. Tạo skill (2-4 kỹ năng) và trait (1-4 nội tại).
+4. Tạo skill (2-4 kỹ năng tính bằng MP) và trait (1-4 thuộc tính bị động).
+5. Tính năng TRAIT LUÔN tuân thủ: "type" thuộc 1 trong 5 loại: crit (bạo kích), dodge (né tránh), hp_regen (hồi máu %), atk_boost (tăng dmg %), def_boost (giảm dmg % nhận vào). "value" là số thực từ 0.05 đến 0.4 tỷ lệ thuận với Độ Hiếm.
 
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON]
 {
@@ -366,7 +369,7 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 "imageprompt_pet": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
 "base_stats": { "hp": 100, "mp": 50, "atk": 10, "def": 10, "int": 10, "spd": 10 },
 "skills": [ { "name": "", "description": "", "cost": 0, "type": "Physical", "power": 0 } ],
-"traits": [ { "name": "", "description": "" } ]
+"traits": [ { "name": "", "description": "", "type": "crit/dodge/hp_regen/atk_boost/def_boost", "value": 0.1 } ]
 }`;
 
     return await geminiService.generateJSON(prompt);
@@ -521,7 +524,7 @@ ${JSON.stringify(aiInput, null, 2)}
 2. Viết lại "description_vi" và "lore" mô tả sự vĩ đại này. Bắt buộc dài hơn 2 câu.
 3. imageprompt_pet: Tạo visual representation mô tả cực chi tiết bằng TIẾNG ANH.
 4. "skills": TRẢ VỀ CHÍNH XÁC MẢNG JSON CỦA BẠN. TẠO THÊM 1 skill tấn công mới mạnh hơn và gộp vào mảng "skills" cũ. Hệ thống sẽ tự động gọt bỏ skill cũ nhất nếu vượt quá 4.
-5. "traits": Nâng cấp mô tả của trait hiện tại cho ngầu hơn (nếu đổi tên phải giữ ý nghĩa).
+5. "traits": Nâng cấp sức mạnh "value" của các trait cũ (cộng thêm 0.05 - 0.15) nhưng GIỮ NGUYÊN "type". Có thể đổi Tên Trait cho ngầu hơn.
 6. "stats": Tăng tất cả chỉ số lên khoảng 1.5 - 2 lần. BẮT BUỘC trả về number.
 
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON HỢP LỆ]
@@ -532,7 +535,7 @@ ${JSON.stringify(aiInput, null, 2)}
 "imageprompt_pet": "English visual description for a chibi monster...",
 "stats": { "hp": 200, "atk": 20, "def": 20, "spd": 20 },
 "skills": [ { "name": "Skill cũ", "description": "...", "type": "...", "power": 10 }, { "name": "Skill MỚI", "description": "Mô tả", "type": ".../Phép", "power": 50 } ],
-"traits": [ { "name": "Trait cũ/nâng cấp", "description": "Mô tả" } ]
+"traits": [ { "name": "Trait cũ/nâng cấp", "description": "Mô tả", "type": "crit/dodge...", "value": 0.2 } ]
 }`;
 
           const evolvedData: any = await geminiService.generateJSON(prompt);
@@ -770,8 +773,10 @@ ${JSON.stringify(aiInput, null, 2)}
 export const petService = new PetService();
 
 export interface PetSnapshot {
+    id?: number;
     ownerId: string;
     name: string;
+    species?: string;
     hp: number;
     maxHp: number;
     mp: number;

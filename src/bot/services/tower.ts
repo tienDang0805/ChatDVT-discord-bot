@@ -84,14 +84,16 @@ export class TowerService {
             );
 
         const continueRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-            new ButtonBuilder().setCustomId('tower_next').setLabel('⬆️ Lên Tầng Tiếp').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId('tower_auto').setLabel('🤖 Tự Động Leo').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('tower_retreat').setLabel('🏃 Rút Lui').setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId('tower_next').setLabel('⬆️ Đánh Lên').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('tower_auto').setLabel('🤖 Tự Động').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('tower_sweep').setLabel('⚡ Càn Quét').setStyle(ButtonStyle.Danger),
+            new ButtonBuilder().setCustomId('tower_retreat').setLabel('🏃 Rút Lui').setStyle(ButtonStyle.Secondary)
         );
 
         let msg = await interaction.editReply({ embeds: [towerEmbed()], components: [continueRow] }) as Message;
 
         let isAuto = false;
+        let isSweep = false;
 
         for (let floor = startFloor; floor <= MAX_FLOORS; floor++) {
             const mob = generateMob(floor);
@@ -135,15 +137,18 @@ export class TowerService {
                 break;
             }
 
-            const floorEmbed = towerEmbed()
-                .setTitle(`🏰 Tầng ${floor} — Chiến Thắng!`)
-                .setDescription(`⚔️ Đã đánh bại **${mob.name}**!\n+${reward.exp} EXP | +${reward.coins} Coin`);
+            if (!isSweep) {
+                const floorEmbed = towerEmbed()
+                    .setTitle(`🏰 Tầng ${floor} — Chiến Thắng!`)
+                    .setDescription(`⚔️ Đã đánh bại **${mob.name}**!\n+${reward.exp} EXP | +${reward.coins} Coin`);
 
-            await msg.edit({ embeds: [floorEmbed], components: [continueRow] });
+                await msg.edit({ embeds: [floorEmbed], components: [continueRow] });
+            }
 
             if (isAuto) {
-                // Tự động neo 1.5s trước khi lặp tầng mới để người chơi kịp xem
                 await new Promise(r => setTimeout(r, 1500));
+                continue;
+            } else if (isSweep) {
                 continue;
             }
 
@@ -163,12 +168,17 @@ export class TowerService {
                     break;
                 } else if (btn.customId === 'tower_auto') {
                     isAuto = true;
-                    // Chuyển nút Tự Động thành màu xám (disabled) để báo hiệu đang chạy
                     const autoRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
                         new ButtonBuilder().setCustomId('tower_next').setLabel('⬆️ Tự động...').setStyle(ButtonStyle.Secondary).setDisabled(true),
                         new ButtonBuilder().setCustomId('tower_retreat').setLabel('🛑 Dừng Auto (Rút Lui)').setStyle(ButtonStyle.Danger)
                     );
                     await msg.edit({ components: [autoRow] });
+                } else if (btn.customId === 'tower_sweep') {
+                    isSweep = true;
+                    const sweepRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                        new ButtonBuilder().setCustomId('sweeping').setLabel('⚡ Đang Tính Toán Càn Quét...').setStyle(ButtonStyle.Danger).setDisabled(true)
+                    );
+                    await msg.edit({ components: [sweepRow] });
                 }
             } catch {
                 const timeoutEmbed = new EmbedBuilder().setTitle('⏰ Hết Thời Gian').setDescription(`Kết quả: ${floorsClimbed} tầng`);

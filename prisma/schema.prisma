@@ -148,3 +148,11 @@ model ExpeditionProgress {
   lastClaim     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+model UserDailyPk {
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique
+  dailyCount  Int      @default(0)
+  lastPkTime  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
