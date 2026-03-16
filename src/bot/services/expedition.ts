@@ -396,7 +396,7 @@ class ExpeditionService {
             // Wait 2s then send reward
             await new Promise(r => setTimeout(r, 2000));
             const rewardPayload = await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚔️ Thắng trận Oanh Liệt!');
-            await interaction.followUp({ embeds: rewardPayload.embeds, components: rewardPayload.components });
+            await interaction.editReply({ embeds: rewardPayload.embeds, components: rewardPayload.components });
             return { content: null };
         }
     }

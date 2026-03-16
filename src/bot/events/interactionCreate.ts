@@ -46,18 +46,21 @@ export async function handleInteraction(interaction: Interaction) {
 
           // --- Expedition Next ---
           if (customId === 'expedition_next') {
-               // Xóa nút bấm của báo cáo nhận thưởng cũ để dọn UI
-               await interaction.message.edit({ components: [] }).catch(() => {});
+               // Update the message to loading state immediately
+               await interaction.deferUpdate();
+               await interaction.editReply({ 
+                    content: '🏃‍♂️ **Đang tiến đến ải tiếp theo...**', 
+                    embeds: [], 
+                    components: [] 
+               });
                
-               // Tạo một loading message mới y như gõ lệnh thả command /expedition fight
-               await interaction.deferReply();
                const result = await expeditionService.fight(interaction as any);
                
                if (!result) return;
                
                const res = result as any;
                if ('content' in res && res.content) {
-                    await interaction.editReply({ content: res.content as string, components: res.components || [] });
+                    await interaction.editReply({ content: res.content as string, embeds: [], components: res.components || [] });
                } else if ('embeds' in res) {
                     await interaction.editReply({ embeds: res.embeds, components: res.components || [] });
                }
