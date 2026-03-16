@@ -13,6 +13,8 @@ export const data = new SlashCommandBuilder()
               { name: '💰 Giàu Nhất',   value: 'coin'  },
               { name: '🏰 Leo Tháp',    value: 'tower' },
               { name: '⚔️ Lực Chiến',    value: 'power' },
+              { name: '👑 Tiến Hóa',     value: 'evolution'},
+              { name: '🗺️ Viễn Chinh',   value: 'expedition'},
           )
           .setRequired(false)
   );
@@ -73,6 +75,32 @@ async function buildPowerBoard(): Promise<EmbedBuilder> {
     return embed;
 }
 
+async function buildEvoBoard(): Promise<EmbedBuilder> {
+    const pets = await prisma.pet.findMany({ orderBy: [{ evolutionStage: 'desc' }, { level: 'desc' }], take: 10 });
+    const embed = new EmbedBuilder().setTitle('👑 Top 10 — Bậc Tiến Hóa Tối Cao').setColor(0x10B981);
+    if (!pets.length) { embed.setDescription('Chưa có dữ liệu.'); return embed; }
+
+    const lines = await Promise.all(pets.map(async (p, i) => {
+        const id = await prisma.userIdentity.findUnique({ where: { userId: p.ownerId } });
+        return `${MEDALS[i]} **${p.name}** (${id?.nickname || p.ownerId.slice(0, 8)}) — Bậc **${p.evolutionStage}** (Lv.${p.level})`;
+    }));
+    embed.setDescription(lines.join('\n'));
+    return embed;
+}
+
+async function buildExpeditionBoard(): Promise<EmbedBuilder> {
+    const records = await prisma.expeditionProgress.findMany({ orderBy: { maxStage: 'desc' }, take: 10 });
+    const embed = new EmbedBuilder().setTitle('🗺️ Top 10 — Khám Phá Viễn Chinh').setColor(0x8B5CF6);
+    if (!records.length) { embed.setDescription('Chưa có dữ liệu khảo sát.'); return embed; }
+
+    const lines = await Promise.all(records.map(async (r, i) => {
+        const id = await prisma.userIdentity.findUnique({ where: { userId: r.userId } });
+        return `${MEDALS[i]} **${id?.nickname || r.userId.slice(0, 8)}** — Xuyên phá Ải **${r.maxStage}/100**`;
+    }));
+    embed.setDescription(lines.join('\n'));
+    return embed;
+}
+
 export async function execute(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply();
   const type = interaction.options.getString('type') || 'level';
@@ -81,6 +109,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   if (type === 'coin')  embed = await buildCoinBoard();
   else if (type === 'tower') embed = await buildTowerBoard();
   else if (type === 'power') embed = await buildPowerBoard();
+  else if (type === 'evolution') embed = await buildEvoBoard();
+  else if (type === 'expedition') embed = await buildExpeditionBoard();
   else embed = await buildLevelBoard();
 
   embed.setFooter({ text: 'Dùng /rank type:... để xem BXH khác' });

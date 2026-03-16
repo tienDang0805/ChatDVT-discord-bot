@@ -89,6 +89,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const powerIdx = withPower.findIndex(item => item.pet.ownerId === userId);
   if (powerIdx !== -1) userRanks.push({ board: '⚔️ Top Lực Chiến', position: powerIdx + 1 });
 
+  const petsEvo = await prisma.pet.findMany({ orderBy: [{ evolutionStage: 'desc' }, { level: 'desc' }], take: 10 });
+  const evoIdx = petsEvo.findIndex(p => p.ownerId === userId);
+  if (evoIdx !== -1) userRanks.push({ board: '👑 Top Tiến Hóa', position: evoIdx + 1 });
+
+  const expeditionRecords = await prisma.expeditionProgress.findMany({ orderBy: { maxStage: 'desc' }, take: 10 });
+  const expeditionIdx = expeditionRecords.findIndex(r => r.userId === userId);
+  if (expeditionIdx !== -1) userRanks.push({ board: '🗺️ Top Viễn Chinh', position: expeditionIdx + 1 });
+
   if (userRanks.length === 0) {
       await interaction.editReply('❌ Rất tiếc! Bạn không nằm trong TOP 10 của bất kỳ bảng xếp hạng nào (`/rank`). Hãy cố gắng hơn nhé!');
       return;

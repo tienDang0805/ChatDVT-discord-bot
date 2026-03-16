@@ -24,11 +24,16 @@ export interface StageData {
 }
 
 const CHAPTER_META = [
-    { name: 'Rừng Hoang Sơ',       emoji: '🌿', cpStart: 50,   cpEnd: 200   },
-    { name: 'Đồng Bằng Lửa',       emoji: '🔥', cpStart: 200,  cpEnd: 500   },
-    { name: 'Hang Động Băng',       emoji: '❄️', cpStart: 500,  cpEnd: 1000  },
-    { name: 'Tháp Ác Ma',           emoji: '⚡', cpStart: 1000, cpEnd: 2000  },
-    { name: 'Thần Giới Viễn Cổ',   emoji: '🌌', cpStart: 2000, cpEnd: 4000  },
+    { name: 'Rừng Hoang Sơ',       emoji: '🌿', cpStart: 50,    cpEnd: 200     },
+    { name: 'Đồng Bằng Lửa',       emoji: '🔥', cpStart: 200,   cpEnd: 500     },
+    { name: 'Hang Động Băng',      emoji: '❄️', cpStart: 500,   cpEnd: 1000    },
+    { name: 'Tháp Ác Ma',          emoji: '⚡', cpStart: 1000,  cpEnd: 2000    },
+    { name: 'Thần Giới Viễn Cổ',   emoji: '🌌', cpStart: 2000,  cpEnd: 4000    },
+    { name: 'Lãnh Địa Phá Hoại',   emoji: '🌋', cpStart: 4000,  cpEnd: 10000   },
+    { name: 'Vực Sâu Tuyệt Vọng',  emoji: '🕳️', cpStart: 10000, cpEnd: 25000   },
+    { name: 'Cõi Mộng Ảo Thiên',   emoji: '🌠', cpStart: 25000, cpEnd: 60000   },
+    { name: 'Hành Tinh Sắt Đá',    emoji: '⚙️', cpStart: 60000, cpEnd: 120000  },
+    { name: 'Thánh Điện Tận Cùng', emoji: '👑', cpStart: 120000, cpEnd: 250000 },
 ];
 
 const STAGE_MOBS = [
@@ -47,6 +52,21 @@ const STAGE_MOBS = [
     // Ch5 – Thần Giới Viễn Cổ
     ['Thiên Binh Sơ Cấp', 'Mãnh Long Thần Giới', 'Tiên Vệ Thiên Đình', 'Chiến Thần Vô Danh', 'Thần Thú Tứ Thánh',
      'Hộ Pháp Kim Cương', 'Tứ Tượng Thần Vệ', 'Chư Thiên Đại Thánh', 'Thần Vương Cổ Đại', 'Trùm: ❖ Thái Cổ Hỗn Nguyên Chi Thần'],
+    // Ch6 – Lãnh Địa Phá Hoại
+    ['Dung Nham Trĩ Nhân', 'Hắc Diệu Thạch Quái', 'Tinh Linh Dung Nham', 'Ma Thú Hỏa Diệm', 'Chiến Binh Tro Tàn',
+     'Dực Long Phun Lửa', 'Quỷ Lùn Lò Rèn', 'Đại Tướng Nham Thạch', 'Phượng Hoàng Đen', 'Trùm: ❖ Dung Nham Bạo Quân'],
+    // Ch7 – Vực Sâu Tuyệt Vọng
+    ['Bóng Ma Lang Thang', 'Kẻ Nuốt Hồn', 'Xác Sống Mù', 'Thảm Thực Vật Hút Máu', 'Sứa Vực Sâu Phát Sáng',
+     'Cá Voi Ma Quái', 'Quái Vật Xúc Tu Rỗng', 'Lính Canh Ngục Tối', 'Kẻ Giao Báo Tử', 'Trùm: ❖ Thú Nuốt Chửng Ánh Sáng'],
+    // Ch8 – Cõi Mộng Ảo Thiên
+    ['Tinh Linh Ảo Giác', 'Quái Thú Bụi Sao', 'Hồ Ly Chín Đuôi Mộng', 'Chiến Binh Kính Vỡ', 'Pháp Sư Không Gian',
+     'Kỳ Lân Cửu Sắc', 'Thiên Tướng Dải Ngân Hà', 'Phi Long Thủy Tinh', 'Kẻ Xuyên Không', 'Trùm: ❖ Chúa Tể Mộng Ảo'],
+    // Ch9 – Hành Tinh Sắt Đá
+    ['Bọ Máy Thăm Dò', 'Chó Săn Hợp Kim', 'Droid Phá Hủy', 'Xe Tăng Tư Duy', 'Chiến Cơ Phản Đột',
+     'Quái Vật Dây Cáp', 'Robot Biến Hình Cổ', 'Tướng Quân Cyborg', 'Đại Bàng Thép', 'Trùm: ❖ Trí Tuệ Nhân Tạo Tối Cao'],
+    // Ch10 – Thánh Điện Tận Cùng
+    ['Hộ Vệ Thánh Môn', 'Thiên Sứ Lông Cánh Đen', 'Kỵ Sĩ Thập Tự Vàng', 'Pháp Sư Vô Cực', 'Long Thần Ánh Sáng',
+     'Bóng Đêm Song Sinh', 'Thần Khí Sống Lại', 'Tứ Thiên Vương Cổ', 'Hóa Thân Của Tuyệt Vọng', 'Trùm: ❖ Nguyên Tôn Sáng Niệm Cổ Thần'],
 ];
 
 const STAGE_LORES = [
@@ -57,22 +77,37 @@ const STAGE_LORES = [
     // Ch3
     ['Hơi thở của mình hóa khói trắng trong cái lạnh buốt xương.','Tơ nhện đóng băng như pha lê, một va chạm là vỡ tan.','Tiếng cánh đập làm băng vụn rơi lả tả từ vách núi.','Đá và băng hợp nhất thành hình dạng - Golem thức tỉnh!','Từ bóng tối dưới lớp băng, một đôi mắt đỏ nhìn lên.','Tiếng gầm vang động cả hang động, băng trên trần rơi xuống.','Bóng ma không có bóng, chỉ có cái lạnh đột ngột báo hiệu.','Áo giáp đen phủ băng trắng - kỵ sĩ của mùa đông vĩnh cửu.','Gầm gừ trắng toát, mỗi bước in hình chân trên lớp băng.','Cả hang rung chuyển - Băng Hồn Chi Vương đã thức tỉnh!'],
     // Ch4
-    ['Tháp tối tăm, mỗi bậc thang là một thử thách về tâm lý.','Cánh dơi quỷ phủ kín trần, tiếng kêu chói tai điếc cả hồn.','Chuỗi xích bao quanh, nhưng ánh mắt chứa đầy tức giận và đau...','Hàng trăm bóng tối hợp nhất thành đội hình chiến đấu.','Chiếc mũ sắt che khuất khuôn mặt, nhưng sát khí tràn ngập.','Cuốn sách phép thuật tối tự lật trang, phun ra lửa địa ngục.','Rồng cổ lớp 7 - mỗi vảy là một bùa trận, mỗi móng là gươm báu.','Tiếng thét kinh hoàng vang lên từ cổng địa ngục mở ra.','Mắt đỏ như máu, bào ảnh trăm tay - Đại Tướng của Diêm Vương.','Ma Vương xuất hiện - cả tháp rung chuyển, bóng tối bao phủ tất cả.'],
+    ['Tháp tối tăm, mỗi bậc thang là một thử thách về tâm lý.','Cánh dơi quỷ phủ kín trần, tiếng kêu chói tai điếc cả hồn.','Chuỗi xích bao quanh, nhưng ánh mắt chứa đầy tức গঠন và đau...','Hàng trăm bóng tối hợp nhất thành đội hình chiến đấu.','Chiếc mũ sắt che khuất khuôn mặt, nhưng sát khí tràn ngập.','Cuốn sách phép thuật tối tự lật trang, phun ra lửa địa ngục.','Rồng cổ lớp 7 - mỗi vảy là một bùa trận, mỗi móng là gươm báu.','Tiếng thét kinh hoàng vang lên từ cổng địa ngục mở ra.','Mắt đỏ như máu, bào ảnh trăm tay - Đại Tướng của Diêm Vương.','Ma Vương xuất hiện - cả tháp rung chuyển, bóng tối bao phủ tất cả.'],
     // Ch5
     ['Ánh sáng chói lóa, không khí gần như rung lên vì thần lực.','Rồng thần mang theo vận mệnh của cả thế giới trong hơi thở.','Áo giáp vàng lóng lánh, mỗi bước đi là tiếng sấm sét khai thiên.','Không tên tuổi, không lịch sử - chỉ có sức mạnh thuần túy.','Bốn linh thú của tứ phương hợp nhất bảo vệ Thiên Đình.','Kim cương áo giáp hấp thụ mọi đòn tấn công thường.','Bộ tứ thiên vệ kết thành trận pháp - phong tỏa mọi đường ra.','Đại thánh của chư thiên, mỗi nụ cười là một ngôi sao tắt.','Thần vương sải bước, mỗi bước tạo ra một thiên hà!','Thái Cổ Hỗn Nguyên - nguồn gốc của mọi sức mạnh trong vũ trụ!'],
+    // Ch6
+    ['Dung nham sôi rùng rục dưới lòng đất, nóng đến ngạt thở.','Đá đen lấp lánh như có sự sống riêng.','Hạt tinh linh nảy múa trên biển lửa chết chóc.','Quái vật gầm thét, nôn ra lửa lưu huỳnh thiêu rụi mọi thứ.','Bộ giáp như tro tàn, ánh mắt là đốm lửa ma trơi thù hận.','Đôi cánh che khuất cả bầu trời núi lửa, rải thảm nhiệt.','Lò rèn cổ xưa rung lên theo từng nhịp búa đập.','Kẻ cai trị biển dung nham với thân hình vạn tấn.','Phượng hoàng niết bàn, thiêu cháy mọi vật quanh đây.','Vua của ngọn núi này... Không gì có thể ngăn ngài nổi giận!'],
+    // Ch7
+    ['Bóng tối đặc quánh, nuốt chửng ánh sáng của đuốc rọi.','Tiếng thì thầm vang dội từ một góc vô định... Ai đói hồn?','Bọn chúng di chuyển trong mù lòa nhưng chính xác đáng sợ.','Dây leo màu máu bò dưới chân, chờ hút cạn sự sống.','Đốm sáng duy nhất là thứ nguy hiểm nhất dưới Vực.','Nó rên rỉ một bài ca của những linh hồn chết chìm ngàn độ sâu.','Xúc tu từ hư không đâm nát nền đá đen kịt.','Chúng gác cổng sự tuyệt vọng, không nụ cười, vô tri.','Hắn mang lưỡi hái, điểm tên những kẻ tới đây.','Thứ nuốt chửng cả một thế giới ánh sáng đang tỉnh giấc...'],
+    // Ch8
+    ['Làn sương mờ ảo biến đổi không ngừng, dụ dỗ con ngươi mỏi mệt.','Sao chổi vỡ vụn sinh ra quái dị kỳ lạ, tấn công bằng viễn ảnh.','Hồ ly mê hoặc, cứ mỗi cái đuôi quật là một khoảng thực tại vỡ nát.','Tấm gương phản chiếu ảo ảnh, mỗi cái đập là một mảnh vỡ đâm vào da.','Pháp sư bóp méo không gian, thay đổi hình dạng vũ trụ.','Kỳ lân bước đi trên dải ngân hà, mang bão tố muôn màu.','Tướng quân canh phòng cõi Ảo, thân mặc giáp mây ngũ sắc.','Phi long vô hình lướt qua, để lại tinh vân rực rỡ.','Kẻ không thuộc về thời đại này, xóa bỏ mọi quy luật vật lý.','Chúa tể thực tại... Bất cứ thứ gì ngươi đang thấy chỉ là do ngài vẽ ra.'],
+    // Ch9
+    ['Thế giới của bánh răng và dầu nhớt, tiếng bíp báo động râm ran.','Mã tấu hợp kim trên mõm con thú máy kêu rè rè ghê rợn.','Người máy không có khái niệm sợ hãi, chỉ có lập trình tiêu diệt.','Pháo đài tư duy, bắn phá mọi logic.','Động cơ gầm thét xé nát lớp tĩnh lặng của hành tinh kim loại.','Dây cáp cắm thẳng vào mạch điện tạo thành quái vật khát điện khổng lồ.','Robot thức tỉnh từ phế tích phế liệu vạn năm.','Cyborg tay súng tay kiếm, sẵn sàng xóa sổ mọi kháng cự...','Máy dò tàng hình từ trên không thả bom.','Trí Tuệ Tối Cao, bộ não khổng lồ cai trị cả một hành tinh.'],
+    // Ch10
+    ['Nơi linh thiêng nhất chứa đựng hàng vạn câu thần chú chết người.','Lông vũ đen rơi xuống, báo hiệu thiên thần đã sa ngã.','Thập Tự Giá Vàng đè bẹp những ai không xứng đáng!','Pháp sư tạo ra khoảng không vô cực. Cẩn thận bước hụt!','Tia sáng chói lóa xuyên qua tim, xé nát linh hồn tà ác.','Bóng tối song sinh luôn ở sau lưng ngươi, chực chờ cơ hội.','Thanh kiếm thần cổ, tự động tìm mục tiêu không cần người sử dụng.','Bốn thiên vương canh gác phòng cuối cùng... Bọn họ bất bại.','Cảm giác áp lực đè nát tinh thần... Ngươi dám đi tiếp không?','Nguyên Tôn Sáng Niệm Cổ Thần, nguồn gốc của vạn sự vạn vật. Ngươi... Dám khiêu chiến Thiên Đạo?'],
 ];
 
 const CHAPTER_DROPS: string[][] = [
-    ['exp_potion','exp_stone_sm','stamina_potion'],
-    ['exp_stone_md','stamina_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'],
-    ['exp_stone_lg','hp_potion','mp_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'],
-    ['rare_chest','evo_stone','hp_potion','mp_potion','exp_stone_lg'],
-    ['rare_chest','evo_stone','egg_magic','egg_rare','exp_stone_lg'],
+    ['exp_potion','exp_stone_sm','stamina_potion'], // Ch1
+    ['exp_stone_md','stamina_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'], // Ch2
+    ['exp_stone_lg','hp_potion','mp_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'], // Ch3
+    ['rare_chest','evo_stone','hp_potion','mp_potion','exp_stone_lg'], // Ch4
+    ['rare_chest','evo_stone','egg_magic','egg_rare','exp_stone_lg'], // Ch5
+    ['rare_chest','evo_stone','exp_stone_lg','egg_rare','fire_crystal','earth_crystal'], // Ch6
+    ['rare_chest','evo_stone','exp_stone_lg','egg_epic','water_crystal','wind_crystal'], // Ch7
+    ['rare_chest','evo_stone','exp_stone_lg','egg_epic','egg_legendary'], // Ch8
+    ['rare_chest','evo_stone','exp_stone_lg','egg_legendary','fire_crystal','wind_crystal'], // Ch9
+    ['rare_chest','evo_stone','exp_stone_lg','egg_mythic','egg_legendary'], // Ch10
 ];
 
 function buildStages(): StageData[] {
     const stages: StageData[] = [];
-    for (let ch = 0; ch < 5; ch++) {
+    for (let ch = 0; ch < 10; ch++) {
         const meta = CHAPTER_META[ch];
         for (let s = 0; s < 10; s++) {
             const id = ch * 10 + s + 1;
@@ -136,11 +171,11 @@ class ExpeditionService {
         const prog = await this.getProgress(userId);
         const cleared: number[] = JSON.parse(prog.clearedStages);
         const nextStageId = prog.maxStage + 1;
-        const nextStage = getStageById(Math.min(nextStageId, 50));
+        const nextStage = getStageById(Math.min(nextStageId, 100));
         const petCP = petService.calcCombatPower(pet);
 
         const chapterProgress: string[] = [];
-        for (let ch = 1; ch <= 5; ch++) {
+        for (let ch = 1; ch <= 10; ch++) {
             const meta = CHAPTER_META[ch - 1];
             const chStages = EXPEDITION_STAGES.filter(s => s.chapter === ch);
             const cleared_ch = chStages.filter(s => cleared.includes(s.id)).length;
@@ -158,7 +193,7 @@ class ExpeditionService {
             .setDescription(chapterProgress.join('\n'))
             .addFields(
                 { name: '⚔️ Lực Chiến (CP)', value: `**${petCP.toLocaleString()}**`, inline: true },
-                { name: '🏆 Ải Cao Nhất', value: `**Ải ${prog.maxStage}** / 50`, inline: true },
+                { name: '🏆 Ải Cao Nhất', value: `**Ải ${prog.maxStage}** / 100`, inline: true },
                 { name: '🎯 Ải Tiếp Theo', value: nextStage ? `**${nextStage.name}**\nCP Cần: ${nextStage.requiredCP.toLocaleString()} | Tỉ Lệ Thắng: **${winRate}%**` : '🎉 Đã chinh phục tất cả!', inline: false },
                 { name: '⏱️ Trạng Thái', value: onCooldown ? `⏳ Hồi chiêu: còn **${Math.ceil(cooldownMs / 60000)} phút**` : '✅ Sẵn sàng chiến đấu!', inline: false }
             )
@@ -179,8 +214,8 @@ class ExpeditionService {
         }
 
         const nextStageId = prog.maxStage + 1;
-        if (nextStageId > 50) {
-            return { content: '🎉 **Bạn đã chinh phục toàn bộ 50 ải Viễn Chinh!** Thật phi thường!' };
+        if (nextStageId > 100) {
+            return { content: '🎉 **Bạn đã chinh phục toàn bộ 100 ải Viễn Chinh!** Thật phi thường!' };
         }
 
         const stage = getStageById(nextStageId)!;
@@ -271,10 +306,9 @@ class ExpeditionService {
 
         const buildSkillButtons = (p: PetSnapshot) => {
             const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-            const normalAtk = new ButtonBuilder().setCustomId(`pvp_normal`).setLabel('👊 Đánh Thường').setStyle(ButtonStyle.Secondary);
-            const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(normalAtk);
+            const row1 = new ActionRowBuilder<ButtonBuilder>();
             
-            p.skills.slice(0, 3).forEach((skill: any, i: number) => {
+            p.skills.slice(0, 4).forEach((skill: any, i: number) => {
                 const mpCost = skill.cost || 10;
                 row1.addComponents(
                     new ButtonBuilder().setCustomId(`pvp_skill_${i}`).setLabel(`⚡ ${skill.name} (-${mpCost} MP)`).setStyle(p.mp >= mpCost ? ButtonStyle.Primary : ButtonStyle.Danger).setDisabled(p.mp < mpCost)
@@ -309,10 +343,7 @@ class ExpeditionService {
                     await btn.deferUpdate();
 
                     const cId = btn.customId;
-                    if (cId === 'pvp_normal') {
-                        const res = calcDamage(pet, boss, { power: 10 });
-                        damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                    } else if (cId.startsWith('pvp_skill_')) {
+                    if (cId.startsWith('pvp_skill_')) {
                         const idx = parseInt(cId.replace('pvp_skill_', ''));
                         const s = pet.skills[idx];
                         if (s && pet.mp >= (s.cost || 10)) {
@@ -322,7 +353,7 @@ class ExpeditionService {
                         } else {
                             const res = calcDamage(pet, boss, { power: 10 });
                             damage = res.damage; isCrit = res.isCrit; isMiss = res.isMiss;
-                            skillName = 'Tấn Công Thường (không đủ MP)';
+                            skillName = 'Hụt Hơi (Không đủ MP)';
                         }
                     }
 
@@ -454,7 +485,7 @@ class ExpeditionService {
             .addFields(
                 { name: '🎁 Phần Thưởng', value: rewardLines.join('\n'), inline: false },
                 { name: '⚔️ CP', value: `${petCP.toLocaleString()}`, inline: true },
-                { name: '🏆 Tiến Độ', value: `Ải ${stage.id}/50`, inline: true }
+                { name: '🏆 Tiến Độ', value: `Ải ${stage.id}/100`, inline: true }
             );
 
         const components = [];
