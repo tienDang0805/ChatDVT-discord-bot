@@ -41,6 +41,16 @@ const FEATURES = [
     desc: '5 bảng xếp hạng: Tài sản, Level, Tiến Hóa, Viễn Chinh, Tháp. Top 10 nhận thưởng mỗi Thứ 6!',
     commands: ['/rank', '/claim_rank'],
   },
+  {
+    icon: '☀️', title: 'Nhận Quà Trọn Gói 1 Lệnh',
+    desc: 'Gộp Daily + AFK Viễn Chinh vào đúng 1 lệnh duy nhất. Sáng ngủ dậy gõ 1 phát lấy hết quà.',
+    commands: ['/claim_all'],
+  },
+  {
+    icon: '📊', title: 'Tổng Quan Nhanh',
+    desc: 'Xem toàn bộ tiến trình chỉ 1 lệnh: Level, Coin, Stats, Traits, Ải Viễn Chinh, Tháp, PK còn bao nhiêu lượt.',
+    commands: ['/status'],
+  },
 ];
 
 const RARITIES = [
@@ -287,7 +297,7 @@ export function PetLandingPage() {
               { cat: '🐾 Thú Cưng', cmds: ['/pet start — Ấp trứng thú mới', '/pet info — Xem thông tin thú', '/pet evolve — Tiến hóa', '/pet daily_free — Gacha miễn phí mỗi ngày'] },
               { cat: '⚔️ Chiến Đấu', cmds: ['/expedition fight — Cày ải tự động', '/expedition status — Tiến trình', '/expedition claim_afk — Nhận quà AFK', '/tower — Leo tháp thử thách', '/pk — PK người chơi / Auto Match'] },
               { cat: '💰 Kinh Tế', cmds: ['/shop — Xem cửa hàng', '/buy <id> — Mua vật phẩm', '/sell <id> — Bán vật phẩm', '/use <id> — Dùng item (use_all)', '/train coin:<số> — Đổi xu lấy EXP', '/inventory — Xem kho đồ'] },
-              { cat: '🏆 Xã Hội', cmds: ['/rank — Bảng xếp hạng', '/claim_rank — Nhận thưởng Thứ 6', '/daily — Điểm danh hàng ngày'] },
+              { cat: '🏆 Xã Hội', cmds: ['/rank — Bảng xếp hạng', '/claim_rank — Nhận thưởng Thứ 6', '/daily — Điểm danh hàng ngày', '/claim_all — Nhận trọn quà 1 nút', '/status — Tổng quan nhanh'] },
               { cat: '🎮 Mini-Game', cmds: ['/quiz — Trả lời câu đố', '/ctw — Catch The Word', '/grind — Cày nhiệm vụ'] },
               { cat: '⚙️ Cá Nhân', cmds: ['/identity — Cập nhật biệt danh', '/help — Xem trợ giúp'] },
             ].map((group, i) => (

@@ -6,7 +6,6 @@ export const SHOP_ITEMS = [
     { id: 'exp_stone_sm', name: 'Đá EXP Nhỏ',   type: 'consumable', price: 200,  description: '💎 Tăng **50 EXP** cho sinh vật.', emoji: '🟢', expGain: 50  },
     { id: 'exp_stone_md', name: 'Đá EXP Vừa',   type: 'consumable', price: 500,  description: '💎 Tăng **150 EXP** cho sinh vật.', emoji: '🔵', expGain: 150 },
     { id: 'exp_stone_lg', name: 'Đá EXP Lớn',   type: 'consumable', price: 1200, description: '💎 Tăng **400 EXP** cho sinh vật.', emoji: '🟣', expGain: 400 },
-    { id: 'exp_potion',   name: 'Bình EXP Nhỏ', type: 'consumable', price: 100,  description: '🧪 Tăng **50 EXP** cho sinh vật.', emoji: '🧪', expGain: 50  },
     { id: 'fire_crystal', name: 'Khoáng Hỏa', type: 'elemental', price: 1500, description: '🔥 Vĩnh viễn tăng **+5 ATK** cho sinh vật.', emoji: '🔥', expGain: 0 },
     { id: 'water_crystal', name: 'Đá Băng', type: 'elemental', price: 1500, description: '💧 Vĩnh viễn tăng **+20 HP** cho sinh vật.', emoji: '💧', expGain: 0 },
     { id: 'earth_crystal', name: 'Hạt Giống Thổ', type: 'elemental', price: 1500, description: '🌿 Vĩnh viễn tăng **+5 DEF** cho sinh vật.', emoji: '🌿', expGain: 0 },
