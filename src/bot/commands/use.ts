@@ -24,25 +24,6 @@ export const data = new SlashCommandBuilder()
           .setRequired(false)
   );
 
-// Base stats per level based on rarity
-const STAT_BONUS_MAP: Record<string, { hp: number, mp: number, atk: number, def: number, spd: number, int: number }> = {
-    'Legend': { hp: 10, mp: 5, atk: 4, def: 3, spd: 2, int: 3 },
-    'Unique': { hp: 8, mp: 4, atk: 3, def: 2, spd: 1, int: 2 },
-    'Rare': { hp: 6, mp: 3, atk: 2, def: 2, spd: 1, int: 1 },
-    'Magic': { hp: 5, mp: 2, atk: 2, def: 1, spd: 1, int: 1 },
-    'Normal': { hp: 4, mp: 1, atk: 1, def: 1, spd: 0, int: 0 },
-};
-
-function applyStatBonus(stats: any, levelsGained: number, rarity: string) {
-    const bonus = STAT_BONUS_MAP[rarity] || STAT_BONUS_MAP['Normal'];
-    stats.hp = (stats.hp || 0) + (bonus.hp * levelsGained);
-    stats.mp = (stats.mp || 80) + (bonus.mp * levelsGained);
-    stats.atk = (stats.atk || 0) + (bonus.atk * levelsGained);
-    stats.def = (stats.def || 0) + (bonus.def * levelsGained);
-    stats.spd = (stats.spd || 0) + (bonus.spd * levelsGained);
-    stats.int = (stats.int || 10) + (bonus.int * levelsGained);
-    return stats;
-}
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   const itemId   = interaction.options.getString('item_id', true).trim().toLowerCase();
@@ -237,7 +218,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
   }
 
-  // --- Vật phẩm EXP (exp_stone_sm, exp_stone_md, exp_stone_lg, exp_potion) ---
+  // --- Vật phẩm EXP (exp_stone_sm, exp_stone_md, exp_stone_lg) ---
   if (shopItem.expGain && shopItem.expGain > 0) {
       if (!pet) {
           await interaction.editReply('❌ Bạn chưa có sinh vật! Dùng `/pet start`.');
@@ -246,69 +227,36 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
       const totalExpGain = shopItem.expGain * quantity;
 
-      // Deduct item
-      await (async () => {
-          if (inventoryItem.quantity === quantity) {
-              await prisma.inventoryItem.delete({ where: { id: inventoryItem.id } });
-          } else {
-              await prisma.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: quantity } } });
-          }
-          await prisma.pet.update({ where: { id: pet.id }, data: { exp: { increment: totalExpGain } } });
-      })();
-
-      // Re-fetch and compute multi-level-up
-      let updatedPet = await prisma.pet.findUnique({ where: { id: pet.id } });
-      if (!updatedPet) return;
-
-      let stats: any = {};
-      try { stats = JSON.parse(updatedPet.stats); } catch(e) {}
-
-      let levelsGained = 0;
-      let currentExp = updatedPet.exp;
-      let currentLevel = updatedPet.level;
-      let reqExp = petService.getRequiredExp(currentLevel, updatedPet.rarity);
-
-      while (currentExp >= reqExp) {
-          currentExp -= reqExp;
-          currentLevel++;
-          levelsGained++;
-          reqExp = petService.getRequiredExp(currentLevel, updatedPet.rarity);
+      if (inventoryItem.quantity === quantity) {
+          await prisma.inventoryItem.delete({ where: { id: inventoryItem.id } });
+      } else {
+          await prisma.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: quantity } } });
       }
 
-      if (levelsGained > 0 || currentExp !== updatedPet.exp) {
-          if (levelsGained > 0) Object.assign(stats, applyStatBonus(stats, levelsGained, updatedPet.rarity));
-          await prisma.pet.update({
-              where: { id: updatedPet.id },
-              data: { level: currentLevel, exp: currentExp, stats: JSON.stringify(stats) }
-          });
-      }
-
-      const finalPet = levelsGained > 0
-          ? await prisma.pet.findUnique({ where: { id: pet.id } })
-          : updatedPet;
-          
-      const finalReqExp = petService.getRequiredExp(finalPet!.level, finalPet!.rarity);
+      const { pet: updatedPet, messages, levelsGained } = await petService.addExpAndLevelUp(pet.id, totalExpGain);
+      const finalReqExp = petService.getRequiredExp(updatedPet.level, updatedPet.rarity);
+      const finalStats = JSON.parse(updatedPet.stats || '{}');
 
       const embed = new EmbedBuilder()
           .setColor(levelsGained > 0 ? 0xFF6B00 : 0x00AE86)
           .setTitle(levelsGained > 0 ? `🎉 THĂNG CẤP x${levelsGained}!` : `${shopItem.emoji} Sử Dụng Thành Công!`)
-          .setDescription(`**${finalPet!.name}** nhận được **+${totalExpGain.toLocaleString()} EXP** từ ${quantity}x ${shopItem.emoji} ${shopItem.name}`)
+          .setDescription(`**${updatedPet.name}** nhận được **+${totalExpGain.toLocaleString()} EXP** từ ${quantity}x ${shopItem.emoji} ${shopItem.name}`)
           .addFields(
-              { name: '📊 Cấp Độ', value: `Lv.${finalPet!.level}`, inline: true },
-              { name: '✨ EXP Hiện Tại', value: `${finalPet!.exp.toLocaleString()} / ${finalReqExp.toLocaleString()}`, inline: true },
-              { name: '⬆️ EXP Cần Thêm', value: `${(finalReqExp - finalPet!.exp).toLocaleString()}`, inline: true }
+              { name: '📊 Cấp Độ', value: `Lv.${updatedPet.level}`, inline: true },
+              { name: '✨ EXP Hiện Tại', value: `${updatedPet.exp.toLocaleString()} / ${finalReqExp.toLocaleString()}`, inline: true },
+              { name: '⬆️ EXP Cần Thêm', value: `${(finalReqExp - updatedPet.exp).toLocaleString()}`, inline: true }
           );
 
       if (levelsGained > 0) {
           embed.addFields({
-              name: '💪 Chỉ Số Mới Nhận (Scale Theo Độ Hiếm)',
-              value: `❤️ HP: ${stats.hp} | ⚔️ ATK: ${stats.atk} | 🛡️ DEF: ${stats.def} | ⚡ SPD: ${stats.spd}`,
+              name: '💪 Chỉ Số Mới',
+              value: `❤️ HP: ${finalStats.hp} | 💙 MP: ${finalStats.mp} | ⚔️ ATK: ${finalStats.atk} | 🛡️ DEF: ${finalStats.def} | ⚡ SPD: ${finalStats.spd} | 🧠 INT: ${finalStats.int}`,
               inline: false
           });
       }
 
-      if (finalPet!.imageData && finalPet!.imageData.startsWith('data:image')) {
-          const base64Data = finalPet!.imageData.replace(/^data:image\/(png|jpeg);base64,/, '');
+      if (updatedPet.imageData && updatedPet.imageData.startsWith('data:image')) {
+          const base64Data = updatedPet.imageData.replace(/^data:image\/(png|jpeg);base64,/, '');
           const buffer = Buffer.from(base64Data, 'base64');
           await interaction.editReply({ embeds: [embed], files: [{ attachment: buffer, name: 'pet.png' }] });
           embed.setThumbnail('attachment://pet.png');
