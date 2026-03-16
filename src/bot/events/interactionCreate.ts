@@ -3,6 +3,7 @@ import { userIdentityService } from '../services/identity';
 import { quizService } from '../services/quiz';
 import { ctwService } from '../services/ctw';
 import { petService } from '../services/pet';
+import { expeditionService } from '../services/expedition';
 import { prisma } from '../../database/prisma';
 
 export async function handleInteraction(interaction: Interaction) {
@@ -40,6 +41,26 @@ export async function handleInteraction(interaction: Interaction) {
           }
           if (customId === 'free_pet_drop') {
                await petService.processDailyFreePetPick(interaction, 'drop');
+               return;
+          }
+
+          // --- Expedition Next ---
+          if (customId === 'expedition_next') {
+               // Xóa nút bấm của báo cáo nhận thưởng cũ để dọn UI
+               await interaction.message.edit({ components: [] }).catch(() => {});
+               
+               // Tạo một loading message mới y như gõ lệnh thả command /expedition fight
+               await interaction.deferReply();
+               const result = await expeditionService.fight(interaction as any);
+               
+               if (!result) return;
+               
+               const res = result as any;
+               if ('content' in res && res.content) {
+                    await interaction.editReply({ content: res.content as string, components: res.components || [] });
+               } else if ('embeds' in res) {
+                    await interaction.editReply({ embeds: res.embeds, components: res.components || [] });
+               }
                return;
           }
 

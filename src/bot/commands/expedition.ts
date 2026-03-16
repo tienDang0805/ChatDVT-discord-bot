@@ -52,10 +52,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 // Return null means the service handled the editReply/followUp due to PVE manual combat
                 return;
             }
-            if ('content' in result && result.content !== null && result.content !== undefined) {
-                await interaction.editReply(result.content as string);
-            } else if ('embeds' in result) {
-                await interaction.editReply({ embeds: result.embeds });
+            const res = result as any;
+            if ('content' in res && res.content !== null && res.content !== undefined) {
+                await interaction.editReply({ content: res.content, components: res.components || [] });
+            } else if ('embeds' in res) {
+                await interaction.editReply({ embeds: res.embeds, components: res.components || [] });
             }
         } 
         else if (subcommand === 'info') {

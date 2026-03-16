@@ -1,7 +1,7 @@
 import { prisma } from '../../database/prisma';
 import { petService, PetSnapshot, parsePet } from './pet';
 import { userIdentityService } from './identity';
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, Message } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, ChatInputCommandInteraction, ButtonInteraction, Message } from 'discord.js';
 import { SHOP_ITEMS } from './shop';
 
 const EXPEDITION_COOLDOWN_MS = 30 * 60 * 1000;
@@ -167,7 +167,7 @@ class ExpeditionService {
         return { embeds: [embed] };
     }
 
-    public async fight(interaction: ChatInputCommandInteraction) {
+    public async fight(interaction: ChatInputCommandInteraction | ButtonInteraction) {
         const userId = interaction.user.id;
         const petInfo = await prisma.pet.findFirst({ where: { ownerId: userId } });
         if (!petInfo) return { content: '❌ Bạn chưa có sinh vật!' };
@@ -189,7 +189,7 @@ class ExpeditionService {
 
         // Auto Pass Check (Out CP x2)
         if (ratio >= 2.0) {
-            await prisma.expeditionProgress.update({ where: { userId }, data: { lastAttempt: new Date() } });
+            // Mới: Bỏ qua cooldown 30p khi thắng để qua ải ngay lập tức
             return await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚡ Áp đảo hoàn toàn! (Auto Pass)');
         }
 
@@ -385,8 +385,7 @@ class ExpeditionService {
             await battleMsg.edit({ embeds: [defeatEmbed], components: [] });
             return { content: null }; // Request finished
         } else {
-            // Thắng, thưởng, cooldown 30 min
-            await prisma.expeditionProgress.update({ where: { userId }, data: { lastAttempt: new Date() } });
+            // Thắng, thưởng, không cooldown (vào ải kế tiếp luôn)
             
             const victoryEmbed = buildBattleEmbed(currentTurn, log, round)
                 .setTitle(`🎉 HUYỀN THOẠI! — Boss Gục Ngã`)
@@ -397,7 +396,7 @@ class ExpeditionService {
             // Wait 2s then send reward
             await new Promise(r => setTimeout(r, 2000));
             const rewardPayload = await this.handleVictory(userId, petInfo, stage, prog, petCP, '⚔️ Thắng trận Oanh Liệt!');
-            await interaction.followUp({ embeds: rewardPayload.embeds });
+            await interaction.followUp({ embeds: rewardPayload.embeds, components: rewardPayload.components });
             return { content: null };
         }
     }
@@ -458,14 +457,22 @@ class ExpeditionService {
                 { name: '🏆 Tiến Độ', value: `Ải ${stage.id}/50`, inline: true }
             );
 
+        const components = [];
         if (nextUp) {
             embed.addFields({ name: '▶️ Ải Tiếp Theo', value: `${nextUp.name} (CP cần: ${nextUp.requiredCP.toLocaleString()})`, inline: false });
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('expedition_next')
+                    .setLabel('⚔️ Tiến Lên Ải Tiếp Theo')
+                    .setStyle(ButtonStyle.Primary)
+            );
+            components.push(row);
         } else {
             embed.addFields({ name: '🎉 HOÀN THÀNH', value: 'Bạn đã chinh phục toàn bộ Viễn Chinh!', inline: false });
         }
 
-        embed.setFooter({ text: 'Cooldown 30 phút trước lần xuất chinh tiếp theo' });
-        return { embeds: [embed] };
+        embed.setFooter({ text: 'Bạn có thể tiến thẳng vào ải tiếp theo ngay lập tức!' });
+        return { embeds: [embed], components };
     }
 
     public async showStageInfo(stageId: number) {
