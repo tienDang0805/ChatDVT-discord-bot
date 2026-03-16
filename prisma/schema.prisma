@@ -138,3 +138,12 @@ model UserItemPurchaseLog {
   @@unique([userId, itemId, purchaseDate])
   @@index([userId])
 }
+
+model ExpeditionProgress {
+  id            Int      @id @default(autoincrement())
+  userId        String   @unique
+  maxStage      Int      @default(0)
+  clearedStages String   @default("[]")
+  lastAttempt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
