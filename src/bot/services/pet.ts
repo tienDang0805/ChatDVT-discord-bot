@@ -623,6 +623,186 @@ ${JSON.stringify(aiInput, null, 2)}
           return { content: `❌ Có lỗi xảy ra trong quá trình tiến hóa: ${(error as Error).message}` };
       }
   }
-}
+
+  // --- Daily Free Pet Logic ---
+  private dailyFreePetCache: Map<string, any> = new Map();
+
+  public async handleDailyFreePet(interaction: any) {
+      const userId = interaction.user.id;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const cooldown = await prisma.userEggCooldown.findUnique({ where: { userId } });
+      if (cooldown && cooldown.lastEggOpenTime >= today && cooldown.dailyCount >= 1) {
+          const tomorrow = new Date(today);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const timeUntilReset = Math.floor((tomorrow.getTime() - new Date().getTime()) / 1000 / 60 / 60);
+          return interaction.editReply(`❌ Sức mạnh của Gene-Sys cần thời gian phục hồi! Bạn đã nhận Gacha miễn phí hôm nay rồi.\n⏳ Hãy quay lại sau khoảng **${timeUntilReset} giờ** nữa.`);
+      }
+
+      await interaction.editReply("🌟 Hệ thống Gene-Sys đang tạo cho bạn 1 thẻ Gacha Sinh Vật miễn phí...");
+
+      try {
+          const petData = await this.generatePetData("Trứng Kỳ Diệu (Miễn Phí)");
+          
+          const botConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+          let disablePetImage = false;
+          if (botConfig && botConfig.features) {
+              try { disablePetImage = !!JSON.parse(botConfig.features).disablePetImage; } catch (e) {}
+          }
+
+          let imageUrl = "https://via.placeholder.com/256";
+          const imagePrompt = `Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${petData.imageprompt_pet}`;
+          let imageBuffer: Buffer | undefined = undefined;
+
+          if (!disablePetImage) {
+              const imageResult = await geminiService.generateImage(imagePrompt);
+              if (imageResult.success && imageResult.imageBuffer) {
+                  imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
+                  imageBuffer = imageResult.imageBuffer;
+              }
+          } else {
+              imageUrl = "https://i.imgur.com/3q123b3.png";
+          }
+
+          // Temporarily store in class cache
+          const gachaObj = { petData, imagePrompt, imageUrl, imageBuffer };
+          this.dailyFreePetCache.set(userId, gachaObj);
+
+          const currentPet = await prisma.pet.findFirst({ where: { ownerId: userId } });
+          
+          const embed = new EmbedBuilder()
+              .setTitle(`🎉 Chúc mừng! Thẻ Gacha đã nở ra **${petData.species}**!`)
+              .setDescription(petData.description_vi)
+              .setColor(this.getRarityColor(petData.rarity))
+              .addFields(
+                  { name: "Độ hiếm", value: petData.rarity, inline: true },
+                  { name: "Hệ", value: petData.element, inline: true },
+                  { name: "Stats Gốc", value: `HP: ${petData.base_stats.hp} | ATK: ${petData.base_stats.atk} | DEF: ${petData.base_stats.def}`, inline: false }
+              );
+
+          const files = [];
+          if (imageBuffer) {
+              files.push({ attachment: imageBuffer, name: 'free_pet.png' });
+              embed.setImage('attachment://free_pet.png');
+          } else if (imageUrl.startsWith('data:image')) {
+              const base64Data = imageUrl.replace(/^data:image\/png;base64,/, "").replace(/^data:image\/jpeg;base64,/, "");
+              const buffer = Buffer.from(base64Data, 'base64');
+              files.push({ attachment: buffer, name: 'free_pet.png' });
+              embed.setImage('attachment://free_pet.png');
+          } else if (imageUrl.startsWith('http')) {
+              embed.setImage(imageUrl);
+          }
+
+          if (currentPet) {
+              embed.addFields({ name: "⚠️ Thay thế thú cưng cũ?", value: `Bạn đang có **${currentPet.name}** (Lv.${currentPet.level}).\nNếu chọn [Thay Thế], thú cũ sẽ bị XÓA vĩnh viễn và cấp độ restart từ 1.\nNếu chọn [Bỏ Qua], thú mới sẽ bay mất.`, inline: false });
+          } else {
+              embed.addFields({ name: "🎉 Bạn chưa có thú cưng!", value: `Một khởi đầu tuyệt vời. Hãy giữ nó!`, inline: false });
+          }
+
+          const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+              new ButtonBuilder().setCustomId(`free_pet_keep`).setLabel("💖 Giữ Thú Mới").setStyle(ButtonStyle.Success),
+              new ButtonBuilder().setCustomId(`free_pet_drop`).setLabel("🗑️ Bỏ Qua").setStyle(ButtonStyle.Secondary)
+          );
+
+          if (cooldown) {
+              await prisma.userEggCooldown.update({ where: { userId }, data: { dailyCount: 1, lastEggOpenTime: new Date() } });
+          } else {
+              await prisma.userEggCooldown.create({ data: { userId, dailyCount: 1, lastEggOpenTime: new Date() } });
+          }
+
+          await interaction.editReply({ embeds: [embed], components: [row], files });
+          
+      } catch (error) {
+          console.error("Daily Free Pet Error:", error);
+          return interaction.editReply("❌ Có lỗi xảy ra trong quá trình rút Gacha Mới.");
+      }
+  }
+
+  public async processDailyFreePetPick(interaction: any, action: 'keep' | 'drop') {
+      const userId = interaction.user.id;
+      const gachaObj = this.dailyFreePetCache.get(userId);
+      
+      if (!gachaObj) {
+          return interaction.reply({ content: "Phiên giao dịch thẻ Gacha của bạn đã hết hạn hoặc không tồn tại.", ephemeral: true });
+      }
+      
+      await interaction.deferUpdate();
+
+      if (action === 'drop') {
+          this.dailyFreePetCache.delete(userId);
+          return interaction.editReply({ content: "🐾 Bạn đã thả sinh vật này trở về tự nhiên. Hẹn gặp lại vào ngày mai!", components: [], embeds: [], files: [] });
+      } else {
+          const petData = gachaObj.petData;
+          
+          await prisma.$transaction(async (tx) => {
+              const existing = await tx.pet.findFirst({ where: { ownerId: userId } });
+              if (existing) {
+                  await tx.pet.delete({ where: { id: existing.id } });
+              }
+
+              await tx.pet.create({
+                  data: {
+                      ownerId: userId,
+                      name: petData.species,
+                      species: petData.species,
+                      description: petData.description_vi,
+                      rarity: petData.rarity,
+                      element: petData.element,
+                      stats: JSON.stringify(petData.base_stats),
+                      skills: JSON.stringify(petData.skills),
+                      traits: JSON.stringify(petData.traits),
+                      imageBasePrompt: gachaObj.imagePrompt,
+                      imageData: gachaObj.imageUrl,
+                      status: JSON.stringify({ stamina: 100, hunger: 100 }),
+                      evolutionStage: 1
+                  }
+              });
+          });
+
+          this.dailyFreePetCache.delete(userId);
+          return interaction.editReply({ content: `🎉 Bạn đã nhận thành công **${petData.species}**! Sinh vật cũ đã được Giải Phóng Tự Do.`, components: [], embeds: [], files: [] });
+      }
+  }
+} // End PetService Class
 
 export const petService = new PetService();
+
+export interface PetSnapshot {
+    ownerId: string;
+    name: string;
+    hp: number;
+    maxHp: number;
+    mp: number;
+    maxMp: number;
+    atk: number;
+    def: number;
+    spd: number;
+    skills: any[];
+    traits: any[];
+    imageData: string;
+    level: number;
+}
+
+export function parsePet(pet: any): PetSnapshot {
+    const stats = JSON.parse(pet.stats || '{}');
+    const skills = JSON.parse(pet.skills || '[]');
+    const traits = JSON.parse(pet.traits || '[]');
+
+    return {
+        ownerId: pet.ownerId,
+        name: pet.name,
+        hp: stats.hp || 100,
+        maxHp: stats.hp || 100,
+        mp: stats.mp || 100,
+        maxMp: stats.mp || 100,
+        atk: stats.atk || 10,
+        def: stats.def || 10,
+        spd: stats.spd || 10,
+        skills,
+        traits,
+        imageData: pet.imageData || '',
+        level: pet.level || 1
+    };
+}

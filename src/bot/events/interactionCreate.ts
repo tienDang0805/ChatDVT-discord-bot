@@ -33,6 +33,16 @@ export async function handleInteraction(interaction: Interaction) {
                return;
           }
 
+          // --- Daily Free Pet ---
+          if (customId === 'free_pet_keep') {
+               await petService.processDailyFreePetPick(interaction, 'keep');
+               return;
+          }
+          if (customId === 'free_pet_drop') {
+               await petService.processDailyFreePetPick(interaction, 'drop');
+               return;
+          }
+
           // --- Identity ---
           if (customId === 'edit_identity') {
               const modal = new ModalBuilder()

@@ -19,6 +19,10 @@ export const data = new SlashCommandBuilder()
   .addSubcommand(sub =>
        sub.setName('evolve')
           .setDescription('Tiến hóa sinh vật bằng Đá Tiến Hóa')
+  )
+  .addSubcommand(sub =>
+       sub.setName('daily_free')
+          .setDescription('🎁 Rút thẻ Gacha sinh vật ngẫu nhiên miễn phí (1 lần / ngày)')
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -43,5 +47,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       } else {
           await interaction.editReply("❌ Đã có lỗi xảy ra.");
       }
+  } else if (subcommand === 'daily_free') {
+      await interaction.deferReply();
+      await petService.handleDailyFreePet(interaction);
   }
 }

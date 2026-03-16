@@ -145,5 +145,6 @@ model ExpeditionProgress {
   maxStage      Int      @default(0)
   clearedStages String   @default("[]")
   lastAttempt   DateTime @default(now())
+  lastClaim     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
