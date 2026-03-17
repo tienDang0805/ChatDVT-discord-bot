@@ -3,6 +3,7 @@ import { bot } from '../client';
 import { geminiService } from '../services/gemini';
 import { prisma } from '../../database/prisma';
 import { LoggerService } from '../services/logger';
+import { ADMIN_ID } from '../../config/constants';
 
 const IGNORE_PREFIXES = ['!', '/', '-'];
 
@@ -17,6 +18,21 @@ export const messageCreate = async (message: Message) => {
            return;
       } catch (e) {
           console.error("Error sending legacy reply:", e);
+      }
+  }
+
+  if (ADMIN_ID && message.mentions.users.has(ADMIN_ID)) {
+      try {
+          if ('sendTyping' in message.channel) await message.channel.sendTyping();
+          const replyContent = await geminiService.generateAutoReply(
+              message.content,
+              message.author.username,
+              message.guild?.id
+          );
+          await message.reply(replyContent);
+          return;
+      } catch (error) {
+          console.error("Lỗi Auto-reply:", error);
       }
   }
   // --------------------------------
