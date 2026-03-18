@@ -13,6 +13,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 
 import { Identity } from './pages/Identity';
 import { PetLandingPage } from './pages/PetLandingPage';
+import { CoupleLandingPage } from './pages/CoupleLandingPage';
 import TuTienGame from './pages/TuTienGame';
 
 // Auth Wrapper
@@ -38,6 +39,7 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/couple" element={<CoupleLandingPage />} />
                 <Route path="/prompts" element={<Prompts />} />
                 <Route path="/identity" element={<Identity />} />
                 <Route path="/control" element={<ControlCenter />} />

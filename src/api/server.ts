@@ -979,6 +979,57 @@ app.delete('/api/pets/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// --- Couple System API ---
+app.get('/api/couple/top', async (req, res) => {
+    try {
+        const couples = await prisma.couple.findMany({
+            orderBy: { affection: 'desc' },
+            take: 10
+        });
+        
+        // Enrich with nicknames
+        const enriched = await Promise.all(couples.map(async (c) => {
+            const [u1, u2] = await Promise.all([
+                prisma.userIdentity.findUnique({ where: { userId: c.user1Id } }),
+                prisma.userIdentity.findUnique({ where: { userId: c.user2Id } })
+            ]);
+            return {
+                ...c,
+                user1Nickname: u1?.nickname || c.user1Id,
+                user2Nickname: u2?.nickname || c.user2Id
+            };
+        }));
+        
+        res.json(enriched);
+    } catch (error: any) {
+        console.error("Error fetching top couples:", error);
+        res.status(500).json({ error: 'Failed to fetch couples' });
+    }
+});
+
+app.get('/api/couple/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        const couple = await prisma.couple.findFirst({
+            where: { OR: [{ user1Id: userId }, { user2Id: userId }] }
+        });
+        
+        if (!couple) return res.status(404).json({ error: 'Not in a relationship' });
+        
+        const partnerId = couple.user1Id === userId ? couple.user2Id : couple.user1Id;
+        const partnerInfo = await prisma.userIdentity.findUnique({ where: { userId: partnerId } });
+        
+        res.json({
+            ...couple,
+            partnerNickname: partnerInfo?.nickname || partnerId,
+            partnerId
+        });
+    } catch (error: any) {
+        console.error("Error fetching couple:", error);
+        res.status(500).json({ error: 'Failed to fetch couple status' });
+    }
+});
+
 // Serve Static Frontend (MUST BE LAST)
 app.use(express.static(CLIENT_BUILD_PATH));
 

@@ -156,3 +156,31 @@ model UserDailyPk {
   lastPkTime  DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Couple {
+  id        Int      @id @default(autoincrement())
+  user1Id   String
+  user2Id   String
+  affection Int      @default(0) // Mức độ tình cảm
+  level     Int      @default(1)
+  status    String   @default("dating") // dating, married
+  marriedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+model CoupleProposal {
+  id         Int      @id @default(autoincrement())
+  senderId   String
+  receiverId String
+  status     String   @default("pending") // pending, accepted, declined
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+}
