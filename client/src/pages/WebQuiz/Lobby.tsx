@@ -185,7 +185,7 @@ export function WebQuizLobby() {
           className="bg-white dark:bg-surface rounded-3xl p-6 shadow-sm border border-slate-200 dark:border-slate-800"
         >
            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Tạo Phòng Mới</h2>
-           <form onSubmit={handleCreate} className="space-y-4 max-w-lg">
+           <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Chủ đề (Nổi lẩu thập cẩm, Toán học, Khịa nhau...)</label>
                 <input 
@@ -196,7 +196,7 @@ export function WebQuizLobby() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mức độ</label>
                   <select 

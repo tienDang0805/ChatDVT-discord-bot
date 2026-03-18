@@ -22,9 +22,12 @@ export interface IWebQuizState {
   timeLimitSecs: number;
   numQuestions: number;
   apiKey: string; // Tác giả cấp Key
-  status: 'waiting' | 'generating' | 'showing_question' | 'showing_answer' | 'finished';
+  status: 'waiting' | 'generating' | 'showing_question' | 'showing_answer' | 'finished' | 'error';
+  errorMessage?: string;
+  creatorId: string;
   players: Record<string, IWebQuizPlayer>; // Key: playerId
   questions: IWebQuizQuestion[];
+  totalQuestions: number;
   currentQuestionIndex: number;
   timer: number;
   clients: any[]; // express Response objects for SSE
@@ -69,8 +72,10 @@ export class WebQuizServiceClass {
       numQuestions: Math.min(20, Math.max(2, numQuestions)),
       apiKey,
       status: 'waiting',
+      creatorId: playerId,
       players: { [playerId]: { id: playerId, name: creatorName, score: 0 } },
       questions: [],
+      totalQuestions: Math.min(20, Math.max(2, numQuestions)),
       currentQuestionIndex: -1,
       timer: 0,
       clients: [],
@@ -140,9 +145,11 @@ export class WebQuizServiceClass {
          id: room.id,
          topic: room.topic,
          status: room.status,
+         errorMessage: room.errorMessage,
          timer: room.timer,
+         creatorId: room.creatorId,
          currentQuestionIndex: room.currentQuestionIndex,
-         totalQuestions: room.numQuestions,
+         totalQuestions: room.totalQuestions,
          players: Object.values(room.players).sort((a,b)=>b.score - a.score),
          currentQuestion,
          answersSubmittedCount: Object.keys(room.answersThisRound).length
@@ -153,9 +160,10 @@ export class WebQuizServiceClass {
   public async startRoom(roomId: string, playerId: string) {
      const room = this.rooms.get(roomId);
      if (!room) return false;
-     if (room.status !== 'waiting') return false;
+     if (room.status !== 'waiting' && room.status !== 'error' && room.status !== 'finished') return false;
 
      room.status = 'generating';
+     room.errorMessage = undefined;
      this.broadcast(room, this.getRoomPublicState(room));
 
      try {
@@ -172,18 +180,33 @@ export class WebQuizServiceClass {
         ]`;
        // Call Gemini with custom API KEY
        const questions = await geminiService.generateJSON<IWebQuizQuestion[]>(prompt, null, undefined, room.apiKey);
-       if (!questions || questions.length === 0) throw new Error("No questions generated");
+       if (!questions || questions.length === 0) throw new Error("AI không trả về kết quả hợp lệ.");
 
        room.questions = questions;
+       room.totalQuestions = questions.length;
        this.gameLoop(room); // Start the engine asynchronous
        return true;
-     } catch (err) {
-       console.error(err);
-       room.status = 'waiting';
-       this.broadcast(room, { type: 'error', message: "Không thể nhận diện câu hỏi từ AI, hãy thử lại." });
+     } catch (err: any) {
+       console.error("Web Quiz Gen Error:", err);
+       room.status = 'error';
+       room.errorMessage = err.message || "Không thể nhận diện câu hỏi từ AI, hãy thử lại với Prompt / API Key khác.";
        this.broadcast(room, this.getRoomPublicState(room));
        return false;
      }
+  }
+
+  public async nextRound(roomId: string, playerId: string, newTopic: string, newTone: string) {
+      const room = this.rooms.get(roomId);
+      if (!room || room.creatorId !== playerId) return false;
+
+      room.topic = newTopic;
+      if (newTone) room.tone = newTone;
+      for (const p of Object.values(room.players)) { p.score = 0; }
+      room.questions = [];
+      room.currentQuestionIndex = -1;
+      
+      this.startRoom(roomId, playerId);
+      return true;
   }
 
   private async sleep(ms: number) {
@@ -235,10 +258,14 @@ export class WebQuizServiceClass {
       room.status = 'finished';
       this.broadcast(room, this.getRoomPublicState(room));
 
-      // Cleanup room after 2 minutes
+      // Cleanup room after 5 minutes, close SSE connections gracefully
       setTimeout(() => {
+          for (const c of room.clients) {
+             try { c.end(); } catch(e) {}
+          }
+          room.clients = [];
           this.rooms.delete(room.id);
-      }, 120 * 1000);
+      }, 300 * 1000);
   }
 
   public submitAnswer(roomId: string, playerId: string, answer: "A"|"B"|"C"|"D") {

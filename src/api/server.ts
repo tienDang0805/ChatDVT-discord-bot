@@ -1066,6 +1066,13 @@ app.post('/api/web-quiz/:roomId/start', async (req, res) => {
     res.json({ success: started });
 });
 
+app.post('/api/web-quiz/:roomId/next-round', async (req, res) => {
+    const { playerId, newTopic, newTone } = req.body;
+    if (!newTopic) return res.status(400).json({ success: false, error: 'Missing topic' });
+    const started = await webQuizService.nextRound(req.params.roomId, playerId, newTopic, newTone || '');
+    res.json({ success: started });
+});
+
 app.get('/api/web-quiz/:roomId/stream', (req, res) => {
     webQuizService.addClient(req.params.roomId, res);
 });
