@@ -123,8 +123,8 @@ export const PublicPortal = () => {
            </div>
            
            <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-5xl font-black text-orange-500">140.000</span>
-              <span className="text-slate-500 font-medium">/ 300.000 VNĐ</span>
+              <span className="text-5xl font-black text-orange-500">0</span>
+              <span className="text-slate-500 font-medium">/ 69.000.000 VNĐ</span>
            </div>
 
            {/* Progress bar */}
@@ -161,8 +161,8 @@ export const PublicPortal = () => {
                  </div>
                  <div>
                     <h4 className="text-xl font-bold text-green-500 mb-1 flex items-center gap-2"><Wallet size={18} /> Vietcombank</h4>
-                    <p className="text-white font-mono text-xl mb-1 tracking-wider">YOUR_ACCOUNT_NO</p>
-                    <p className="text-slate-500 text-sm font-medium">Chủ TK: YOUR_NAME (Sửa code nhé sếp)</p>
+                    <p className="text-white font-mono text-xl mb-1 tracking-wider"></p>
+                    <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
                  </div>
               </div>
 
@@ -181,8 +181,8 @@ export const PublicPortal = () => {
                  </div>
                  <div>
                     <h4 className="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2"><Wallet size={18} /> MoMo</h4>
-                    <p className="text-white font-mono text-xl mb-1 tracking-wider">YOUR_PHONE_NO</p>
-                    <p className="text-slate-500 text-sm font-medium">Chủ TK: YOUR_NAME</p>
+                    <p className="text-white font-mono text-xl mb-1 tracking-wider">*******725</p>
+                    <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
                  </div>
               </div>
 
