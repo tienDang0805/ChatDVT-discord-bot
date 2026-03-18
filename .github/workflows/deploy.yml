@@ -37,12 +37,13 @@ jobs:
               'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
               'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
               'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
-              'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL'
+              'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL',
+              'NASA_API_KEY'
             ];
             let content = '';
             for (const key of keys) {
               if (process.env[key]) {
-                content += key + '=' + JSON.stringify(process.env[key]) + '\n';
+                content += key + '=' + JSON.stringify(process.env[key]) + '\\n';
               }
             }
             fs.writeFileSync('.env', content);
@@ -62,6 +63,7 @@ jobs:
           ADMIN_ID: ${{ secrets.ADMIN_ID }}
           AUTO_REPLY_PROMPT: ${{ secrets.AUTO_REPLY_PROMPT }}
           PORT: ${{ secrets.PORT }}
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
           ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}

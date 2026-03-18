@@ -1,6 +1,8 @@
 import { Client, ActivityType, Routes, REST, EmbedBuilder, TextChannel } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import cron from 'node-cron';
+import { NasaService } from '../services/nasa';
 
 let lastAnnouncedWeek = -1;
 
@@ -53,6 +55,40 @@ export async function handleReady(client: Client) {
     client.user?.setActivity('Nần ná na na anh Đặng Văn Tiến ,....', { type: ActivityType.Listening });
 
     setInterval(() => checkFridayAnnouncement(client), 60 * 1000);
+
+    // Lập lịch báo thức Vũ trụ mỗi 8h sáng
+    cron.schedule('0 8 * * *', async () => {
+        const channelId = process.env.DISCORD_CHANNEL_ID;
+        if (!channelId) return;
+        
+        try {
+            const channel = await client.channels.fetch(channelId);
+            if (!channel || !(channel instanceof TextChannel)) return;
+
+            const apodData = await NasaService.getDailyPicture();
+            if (apodData) {
+                const embed = new EmbedBuilder()
+                    .setColor('#0b3d91')
+                    .setTitle(`🌌 Bản Tin Vũ Trụ Sáng Nay: ${apodData.title}`)
+                    .setDescription(apodData.explanation)
+                    .setFooter({ text: 'Nguồn: NASA APOD API & Gemini Translation' });
+
+                if (apodData.media_type === 'image') {
+                    embed.setImage(apodData.hdurl || apodData.url);
+                    await channel.send({ embeds: [embed] });
+                } else {
+                    await channel.send({ 
+                        content: `🎬 Mời bạn xem Video Thiên văn sáng nay:\n${apodData.url}`,
+                        embeds: [embed] 
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('NASA Daily CRON Error:', error);
+        }
+    }, {
+        timezone: "Asia/Ho_Chi_Minh" 
+    });
 
     try {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
