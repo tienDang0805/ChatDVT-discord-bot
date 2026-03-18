@@ -1,8 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { CoupleService } from '../services/couple';
 
-export const coupleCommand = {
-  data: new SlashCommandBuilder()
+export const data = new SlashCommandBuilder()
     .setName('couple')
     .setDescription('Hệ thống tình yêu đỉnh cao')
     .addSubcommand(subcmd => 
@@ -39,7 +38,7 @@ export const coupleCommand = {
         .setDescription('Chia tay / Ly hôn')
     ),
 
-  async execute(interaction: any) {
+export async function execute(interaction: any) {
     if (!interaction.isChatInputCommand()) return;
 
     await interaction.deferReply();
@@ -99,5 +98,4 @@ export const coupleCommand = {
       console.error('Couple Command Error:', error);
       await interaction.editReply('Có lỗi xảy ra, thử lại sau nhé.');
     }
-  }
-};
+}
