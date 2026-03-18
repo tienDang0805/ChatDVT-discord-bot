@@ -15,6 +15,9 @@ export function WebQuizLobby() {
   const [topic, setTopic] = useState('Đố vui dân gian');
   const [difficulty, setDifficulty] = useState('Dễ');
   const [numQuestions, setNumQuestions] = useState(5);
+  const [timeLimitSecs, setTimeLimitSecs] = useState(15);
+  const [tone, setTone] = useState('Hài hước, mở mang kiến thức');
+  const [apiKey, setApiKey] = useState(localStorage.getItem('webQuizApiKey') || '');
 
   const navigate = useNavigate();
 
@@ -67,7 +70,13 @@ export function WebQuizLobby() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim() || !topic.trim()) return;
+    if (!apiKey.trim()) {
+       alert("Vui lòng cung cấp Gemini API Key để đẻ câu hỏi!");
+       return;
+    }
+
     localStorage.setItem('webQuizName', playerName);
+    localStorage.setItem('webQuizApiKey', apiKey);
     setLoading(true);
 
     try {
@@ -75,7 +84,7 @@ export function WebQuizLobby() {
       const resCreate = await fetch(`${API_BASE}/api/web-quiz/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ creatorName: playerName, topic, difficulty, numQuestions })
+        body: JSON.stringify({ creatorName: playerName, topic, difficulty, numQuestions, apiKey, timeLimitSecs, tone })
       });
       const dataCreate = await resCreate.json();
       
@@ -187,7 +196,7 @@ export function WebQuizLobby() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mức độ</label>
                   <select 
@@ -211,6 +220,48 @@ export function WebQuizLobby() {
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Thời gian (giây)</label>
+                  <select 
+                    value={timeLimitSecs}
+                    onChange={(e) => setTimeLimitSecs(Number(e.target.value))}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
+                  >
+                    <option value={10}>10 giây</option>
+                    <option value={15}>15 giây</option>
+                    <option value={20}>20 giây</option>
+                    <option value={30}>30 giây</option>
+                    <option value={45}>45 giây</option>
+                    <option value={60}>60 giây</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Giọng văn</label>
+                  <select 
+                    value={tone}
+                    onChange={(e) => setTone(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none flex-1 truncate"
+                  >
+                    <option value="Hài hước, mở mang kiến thức">Hài hước</option>
+                    <option value="Nghiêm túc, học thuật">Nghiêm túc</option>
+                    <option value="Xéo xắt, cà khịa chửi bậy">Cà khịa</option>
+                    <option value="Tuổi teen, ngôn ngữ Gen Z">Gen Z</option>
+                    <option value="Lãng mạn, sến súa ngôn tình">Ngôn tình</option>
+                    <option value="Kinh dị, rùng rợn">Kinh dị</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gemini API Key (Bắt buộc để Tạo đề)</label>
+                <input 
+                  type="password" 
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="AIzaSy..."
+                  className="w-full px-4 py-2 rounded-xl border border-rose-300 dark:border-rose-800/50 bg-rose-50/50 dark:bg-rose-900/10 text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500 outline-none placeholder:text-slate-400"
+                  required
+                />
+                <p className="text-xs text-slate-500 mt-1">Lưu ý: API Key của bạn không được lưu qua Database, chỉ dùng để gọi trực tiếp đẻ đề 1 lần.</p>
               </div>
 
               <div className="flex items-center gap-3 pt-4">

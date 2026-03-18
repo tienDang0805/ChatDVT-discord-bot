@@ -51,8 +51,8 @@ class GeminiService {
       return apiKey;
   }
 
-  private async getModel(guildId?: string | null, type: 'chat' | 'image' | 'logic' | 'search' = 'chat', customConfig?: any): Promise<GenerativeModel> {
-      const apiKey = await this.getApiKey(guildId);
+  private async getModel(guildId?: string | null, type: 'chat' | 'image' | 'logic' | 'search' = 'chat', customConfig?: any, customApiKey?: string): Promise<GenerativeModel> {
+      const apiKey = customApiKey || await this.getApiKey(guildId);
       const genAI = new GoogleGenerativeAI(apiKey);
       const safetySettings = [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -545,7 +545,7 @@ class GeminiService {
   }
   
   // --- Generic JSON Generation ---
-  public async generateJSON<T>(prompt: string, schema?: any, guildId?: string): Promise<T> {
+  public async generateJSON<T>(prompt: string, schema?: any, guildId?: string, customApiKey?: string): Promise<T> {
       try {
           const config: any = {
               responseMimeType: "application/json",
@@ -554,7 +554,7 @@ class GeminiService {
               config.responseSchema = schema;
           }
 
-          const model = await this.getModel(guildId, 'logic', config);
+          const model = await this.getModel(guildId, 'logic', config, customApiKey);
 
           const result = await retryWithBackoff(() => model.generateContent(prompt));
           const text = result.response.text();

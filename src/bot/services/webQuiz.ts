@@ -18,7 +18,10 @@ export interface IWebQuizState {
   creatorName: string;
   topic: string;
   difficulty: string;
+  tone: string;
+  timeLimitSecs: number;
   numQuestions: number;
+  apiKey: string; // Tác giả cấp Key
   status: 'waiting' | 'generating' | 'showing_question' | 'showing_answer' | 'finished';
   players: Record<string, IWebQuizPlayer>; // Key: playerId
   questions: IWebQuizQuestion[];
@@ -52,7 +55,7 @@ export class WebQuizServiceClass {
     return list;
   }
 
-  public createRoom(creatorName: string, topic: string, difficulty: string, numQuestions: number) {
+  public createRoom(creatorName: string, topic: string, difficulty: string, numQuestions: number, apiKey: string, timeLimitSecs: number, tone: string) {
     const roomId = this.generateId();
     const playerId = this.generateId();
     
@@ -61,7 +64,10 @@ export class WebQuizServiceClass {
       creatorName,
       topic,
       difficulty,
+      tone,
+      timeLimitSecs: Math.min(60, Math.max(5, timeLimitSecs)),
       numQuestions: Math.min(20, Math.max(2, numQuestions)),
+      apiKey,
       status: 'waiting',
       players: { [playerId]: { id: playerId, name: creatorName, score: 0 } },
       questions: [],
@@ -154,7 +160,7 @@ export class WebQuizServiceClass {
 
      try {
        const prompt = `Bạn là chuyên gia Quiz. Tạo ${room.numQuestions} câu hỏi trắc nghiệm tiếng Việt về "${room.topic}". Mức độ: ${room.difficulty}.
-        Giọng văn: Hài hước, troll.
+        Giọng văn: ${room.tone}.
         Trả về ĐÚNG VÀ CHỈ MỘT mảng JSON hợp lệ, KHÔNG CÓ THẺ MARKDOWN. Phải có định dạng:
         [
           {
@@ -164,9 +170,8 @@ export class WebQuizServiceClass {
             "explanation": "Giải thích hài hước ngắn gọn."
           }
         ]`;
-       // Call Gemini. For WebQuiz we parse it manually from generateResponse since generateJSON might fail on large tokens 
-       // but wait, generateJSON is in geminiService usually. We'll use generateJSON.
-       const questions = await geminiService.generateJSON<IWebQuizQuestion[]>(prompt);
+       // Call Gemini with custom API KEY
+       const questions = await geminiService.generateJSON<IWebQuizQuestion[]>(prompt, null, undefined, room.apiKey);
        if (!questions || questions.length === 0) throw new Error("No questions generated");
 
        room.questions = questions;
@@ -189,7 +194,7 @@ export class WebQuizServiceClass {
       for (let i = 0; i < room.questions.length; i++) {
          room.currentQuestionIndex = i;
          room.status = 'showing_question';
-         room.timer = 15; // 15 seconds to answer
+         room.timer = room.timeLimitSecs; // N giây để answer
          room.answersThisRound = {};
          this.broadcast(room, this.getRoomPublicState(room));
 

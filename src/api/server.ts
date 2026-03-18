@@ -47,9 +47,9 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// Protect API Routes (except login/health)
+// Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1038,9 +1038,17 @@ app.get('/api/web-quiz/rooms', (req, res) => {
 });
 
 app.post('/api/web-quiz/create', (req, res) => {
-    const { creatorName, topic, difficulty, numQuestions } = req.body;
-    if (!creatorName || !topic) return res.status(400).json({ error: 'Missing info' });
-    const result = webQuizService.createRoom(creatorName, topic, difficulty || 'Dễ', numQuestions || 5);
+    const { creatorName, topic, difficulty, numQuestions, apiKey, timeLimitSecs, tone } = req.body;
+    if (!creatorName || !topic || !apiKey) return res.status(400).json({ error: 'Missing info or API Key' });
+    const result = webQuizService.createRoom(
+         creatorName, 
+         topic, 
+         difficulty || 'Dễ', 
+         numQuestions || 5, 
+         apiKey, 
+         timeLimitSecs || 15, 
+         tone || 'Hài hước, giải trí'
+    );
     res.json(result);
 });
 
