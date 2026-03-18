@@ -100,21 +100,30 @@ export class WebQuizServiceClass {
 
   public addClient(roomId: string, res: any) {
     const room = this.rooms.get(roomId);
-    if (!room) return;
-    room.clients.push(res);
+    if (!room) {
+      res.status(404).json({ error: 'Room not found' });
+      return;
+    }
     
-    // Setup SSE connection keeping alive
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive'
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': '*'
     });
     res.flushHeaders?.();
 
-    // Send initial state
+    room.clients.push(res);
+
     res.write(`data: ${JSON.stringify(this.getRoomPublicState(room))}\n\n`);
 
+    const heartbeat = setInterval(() => {
+      try { res.write(`: heartbeat\n\n`); } catch(e) { clearInterval(heartbeat); }
+    }, 15000);
+
     res.on('close', () => {
+      clearInterval(heartbeat);
       room.clients = room.clients.filter(c => c !== res);
     });
   }
