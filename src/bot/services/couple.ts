@@ -35,7 +35,8 @@ export class CoupleService {
       return { success: false, message: 'Đừng tự kỷ thế chứ, kiếm ai mà cầu hôn đi!' };
     }
 
-    // Check if either is already in a couple
+    // Cắm sừng / Trà xanh check:
+    let cheatingMessage = '';
     const existingCoupleSender = await prisma.couple.findFirst({
       where: { OR: [{ user1Id: senderId }, { user2Id: senderId }] }
     });
@@ -43,11 +44,12 @@ export class CoupleService {
       where: { OR: [{ user1Id: receiverId }, { user2Id: receiverId }] }
     });
 
-    if (existingCoupleSender) {
-      return { success: false, message: 'Bạn đang trong một mối quan hệ rồi, tính bắt cá hai tay à?' };
-    }
-    if (existingCoupleReceiver) {
-      return { success: false, message: 'Người ta có chậu rồi, đừng đập chậu cướp hoa!' };
+    if (existingCoupleSender && existingCoupleReceiver) {
+      cheatingMessage = ' 🚨 CẢ HAI ĐỀU ĐANG CÓ NGƯỜI YÊU! Quả là một vụ MÈO MẢ GÀ ĐỒNG chấn động!';
+    } else if (existingCoupleSender) {
+      cheatingMessage = ' 🚨 BẠN ĐANG ĐI NGOẠI TÌNH! Bắt cá hai tay à?';
+    } else if (existingCoupleReceiver) {
+      cheatingMessage = ' 🚨 TRÀ XANH XUẤT HIỆN! Bạn đang đập chậu cướp hoa!';
     }
 
     // Check pending proposals
@@ -63,7 +65,7 @@ export class CoupleService {
       data: { senderId, receiverId }
     });
 
-    return { success: true, message: `Bạn đã ngỏ lời với <@${receiverId}>. Hãy chờ người ấy đồng ý nhé! 💕` };
+    return { success: true, message: `Bạn đã ngỏ lời với <@${receiverId}>. Hãy chờ người ấy đồng ý nhé! 💕${cheatingMessage}` };
   }
 
   /**
@@ -78,28 +80,43 @@ export class CoupleService {
       return { success: false, message: 'Không tìm thấy lời tỏ tình nào từ người này.' };
     }
 
-    // Double check if either jumped into another relationship
-    const existingCouple = await prisma.couple.findFirst({
+    // Ngoại tình bóc phốt check!
+    const couplesToBreak = await prisma.couple.findMany({
       where: { 
         OR: [{ user1Id: senderId }, { user2Id: senderId }, { user1Id: receiverId }, { user2Id: receiverId }]
       }
     });
 
-    if (existingCouple) {
-      // Auto decline
-      await prisma.coupleProposal.update({ where: { id: proposal.id }, data: { status: 'declined' } });
-      return { success: false, message: 'Một trong hai người đã có tình yêu mới. Kèo này huỷ!' };
+    let dramaMessage = `Tuyệt vời! <@${senderId}> và <@${receiverId}> đã chính thức hẹn hò! 🎉💞`;
+
+    if (couplesToBreak.length > 0) {
+      let victims = [];
+      for (const c of couplesToBreak) {
+        if (c.user1Id !== senderId && c.user1Id !== receiverId) victims.push(c.user1Id);
+        if (c.user2Id !== senderId && c.user2Id !== receiverId) victims.push(c.user2Id);
+        
+        // Cưỡng ép ly hôn
+        await prisma.couple.delete({ where: { id: c.id } });
+      }
+
+      if (victims.length > 0) {
+        const victimTags = victims.map(v => `<@${v}>`).join(' và ');
+        dramaMessage = `🚨 BÓC PHỐT CẮM SỪNG! 🚨\nCẩu nam nữ <@${senderId}> và <@${receiverId}> đã lén lút "cắm sừng" phũ phàng đá bay ${victimTags} ra chuồng gà!\nMột mối tình TRÀ XANH TIỂU TAM đã chính thức bắt đầu, quả báo sẽ đến sớm thôi! 🐕🐷`;
+      }
     }
 
     // Accept it
     await prisma.$transaction([
-      prisma.coupleProposal.update({ where: { id: proposal.id }, data: { status: 'accepted' } }),
+      prisma.coupleProposal.updateMany({
+        where: { OR: [{ senderId: senderId }, { receiverId: receiverId }, { senderId: receiverId }, { receiverId: senderId }] },
+        data: { status: 'declined' } // Huỷ bỏ mọi proposal cũ liên quan
+      }),
       prisma.couple.create({
         data: { user1Id: senderId, user2Id: receiverId }
       })
     ]);
 
-    return { success: true, message: `Tuyệt vời! <@${senderId}> và <@${receiverId}> đã chính thức hẹn hò! 🎉💞` };
+    return { success: true, message: dramaMessage };
   }
 
   /**
@@ -186,35 +203,21 @@ export class CoupleService {
   }
 
   /**
-   * Tặng Quà (Gift)
+   * Tặng Quà (Gift - Freestyle Version)
    */
-  static async gift(userId: string, itemId: string, quantity: number) {
+  static async gift(userId: string, itemName: string, quantityInput: number) {
     const couple = await prisma.couple.findFirst({
       where: { OR: [{ user1Id: userId }, { user2Id: userId }] }
     });
 
     if (!couple) return { success: false, message: 'Đang FA mà mang quà tặng ai?' };
 
-    // Trừ item của sender
-    const itemInfo = await prisma.inventoryItem.findFirst({
-      where: { userId, itemId }
-    });
+    // Limit quantity to avoid numeric overflow, though realistically anyone can type 1000
+    const quantity = Math.max(1, Math.min(quantityInput, 1000));
 
-    if (!itemInfo || itemInfo.quantity < quantity) {
-      return { success: false, message: 'Bạn đâu có đủ món quà này trong hành lý?' };
-    }
-
-    if (itemInfo.quantity === quantity) {
-      await prisma.inventoryItem.delete({ where: { id: itemInfo.id } });
-    } else {
-      await prisma.inventoryItem.update({
-        where: { id: itemInfo.id },
-        data: { quantity: itemInfo.quantity - quantity }
-      });
-    }
-
-    // Tăng nhiều điểm tình cảm hơn (VD: 50 điểm / món)
-    const bonusAffection = 50 * quantity;
+    // Mỗi món quà mang lại từ 10 - 50 điểm tình cảm ngẫu nhiên
+    const randomAffectionPerItem = Math.floor(Math.random() * 41) + 10;
+    const bonusAffection = randomAffectionPerItem * quantity;
     const newAffection = couple.affection + bonusAffection;
 
     await prisma.couple.update({
@@ -223,7 +226,7 @@ export class CoupleService {
     });
 
     const partnerId = couple.user1Id === userId ? couple.user2Id : couple.user1Id;
-    return { success: true, message: `🎁 Bạn vừa dâng lên mãnh thú <@${partnerId}> ${quantity}x **${itemInfo.name}**. Điểm tình cảm tăng vút +${bonusAffection} ❤️!` };
+    return { success: true, message: `🎁 Bạn vừa dâng lên mãnh thú <@${partnerId}> ${quantity}x **${itemName}**. Lòng thành này đã giúp tình yêu thăng hoa +${bonusAffection} ❤️ điểm!` };
   }
 
   /**

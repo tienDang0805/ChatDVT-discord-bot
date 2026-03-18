@@ -50,8 +50,8 @@ export const data = new SlashCommandBuilder()
     .addSubcommand(subcmd => 
       subcmd
         .setName('gift')
-        .setDescription('Tặng vật phẩm trong túi đồ cho người ấy')
-        .addStringOption(opt => opt.setName('item_id').setDescription('ID vật phẩm (ví dụ: gacha1, ring...)').setRequired(true))
+        .setDescription('Tặng bất cứ thứ gì bạn muốn cho người ấy')
+        .addStringOption(opt => opt.setName('item_name').setDescription('Tên món quà (quần đùi, xe rác...)').setRequired(true))
         .addIntegerOption(opt => opt.setName('quantity').setDescription('Số lượng').setRequired(true))
     );
 
@@ -126,10 +126,10 @@ export async function execute(interaction: any) {
         await interaction.editReply(res.message);
       }
       else if (subcmd === 'gift') {
-        const itemId = interaction.options.getString('item_id', true);
+        const itemName = interaction.options.getString('item_name', true);
         const qty = interaction.options.getInteger('quantity', true);
         
-        const res = await CoupleService.gift(userId, itemId, qty);
+        const res = await CoupleService.gift(userId, itemName, qty);
         await interaction.editReply(res.message);
       }
     } catch (error: any) {
