@@ -54,7 +54,7 @@ export const PublicPortal = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % chibiImages.length);
-    }, 4000); // Đổi ảnh mỗi 4 giây
+    }, 2000); // Đổi ảnh mỗi 2 giây
     return () => clearInterval(interval);
   }, []);
 
