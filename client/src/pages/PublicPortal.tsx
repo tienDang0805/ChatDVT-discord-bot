@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Trophy, Star } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, Wallet } from 'lucide-react';
 
 export const PublicPortal = () => {
   const features = [
@@ -56,7 +56,7 @@ export const PublicPortal = () => {
 
           <div className="flex-1 space-y-6">
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
-              devtien.<span className="text-orange-500">blog</span>
+              devtiendang.<span className="text-orange-500">blog</span>
             </h1>
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
@@ -115,30 +115,77 @@ export const PublicPortal = () => {
         </div>
 
         {/* Goal Section */}
-        <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 md:p-8 mb-16 relative overflow-hidden">
+        <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden">
            <div className="flex flex-wrap justify-between items-center mb-6">
               <h3 className="text-orange-400 font-bold flex items-center gap-2 uppercase tracking-wider">
-                <Star size={18} /> Mục Tiêu Server
+                <Heart size={18} className="animate-pulse" /> Mục Tiêu Tháng: Nuôi Server (Bằng cơm mặn)
               </h3>
-              <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 px-4 py-2 rounded font-medium text-sm flex items-center gap-2 transition-all">
-                <Github size={16} /> Ủng hộ 1 Star trên Github
-              </a>
            </div>
            
            <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-5xl font-black text-orange-500">80</span>
-              <span className="text-slate-500 font-medium">/ 100 members active</span>
+              <span className="text-5xl font-black text-orange-500">140.000</span>
+              <span className="text-slate-500 font-medium">/ 300.000 VNĐ</span>
            </div>
 
            {/* Progress bar */}
            <div className="relative h-4 bg-slate-800 rounded-full overflow-hidden mt-4">
-              <div className="absolute top-0 left-0 h-full w-[80%] bg-gradient-to-r from-orange-600 to-orange-400 rounded-full"></div>
+              <div className="absolute top-0 left-0 h-full w-[45%] bg-gradient-to-r from-orange-600 to-orange-400 rounded-full"></div>
               {/* Glow dot */}
-              <div className="absolute top-1/2 -translate-y-1/2 left-[80%] -ml-2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_#f97316]"></div>
+              <div className="absolute top-1/2 -translate-y-1/2 left-[45%] -ml-2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_#f97316]"></div>
            </div>
            <div className="flex justify-between text-xs text-slate-600 mt-2 font-bold">
-              <span>0</span>
-              <span>100</span>
+              <span>0 đ</span>
+              <span>300.000 đ</span>
+           </div>
+        </div>
+
+        {/* Donate / Nuôi Em Section */}
+        <div className="mb-16">
+           <h3 className="text-xl font-bold flex items-center gap-2 tracking-wider text-slate-200 mb-6">
+             <Coffee size={24} className="text-amber-500" /> Donate Nuôi Dev
+           </h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* VCB */}
+              <div className="bg-[#131923] border border-slate-800 hover:border-green-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
+                 <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-green-500 relative overflow-hidden flex items-center justify-center">
+                    <img 
+                      src="/images/qr-vcb.jpg" 
+                      alt="Vietcombank QR" 
+                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                    />
+                    <div className="text-[10px] text-slate-400 text-center leading-tight">
+                      Vui lòng lưu ảnh<br/><span className="font-bold text-slate-600">qr-vcb.jpg</span><br/>vào client/public/images/
+                    </div>
+                 </div>
+                 <div>
+                    <h4 className="text-xl font-bold text-green-500 mb-1 flex items-center gap-2"><Wallet size={18} /> Vietcombank</h4>
+                    <p className="text-white font-mono text-xl mb-1 tracking-wider">YOUR_ACCOUNT_NO</p>
+                    <p className="text-slate-500 text-sm font-medium">Chủ TK: YOUR_NAME (Sửa code nhé sếp)</p>
+                 </div>
+              </div>
+
+              {/* MoMo */}
+              <div className="bg-[#131923] border border-slate-800 hover:border-pink-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
+                 <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-pink-500 relative overflow-hidden flex items-center justify-center">
+                    <img 
+                      src="/images/qr-momo.jpg" 
+                      alt="MoMo QR" 
+                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                    />
+                    <div className="text-[10px] text-slate-400 text-center leading-tight">
+                      Vui lòng lưu ảnh<br/><span className="font-bold text-slate-600">qr-momo.jpg</span><br/>vào client/public/images/
+                    </div>
+                 </div>
+                 <div>
+                    <h4 className="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2"><Wallet size={18} /> MoMo</h4>
+                    <p className="text-white font-mono text-xl mb-1 tracking-wider">YOUR_PHONE_NO</p>
+                    <p className="text-slate-500 text-sm font-medium">Chủ TK: YOUR_NAME</p>
+                 </div>
+              </div>
+
            </div>
         </div>
 
