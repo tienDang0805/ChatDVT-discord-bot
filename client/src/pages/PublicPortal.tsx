@@ -10,7 +10,7 @@ export const PublicPortal = () => {
       description: 'Chơi trắc nghiệm Real-time với câu hỏi do Bot ChatDVT gen bằng AI tự động.',
       icon: BrainCircuit,
       href: '/quiz',
-      author: 'Tiến Đặng'
+      author: 'Gấu bự (Tiến Đặng lúc sảng đá)'
     },
     {
       id: 'pets',
@@ -19,7 +19,7 @@ export const PublicPortal = () => {
       description: 'Giao diện xem danh sách Thú cưng đáng yêu, tiến hoá, và bảng xếp hạng Pet Server.',
       icon: Cat,
       href: '/petlandingpage',
-      author: 'ChatDVT Bot'
+      author: 'Lãng tử content ( Là Tiến Đặng lúc làm content)'
     },
     {
       id: 'tutien',
@@ -28,7 +28,7 @@ export const PublicPortal = () => {
       description: 'Hệ thống Tu luyện Cảnh giới, độ kiếp, pháp bảo và thế giới quan RPG Text-based.',
       icon: Sparkles,
       href: '/tutien',
-      author: 'Cộng đồng'
+      author: 'Phì Đế (Tiến Đặng lúc đói)'
     },
     {
       id: 'github',
@@ -37,7 +37,7 @@ export const PublicPortal = () => {
       description: 'Mã nguồn mở Discord Bot - Tích hợp AI, Game Economy, Leveling.',
       icon: Github,
       href: 'https://github.com/tienDang0805/ChatDVT-discord-bot',
-      author: 'Tiến Đặng',
+      author: 'Tiến Đặng (Lúc lập trình viên)',
       external: true
     }
   ];
@@ -56,15 +56,15 @@ export const PublicPortal = () => {
 
           <div className="flex-1 space-y-6">
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
-              vibe.<span className="text-orange-500">chatdvt.org</span>
+              devtien.<span className="text-orange-500">blog</span>
             </h1>
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
               <p className="text-xl font-bold text-slate-300">
-                Sẽ thế nào nếu cả server Discord vibe code cùng nhau?
+                Make by Tien Dang form 8D with love 
               </p>
               <p className="text-slate-400 leading-relaxed max-w-2xl">
-                Đây là cổng thông tin giải trí tổng hợp của Server ChatDVT. Mỗi thẻ bên dưới là một mini-game hoặc tiện ích web được tích hợp trực tiếp với Bot Discord. Không cần admin, cứ vibe thoải mái.
+                  Bot Discord Tiến Đặng Làm Cho mấy thằng Mọi 8D 
               </p>
             </div>
 
@@ -72,9 +72,9 @@ export const PublicPortal = () => {
               <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-[#1f2937] hover:bg-[#374151] border border-orange-500/50 text-orange-400 hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all">
                 <Rocket size={18} /> Tham gia Discord
               </a>
-              <a href="/rankings" className="flex items-center gap-2 bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 text-slate-300 px-6 py-3 rounded-md font-bold transition-all">
+              {/* <a href="/rankings" className="flex items-center gap-2 bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 text-slate-300 px-6 py-3 rounded-md font-bold transition-all">
                 <Trophy size={18} className="text-emerald-500" /> Bảng Xếp Hạng
-              </a>
+              </a> */}
               <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 rounded-md overflow-hidden transition-all group">
                 <div className="flex items-center gap-2 px-4 py-3 text-slate-300 font-bold border-r border-slate-700">
                   <Github size={18} /> STARS
