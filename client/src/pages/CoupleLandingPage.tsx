@@ -22,7 +22,11 @@ export function CoupleLandingPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/couple/top`)
+    fetch(`${API_BASE}/api/couple/top`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setTopCouples(data || []);

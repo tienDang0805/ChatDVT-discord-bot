@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { geminiService } from './gemini';
 
 const prisma = new PrismaClient();
 
@@ -87,25 +88,29 @@ export class CoupleService {
       }
     });
 
-    let dramaMessage = `Tuyệt vời! <@${senderId}> và <@${receiverId}> đã chính thức hẹn hò! 🎉💞`;
+    let dramaMessageStr = `Tuyệt vời! <@${senderId}> và <@${receiverId}> đã chính thức hẹn hò! 🎉💞`;
 
     if (couplesToBreak.length > 0) {
       let victims = [];
       for (const c of couplesToBreak) {
-        if (c.user1Id !== senderId && c.user1Id !== receiverId) victims.push(c.user1Id);
-        if (c.user2Id !== senderId && c.user2Id !== receiverId) victims.push(c.user2Id);
-        
-        // Cưỡng ép ly hôn
-        await prisma.couple.delete({ where: { id: c.id } });
+        if (c.user1Id !== senderId && c.user1Id !== receiverId) victims.push(`<@${c.user1Id}>`);
+        if (c.user2Id !== senderId && c.user2Id !== receiverId) victims.push(`<@${c.user2Id}>`);
       }
 
       if (victims.length > 0) {
-        const victimTags = victims.map(v => `<@${v}>`).join(' và ');
-        dramaMessage = `🚨 BÓC PHỐT CẮM SỪNG! 🚨\nCẩu nam nữ <@${senderId}> và <@${receiverId}> đã lén lút "cắm sừng" phũ phàng đá bay ${victimTags} ra chuồng gà!\nMột mối tình TRÀ XANH TIỂU TAM đã chính thức bắt đầu, quả báo sẽ đến sớm thôi! 🐕🐷`;
+        const victimTags = victims.join(' và ');
+        const sysPrompt = `Thưa hệ thống, người dùng <@${senderId}> (Kẻ cắm sừng) vừa mới cưa cẩm và "lên giường" thành công với <@${receiverId}> (Tiểu tam/Trà xanh), trong khi đó họ đã có vợ/chồng là ${victimTags} (Người bị cắm sừng). Hãy sinh ra một tin nhắn BÓC PHỐT chấn động để gửi lên cộng đồng Discord. Giọng điệu của một bà hàng xóm, gào thét, chỉ trích cẩu nam nữ và thương xót nạn nhân. Khuyến khích dùng các từ 'trà xanh', 'tiểu tam', 'ngoại tình'. Giữ đúng format tag <@ID>. Dài khoảng 3-5 câu. Đừng thêm câu dẫn, nói thẳng vào vấn đề.`;
+        
+        try {
+           const aiDrama = await geminiService.generateResponse('global', 'system', 'Hệ Thống', sysPrompt);
+           dramaMessageStr = `🚨 BÓC PHỐT CẮM SỪNG! 🚨\n${aiDrama.trim()}`;
+        } catch(e) {
+           dramaMessageStr = `🚨 BÓC PHỐT CẮM SỪNG! 🚨\nCẩu nam nữ <@${senderId}> và <@${receiverId}> đã lén lút rủ nhau đi Ngoại Tình, đạp lên nỗi đau khổ của ${victimTags}! Một mối tình TRÀ XANH TIỂU TAM đã chính thức chắp vá, cả server vào phỉ nhổ chúng đi! 🐕🐷`;
+        }
       }
     }
 
-    // Accept it
+    // Accept it - KHÔNG XOÁ cặp đôi cũ, cho phép cắm sừng/harem
     await prisma.$transaction([
       prisma.coupleProposal.updateMany({
         where: { OR: [{ senderId: senderId }, { receiverId: receiverId }, { senderId: receiverId }, { receiverId: senderId }] },
@@ -116,7 +121,7 @@ export class CoupleService {
       })
     ]);
 
-    return { success: true, message: dramaMessage };
+    return { success: true, message: dramaMessageStr };
   }
 
   /**
