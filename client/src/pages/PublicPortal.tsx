@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, Wallet } from 'lucide-react';
 
@@ -41,6 +42,21 @@ export const PublicPortal = () => {
       external: true
     }
   ];
+
+  const chibiImages = [
+    '/images/chibi-bear.jpg',
+    '/images/chibi-rain.jpg',
+    '/images/phide.jpg'
+  ];
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % chibiImages.length);
+    }, 4000); // Đổi ảnh mỗi 4 giây
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-slate-200 font-sans selection:bg-orange-500/30">
@@ -88,29 +104,25 @@ export const PublicPortal = () => {
 
           {/* Chibi Illustration Area */}
           <div className="lg:w-1/3 shrink-0 flex flex-col items-center">
-             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl group">
-                {/* 
-                  Sử dụng hai ảnh Chibi đổi qua lại khi hover để tạo hiệu ứng "Vibe".
-                  Bạn hãy nhớ chép 2 ảnh bạn vừa gửi vào thư mục client/public/images/
-                */}
-                <img 
-                  src="/images/chibi-bear.jpg" 
-                  alt="Tiến Đặng Chibi" 
-                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 group-hover:opacity-0"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-                <img 
-                  src="/images/chibi-rain.jpg" 
-                  alt="Tiến Đặng Vibe Code" 
-                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 group-hover:opacity-100"
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl">
+                {chibiImages.map((src, idx) => (
+                  <img 
+                    key={src}
+                    src={src} 
+                    alt={`Tiến Đặng Vibe ${idx}`} 
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+                      idx === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ))}
+                
                 {/* Fallback box nếu user chưa upload ảnh */}
                 <div className="absolute inset-0 -z-10 bg-[#161b22] flex items-center justify-center text-slate-600 text-sm text-center p-4">
-                  (Vui lòng lưu 2 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>và chibi-rain.jpg)
+                  (Vui lòng lưu 3 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>chibi-rain.jpg<br/>phide.jpg)
                 </div>
              </div>
-             <p className="mt-4 text-sm text-slate-500 font-medium italic animate-pulse">Hover để đổi vibe...</p>
+             <p className="mt-4 text-sm text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
           </div>
         </div>
 
