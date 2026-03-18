@@ -36,7 +36,7 @@ export const data = new SlashCommandBuilder()
       subcmd
         .setName('breakup')
         .setDescription('Chia tay / Ly hôn')
-    ),
+    );
 
 export async function execute(interaction: any) {
     if (!interaction.isChatInputCommand()) return;
