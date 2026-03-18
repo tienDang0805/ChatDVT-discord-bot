@@ -170,6 +170,7 @@ export class WebQuizServiceClass {
      const room = this.rooms.get(roomId);
      if (!room) return false;
      if (room.status !== 'waiting' && room.status !== 'error' && room.status !== 'finished') return false;
+     if (room.creatorId !== playerId) return false;
 
      room.status = 'generating';
      room.errorMessage = undefined;

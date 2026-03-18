@@ -188,12 +188,16 @@ export function WebQuizRoom() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Chủ đề: {gameState.topic}</h1>
           <p className="text-slate-500 dark:text-slate-400 mb-8">Rủ bạn bè Web Quiz cùng nhau tỉ thí trí tuệ!</p>
           
-          <button 
-             onClick={handleStart}
-             className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-2xl font-bold text-lg shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2 mx-auto w-full md:w-auto"
-          >
-             <Play size={20} fill="currentColor" /> Bắt đầu game ngay
-          </button>
+          {isCreator ? (
+            <button 
+               onClick={handleStart}
+               className="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-2xl font-bold text-lg shadow-lg shadow-primary/30 transition-all flex items-center justify-center gap-2 mx-auto w-full md:w-auto"
+            >
+               <Play size={20} fill="currentColor" /> Bắt đầu game ngay
+            </button>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400 italic">Chờ chủ phòng bấm bắt đầu...</p>
+          )}
         </div>
 
         <div className="bg-white dark:bg-surface rounded-3xl p-6 border border-slate-200 dark:border-slate-800">
