@@ -1,0 +1,251 @@
+import { geminiService } from './gemini';
+
+export interface IWebQuizQuestion {
+  question: string;
+  options: { A: string; B: string; C: string; D: string };
+  correct_answer: "A" | "B" | "C" | "D";
+  explanation: string;
+}
+
+export interface IWebQuizPlayer {
+  id: string; // Secret ID like UUID for scoring
+  name: string; // Display name
+  score: number;
+}
+
+export interface IWebQuizState {
+  id: string; // Room ID
+  creatorName: string;
+  topic: string;
+  difficulty: string;
+  numQuestions: number;
+  status: 'waiting' | 'generating' | 'showing_question' | 'showing_answer' | 'finished';
+  players: Record<string, IWebQuizPlayer>; // Key: playerId
+  questions: IWebQuizQuestion[];
+  currentQuestionIndex: number;
+  timer: number;
+  clients: any[]; // express Response objects for SSE
+  answersThisRound: Record<string, "A" | "B" | "C" | "D">; // Key: playerId
+}
+
+export class WebQuizServiceClass {
+  private rooms: Map<string, IWebQuizState> = new Map();
+
+  private generateId() {
+    return Math.random().toString(36).substring(2, 9);
+  }
+
+  public getPublicRooms() {
+    const list = [];
+    for (const [id, room] of this.rooms.entries()) {
+      if (room.status === 'waiting' || room.status === 'generating') {
+        list.push({
+          id,
+          creator: room.creatorName,
+          topic: room.topic,
+          difficulty: room.difficulty,
+          numQuestions: room.numQuestions,
+          playerCount: Object.keys(room.players).length
+        });
+      }
+    }
+    return list;
+  }
+
+  public createRoom(creatorName: string, topic: string, difficulty: string, numQuestions: number) {
+    const roomId = this.generateId();
+    const playerId = this.generateId();
+    
+    const room: IWebQuizState = {
+      id: roomId,
+      creatorName,
+      topic,
+      difficulty,
+      numQuestions: Math.min(20, Math.max(2, numQuestions)),
+      status: 'waiting',
+      players: { [playerId]: { id: playerId, name: creatorName, score: 0 } },
+      questions: [],
+      currentQuestionIndex: -1,
+      timer: 0,
+      clients: [],
+      answersThisRound: {}
+    };
+
+    this.rooms.set(roomId, room);
+    return { roomId, playerId };
+  }
+
+  public joinRoom(roomId: string, playerName: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) return { success: false, message: 'Phòng không tồn tại!' };
+    if (room.status !== 'waiting') return { success: false, message: 'Phòng đã bắt đầu!' };
+
+    const playerId = this.generateId();
+    room.players[playerId] = { id: playerId, name: playerName, score: 0 };
+    
+    this.broadcast(room, { type: 'players_update', players: Object.values(room.players) });
+    return { success: true, playerId };
+  }
+
+  public addClient(roomId: string, res: any) {
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+    room.clients.push(res);
+    
+    // Setup SSE connection keeping alive
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
+    });
+    res.flushHeaders?.();
+
+    // Send initial state
+    res.write(`data: ${JSON.stringify(this.getRoomPublicState(room))}\n\n`);
+
+    res.on('close', () => {
+      room.clients = room.clients.filter(c => c !== res);
+    });
+  }
+
+  public broadcast(room: IWebQuizState, data: any) {
+    const payload = `data: ${JSON.stringify(data)}\n\n`;
+    for (const c of room.clients) {
+      c.write(payload);
+    }
+  }
+
+  private getRoomPublicState(room: IWebQuizState) {
+    let currentQuestion = null;
+    if (room.status === 'showing_question' || room.status === 'showing_answer') {
+        const q = room.questions[room.currentQuestionIndex];
+        currentQuestion = {
+           question: q.question,
+           options: q.options,
+           // Hide correct answer unless showing_answer
+           correct_answer: room.status === 'showing_answer' ? q.correct_answer : null,
+           explanation: room.status === 'showing_answer' ? q.explanation : null
+        };
+    }
+
+    return {
+       type: 'sync',
+       state: {
+         id: room.id,
+         topic: room.topic,
+         status: room.status,
+         timer: room.timer,
+         currentQuestionIndex: room.currentQuestionIndex,
+         totalQuestions: room.numQuestions,
+         players: Object.values(room.players).sort((a,b)=>b.score - a.score),
+         currentQuestion,
+         answersSubmittedCount: Object.keys(room.answersThisRound).length
+       }
+    };
+  }
+
+  public async startRoom(roomId: string, playerId: string) {
+     const room = this.rooms.get(roomId);
+     if (!room) return false;
+     if (room.status !== 'waiting') return false;
+
+     room.status = 'generating';
+     this.broadcast(room, this.getRoomPublicState(room));
+
+     try {
+       const prompt = `Bạn là chuyên gia Quiz. Tạo ${room.numQuestions} câu hỏi trắc nghiệm tiếng Việt về "${room.topic}". Mức độ: ${room.difficulty}.
+        Giọng văn: Hài hước, troll.
+        Trả về ĐÚNG VÀ CHỈ MỘT mảng JSON hợp lệ, KHÔNG CÓ THẺ MARKDOWN. Phải có định dạng:
+        [
+          {
+            "question": "Câu hỏi?",
+            "options": { "A": "...", "B": "...", "C": "...", "D": "..." },
+            "correct_answer": "A",
+            "explanation": "Giải thích hài hước ngắn gọn."
+          }
+        ]`;
+       // Call Gemini. For WebQuiz we parse it manually from generateResponse since generateJSON might fail on large tokens 
+       // but wait, generateJSON is in geminiService usually. We'll use generateJSON.
+       const questions = await geminiService.generateJSON<IWebQuizQuestion[]>(prompt);
+       if (!questions || questions.length === 0) throw new Error("No questions generated");
+
+       room.questions = questions;
+       this.gameLoop(room); // Start the engine asynchronous
+       return true;
+     } catch (err) {
+       console.error(err);
+       room.status = 'waiting';
+       this.broadcast(room, { type: 'error', message: "Không thể nhận diện câu hỏi từ AI, hãy thử lại." });
+       this.broadcast(room, this.getRoomPublicState(room));
+       return false;
+     }
+  }
+
+  private async sleep(ms: number) {
+     return new Promise(r => setTimeout(r, ms));
+  }
+
+  private async gameLoop(room: IWebQuizState) {
+      for (let i = 0; i < room.questions.length; i++) {
+         room.currentQuestionIndex = i;
+         room.status = 'showing_question';
+         room.timer = 15; // 15 seconds to answer
+         room.answersThisRound = {};
+         this.broadcast(room, this.getRoomPublicState(room));
+
+         while (room.timer > 0) {
+            await this.sleep(1000);
+            room.timer--;
+            // Broadcast every second
+            this.broadcast(room, { type: 'timer', timer: room.timer });
+
+            // If everyone answered, stop timer early
+            if (Object.keys(room.answersThisRound).length === Object.keys(room.players).length) {
+               break; 
+            }
+         }
+
+         // Show Answer Phase
+         room.status = 'showing_answer';
+         room.timer = 7; // 7 seconds to show answer and leaderboard
+         const correctOpt = room.questions[i].correct_answer;
+
+         // Calculate scores
+         for (const [pId, ans] of Object.entries(room.answersThisRound)) {
+             if (ans === correctOpt) {
+                 room.players[pId].score += 100; // Plus 100 per correct
+             }
+         }
+
+         this.broadcast(room, this.getRoomPublicState(room));
+
+         while(room.timer > 0) {
+             await this.sleep(1000);
+             room.timer--;
+             this.broadcast(room, { type: 'timer', timer: room.timer });
+         }
+      }
+
+      // Finish
+      room.status = 'finished';
+      this.broadcast(room, this.getRoomPublicState(room));
+
+      // Cleanup room after 2 minutes
+      setTimeout(() => {
+          this.rooms.delete(room.id);
+      }, 120 * 1000);
+  }
+
+  public submitAnswer(roomId: string, playerId: string, answer: "A"|"B"|"C"|"D") {
+      const room = this.rooms.get(roomId);
+      if (!room || room.status !== 'showing_question') return { success: false };
+      if (!room.players[playerId]) return { success: false };
+      if (room.answersThisRound[playerId]) return { success: false }; // Already answered
+
+      room.answersThisRound[playerId] = answer;
+      this.broadcast(room, { type: 'player_answered', answersSubmittedCount: Object.keys(room.answersThisRound).length });
+      return { success: true };
+  }
+}
+
+export const webQuizService = new WebQuizServiceClass();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, Menu, X, Heart } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, Menu, X, Heart, BrainCircuit } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import api from '../api';
@@ -139,6 +139,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/pets" icon={Bot} label="Pet Hub" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/couple" icon={Heart} label="Hệ thống Cặp Đôi" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/quiz" icon={BrainCircuit} label="Web Quiz (Public)" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />

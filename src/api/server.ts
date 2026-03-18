@@ -1030,6 +1030,44 @@ app.get('/api/couple/:userId', async (req, res) => {
     }
 });
 
+// --- Web Quiz API ---
+import { webQuizService } from '../bot/services/webQuiz';
+
+app.get('/api/web-quiz/rooms', (req, res) => {
+    res.json(webQuizService.getPublicRooms());
+});
+
+app.post('/api/web-quiz/create', (req, res) => {
+    const { creatorName, topic, difficulty, numQuestions } = req.body;
+    if (!creatorName || !topic) return res.status(400).json({ error: 'Missing info' });
+    const result = webQuizService.createRoom(creatorName, topic, difficulty || 'Dễ', numQuestions || 5);
+    res.json(result);
+});
+
+app.post('/api/web-quiz/join', (req, res) => {
+    const { roomId, playerName } = req.body;
+    if (!roomId || !playerName) return res.status(400).json({ error: 'Missing info' });
+    const result = webQuizService.joinRoom(roomId, playerName);
+    if (!result.success) return res.status(400).json(result);
+    res.json(result);
+});
+
+app.post('/api/web-quiz/:roomId/start', async (req, res) => {
+    const { playerId } = req.body;
+    const started = await webQuizService.startRoom(req.params.roomId, playerId);
+    res.json({ success: started });
+});
+
+app.get('/api/web-quiz/:roomId/stream', (req, res) => {
+    webQuizService.addClient(req.params.roomId, res);
+});
+
+app.post('/api/web-quiz/:roomId/answer', (req, res) => {
+    const { playerId, answer } = req.body;
+    const result = webQuizService.submitAnswer(req.params.roomId, playerId, answer);
+    res.json(result);
+});
+
 // Serve Static Frontend (MUST BE LAST)
 app.use(express.static(CLIENT_BUILD_PATH));
 
