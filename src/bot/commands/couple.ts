@@ -36,6 +36,23 @@ export const data = new SlashCommandBuilder()
       subcmd
         .setName('breakup')
         .setDescription('Chia tay / Ly hôn')
+    )
+    .addSubcommand(subcmd => 
+      subcmd
+        .setName('marry')
+        .setDescription('Tổ chức đám cưới rình rang')
+    )
+    .addSubcommand(subcmd => 
+      subcmd
+        .setName('make_poop')
+        .setDescription('2 vợ chồng cùng nhau rặn 💩')
+    )
+    .addSubcommand(subcmd => 
+      subcmd
+        .setName('gift')
+        .setDescription('Tặng vật phẩm trong túi đồ cho người ấy')
+        .addStringOption(opt => opt.setName('item_id').setDescription('ID vật phẩm (ví dụ: gacha1, ring...)').setRequired(true))
+        .addIntegerOption(opt => opt.setName('quantity').setDescription('Số lượng').setRequired(true))
     );
 
 export async function execute(interaction: any) {
@@ -92,6 +109,27 @@ export async function execute(interaction: any) {
       }
       else if (subcmd === 'breakup') {
         const res = await CoupleService.breakup(userId);
+        await interaction.editReply(res.message);
+      }
+      else if (subcmd === 'marry') {
+        const res = await CoupleService.marry(userId);
+        
+        const embed = new EmbedBuilder()
+          .setColor(res.success ? '#ff0055' : '#4a4e69')
+          .setTitle('💒 Tổ Chức Lễ Cưới 💒')
+          .setDescription(res.message);
+          
+        await interaction.editReply({ embeds: [embed] });
+      }
+      else if (subcmd === 'make_poop') {
+        const res = await CoupleService.makePoop(userId);
+        await interaction.editReply(res.message);
+      }
+      else if (subcmd === 'gift') {
+        const itemId = interaction.options.getString('item_id', true);
+        const qty = interaction.options.getInteger('quantity', true);
+        
+        const res = await CoupleService.gift(userId, itemId, qty);
         await interaction.editReply(res.message);
       }
     } catch (error: any) {

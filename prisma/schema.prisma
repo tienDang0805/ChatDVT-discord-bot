@@ -165,6 +165,7 @@ model Couple {
   level     Int      @default(1)
   status    String   @default("dating") // dating, married
   marriedAt DateTime?
+  poopCount Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

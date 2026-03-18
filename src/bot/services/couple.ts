@@ -21,6 +21,7 @@ export class CoupleService {
         affection: true,
         status: true,
         marriedAt: true,
+        poopCount: true,
         createdAt: true,
       }
     });
@@ -130,32 +131,99 @@ export class CoupleService {
       return { success: false, message: 'Bạn FA à? Kiếm người yêu đi rồi mới tương tác được nhé.' };
     }
 
-    // Check interaction cooldown (simple logic: using updatedAt as last interact time if we want to be lazy, 
-    // but better to just let them spam a bit or add a specific field. 
-    // Let's just increase affection directly for fun or add a daily limit later).
-    // Let's just allow unlimited interactions for now to show off the system quickly.
-    
+    // Cho phép tương tác tăng điểm
     let newAffection = couple.affection + AFFECTION_PER_INTERACT;
-    let newStatus = couple.status;
-    let marriedAt = couple.marriedAt;
     let message = `Tình cảm đi lên! ❤️ (Điểm: ${newAffection})`;
-
-    if (couple.status === 'dating' && newAffection >= MAX_AFFECTION_FOR_MARRIAGE) {
-      newStatus = 'married';
-      marriedAt = new Date();
-      message = `🎊 CHÚC MỪNG! Tình cảm đã chín muồi. Hai bạn đã CHÍNH THỨC TRỞ THÀNH VỢ CHỒNG! 💍 (Điểm: ${newAffection})`;
-    }
 
     await prisma.couple.update({
       where: { id: couple.id },
-      data: {
-        affection: newAffection,
-        status: newStatus,
-        marriedAt
-      }
+      data: { affection: newAffection }
     });
 
     return { success: true, message };
+  }
+
+  /**
+   * Marry (Lễ cưới)
+   */
+  static async marry(userId: string) {
+    const couple = await prisma.couple.findFirst({
+      where: { OR: [{ user1Id: userId }, { user2Id: userId }] }
+    });
+
+    if (!couple) return { success: false, message: 'Bạn chưa có người yêu mà đòi cưới ai??' };
+    if (couple.status === 'married') return { success: false, message: 'Hai người đã cưới nhau rồi mà, hay định cưới vợ bé?' };
+    if (couple.affection < 1000) return { success: false, message: `Trời ơi, yêu nhau chưa đủ đậm sâu! Cần 1000 điểm tình cảm (bạn đang có ${couple.affection}) mới rước nàng về dinh được.` };
+
+    // Tự động trừ tiền hoặc phí nếu có thể (ở đây cho cưới free nhưng hoành tráng)
+    // Cập nhật trạng thái
+    await prisma.couple.update({
+      where: { id: couple.id },
+      data: { status: 'married', marriedAt: new Date() }
+    });
+
+    return { success: true, message: `🎊 CHÚC MỪNG! Tình cảm đã chín muồi. Trăm năm hạnh phúc nhé 💍` };
+  }
+
+  /**
+   * Đẻ Cứt (Make Poop)
+   */
+  static async makePoop(userId: string) {
+    const couple = await prisma.couple.findFirst({
+      where: { OR: [{ user1Id: userId }, { user2Id: userId }] }
+    });
+
+    if (!couple) return { success: false, message: 'Chưa có bồ sao rặn cứt chung được?' };
+    if (couple.status !== 'married') return { success: false, message: 'Phải cưới nhau đàng hoàng mới được rặn 💩 nhé!' };
+    if (couple.affection < 2000) return { success: false, message: `Tình cảm nhạt nhoà rặn không ra nổi 💩. Cần 2000 điểm tình duyên! (Đang có ${couple.affection})` };
+
+    await prisma.couple.update({
+      where: { id: couple.id },
+      data: { poopCount: couple.poopCount + 1 }
+    });
+
+    return { success: true, message: `💦 PỌT! Chúc mừng hai vợ chồng vừa còng lưng rặn ra thêm 1 cục cứt 💩! (Tổng cộng: ${couple.poopCount + 1})` };
+  }
+
+  /**
+   * Tặng Quà (Gift)
+   */
+  static async gift(userId: string, itemId: string, quantity: number) {
+    const couple = await prisma.couple.findFirst({
+      where: { OR: [{ user1Id: userId }, { user2Id: userId }] }
+    });
+
+    if (!couple) return { success: false, message: 'Đang FA mà mang quà tặng ai?' };
+
+    // Trừ item của sender
+    const itemInfo = await prisma.inventoryItem.findFirst({
+      where: { userId, itemId }
+    });
+
+    if (!itemInfo || itemInfo.quantity < quantity) {
+      return { success: false, message: 'Bạn đâu có đủ món quà này trong hành lý?' };
+    }
+
+    if (itemInfo.quantity === quantity) {
+      await prisma.inventoryItem.delete({ where: { id: itemInfo.id } });
+    } else {
+      await prisma.inventoryItem.update({
+        where: { id: itemInfo.id },
+        data: { quantity: itemInfo.quantity - quantity }
+      });
+    }
+
+    // Tăng nhiều điểm tình cảm hơn (VD: 50 điểm / món)
+    const bonusAffection = 50 * quantity;
+    const newAffection = couple.affection + bonusAffection;
+
+    await prisma.couple.update({
+      where: { id: couple.id },
+      data: { affection: newAffection }
+    });
+
+    const partnerId = couple.user1Id === userId ? couple.user2Id : couple.user1Id;
+    return { success: true, message: `🎁 Bạn vừa dâng lên mãnh thú <@${partnerId}> ${quantity}x **${itemInfo.name}**. Điểm tình cảm tăng vút +${bonusAffection} ❤️!` };
   }
 
   /**
@@ -176,7 +244,7 @@ export class CoupleService {
     return {
       success: true,
       data: couple,
-      message: `Tình trạng: ${statusText}\nNửa kia: <@${partnerId}>\nĐiểm tình cảm: ${couple.affection}`
+      message: `Tình trạng: ${statusText}\nNửa kia: <@${partnerId}>\nĐiểm tình cảm: ${couple.affection}\nSố cục 💩: ${couple.poopCount}`
     };
   }
 

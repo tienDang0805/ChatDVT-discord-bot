@@ -14,6 +14,7 @@ interface CoupleData {
   level: number;
   status: 'dating' | 'married';
   marriedAt: string | null;
+  poopCount: number;
 }
 
 export function CoupleLandingPage() {
@@ -104,7 +105,11 @@ export function CoupleLandingPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-gradient-to-r from-white to-rose-50 rounded-2xl p-5 sm:p-6 shadow-sm border border-rose-100 flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow cursor-default group"
+                  className={`rounded-2xl p-5 sm:p-6 shadow-sm border flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-md transition-shadow cursor-default group ${
+                    couple.status === 'married'
+                      ? 'bg-gradient-to-r from-pink-100 via-rose-200 to-amber-100 border-amber-300 shadow-[0_0_15px_rgba(251,191,36,0.5)] scale-[1.02]'
+                      : 'bg-gradient-to-r from-white to-rose-50 border-rose-100'
+                  }`}
                 >
                   <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="flex -space-x-4">
@@ -123,13 +128,18 @@ export function CoupleLandingPage() {
                       </h3>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                         {couple.status === 'married' ? (
-                          <span className="text-pink-600 font-semibold flex items-center gap-1">💍 Vợ Chồng</span>
+                          <span className="text-amber-600 font-extrabold flex items-center gap-1 drop-shadow-sm">💍 Vợ Chồng</span>
                         ) : (
                           <span className="text-blue-500 font-semibold">💑 Đang hẹn hò</span>
                         )}
                         {couple.marriedAt && (
                           <span className="flex items-center gap-1 ml-2 text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
                             <CalendarHeart size={12} /> {new Date(couple.marriedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                        {couple.poopCount > 0 && (
+                          <span className="flex items-center gap-1 ml-2 text-xs bg-amber-900/80 text-white px-2 py-0.5 rounded-full shadow-sm" title={`Đã rặn ra ${couple.poopCount} cục cứt`}>
+                            💩 x {couple.poopCount}
                           </span>
                         )}
                       </p>
