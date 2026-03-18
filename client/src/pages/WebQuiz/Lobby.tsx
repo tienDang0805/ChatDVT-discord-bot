@@ -222,33 +222,25 @@ export function WebQuizLobby() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Thời gian (giây)</label>
-                  <select 
+                  <input 
+                    type="number" min={5} max={60}
                     value={timeLimitSecs}
                     onChange={(e) => setTimeLimitSecs(Number(e.target.value))}
                     className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none"
-                  >
-                    <option value={10}>10 giây</option>
-                    <option value={15}>15 giây</option>
-                    <option value={20}>20 giây</option>
-                    <option value={30}>30 giây</option>
-                    <option value={45}>45 giây</option>
-                    <option value={60}>60 giây</option>
-                  </select>
+                    placeholder="VD: 15"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Giọng văn</label>
-                  <select 
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Giọng văn Chủ đề</label>
+                  <input 
+                    type="text"
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
+                    placeholder="VD: Hài hước, cà khịa, Gen Z..."
                     className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none flex-1 truncate"
-                  >
-                    <option value="Hài hước, mở mang kiến thức">Hài hước</option>
-                    <option value="Nghiêm túc, học thuật">Nghiêm túc</option>
-                    <option value="Xéo xắt, cà khịa chửi bậy">Cà khịa</option>
-                    <option value="Tuổi teen, ngôn ngữ Gen Z">Gen Z</option>
-                    <option value="Lãng mạn, sến súa ngôn tình">Ngôn tình</option>
-                    <option value="Kinh dị, rùng rợn">Kinh dị</option>
-                  </select>
+                    required
+                  />
                 </div>
               </div>
               <div>
