@@ -40,6 +40,14 @@ export const PublicPortal = () => {
       href: 'https://github.com/tienDang0805/ChatDVT-discord-bot',
       author: 'Tiến Đặng (Lúc lập trình viên)',
       external: true
+    },
+    {
+      id: 'food-wheel',
+      number: '05',
+      title: 'Hôm Nay Ăn Gì?',
+      description: 'Thầy AI phong thuỷ chọn giúp bạn. 5 món ăn, 1 vòng quay, vô tri hoàn toàn.',
+      icon: Coffee,
+      href: '/food-wheel',
     }
   ];
 

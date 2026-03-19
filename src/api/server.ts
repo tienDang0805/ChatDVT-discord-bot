@@ -49,7 +49,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1081,6 +1081,47 @@ app.post('/api/web-quiz/:roomId/answer', (req, res) => {
     const { playerId, answer } = req.body;
     const result = webQuizService.submitAnswer(req.params.roomId, playerId, answer);
     res.json(result);
+});
+
+// --- Food Wheel API (Phong Thuy) ---
+app.post('/api/food-wheel', async (req, res) => {
+    const { GoogleGenerativeAI } = await import('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
+
+    const prompt = `Hôm nay là ${today}. Bạn là một thầy phong thuỷ ẩm thực vô tri nhưng rất hài hước và tự tin.
+Hãy đề xuất 5 món ăn cho hôm nay theo phong thuỷ ngày này. Cụ thể:
+- 3 món ăn dân dã Việt Nam bình thường (ví dụ: cơm nhà, bún bò, bánh mì thịt...)
+- 1 món ăn sang mồm / trải nghiệm mới (sushi, steak, fondue...)
+- 1 món ăn vô lý bất thường hoàn toàn (kiểu như "cháo thuyền không cạo vảy", "trứng chiên với đá cục", "mì tôm sống nhúng nước mắm"...)
+
+Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng format sau:
+{
+  "intro": "Câu giới thiệu ngắn hài hước theo phong thuỷ cho ngày hôm nay (1-2 câu)",
+  "foods": [
+    {
+      "name": "Tên món ăn",
+      "emoji": "1 emoji đại diện",
+      "type": "normal|fancy|weird",
+      "phongThuy": "Lý do phong thuỷ hài hước tại sao nên ăn món này hôm nay (1 câu)",
+      "description": "Mô tả món ăn ngắn (1 câu)",
+      "luckyAdvice": "Lời khuyên về sức khoẻ, may mắn khi ăn món này (1 câu vui vẻ)"
+    }
+  ]
+}`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim();
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        res.json(data);
+    } catch (err) {
+        console.error('Food wheel error:', err);
+        res.status(500).json({ error: 'AI đang ngủ, thầy phong thuỷ mất điện rồi!' });
+    }
 });
 
 // Serve Static Frontend (MUST BE LAST)

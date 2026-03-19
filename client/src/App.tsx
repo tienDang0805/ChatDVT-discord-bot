@@ -18,6 +18,7 @@ import TuTienGame from './pages/TuTienGame';
 import { WebQuizLobby } from './pages/WebQuiz/Lobby';
 import { WebQuizRoom } from './pages/WebQuiz/Room';
 import { PublicPortal } from './pages/PublicPortal';
+import FoodWheel from './pages/FoodWheel';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -36,6 +37,7 @@ function App() {
     <Routes>
        <Route path="/" element={<PublicPortal />} />
        <Route path="/chatDVT" element={<PublicPortal />} />
+       <Route path="/food-wheel" element={<FoodWheel />} />
        <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />
