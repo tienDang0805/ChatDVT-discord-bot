@@ -1,17 +1,23 @@
-import { Play, Pause, SkipForward, SkipBack, Music2 } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music2, X } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue } = useMusicPlayer();
+  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue } = useMusicPlayer();
   const navigate = useNavigate();
 
   if (!currentSong && queue.length === 0) return null;
 
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) togglePlay();
+    setQueue([]);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] px-4 pb-4 pointer-events-none">
       <div 
-        className="max-w-lg mx-auto bg-slate-900/90 backdrop-blur-md border border-slate-700/50 p-3 rounded-2xl shadow-2xl flex items-center justify-between pointer-events-auto transition-transform duration-300 hover:-translate-y-1"
+        className="max-w-lg mx-auto bg-slate-900/95 backdrop-blur-xl border border-slate-700/50 p-2 pr-4 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] flex items-center justify-between pointer-events-auto transition-transform duration-300 hover:-translate-y-1"
       >
         <div 
            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer group"
@@ -55,25 +61,35 @@ export default function GlobalMusicPlayer() {
            <button 
              onClick={prevSong} 
              disabled={!currentSong}
-             className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+             className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
            >
-             <SkipBack size={20} />
+             <SkipBack size={18} />
            </button>
            
            <button 
              onClick={togglePlay}
              disabled={!currentSong}
-             className="w-12 h-12 rounded-full flex items-center justify-center text-slate-900 bg-white hover:bg-slate-200 hover:scale-105 transition-all disabled:opacity-50"
+             className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-slate-900 bg-white hover:bg-slate-200 hover:scale-105 transition-all disabled:opacity-50"
            >
-             {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+             {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-1" />}
            </button>
            
            <button 
              onClick={nextSong}
              disabled={!currentSong}
-             className="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+             className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50 mr-2"
            >
-             <SkipForward size={20} />
+             <SkipForward size={18} />
+           </button>
+
+           {/* Close / Hide Player */}
+           <div className="w-px h-6 bg-slate-800 mx-1"></div>
+           <button 
+             onClick={handleClose}
+             className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+             title="Tắt nhạc & Đóng Trạm"
+           >
+             <X size={18} />
            </button>
         </div>
       </div>
