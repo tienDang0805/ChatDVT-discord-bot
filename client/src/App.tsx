@@ -19,6 +19,7 @@ import { WebQuizLobby } from './pages/WebQuiz/Lobby';
 import { WebQuizRoom } from './pages/WebQuiz/Room';
 import { PublicPortal } from './pages/PublicPortal';
 import FoodWheel from './pages/FoodWheel';
+import ExcuseGenerator from './pages/ExcuseGenerator';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -38,6 +39,7 @@ function App() {
        <Route path="/" element={<PublicPortal />} />
        <Route path="/chatDVT" element={<PublicPortal />} />
        <Route path="/food-wheel" element={<FoodWheel />} />
+       <Route path="/excuse-generator" element={<ExcuseGenerator />} />
        <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />

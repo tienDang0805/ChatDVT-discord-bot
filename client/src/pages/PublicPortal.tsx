@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, Wallet, X } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Wallet, X } from 'lucide-react';
 
 export const PublicPortal = () => {
   const features = [
@@ -50,6 +50,15 @@ export const PublicPortal = () => {
       href: '/food-wheel',
       author: 'Tiến Đặng (Lúc k biết ăn gì)',
 
+    },
+    {
+      id: 'excuse-generator',
+      number: '06',
+      title: 'Tạo Lý Do Nghỉ Phép',
+      description: 'Máy phát điện lý do nghỉ phép vô tri, giúp bạn dõng dạc xin sếp nghỉ hưu non.',
+      icon: AlertTriangle,
+      href: '/excuse-generator',
+      author: 'ChatDVT (Lúc lười biếng)',
     }
   ];
 

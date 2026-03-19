@@ -51,7 +51,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1122,6 +1122,35 @@ Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng form
     } catch (err) {
         console.error('Food wheel error:', err);
         res.status(500).json({ error: 'AI đang ngủ, thầy phong thuỷ mất điện rồi!' });
+    }
+});
+
+// --- Excuse Generator API ---
+app.post('/api/excuse-generator', async (req, res) => {
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+
+        const prompt = `Bạn là một cỗ máy tạo lý do xin nghỉ phép vô tri, hài hước và lầy lội nhất hành tinh.
+Hãy sáng tác 1 lý do xin nghỉ phép ngẫu nhiên CỰC KỲ VÔ LÝ nhưng được viết một cách RẤT NGHIÊM TÚC.
+Tránh các lý do quá ốm đau bệnh tật thông thường. Hãy bịa ra những tình huống dở khóc dở cười (ví dụ: bị alien bắt cóc, chó cắn mất dép không đi làm được, kẹt thang máy với một con gián...).
+
+Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng định dạng sau:
+{
+  "excuse": "Lý do ngắn gọn nhưng đầy tính thuyết phục (1 câu)",
+  "bossReaction": "Phản ứng dự kiến của sếp khi nghe lý do này (1 câu hài hước)",
+  "successRate": "Một tỷ lệ phần trăm (ví dụ: '12%', '-50%', '99.9%')",
+  "template": "Một bức email/tin nhắn mẫu dài 3-4 câu để copy gửi sếp, viết theo giọng điệu nghiêm túc một cách hài hước"
+}`;
+
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().trim();
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        res.json(data);
+    } catch (err) {
+        console.error('Excuse generator error:', err);
+        res.status(500).json({ error: 'Cỗ máy bị hỏng gạch, sếp bắt đi làm rồi!' });
     }
 });
 
