@@ -44,9 +44,9 @@ export const PublicPortal = () => {
   ];
 
   const chibiImages = [
-    '/images/chibi-bear.jpg',
-    '/images/chibi-rain.jpg',
-    '/images/phide.jpg'
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg',
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-rain.jpg',
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/phide.jpg'
   ];
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -162,7 +162,7 @@ export const PublicPortal = () => {
               <div className="bg-[#131923] border border-slate-800 hover:border-green-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
                  <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-green-500 relative overflow-hidden flex items-center justify-center">
                     <img 
-                      src="/images/qr-vcb.jpg" 
+                      src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-vcb.jpg" 
                       alt="Vietcombank QR" 
                       className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
                       onError={(e) => { e.currentTarget.style.display = 'none'; }} 
@@ -182,7 +182,7 @@ export const PublicPortal = () => {
               <div className="bg-[#131923] border border-slate-800 hover:border-pink-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
                  <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-pink-500 relative overflow-hidden flex items-center justify-center">
                     <img 
-                      src="/images/qr-momo.jpg" 
+                      src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-momo.jpg" 
                       alt="MoMo QR" 
                       className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
                       onError={(e) => { e.currentTarget.style.display = 'none'; }} 
