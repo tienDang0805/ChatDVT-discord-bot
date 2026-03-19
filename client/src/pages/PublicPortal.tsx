@@ -99,13 +99,11 @@ export const PublicPortal = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 pt-4">
-              <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-[#1f2937] hover:bg-[#374151] border border-orange-500/50 text-orange-400 hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all">
                 <Rocket size={18} /> Tham gia Discord
               </a>
               {/* <a href="/rankings" className="flex items-center gap-2 bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 text-slate-300 px-6 py-3 rounded-md font-bold transition-all">
                 <Trophy size={18} className="text-emerald-500" /> Bảng Xếp Hạng
               </a> */}
-              <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 rounded-md overflow-hidden transition-all group">
                 <div className="flex items-center gap-2 px-4 py-3 text-slate-300 font-bold border-r border-slate-700">
                   <Github size={18} /> STARS
                 </div>
@@ -237,7 +235,6 @@ export const PublicPortal = () => {
                 <a
                   key={item.id}
                   href={item.href}
-                  target="_blank"
                   rel="noopener noreferrer"
                   className="group relative bg-[#131923] border border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px]"
                 >
@@ -262,7 +259,6 @@ export const PublicPortal = () => {
                 <Link
                   key={item.id}
                   to={item.href}
-                  target="_blank"
                   className="group relative bg-[#131923] border border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px]"
                 >
                    {/* Big Number Background */}
