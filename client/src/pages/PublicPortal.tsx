@@ -59,6 +59,19 @@ export const PublicPortal = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Thay đổi tiêu đề và icon trên tab Chrome khi vào trang này
+  useEffect(() => {
+    document.title = "devtiendang.blog | Portal";
+    
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    link.href = "https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg";
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0d1117] text-slate-200 font-sans selection:bg-orange-500/30">
       <div className="max-w-6xl mx-auto px-6 py-16">
