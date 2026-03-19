@@ -2,6 +2,7 @@ import express from 'express';
 import { ChannelType, TextChannel } from 'discord.js';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../database/prisma';
 import { bot } from '../bot/client';
 import { geminiService } from '../bot/services/gemini';
@@ -1085,13 +1086,13 @@ app.post('/api/web-quiz/:roomId/answer', (req, res) => {
 
 // --- Food Wheel API (Phong Thuy) ---
 app.post('/api/food-wheel', async (req, res) => {
-    const { GoogleGenerativeAI } = await import('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    try {
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
+        const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
 
-    const prompt = `Hôm nay là ${today}. Bạn là một thầy phong thuỷ ẩm thực vô tri nhưng rất hài hước và tự tin.
+        const prompt = `Hôm nay là ${today}. Bạn là một thầy phong thuỷ ẩm thực vô tri nhưng rất hài hước và tự tin.
 Hãy đề xuất 5 món ăn cho hôm nay theo phong thuỷ ngày này. Cụ thể:
 - 3 món ăn dân dã Việt Nam bình thường (ví dụ: cơm nhà, bún bò, bánh mì thịt...)
 - 1 món ăn sang mồm / trải nghiệm mới (sushi, steak, fondue...)
@@ -1112,7 +1113,6 @@ Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng form
   ]
 }`;
 
-    try {
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
         const cleaned = text.replace(/```json|```/g, '').trim();

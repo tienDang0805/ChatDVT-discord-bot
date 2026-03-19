@@ -48,6 +48,8 @@ export const PublicPortal = () => {
       description: 'Thầy AI phong thuỷ chọn giúp bạn. 5 món ăn, 1 vòng quay, vô tri hoàn toàn.',
       icon: Coffee,
       href: '/food-wheel',
+      author: 'Tiến Đặng (Lúc k biết ăn gì)',
+
     }
   ];
 
