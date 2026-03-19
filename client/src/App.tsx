@@ -20,6 +20,9 @@ import { WebQuizRoom } from './pages/WebQuiz/Room';
 import { PublicPortal } from './pages/PublicPortal';
 import FoodWheel from './pages/FoodWheel';
 import ExcuseGenerator from './pages/ExcuseGenerator';
+import MusicStation from './pages/MusicStation';
+import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
+import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -35,12 +38,16 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 
 function App() {
   return (
-    <Routes>
-       <Route path="/" element={<PublicPortal />} />
-       <Route path="/chatDVT" element={<PublicPortal />} />
-       <Route path="/food-wheel" element={<FoodWheel />} />
-       <Route path="/excuse-generator" element={<ExcuseGenerator />} />
-       <Route path="/petlandingpage" element={<PetLandingPage />} />
+    <MusicPlayerProvider>
+      <div className="min-h-screen">
+        <GlobalMusicPlayer />
+        <Routes>
+          <Route path="/" element={<PublicPortal />} />
+          <Route path="/chatDVT" element={<PublicPortal />} />
+          <Route path="/food-wheel" element={<FoodWheel />} />
+          <Route path="/excuse-generator" element={<ExcuseGenerator />} />
+          <Route path="/music" element={<MusicStation />} />
+          <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />
        <Route path="/quiz" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8"><WebQuizLobby /></div>} />
@@ -62,7 +69,9 @@ function App() {
             </Layout>
          </RequireAuth>
        } />
-    </Routes>
+        </Routes>
+      </div>
+    </MusicPlayerProvider>
   );
 }
 

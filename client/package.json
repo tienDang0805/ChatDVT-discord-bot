@@ -20,6 +20,7 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^6.20.0",
     "react-textarea-autosize": "^8.5.9",
+    "react-youtube": "^10.1.0",
     "recharts": "^3.7.0",
     "tailwind-merge": "^2.0.0"
   },

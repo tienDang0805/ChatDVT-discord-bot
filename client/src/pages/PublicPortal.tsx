@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Wallet, X } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X } from 'lucide-react';
 
 export const PublicPortal = () => {
   const features = [
@@ -59,6 +59,14 @@ export const PublicPortal = () => {
       icon: AlertTriangle,
       href: '/excuse-generator',
       author: 'ChatDVT (Lúc lười biếng)',
+    },
+    {
+      id: 'music-station',
+      number: '07',
+      title: 'Trạm Giai Điệu',
+      description: 'Lưu playlist Youtube bằng Mã Bí Mật nặc danh, phát nhạc xuyên suốt Portal.',
+      icon: Music2,
+      href: '/music',
     }
   ];
 
