@@ -36,12 +36,6 @@ export function WebQuizLobby() {
   useEffect(() => {
     fetchRooms();
     const interval = setInterval(fetchRooms, 3000);
-    
-    if (window.history.length <= 2) {
-      window.history.replaceState(null, '', '/chatDVT');
-      window.history.pushState(null, '', window.location.pathname);
-    }
-    
     return () => clearInterval(interval);
   }, []);
 

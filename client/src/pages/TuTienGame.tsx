@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { GameProvider, useTuTienGame } from '../components/tutien/GameContext';
 import '../components/tutien/shared/styles.css';
 
@@ -27,14 +26,6 @@ const GameContainer = () => {
 };
 
 export default function TuTienGame() {
-  // Đảm bảo nút back của trình duyệt luôn về /chatDVT nếu là entry đầu tiên
-  useEffect(() => {
-    if (window.history.length <= 2) {
-      window.history.replaceState(null, '', '/chatDVT');
-      window.history.pushState(null, '', window.location.pathname);
-    }
-  }, []);
-
   return (
     <GameProvider>
       <GameContainer />

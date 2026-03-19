@@ -85,13 +85,6 @@ export function PetLandingPage() {
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
-    
-    // Đảm bảo nút back của trình duyệt luôn về /chatDVT nếu là entry đầu
-    if (window.history.length <= 2) {
-      window.history.replaceState(null, '', '/chatDVT');
-      window.history.pushState(null, '', window.location.pathname);
-    }
-    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
