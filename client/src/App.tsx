@@ -34,13 +34,14 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 function App() {
   return (
     <Routes>
+       <Route path="/" element={<PublicPortal />} />
+       <Route path="/chatDVT" element={<PublicPortal />} />
        <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
-       <Route path="/chatDVT" element={<PublicPortal />} />
        <Route path="/login" element={<Login />} />
        <Route path="/quiz" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8"><WebQuizLobby /></div>} />
        <Route path="/quiz/room/:roomId" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8 flex items-center justify-center"><WebQuizRoom /></div>} />
-       <Route path="/*" element={
+       <Route path="/admin/*" element={
          <RequireAuth>
             <Layout>
               <Routes>

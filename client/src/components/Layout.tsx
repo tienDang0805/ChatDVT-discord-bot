@@ -134,16 +134,16 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         <nav className="flex-1 space-y-2 mt-4 md:mt-0">
-          <NavItem to="/" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/prompts" icon={ScrollText} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/pets" icon={Bot} label="Pet Hub" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/couple" icon={Heart} label="Hệ thống Cặp Đôi" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/prompts" icon={ScrollText} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/pets" icon={Bot} label="Pet Hub" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/couple" icon={Heart} label="Hệ thống Cặp Đôi" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/quiz" icon={BrainCircuit} label="Web Quiz (Public)" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
 
           {/* Spacer */}
           <div className="flex-1" />

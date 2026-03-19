@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, Shield, ArrowRight, AlertCircle, Terminal } from 'lucide-react';
 import { api } from '../api'; // Need to export api instance from index.ts or create loginApi
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export const Login = () => {
   const [username, setUsername] = useState('');
@@ -9,6 +9,8 @@ export const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/admin';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export const Login = () => {
         localStorage.setItem('token', res.data.token);
         // Set default header
         api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-        navigate('/');
+        navigate(from, { replace: true });
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Access Denied. Intruder detected.');
