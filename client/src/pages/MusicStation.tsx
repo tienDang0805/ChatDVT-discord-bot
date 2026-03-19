@@ -11,14 +11,16 @@ export default function MusicStation() {
   const [inputCode, setInputCode] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [categoryInput, setCategoryInput] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Extract unique categories from library
-  const categories = ['Tất cả', ...Array.from(new Set(library.map(s => s.category || 'Tất cả'))).filter(c => c !== 'Tất cả')];
+  // Extract unique custom categories from library (excluding 'Tất cả' which is just a view filter)
+  const customCategories = Array.from(new Set(library.map(s => s.category || 'Nhạc Chung'))).filter(c => c !== 'Tất cả');
+  const tabs = ['Tất cả', ...customCategories];
 
   // The songs currently visible in the selected Tab
-  const displayedSongs = library.filter(s => activeTab === 'Tất cả' || (s.category || 'Tất cả') === activeTab);
+  const displayedSongs = library.filter(s => activeTab === 'Tất cả' || (s.category || 'Nhạc Chung') === activeTab);
 
   useEffect(() => {
     document.title = 'Trạm Giai Điệu | devtiendang.blog';
@@ -57,22 +59,37 @@ export default function MusicStation() {
   const addSong = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!youtubeUrl.trim() || !secretCode) return;
+    
+    // Determine the final folder name:
+    // If user is creating new, use categoryInput. Otherwise use categoryInput (which holds the select value).
+    // If completely empty, default to activeTab (if not 'Tất cả') or 'Nhạc Chung'
+    let finalCategory = categoryInput.trim();
+    if (!isCreatingCategory && !finalCategory) {
+      finalCategory = activeTab !== 'Tất cả' ? activeTab : 'Nhạc Chung';
+    } else if (isCreatingCategory && !finalCategory) {
+      finalCategory = 'Nhạc Chung';
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/music/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretCode, youtubeUrl, category: categoryInput })
+        body: JSON.stringify({ secretCode, youtubeUrl, category: finalCategory })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lỗi thêm bài hát');
       setLibrary([...library, data]);
+      
       // Also add to current queue if looking at "Tất cả" or the matching tab
-      if (activeTab === 'Tất cả' || (data.category || 'Tất cả') === activeTab) {
+      const addedCat = data.category || 'Nhạc Chung';
+      if (activeTab === 'Tất cả' || addedCat === activeTab) {
          setQueue([...queue, data]);
       }
       setYoutubeUrl('');
-      setCategoryInput('');
+      setIsCreatingCategory(false);
+      // We keep the selected category so they can quickly add more to the same folder
+      setCategoryInput(addedCat);
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -178,40 +195,69 @@ export default function MusicStation() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-3 mb-6">
-          <form onSubmit={addSong} className="bg-slate-900 border border-slate-800 p-2 pl-4 rounded-2xl flex flex-1 gap-2 items-center">
+          <form onSubmit={addSong} className="bg-slate-900 border border-slate-800 p-2 pl-4 rounded-2xl flex flex-col sm:flex-row flex-1 gap-2 sm:items-center">
             <input
               type="url"
               value={youtubeUrl}
               onChange={(e) => setYoutubeUrl(e.target.value)}
               placeholder="Dán link Youtube..."
-              className="flex-[2] bg-transparent border-none text-white outline-none text-sm min-w-0"
+              className="flex-[2] bg-transparent border-none text-white outline-none text-sm min-w-0 py-2 sm:py-0"
               required
             />
-            <div className="w-px h-6 bg-slate-800 mx-2 hidden sm:block"></div>
-            <input
-              type="text"
-              value={categoryInput}
-              onChange={(e) => setCategoryInput(e.target.value)}
-              placeholder="Tên Folder (Mặc định: Tất cả)"
-              className="flex-1 bg-transparent border-none text-slate-300 outline-none text-sm min-w-0 hidden sm:block"
-            />
+            <div className="w-full h-px sm:w-px sm:h-6 bg-slate-800 my-1 sm:my-0 sm:mx-2"></div>
+            
+            <div className="flex-1 flex items-center min-w-0">
+               {isCreatingCategory ? (
+                 <input
+                   type="text"
+                   value={categoryInput}
+                   onChange={(e) => setCategoryInput(e.target.value)}
+                   placeholder="Nhập tên Folder mới..."
+                   className="flex-1 bg-transparent border border-slate-700/50 focus:border-indigo-500 rounded-lg text-slate-200 outline-none text-sm min-w-0 px-3 py-2"
+                   autoFocus
+                 />
+               ) : (
+                 <select
+                   value={categoryInput || (activeTab !== 'Tất cả' ? activeTab : (customCategories[0] || 'Nhạc Chung'))}
+                   onChange={(e) => {
+                     if (e.target.value === 'CREATE_NEW') {
+                       setIsCreatingCategory(true);
+                       setCategoryInput('');
+                     } else {
+                       setCategoryInput(e.target.value);
+                     }
+                   }}
+                   className="flex-1 bg-transparent border-none text-slate-300 outline-none text-sm min-w-0 cursor-pointer appearance-none"
+                 >
+                   {customCategories.length === 0 && <option value="Nhạc Chung" className="bg-slate-900">Nhạc Chung (Gốc)</option>}
+                   {customCategories.map(cat => (
+                     <option key={cat} value={cat} className="bg-slate-900">{cat}</option>
+                   ))}
+                   <option value="CREATE_NEW" className="bg-slate-800 text-indigo-400 font-bold">➕ Tạo Folder Mới...</option>
+                 </select>
+               )}
+            </div>
+
             <button
               type="submit"
               disabled={loading || !youtubeUrl}
-              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-bold flex flex-shrink-0 items-center gap-2 transition-colors"
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-bold flex flex-shrink-0 items-center justify-center gap-2 transition-colors mt-2 sm:mt-0"
             >
-              <Plus size={18} /> <span className="hidden sm:inline">{loading ? 'Thêm...' : 'Add'}</span>
+              <Plus size={18} /> <span>{loading ? 'Đang tải...' : 'Vứt Vào Folder'}</span>
             </button>
           </form>
         </div>
 
         {/* Category Tabs */}
-        {categories.length > 1 && (
+        {tabs.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-             {categories.map(cat => (
+             {tabs.map(cat => (
                <button
                  key={cat}
-                 onClick={() => setActiveTab(cat)}
+                 onClick={() => {
+                   setActiveTab(cat);
+                   if (cat !== 'Tất cả') setCategoryInput(cat);
+                 }}
                  className={`px-4 py-2 rounded-xl whitespace-nowrap font-medium text-sm transition-all border ${
                    activeTab === cat 
                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
