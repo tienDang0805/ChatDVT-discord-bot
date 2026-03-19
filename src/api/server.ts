@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from '../database/prisma';
 import { bot } from '../bot/client';
 import { geminiService } from '../bot/services/gemini';
+import { GEMINI_CHAT_CONFIG } from '../config/constants';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 
@@ -1088,7 +1089,7 @@ app.post('/api/web-quiz/:roomId/answer', (req, res) => {
 app.post('/api/food-wheel', async (req, res) => {
     try {
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
 
         const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
 
