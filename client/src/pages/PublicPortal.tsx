@@ -99,18 +99,20 @@ export const PublicPortal = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-4 pt-4">
-                <Rocket size={18} /> Tham gia Discord
+                <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-[#1f2937] hover:bg-[#374151] border border-orange-500/50 text-orange-400 hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all">
+                  <Rocket size={18} /> Tham gia Discord
               </a>
               {/* <a href="/rankings" className="flex items-center gap-2 bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 text-slate-300 px-6 py-3 rounded-md font-bold transition-all">
                 <Trophy size={18} className="text-emerald-500" /> Bảng Xếp Hạng
               </a> */}
-                <div className="flex items-center gap-2 px-4 py-3 text-slate-300 font-bold border-r border-slate-700">
-                  <Github size={18} /> STARS
-                </div>
-                <div className="bg-[#007acc] px-4 py-3 text-white font-bold group-hover:bg-[#005c99] transition-colors">
-                  100+
-                </div>
-              </a>
+                <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 rounded-md overflow-hidden transition-all group">
+                  <div className="flex items-center gap-2 px-4 py-3 text-slate-300 font-bold border-r border-slate-700">
+                    <Github size={18} /> STARS
+                  </div>
+                  <div className="bg-[#007acc] px-4 py-3 text-white font-bold group-hover:bg-[#005c99] transition-colors">
+                    100+
+                  </div>
+                </a>
             </div>
           </div>
 
