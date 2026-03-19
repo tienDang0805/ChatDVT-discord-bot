@@ -23,6 +23,8 @@ interface MusicPlayerContextType {
   isPlaying: boolean;
   togglePlay: () => void;
   currentSong: Song | null;
+  volume: number;
+  setVolume: (vol: number) => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -32,6 +34,10 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolumeState] = useState<number>(() => {
+    const saved = localStorage.getItem('music_volume');
+    return saved !== null ? Number(saved) : 100;
+  });
   
   const playerRef = useRef<any>(null);
 
@@ -73,8 +79,17 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const setVolume = (vol: number) => {
+    setVolumeState(vol);
+    localStorage.setItem('music_volume', vol.toString());
+    if (playerRef.current) {
+      playerRef.current.setVolume(vol);
+    }
+  };
+
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
+    playerRef.current.setVolume(volume);
     if (isPlaying) playerRef.current.playVideo();
   };
 
@@ -110,7 +125,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
         secretCode, setSecretCode,
         queue, setQueue,
         currentSongIndex, playSong, nextSong, prevSong,
-        isPlaying, togglePlay, currentSong
+        isPlaying, togglePlay, currentSong,
+        volume, setVolume
       }}
     >
       {children}

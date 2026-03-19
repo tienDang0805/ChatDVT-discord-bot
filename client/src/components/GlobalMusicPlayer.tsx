@@ -1,9 +1,9 @@
-import { Play, Pause, SkipForward, SkipBack, Music2, X } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music2, X, Volume2, VolumeX } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue } = useMusicPlayer();
+  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue, volume, setVolume } = useMusicPlayer();
   const navigate = useNavigate();
 
   if (!currentSong && queue.length === 0) return null;
@@ -82,8 +82,23 @@ export default function GlobalMusicPlayer() {
              <SkipForward size={18} />
            </button>
 
+           {/* Volume Slider */}
+           <div className="hidden sm:flex items-center gap-2 mx-2 group/vol">
+             <button onClick={() => setVolume(volume === 0 ? 100 : 0)} className="text-slate-400 hover:text-white transition-colors">
+                {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
+             </button>
+             <input 
+               type="range" 
+               min="0" max="100" 
+               value={volume} 
+               onChange={(e) => setVolume(Number(e.target.value))}
+               className="w-16 h-1 appearance-none bg-slate-700/50 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-slate-300 group-hover/vol:[&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full cursor-pointer transition-all"
+               title={`Âm lượng: ${volume}%`}
+             />
+           </div>
+
            {/* Close / Hide Player */}
-           <div className="w-px h-6 bg-slate-800 mx-1"></div>
+           <div className="w-px h-6 bg-slate-800 mx-1 hidden sm:block"></div>
            <button 
              onClick={handleClose}
              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
