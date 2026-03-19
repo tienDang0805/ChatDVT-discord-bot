@@ -50,10 +50,8 @@ export default function GlobalMusicPlayer() {
              <p className="text-white text-sm font-bold truncate">
                {currentSong ? currentSong.title : 'Chưa chọn bài hát'}
              </p>
-             <p className="text-slate-400 text-xs truncate flex items-center gap-1">
-               {currentSong ? (
-                 <><Music2 size={9} /> {currentSong.category || 'Tất cả'}</>
-               ) : 'Sẵn sàng phát nhạc'}
+             <p className="text-slate-400 text-xs truncate mt-0.5">
+               {currentSong ? `📂 ${currentSong.category || 'Tất cả'}` : 'Sẵn sàng phát nhạc'}
              </p>
           </div>
         </div>
