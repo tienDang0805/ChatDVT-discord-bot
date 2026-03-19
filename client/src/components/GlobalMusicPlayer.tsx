@@ -1,9 +1,9 @@
-import { Play, Pause, SkipForward, SkipBack, Music2, X, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music2, X, Volume2, VolumeX, Shuffle } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue, volume, setVolume } = useMusicPlayer();
+  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue, volume, setVolume, isShuffling, toggleShuffle } = useMusicPlayer();
   const navigate = useNavigate();
 
   if (!currentSong && queue.length === 0) return null;
@@ -58,6 +58,14 @@ export default function GlobalMusicPlayer() {
 
         {/* Controls */}
         <div className="flex items-center gap-2 ml-4">
+           <button 
+             onClick={toggleShuffle}
+             title={isShuffling ? "Tắt Trộn Bài" : "Bật Trộn Bài"}
+             className={`hidden sm:flex w-8 h-8 rounded-full items-center justify-center transition-colors ${isShuffling ? 'text-emerald-400 bg-emerald-500/10' : 'text-slate-500 hover:text-white hover:bg-slate-800'}`}
+           >
+             <Shuffle size={16} />
+           </button>
+
            <button 
              onClick={prevSong} 
              disabled={!currentSong}

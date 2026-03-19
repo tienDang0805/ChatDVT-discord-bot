@@ -25,6 +25,8 @@ interface MusicPlayerContextType {
   currentSong: Song | null;
   volume: number;
   setVolume: (vol: number) => void;
+  isShuffling: boolean;
+  toggleShuffle: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -34,6 +36,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
   const [volume, setVolumeState] = useState<number>(() => {
     const saved = localStorage.getItem('music_volume');
     return saved !== null ? Number(saved) : 100;
@@ -58,7 +61,16 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const nextSong = () => {
     if (queue.length === 0) return;
-    setCurrentSongIndex((prev) => (prev + 1) % queue.length);
+    setCurrentSongIndex((prev) => {
+      if (isShuffling && queue.length > 1) {
+        let nextIdx = prev;
+        while (nextIdx === prev) {
+           nextIdx = Math.floor(Math.random() * queue.length);
+        }
+        return nextIdx;
+      }
+      return (prev + 1) % queue.length;
+    });
     setIsPlaying(true);
   };
 
@@ -86,6 +98,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
       playerRef.current.setVolume(vol);
     }
   };
+
+  const toggleShuffle = () => setIsShuffling(!isShuffling);
 
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -126,7 +140,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
         queue, setQueue,
         currentSongIndex, playSong, nextSong, prevSong,
         isPlaying, togglePlay, currentSong,
-        volume, setVolume
+        volume, setVolume,
+        isShuffling, toggleShuffle
       }}
     >
       {children}

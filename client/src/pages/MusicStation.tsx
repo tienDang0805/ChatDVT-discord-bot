@@ -5,7 +5,7 @@ import { KeyRound, Plus, Trash2, Play, Shuffle, Music2 } from 'lucide-react';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export default function MusicStation() {
-  const { secretCode, setSecretCode, queue, setQueue, playSong, currentSong } = useMusicPlayer();
+  const { secretCode, setSecretCode, queue, setQueue, playSong, currentSong, isShuffling, toggleShuffle } = useMusicPlayer();
   const [library, setLibrary] = useState<Song[]>([]);
   const [activeTab, setActiveTab] = useState('Tất cả');
   const [inputCode, setInputCode] = useState('');
@@ -120,11 +120,46 @@ export default function MusicStation() {
 
   const shufflePlay = () => {
     if (displayedSongs.length === 0) return;
-    const shuffled = [...displayedSongs].sort(() => Math.random() - 0.5);
-    setQueue(shuffled);
-    playSong(0);
+    
+    // We just set the queue to the displayed songs
+    setQueue(displayedSongs);
+
+    // If not shuffling currently, turn it on
+    if (!isShuffling) {
+      toggleShuffle();
+    }
+    
+    // Pick a random song to start
+    const randomIdx = Math.floor(Math.random() * displayedSongs.length);
+    playSong(randomIdx);
   };
-  
+
+  const handleCopyPlaylist = async () => {
+    const newCode = prompt('Nhập Mã Kho Nhạc (ID) mới mà bạn muốn Copy sang:');
+    if (!newCode || !newCode.trim()) return;
+    
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/music/copy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceCode: secretCode, targetCode: newCode })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Lỗi copy playlist');
+      
+      alert(`Đã copy thành công sang kho nhạc mang mã: ${data.targetCode}`);
+      // Auto login to new code
+      setSecretCode(null);
+      setQueue([]);
+      setLibrary([]);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePlaySongFromList = (song: Song) => {
     // If playing a song, we make the current displayed list the active queue
     const targetQueue = [...displayedSongs];
@@ -141,7 +176,10 @@ export default function MusicStation() {
             <KeyRound size={32} className="text-slate-400" />
           </div>
           <h1 className="text-3xl font-black mb-2">Trạm Giai Điệu</h1>
-          <p className="text-slate-400 mb-8 text-sm">Nhập Mã Bí Mật để gọi hồn Playlist nghe ngầm qua các trang.</p>
+          <p className="text-slate-400 mb-2 text-sm">Nhập Mã Bí Mật để gọi hồn Playlist nghe ngầm qua các trang.</p>
+          <div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 rounded-xl p-3 mb-8 text-xs font-medium">
+             ✨ Gợi ý: Nếu chưa có kho nhạc, hãy nhập thử mã <strong className="text-white bg-indigo-600 px-2 py-0.5 rounded">TIENDANG</strong> để nghe ké Trạm phát xịn xò của Admin nhé!
+          </div>
           
           <form onSubmit={handleAuth} className="space-y-4">
             <input
@@ -180,14 +218,21 @@ export default function MusicStation() {
           </div>
           <div className="flex gap-2">
             <button
+              onClick={handleCopyPlaylist}
+              className="px-3 py-2 text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 rounded-xl transition-colors text-sm font-bold flex items-center gap-1"
+              title="Sao chép toàn bộ Folder này thành của bạn"
+            >
+              Copy Playlist
+            </button>
+            <button
               onClick={shufflePlay}
               className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
             >
               <Shuffle size={16} /> Shuffle Play
             </button>
             <button
-              onClick={() => { setSecretCode(null); setQueue([]); }}
-              className="px-4 py-2 text-slate-500 hover:text-white transition-colors text-sm font-medium"
+              onClick={() => { setSecretCode(null); setQueue([]); setLibrary([]); }}
+              className="px-4 py-2 text-slate-500 hover:text-red-400 bg-transparent hover:bg-red-500/10 rounded-xl transition-colors text-sm font-medium"
             >
               Thoát mã
             </button>
