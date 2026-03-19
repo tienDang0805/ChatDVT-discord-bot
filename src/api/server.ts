@@ -1095,16 +1095,16 @@ app.post('/api/food-wheel', async (req, res) => {
 
         const prompt = `Hôm nay là ${today}. Bạn là một thầy phong thuỷ ẩm thực vô tri nhưng rất hài hước và tự tin.
 Hãy đề xuất 5 món ăn cho hôm nay theo phong thuỷ ngày này. Cụ thể:
-- 3 món ăn dân dã Việt Nam bình thường (ví dụ: cơm nhà, bún bò, bánh mì thịt...)
-- 1 món ăn sang mồm / trải nghiệm mới (sushi, steak, fondue...)
-- 1 món ăn vô lý bất thường hoàn toàn (kiểu như "cháo thuyền không cạo vảy", "trứng chiên với đá cục", "mì tôm sống nhúng nước mắm"...)
+- 3 món ăn dân dã Việt Nam bình thường (ví dụ: cơm nhà, bún bò, bánh mì thịt, phở, hủ tiếu, cháo...)
+- 1 món ăn sang hơn một chút nhưng vẫn ĂN ĐƯỢC và BÌNH DÂN như là đi ăn ở tiệm: thịt nướng BBQ kiểu Gogi/Kichi, lẩu Haidilao hoặc lẩu thái, bò né, cơm gà Hội An, sushi conveyor belt, hotpot, dimsum... Không được đề xuất những món quá xa xỉ như bò Wagyu dát vàng, tôm hùm Alaska, caviar. Phải là món người đi làm bình thường có thể tự chi tiêu được.
+- 1 món ăn vô lý bất thường hoàn toàn theo kiểu hài hước Việt Nam (ví dụ: mì gói chan với nước ngọt, bánh mì không có gì hết, cháo trắng chấm muối mà tự gọi là "detox 5 sao"...)
 
 Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng format sau:
 {
   "intro": "Câu giới thiệu ngắn hài hước theo phong thuỷ cho ngày hôm nay (1-2 câu)",
   "foods": [
     {
-      "name": "Tên món ăn",
+      "name": "Tên món ăn ngắn gọn",
       "emoji": "1 emoji đại diện",
       "type": "normal|fancy|weird",
       "phongThuy": "Lý do phong thuỷ hài hước tại sao nên ăn món này hôm nay (1 câu)",
