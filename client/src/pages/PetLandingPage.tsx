@@ -1,6 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 
 const FEATURES = [
   {
@@ -87,6 +85,13 @@ export function PetLandingPage() {
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
+    
+    // Đảm bảo nút back của trình duyệt luôn về /chatDVT nếu là entry đầu
+    if (window.history.length <= 2) {
+      window.history.replaceState(null, '', '/chatDVT');
+      window.history.pushState(null, '', window.location.pathname);
+    }
+    
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -96,22 +101,17 @@ export function PetLandingPage() {
 
       {/* NAV */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrollY > 50 ? 'bg-[#0a0a1a]/90 backdrop-blur-xl shadow-2xl shadow-purple-900/10' : 'bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-3">
-            <Link to="/" className="text-gray-400 hover:text-white transition-colors p-1 md:hidden">
-               <ArrowLeft size={24} />
-            </Link>
-            <span className="text-2xl md:text-3xl hidden sm:inline">🐾</span>
-            <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">EvoVerse</span>
-            <span className="text-[10px] md:text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-medium">Beta 1.0</span>
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🐾</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">EvoVerse</span>
+            <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-medium">Beta 1.0</span>
           </div>
-          <div className="flex items-center gap-4 md:gap-8">
-            <Link to="/" className="hidden md:flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/5">
-               <ArrowLeft size={16} /> Trang Chủ Vibe
-            </Link>
-            <a href="#features" className="hidden lg:block text-sm text-gray-400 hover:text-white transition-colors">Tính Năng</a>
-            <a href="#traits" className="hidden lg:block text-sm text-gray-400 hover:text-white transition-colors">Hệ Thống</a>
-            <a href="#quickstart" className="hidden lg:block text-sm text-gray-400 hover:text-white transition-colors">Bắt Đầu</a>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Tính Năng</a>
+            <a href="#traits" className="text-sm text-gray-400 hover:text-white transition-colors">Hệ Thống</a>
+            <a href="#quickstart" className="text-sm text-gray-400 hover:text-white transition-colors">Bắt Đầu</a>
+            <a href="#commands" className="text-sm text-gray-400 hover:text-white transition-colors">Lệnh</a>
           </div>
         </div>
       </nav>

@@ -1,6 +1,5 @@
+import { useEffect } from 'react';
 import { GameProvider, useTuTienGame } from '../components/tutien/GameContext';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import '../components/tutien/shared/styles.css';
 
 // Tạm thời để trống component con, ta sẽ import sau khi code xong.
@@ -23,19 +22,19 @@ const GameContainer = () => {
           Thân Tử Đạo Tiêu
         </div>
       )}
-
-      {/* Nút Back về Portal */}
-      <Link 
-        to="/" 
-        className="fixed top-4 left-4 z-50 bg-black/60 hover:bg-black/90 text-white/80 hover:text-white p-2 md:px-4 md:py-2 rounded-full backdrop-blur-md transition-all flex items-center gap-2 shadow-lg border border-white/10"
-      >
-        <ArrowLeft size={20} /> <span className="hidden md:inline text-sm font-bold">Về Trang Chủ</span>
-      </Link>
     </div>
   );
 };
 
 export default function TuTienGame() {
+  // Đảm bảo nút back của trình duyệt luôn về /chatDVT nếu là entry đầu tiên
+  useEffect(() => {
+    if (window.history.length <= 2) {
+      window.history.replaceState(null, '', '/chatDVT');
+      window.history.pushState(null, '', window.location.pathname);
+    }
+  }, []);
+
   return (
     <GameProvider>
       <GameContainer />
