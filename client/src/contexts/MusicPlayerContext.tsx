@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useState, useRef, useEffect, ReactNode } from 'react';
-import YouTube, { YouTubeProps } from 'react-youtube';
+import { createContext, useContext, useState, useRef } from 'react';
+import type { ReactNode } from 'react';
+import YouTube from 'react-youtube';
+import type { YouTubeProps } from 'react-youtube';
 
 export interface Song {
   id: string;
   videoId: string;
   title: string;
   coverUrl: string;
+  category?: string;
 }
 
 interface MusicPlayerContextType {

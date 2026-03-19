@@ -6,10 +6,19 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export default function MusicStation() {
   const { secretCode, setSecretCode, queue, setQueue, playSong, currentSong } = useMusicPlayer();
+  const [library, setLibrary] = useState<Song[]>([]);
+  const [activeTab, setActiveTab] = useState('Tất cả');
   const [inputCode, setInputCode] = useState('');
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [categoryInput, setCategoryInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Extract unique categories from library
+  const categories = ['Tất cả', ...Array.from(new Set(library.map(s => s.category || 'Tất cả'))).filter(c => c !== 'Tất cả')];
+
+  // The songs currently visible in the selected Tab
+  const displayedSongs = library.filter(s => activeTab === 'Tất cả' || (s.category || 'Tất cả') === activeTab);
 
   useEffect(() => {
     document.title = 'Trạm Giai Điệu | devtiendang.blog';
@@ -30,7 +39,8 @@ export default function MusicStation() {
       });
       if (!res.ok) throw new Error('Không thể tải Playlist');
       const data = await res.json();
-      setQueue(data.songs || []);
+      setLibrary(data.songs || []);
+      if (queue.length === 0) setQueue(data.songs || []);
       setSecretCode(code.trim().toUpperCase());
     } catch (err: any) {
       setError(err.message);
@@ -52,12 +62,17 @@ export default function MusicStation() {
       const res = await fetch(`${API_BASE}/api/music/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secretCode, youtubeUrl })
+        body: JSON.stringify({ secretCode, youtubeUrl, category: categoryInput })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Lỗi thêm bài hát');
-      setQueue([...queue, data]);
+      setLibrary([...library, data]);
+      // Also add to current queue if looking at "Tất cả" or the matching tab
+      if (activeTab === 'Tất cả' || (data.category || 'Tất cả') === activeTab) {
+         setQueue([...queue, data]);
+      }
       setYoutubeUrl('');
+      setCategoryInput('');
     } catch (err: any) {
       alert(err.message);
     } finally {
@@ -76,17 +91,29 @@ export default function MusicStation() {
       });
       if (!res.ok) throw new Error('Lỗi xoá bài hát');
       const data = await res.json();
-      setQueue(data.songs);
+      setLibrary(data.songs);
+      
+      // Update queue to sync without interrupting current song perfectly (complex, but doing simple for now)
+      // Just re-set queue if we want. For simplicity, we filter the current queue
+      setQueue(queue.filter(s => s.id !== songId));
     } catch (err: any) {
       alert(err.message);
     }
   };
 
   const shufflePlay = () => {
-    if (queue.length === 0) return;
-    const shuffled = [...queue].sort(() => Math.random() - 0.5);
+    if (displayedSongs.length === 0) return;
+    const shuffled = [...displayedSongs].sort(() => Math.random() - 0.5);
     setQueue(shuffled);
     playSong(0);
+  };
+  
+  const handlePlaySongFromList = (song: Song) => {
+    // If playing a song, we make the current displayed list the active queue
+    const targetQueue = [...displayedSongs];
+    setQueue(targetQueue);
+    const index = targetQueue.findIndex(s => s.id === song.id);
+    playSong(index >= 0 ? index : 0);
   };
 
   if (!secretCode) {
@@ -150,33 +177,61 @@ export default function MusicStation() {
           </div>
         </div>
 
-        {/* Add Song Form */}
-        <form onSubmit={addSong} className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex gap-3 mb-10">
-          <input
-            type="url"
-            value={youtubeUrl}
-            onChange={(e) => setYoutubeUrl(e.target.value)}
-            placeholder="Dán link Youtube bài hát vào đây..."
-            className="flex-1 bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 outline-none text-sm transition-colors"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading || !youtubeUrl}
-            className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-colors"
-          >
-            <Plus size={18} /> {loading ? 'Thêm...' : 'Add Nhạc'}
-          </button>
-        </form>
+        <div className="flex flex-col md:flex-row gap-3 mb-6">
+          <form onSubmit={addSong} className="bg-slate-900 border border-slate-800 p-2 pl-4 rounded-2xl flex flex-1 gap-2 items-center">
+            <input
+              type="url"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="Dán link Youtube..."
+              className="flex-[2] bg-transparent border-none text-white outline-none text-sm min-w-0"
+              required
+            />
+            <div className="w-px h-6 bg-slate-800 mx-2 hidden sm:block"></div>
+            <input
+              type="text"
+              value={categoryInput}
+              onChange={(e) => setCategoryInput(e.target.value)}
+              placeholder="Tên Folder (Mặc định: Tất cả)"
+              className="flex-1 bg-transparent border-none text-slate-300 outline-none text-sm min-w-0 hidden sm:block"
+            />
+            <button
+              type="submit"
+              disabled={loading || !youtubeUrl}
+              className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-bold flex flex-shrink-0 items-center gap-2 transition-colors"
+            >
+              <Plus size={18} /> <span className="hidden sm:inline">{loading ? 'Thêm...' : 'Add'}</span>
+            </button>
+          </form>
+        </div>
+
+        {/* Category Tabs */}
+        {categories.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+             {categories.map(cat => (
+               <button
+                 key={cat}
+                 onClick={() => setActiveTab(cat)}
+                 className={`px-4 py-2 rounded-xl whitespace-nowrap font-medium text-sm transition-all border ${
+                   activeTab === cat 
+                     ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
+                     : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
+                 }`}
+               >
+                 {cat}
+               </button>
+             ))}
+          </div>
+        )}
 
         {/* Playlist */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {queue.map((song, idx) => {
+          {displayedSongs.map((song) => {
             const isPlaying = currentSong?.id === song.id;
             return (
               <div
                 key={song.id}
-                onClick={() => playSong(idx)}
+                onClick={() => handlePlaySongFromList(song)}
                 className={`group relative flex items-center gap-4 p-3 rounded-2xl border transition-all cursor-pointer overflow-hidden ${
                   isPlaying 
                     ? 'bg-indigo-900/40 border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.15)]' 
@@ -214,11 +269,17 @@ export default function MusicStation() {
           })}
         </div>
 
-        {queue.length === 0 && (
+        {library.length === 0 && (
           <div className="text-center py-20 text-slate-500 border-2 border-dashed border-slate-800 rounded-3xl">
             <Music2 size={48} className="mx-auto mb-4 opacity-50" />
             <p>Kho nhạc đang trống trơn.</p>
             <p className="text-sm">Hãy copy 1 link Youtube dán vào ô bên trên để khai trương trạm phát!</p>
+          </div>
+        )}
+        
+        {library.length > 0 && displayedSongs.length === 0 && (
+          <div className="text-center py-10 text-slate-500 bg-slate-900/50 rounded-3xl border border-slate-800">
+             Folder này chưa có bài nào.
           </div>
         )}
       </div>

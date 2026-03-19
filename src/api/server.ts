@@ -1177,9 +1177,11 @@ app.post('/api/music/playlist', async (req, res) => {
 
 app.post('/api/music/add', async (req, res) => {
     try {
-        const { secretCode, youtubeUrl } = req.body;
+        const { secretCode, youtubeUrl, category } = req.body;
         if (!secretCode || !youtubeUrl) return res.status(400).json({ error: 'Thiếu thông tin' });
         const code = secretCode.trim().toUpperCase();
+        
+        const folderName = category?.trim() || 'Tất cả';
 
         // Extract Video ID
         const match = youtubeUrl.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
@@ -1201,7 +1203,8 @@ app.post('/api/music/add', async (req, res) => {
             id: Date.now().toString(),
             videoId,
             title,
-            coverUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+            coverUrl: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+            category: folderName
         };
 
         const playlist = await prisma.musicPlaylist.findUnique({ where: { secretCode: code } });
