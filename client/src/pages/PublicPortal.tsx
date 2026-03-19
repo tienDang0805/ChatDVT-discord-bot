@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, Wallet } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, Wallet, X } from 'lucide-react';
 
 export const PublicPortal = () => {
   const features = [
@@ -50,6 +50,7 @@ export const PublicPortal = () => {
   ];
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -160,18 +161,22 @@ export const PublicPortal = () => {
               
               {/* VCB */}
               <div className="bg-[#131923] border border-slate-800 hover:border-green-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
-                 <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-green-500 relative overflow-hidden flex items-center justify-center">
+                 <div 
+                   className="w-24 h-40 sm:w-32 sm:h-48 shrink-0 bg-white rounded-xl p-1.5 border-2 border-green-500 relative overflow-hidden flex items-center justify-center cursor-pointer shadow-lg hover:shadow-green-500/20 transition-all"
+                   onClick={() => setSelectedImage('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-vcb.jpg')}
+                   title="Click để phóng to"
+                 >
                     <img 
                       src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-vcb.jpg" 
                       alt="Vietcombank QR" 
-                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
+                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white group-hover:scale-105 transition-transform duration-500" 
                       onError={(e) => { e.currentTarget.style.display = 'none'; }} 
                     />
                     <div className="text-[10px] text-slate-400 text-center leading-tight">
                       Vui lòng lưu ảnh<br/><span className="font-bold text-slate-600">qr-vcb.jpg</span><br/>vào client/public/images/
                     </div>
                  </div>
-                 <div>
+                 <div className="flex-1">
                     <h4 className="text-xl font-bold text-green-500 mb-1 flex items-center gap-2"><Wallet size={18} /> Vietcombank</h4>
                     <p className="text-white font-mono text-xl mb-1 tracking-wider"></p>
                     <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
@@ -180,18 +185,22 @@ export const PublicPortal = () => {
 
               {/* MoMo */}
               <div className="bg-[#131923] border border-slate-800 hover:border-pink-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
-                 <div className="w-28 h-28 shrink-0 bg-white rounded-lg p-1.5 border-2 border-pink-500 relative overflow-hidden flex items-center justify-center">
+                 <div 
+                   className="w-24 h-40 sm:w-32 sm:h-48 shrink-0 bg-white rounded-xl p-1.5 border-2 border-pink-500 relative overflow-hidden flex items-center justify-center cursor-pointer shadow-lg hover:shadow-pink-500/20 transition-all"
+                   onClick={() => setSelectedImage('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-momo.jpg')}
+                   title="Click để phóng to"
+                 >
                     <img 
                       src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-momo.jpg" 
                       alt="MoMo QR" 
-                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white" 
+                      className="absolute inset-0 w-full h-full object-cover z-10 bg-white group-hover:scale-105 transition-transform duration-500" 
                       onError={(e) => { e.currentTarget.style.display = 'none'; }} 
                     />
                     <div className="text-[10px] text-slate-400 text-center leading-tight">
                       Vui lòng lưu ảnh<br/><span className="font-bold text-slate-600">qr-momo.jpg</span><br/>vào client/public/images/
                     </div>
                  </div>
-                 <div>
+                 <div className="flex-1">
                     <h4 className="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2"><Wallet size={18} /> MoMo</h4>
                     <p className="text-white font-mono text-xl mb-1 tracking-wider">*******725</p>
                     <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
@@ -265,6 +274,27 @@ export const PublicPortal = () => {
         </div>
 
       </div>
+
+      {/* Image Zoom Modal */}
+      {selectedImage && (
+        <div 
+           className="fixed inset-0 z-50 bg-[#0d1117]/95 backdrop-blur-md flex justify-center items-center p-4 sm:p-8 cursor-zoom-out"
+           onClick={() => setSelectedImage(null)}
+        >
+           <button 
+             className="absolute top-4 right-4 sm:top-8 sm:right-8 text-slate-300 hover:text-white bg-slate-800/50 hover:bg-slate-700 p-3 rounded-full transition-all"
+             onClick={() => setSelectedImage(null)}
+           >
+             <X size={28} />
+           </button>
+           <img 
+              src={selectedImage} 
+              alt="QR Cận Cảnh" 
+              className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl ring-4 ring-white/10" 
+              onClick={(e) => e.stopPropagation()} 
+           />
+        </div>
+      )}
     </div>
   );
 };
