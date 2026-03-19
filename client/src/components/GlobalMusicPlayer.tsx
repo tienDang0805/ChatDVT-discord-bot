@@ -1,9 +1,9 @@
-import { Play, Pause, SkipForward, SkipBack, Music2, X, Volume2, VolumeX, Shuffle } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Music2, X, Volume2, VolumeX, Shuffle, Repeat } from 'lucide-react';
 import { useMusicPlayer } from '../contexts/MusicPlayerContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function GlobalMusicPlayer() {
-  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue, volume, setVolume, isShuffling, toggleShuffle } = useMusicPlayer();
+  const { currentSong, isPlaying, togglePlay, nextSong, prevSong, queue, setQueue, volume, setVolume, isShuffling, toggleShuffle, isLooping, toggleLoop } = useMusicPlayer();
   const navigate = useNavigate();
 
   if (!currentSong && queue.length === 0) return null;
@@ -50,8 +50,10 @@ export default function GlobalMusicPlayer() {
              <p className="text-white text-sm font-bold truncate">
                {currentSong ? currentSong.title : 'Chưa chọn bài hát'}
              </p>
-             <p className="text-slate-400 text-xs truncate">
-               {currentSong ? 'Trạm Giai Điệu Vô Tri' : 'Sẵn sàng phát nhạc'}
+             <p className="text-slate-400 text-xs truncate flex items-center gap-1">
+               {currentSong ? (
+                 <><Music2 size={9} /> {currentSong.category || 'Tất cả'}</>
+               ) : 'Sẵn sàng phát nhạc'}
              </p>
           </div>
         </div>
@@ -88,6 +90,16 @@ export default function GlobalMusicPlayer() {
              className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50 mr-2"
            >
              <SkipForward size={18} />
+           </button>
+
+           <button 
+             onClick={toggleLoop}
+             title={isLooping ? "Tắt Lặp Lại" : "Bật Lặp Lại 1 Bài"}
+             className={`hidden sm:flex w-8 h-8 rounded-full items-center justify-center transition-colors ${
+               isLooping ? 'text-indigo-400 bg-indigo-500/10' : 'text-slate-500 hover:text-white hover:bg-slate-800'
+             }`}
+           >
+             <Repeat size={16} />
            </button>
 
            {/* Volume Slider */}

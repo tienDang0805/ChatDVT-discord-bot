@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef } from 'react';
+import { createContext, useContext, useState, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import YouTube from 'react-youtube';
 import type { YouTubeProps } from 'react-youtube';
@@ -27,6 +27,8 @@ interface MusicPlayerContextType {
   setVolume: (vol: number) => void;
   isShuffling: boolean;
   toggleShuffle: () => void;
+  isLooping: boolean;
+  toggleLoop: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -37,12 +39,19 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
+  const [isLooping, setIsLooping] = useState(false);
   const [volume, setVolumeState] = useState<number>(() => {
     const saved = localStorage.getItem('music_volume');
     return saved !== null ? Number(saved) : 100;
   });
   
   const playerRef = useRef<any>(null);
+  
+  // To avoid Stale Closures in react-youtube event callbacks
+  const stateRefs = useRef({ queue, isShuffling, isLooping });
+  useEffect(() => {
+    stateRefs.current = { queue, isShuffling, isLooping };
+  }, [queue, isShuffling, isLooping]);
 
   const setSecretCode = (code: string | null) => {
     setSecretCodeState(code);
@@ -60,23 +69,28 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const nextSong = () => {
-    if (queue.length === 0) return;
+    const { queue: currentQueue, isShuffling: currentIsShuffling } = stateRefs.current;
+    if (currentQueue.length === 0) return;
     setCurrentSongIndex((prev) => {
-      if (isShuffling && queue.length > 1) {
+      if (currentIsShuffling && currentQueue.length > 1) {
         let nextIdx = prev;
-        while (nextIdx === prev) {
-           nextIdx = Math.floor(Math.random() * queue.length);
+        // Try up to 10 times to find a new index (to avoid infinite loop if somehow logic fails)
+        let attempts = 0;
+        while (nextIdx === prev && attempts < 10) {
+           nextIdx = Math.floor(Math.random() * currentQueue.length);
+           attempts++;
         }
         return nextIdx;
       }
-      return (prev + 1) % queue.length;
+      return (prev + 1) % currentQueue.length;
     });
     setIsPlaying(true);
   };
 
   const prevSong = () => {
-    if (queue.length === 0) return;
-    setCurrentSongIndex((prev) => (prev - 1 + queue.length) % queue.length);
+    const { queue: currentQueue } = stateRefs.current;
+    if (currentQueue.length === 0) return;
+    setCurrentSongIndex((prev) => (prev - 1 + currentQueue.length) % currentQueue.length);
     setIsPlaying(true);
   };
 
@@ -99,7 +113,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const toggleShuffle = () => setIsShuffling(!isShuffling);
+  const toggleShuffle = () => setIsShuffling(prev => !prev);
+  const toggleLoop = () => setIsLooping(prev => !prev);
 
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
@@ -110,7 +125,12 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const onStateChange: YouTubeProps['onStateChange'] = (event) => {
     // 0 = ended, 1 = playing, 2 = paused
     if (event.data === 0) {
-      nextSong();
+      if (stateRefs.current.isLooping) {
+        playerRef.current?.seekTo(0);
+        playerRef.current?.playVideo();
+      } else {
+        nextSong();
+      }
     } else if (event.data === 1) {
       setIsPlaying(true);
     } else if (event.data === 2) {
@@ -141,7 +161,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
         currentSongIndex, playSong, nextSong, prevSong,
         isPlaying, togglePlay, currentSong,
         volume, setVolume,
-        isShuffling, toggleShuffle
+        isShuffling, toggleShuffle,
+        isLooping, toggleLoop
       }}
     >
       {children}
