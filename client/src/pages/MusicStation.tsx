@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useMusicPlayer, Song } from '../contexts/MusicPlayerContext';
-import { KeyRound, Plus, Trash2, Play, Shuffle } from 'lucide-react';
+import { KeyRound, Plus, Trash2, Play, Shuffle, Music2 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 

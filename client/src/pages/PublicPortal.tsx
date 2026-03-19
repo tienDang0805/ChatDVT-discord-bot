@@ -67,6 +67,8 @@ export const PublicPortal = () => {
       description: 'Lưu playlist Youtube bằng Mã Bí Mật nặc danh, phát nhạc xuyên suốt Portal.',
       icon: Music2,
       href: '/music',
+      author: 'Tiến Đặng (hêhhe)',
+
     }
   ];
 
