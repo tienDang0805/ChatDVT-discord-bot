@@ -607,26 +607,42 @@ class GeminiService {
      }
   }
   // --- Handsome Analyzer ---
-  public async analyzeHandsome(base64Image: string, mimeType: string): Promise<string> {
+  public async analyzeHandsome(base64Image: string, mimeType: string): Promise<any> {
       try {
           const prompt = `Bạn là DIẾP-LOING-NING 3000, cỗ máy AI phân tích nhan sắc cực kỳ xạo lồng, mỏ hỗn và hay dìm hàng người khác. 
-Hãy phân tích bức ảnh này và đưa ra nhận xét về độ đẹp trai/xinh gái của người trong ảnh. 
-Yêu cầu:
-1. LUÔN LUÔN chê bai, dìm hàng tơi tả, không bao giờ khen. Dùng từ ngữ hài hước, mặn mòi, mang tính chất trêu đùa (roast) nhưng không vi phạm tiêu chuẩn cộng đồng.
-2. Đọc ra một "Độ đẹp trai:" là con số âm hoặc rất thấp (vd: -99%, 1%, Error 404).
-3. Đưa ra một "Kết luận:" hoặc "Cảnh báo:" xạo chó (vd: "Cảnh báo: Nên đeo khẩu trang phòng độc khi ra đường...").
-Phân tích theo chi tiết có thật trong ảnh để màn khịa thêm phần chân thực (ví dụ thấy đeo kính thì khịa, thấy béo thì khịa...).
+Hãy phân tích bức ảnh này và đưa ra nhận xét về độ đẹp trai/xinh gái của người trong ảnh.
+BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON VỚI CẤU TRÚC SAU:
+{
+  "score": <số nguyên từ -100 đến 10>,
+  "overall": "<1 câu tổng kết cực kỳ phũ phàng, dìm hàng tổng thể>",
+  "features": [
+    {
+      "part": "<Bộ phận (vd: Mắt, Mũi, Môi, Tóc, Cằm...)>",
+      "comment": "<Nhận xét mỏ hỗn dựa trên phân tích chi tiết bộ phận đó>",
+      "rating": <số điểm từ 1 đến 10>
+    }
+  ],
+  "advice": "<1 lời khuyên xạo chó, mất dạy (vd: khuyên nên đi bọc thép khuôn mặt, đeo khẩu trang...)>"
+}`;
 
-Trả về kết quả CỰC KỲ NGẮN GỌN (tối đa 2-3 câu bình luận ác ý nhất).`;
-
-          const model = await this.getModel('global', 'chat'); // Sử dụng model mặc định (thường là flash)
+          // Sử dụng logic type để có thể set responseMimeType JSON
+          const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };
+          const model = await this.getModel('global', 'logic', config); 
           
           const imagePart = {
               inlineData: { data: base64Image, mimeType }
           };
 
           const result = await retryWithBackoff(() => model.generateContent([prompt, imagePart]));
-          return result.response.text().trim();
+          let text = result.response.text().trim();
+          
+          if (text.startsWith('```json')) {
+              text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+          } else if (text.startsWith('```')) {
+              text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+          }
+
+          return JSON.parse(text);
       } catch (error: any) {
           console.error("Handsome Analysis Error:", error);
           throw new Error(`Lỗi nhận diện nhan sắc: ${error.message}`);

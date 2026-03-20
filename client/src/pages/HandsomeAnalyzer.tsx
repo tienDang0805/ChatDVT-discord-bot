@@ -2,24 +2,24 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Scan, AlertTriangle, Share2, CornerUpLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const roasts = [
-  "Độ đẹp trai: -99%. AI từ chối phân tích vì lo ngại hỏng cảm biến quang học.",
-  "Độ đẹp trai: 1%. Điểm số này tương đương với vẻ đẹp của một củ khoai tây lùi.",
-  "Cảnh báo: Hàm lượng nhan sắc dưới mức tối thiểu do WHO quy định. Khuyên dùng thêm app chỉnh ảnh.",
-  "Độ đẹp trai: 5%. Nếu nhan sắc là tội ác thì bạn hoàn toàn vô tội.",
-  "Xác nhận: Gương mặt mang tính chất phòng thủ cao. Có thể dùng để xua đuổi tà ma.",
-  "Phân tích hoàn tất: Vui lòng không nhìn vào gương sau 12h đêm để tránh tự doạ mình.",
-  "Độ đẹp trai: Error 404. Not found. Thử lại ở kiếp sau.",
-  "Kết luận của AI: Vẻ đẹp tiềm ẩn... nhưng tìm rà gắt gao vẫn không thấy.",
-  "Độ đẹp trai: 10%. Giao diện khá thân thiện với môi trường, đặc biệt là phù hợp với hệ sinh thái đầm lầy.",
-  "Cảnh báo đỏ: Nhan sắc này làm vi phạm tiêu chuẩn cộng đồng của ChatDVT. Cấm xuất hiện trên livestream."
-];
+interface FeatureRating {
+  part: string;
+  comment: string;
+  rating: number;
+}
+
+interface AnalysisResult {
+  score: number;
+  overall: string;
+  features: FeatureRating[];
+  advice: string;
+}
 
 export const HandsomeAnalyzer = () => {
   const [image, setImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,9 +36,37 @@ export const HandsomeAnalyzer = () => {
       }
       const reader = new FileReader();
       reader.onload = (event) => {
-        setImage(event.target?.result as string);
-        setResult(null);
-        setLogs([]);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const MAX_SIZE = 800; // Tiết kiệm Token API
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Nén ảnh chất lượng 70% ra base64
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          setImage(compressedBase64);
+          setResult(null);
+          setLogs([]);
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -99,8 +127,14 @@ export const HandsomeAnalyzer = () => {
       clearInterval(interval);
       setScanProgress(100);
       setIsScanning(false);
-      const randomRoast = roasts[Math.floor(Math.random() * roasts.length)];
-      setResult("Sever AI chết ngang do nhan sắc này quá tải băng thông. Trả về kết quả dự phòng: " + randomRoast);
+      setResult({
+        score: -999,
+        overall: "Mất kết nối với vệ tinh AI. Có thể nhan sắc này gây nghẽn băng thông vũ trụ.",
+        features: [
+          { part: "Toàn thân", comment: "Lỗi kết nối hoặc AI bị choáng váng.", rating: 0 }
+        ],
+        advice: "Nên đeo khẩu trang tạm thời hoặc ra ngoài hít thở, sau đó thử lại."
+      });
       setLogs(prev => [...prev, "ERROR: Mất kết nối Gemini!"]);
     }
   };
@@ -118,7 +152,7 @@ export const HandsomeAnalyzer = () => {
 
   const shareResult = () => {
     if (result) {
-      navigator.clipboard.writeText(`Máy Quét AI ChatDVT đã đánh giá tao: "${result}"\nVô thử coi m độ đẹp trai bao nhiêu: devtiendang.blog/handsome`);
+      navigator.clipboard.writeText(`Máy Quét AI ChatDVT đã chấm tao ${result.score} điểm:\n"${result.overall}"\nVô thử coi m độ đẹp trai bao nhiêu: devtiendang.blog/handsome`);
       alert("Đã copy kết quả xạo chó! Gửi ngay cho crush để bị block.");
     }
   };
@@ -225,16 +259,41 @@ export const HandsomeAnalyzer = () => {
             </div>
 
             {result && (
-              <div className="mt-4 p-4 border border-red-500/50 bg-red-500/10 rounded animate-[pulse_1s_ease-in-out_1]">
-                <h4 className="flex items-center gap-2 text-red-500 font-bold mb-2 uppercase tracking-wide">
-                  <AlertTriangle size={18} /> KẾT QUẢ PHÂN TÍCH ĐÍCH TÔN
-                </h4>
-                <p className="text-white text-base md:text-lg leading-relaxed mb-4">
-                  {result}
-                </p>
+              <div className="mt-4 animate-[pulse_1s_ease-in-out_1] flex flex-col gap-4">
+                <div className="p-4 border border-red-500/50 bg-red-500/10 rounded-lg flex items-center justify-between">
+                   <div>
+                      <h4 className="flex items-center gap-2 text-red-500 font-bold mb-1 uppercase tracking-wide text-[10px] md:text-sm">
+                        <AlertTriangle size={14} /> DEEP-SCAN SCORE
+                      </h4>
+                      <div className="text-3xl md:text-5xl font-black text-red-500">
+                         {result.score} <span className="text-lg text-red-500/50">PTS</span>
+                      </div>
+                   </div>
+                   <div className="text-right flex-1 ml-4 border-l border-red-500/30 pl-4">
+                      <p className="text-white/90 text-xs md:text-sm italic">"{result.overall}"</p>
+                   </div>
+                </div>
+
+                <div className="grid gap-2 overflow-y-auto max-h-[160px] pr-2 custom-scrollbar">
+                  {result.features.map((f, i) => (
+                     <div key={i} className="p-3 bg-[#161b22] border border-slate-700/50 rounded flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                           <span className="text-cyan-400 font-bold text-[10px] md:text-xs uppercase bg-cyan-400/10 px-2 py-0.5 rounded">Vùng: {f.part}</span>
+                           <span className="text-pink-500 font-bold text-xs">{f.rating}/10</span>
+                        </div>
+                        <p className="text-slate-300 text-xs mt-1 leading-relaxed">{f.comment}</p>
+                     </div>
+                  ))}
+                </div>
+
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
+                   <p className="text-yellow-500 text-[10px] font-bold uppercase mb-1 flex items-center gap-1"><AlertTriangle size={12} /> KIẾN NGHỊ TỪ HỆ THỐNG:</p>
+                   <p className="text-yellow-100/90 text-xs md:text-sm">{result.advice}</p>
+                </div>
+
                 <button 
                   onClick={shareResult}
-                  className="w-full bg-red-500/20 hover:bg-red-500/40 border border-red-500 text-red-100 py-2 rounded flex items-center justify-center gap-2 font-bold transition-colors"
+                  className="w-full bg-red-500/20 hover:bg-red-500/40 border border-red-500 text-red-100 py-2.5 rounded flex items-center justify-center gap-2 font-bold transition-all active:scale-95 text-xs md:text-sm mt-1"
                 >
                   <Share2 size={16} /> COPY KẾT QUẢ ĐỂ KHÈ TRẺ TRÂU
                 </button>
