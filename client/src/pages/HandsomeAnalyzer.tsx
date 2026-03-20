@@ -44,43 +44,65 @@ export const HandsomeAnalyzer = () => {
     }
   };
 
-  const startAnalysis = () => {
+  const startAnalysis = async () => {
     if (!image) return;
     setIsScanning(true);
     setScanProgress(0);
     setResult(null);
-    setLogs(["Đang khởi động cảm biến lượng tử..."]);
+    setLogs(["Đang khởi động cảm biến lượng tử...", "Thiết lập kết nối với Gemini AI..."]);
 
     const analysisSteps = [
-      "Quét cấu trúc xương hàm...",
-      "Phân tích tỷ lệ vàng trên khuôn mặt...",
-      "Kiểm tra độ simping qua ánh mắt...",
+      "Tải ảnh màn hình lên máy chủ trung tâm...",
+      "Quét cấu trúc võng mạc và xương hàm...",
+      "Phân tích hệ thống nhận diện tội phạm nội y...",
       "Đo lường mức độ xảo quyệt...",
-      "Tham chiếu cơ sở dữ liệu tội phạm quốc tế...",
-      "Tổng hợp độ xạo lồng của Tiến Đặng...",
-      "Đang xuất kết quả cuối cùng..."
+      "Tổng hợp độ xạo lồng bằng Deep Learning...",
+      "Phân tích dữ liệu phản hồi từ vệ tinh..."
     ];
 
     let step = 0;
     const interval = setInterval(() => {
       setScanProgress((prev) => {
-        const next = prev + Math.floor(Math.random() * 15) + 5;
-        return next > 100 ? 100 : next;
+        // AI có thể delay lâu, giữ thanh tiến trình chạy chậm lại khi gần đích
+        const next = prev + Math.floor(Math.random() * 8) + 2;
+        return next > 95 ? 95 : next;
       });
 
       if (step < analysisSteps.length) {
         setLogs(prev => [...prev, analysisSteps[step]]);
         step++;
       }
-    }, 600);
+    }, 800);
 
-    setTimeout(() => {
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/api/handsome-analyzer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: image })
+      });
+      
+      const data = await response.json();
+      
       clearInterval(interval);
-      setIsScanning(false);
       setScanProgress(100);
+      setIsScanning(false);
+      
+      if (!response.ok) {
+        setResult(data.error || "Lỗi cmnr, tao từ chối phân tích bức ảnh này.");
+        setLogs(prev => [...prev, "ERROR: Xảy ra lỗi lượng tử."]);
+      } else {
+        setResult(data.result);
+        setLogs(prev => [...prev, "Xuất kết quả thành công."]);
+      }
+    } catch (error) {
+      clearInterval(interval);
+      setScanProgress(100);
+      setIsScanning(false);
       const randomRoast = roasts[Math.floor(Math.random() * roasts.length)];
-      setResult(randomRoast);
-    }, 5000);
+      setResult("Sever AI chết ngang do nhan sắc này quá tải băng thông. Trả về kết quả dự phòng: " + randomRoast);
+      setLogs(prev => [...prev, "ERROR: Mất kết nối Gemini!"]);
+    }
   };
 
   const reset = () => {
