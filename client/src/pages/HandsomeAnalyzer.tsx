@@ -15,6 +15,166 @@ interface AnalysisResult {
   advice: string;
 }
 
+// --- COMPONENT: IMAGE UPLOADER ---
+const ImageUploaderCard = ({ image, fileInputRef, onUpload, onStart, onReset, isScanning, hasResult }: any) => {
+  return (
+    <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 shadow-2xl relative overflow-hidden flex flex-col h-full">
+      {!image ? (
+        <div 
+          className="border-2 border-dashed border-slate-600 hover:border-orange-500 rounded-lg h-80 flex flex-col items-center justify-center cursor-pointer transition-colors group relative bg-[#0d1117]"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload size={48} className="text-slate-500 group-hover:text-orange-500 mb-4 group-hover:-translate-y-2 transition-all" />
+          <p className="text-slate-400 font-bold group-hover:text-white transition-colors">BẤM VÀO ĐÂY ĐỂ TẢI ẢNH LÊN</p>
+          <p className="text-xs text-slate-600 mt-2">Chấp nhận JPG, PNG, WEBP (Tối đa xạo lồng)</p>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={onUpload} 
+            accept="image/*" 
+            className="hidden" 
+          />
+        </div>
+      ) : (
+        <div className="relative flex-1 min-h-[320px] rounded-lg overflow-hidden border border-slate-700 bg-black">
+          <img src={image} alt="Target" className="w-full h-full object-contain" />
+          
+          {isScanning && (
+            <>
+              <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_#22d3ee] animate-[scan_2s_ease-in-out_infinite]" />
+              <div className="absolute inset-0 bg-[url('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/matrix-rain.gif')] opacity-10 mix-blend-screen pointer-events-none" />
+            </>
+          )}
+          {hasResult && (
+             <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(239,68,68,0.3)] pointer-events-none" />
+          )}
+        </div>
+      )}
+
+      <div className="mt-6 flex gap-4">
+        {image && !isScanning && !hasResult && (
+          <button 
+            onClick={onStart}
+            className="flex-1 bg-gradient-to-r from-orange-600 to-pink-600 text-white font-bold py-3 rounded hover:from-orange-500 hover:to-pink-500 transition-all flex justify-center items-center gap-2 active:scale-95"
+          >
+            <Scan size={20} /> PHÂN TÍCH NGAY
+          </button>
+        )}
+        {image && (
+          <button 
+            onClick={onReset}
+            disabled={isScanning}
+            className="px-6 bg-[#1f2937] text-slate-300 font-bold py-3 rounded hover:bg-[#374151] border border-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full flex-1"
+          >
+            Huỷ/Đổi Ảnh
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- COMPONENT: TERMINAL SCANNER ---
+const TerminalScanner = ({ logs, scanProgress, isScanning }: any) => {
+  return (
+    <div className="bg-black border border-slate-800 rounded-xl p-6 font-mono text-sm shadow-2xl flex flex-col h-full min-h-[400px]">
+      <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
+        <div className="w-3 h-3 rounded-full bg-red-500" />
+        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+        <div className="w-3 h-3 rounded-full bg-green-500" />
+        <span className="ml-2 text-slate-500 font-bold tracking-widest text-xs">AI_CONSOLE_V3.1.sys</span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-2 text-green-400">
+        {logs.map((log: string, index: number) => (
+          <div key={index} className="flex gap-2">
+            <span className="text-slate-600">[{new Date().toLocaleTimeString()}]</span>
+            <span className={index === logs.length - 1 && isScanning ? 'animate-pulse' : ''}>
+              {log}
+            </span>
+          </div>
+        ))}
+        {isScanning && (
+          <div className="mt-4">
+            <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+              <div 
+                className="h-full bg-cyan-400 transition-all duration-300 ease-out"
+                style={{ width: scanProgress + '%' }}
+              />
+            </div>
+            <p className="text-cyan-400 mt-2 text-xs">Đang nạp dữ liệu... {scanProgress}%</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- COMPONENT: RESULT DASHBOARD ---
+const ResultDashboard = ({ result, shareResult }: { result: AnalysisResult, shareResult: () => void }) => {
+  return (
+    <div className="bg-[#0b0f19] border border-red-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(239,68,68,0.1)] flex flex-col h-full animate-fade-in relative overflow-hidden">
+      {/* Background glow overlay */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 blur-[100px] pointer-events-none rounded-full" />
+      
+      {/* Header & Score */}
+      <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 border-b border-slate-800 pb-6 mb-6 relative z-10">
+        <div className="flex-1 text-center md:text-left">
+           <h4 className="flex items-center justify-center md:justify-start gap-2 text-red-500 font-bold mb-2 uppercase tracking-widest text-sm">
+             <AlertTriangle size={18} /> HỒ SƠ TỘI PHẠM NHAN SẮC
+           </h4>
+           <p className="text-slate-300 text-lg md:text-xl italic leading-relaxed">
+             "{result.overall}"
+           </p>
+        </div>
+        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl min-w-[140px] text-center shrink-0 shadow-[inset_0_0_20px_rgba(239,68,68,0.1)]">
+           <p className="text-slate-500 text-xs font-bold uppercase mb-1">DEEP-SCAN SCORE</p>
+           <div className="text-5xl font-black text-red-500 tracking-tighter">
+             {result.score}<span className="text-xl text-red-500/50">PTS</span>
+           </div>
+        </div>
+      </div>
+
+      {/* Grid Features */}
+      <div className="mb-4">
+         <h5 className="text-slate-500 text-xs font-bold uppercase tracking-widest mb-4">Chi tiết cấu trúc sinh học:</h5>
+         <div className="grid sm:grid-cols-2 gap-4">
+           {result.features.map((f, i) => (
+             <div key={i} className="bg-[#121826] border border-slate-800 hover:border-slate-600 transition-colors rounded-lg p-4 flex flex-col gap-2 relative overflow-hidden group">
+               <div className="absolute left-0 top-0 w-1 h-full bg-slate-800 group-hover:bg-cyan-500 transition-colors" />
+               <div className="flex justify-between items-center pl-2">
+                 <span className="text-cyan-400 font-bold text-xs uppercase tracking-wider">{f.part}</span>
+                 <span className="text-pink-500 font-bold bg-pink-500/10 px-2 py-1 rounded text-xs">{f.rating}/10</span>
+               </div>
+               <p className="text-slate-400 text-sm leading-relaxed pl-2">{f.comment}</p>
+             </div>
+           ))}
+         </div>
+      </div>
+
+      {/* Advice Block */}
+      <div className="mt-auto pt-6">
+        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg relative overflow-hidden">
+           <div className="absolute left-0 top-0 w-1 h-full bg-yellow-500" />
+           <p className="text-yellow-500 text-xs font-bold uppercase mb-2 flex items-center gap-2 pl-2">
+              <AlertTriangle size={14} /> KIẾN NGHỊ TỪ HỆ THỐNG
+           </p>
+           <p className="text-yellow-100/80 text-sm md:text-base pl-2">{result.advice}</p>
+        </div>
+
+        <button 
+          onClick={shareResult}
+          className="w-full mt-4 bg-red-500/20 hover:bg-red-500/40 border border-red-500 text-red-100 py-4 rounded-lg flex items-center justify-center gap-3 font-bold transition-all active:scale-95 text-sm uppercase tracking-wider"
+        >
+          <Share2 size={18} /> COPY KẾT QUẢ ĐỂ KHÈ TRẺ TRÂU
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+// --- MAIN PAGE COMPONENT ---
 export const HandsomeAnalyzer = () => {
   const [image, setImage] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -91,7 +251,6 @@ export const HandsomeAnalyzer = () => {
     let step = 0;
     const interval = setInterval(() => {
       setScanProgress((prev) => {
-        // AI có thể delay lâu, giữ thanh tiến trình chạy chậm lại khi gần đích
         const next = prev + Math.floor(Math.random() * 8) + 2;
         return next > 95 ? 95 : next;
       });
@@ -117,7 +276,12 @@ export const HandsomeAnalyzer = () => {
       setIsScanning(false);
       
       if (!response.ok) {
-        setResult(data.error || "Lỗi cmnr, tao từ chối phân tích bức ảnh này.");
+        setResult({
+          score: -999,
+          overall: data.error || "Lỗi cmnr, tao từ chối phân tích bức ảnh này.",
+          features: [{ part: "Toàn thân", comment: "Lỗi kết nối hoặc AI bị choáng váng.", rating: 0 }],
+          advice: "Nên đeo khẩu trang tạm thời hoặc ra ngoài hít thở, sau đó thử lại."
+        });
         setLogs(prev => [...prev, "ERROR: Xảy ra lỗi lượng tử."]);
       } else {
         setResult(data.result);
@@ -158,151 +322,7 @@ export const HandsomeAnalyzer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-6 font-mono">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-2 bg-[#161b22] rounded border border-slate-800">
-            <CornerUpLeft size={20} />
-          </Link>
-          <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 uppercase tracking-widest flex items-center gap-3">
-            <Scan size={36} className="text-orange-500" /> DIẾP-LOING-NING 3000
-          </h1>
-        </div>
-
-        <p className="text-slate-400 mb-8 max-w-2xl border-l-4 border-pink-500 pl-4">
-          Công nghệ phân tích khuôn mặt "Deep Learning" chạy bằng cơm mặn của ChatDVT. Gửi ảnh lên để nhận về sự thật phũ phàng. Dữ liệu của mày sẽ KHÔNG bị lưu lại vì server nghèo không có dung lượng.
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Cột Upload và Hiển thị ảnh */}
-          <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 shadow-2xl relative overflow-hidden">
-            {!image ? (
-              <div 
-                className="border-2 border-dashed border-slate-600 hover:border-orange-500 rounded-lg h-80 flex flex-col items-center justify-center cursor-pointer transition-colors group relative bg-[#0d1117]"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload size={48} className="text-slate-500 group-hover:text-orange-500 mb-4 group-hover:-translate-y-2 transition-all" />
-                <p className="text-slate-400 font-bold group-hover:text-white transition-colors">BẤM VÀO ĐÂY ĐỂ TẢI ẢNH LÊN</p>
-                <p className="text-xs text-slate-600 mt-2">Chấp nhận JPG, PNG, WEBP (Tối đa xạo lồng)</p>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleImageUpload} 
-                  accept="image/*" 
-                  className="hidden" 
-                />
-              </div>
-            ) : (
-              <div className="relative h-80 w-full rounded-lg overflow-hidden border border-slate-700 bg-black">
-                <img src={image} alt="Target" className="w-full h-full object-contain" />
-                
-                {/* Hiệu ứng Scanning Line */}
-                {isScanning && (
-                  <>
-                    <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_#22d3ee] animate-[scan_2s_ease-in-out_infinite]" />
-                    <div className="absolute inset-0 bg-[url('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/matrix-rain.gif')] opacity-10 mix-blend-screen pointer-events-none" />
-                  </>
-                )}
-              </div>
-            )}
-
-            <div className="mt-6 flex gap-4">
-              {image && !isScanning && !result && (
-                <button 
-                  onClick={startAnalysis}
-                  className="flex-1 bg-gradient-to-r from-orange-600 to-pink-600 text-white font-bold py-3 rounded hover:from-orange-500 hover:to-pink-500 transition-all flex justify-center items-center gap-2 active:scale-95"
-                >
-                  <Scan size={20} /> PHÂN TÍCH NGAY
-                </button>
-              )}
-              {image && (
-                <button 
-                  onClick={reset}
-                  disabled={isScanning}
-                  className="px-6 bg-[#1f2937] text-slate-300 font-bold rounded hover:bg-[#374151] border border-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Huỷ/Đổi Ảnh
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Cột Terminal / Logs / Kết quả */}
-          <div className="bg-black border border-slate-800 rounded-xl p-6 font-mono text-sm shadow-2xl flex flex-col h-[400px]">
-            <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
-              <div className="w-3 h-3 rounded-full bg-red-500" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500" />
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="ml-2 text-slate-500 font-bold tracking-widest text-xs">AI_CONSOLE_V3.1.sys</span>
-            </div>
-
-            <div className="flex-1 overflow-y-auto space-y-2 text-green-400">
-              {logs.map((log, index) => (
-                <div key={index} className="flex gap-2">
-                  <span className="text-slate-600">[{new Date().toLocaleTimeString()}]</span>
-                  <span className={index === logs.length - 1 && isScanning ? 'animate-pulse' : ''}>
-                    {log}
-                  </span>
-                </div>
-              ))}
-              {isScanning && (
-                <div className="mt-4">
-                  <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-                    <div 
-                      className="h-full bg-cyan-400 transition-all duration-300 ease-out"
-                      style={{ width: scanProgress + '%' }}
-                    />
-                  </div>
-                  <p className="text-cyan-400 mt-2 text-xs">Đang nạp dữ liệu... {scanProgress}%</p>
-                </div>
-              )}
-            </div>
-
-            {result && (
-              <div className="mt-4 animate-[pulse_1s_ease-in-out_1] flex flex-col gap-4">
-                <div className="p-4 border border-red-500/50 bg-red-500/10 rounded-lg flex items-center justify-between">
-                   <div>
-                      <h4 className="flex items-center gap-2 text-red-500 font-bold mb-1 uppercase tracking-wide text-[10px] md:text-sm">
-                        <AlertTriangle size={14} /> DEEP-SCAN SCORE
-                      </h4>
-                      <div className="text-3xl md:text-5xl font-black text-red-500">
-                         {result.score} <span className="text-lg text-red-500/50">PTS</span>
-                      </div>
-                   </div>
-                   <div className="text-right flex-1 ml-4 border-l border-red-500/30 pl-4">
-                      <p className="text-white/90 text-xs md:text-sm italic">"{result.overall}"</p>
-                   </div>
-                </div>
-
-                <div className="grid gap-2 overflow-y-auto max-h-[160px] pr-2 custom-scrollbar">
-                  {result.features.map((f, i) => (
-                     <div key={i} className="p-3 bg-[#161b22] border border-slate-700/50 rounded flex flex-col gap-1">
-                        <div className="flex justify-between items-center">
-                           <span className="text-cyan-400 font-bold text-[10px] md:text-xs uppercase bg-cyan-400/10 px-2 py-0.5 rounded">Vùng: {f.part}</span>
-                           <span className="text-pink-500 font-bold text-xs">{f.rating}/10</span>
-                        </div>
-                        <p className="text-slate-300 text-xs mt-1 leading-relaxed">{f.comment}</p>
-                     </div>
-                  ))}
-                </div>
-
-                <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
-                   <p className="text-yellow-500 text-[10px] font-bold uppercase mb-1 flex items-center gap-1"><AlertTriangle size={12} /> KIẾN NGHỊ TỪ HỆ THỐNG:</p>
-                   <p className="text-yellow-100/90 text-xs md:text-sm">{result.advice}</p>
-                </div>
-
-                <button 
-                  onClick={shareResult}
-                  className="w-full bg-red-500/20 hover:bg-red-500/40 border border-red-500 text-red-100 py-2.5 rounded flex items-center justify-center gap-2 font-bold transition-all active:scale-95 text-xs md:text-sm mt-1"
-                >
-                  <Share2 size={16} /> COPY KẾT QUẢ ĐỂ KHÈ TRẺ TRÂU
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-4 md:px-8 font-mono overflow-x-hidden">
       <style>{`
         @keyframes scan {
           0% { top: 0; opacity: 0; }
@@ -310,7 +330,83 @@ export const HandsomeAnalyzer = () => {
           90% { opacity: 1; }
           100% { top: 100%; opacity: 0; }
         }
+        @keyframes fade-in {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
       `}</style>
+      
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-3 bg-[#161b22] rounded-xl border border-slate-800 shadow-xl">
+              <CornerUpLeft size={24} />
+            </Link>
+            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 uppercase tracking-widest flex items-center gap-3">
+              <Scan size={32} className="text-orange-500 hidden md:block" /> DIẾP-LOING-NING 3000
+            </h1>
+          </div>
+          <p className="text-slate-400 max-w-sm text-xs md:text-sm text-right border-r-4 border-pink-500 pr-4 hidden md:block italic">
+            "Máy quét chạy bằng cơm mặn của ChatDVT. Gửi ảnh lên để nhận về sự thật phũ phàng."
+          </p>
+        </div>
+
+        {/* TRẠNG THÁI 1: CHƯA UPLOAD & TRẠNG THÁI 2: ĐANG UPLOAD / QUÉT */}
+        {!result && (
+          <div className="flex justify-center transition-all duration-500">
+            <div className={`w-full transition-all duration-500 ${image && isScanning ? 'grid lg:grid-cols-2 gap-8' : 'max-w-2xl'}`}>
+              <ImageUploaderCard 
+                image={image} 
+                fileInputRef={fileInputRef} 
+                onUpload={handleImageUpload} 
+                onStart={startAnalysis} 
+                onReset={reset} 
+                isScanning={isScanning} 
+                hasResult={false} 
+              />
+              
+              {image && isScanning && (
+                <div className="animate-fade-in">
+                  <TerminalScanner logs={logs} scanProgress={scanProgress} isScanning={isScanning} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TRẠNG THÁI 3: KẾT QUẢ HIỂN THỊ */}
+        {result && (
+           <div className="grid lg:grid-cols-[1fr_2.5fr] gap-8 transition-all duration-700 animate-fade-in items-stretch">
+             {/* Thu nhỏ Ảnh sang cột trái */}
+             <div className="hidden lg:block h-full">
+               <ImageUploaderCard 
+                 image={image} 
+                 fileInputRef={fileInputRef} 
+                 onUpload={handleImageUpload} 
+                 onStart={startAnalysis} 
+                 onReset={reset} 
+                 isScanning={false} 
+                 hasResult={true} 
+               />
+             </div>
+             
+             {/* Result Dashboard chiếm trọn không gian lớn bên phải */}
+             <ResultDashboard result={result} shareResult={shareResult} />
+             
+             {/* Nút reset cho mobile (Nằm dưới cùng màn result) */}
+             <div className="lg:hidden w-full">
+               <button 
+                 onClick={reset}
+                 className="px-6 bg-[#1f2937] text-slate-300 font-bold py-4 rounded-xl hover:bg-[#374151] border border-slate-700 transition-colors w-full uppercase tracking-wider text-sm"
+               >
+                 Phân Tích Ảnh Khác
+               </button>
+             </div>
+           </div>
+        )}
+
+      </div>
     </div>
   );
 };
