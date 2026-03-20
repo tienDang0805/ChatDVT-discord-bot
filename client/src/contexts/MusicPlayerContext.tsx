@@ -46,6 +46,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   });
   
   const playerRef = useRef<any>(null);
+  const isHandlingEnd = useRef(false);
   
   // To avoid Stale Closures in react-youtube event callbacks
   const stateRefs = useRef({ queue, isShuffling, isLooping, currentSongIndex });
@@ -132,6 +133,43 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const toggleShuffle = () => setIsShuffling(prev => !prev);
   const toggleLoop = () => setIsLooping(prev => !prev);
 
+  const handleSongEnd = () => {
+    if (isHandlingEnd.current) return;
+    isHandlingEnd.current = true;
+    if (stateRefs.current.isLooping) {
+      playerRef.current?.seekTo(0);
+      playerRef.current?.playVideo();
+    } else {
+      nextSong();
+    }
+    setTimeout(() => { isHandlingEnd.current = false; }, 2000);
+  };
+
+  useEffect(() => {
+    if (!isPlaying || !playerRef.current) return;
+
+    const interval = setInterval(() => {
+      const player = playerRef.current;
+      if (!player) return;
+
+      try {
+        const state = player.getPlayerState();
+        if (state === 0) {
+          handleSongEnd();
+          return;
+        }
+
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        if (duration > 0 && currentTime >= duration - 0.5) {
+          handleSongEnd();
+        }
+      } catch {}
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isPlaying, currentSongIndex]);
+
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
     playerRef.current.setVolume(volume);
@@ -139,14 +177,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const onStateChange: YouTubeProps['onStateChange'] = (event) => {
-    // 0 = ended, 1 = playing, 2 = paused
     if (event.data === 0) {
-      if (stateRefs.current.isLooping) {
-        playerRef.current?.seekTo(0);
-        playerRef.current?.playVideo();
-      } else {
-        nextSong();
-      }
+      handleSongEnd();
     } else if (event.data === 1) {
       setIsPlaying(true);
     } else if (event.data === 2) {
