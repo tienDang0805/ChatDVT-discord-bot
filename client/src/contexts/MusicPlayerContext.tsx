@@ -148,7 +148,24 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!isPlaying || !playerRef.current) return;
 
-    const interval = setInterval(() => {
+    // Dùng Web Worker để không bị trình duyệt bóp băng thông/ngủ đông tab
+    const blob = new Blob([
+      `
+      let interval;
+      self.onmessage = function(e) {
+        if (e.data === 'start') {
+          interval = setInterval(() => self.postMessage('tick'), 1000);
+        } else if (e.data === 'stop') {
+          clearInterval(interval);
+        }
+      }
+      `
+    ], { type: 'application/javascript' });
+    
+    const workerContext = URL.createObjectURL(blob);
+    const worker = new Worker(workerContext);
+
+    worker.onmessage = () => {
       const player = playerRef.current;
       if (!player) return;
 
@@ -161,13 +178,20 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
 
         const currentTime = player.getCurrentTime();
         const duration = player.getDuration();
+        // Check nếu gần hết bài (cách 0.5s)
         if (duration > 0 && currentTime >= duration - 0.5) {
           handleSongEnd();
         }
       } catch {}
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
+    worker.postMessage('start');
+
+    return () => {
+      worker.postMessage('stop');
+      worker.terminate();
+      URL.revokeObjectURL(workerContext);
+    };
   }, [isPlaying, currentSongIndex]);
 
   const onReady: YouTubeProps['onReady'] = (event) => {

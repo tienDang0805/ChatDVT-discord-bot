@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -76,6 +76,16 @@ export const PublicPortal = () => {
       href: '/music',
       author: 'Tiến Đặng (hêhhe)',
       category: 'utility'
+    },
+    {
+      id: 'handsome-analyzer',
+      number: '08',
+      title: 'Máy Quét Nhan Sắc AI',
+      description: 'Công nghệ phân tích khuôn mặt Deep Learning chạy bằng cơm mặn, chuyên trả kết quả xạo chó dìm hàng.',
+      icon: Scan,
+      href: '/handsome',
+      author: 'Super AI Lỏ',
+      category: 'utility'
     }
   ];
 
@@ -143,7 +153,6 @@ export const PublicPortal = () => {
         
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row gap-12 items-start justify-between mb-20 relative">
-          
           
           {/* Theme Toggle */}
           <button 

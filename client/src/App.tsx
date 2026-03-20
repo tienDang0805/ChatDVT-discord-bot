@@ -20,6 +20,7 @@ import { WebQuizRoom } from './pages/WebQuiz/Room';
 import { PublicPortal } from './pages/PublicPortal';
 import FoodWheel from './pages/FoodWheel';
 import ExcuseGenerator from './pages/ExcuseGenerator';
+import { HandsomeAnalyzer } from './pages/HandsomeAnalyzer';
 import MusicStation from './pages/MusicStation';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
@@ -51,6 +52,7 @@ function App() {
           <Route path="/chatDVT" element={<PublicPortal />} />
           <Route path="/food-wheel" element={<FoodWheel />} />
           <Route path="/excuse-generator" element={<ExcuseGenerator />} />
+          <Route path="/handsome" element={<HandsomeAnalyzer />} />
           <Route path="/music" element={<MusicStation />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
