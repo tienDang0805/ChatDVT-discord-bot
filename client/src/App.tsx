@@ -23,6 +23,7 @@ import ExcuseGenerator from './pages/ExcuseGenerator';
 import MusicStation from './pages/MusicStation';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
+import { Toaster } from 'react-hot-toast';
 
 // Auth Wrapper
 const RequireAuth = ({ children }: { children: JSX.Element }) => {
@@ -40,6 +41,10 @@ function App() {
   return (
     <MusicPlayerProvider>
       <div className="min-h-screen">
+        <Toaster position="top-right" toastOptions={{ 
+          className: 'dark:bg-slate-800 dark:text-white',
+          style: { borderRadius: '12px', padding: '16px' }
+        }} />
         <GlobalMusicPlayer />
         <Routes>
           <Route path="/" element={<PublicPortal />} />

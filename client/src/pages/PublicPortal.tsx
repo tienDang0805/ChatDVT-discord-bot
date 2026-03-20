@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
+  const { theme, toggleTheme } = useTheme();
   const features = [
     {
       id: 'quiz',
@@ -11,7 +13,8 @@ export const PublicPortal = () => {
       description: 'Chơi trắc nghiệm Real-time với câu hỏi do Bot ChatDVT gen bằng AI tự động.',
       icon: BrainCircuit,
       href: '/quiz',
-      author: 'Gấu bự (Tiến Đặng lúc sảng đá)'
+      author: 'Gấu bự (Tiến Đặng lúc sảng đá)',
+      category: 'game'
     },
     {
       id: 'pets',
@@ -20,7 +23,8 @@ export const PublicPortal = () => {
       description: 'Giao diện xem danh sách Thú cưng đáng yêu, tiến hoá, và bảng xếp hạng Pet Server.',
       icon: Cat,
       href: '/petlandingpage',
-      author: 'Lãng tử content ( Là Tiến Đặng lúc làm content)'
+      author: 'Lãng tử content ( Là Tiến Đặng lúc làm content)',
+      category: 'game'
     },
     {
       id: 'tutien',
@@ -29,7 +33,8 @@ export const PublicPortal = () => {
       description: 'Hệ thống Tu luyện Cảnh giới, độ kiếp, pháp bảo và thế giới quan RPG Text-based.',
       icon: Sparkles,
       href: '/tutien',
-      author: 'Phì Đế (Tiến Đặng lúc đói)'
+      author: 'Phì Đế (Tiến Đặng lúc đói)',
+      category: 'game'
     },
     {
       id: 'github',
@@ -39,7 +44,8 @@ export const PublicPortal = () => {
       icon: Github,
       href: 'https://github.com/tienDang0805/ChatDVT-discord-bot',
       author: 'Tiến Đặng (Lúc lập trình viên)',
-      external: true
+      external: true,
+      category: 'utility'
     },
     {
       id: 'food-wheel',
@@ -49,7 +55,7 @@ export const PublicPortal = () => {
       icon: Coffee,
       href: '/food-wheel',
       author: 'Tiến Đặng (Lúc k biết ăn gì)',
-
+      category: 'utility'
     },
     {
       id: 'excuse-generator',
@@ -59,6 +65,7 @@ export const PublicPortal = () => {
       icon: AlertTriangle,
       href: '/excuse-generator',
       author: 'ChatDVT (Lúc lười biếng)',
+      category: 'utility'
     },
     {
       id: 'music-station',
@@ -68,7 +75,7 @@ export const PublicPortal = () => {
       icon: Music2,
       href: '/music',
       author: 'Tiến Đặng (hêhhe)',
-
+      category: 'utility'
     }
   ];
 
@@ -80,6 +87,35 @@ export const PublicPortal = () => {
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Filter & Search states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility'>('all');
+  const [showTopBtn, setShowTopBtn] = useState(false);
+
+  // Monitor scroll for Back-To-Top
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTopBtn(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Lọc dữ liệu
+  const filteredFeatures = features.filter(item => {
+    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = item.title.toLowerCase().includes(term) || item.description.toLowerCase().includes(term);
+    return matchesCategory && matchesSearch;
+  });
+
+  const countGame = features.filter(f => f.category === 'game').length;
+  const countUtility = features.filter(f => f.category === 'utility').length;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -108,10 +144,15 @@ export const PublicPortal = () => {
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row gap-12 items-start justify-between mb-20 relative">
           
-          {/* Tag VOL.01 */}
-          <div className="absolute top-0 right-4 lg:right-0 rotate-12 bg-orange-500 text-white font-black px-4 py-1 text-sm tracking-wider shadow-lg z-10">
-            VOL.01 / 2026
-          </div>
+          
+          {/* Theme Toggle */}
+          <button 
+            onClick={toggleTheme}
+            className="absolute -top-10 left-4 lg:left-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#1f2937] border border-slate-700 text-slate-300 hover:text-orange-400 hover:border-orange-500/50 shadow-lg transition-all z-10 group"
+            title={theme === 'dark' ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
+          >
+            {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
+          </button>
 
           <div className="flex-1 space-y-6">
             <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
@@ -252,16 +293,48 @@ export const PublicPortal = () => {
            </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
-           <button className="bg-orange-500 text-white font-bold py-2 px-4 rounded hover:bg-orange-600 transition-colors">Tất cả ({features.length})</button>
-           <button className="bg-[#1f2937] text-slate-300 font-medium border border-slate-700 py-2 px-4 rounded hover:bg-[#374151] transition-colors">🎮 Game (2)</button>
-           <button className="bg-[#1f2937] text-slate-300 font-medium border border-slate-700 py-2 px-4 rounded hover:bg-[#374151] transition-colors">🚀 Tiện ích (2)</button>
+        {/* Filters & Search */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+           <div className="flex flex-wrap gap-2">
+             <button 
+               onClick={() => setActiveCategory('all')}
+               className={`font-bold py-2 px-4 rounded transition-colors ${activeCategory === 'all' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-[#1f2937] text-slate-300 border border-slate-700 hover:bg-[#374151]'}`}>
+                 Tất cả ({features.length})
+             </button>
+             <button 
+               onClick={() => setActiveCategory('game')}
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'game' ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#1f2937] text-slate-300 border-slate-700 hover:bg-[#374151]'}`}>
+                 🎮 Game ({countGame})
+             </button>
+             <button 
+               onClick={() => setActiveCategory('utility')}
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'utility' ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#1f2937] text-slate-300 border-slate-700 hover:bg-[#374151]'}`}>
+                 🚀 Tiện ích ({countUtility})
+             </button>
+           </div>
+           {/* Search Box */}
+           <div className="relative w-full md:w-64">
+             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <Search size={16} className="text-slate-500" />
+             </div>
+             <input
+               type="text"
+               placeholder="Tìm kiếm tính năng..."
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="w-full bg-[#131923] border border-slate-700 text-slate-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-orange-500 transition-colors"
+             />
+           </div>
         </div>
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((item) => (
+          {filteredFeatures.length === 0 ? (
+            <div className="col-span-full py-12 text-center text-slate-500">
+              Không tìm thấy tính năng nào phù hợp. (Thử dùng từ khoá khác)
+            </div>
+          ) : (
+            filteredFeatures.map((item) => (
              item.external ? (
                 <a
                   key={item.id}
@@ -310,7 +383,8 @@ export const PublicPortal = () => {
                    </div>
                 </Link>
              )
-          ))}
+            ))
+          )}
         </div>
 
       </div>
@@ -334,6 +408,17 @@ export const PublicPortal = () => {
               onClick={(e) => e.stopPropagation()} 
            />
         </div>
+      )}
+
+      {/* Back To Top Button */}
+      {showTopBtn && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 bg-orange-500 text-white p-3 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:bg-orange-600 hover:scale-110 hover:-translate-y-1 transition-all z-40 group"
+          title="Lên đầu trang"
+        >
+          <ArrowUp size={24} className="group-hover:animate-bounce" />
+        </button>
       )}
     </div>
   );

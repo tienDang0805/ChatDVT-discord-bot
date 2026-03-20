@@ -181,6 +181,20 @@ export default function FoodWheel() {
     document.title = 'Hôm Nay Ăn Gì? | devtiendang.blog';
   }, []);
 
+  // Keyboard Shortcuts (Space to spin, Esc to close modal)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === ' ' && !showModal && !spinning && wheelData) {
+        e.preventDefault();
+        spin();
+      } else if (e.key === 'Escape' && showModal) {
+        setShowModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showModal, spinning, wheelData]);
+
   const drawWheel = useCallback((deg: number) => {
     const canvas = canvasRef.current;
     if (!canvas || !wheelData) return;
