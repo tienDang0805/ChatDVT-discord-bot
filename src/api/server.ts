@@ -1175,6 +1175,36 @@ app.post('/api/music/playlist', async (req, res) => {
     }
 });
 
+app.post('/api/music/copy', async (req, res) => {
+    try {
+        const { sourceCode, targetCode } = req.body;
+        if (!sourceCode || !targetCode) return res.status(400).json({ error: 'Thiếu thông tin' });
+        
+        const src = sourceCode.trim().toUpperCase();
+        const tgt = targetCode.trim().toUpperCase();
+
+        const sourcePlaylist = await prisma.musicPlaylist.findUnique({ where: { secretCode: src } });
+        if (!sourcePlaylist) return res.status(404).json({ error: 'Playlist nguồn không tồn tại' });
+
+        const targetPlaylist = await prisma.musicPlaylist.findUnique({ where: { secretCode: tgt } });
+        if (targetPlaylist) {
+            await prisma.musicPlaylist.update({
+                where: { secretCode: tgt },
+                data: { songs: sourcePlaylist.songs }
+            });
+        } else {
+            await prisma.musicPlaylist.create({ 
+                data: { secretCode: tgt, name: `Trạm phát ${tgt}`, songs: sourcePlaylist.songs } 
+            });
+        }
+
+        res.json({ success: true, targetCode: tgt, songs: JSON.parse(sourcePlaylist.songs) });
+    } catch (err) {
+        console.error('Music copy error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 app.post('/api/music/add', async (req, res) => {
     try {
         const { secretCode, youtubeUrl, category } = req.body;

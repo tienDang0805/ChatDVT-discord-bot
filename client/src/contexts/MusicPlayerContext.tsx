@@ -48,10 +48,10 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const playerRef = useRef<any>(null);
   
   // To avoid Stale Closures in react-youtube event callbacks
-  const stateRefs = useRef({ queue, isShuffling, isLooping });
+  const stateRefs = useRef({ queue, isShuffling, isLooping, currentSongIndex });
   useEffect(() => {
-    stateRefs.current = { queue, isShuffling, isLooping };
-  }, [queue, isShuffling, isLooping]);
+    stateRefs.current = { queue, isShuffling, isLooping, currentSongIndex };
+  }, [queue, isShuffling, isLooping, currentSongIndex]);
 
   const setSecretCode = (code: string | null) => {
     setSecretCodeState(code);
@@ -65,33 +65,49 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     if (index >= 0 && index < queue.length) {
       setCurrentSongIndex(index);
       setIsPlaying(true);
+      if (playerRef.current) {
+        playerRef.current.loadVideoById(queue[index].videoId);
+        playerRef.current.playVideo();
+      }
     }
   };
 
   const nextSong = () => {
-    const { queue: currentQueue, isShuffling: currentIsShuffling } = stateRefs.current;
+    const { queue: currentQueue, isShuffling: currentIsShuffling, currentSongIndex: prevIdx } = stateRefs.current;
     if (currentQueue.length === 0) return;
-    setCurrentSongIndex((prev) => {
-      if (currentIsShuffling && currentQueue.length > 1) {
-        let nextIdx = prev;
-        // Try up to 10 times to find a new index (to avoid infinite loop if somehow logic fails)
-        let attempts = 0;
-        while (nextIdx === prev && attempts < 10) {
-           nextIdx = Math.floor(Math.random() * currentQueue.length);
-           attempts++;
-        }
-        return nextIdx;
+    
+    let nextIdx = prevIdx;
+    if (currentIsShuffling && currentQueue.length > 1) {
+      let attempts = 0;
+      while (nextIdx === prevIdx && attempts < 10) {
+         nextIdx = Math.floor(Math.random() * currentQueue.length);
+         attempts++;
       }
-      return (prev + 1) % currentQueue.length;
-    });
+    } else {
+      nextIdx = (prevIdx + 1) % currentQueue.length;
+    }
+
+    setCurrentSongIndex(nextIdx);
     setIsPlaying(true);
+
+    if (playerRef.current && currentQueue[nextIdx]) {
+      playerRef.current.loadVideoById(currentQueue[nextIdx].videoId);
+      playerRef.current.playVideo();
+    }
   };
 
   const prevSong = () => {
-    const { queue: currentQueue } = stateRefs.current;
+    const { queue: currentQueue, currentSongIndex: prevIdx } = stateRefs.current;
     if (currentQueue.length === 0) return;
-    setCurrentSongIndex((prev) => (prev - 1 + currentQueue.length) % currentQueue.length);
+    
+    const nextIdx = (prevIdx - 1 + currentQueue.length) % currentQueue.length;
+    setCurrentSongIndex(nextIdx);
     setIsPlaying(true);
+
+    if (playerRef.current && currentQueue[nextIdx]) {
+      playerRef.current.loadVideoById(currentQueue[nextIdx].videoId);
+      playerRef.current.playVideo();
+    }
   };
 
   const togglePlay = () => {
@@ -167,7 +183,7 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     >
       {children}
       {currentSong && (
-        <div style={{ position: 'fixed', bottom: -100, visibility: 'hidden', zIndex: -999 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', zIndex: -999 }}>
            <YouTube
              videoId={currentSong.videoId}
              opts={opts}
