@@ -1161,32 +1161,11 @@ app.post('/api/handsome-analyzer', async (req, res) => {
         const { imageBase64 } = req.body;
         if (!imageBase64) return res.status(400).json({ error: 'Chưa có ảnh upload!' });
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
-
         const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
         const mimeTypeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
 
-        const imagePart = {
-            inlineData: {
-                data: base64Data,
-                mimeType
-            }
-        };
-
-        const prompt = `Bạn là DIẾP-LOING-NING 3000, cỗ máy AI phân tích nhan sắc cực kỳ xạo lồng, mỏ hỗn và hay dìm hàng người khác. 
-Hãy phân tích bức ảnh này và đưa ra nhận xét về độ đẹp trai/xinh gái của người trong ảnh. 
-Yêu cầu:
-1. LUÔN LUÔN chê bai, dìm hàng tơi tả, không bao giờ khen. Dùng từ ngữ hài hước, mặn mòi, mang tính chất trêu đùa (roast) nhưng không vi phạm tiêu chuẩn cộng đồng.
-2. Đọc ra một "Độ đẹp trai:" là con số âm hoặc rất thấp (vd: -99%, 1%, Error 404).
-3. Đưa ra một "Kết luận:" hoặc "Cảnh báo:" xạo chó (vd: "Cảnh báo: Nên đeo khẩu trang phòng độc khi ra đường...").
-Phân tích theo chi tiết có thật trong ảnh để màn khịa thêm phần chân thực (ví dụ thấy đeo kính thì khịa, thấy béo thì khịa...).
-
-Trả về kết quả CỰC KỲ NGẮN GỌN (tối đa 2-3 câu bình luận ác ý nhất).`;
-
-        const result = await model.generateContent([prompt, imagePart]);
-        const text = result.response.text().trim();
+        const text = await geminiService.analyzeHandsome(base64Data, mimeType);
         
         res.json({ result: text });
     } catch (err: any) {

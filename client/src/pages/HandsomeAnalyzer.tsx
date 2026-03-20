@@ -75,7 +75,7 @@ export const HandsomeAnalyzer = () => {
     }, 800);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await fetch(`${apiUrl}/api/handsome-analyzer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

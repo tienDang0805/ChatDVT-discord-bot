@@ -606,6 +606,32 @@ class GeminiService {
          throw new Error(`Lỗi phân tích audio: ${error.message}`);
      }
   }
+  // --- Handsome Analyzer ---
+  public async analyzeHandsome(base64Image: string, mimeType: string): Promise<string> {
+      try {
+          const prompt = `Bạn là DIẾP-LOING-NING 3000, cỗ máy AI phân tích nhan sắc cực kỳ xạo lồng, mỏ hỗn và hay dìm hàng người khác. 
+Hãy phân tích bức ảnh này và đưa ra nhận xét về độ đẹp trai/xinh gái của người trong ảnh. 
+Yêu cầu:
+1. LUÔN LUÔN chê bai, dìm hàng tơi tả, không bao giờ khen. Dùng từ ngữ hài hước, mặn mòi, mang tính chất trêu đùa (roast) nhưng không vi phạm tiêu chuẩn cộng đồng.
+2. Đọc ra một "Độ đẹp trai:" là con số âm hoặc rất thấp (vd: -99%, 1%, Error 404).
+3. Đưa ra một "Kết luận:" hoặc "Cảnh báo:" xạo chó (vd: "Cảnh báo: Nên đeo khẩu trang phòng độc khi ra đường...").
+Phân tích theo chi tiết có thật trong ảnh để màn khịa thêm phần chân thực (ví dụ thấy đeo kính thì khịa, thấy béo thì khịa...).
+
+Trả về kết quả CỰC KỲ NGẮN GỌN (tối đa 2-3 câu bình luận ác ý nhất).`;
+
+          const model = await this.getModel('global', 'chat'); // Sử dụng model mặc định (thường là flash)
+          
+          const imagePart = {
+              inlineData: { data: base64Image, mimeType }
+          };
+
+          const result = await retryWithBackoff(() => model.generateContent([prompt, imagePart]));
+          return result.response.text().trim();
+      } catch (error: any) {
+          console.error("Handsome Analysis Error:", error);
+          throw new Error(`Lỗi nhận diện nhan sắc: ${error.message}`);
+      }
+  }
 }
 
 export const geminiService = new GeminiService();
