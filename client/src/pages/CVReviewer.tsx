@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Scan, AlertTriangle, FileText, CornerUpLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github } from 'lucide-react';
+import { Upload, Scan, AlertTriangle, FileText, CornerUpLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github, TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -7,39 +7,64 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'react-hot-toast';
 import { EditableCV, type CVData } from '../components/EditableCV';
 
+const htmlToMd = (html: string) => {
+  if (!html) return '';
+  let md = html.replace(/<b\b[^>]*>(.*?)<\/b>/gi, '**$1**')
+               .replace(/<strong\b[^>]*>(.*?)<\/strong>/gi, '**$1**')
+               .replace(/<i\b[^>]*>(.*?)<\/i>/gi, '_$1_')
+               .replace(/<em\b[^>]*>(.*?)<\/em>/gi, '_$1_')
+               .replace(/<div><br><\/div>/gi, '\n')
+               .replace(/<div\b[^>]*>(.*?)<\/div>/gi, '\n$1')
+               .replace(/<br\s*\/?>/gi, '\n')
+               .replace(/<[^>]+>/g, '')
+               .replace(/\n\s*\n/g, '\n\n');
+  return md.trim();
+};
+
 const jsonToMarkdown = (data: CVData) => {
   if (!data) return '';
-  const { personalInfo, experience, education, skills, projects } = data;
+  const { personalInfo, experience, education, skills, projects, customSections } = data;
   let md = `# ${personalInfo?.fullName || 'Tên'}\n`;
   md += `**${personalInfo?.title || 'Vị trí'}** | ${personalInfo?.email || ''} | ${personalInfo?.phone || ''} | ${personalInfo?.portfolio || ''}\n\n`;
   
-  if (personalInfo?.summary) md += `## SUMMARY\n${personalInfo.summary}\n\n`;
+  if (personalInfo?.summary) md += `## SUMMARY\n${htmlToMd(personalInfo.summary)}\n\n`;
   
   if (experience?.length) {
-    md += `## KINH NGHIỆM LÀM VIỆC\n`;
+    md += `## WORK EXPERIENCE\n`;
     experience.forEach(exp => {
-      md += `### **${exp.role}** - *${exp.company}*\n_${exp.duration}_\n${exp.description}\n\n`;
+      md += `### **${exp.role}** - *${exp.company}*\n_${exp.duration}_\n${htmlToMd(exp.description)}\n\n`;
     });
   }
   
   if (projects?.length) {
-    md += `## DỰ ÁN NỔI BẬT\n`;
+    md += `## PROJECTS\n`;
     projects.forEach(proj => {
-      md += `### **${proj.name}**\n_${proj.duration}_\n${proj.description}\n\n`;
+      md += `### **${proj.name}**\n_${proj.duration}_\n${htmlToMd(proj.description)}\n\n`;
     });
   }
   
   if (education?.length) {
-    md += `## HỌC VẤN\n`;
+    md += `## EDUCATION\n`;
     education.forEach(edu => {
-      md += `### **${edu.school}**\n**${edu.degree}** | GPA: ${edu.gpa} | _${edu.duration}_\n\n`;
+      md += `### **${edu.school}**\n**${edu.degree}** ${edu.gpa ? `| GPA: ${edu.gpa}` : ''} | _${edu.duration}_\n\n`;
     });
   }
   
   if (skills?.length) {
-    md += `## KỸ NĂNG\n`;
-    skills.forEach(s => { md += `- ${s}\n`; });
+    md += `## SKILLS\n`;
+    skills.forEach(s => { md += `- ${htmlToMd(s)}\n`; });
+    md += '\n';
   }
+  
+  if (customSections?.length) {
+    customSections.forEach(section => {
+      md += `## ${section.title?.toUpperCase()}\n`;
+      section.items?.forEach(item => {
+         md += `### **${item.name}**\n_${item.duration}_\n${htmlToMd(item.description)}\n\n`;
+      });
+    });
+  }
+
   return md;
 };
 
@@ -100,6 +125,10 @@ interface AnalysisResult {
   overall: string;
   critiques: FeatureRating[];
   strengths: string[];
+  development?: {
+    missingSkills: string[];
+    nextSteps: string[];
+  };
 }
 
 export const CVReviewer = () => {
@@ -113,6 +142,7 @@ export const CVReviewer = () => {
   const [rewriteResult, setRewriteResult] = useState<CVData | null>(null);
   const [devMarkdown, setDevMarkdown] = useState<string>('');
   const [currentMode, setCurrentMode] = useState<'review' | 'rewrite' | null>(null);
+  const [customPrompt, setCustomPrompt] = useState<string>('');
   
   const [activeTab, setActiveTab] = useState<'preview' | 'raw'>('preview');
 
@@ -190,6 +220,9 @@ export const CVReviewer = () => {
       const formData = new FormData();
       formData.append('cvFile', file);
       formData.append('mode', mode);
+      if (customPrompt) {
+        formData.append('customPrompt', customPrompt);
+      }
 
       const response = await fetch(`${apiUrl}/api/cv-reviewer`, {
         method: 'POST',
@@ -362,13 +395,21 @@ export const CVReviewer = () => {
              "{reviewResult.overall}"
            </p>
            
-           <div className="mt-8 flex justify-end">
-              <button 
-                 onClick={() => startProcess('rewrite')}
-                 className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-sm transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95"
-              >
-                 <Wand2 size={18} /> CỨU RỖI CV - REFACTOR TỰ ĐỘNG (&gt;95 ĐIỂM)
-              </button>
+           <div className="mt-8 flex flex-col gap-4">
+              <div className="relative">
+                <textarea 
+                  value={customPrompt}
+                  onChange={e => setCustomPrompt(e.target.value)}
+                  placeholder="Yêu cầu đặc biệt cho AI (Ví dụ: Thêm tech stack React, dịch sang tiếng Nhật...)"
+                  className="w-full bg-slate-900/50 border border-slate-700/50 rounded-lg p-3.5 text-[13.5px] text-slate-300 outline-none focus:border-cyan-500/50 transition-colors custom-scrollbar placeholder:text-slate-600 resize-none h-[75px]"
+                />
+                <button 
+                   onClick={() => startProcess('rewrite')}
+                   className="absolute right-2 bottom-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-5 py-2 rounded-md font-black uppercase tracking-widest text-[11px] transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95"
+                >
+                   <Wand2 size={14} /> REFACTOR (&gt;95 ĐIỂM)
+                </button>
+              </div>
            </div>
         </div>
 
@@ -415,6 +456,35 @@ export const CVReviewer = () => {
            </div>
         </div>
 
+        {/* Development Plan */}
+        {reviewResult.development && (
+          <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-6 md:p-8 mt-8 border-l-4 border-l-blue-500 relative overflow-hidden transition-all shadow-lg hover:shadow-blue-900/10">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[80px] -z-10 rounded-full" />
+             <h4 className="text-[12px] font-black uppercase tracking-[0.2em] mb-6 text-blue-400 flex items-center gap-2">
+               <TrendingUp size={16} /> ROADMAP & SKILL GAP ANALYSIS
+             </h4>
+             <div className="grid md:grid-cols-[1fr_1.5fr] gap-8">
+                <div>
+                   <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Tech & Soft Skills Còn Thiếu</h5>
+                   <div className="flex flex-wrap gap-2">
+                      {reviewResult.development.missingSkills?.map((s: string, i: number) => (
+                         <span key={i} className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg text-xs font-bold leading-none">{s}</span>
+                      ))}
+                   </div>
+                </div>
+                <div>
+                   <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Hành Động Khuyên Dùng (Next Steps)</h5>
+                   <ul className="space-y-3">
+                      {reviewResult.development.nextSteps?.map((step: string, i: number) => (
+                         <li key={i} className="flex gap-3 text-slate-300 text-[13.5px] leading-relaxed font-medium">
+                            <span className="text-blue-500 mt-1 shrink-0"><ArrowRight size={14}/></span> {step}
+                         </li>
+                      ))}
+                   </ul>
+                </div>
+             </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -433,7 +503,7 @@ export const CVReviewer = () => {
              <Eye size={18} /> Normal Mode (Sửa trực tiếp & In PDF)
            </button>
            <button 
-             onClick={() => setActiveTab('raw')}
+             onClick={() => { setActiveTab('raw'); setDevMarkdown(jsonToMarkdown(rewriteResult)); }}
              className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-colors ${activeTab === 'raw' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
            >
              <Code size={18} /> Dev Mode (Trình sinh Markdown)

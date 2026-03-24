@@ -1183,8 +1183,8 @@ app.post('/api/cv-reviewer', upload.single('cvFile'), async (req, res) => {
         if (!file) return res.status(400).json({ error: 'Chưa đính kèm file CV!' });
         if (mode !== 'review' && mode !== 'rewrite') return res.status(400).json({ error: 'Chế độ không hợp lệ.' });
 
-        // Multer puts the file buffer in req.file.buffer
-        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode);
+        const customPrompt = req.body.customPrompt || '';
+        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode, customPrompt);
         
         res.json({ result });
     } catch (err: any) {

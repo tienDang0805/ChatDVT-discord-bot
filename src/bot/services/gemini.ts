@@ -718,7 +718,7 @@ TRẢ VỀ ĐÚNG MÃ MARKDOWN CỦA CV MỚI.`;
   }
 
   // --- CV Reviewer & Rewriter ---
-  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite'): Promise<any> {
+  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite', customPrompt?: string): Promise<any> {
       try {
           const documentContent: Part[] = [];
           
@@ -755,7 +755,11 @@ BẮT BUỘC TRẢ VỀ CHUẨN JSON VỚI CẤU TRÚC:
       "advice": "<Giải pháp sắc bén, mang tính Actionable và đúng chuẩn Silicon Valley>"
     }
   ],
-  "strengths": ["<Điểm sáng 1>", "<Điểm sáng 2>"]
+  "strengths": ["<Điểm sáng 1>", "<Điểm sáng 2>"],
+  "development": {
+    "missingSkills": ["<Kỹ năng/Tech stack cốt lõi còn thiếu 1>", "<Kỹ năng 2>"],
+    "nextSteps": ["<Hành động thực tế cần làm để leo level 1>", "<Hành động 2>"]
+  }
 }`;
               config.responseMimeType = "application/json";
           } else if (mode === 'rewrite') {
@@ -766,14 +770,19 @@ QUY TẮC REFACTOR BẮT BUỘC:
 2. Ánh xạ "Công thức XYZ từ Google": "Accomplished [X] as measured by [Y], by doing [Z]" cho MỌI kinh nghiệm. Lượng hoá kết quả theo fact của user. Nếu user thiếu số liệu, hãy chèn note <b>[Bổ sung số liệu KPI vào đây]</b> để người dùng tự điền thay vì tự bịa ra số liệu giả.
 3. Khai hỏa bằng ĐỘNG TỪ MẠNH (Action Verbs) mang tính tác động cao (e.g., Architected, Spearheaded, Optimized, Orchestrated, Engineered). KHÔNG dùng các từ yếu đuối (Worked on, Helped). Biến các câu văn lủng củng thành bullet point súc tích, chuyên nghiệp.
 4. Dịch sang Tiếng Anh chuyên ngành (hoặc giữ Tiếng Việt tuỳ bối cảnh), dùng văn phong Sắc - Gọn - Lạnh lùng. Output dùng HTML inline tags như <b>, <i> ở những technical keyword cốt lõi (BẮT BUỘC).
+5. Nếu ứng viên có thông tin nằm ngoài 4 danh mục chính (như Chứng chỉ, Giải thưởng, Tech Stack riêng), hãy gom chúng vào mảng 'customSections' và đặt 'title' tương ứng (VD: 'CERTIFICATIONS').
 BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown, chỉ duy nhất JSON):
 {
   "personalInfo": { "fullName": "", "title": "", "email": "", "phone": "", "portfolio": "", "summary": "" },
   "experience": [ { "company": "", "role": "", "duration": "", "description": "" } ],
   "education": [ { "school": "", "degree": "", "duration": "", "gpa": "" } ],
   "skills": ["", "", ""],
-  "projects": [ { "name": "", "duration": "", "description": "" } ]
+  "projects": [ { "name": "", "duration": "", "description": "" } ],
+  "customSections": [ { "id": "uuid-1", "title": "CERTIFICATIONS", "items": [ { "name": "", "duration": "", "description": "" } ] } ]
 }`;
+              if (customPrompt && customPrompt.trim() !== '') {
+                  prompt += `\n\n[📢 YÊU CẦU ĐẶC BIỆT TỪ ỨNG VIÊN BẰNG MỌI GIÁ PHẢI TUÂN THỦ]:\n"${customPrompt}"\nHãy ưu tiên đáp ứng chính xác yêu cầu này nhưng vẫn giữ nguyên cấu trúc JSON.\n`;
+              }
               config.responseMimeType = "application/json";
           }
 
