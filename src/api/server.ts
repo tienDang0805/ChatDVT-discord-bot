@@ -1174,28 +1174,22 @@ app.post('/api/handsome-analyzer', async (req, res) => {
     }
 });
 
-// --- CV Reviewer API ---
+// --- CV Reviewer & Rewriter API ---
 app.post('/api/cv-reviewer', upload.single('cvFile'), async (req, res) => {
     try {
         const file = req.file;
         const mode = req.body.mode;
+        
+        if (!file) return res.status(400).json({ error: 'Chưa đính kèm file CV!' });
+        if (mode !== 'review' && mode !== 'rewrite') return res.status(400).json({ error: 'Chế độ không hợp lệ.' });
 
-        if (!file) return res.status(400).json({ error: 'Chưa upload file CV!' });
-        if (mode !== 'review' && mode !== 'rewrite') {
-           return res.status(400).json({ error: 'Chế độ không hợp lệ.' });
-        }
-
-        const result = await geminiService.processCV(
-            file.buffer, 
-            file.mimetype, 
-            file.originalname, 
-            mode as 'review' | 'rewrite'
-        );
+        // Multer puts the file buffer in req.file.buffer
+        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode);
         
         res.json({ result });
     } catch (err: any) {
         console.error('CV Reviewer error:', err.message);
-        res.status(500).json({ error: err.message || 'Lỗi AI khi phân tích CV.' });
+        res.status(500).json({ error: err.message || 'Lỗi phân tích CV. Vui lòng thử lại.' });
     }
 });
 
