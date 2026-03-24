@@ -718,7 +718,7 @@ TRẢ VỀ ĐÚNG MÃ MARKDOWN CỦA CV MỚI.`;
   }
 
   // --- CV Reviewer & Rewriter ---
-  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite', customPrompt?: string): Promise<any> {
+  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite', customPrompt?: string, reviewContext?: any): Promise<any> {
       try {
           const documentContent: Part[] = [];
           
@@ -764,6 +764,7 @@ BẮT BUỘC TRẢ VỀ CHUẨN JSON VỚI CẤU TRÚC:
               config.responseMimeType = "application/json";
           } else if (mode === 'rewrite') {
               prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) top đầu tại Thung lũng Silicon.
+${reviewContext ? `\n[TÀI LIỆU QUAN TRỌNG: KẾT QUẢ ĐÁNH GIÁ (REVIEW) BẠN VỪA TRẢ VỀ CHO CV GỐC]:\n${JSON.stringify(reviewContext, null, 2)}\n\nNhiệm vụ của bạn là bám sát tuyệt đối vào lỗi sai (critiques) và khoảng trống (missingSkills, nextSteps) ở trên để TRÁM LỖ HỔNG, SỬA CHỮA và REFACTOR lại CV này một cách hoàn hảo.\n` : ''}
 Mục tiêu tuyệt đối: Refactor bản CV này để VƯỢT QUA MỌI HỆ THỐNG ATS với ĐIỂM SỐ CHẮC CHẮN > 95 nhưng PHẢI DỰA TRÊN KHUNG SỰ THẬT 100%.
 QUY TẮC REFACTOR BẮT BUỘC:
 1. TUYỆT ĐỐI KHÔNG BỊA ĐẶT SỐ LIỆU (Metrics), dự án, hoặc chém gió những thứ không có thật trong CV gốc. Chỉ tái cấu trúc và làm đẹp văn phong từ những gì user đã cung cấp.

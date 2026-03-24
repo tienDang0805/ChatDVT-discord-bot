@@ -223,6 +223,9 @@ export const CVReviewer = () => {
       if (customPrompt) {
         formData.append('customPrompt', customPrompt);
       }
+      if (mode === 'rewrite' && reviewResult) {
+        formData.append('reviewContext', JSON.stringify(reviewResult));
+      }
 
       const response = await fetch(`${apiUrl}/api/cv-reviewer`, {
         method: 'POST',

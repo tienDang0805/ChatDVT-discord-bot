@@ -1184,7 +1184,8 @@ app.post('/api/cv-reviewer', upload.single('cvFile'), async (req, res) => {
         if (mode !== 'review' && mode !== 'rewrite') return res.status(400).json({ error: 'Chế độ không hợp lệ.' });
 
         const customPrompt = req.body.customPrompt || '';
-        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode, customPrompt);
+        const reviewContext = req.body.reviewContext ? JSON.parse(req.body.reviewContext) : undefined;
+        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode, customPrompt, reviewContext);
         
         res.json({ result });
     } catch (err: any) {
