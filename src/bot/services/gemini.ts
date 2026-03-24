@@ -759,10 +759,10 @@ Hãy phân tích chiếc CV hoặc Resume này. BẮT BUỘC TRẢ VỀ CHUẨN 
 }`;
               config.responseMimeType = "application/json";
           } else if (mode === 'rewrite') {
-              prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) cấp cao của Thung lũng Silicon.
-Dựa vào những thông tin lộn xộn/sơ sài có trong tài liệu người dùng cấp, hãy TỰ ĐỘNG THÊM THẮT, CHUỐT TỪ, DỊCH SANG TIẾNG ANH (hoặc giữ Tiếng Việt tuỳ bối cảnh) và **VIẾT MỚI LẠI HOÀN TOÀN** một bản CV chuyên nghiệp chuẩn ATS.
-Nếu thông tin quá thiếu, hãy đặt các text hợp lý hoặc [Placeholder] để người dùng điền.
-BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa code Markdown hay chữ nào ngoài JSON):
+              prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) cấp cao tại Thung lũng Silicon với nhiệm vụ tạo ra một bản CV vượt qua mọi hệ thống máy quét (ATS) với Điểm số CHẮC CHẮN TRÊN 90.
+Dựa vào những thông tin lộn xộn/sơ sài có trong tài liệu người dùng cấp, hãy TỰ ĐỘNG REFACTOR, CHUỐT TỪ CỰC MẠNH (Dùng Action Verbs có sức ảnh hưởng cao như Architected, Spearheaded, Optimized), DỊCH SANG TIẾNG ANH (hoặc giữ nguyên Tiếng Việt tuỳ bối cảnh) và **VIẾT MỚI LẠI HOÀN TOÀN** bản CV này thành đẳng cấp thế giới.
+Khỏa lấp các lỗ hổng: Nếu thông tin chức vụ/dự án quá sơ sài, hãy tự động sinh ra các gạch đầu dòng chuyên sâu mô tả những best-practice tiêu chuẩn của role đó để ứng viên dễ hình dung (hoặc đặt [Placeholder] khéo léo).
+BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown, chỉ duy nhất JSON):
 {
   "personalInfo": { "fullName": "", "title": "", "email": "", "phone": "", "portfolio": "", "summary": "" },
   "experience": [ { "company": "", "role": "", "duration": "", "description": "" } ],

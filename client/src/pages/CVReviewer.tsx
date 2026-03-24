@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Scan, AlertTriangle, FileText, CornerUpLeft, Code, Eye, File, CheckCircle2 } from 'lucide-react';
+import { Upload, Scan, AlertTriangle, FileText, CornerUpLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -43,6 +43,52 @@ const jsonToMarkdown = (data: CVData) => {
   return md;
 };
 
+const sampleCV: CVData = {
+  personalInfo: {
+    fullName: "NGUYỄN VĂN A",
+    title: "Senior Full Stack Software Engineer",
+    email: "nguyenvana.dev@email.com",
+    phone: "(+84) 987 654 321",
+    portfolio: "github.com/nguyenvana | linkedin.com/in/nguyenvana",
+    summary: "Senior Full Stack Engineer với hơn 5 năm kinh nghiệm thiết kế và phát triển các hệ thống chịu tải cao (high-traffic distributed systems). Chuyên môn sâu về Node.js, React, và Data Architecture. Đam mê tối ưu hoá hiệu năng (performance tuning) và xây dựng văn hoá kĩ thuật (engineering culture). Từng leader team 5 người phát triển core payment gateway xử lý hơn $1M/ngày."
+  },
+  experience: [
+    {
+       company: "Kỳ Lân Công Nghệ (Tech Unicorn VN)",
+       role: "Senior Backend Engineer",
+       duration: "01/2021 - Hiện tại",
+       description: "- Thiết kế lại kiến trúc (Refactor Microservices) cho hệ thống lõi giúp giảm 40% latency và tiết kiệm $2,000 AWS cost mỗi tháng.\n- Triển khai Redis caching và Optimize SQL Queries, giải quyết triệt để bài toán bottleneck cho hơn 2 triệu concurrent users dịp Flash Sale.\n- Dẫn dắt team 5 thành viên; áp dụng CI/CD (GitHub Actions, Docker) giảm thời gian release từ 2 ngày xuống 30 phút."
+    },
+    {
+       company: "Công ty Outsourcing X",
+       role: "Full Stack Developer",
+       duration: "06/2018 - 12/2020",
+       description: "- Xây dựng từ đầu (from scratch) 3 hệ thống CRM nội bộ bằng React và Express.js cho thị trường Nhật.\n- Tích hợp thành công các cổng thanh toán Stripe và PayPal, đạt độ ổn định 99.9% uptime.\n- Mentor cho 3 Fresher lên trình độ Junior trong vòng 6 tháng."
+    }
+  ],
+  education: [
+    {
+       school: "Đại học Bách Khoa Hà Nội",
+       degree: "Kỹ sư Kỹ thuật Phần mềm",
+       duration: "2014 - 2018",
+       gpa: "3.6/4.0 (Giỏi)"
+    }
+  ],
+  skills: [
+    "Ngôn ngữ: TypeScript, Go, Python, SQL",
+    "Frontend: React.js, Next.js, Tailwind CSS",
+    "Backend & DB: Node.js, Express, PostgreSQL, MongoDB, Redis",
+    "Infrastructure: Docker, Kubernetes, AWS (EC2), CI/CD"
+  ],
+  projects: [
+    {
+       name: "Hệ thống Phân phối Video Thời gian thực",
+       duration: "Dự án cá nhân (2022)",
+       description: "- Tự xây dựng streaming server bằng WebRTC & Golang. Đạt giải Nhất cuộc thi Hackathon nội bộ công ty."
+    }
+  ]
+};
+
 interface FeatureRating {
   issue: string;
   advice: string;
@@ -68,7 +114,6 @@ export const CVReviewer = () => {
   const [devMarkdown, setDevMarkdown] = useState<string>('');
   const [currentMode, setCurrentMode] = useState<'review' | 'rewrite' | null>(null);
   
-  // Tab control for Rewrite mode
   const [activeTab, setActiveTab] = useState<'preview' | 'raw'>('preview');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,6 +150,19 @@ export const CVReviewer = () => {
     }
   };
 
+  const loadSampleCV = () => {
+    // Fake a file to satisfy UI checks
+    const fakeFile = new File(["sample"], "Sample_CV_Senior_99D.pdf", { type: "application/pdf" });
+    setFile(fakeFile);
+    setFilePreview(null);
+    setReviewResult(null);
+    setRewriteResult(sampleCV);
+    setDevMarkdown(jsonToMarkdown(sampleCV));
+    setCurrentMode('rewrite');
+    setIsScanning(false);
+    toast.success("Đã nạp thành công Mẫu CV Chuyên Gia!");
+  };
+
   const startProcess = async (mode: 'review' | 'rewrite') => {
     if (!file) return;
     setIsScanning(true);
@@ -115,9 +173,9 @@ export const CVReviewer = () => {
     setActiveTab('preview');
     
     setLogs([
-      "Đang kích hoạt đặc vụ HR AI...", 
-      `Chế độ: ${mode === 'review' ? 'KHÁM ĐIỀN THỔ (REVIEW)' : 'TỰ VIẾT MỚI CV (REWRITE)'}`,
-      "Đang nhai nốt tệp tin..."
+      "Bật Server HR chạy bằng cơm...", 
+      `Chế độ: ${mode === 'review' ? 'KHÁM ĐIỀN THỔ (REVIEW)' : 'REFACTOR CV 90+ (REWRITE)'}`,
+      "Đang dịch ngược tệp tin..."
     ]);
 
     const interval = setInterval(() => {
@@ -145,8 +203,8 @@ export const CVReviewer = () => {
       setIsScanning(false);
       
       if (!response.ok) {
-        toast.error(data.error || "Lỗi cmnr, AI chê CV này.");
-        setLogs(prev => [...prev, `ERROR: ${data.error}`]);
+        toast.error(data.error || "Nhân sự báo lỗi rồi bạn ơi.");
+        setLogs(prev => [...prev, `LỖI: ${data.error}`]);
       } else {
         if (mode === 'review') {
            setReviewResult(data.result);
@@ -154,15 +212,15 @@ export const CVReviewer = () => {
            setRewriteResult(data.result);
            setDevMarkdown(jsonToMarkdown(data.result));
         }
-        setLogs(prev => [...prev, "Hoàn tất xử lý tác vụ."]);
-        toast.success("Xong rồi nha!");
+        setLogs(prev => [...prev, "Báo cáo biên bản hoàn tất."]);
+        toast.success("Done!");
       }
     } catch (error) {
       clearInterval(interval);
       setScanProgress(100);
       setIsScanning(false);
-      toast.error("Lỗi mất kết nối với vũ trụ AI.");
-      setLogs(prev => [...prev, "ERROR: Disconnected!"]);
+      toast.error("Mất sóng não với AI.");
+      setLogs(prev => [...prev, "LỖI KẾT NỐI SERVER"]);
     }
   };
 
@@ -181,14 +239,22 @@ export const CVReviewer = () => {
   const renderUploader = () => (
     <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 shadow-2xl relative overflow-hidden flex flex-col h-full">
       {!file ? (
-        <div 
-          className="border-2 border-dashed border-slate-600 hover:border-cyan-500 rounded-lg h-60 md:h-80 flex flex-col items-center justify-center cursor-pointer transition-colors group relative bg-[#0d1117]"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload size={48} className="text-slate-500 group-hover:text-cyan-500 mb-4 group-hover:-translate-y-2 transition-all" />
-          <p className="text-slate-400 font-bold group-hover:text-white transition-colors">THẢ FILE CV VÀO ĐÂY</p>
-          <p className="text-xs text-slate-600 mt-2">Hỗ trợ PDF, DOCX, Ảnh, Markdown</p>
-          <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+        <div className="flex flex-col gap-4">
+          <div 
+            className="border-2 border-dashed border-slate-600 hover:border-cyan-500 rounded-lg h-60 md:h-72 flex flex-col items-center justify-center cursor-pointer transition-colors group relative bg-[#0d1117]"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <Upload size={48} className="text-slate-500 group-hover:text-cyan-500 mb-4 group-hover:-translate-y-2 transition-transform duration-300" />
+            <p className="text-slate-400 font-bold group-hover:text-white transition-colors uppercase tracking-widest text-sm">THẢ BẢN CV LỖI VÀO ĐÂY</p>
+            <p className="text-xs text-slate-600 mt-2">Nhận đĩa mềm PDF, DOCX, Ảnh PNG/JPG, Markdown</p>
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+          </div>
+          <button 
+            onClick={loadSampleCV}
+            className="flex items-center justify-center gap-2 w-full bg-slate-800 hover:bg-slate-700 text-yellow-500 border border-yellow-500/30 py-4 mt-2 rounded-lg font-bold transition-all shadow-lg text-sm tracking-wider"
+          >
+            <Star size={18} /> LOAD MẪU CV CHUYÊN GIA (&gt;90Đ) LÀM THAM KHẢO
+          </button>
         </div>
       ) : (
         <div className="relative flex-1 min-h-[200px] md:min-h-[320px] rounded-lg border border-cyan-500/30 bg-black flex items-center justify-center group overflow-hidden">
@@ -197,15 +263,15 @@ export const CVReviewer = () => {
           ) : (
              <div className="flex flex-col items-center text-cyan-400">
                 <FileText size={80} className="mb-4 opacity-80" />
-                <p className="font-bold text-lg">{file.name}</p>
-                <p className="text-sm opacity-60">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="font-bold text-lg mb-1">{file.name}</p>
+                <p className="text-sm opacity-60 bg-cyan-900/40 px-3 py-1 rounded-full">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
              </div>
           )}
           
           {isScanning && (
             <>
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_#22d3ee] animate-[scan_2s_ease-in-out_infinite]" />
-              <div className="absolute inset-0 bg-cyan-900/20 pointer-events-none" />
+              <div className="absolute top-0 left-0 w-full h-[3px] bg-cyan-400 shadow-[0_0_20px_#22d3ee] animate-[scan_2s_ease-in-out_infinite]" />
+              <div className="absolute inset-0 bg-cyan-900/20 pointer-events-none mix-blend-screen" />
             </>
           )}
         </div>
@@ -216,15 +282,15 @@ export const CVReviewer = () => {
           <>
             <button 
               onClick={() => startProcess('review')}
-              className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 text-white font-bold py-3 rounded-xl hover:from-red-500 hover:to-orange-500 transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-red-900/20 uppercase text-sm tracking-wider"
+              className="flex-1 bg-gradient-to-r from-rose-600 to-orange-600 text-white font-bold py-3.5 rounded-xl hover:from-rose-500 hover:to-orange-500 transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-rose-900/20 uppercase text-sm tracking-wider"
             >
               <Scan size={18} /> Khám Điền Thổ
             </button>
             <button 
               onClick={() => startProcess('rewrite')}
-              className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-cyan-900/20 uppercase text-sm tracking-wider"
+              className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all flex justify-center items-center gap-2 active:scale-95 shadow-lg shadow-cyan-900/20 uppercase text-sm tracking-wider"
             >
-              <FileText size={18} /> Tự Viết Mới CV
+              <Wand2 size={18} /> REFACTOR CV ĐẠT 90+
             </button>
           </>
         )}
@@ -232,9 +298,9 @@ export const CVReviewer = () => {
           <button 
             onClick={reset}
             disabled={isScanning}
-            className="md:px-6 bg-[#1f2937] text-slate-300 font-bold py-3 rounded-xl hover:bg-[#374151] border border-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm"
+            className="md:px-6 bg-[#1f2937] text-slate-300 font-bold py-3.5 rounded-xl hover:bg-[#374151] border border-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase text-sm tracking-wider"
           >
-            Đổi CV Mới
+            Vứt Đi Làm Lại
           </button>
         )}
       </div>
@@ -244,46 +310,61 @@ export const CVReviewer = () => {
   const renderReviewResult = () => {
     if (!reviewResult) return null;
     return (
-      <div className="bg-[#0b0f19] border border-red-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_40px_rgba(239,68,68,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] relative">
-        <h3 className="text-xl font-black text-red-500 uppercase flex items-center gap-2 mb-6 border-b border-red-500/20 pb-4">
-          <AlertTriangle /> BIÊN BẢN HẠ NHỤC CV
+      <div className="bg-[#0b0f19] border border-rose-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_50px_rgba(225,29,72,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] relative">
+        <h3 className="text-xl md:text-2xl font-black text-rose-500 uppercase flex items-center gap-2 mb-6 border-b border-rose-500/20 pb-4">
+          <AlertTriangle /> BIÊN BẢN CHỈ TRÍCH TỪ HR
         </h3>
         
         <div className="flex flex-col md:flex-row gap-6 mb-8 items-center md:items-stretch">
-           <div className="bg-red-500/10 border border-red-500/30 p-6 rounded-2xl flex flex-col items-center justify-center shrink-0 w-48 shadow-inner">
-              <span className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-2">ĐIỂM CHUYÊN NGHIỆP</span>
-              <span className="text-6xl font-black text-red-500">{reviewResult.score}<span className="text-2xl text-red-500/50">/100</span></span>
-              <span className="mt-2 text-red-400 font-bold bg-red-500/20 px-3 py-1 rounded-full text-xs">Level: {reviewResult.level}</span>
+           <div className="bg-gradient-to-br from-rose-950/50 to-orange-950/50 border border-rose-500/30 p-8 rounded-2xl flex flex-col items-center justify-center shrink-0 w-48 shadow-inner relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 blur-[50px] -z-10" />
+              <span className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-3">ĐIỂM CHUYÊN NGHIỆP</span>
+              <span className="text-7xl font-black text-rose-500 tracking-tighter shadow-sm">{reviewResult.score}<span className="text-2xl text-rose-500/40">/100</span></span>
+              <span className="mt-4 text-rose-300 font-black bg-rose-500/20 border border-rose-500/30 px-4 py-1.5 rounded-full text-xs uppercase tracking-wider shadow-lg">Level: {reviewResult.level}</span>
            </div>
            
-           <div className="flex-1 bg-[#161b22] border border-slate-800 rounded-2xl p-6">
-              <h4 className="text-sm text-cyan-500 font-bold uppercase tracking-wider mb-2">ĐÁNH GIÁ TỔNG QUAN TỪ HR:</h4>
-              <p className="text-slate-300 italic leading-relaxed text-lg">"{reviewResult.overall}"</p>
+           <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col">
+              <div className="absolute left-0 top-0 w-1 h-full bg-rose-500" />
+              <h4 className="text-xs text-rose-400 font-black uppercase tracking-widest mb-3 flex items-center gap-2"><Eye size={16}/> LỜI SẤM TRUYỀN:</h4>
+              <p className="text-slate-300 italic leading-relaxed text-lg md:text-xl font-serif">"{reviewResult.overall}"</p>
+              
+              <div className="mt-auto pt-6">
+                 <button 
+                    onClick={() => startProcess('rewrite')}
+                    className="w-full bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 py-3 rounded-lg font-bold uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)]"
+                 >
+                    <Wand2 size={18} className="group-hover:rotate-12 transition-transform" /> REFACTOR THÀNH CV ĐỈNH CAO CHUẨN 90+ NGAY
+                 </button>
+              </div>
            </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-[1fr_1fr] gap-8">
            <div>
-               <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2 text-rose-500">
-                 <AlertTriangle size={16} /> DANH SÁCH LỖI (CRITIQUES)
+               <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-rose-500 bg-rose-950/30 py-2 px-3 rounded-lg w-max">
+                 <AlertTriangle size={16} /> NHỮNG LỖI CHÍ MẠNG
                </h4>
-               <div className="space-y-3">
+               <div className="space-y-4">
                  {reviewResult.critiques?.map((item, idx) => (
-                   <div key={idx} className="bg-rose-950/20 border border-rose-900/50 p-4 rounded-xl">
-                      <p className="text-rose-400 font-bold text-sm mb-1">{item.issue}</p>
-                      <p className="text-slate-400 text-sm">💡 Fix: {item.advice}</p>
+                   <div key={idx} className="bg-slate-900/50 border border-rose-900/30 p-5 rounded-xl transition-all hover:bg-slate-900 hover:border-rose-700/50">
+                      <p className="text-rose-400 font-bold mb-2 flex items-start gap-2 text-md">
+                        <span className="mt-1 text-[10px] bg-rose-500/20 px-1.5 rounded text-rose-300">LỖI</span> {item.issue}
+                      </p>
+                      <p className="text-slate-400 text-sm leading-relaxed flex items-start gap-2">
+                        <span className="mt-1 text-[10px] bg-sky-500/20 px-1.5 rounded text-sky-400">FIX</span> <span className="flex-1">{item.advice}</span>
+                      </p>
                    </div>
                  ))}
                </div>
            </div>
            <div>
-               <h4 className="text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2 text-emerald-500">
-                 <CheckCircle2 size={16} /> ĐIỂM SÁNG VỚT VÁT
+               <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-emerald-500 bg-emerald-950/30 py-2 px-3 rounded-lg w-max">
+                 <CheckCircle2 size={16} /> ĐIỂM SÁNG LE LÓI
                </h4>
                <div className="space-y-3">
                  {reviewResult.strengths?.map((item, idx) => (
-                   <div key={idx} className="bg-emerald-950/20 border border-emerald-900/50 p-4 rounded-xl flex items-start gap-3">
-                      <span className="text-emerald-500 mt-1">•</span>
+                   <div key={idx} className="bg-slate-900/50 border border-emerald-900/30 p-4 rounded-xl flex items-start gap-3 transition-all hover:bg-slate-900 hover:border-emerald-700/50">
+                      <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" />
                       <p className="text-slate-300 text-sm leading-relaxed">{item}</p>
                    </div>
                  ))}
@@ -297,39 +378,54 @@ export const CVReviewer = () => {
   const renderRewriteResult = () => {
     if (!rewriteResult) return null;
     return (
-      <div className="bg-[#0b0f19] border border-cyan-500/30 rounded-xl shadow-[0_0_40px_rgba(34,211,238,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] overflow-hidden" style={{ minHeight: activeTab === 'preview' ? '800px' : '600px' }}>
+      <div className="bg-[#0b0f19] border border-cyan-500/30 rounded-xl shadow-[0_0_40px_rgba(34,211,238,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] overflow-hidden transition-all duration-500" style={{ minHeight: activeTab === 'preview' ? '850px' : '650px' }}>
         
         {/* Tab Header */}
-        <div className="flex bg-[#161b22] border-b border-slate-800 shrink-0">
+        <div className="flex bg-[#161b22] border-b border-slate-800 shrink-0 sm:flex-row flex-col">
            <button 
              onClick={() => setActiveTab('preview')}
-             className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'preview' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
+             className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-colors ${activeTab === 'preview' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
            >
-             <Eye size={18} /> Normal Mode (Sửa & In PDF)
+             <Eye size={18} /> Normal Mode (Sửa trực tiếp & In PDF)
            </button>
            <button 
              onClick={() => setActiveTab('raw')}
-             className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'raw' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
+             className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-black uppercase tracking-widest transition-colors ${activeTab === 'raw' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
            >
-             <Code size={18} /> Dev Mode (Markdown)
+             <Code size={18} /> Dev Mode (Trình sinh Markdown)
            </button>
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 bg-[#0d1117] h-full">
+        <div className="flex-1 bg-[#1e1e1e] h-full flex flex-col relative">
            {activeTab === 'preview' ? (
               <EditableCV data={rewriteResult} onChange={setRewriteResult} />
            ) : (
               <div className="flex flex-col md:flex-row h-full">
-                  <div className="flex-1 border-r border-slate-800 min-h-[300px]">
+                  {/* Fake VS Code Header */}
+                  <div className="absolute top-0 w-full h-10 bg-[#252526] border-b border-[#3c3c3c] flex items-center px-4 justify-between select-none z-10 shrink-0 hidden md:flex">
+                     <div className="flex items-center gap-2">
+                        <Github size={16} className="text-slate-400" />
+                        <span className="text-xs text-slate-300 font-mono">cv_chuan_ats.md - CHATDVT EDITION</span>
+                     </div>
+                     <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                        <div className="w-3 h-3 rounded-full bg-green-500" />
+                     </div>
+                  </div>
+                  
+                  {/* Left: Code Editor Fake */}
+                  <div className="flex-1 border-r border-[#3c3c3c] min-h-[400px] bg-[#1e1e1e] flex flex-col pt-0 md:pt-10">
                      <TextareaAutosize
                        value={devMarkdown}
                        onChange={(e) => setDevMarkdown(e.target.value)}
-                       className="w-full h-full min-h-full bg-transparent text-cyan-100 font-mono p-6 resize-none focus:outline-none focus:ring-0 leading-relaxed text-sm lg:text-base placeholder-slate-700 custom-scrollbar"
+                       className="w-full h-full min-h-[400px] bg-transparent text-[#d4d4d4] font-mono p-4 md:p-6 resize-none focus:outline-none focus:ring-0 leading-[1.6] text-[13px] md:text-sm custom-scrollbar selection:bg-[#264f78]"
                        placeholder="Nhập mã Markdown vào đây..."
+                       spellCheck="false"
                      />
                   </div>
-                  <div className="flex-1 bg-slate-50 prose prose-slate p-8 text-slate-800 custom-scrollbar overflow-auto min-h-[300px]">
+                  {/* Right: Code Preview Fake */}
+                  <div className="flex-1 bg-[#161b22] text-[#c9d1d9] prose prose-invert p-6 md:p-10 custom-scrollbar overflow-auto min-h-[400px] pt-4 md:pt-14">
                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
                        {devMarkdown}
                      </ReactMarkdown>
@@ -340,15 +436,15 @@ export const CVReviewer = () => {
         
         {/* Actions Footer - Only for Dev Mode */}
         {activeTab === 'raw' && (
-           <div className="bg-[#161b22] p-4 border-t border-slate-800 flex justify-end gap-4 shrink-0">
+           <div className="bg-[#161b22] p-4 border-t border-[#3c3c3c] flex justify-end gap-4 shrink-0 mt-auto">
               <button 
                 onClick={() => {
                    navigator.clipboard.writeText(devMarkdown);
                    toast.success("Đã copy toàn bộ mã Markdown !");
                 }}
-                className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400 font-bold rounded-lg border border-cyan-500/50 transition-all text-sm"
+                className="px-6 py-2.5 bg-[#007acc] hover:bg-[#005c99] text-white font-bold rounded-sm transition-all text-sm flex items-center gap-2 uppercase tracking-wide"
               >
-                📋 COPY TEXT CHUẨN MARKDOWN
+                📋 COPY MÃ NGUỒN (MARKDOWN)
               </button>
            </div>
         )}
@@ -357,7 +453,7 @@ export const CVReviewer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-4 md:px-8 overflow-x-hidden">
+    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-4 md:px-8 font-sans overflow-x-hidden">
        <style>{`
         @keyframes scan {
           0% { top: 0; opacity: 0; }
@@ -367,53 +463,55 @@ export const CVReviewer = () => {
         }
       `}</style>
 
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-[1500px] mx-auto">
          {/* HEADER */}
-         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-slate-400 hover:text-cyan-500 transition-colors p-3 bg-[#161b22] rounded-xl border border-slate-800 shadow-xl">
-              <CornerUpLeft size={24} />
+         <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-5">
+            <Link to="/" className="text-slate-400 hover:text-cyan-500 transition-colors p-3.5 bg-[#161b22] rounded-xl border border-slate-800 shadow-xl group">
+              <CornerUpLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
             </Link>
-            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 uppercase tracking-widest flex items-center gap-3">
-              <File size={32} className="text-cyan-500 hidden md:block" /> CỨU RỖI CV CHẤP VÁ
+            <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-500 uppercase tracking-tighter flex items-center gap-3">
+              <FileIcon size={36} className="text-cyan-500 hidden md:block" /> CỨU RỖI CV CHẶP VÁ
             </h1>
           </div>
-          <p className="text-slate-400 max-w-sm text-xs md:text-sm text-right border-r-4 border-cyan-500 pr-4 hidden md:block italic">
-            "Sức mạnh AI phân tích và tự động viết lại chiếc CV phèn chúa của bạn thành tuyệt tác Thung lũng Silicon."
+          <p className="text-slate-400 max-w-sm text-xs md:text-sm text-right border-r-4 border-emerald-500 pr-5 hidden md:block italic leading-relaxed">
+            Sức mạnh AI phân tích và tự động thiết kế lại chiếc CV phèn chúa của bạn thành một tuyệt tác Silicon Valley chỉ trong 10 giây.
           </p>
         </div>
 
-        <div className={`grid gap-8 transition-all duration-500 items-start ${reviewResult || rewriteResult ? 'lg:grid-cols-[1fr_2.5fr]' : 'max-w-3xl mx-auto'}`}>
+        <div className={`grid gap-12 transition-all duration-700 items-start ${reviewResult || rewriteResult ? 'xl:grid-cols-[1fr_2.5fr]' : 'max-w-4xl mx-auto'}`}>
            
            {/* CỘT UPLOADER (Trái) */}
-           <div className={`flex flex-col gap-6 ${(!reviewResult && !rewriteResult) ? 'w-full' : 'sticky top-8'}`}>
+           <div className={`flex flex-col gap-8 ${(!reviewResult && !rewriteResult) ? 'w-full' : 'xl:sticky xl:top-8'}`}>
               {renderUploader()}
               
               {/* Terminal Logs hiển thị khi đang scan */}
               {isScanning && (
-                 <div className="bg-black border border-slate-800 rounded-xl p-4 font-mono text-sm shadow-xl animate-[fade-in_0.3s]">
-                    <div className="flex items-center gap-2 mb-3 border-b border-slate-800 pb-2">
-                       <div className="w-3 h-3 rounded-full bg-red-500" />
-                       <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                       <div className="w-3 h-3 rounded-full bg-green-500" />
-                       <span className="ml-2 text-slate-500 font-bold tracking-widest text-xs">HR_CONSOLE.exe</span>
+                 <div className="bg-black border border-slate-800 rounded-xl p-5 font-mono text-sm shadow-2xl animate-[fade-in_0.3s]">
+                    <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                       <div className="flex items-center gap-2">
+                         <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_#ef4444]" />
+                         <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_10px_#eab308]" />
+                         <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_10px_#22c55e]" />
+                       </div>
+                       <span className="text-slate-600 font-bold tracking-widest text-[10px]">HR_CONSOLE.exe - v9.9.9</span>
                     </div>
-                    <div className="text-green-400 space-y-1 h-32 overflow-y-auto text-xs">
+                    <div className="text-green-400 space-y-2 h-36 overflow-y-auto text-[13px] tracking-wide custom-scrollbar pr-2">
                         {logs.map((L, i) => <div key={i}>{`> ${L}`}</div>)}
-                        <div className="h-1 w-full bg-slate-900 rounded-full mt-3 overflow-hidden">
-                           <div className="h-full bg-cyan-400 transition-all" style={{width: `${scanProgress}%`}} />
-                        </div>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-900 rounded-full mt-4 overflow-hidden border border-slate-800">
+                       <div className="h-full bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-300" style={{width: `${scanProgress}%`}} />
                     </div>
                  </div>
               )}
            </div>
 
            {/* CỘT KẾT QUẢ (Phải) */}
-           {(reviewResult || rewriteResult) && (
-              <div className="w-full">
-                 {currentMode === 'review' ? renderReviewResult() : renderRewriteResult()}
-              </div>
-           )}
+           <div className="w-full">
+              {(reviewResult || rewriteResult) && (
+                 currentMode === 'review' ? renderReviewResult() : renderRewriteResult()
+              )}
+           </div>
 
         </div>
 
