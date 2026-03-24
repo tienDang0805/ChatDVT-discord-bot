@@ -60,7 +60,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   // --- Render Sections ---
   const renderSummary = () => (
     <section>
-      <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] mb-3 border-b-2 border-slate-100 pb-2 flex items-center gap-2">
+      <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] mb-3 border-b-2 border-slate-100 pb-2 flex items-center gap-2 print:break-after-avoid">
         <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> SUMMARY
       </h2>
       <ContentEditable 
@@ -75,14 +75,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   const renderExperience = () => (
     <section>
       <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2">
-        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2">
+        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> EXPERIENCE
         </h2>
         <button onClick={() => onChange({...data, experience: [...(data.experience || []), {company:'', role:'', duration:'', description:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Add Job</button>
       </div>
       <div className="flex flex-col gap-6">
         {data.experience?.map((exp, idx) => (
-          <div key={idx} className="relative group/item">
+          <div key={idx} className="relative group/item print:break-inside-avoid">
             <button onClick={() => { const newExp = [...data.experience]; newExp.splice(idx, 1); onChange({...data, experience: newExp}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-0.5">
               <input className={`font-black uppercase text-slate-900 flex-1 text-[15px] ${inputClass}`} value={exp.role} onChange={(e) => updateField('experience', 'role', e.target.value, idx)} placeholder="Job Title" />
@@ -105,14 +105,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   const renderProjects = () => (
     <section>
       <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2">
-        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2">
+        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> PROJECTS
         </h2>
         <button onClick={() => onChange({...data, projects: [...(data.projects || []), {name:'', duration:'', description:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Add Project</button>
       </div>
       <div className="flex flex-col gap-6">
         {data.projects?.map((proj, idx) => (
-          <div key={idx} className="relative group/item">
+          <div key={idx} className="relative group/item print:break-inside-avoid">
             <button onClick={() => { const newProj = [...data.projects]; newProj.splice(idx, 1); onChange({...data, projects: newProj}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-1">
               <input className={`font-black text-slate-900 flex-1 text-[15px] ${inputClass}`} value={proj.name} onChange={(e) => updateField('projects', 'name', e.target.value, idx)} placeholder="Project Name" />
@@ -136,7 +136,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
       <>
         {data.customSections.map((section, sIdx) => (
           <section key={section.id}>
-             <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 relative group/sec transition-colors">
+             <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 relative group/sec transition-colors print:break-after-avoid">
                <div className="flex items-center gap-2 flex-1">
                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0"/>
                  <input 
@@ -165,7 +165,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
              </div>
              <div className="flex flex-col gap-6">
                 {section.items.map((item, iIdx) => (
-                   <div key={iIdx} className="relative group/item">
+                   <div key={iIdx} className="relative group/item print:break-inside-avoid">
                       <button onClick={() => { 
                           const newData = [...data.customSections!];
                           newData[sIdx].items.splice(iIdx, 1);
@@ -207,14 +207,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   const renderSkills = () => (
     <section>
       <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2">
-        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2">
+        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> SKILLS
         </h2>
         <button onClick={() => onChange({...data, skills: [...(data.skills || []), '']})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Thêm</button>
       </div>
       <div className="flex flex-col gap-2">
         {data.skills?.map((skill, idx) => (
-          <div key={idx} className="relative group/item flex items-start">
+          <div key={idx} className="relative group/item flex items-start print:break-inside-avoid">
             <span className="text-emerald-600 mr-2 mt-1 text-[10px] font-black">▶</span>
             <ContentEditable 
               html={skill}
@@ -233,14 +233,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   const renderEducation = () => (
     <section>
       <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2">
-        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2">
+        <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> EDUCATION
         </h2>
         <button onClick={() => onChange({...data, education: [...(data.education || []), {school:'', degree:'', duration:'', gpa:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Thêm</button>
       </div>
       <div className="flex flex-col gap-5">
         {data.education?.map((edu, idx) => (
-          <div key={idx} className="relative group/item">
+          <div key={idx} className="relative group/item print:break-inside-avoid">
             <button onClick={() => { const newEdu = [...data.education]; newEdu.splice(idx, 1); onChange({...data, education: newEdu}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-1">
                <input className={`font-black text-slate-900 text-[13.5px] flex-1 ${inputClass}`} value={edu.school} onChange={(e) => updateField('education', 'school', e.target.value, idx)} placeholder="University Name" />
