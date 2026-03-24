@@ -648,6 +648,74 @@ BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON VỚI CẤU TRÚC SAU:
           throw new Error(`Lỗi nhận diện nhan sắc: ${error.message}`);
       }
   }
+  // --- CV Processing ---
+  public async processCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite'): Promise<any> {
+      try {
+          let documentContent: Part[] = [];
+          
+          if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+              documentContent.push({
+                  inlineData: {
+                      data: fileBuffer.toString('base64'),
+                      mimeType: mimeType
+                  }
+              });
+          } else if (filename.endsWith('.txt') || filename.endsWith('.md')) {
+              documentContent.push({ text: `Nội dung CV:\n${fileBuffer.toString('utf-8')}` });
+          } else if (filename.endsWith('.docx')) {
+              const mammoth = require('mammoth');
+              const textResult = await mammoth.extractRawText({ buffer: fileBuffer });
+              documentContent.push({ text: `Nội dung CV:\n${textResult.value}` });
+          } else {
+              throw new Error("Định dạng file không hỗ trợ. Tải Ảnh, PDF, DOCX, TXT hoặc MD.");
+          }
+
+          let prompt = "";
+          let config: any = { ...GEMINI_LOGIC_CONFIG.generationConfig };
+
+          if (mode === 'review') {
+              prompt = `Bạn là một Giám đốc Nhân sự (HR) vô cùng khó tính, sát thủ diệt CV, nhưng nhận xét cực kỳ chuẩn xác để người ứng tuyển thăng tiến.
+Hãy phân tích CV này. BẮT BUỘC TRẢ VỀ JSON:
+{
+  "score": <Điểm số 1-100 đánh giá tổng thể trình bày và nội dung>,
+  "level": "<Junior/Mid/Senior/Fresher/Thực tập sinh Lỏ>",
+  "overall": "<Nhận xét tổng quan từ HR (Gắt gỏng nhưng đúng)>",
+  "critiques": [
+    {
+      "issue": "<Điểm yếu, lỗi chính tả, thiết kế phèn>",
+      "advice": "<Cách khắc phục ngắn gọn>"
+    }
+  ],
+  "strengths": ["<Điểm mạnh 1>", "<Điểm mạnh 2>"]
+}`;
+              config.responseMimeType = "application/json";
+          } else if (mode === 'rewrite') {
+              prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) cấp cao.
+Từ các thông tin có trong CV này (có thể rất lộn xộn/yếu), hãy TỔNG HỢP, TRAU CHUỐT từ vựng (Action Verbs), và VIẾT LẠI hoàn toàn thành một bản CV chuyên nghiệp bằng chuẩn Markdown.
+Cố gắng sắp xếp theo cấu trúc: SUMMARY, EXPERIENCE (Dùng bullet points có kết quả định lượng), EDUCATION, SKILLS.
+Nếu thiếu thông tin, tự thêm các Placeholder (như [Điền kinh nghiệm A ở đây]) thay vì bịa.
+TRẢ VỀ ĐÚNG MÃ MARKDOWN CỦA CV MỚI.`;
+              config.responseMimeType = "text/plain";
+          }
+
+          const model = await this.getModel('global', 'logic', config);
+          const result = await retryWithBackoff(() => model.generateContent([prompt, ...documentContent]));
+          let text = result.response.text().trim();
+          
+          if (mode === 'review') {
+              if (text.startsWith('```json')) text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+              else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+              return JSON.parse(text);
+          } else {
+              if (text.startsWith('```markdown')) text = text.replace(/^```markdown\n/, '').replace(/\n```$/, '');
+              else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+              return { markdown: text };
+          }
+      } catch (error: any) {
+          console.error("CV Protocol Error:", error);
+          throw new Error(`Lỗi phân tích CV: ${error.message}`);
+      }
+  }
 }
 
 export const geminiService = new GeminiService();

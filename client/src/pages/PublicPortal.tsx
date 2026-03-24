@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -85,6 +85,16 @@ export const PublicPortal = () => {
       icon: Scan,
       href: '/handsome',
       author: 'Super AI Lỏ',
+      category: 'utility'
+    },
+    {
+      id: 'cv-reviewer',
+      number: '09',
+      title: 'Khám Điền Thổ CV',
+      description: 'AI đóng vai HR khó tính soi lỗi CV của bạn mỏ hỗn, hoặc tự động viết lại mới hoàn toàn (Rewrite) chuyên nghiệp.',
+      icon: Briefcase,
+      href: '/cv-review',
+      author: 'HR Tiến Đặng',
       category: 'utility'
     }
   ];

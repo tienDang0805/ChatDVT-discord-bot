@@ -52,7 +52,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path.startsWith('/api/music/')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1171,6 +1171,31 @@ app.post('/api/handsome-analyzer', async (req, res) => {
     } catch (err: any) {
         console.error('Handsome analyzer error:', err.message);
         res.status(500).json({ error: 'AI đang bận đi khám mắt, không thể phân tích nhan sắc lúc này! Trả lại ảnh cho mày.' });
+    }
+});
+
+// --- CV Reviewer API ---
+app.post('/api/cv-reviewer', upload.single('cvFile'), async (req, res) => {
+    try {
+        const file = req.file;
+        const mode = req.body.mode;
+
+        if (!file) return res.status(400).json({ error: 'Chưa upload file CV!' });
+        if (mode !== 'review' && mode !== 'rewrite') {
+           return res.status(400).json({ error: 'Chế độ không hợp lệ.' });
+        }
+
+        const result = await geminiService.processCV(
+            file.buffer, 
+            file.mimetype, 
+            file.originalname, 
+            mode as 'review' | 'rewrite'
+        );
+        
+        res.json({ result });
+    } catch (err: any) {
+        console.error('CV Reviewer error:', err.message);
+        res.status(500).json({ error: err.message || 'Lỗi AI khi phân tích CV.' });
     }
 });
 
