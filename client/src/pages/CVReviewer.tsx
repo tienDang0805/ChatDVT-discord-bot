@@ -309,68 +309,112 @@ export const CVReviewer = () => {
 
   const renderReviewResult = () => {
     if (!reviewResult) return null;
+    
+    // Dynamic color logic for score
+    const score = reviewResult.score;
+    let scoreColor = "text-rose-500";
+    let scoreBg = "bg-rose-500/10";
+    let scoreBorder = "border-rose-500/30";
+    
+    if (score >= 90) { 
+      scoreColor = "text-emerald-500"; 
+      scoreBg = "bg-emerald-500/10"; 
+      scoreBorder = "border-emerald-500/30"; 
+    } else if (score >= 70) { 
+      scoreColor = "text-amber-500"; 
+      scoreBg = "bg-amber-500/10"; 
+      scoreBorder = "border-amber-500/30"; 
+    }
+
     return (
-      <div className="bg-[#0b0f19] border border-rose-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_50px_rgba(225,29,72,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] relative">
-        <h3 className="text-xl md:text-2xl font-black text-rose-500 uppercase flex items-center gap-2 mb-6 border-b border-rose-500/20 pb-4">
-          <AlertTriangle /> BIÊN BẢN CHỈ TRÍCH TỪ HR
-        </h3>
+      <div className="bg-[#0b0f19] border border-slate-800 rounded-xl p-6 md:p-10 shadow-2xl flex flex-col animate-[fade-in_0.5s_ease-out] relative font-sans">
         
-        <div className="flex flex-col md:flex-row gap-6 mb-8 items-center md:items-stretch">
-           <div className="bg-gradient-to-br from-rose-950/50 to-orange-950/50 border border-rose-500/30 p-8 rounded-2xl flex flex-col items-center justify-center shrink-0 w-48 shadow-inner relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/20 blur-[50px] -z-10" />
-              <span className="text-slate-400 text-xs font-bold tracking-widest uppercase mb-3">ĐIỂM CHUYÊN NGHIỆP</span>
-              <span className="text-7xl font-black text-rose-500 tracking-tighter shadow-sm">{reviewResult.score}<span className="text-2xl text-rose-500/40">/100</span></span>
-              <span className="mt-4 text-rose-300 font-black bg-rose-500/20 border border-rose-500/30 px-4 py-1.5 rounded-full text-xs uppercase tracking-wider shadow-lg">Level: {reviewResult.level}</span>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-800 pb-6 gap-4">
+           <div>
+              <h3 className="text-2xl md:text-3xl font-black text-slate-100 uppercase tracking-tight flex items-center gap-3">
+                <Scan className="text-cyan-500" size={28} /> ATS ANALYSIS REPORT
+              </h3>
+              <p className="text-slate-500 text-sm mt-1.5 font-medium">Báo cáo chuẩn mực về mức độ tương thích của CV với hệ thống quét tự động</p>
            </div>
            
-           <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden flex flex-col">
-              <div className="absolute left-0 top-0 w-1 h-full bg-rose-500" />
-              <h4 className="text-xs text-rose-400 font-black uppercase tracking-widest mb-3 flex items-center gap-2"><Eye size={16}/> LỜI SẤM TRUYỀN:</h4>
-              <p className="text-slate-300 italic leading-relaxed text-lg md:text-xl font-serif">"{reviewResult.overall}"</p>
-              
-              <div className="mt-auto pt-6">
-                 <button 
-                    onClick={() => startProcess('rewrite')}
-                    className="w-full bg-cyan-600/10 hover:bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 py-3 rounded-lg font-bold uppercase tracking-widest text-sm transition-all flex items-center justify-center gap-2 group shadow-[0_0_15px_rgba(6,182,212,0.15)] hover:shadow-[0_0_25px_rgba(6,182,212,0.3)]"
-                 >
-                    <Wand2 size={18} className="group-hover:rotate-12 transition-transform" /> REFACTOR THÀNH CV ĐỈNH CAO CHUẨN 90+ NGAY
-                 </button>
+           <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl border ${scoreBorder} ${scoreBg}`}>
+              <div className="flex flex-col text-right">
+                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">ATS SCORE</span>
+                 <span className={`text-4xl font-black ${scoreColor} leading-none tracking-tighter`}>{score}<span className="text-xl opacity-40 font-bold">/100</span></span>
               </div>
            </div>
         </div>
+        
+        {/* Executive Summary */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden">
+           <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500" />
+           <div className="flex justify-between items-start md:items-center mb-3">
+              <h4 className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                <FileText size={14} className="text-cyan-500" /> Executive Summary
+              </h4>
+              <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700`}>
+                 Level: {reviewResult.level}
+              </span>
+           </div>
+           
+           <p className="text-slate-200 leading-relaxed text-lg md:text-xl font-medium">
+             "{reviewResult.overall}"
+           </p>
+           
+           <div className="mt-8 flex justify-end">
+              <button 
+                 onClick={() => startProcess('rewrite')}
+                 className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-sm transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] active:scale-95"
+              >
+                 <Wand2 size={18} /> CỨU RỖI CV - REFACTOR TỰ ĐỘNG (&gt;95 ĐIỂM)
+              </button>
+           </div>
+        </div>
 
-        <div className="grid md:grid-cols-[1fr_1fr] gap-8">
+        {/* Details Grid */}
+        <div className="grid lg:grid-cols-[1.2fr_1fr] gap-8">
+           {/* Actionable Feedback */}
            <div>
-               <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-rose-500 bg-rose-950/30 py-2 px-3 rounded-lg w-max">
-                 <AlertTriangle size={16} /> NHỮNG LỖI CHÍ MẠNG
+               <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 text-slate-400 border-b border-slate-800 pb-2">
+                 Actionable Feedback (Khuyến nghị Cải thiện)
                </h4>
                <div className="space-y-4">
                  {reviewResult.critiques?.map((item, idx) => (
-                   <div key={idx} className="bg-slate-900/50 border border-rose-900/30 p-5 rounded-xl transition-all hover:bg-slate-900 hover:border-rose-700/50">
-                      <p className="text-rose-400 font-bold mb-2 flex items-start gap-2 text-md">
-                        <span className="mt-1 text-[10px] bg-rose-500/20 px-1.5 rounded text-rose-300">LỖI</span> {item.issue}
+                   <div key={idx} className="group bg-slate-900/40 border border-slate-800/80 p-5 rounded-xl hover:border-cyan-500/30 transition-all">
+                      <p className="text-rose-400 font-bold mb-3 text-[14.5px] leading-snug flex gap-2 items-start">
+                        <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                        <span>{item.issue}</span>
                       </p>
-                      <p className="text-slate-400 text-sm leading-relaxed flex items-start gap-2">
-                        <span className="mt-1 text-[10px] bg-sky-500/20 px-1.5 rounded text-sky-400">FIX</span> <span className="flex-1">{item.advice}</span>
-                      </p>
+                      <div className="flex gap-3 items-start bg-emerald-500/5 p-3.5 rounded-lg border border-emerald-500/10">
+                         <div className="mt-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] font-black px-1.5 py-0.5 rounded tracking-wider ring-1 ring-emerald-500/30">FIX</div>
+                         <p className="text-slate-400 text-[13.5px] leading-relaxed font-medium">
+                           {item.advice}
+                         </p>
+                      </div>
                    </div>
                  ))}
                </div>
            </div>
+
+           {/* Core Strengths */}
            <div>
-               <h4 className="text-sm font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 text-emerald-500 bg-emerald-950/30 py-2 px-3 rounded-lg w-max">
-                 <CheckCircle2 size={16} /> ĐIỂM SÁNG LE LÓI
+               <h4 className="text-[11px] font-black uppercase tracking-[0.2em] mb-5 text-slate-400 border-b border-slate-800 pb-2">
+                 Core Strengths (Điểm mạnh cốt lõi)
                </h4>
                <div className="space-y-3">
                  {reviewResult.strengths?.map((item, idx) => (
-                   <div key={idx} className="bg-slate-900/50 border border-emerald-900/30 p-4 rounded-xl flex items-start gap-3 transition-all hover:bg-slate-900 hover:border-emerald-700/50">
-                      <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" />
-                      <p className="text-slate-300 text-sm leading-relaxed">{item}</p>
+                   <div key={idx} className="bg-slate-900/40 border border-slate-800/80 p-4.5 rounded-xl flex items-start gap-3">
+                      <div className="bg-emerald-500/10 p-1.5 rounded-full shrink-0 border border-emerald-500/20 mt-0.5">
+                        <CheckCircle2 size={14} className="text-emerald-500" />
+                      </div>
+                      <p className="text-slate-300 text-[14.5px] leading-relaxed font-medium">{item}</p>
                    </div>
                  ))}
                </div>
            </div>
         </div>
+
       </div>
     );
   };

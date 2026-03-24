@@ -743,25 +743,29 @@ TRẢ VỀ ĐÚNG MÃ MARKDOWN CỦA CV MỚI.`;
           let config: any = { ...GEMINI_LOGIC_CONFIG.generationConfig };
 
           if (mode === 'review') {
-              prompt = `Bạn là một Giám đốc Nhân sự (HR) vô cùng khó tính, sát thủ diệt CV, nhưng nhận xét cực kỳ chuẩn xác và thực tế.
-Hãy phân tích chiếc CV hoặc Resume này. BẮT BUỘC TRẢ VỀ CHUẨN JSON VỚI CẤU TRÚC:
+              prompt = `Bạn là một Giám đốc Nhân sự (HR) cấp cao & Chuyên gia ATS System. Nhiệm vụ của bạn là phân tích CV này một cách cực kỳ khắt khe, chi tiết và chuyên nghiệp nhất.
+BẮT BUỘC TRẢ VỀ CHUẨN JSON VỚI CẤU TRÚC:
 {
-  "score": <Số nguyên 1-100 đánh giá chất lượng CV>,
-  "level": "<Dự đoán trình độ: Mới nhú/Fresher/Junior/Mid/Senior/Thực phi Lỏ...>",
-  "overall": "<1 Câu nhận xét tổng quan vô cùng gắt gỏng, xỉa xói nhưng đúng trọng tâm>",
+  "score": <Số nguyên 1-100 đánh giá chất lượng độ thân thiện ATS & Impact của CV>,
+  "level": "<Dự đoán trình độ thực tế: Intern/Fresher/Junior/Mid-level/Senior/Lead...>",
+  "overall": "<1 Câu tóm tắt đánh giá về giá trị cốt lõi của ứng viên (Professional & Concise)>",
   "critiques": [
     {
-      "issue": "<Điểm yếu, lỗi trình bày, lỗi chính tả, thiết kế phèn rách>",
-      "advice": "<Cách khắc phục cụ thể, chuyên nghiệp>"
+      "issue": "<Lỗ hổng cụ thể về kỹ năng, cách trình bày, thiết hụt số liệu (Metrics), hoặc sai lầm Action Verbs>",
+      "advice": "<Giải pháp sắc bén, mang tính Actionable và đúng chuẩn Silicon Valley>"
     }
   ],
-  "strengths": ["<Điểm tốt hiếm hoi 1>", "<Điểm tốt hiếm hoi 2>"]
+  "strengths": ["<Điểm sáng 1>", "<Điểm sáng 2>"]
 }`;
               config.responseMimeType = "application/json";
           } else if (mode === 'rewrite') {
-              prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) cấp cao tại Thung lũng Silicon với nhiệm vụ tạo ra một bản CV vượt qua mọi hệ thống máy quét (ATS) với Điểm số CHẮC CHẮN TRÊN 90.
-Dựa vào những thông tin lộn xộn/sơ sài có trong tài liệu người dùng cấp, hãy TỰ ĐỘNG REFACTOR, CHUỐT TỪ CỰC MẠNH (Dùng Action Verbs có sức ảnh hưởng cao như Architected, Spearheaded, Optimized), DỊCH SANG TIẾNG ANH (hoặc giữ nguyên Tiếng Việt tuỳ bối cảnh) và **VIẾT MỚI LẠI HOÀN TOÀN** bản CV này thành đẳng cấp thế giới.
-Khỏa lấp các lỗ hổng: Nếu thông tin chức vụ/dự án quá sơ sài, hãy tự động sinh ra các gạch đầu dòng chuyên sâu mô tả những best-practice tiêu chuẩn của role đó để ứng viên dễ hình dung (hoặc đặt [Placeholder] khéo léo).
+              prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) top đầu tại Thung lũng Silicon.
+Mục tiêu tuyệt đối: Refactor bản CV này để VƯỢT QUA MỌI HỆ THỐNG ATS với ĐIỂM SỐ CHẮC CHẮN > 95 nhưng PHẢI DỰA TRÊN KHUNG SỰ THẬT 100%.
+QUY TẮC REFACTOR BẮT BUỘC:
+1. TUYỆT ĐỐI KHÔNG BỊA ĐẶT SỐ LIỆU (Metrics), dự án, hoặc chém gió những thứ không có thật trong CV gốc. Chỉ tái cấu trúc và làm đẹp văn phong từ những gì user đã cung cấp.
+2. Ánh xạ "Công thức XYZ từ Google": "Accomplished [X] as measured by [Y], by doing [Z]" cho MỌI kinh nghiệm. Lượng hoá kết quả theo fact của user. Nếu user thiếu số liệu, hãy chèn note <b>[Bổ sung số liệu KPI vào đây]</b> để người dùng tự điền thay vì tự bịa ra số liệu giả.
+3. Khai hỏa bằng ĐỘNG TỪ MẠNH (Action Verbs) mang tính tác động cao (e.g., Architected, Spearheaded, Optimized, Orchestrated, Engineered). KHÔNG dùng các từ yếu đuối (Worked on, Helped). Biến các câu văn lủng củng thành bullet point súc tích, chuyên nghiệp.
+4. Dịch sang Tiếng Anh chuyên ngành (hoặc giữ Tiếng Việt tuỳ bối cảnh), dùng văn phong Sắc - Gọn - Lạnh lùng. Output dùng HTML inline tags như <b>, <i> ở những technical keyword cốt lõi (BẮT BUỘC).
 BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown, chỉ duy nhất JSON):
 {
   "personalInfo": { "fullName": "", "title": "", "email": "", "phone": "", "portfolio": "", "summary": "" },
