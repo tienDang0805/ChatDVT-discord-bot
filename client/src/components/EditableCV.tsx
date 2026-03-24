@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Download, Edit3, Mail, Phone, ExternalLink, Info, LayoutTemplate, AlignLeft, PlusCircle } from 'lucide-react';
+import { Download, Edit3, Mail, Phone, ExternalLink, Info, LayoutTemplate, AlignLeft, PlusCircle, Eye } from 'lucide-react';
 import ContentEditable from 'react-contenteditable';
 
 export interface CVData {
@@ -26,6 +26,8 @@ type LayoutMode = '1-col' | '2-col';
 export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   const componentRef = useRef<HTMLDivElement>(null);
   const [layout, setLayout] = useState<LayoutMode>('2-col');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [filename, setFilename] = useState(data.personalInfo?.fullName ? `CV_${data.personalInfo.fullName.replace(/\s+/g, '_')}` : 'CV_Xuat_Chuan_ATS');
 
   const updateField = (section: keyof CVData, field: string, value: string, index?: number) => {
     const newData = { ...data };
@@ -45,6 +47,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
+    documentTitle: filename,
     pageStyle: `
       @page { size: A4 portrait; margin: 0; }
       @media print { 
@@ -54,13 +57,22 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
     `
   });
 
-  const inputClass = "bg-transparent border-none outline-none focus:bg-slate-100/80 hover:bg-slate-50 transition-colors rounded-sm print:bg-transparent print:p-0";
-  const rteClass = "w-full bg-transparent border-none outline-none focus:bg-slate-100/80 hover:bg-slate-50 transition-colors rounded-sm leading-[1.6] print:bg-transparent print:p-0 min-h-[20px] whitespace-pre-wrap";
+  const inputClass = `bg-transparent border-none outline-none rounded-sm print:bg-transparent print:p-0 ${
+    isPreviewMode 
+      ? 'pointer-events-none appearance-none' 
+      : 'focus:bg-slate-100/80 hover:bg-slate-50 transition-colors'
+  }`;
+  
+  const rteClass = `w-full bg-transparent border-none outline-none rounded-sm leading-[1.6] print:bg-transparent print:p-0 min-h-[20px] whitespace-pre-wrap ${
+    isPreviewMode 
+      ? 'pointer-events-none appearance-none' 
+      : 'focus:bg-slate-100/80 hover:bg-slate-50 transition-colors'
+  }`;
 
   // --- Render Sections ---
   const renderSummary = () => (
-    <section>
-      <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] mb-3 border-b-2 border-slate-100 pb-2 flex items-center gap-2 print:break-after-avoid">
+    <section className="print:block">
+      <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] mb-3 border-b-2 border-slate-100 pb-2 flex items-center gap-2 print:flex print:break-after-avoid">
         <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> SUMMARY
       </h2>
       <ContentEditable 
@@ -73,17 +85,17 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   );
 
   const renderExperience = () => (
-    <section>
-      <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2">
+    <section className="print:block">
+      <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 print:block">
         <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> EXPERIENCE
         </h2>
-        <button onClick={() => onChange({...data, experience: [...(data.experience || []), {company:'', role:'', duration:'', description:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Add Job</button>
+        <button onClick={() => onChange({...data, experience: [...(data.experience || []), {company:'', role:'', duration:'', description:''}]})} className={`text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden ${isPreviewMode ? 'hidden' : ''}`}>+ Add Job</button>
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="space-y-6 print:block">
         {data.experience?.map((exp, idx) => (
           <div key={idx} className="relative group/item print:break-inside-avoid">
-            <button onClick={() => { const newExp = [...data.experience]; newExp.splice(idx, 1); onChange({...data, experience: newExp}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
+            <button onClick={() => { const newExp = [...data.experience]; newExp.splice(idx, 1); onChange({...data, experience: newExp}); }} className={`absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none ${isPreviewMode ? 'hidden' : ''}`} title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-0.5">
               <input className={`font-black uppercase text-slate-900 flex-1 text-[15px] ${inputClass}`} value={exp.role} onChange={(e) => updateField('experience', 'role', e.target.value, idx)} placeholder="Job Title" />
               <input className={`text-[12px] font-bold text-slate-400 text-right w-36 ${inputClass}`} value={exp.duration} onChange={(e) => updateField('experience', 'duration', e.target.value, idx)} placeholder="MM/YYYY - MM/YYYY" />
@@ -103,17 +115,17 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   );
 
   const renderProjects = () => (
-    <section>
-      <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2">
+    <section className="print:block">
+      <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 print:block">
         <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> PROJECTS
         </h2>
-        <button onClick={() => onChange({...data, projects: [...(data.projects || []), {name:'', duration:'', description:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Add Project</button>
+        <button onClick={() => onChange({...data, projects: [...(data.projects || []), {name:'', duration:'', description:''}]})} className={`text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden ${isPreviewMode ? 'hidden' : ''}`}>+ Add Project</button>
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="space-y-6 print:block">
         {data.projects?.map((proj, idx) => (
           <div key={idx} className="relative group/item print:break-inside-avoid">
-            <button onClick={() => { const newProj = [...data.projects]; newProj.splice(idx, 1); onChange({...data, projects: newProj}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
+            <button onClick={() => { const newProj = [...data.projects]; newProj.splice(idx, 1); onChange({...data, projects: newProj}); }} className={`absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none ${isPreviewMode ? 'hidden' : ''}`} title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-1">
               <input className={`font-black text-slate-900 flex-1 text-[15px] ${inputClass}`} value={proj.name} onChange={(e) => updateField('projects', 'name', e.target.value, idx)} placeholder="Project Name" />
               <input className={`text-[12px] font-bold text-slate-400 text-right w-24 ${inputClass}`} value={proj.duration} onChange={(e) => updateField('projects', 'duration', e.target.value, idx)} placeholder="Timeline" />
@@ -135,8 +147,8 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
     return (
       <>
         {data.customSections.map((section, sIdx) => (
-          <section key={section.id}>
-             <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 relative group/sec transition-colors print:break-after-avoid">
+          <section key={section.id} className="print:block">
+             <div className="flex justify-between items-center mb-5 border-b-2 border-slate-100 pb-2 relative group/sec transition-colors print:block print:break-after-avoid">
                <div className="flex items-center gap-2 flex-1">
                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0"/>
                  <input 
@@ -150,7 +162,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
                    placeholder="SECTION TITLE"
                  />
                </div>
-               <div className="flex items-center gap-2 opacity-0 group-hover/sec:opacity-100 print:hidden transition-opacity">
+               <div className={`flex items-center gap-2 opacity-0 group-hover/sec:opacity-100 print:hidden transition-opacity ${isPreviewMode ? 'hidden' : ''}`}>
                   <button onClick={() => {
                      const newData = [...data.customSections!];
                      newData.splice(sIdx, 1);
@@ -163,14 +175,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
                   }} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded border border-emerald-100">+ Add Item</button>
                </div>
              </div>
-             <div className="flex flex-col gap-6">
+             <div className="space-y-6 print:block">
                 {section.items.map((item, iIdx) => (
                    <div key={iIdx} className="relative group/item print:break-inside-avoid">
                       <button onClick={() => { 
                           const newData = [...data.customSections!];
                           newData[sIdx].items.splice(iIdx, 1);
                           onChange({ ...data, customSections: newData });
-                      }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
+                      }} className={`absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none ${isPreviewMode ? 'hidden' : ''}`} title="Xoá">&times;</button>
                       
                       <div className="flex justify-between items-baseline mb-1">
                         <input className={`font-black text-slate-900 flex-1 text-[15px] ${inputClass}`} value={item.name} onChange={(e) => {
@@ -205,14 +217,14 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   };
 
   const renderSkills = () => (
-    <section>
-      <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2">
+    <section className="print:block">
+      <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2 print:block">
         <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> SKILLS
         </h2>
-        <button onClick={() => onChange({...data, skills: [...(data.skills || []), '']})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Thêm</button>
+        <button onClick={() => onChange({...data, skills: [...(data.skills || []), '']})} className={`text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden ${isPreviewMode ? 'hidden' : ''}`}>+ Thêm</button>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="space-y-2 print:block">
         {data.skills?.map((skill, idx) => (
           <div key={idx} className="relative group/item flex items-start print:break-inside-avoid">
             <span className="text-emerald-600 mr-2 mt-1 text-[10px] font-black">▶</span>
@@ -222,7 +234,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
               className={`${rteClass} flex-1 text-[13.5px] font-bold text-slate-800 -mt-0.5`}
               tagName="div"
             />
-            <button onClick={() => { const newSkills = [...data.skills]; newSkills.splice(idx, 1); onChange({...data, skills: newSkills}); }} className="absolute -right-6 top-0 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
+            <button onClick={() => { const newSkills = [...data.skills]; newSkills.splice(idx, 1); onChange({...data, skills: newSkills}); }} className={`absolute -right-6 top-0 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none ${isPreviewMode ? 'hidden' : ''}`} title="Xoá">&times;</button>
           </div>
         ))}
         {(!data.skills || data.skills.length === 0) && <p className="text-[12px] text-slate-400 italic">No skills added.</p>}
@@ -231,17 +243,17 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
   );
 
   const renderEducation = () => (
-    <section>
-      <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2">
+    <section className="print:block">
+      <div className="flex justify-between items-center mb-4 border-b-2 border-slate-100 pb-2 print:block">
         <h2 className="text-[14px] font-black uppercase text-slate-300 tracking-[0.25em] flex items-center gap-2 print:break-after-avoid">
           <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"/> EDUCATION
         </h2>
-        <button onClick={() => onChange({...data, education: [...(data.education || []), {school:'', degree:'', duration:'', gpa:''}]})} className="text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden">+ Thêm</button>
+        <button onClick={() => onChange({...data, education: [...(data.education || []), {school:'', degree:'', duration:'', gpa:''}]})} className={`text-emerald-600 text-[10px] font-bold uppercase hover:bg-emerald-50 px-2 py-1 rounded print:hidden ${isPreviewMode ? 'hidden' : ''}`}>+ Thêm</button>
       </div>
-      <div className="flex flex-col gap-5">
+      <div className="space-y-5 print:block">
         {data.education?.map((edu, idx) => (
           <div key={idx} className="relative group/item print:break-inside-avoid">
-            <button onClick={() => { const newEdu = [...data.education]; newEdu.splice(idx, 1); onChange({...data, education: newEdu}); }} className="absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none" title="Xoá">&times;</button>
+            <button onClick={() => { const newEdu = [...data.education]; newEdu.splice(idx, 1); onChange({...data, education: newEdu}); }} className={`absolute -left-8 top-1 text-red-500 opacity-0 group-hover/item:opacity-100 print:hidden text-lg leading-none ${isPreviewMode ? 'hidden' : ''}`} title="Xoá">&times;</button>
             <div className="flex justify-between items-baseline mb-1">
                <input className={`font-black text-slate-900 text-[13.5px] flex-1 ${inputClass}`} value={edu.school} onChange={(e) => updateField('education', 'school', e.target.value, idx)} placeholder="University Name" />
                <input className={`text-[12px] font-bold text-slate-400 text-right w-24 ${inputClass}`} value={edu.duration} onChange={(e) => updateField('education', 'duration', e.target.value, idx)} placeholder="Timeline" />
@@ -270,28 +282,58 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
            </p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-           {/* Layout Toggle */}
-           <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700/50">
-             <button 
-                onClick={() => setLayout('2-col')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${layout === '2-col' ? 'bg-slate-900 text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-             >
-                <LayoutTemplate size={14} /> 2-COL
-             </button>
-             <button 
-                onClick={() => setLayout('1-col')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${layout === '1-col' ? 'bg-slate-900 text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-             >
-                <AlignLeft size={14} /> 1-COL
-             </button>
-           </div>
+        <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+           {/* Layout Toggle (Hide during preview if desired, or keep to test) */}
+           {!isPreviewMode && (
+             <div className="flex bg-slate-800 rounded-lg p-1 border border-slate-700/50 shrink-0">
+               <button 
+                  onClick={() => setLayout('2-col')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${layout === '2-col' ? 'bg-slate-900 text-cyan-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+               >
+                  <LayoutTemplate size={14} /> 2-COL
+               </button>
+               <button 
+                  onClick={() => setLayout('1-col')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md transition-all ${layout === '1-col' ? 'bg-slate-900 text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+               >
+                  <AlignLeft size={14} /> 1-COL
+               </button>
+             </div>
+           )}
+           
+           {/* Thêm Nút Preview / Sửa */}
+           {!isPreviewMode ? (
+              <button 
+                 onClick={() => setIsPreviewMode(true)}
+                 className="flex items-center gap-2 bg-slate-800 text-slate-300 hover:text-cyan-400 border border-slate-700 hover:border-cyan-800 px-4 py-2 rounded-lg font-bold text-[13px] transition-all shrink-0"
+              >
+                 <Eye size={16} /> Bật Xem Trước & Tải
+              </button>
+           ) : (
+              <div className="flex items-center gap-2 shrink-0">
+                 <button 
+                    onClick={() => setIsPreviewMode(false)}
+                    className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white px-4 py-2 rounded-lg font-bold text-[13px] transition-all"
+                 >
+                    <Edit3 size={16} /> Quay Lại Sửa
+                 </button>
+                 <div className="flex items-center gap-2 bg-slate-900 border border-emerald-500/30 p-1 rounded-lg">
+                    <input 
+                      value={filename}
+                      onChange={e => setFilename(e.target.value)}
+                      className="bg-transparent text-[13.5px] font-bold text-emerald-400 px-3 outline-none w-48 placeholder:text-emerald-900"
+                      placeholder="Nhập tên file..."
+                    />
+                    <span className="text-slate-500 font-bold text-[13px] pr-3">.pdf</span>
+                 </div>
+              </div>
+           )}
            
            <button 
              onClick={handlePrint}
-             className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white px-5 py-2 rounded-lg font-black shadow-[0_4px_20px_rgba(16,185,129,0.2)] text-sm transition-all active:scale-95 uppercase tracking-widest ml-auto md:ml-0"
+             className={`flex items-center gap-2 text-white px-5 py-2 rounded-lg font-black shadow-[0_4px_20px_rgba(16,185,129,0.2)] text-[13px] transition-all active:scale-95 uppercase tracking-widest shrink-0 ${isPreviewMode ? 'bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400' : 'bg-slate-700 text-slate-400 pointer-events-none opacity-50'}`}
            >
-             <Download size={16} /> IN PDF
+             <Download size={16} /> TẢI CV
            </button>
         </div>
       </div>
@@ -325,16 +367,16 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
              </div>
           </div>
 
-          <div className={`p-10 ${layout === '2-col' ? 'grid grid-cols-[2.5fr_1fr] gap-x-10' : 'flex flex-col gap-8'}`}>
+          <div className={`p-10 ${layout === '2-col' ? 'grid grid-cols-[2.5fr_1fr] gap-x-10 print:grid' : 'space-y-8 print:block'}`}>
             {layout === '2-col' ? (
               <>
-                <div className="flex flex-col gap-8">
+                <div className="space-y-8 flex-col print:block">
                   {renderSummary()}
                   {renderExperience()}
                   {renderProjects()}
                   {renderCustomSections()}
                 </div>
-                <div className="flex flex-col gap-8">
+                <div className="space-y-8 flex-col print:block">
                   {renderSkills()}
                   {renderEducation()}
                 </div>
@@ -351,7 +393,7 @@ export const EditableCV: React.FC<Props> = ({ data, onChange }) => {
             )}
             
             {/* Add Custom Section Button (Only unprinted & isolated from layout grids ideally, but safe here) */}
-            <div className={`mt-8 flex justify-center print:hidden ${layout === '2-col' ? 'col-span-2' : ''}`}>
+            <div className={`mt-8 flex justify-center print:hidden ${layout === '2-col' ? 'col-span-2' : ''} ${isPreviewMode ? 'hidden' : ''}`}>
                <button 
                  onClick={() => {
                    const newSecs = data.customSections ? [...data.customSections] : [];
