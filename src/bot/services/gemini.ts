@@ -761,23 +761,26 @@ Hãy phân tích chiếc CV hoặc Resume này. BẮT BUỘC TRẢ VỀ CHUẨN 
           } else if (mode === 'rewrite') {
               prompt = `Bạn là một Chuyên gia viết CV (Resume Writer) cấp cao của Thung lũng Silicon.
 Dựa vào những thông tin lộn xộn/sơ sài có trong tài liệu người dùng cấp, hãy TỰ ĐỘNG THÊM THẮT, CHUỐT TỪ, DỊCH SANG TIẾNG ANH (hoặc giữ Tiếng Việt tuỳ bối cảnh) và **VIẾT MỚI LẠI HOÀN TOÀN** một bản CV chuyên nghiệp chuẩn ATS.
-Cấu trúc chuẩn: SUMMARY, KINH NGHIỆM (dùng Bullet points và Action Verbs mạnh), HỌC VẤN, KỸ NĂNG.
-Nếu thông tin quá thiếu, hãy đặt các \[Placeholder\] để người dùng tự điền.
-BẮT BUỘC trả về ĐÚNG MÃ MARKDOWN CỦA CV để hiển thị, KHÔNG CẦN GIẢI THÍCH, KHÔNG CHẮP VÁ. Chỉ xuất ra cấu trúc CV.`;
-              config.responseMimeType = "text/plain";
+Nếu thông tin quá thiếu, hãy đặt các text hợp lý hoặc [Placeholder] để người dùng điền.
+BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa code Markdown hay chữ nào ngoài JSON):
+{
+  "personalInfo": { "fullName": "", "title": "", "email": "", "phone": "", "portfolio": "", "summary": "" },
+  "experience": [ { "company": "", "role": "", "duration": "", "description": "" } ],
+  "education": [ { "school": "", "degree": "", "duration": "", "gpa": "" } ],
+  "skills": ["", "", ""],
+  "projects": [ { "name": "", "duration": "", "description": "" } ]
+}`;
+              config.responseMimeType = "application/json";
           }
 
           const model = await this.getModel('global', 'logic', config);
           const result = await retryWithBackoff(() => model.generateContent([prompt, ...documentContent]));
           let text = result.response.text().trim();
           
-          if (mode === 'review') {
-              if (text.startsWith('```json')) text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
-              else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
-              return JSON.parse(text);
-          } else {
-              return { markdown: text };
-          }
+          if (text.startsWith('```json')) text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+          else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+          
+          return JSON.parse(text);
       } catch (error: any) {
           console.error("CV Analysis Error:", error);
           throw new Error(`Lỗi xử lý CV: ${error.message}`);

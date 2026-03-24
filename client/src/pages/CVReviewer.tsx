@@ -5,6 +5,43 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'react-hot-toast';
+import { EditableCV, type CVData } from '../components/EditableCV';
+
+const jsonToMarkdown = (data: CVData) => {
+  if (!data) return '';
+  const { personalInfo, experience, education, skills, projects } = data;
+  let md = `# ${personalInfo?.fullName || 'Tên'}\n`;
+  md += `**${personalInfo?.title || 'Vị trí'}** | ${personalInfo?.email || ''} | ${personalInfo?.phone || ''} | ${personalInfo?.portfolio || ''}\n\n`;
+  
+  if (personalInfo?.summary) md += `## SUMMARY\n${personalInfo.summary}\n\n`;
+  
+  if (experience?.length) {
+    md += `## KINH NGHIỆM LÀM VIỆC\n`;
+    experience.forEach(exp => {
+      md += `### **${exp.role}** - *${exp.company}*\n_${exp.duration}_\n${exp.description}\n\n`;
+    });
+  }
+  
+  if (projects?.length) {
+    md += `## DỰ ÁN NỔI BẬT\n`;
+    projects.forEach(proj => {
+      md += `### **${proj.name}**\n_${proj.duration}_\n${proj.description}\n\n`;
+    });
+  }
+  
+  if (education?.length) {
+    md += `## HỌC VẤN\n`;
+    education.forEach(edu => {
+      md += `### **${edu.school}**\n**${edu.degree}** | GPA: ${edu.gpa} | _${edu.duration}_\n\n`;
+    });
+  }
+  
+  if (skills?.length) {
+    md += `## KỸ NĂNG\n`;
+    skills.forEach(s => { md += `- ${s}\n`; });
+  }
+  return md;
+};
 
 interface FeatureRating {
   issue: string;
@@ -27,7 +64,8 @@ export const CVReviewer = () => {
   const [logs, setLogs] = useState<string[]>([]);
   
   const [reviewResult, setReviewResult] = useState<AnalysisResult | null>(null);
-  const [rewriteResult, setRewriteResult] = useState<string | null>(null);
+  const [rewriteResult, setRewriteResult] = useState<CVData | null>(null);
+  const [devMarkdown, setDevMarkdown] = useState<string>('');
   const [currentMode, setCurrentMode] = useState<'review' | 'rewrite' | null>(null);
   
   // Tab control for Rewrite mode
@@ -113,7 +151,8 @@ export const CVReviewer = () => {
         if (mode === 'review') {
            setReviewResult(data.result);
         } else {
-           setRewriteResult(data.result.markdown);
+           setRewriteResult(data.result);
+           setDevMarkdown(jsonToMarkdown(data.result));
         }
         setLogs(prev => [...prev, "Hoàn tất xử lý tác vụ."]);
         toast.success("Xong rồi nha!");
@@ -258,56 +297,61 @@ export const CVReviewer = () => {
   const renderRewriteResult = () => {
     if (!rewriteResult) return null;
     return (
-      <div className="bg-[#0b0f19] border border-cyan-500/30 rounded-xl shadow-[0_0_40px_rgba(34,211,238,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] h-[600px] overflow-hidden">
+      <div className="bg-[#0b0f19] border border-cyan-500/30 rounded-xl shadow-[0_0_40px_rgba(34,211,238,0.1)] flex flex-col animate-[fade-in_0.5s_ease-out] overflow-hidden" style={{ minHeight: activeTab === 'preview' ? '800px' : '600px' }}>
         
         {/* Tab Header */}
-        <div className="flex bg-[#161b22] border-b border-slate-800">
+        <div className="flex bg-[#161b22] border-b border-slate-800 shrink-0">
            <button 
              onClick={() => setActiveTab('preview')}
              className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'preview' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
            >
-             <Eye size={18} /> Bản Hiển Thị (Dành Cho Người Thường)
+             <Eye size={18} /> Normal Mode (Sửa & In PDF)
            </button>
            <button 
              onClick={() => setActiveTab('raw')}
              className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider transition-colors ${activeTab === 'raw' ? 'text-cyan-400 border-b-2 border-cyan-400 bg-cyan-950/20' : 'text-slate-500 hover:bg-slate-800'}`}
            >
-             <Code size={18} /> Chỉnh sửa Markdown (Dành cho Dev)
+             <Code size={18} /> Dev Mode (Markdown)
            </button>
         </div>
 
         {/* Tab Content */}
-        <div className="flex-1 overflow-auto bg-[#0d1117] relative">
+        <div className="flex-1 bg-[#0d1117] h-full">
            {activeTab === 'preview' ? (
-              <div className="p-8 max-w-4xl mx-auto bg-slate-50 min-h-full text-slate-800 prose prose-slate">
-                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                   {rewriteResult}
-                 </ReactMarkdown>
-              </div>
+              <EditableCV data={rewriteResult} onChange={setRewriteResult} />
            ) : (
-              <div className="h-full w-full relative">
-                 <TextareaAutosize
-                   value={rewriteResult}
-                   onChange={(e) => setRewriteResult(e.target.value)}
-                   className="w-full h-full min-h-full bg-transparent text-cyan-100 font-mono p-6 resize-none focus:outline-none focus:ring-0 leading-relaxed text-sm lg:text-base placeholder-slate-700"
-                   placeholder="Nhập mã Markdown vào đây..."
-                 />
+              <div className="flex flex-col md:flex-row h-full">
+                  <div className="flex-1 border-r border-slate-800 min-h-[300px]">
+                     <TextareaAutosize
+                       value={devMarkdown}
+                       onChange={(e) => setDevMarkdown(e.target.value)}
+                       className="w-full h-full min-h-full bg-transparent text-cyan-100 font-mono p-6 resize-none focus:outline-none focus:ring-0 leading-relaxed text-sm lg:text-base placeholder-slate-700 custom-scrollbar"
+                       placeholder="Nhập mã Markdown vào đây..."
+                     />
+                  </div>
+                  <div className="flex-1 bg-slate-50 prose prose-slate p-8 text-slate-800 custom-scrollbar overflow-auto min-h-[300px]">
+                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                       {devMarkdown}
+                     </ReactMarkdown>
+                  </div>
               </div>
            )}
         </div>
         
-        {/* Actions Footer */}
-        <div className="bg-[#161b22] p-4 border-t border-slate-800 flex justify-end gap-4">
-           <button 
-             onClick={() => {
-                navigator.clipboard.writeText(rewriteResult);
-                toast.success("Đã copy nguyên bản CV mới!");
-             }}
-             className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400 font-bold rounded-lg border border-cyan-500/50 transition-all text-sm"
-           >
-             📋 COPY MARKDOWN
-           </button>
-        </div>
+        {/* Actions Footer - Only for Dev Mode */}
+        {activeTab === 'raw' && (
+           <div className="bg-[#161b22] p-4 border-t border-slate-800 flex justify-end gap-4 shrink-0">
+              <button 
+                onClick={() => {
+                   navigator.clipboard.writeText(devMarkdown);
+                   toast.success("Đã copy toàn bộ mã Markdown !");
+                }}
+                className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-400 font-bold rounded-lg border border-cyan-500/50 transition-all text-sm"
+              >
+                📋 COPY TEXT CHUẨN MARKDOWN
+              </button>
+           </div>
+        )}
       </div>
     );
   };
