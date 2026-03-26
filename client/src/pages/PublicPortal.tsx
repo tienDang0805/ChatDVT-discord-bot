@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -96,6 +96,16 @@ export const PublicPortal = () => {
       href: '/cv-review',
       author: 'HR Tiến Đặng',
       category: 'utility'
+    },
+    {
+      id: 'pixel-agents',
+      number: '10',
+      title: 'Pixel Agents Office',
+      description: 'Văn phòng làm việc thu nhỏ của các AI Agents (Giao diện giả lập). Trải nghiệm tương tác với pixel art!',
+      icon: Bot,
+      href: '/pixel-agents',
+      author: 'Pablo Delucca (Ported)',
+      category: 'game'
     }
   ];
 

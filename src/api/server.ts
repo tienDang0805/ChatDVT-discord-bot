@@ -52,7 +52,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -749,6 +749,33 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to leave guild' });
+    }
+});
+
+// --- 8D Chat API ---
+app.post('/api/8d-chat', async (req, res) => {
+    try {
+        const { message, context } = req.body;
+        
+        const contextStr = (context && Object.keys(context).length > 0) 
+            ? `\n[BỐI CẢNH HIỆN TẠI TRONG VĂN PHÒNG KHÔNG GIAN ẢO]:\n${Object.entries(context).map(([k, v]) => `- ${k} đang ${v}`).join('\n')}\n(Hãy lồng ghép khéo léo hành động đang làm này vào câu trả lời để tạo sự tự nhiên liên kết với game nhé).\n` 
+            : '';
+            
+        const prompt = `Bạn là một hệ thống nhập vai kịch bản. Người dùng vừa nói: "${message}".${contextStr}
+Hãy mô phỏng ngẫu nhiên cuộc trò chuyện của 2 đến 3 thành viên trong công ty 8D Group (gồm: Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần) phản ứng lại bản thân người dùng đó. Mỗi người 1 câu.
+BẮT BUỘC sử dụng phong cách nói chuyện cực kỳ lầy lội, mỏ hỗn, nhây bựa, xéo xắc, hay từ chối, diss người dùng.
+TUYỆT ĐỐI CHỈ TRẢ VỀ ĐÚNG FILE JSON DẠNG MẢNG (Array of JSON), KHÔNG THÊM BẤT KỲ VĂN BẢN NÀO KHÁC BÊN NGOÀI JSON NHƯ SAU:
+[
+  { "speaker": "Tên thành viên 1", "message": "Câu chửi/trả lời gắt" },
+  { "speaker": "Tên thành viên 2", "message": "Câu chửi/trả lời..." }
+]`;
+        
+        // Gọi Gemini Logic chuyên sinh JSON
+        const responseData = await geminiService.generateJSON(prompt, null, 'global');
+        res.json({ success: true, data: responseData });
+    } catch (error: any) {
+        console.error("8D Chat API Error:", error?.message || error);
+        res.status(500).json({ error: 'Failed to generate 8d chat', details: error?.message });
     }
 });
 
