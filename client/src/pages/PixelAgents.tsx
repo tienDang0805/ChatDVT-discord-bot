@@ -16,7 +16,7 @@ export const PixelAgents = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [agentActions, setAgentActions] = useState<Record<string, string>>({});
-  const [iframeUrl] = useState(`/pixel-agents/index.html?v=${Date.now()}`);
+  const [iframeUrl] = useState(`/_pixel-office/index.html?v=${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,10 +52,18 @@ export const PixelAgents = () => {
          context: agentActions 
       });
       if (res.data && res.data.success && Array.isArray(res.data.data)) {
+        const nameToId: Record<string, number> = {
+          'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
+        };
         res.data.data.forEach((msg: any, index: number) => {
            setTimeout(() => {
                setMessages(prev => [...prev, msg]);
-           }, (index + 1) * 800); 
+               const iframe = document.querySelector('iframe');
+               const agentId = nameToId[msg.speaker];
+               if (iframe?.contentWindow && agentId) {
+                 iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text: msg.message }, '*');
+               }
+           }, (index + 1) * 1200); 
         });
       }
     } catch (err) {

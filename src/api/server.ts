@@ -761,14 +761,12 @@ app.post('/api/8d-chat', async (req, res) => {
             ? `\n[BỐI CẢNH HIỆN TẠI TRONG VĂN PHÒNG KHÔNG GIAN ẢO]:\n${Object.entries(context).map(([k, v]) => `- ${k} đang ${v}`).join('\n')}\n(Hãy lồng ghép khéo léo hành động đang làm này vào câu trả lời để tạo sự tự nhiên liên kết với game nhé).\n` 
             : '';
             
-        const prompt = `Bạn là một hệ thống nhập vai kịch bản. Người dùng vừa nói: "${message}".${contextStr}
-Hãy mô phỏng ngẫu nhiên cuộc trò chuyện của 2 đến 3 thành viên trong công ty 8D Group (gồm: Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần) phản ứng lại bản thân người dùng đó. Mỗi người 1 câu.
-BẮT BUỘC sử dụng phong cách nói chuyện cực kỳ lầy lội, mỏ hỗn, nhây bựa, xéo xắc, hay từ chối, diss người dùng.
-TUYỆT ĐỐI CHỈ TRẢ VỀ ĐÚNG FILE JSON DẠNG MẢNG (Array of JSON), KHÔNG THÊM BẤT KỲ VĂN BẢN NÀO KHÁC BÊN NGOÀI JSON NHƯ SAU:
-[
-  { "speaker": "Tên thành viên 1", "message": "Câu chửi/trả lời gắt" },
-  { "speaker": "Tên thành viên 2", "message": "Câu chửi/trả lời..." }
-]`;
+        const prompt = `Người dùng vừa nói: "${message}".${contextStr}
+Mô phỏng 2-3 thành viên 8D Group (Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần) đáp trả.
+PHONG CÁCH: cực tục, chửi thề, mỏ hỗn, bựa, xạo loz. Kiểu nói chuyện đường phố Gen Z Việt Nam. 
+MỖI CÂU TỐI ĐA 15 CHỮ (rất ngắn, gọn, cộc lốc).
+CHỈ TRẢ VỀ JSON ARRAY, KHÔNG CÓ GÌ KHÁC:
+[{"speaker":"Tên","message":"câu ngắn tục"}]`;
         
         // Gọi Gemini Logic chuyên sinh JSON
         const responseData = await geminiService.generateJSON(prompt, null, 'global');
