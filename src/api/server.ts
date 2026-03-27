@@ -755,18 +755,35 @@ app.delete('/api/guilds/:guildId', async (req, res) => {
 // --- 8D Chat API ---
 app.post('/api/8d-chat', async (req, res) => {
     try {
-        const { message, context } = req.body;
+        const { message, context, tags, stats } = req.body;
         
         const contextStr = (context && Object.keys(context).length > 0) 
-            ? `\n[BỐI CẢNH HIỆN TẠI TRONG VĂN PHÒNG KHÔNG GIAN ẢO]:\n${Object.entries(context).map(([k, v]) => `- ${k} đang ${v}`).join('\n')}\n(Hãy lồng ghép khéo léo hành động đang làm này vào câu trả lời để tạo sự tự nhiên liên kết với game nhé).\n` 
+            ? `\n[BỐI CẢNH HIỆN TẠI TRONG VĂN PHÒNG]:\n${Object.entries(context).map(([k, v]) => `- ${k} đang ${v}`).join('\n')}\n` 
             : '';
             
-        const prompt = `Người dùng vừa nói: "${message}".${contextStr}
-Mô phỏng 2-3 thành viên 8D Group (Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần) đáp trả.
-PHONG CÁCH: cực tục, chửi thề, mỏ hỗn, bựa, xạo loz. Kiểu nói chuyện đường phố Gen Z Việt Nam. 
+        const statsStr = (stats && Object.keys(stats).length > 0)
+            ? `\n[TRẠNG THÁI HIỆN TẠI]:\n${Object.entries(stats).map(([k, v]: [string, any]) => `- ${k}: Stress ${v.stress}%, Energy ${v.energy}%`).join('\n')}\n(Kịch bản: Stress càng cao chửi càng gắt, muốn đập phá. Energy thấp thì than mệt mỏi, buồn ngủ).\n`
+            : '';
+
+        const tagStr = (tags && tags.length > 0)
+            ? `\n[QUẢN LÝ NGƯỜI NÓI - BẮT BUỘC]: Người dùng CỐ TÌNH tag đích danh ${tags.join(', ')}! Lần này BẮT BUỘC CHỈ CÓ ${tags.join(', ')} được phép trả lời (mỗi người 1 câu). NHỮNG NGƯỜI KHÁC IM LẶNG TUYỆT ĐỐI không được thêm người nào khác vào danh sách trả lời luyên thuyên!\n`
+            : '\n[QUẢN LÝ NGƯỜI NÓI]: Không ai bị tag. Hãy tự động chọn ngẫu nhiên 2 đến 3 thành viên trong Group trả lời bình luận của user.\n';
+            
+        const prompt = `Người dùng vừa nói: "${message}".${contextStr}${statsStr}${tagStr}
+Thành viên 8D Group gồm: (Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần).
+PHONG CÁCH: cực tục, chửi thề, mỏ hỗn, bựa, xạo loz. Kiểu nói chuyện đường phố Gen Z Việt Nam. Khéo léo lồng ghép bối cảnh nếu có.
 MỖI CÂU TỐI ĐA 15 CHỮ (rất ngắn, gọn, cộc lốc).
-CHỈ TRẢ VỀ JSON ARRAY, KHÔNG CÓ GÌ KHÁC:
-[{"speaker":"Tên","message":"câu ngắn tục"}]`;
+
+QUAN TRỌNG: Dựa vào độ hãm lồn khó chịu của câu hỏi hoặc câu trả lời, hãy thay đổi điểm Stress và Energy của MỖI người nói (nếu có). Trả về JSON ARRAY chứa danh sách các câu nói kèm mức thay đổi chỉ số:
+CHỈ TRẢ VỀ CHÍNH XÁC MẢNG JSON, KHÔNG CÓ DẤU BACKTICK HAY BẤT CỨ CHỮ NÀO KHÁC BÊN NGOÀI:
+[
+  {
+    "speaker": "Tên",
+    "message": "câu ngắn tục",
+    "stressDelta": 10,
+    "energyDelta": -5
+  }
+]`;
         
         // Gọi Gemini Logic chuyên sinh JSON
         const responseData = await geminiService.generateJSON(prompt, null, 'global');

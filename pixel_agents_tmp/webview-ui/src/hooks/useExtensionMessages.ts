@@ -135,6 +135,21 @@ export function useExtensionMessages(
         if (os.characters.size > 0) {
           saveAgentSeats(os);
         }
+      } else if (msg.type === 'FORCE_ACTION') {
+        const agentName = msg.agent as string;
+        const action = msg.action as string;
+        const nameToId: Record<string, number> = {
+          'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
+        };
+        const chId = nameToId[agentName];
+        if (chId) {
+          if (action === 'Bắt đi code' || action === 'Bị chích điện') {
+             os.setAgentActive(chId, true);
+             os.sendToSeat(chId);
+          } else if (action === 'Đang ngủ') {
+             os.setAgentActive(chId, false);
+          }
+        }
       } else if (msg.type === 'agentCreated') {
         const id = msg.id as number;
         const folderName = msg.folderName as string | undefined;

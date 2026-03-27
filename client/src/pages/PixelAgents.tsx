@@ -8,6 +8,8 @@ interface ChatMessage {
   message: string;
 }
 
+const AGENT_NAMES = ['Tiến Đặng', 'Quang Huy', 'Ngọc Tâm', 'Thái Tài', 'Hoà Trần'];
+
 export const PixelAgents = () => {
   const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -16,6 +18,14 @@ export const PixelAgents = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [agentActions, setAgentActions] = useState<Record<string, string>>({});
+
+  // Mentions State
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionIndex, setMentionIndex] = useState(0);
+  const filteredMentions = AGENT_NAMES.filter((n: string) => n.toLowerCase().includes(mentionQuery.toLowerCase()));
+  
+  // RPG Stats State
   const [iframeUrl] = useState(`/_pixel-office/index.html?v=${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +49,55 @@ export const PixelAgents = () => {
     scrollToBottom();
   }, [messages, loading]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInput(val);
+    const lastWord = val.split(' ').pop();
+    if (lastWord && lastWord.startsWith('@')) {
+      setShowMentions(true);
+      setMentionQuery(lastWord.slice(1));
+      setMentionIndex(0);
+    } else {
+      setShowMentions(false);
+    }
+  };
+
+  const insertMention = (name: string) => {
+    const words = input.split(' ');
+    words.pop();
+    setInput([...words, `@${name} `].join(' '));
+    setShowMentions(false);
+    document.getElementById('chat-input')?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (showMentions && filteredMentions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev + 1) % filteredMentions.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev - 1 + filteredMentions.length) % filteredMentions.length);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        insertMention(filteredMentions[mentionIndex]);
+        return;
+      }
+      if (e.key === 'Escape') {
+        setShowMentions(false);
+        return;
+      }
+    }
+    
+    if (e.key === 'Enter') {
+      handleSend();
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim() || loading) return;
     const userMsg = input.trim();
@@ -46,10 +105,13 @@ export const PixelAgents = () => {
     setMessages(prev => [...prev, { speaker: 'BẠN', message: userMsg }]);
     setLoading(true);
 
+    const tags = AGENT_NAMES.filter(name => userMsg.includes(`@${name}`));
+
     try {
       const res = await axios.post('/api/8d-chat', { 
          message: userMsg,
-         context: agentActions 
+         context: agentActions,
+         tags: tags
       });
       if (res.data && res.data.success && Array.isArray(res.data.data)) {
         const nameToId: Record<string, number> = {
@@ -73,6 +135,75 @@ export const PixelAgents = () => {
     }
   };
 
+  const forceAction = async (agentName: string, action: string) => {
+    const iframe = document.querySelector('iframe');
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'FORCE_ACTION', agent: agentName, action }, '*');
+    }
+    setAgentActions(prev => ({ ...prev, [agentName]: action }));
+
+    // Random Dialog Arrays
+    const shockLines = [
+       "Vãi lồn chích điện trái dé tao rồi 💥 oái oái!",
+       "Đụ má cứu tao vớiii á á á 🤡⚡",
+       "Má ơi giật tung cả lồn xì khói rồi sếp ơi!!! ⚡️",
+       "Á đù má nó Tê quá!!! Nát mẹ người rồi!!! 💥",
+       "Địt mẹ con nào chích điện tao đấy táng bỏ mẹ giờ 👹⚡",
+       "Ối dồi ôi xoắn mẹ nó lưỡi rồi cứu tôi với mấy anh ơi!!! ⚡️🥵",
+       "Chích lộn lỗ rồi sếp ơi á á á ⚡️😫",
+       "Thằng lol nào chơi chó rút dây điện đi đcmmm 💥",
+       "Á á cháy mẹ lông lồn rồi sếp ơiiii ⚡",
+       "Má nó xẹt lửa ầm ầm thế này mỏi chết con mẹ tao à ⚡🤡"
+    ];
+
+    const codeLines = [
+       "Địt mẹ cuộc đời đéo khác gì nô lệ... code gãy xương sống rồi! 😭💻",
+       "Lại bắt làm à, mả bố thằng tư bản bóc lột 🤬",
+       "Code con cặc tao đéo muốn làm nữa huhu 😭",
+       "Đụ má tay nhão mẹ rồi vẫn bắt gõ phím à sếp ơi ⌨️🖕",
+       "Mắt đui mẹ rồi con đĩ sếp tha cho tao đi 😫👀",
+       "Vừa mở mắt ra đã bắt làm, đcm tư bản rác rưởi vcl 🗑️💻",
+       "Biết thế đéo học IT đi bú cặc còn sướng hơn 🤬",
+       "Fix mẹ nó 100 cái bug rồi vẫn bắt làm tiếp à??? 🖕",
+       "Sếp như cặc tao lạy sếp tha cho em đi 😭",
+       "Cuộc sống loz gì cứ mở mắt ra là cắm mặt vào cái màn hình 🖥️💀"
+    ];
+
+    const sleepLines = [
+       "Khò khò... zzz... đụ má kệ mẹ sếp 😴",
+       "Zzz... cút ra cho bố mày ngủ 😪",
+       "Ngáy to mả mẹ mày à... zzz... khò khò 😴",
+       "Buồn ngủ rớt lồn rồi, đéo làm ăn gì nữa zzz 💤",
+       "Sếp gọi kể sếp, bố đi ngủ đây 🛌💤",
+       "Ngủ một lát đã đcm buồn ngủ vcl con đĩ ơi 😪",
+       "Mơ thấy cái gì đấy mlem mlem... zzz 🤤",
+       "Khò khò... ôi gái đẹp... zzz 😴🤤",
+       "Buông đôi tay nhau ra... zzz buồn ngủ thế hở trời 💤",
+       "Thôi cho bố xin một giấc, làm nhiều đéo phất lên được đâu 😴"
+    ];
+
+    let hardcodedMsg = "";
+    if (action === 'Bị chích điện') {
+       hardcodedMsg = shockLines[Math.floor(Math.random() * shockLines.length)];
+    } else if (action === 'Bắt đi code') {
+       hardcodedMsg = codeLines[Math.floor(Math.random() * codeLines.length)];
+    } else if (action === 'Đang ngủ') {
+       hardcodedMsg = sleepLines[Math.floor(Math.random() * sleepLines.length)];
+    }
+
+    if (hardcodedMsg) {
+       setMessages(prev => [...prev, { speaker: agentName, message: hardcodedMsg }]);
+       
+       const nameToId: Record<string, number> = {
+          'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
+       };
+       const agentId = nameToId[agentName];
+       if (iframe?.contentWindow && agentId) {
+         iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text: hardcodedMsg }, '*');
+       }
+    }
+  };
+
   const getSpeakerColor = (speaker: string) => {
     const s = speaker.toUpperCase();
     if (s.includes('TIẾN')) return 'text-orange-500';
@@ -83,6 +214,18 @@ export const PixelAgents = () => {
     if (s === 'HỆ THỐNG') return 'text-slate-400';
     if (s === 'BẠN') return 'text-white font-bold block mb-1';
     return 'text-emerald-500';
+  };
+
+  const renderMessageWithMentions = (text: string) => {
+    const regex = new RegExp(`@(${AGENT_NAMES.join('|')})`, 'gi');
+    const parts = text.split(regex);
+    return parts.map((part, i) => {
+       const isMention = AGENT_NAMES.some(name => name.toLowerCase() === part.toLowerCase());
+       if (isMention) {
+         return <span key={i} className="text-orange-400 font-bold bg-orange-500/10 px-1 py-0.5 rounded border border-orange-500/30">@{part}</span>;
+       }
+       return part;
+    });
   };
 
   return (
@@ -133,7 +276,7 @@ export const PixelAgents = () => {
                 {m.speaker !== 'BẠN' && <div className={`text-[11px] font-black uppercase mb-1.5 tracking-widest ${getSpeakerColor(m.speaker)}`}>// {m.speaker}</div>}
                 {m.speaker === 'BẠN' && <span className={getSpeakerColor(m.speaker)}>{m.speaker}</span>}
                 <div className="text-slate-300 text-[13.5px] leading-relaxed whitespace-pre-wrap font-medium font-mono">
-                  {m.message}
+                  {renderMessageWithMentions(m.message)}
                 </div>
               </div>
             ))}
@@ -147,15 +290,31 @@ export const PixelAgents = () => {
           </div>
 
           <div className="p-4 border-t border-slate-800 bg-[#0a0f18] shrink-0">
-            <div className="flex gap-2 h-11">
+            <div className="flex gap-2 h-11 relative">
+              {showMentions && filteredMentions.length > 0 && (
+                <ul className="absolute bottom-[calc(100%+8px)] left-0 w-64 bg-[#131b26] border-2 border-slate-700 shadow-[0_0_15px_rgba(0,0,0,0.5)] z-50 rounded-md overflow-hidden">
+                  <div className="bg-slate-800 text-slate-400 text-[10px] uppercase font-black px-3 py-1.5 border-b border-slate-700">Tag AI Member</div>
+                  {filteredMentions.map((name: string, i: number) => (
+                    <li 
+                      key={name}
+                      onClick={() => insertMention(name)}
+                      className={`px-3 py-2 text-sm font-mono cursor-pointer transition-colors ${i === mentionIndex ? 'bg-orange-500/20 text-orange-400 border-l-2 border-orange-500' : 'text-slate-300 hover:bg-slate-800'}`}
+                    >
+                      @{name}
+                    </li>
+                  ))}
+                </ul>
+              )}
               <input
+                id="chat-input"
                 type="text"
                 className="flex-1 bg-[#131b26] border border-slate-700 text-emerald-400 font-mono rounded-none px-4 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors placeholder:text-slate-600"
-                placeholder="Nhập chat tại đây..."
+                placeholder="Nhập chat tại đây (@ để tag)..."
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 disabled={loading}
+                autoComplete="off"
               />
               <button
                 onClick={handleSend}
@@ -178,13 +337,20 @@ export const PixelAgents = () => {
               const currentAction = agentActions[name] || 'Đang ngủ';
               const isIdle = currentAction === 'Đang rảnh' || currentAction === 'Đang ngủ';
               return (
-                <div key={name} className="bg-[#131b26] border border-slate-800 rounded p-3 text-center transition-all hover:border-slate-700">
+                <div key={name} className="relative bg-[#131b26] border border-slate-800 rounded p-3 text-center transition-all hover:border-slate-700 hover:shadow-lg group">
                   <div className={`text-[11px] font-black uppercase tracking-widest mb-1.5 ${getSpeakerColor(name)}`}>{name}</div>
                   <div className={`text-[11px] font-bold tracking-wide flex items-center justify-center gap-1.5 ${isIdle ? 'text-slate-500' : 'text-orange-400'}`}>
                     {isIdle 
-                      ? <span className="inline-block w-1.5 h-1.5 bg-slate-600 rounded-full animate-pulse"></span> 
-                      : <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping" style={{ animationDuration: '1.5s' }}></span>}
+                      ? <span className="inline-block w-1.5 h-1.5 bg-slate-600 rounded-full animate-pulse shrink-0"></span> 
+                      : <span className="inline-block w-1.5 h-1.5 bg-orange-500 rounded-full animate-ping shrink-0" style={{ animationDuration: '1.5s' }}></span>}
                     <span className="truncate max-w-[90%]">{currentAction}</span>
+                  </div>
+
+                  {/* Force Actions */}
+                  <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity mt-3 h-0 group-hover:h-auto overflow-hidden">
+                     <button onClick={() => forceAction(name, 'Bắt đi code')} className="w-full bg-slate-800/80 hover:bg-orange-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-orange-500" title="Bắt Code">💻 BẮT LÀM</button>
+                     <button onClick={() => forceAction(name, 'Bị chích điện')} className="w-full bg-slate-800/80 hover:bg-yellow-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-yellow-500" title="Chích Điện">⚡️ CHÍCH ĐIỆN</button>
+                     <button onClick={() => forceAction(name, 'Đang ngủ')} className="w-full bg-slate-800/80 hover:bg-blue-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-blue-500" title="Nghỉ ngơi">🌙 ĐI NGỦ</button>
                   </div>
                 </div>
               );
