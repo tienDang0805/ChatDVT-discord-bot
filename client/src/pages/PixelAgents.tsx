@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { Sun, Moon, Loader2 } from 'lucide-react';
-import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 
 interface ChatMessage {
   speaker: string;
@@ -29,16 +29,58 @@ export const PixelAgents = () => {
   const [iframeUrl] = useState(`/_pixel-office/index.html?v=${Date.now()}`);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Socket State
+  const [socket, setSocket] = useState<Socket | null>(null);
+
   useEffect(() => {
     document.title = "Cuộc Sống Hằng Ngày của 8D | devtiendang.blog";
     
-    const handleMessage = (e: MessageEvent) => {
-      if (e.data?.type === '8d_action') {
-        setAgentActions(prev => ({ ...prev, [e.data.agent]: e.data.action }));
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    // Connect to websocket backend
+    const backendUrl = import.meta.env.DEV ? `http://${window.location.hostname}:3000` : '/';
+    const newSocket = io(backendUrl);
+    setSocket(newSocket);
+
+    newSocket.on('init_state', ({ messages, agentActions }) => {
+        setMessages(messages);
+        setAgentActions(agentActions);
+    });
+
+    newSocket.on('chat_update', (msgs) => {
+        setMessages(msgs);
+        setLoading(false);
+    });
+
+    newSocket.on('agent_action_sync', ({ agentName, action, hardcodedMsg }) => {
+        setAgentActions(prev => ({ ...prev, [agentName]: action }));
+        const iframe = document.querySelector('iframe');
+        if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage({ type: 'FORCE_ACTION', agent: agentName, action }, '*');
+            
+            // If there's a hardcoded message accompanying action, show a speech bubble
+            if (hardcodedMsg) {
+               const nameToId: Record<string, number> = {
+                  'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
+               };
+               const agentId = nameToId[agentName];
+               if (agentId) {
+                   iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text: hardcodedMsg }, '*');
+               }
+            }
+        }
+    });
+
+    newSocket.on('agent_bubble', ({ speaker, text }) => {
+        const nameToId: Record<string, number> = {
+           'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
+        };
+        const iframe = document.querySelector('iframe');
+        const agentId = nameToId[speaker];
+        if (iframe?.contentWindow && agentId) {
+            iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text }, '*');
+        }
+    });
+
+    return () => { newSocket.disconnect(); };
   }, []);
 
   const scrollToBottom = () => {
@@ -99,50 +141,18 @@ export const PixelAgents = () => {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading || !socket) return;
     const userMsg = input.trim();
     setInput('');
-    setMessages(prev => [...prev, { speaker: 'BẠN', message: userMsg }]);
     setLoading(true);
 
     const tags = AGENT_NAMES.filter(name => userMsg.includes(`@${name}`));
-
-    try {
-      const res = await axios.post('/api/8d-chat', { 
-         message: userMsg,
-         context: agentActions,
-         tags: tags
-      });
-      if (res.data && res.data.success && Array.isArray(res.data.data)) {
-        const nameToId: Record<string, number> = {
-          'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
-        };
-        res.data.data.forEach((msg: any, index: number) => {
-           setTimeout(() => {
-               setMessages(prev => [...prev, msg]);
-               const iframe = document.querySelector('iframe');
-               const agentId = nameToId[msg.speaker];
-               if (iframe?.contentWindow && agentId) {
-                 iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text: msg.message }, '*');
-               }
-           }, (index + 1) * 1200); 
-        });
-      }
-    } catch (err) {
-      setMessages(prev => [...prev, { speaker: 'HỆ THỐNG', message: 'Lỗi API cmnr, F5 hoặc check Node server.' }]);
-    } finally {
-      setTimeout(() => setLoading(false), 500);
-    }
+    socket.emit('chat_message', { text: userMsg, tags });
   };
 
   const forceAction = async (agentName: string, action: string) => {
-    const iframe = document.querySelector('iframe');
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'FORCE_ACTION', agent: agentName, action }, '*');
-    }
-    setAgentActions(prev => ({ ...prev, [agentName]: action }));
+    if (!socket) return;
 
-    // Random Dialog Arrays
     const shockLines = [
        "Vãi lồn chích điện trái dé tao rồi 💥 oái oái!",
        "Đụ má cứu tao vớiii á á á 🤡⚡",
@@ -157,51 +167,26 @@ export const PixelAgents = () => {
     ];
 
     const codeLines = [
-       "Địt mẹ cuộc đời đéo khác gì nô lệ... code gãy xương sống rồi! 😭💻",
+       "Địt mẹ cuộc đời đéo khác gì nô lệ... đào than gãy xương sống rồi! 😭⛏️",
        "Lại bắt làm à, mả bố thằng tư bản bóc lột 🤬",
-       "Code con cặc tao đéo muốn làm nữa huhu 😭",
-       "Đụ má tay nhão mẹ rồi vẫn bắt gõ phím à sếp ơi ⌨️🖕",
-       "Mắt đui mẹ rồi con đĩ sếp tha cho tao đi 😫👀",
-       "Vừa mở mắt ra đã bắt làm, đcm tư bản rác rưởi vcl 🗑️💻",
-       "Biết thế đéo học IT đi bú cặc còn sướng hơn 🤬",
-       "Fix mẹ nó 100 cái bug rồi vẫn bắt làm tiếp à??? 🖕",
-       "Sếp như cặc tao lạy sếp tha cho em đi 😭",
-       "Cuộc sống loz gì cứ mở mắt ra là cắm mặt vào cái màn hình 🖥️💀"
+       "Cuốc than ngu người luôn tao đéo muốn làm nữa huhu 😭",
+       "Đụ má tay nhão mẹ rồi vẫn bắt cuốc à sếp ơi ⛏️🖕",
+       "Cực như chó thế này con đĩ sếp tha cho tao đi 😫",
+       "Vừa mở mắt ra đã bắt làm, đcm tư bản rác rưởi vcl 🗑️",
+       "Fix mẹ nó 100 cái bug rồi lại bắt xuống hầm than à??? 🖕",
+       "Sếp như cặc tao lạy sếp tha cho em đi 😭"
     ];
 
-    const sleepLines = [
-       "Khò khò... zzz... đụ má kệ mẹ sếp 😴",
-       "Zzz... cút ra cho bố mày ngủ 😪",
-       "Ngáy to mả mẹ mày à... zzz... khò khò 😴",
-       "Buồn ngủ rớt lồn rồi, đéo làm ăn gì nữa zzz 💤",
-       "Sếp gọi kể sếp, bố đi ngủ đây 🛌💤",
-       "Ngủ một lát đã đcm buồn ngủ vcl con đĩ ơi 😪",
-       "Mơ thấy cái gì đấy mlem mlem... zzz 🤤",
-       "Khò khò... ôi gái đẹp... zzz 😴🤤",
-       "Buông đôi tay nhau ra... zzz buồn ngủ thế hở trời 💤",
-       "Thôi cho bố xin một giấc, làm nhiều đéo phất lên được đâu 😴"
-    ];
+
 
     let hardcodedMsg = "";
     if (action === 'Bị chích điện') {
        hardcodedMsg = shockLines[Math.floor(Math.random() * shockLines.length)];
-    } else if (action === 'Bắt đi code') {
+    } else if (action === 'Bắt Đào Than') {
        hardcodedMsg = codeLines[Math.floor(Math.random() * codeLines.length)];
-    } else if (action === 'Đang ngủ') {
-       hardcodedMsg = sleepLines[Math.floor(Math.random() * sleepLines.length)];
     }
 
-    if (hardcodedMsg) {
-       setMessages(prev => [...prev, { speaker: agentName, message: hardcodedMsg }]);
-       
-       const nameToId: Record<string, number> = {
-          'Tiến Đặng': 101, 'Quang Huy': 102, 'Ngọc Tâm': 103, 'Thái Tài': 104, 'Hoà Trần': 105
-       };
-       const agentId = nameToId[agentName];
-       if (iframe?.contentWindow && agentId) {
-         iframe.contentWindow.postMessage({ type: '8d_speech_bubble', agentId, text: hardcodedMsg }, '*');
-       }
-    }
+    socket.emit('force_action', { agentName, action, hardcodedMsg });
   };
 
   const getSpeakerColor = (speaker: string) => {
@@ -335,7 +320,7 @@ export const PixelAgents = () => {
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
             {['Tiến Đặng', 'Quang Huy', 'Ngọc Tâm', 'Thái Tài', 'Hoà Trần'].map(name => {
               const currentAction = agentActions[name] || 'Đang ngủ';
-              const isIdle = currentAction === 'Đang rảnh' || currentAction === 'Đang ngủ';
+              const isIdle = !['Bắt Đào Than', 'Bị chích điện'].includes(currentAction);
               return (
                 <div key={name} className="relative bg-[#131b26] border border-slate-800 rounded p-3 text-center transition-all hover:border-slate-700 hover:shadow-lg group">
                   <div className={`text-[11px] font-black uppercase tracking-widest mb-1.5 ${getSpeakerColor(name)}`}>{name}</div>
@@ -348,9 +333,8 @@ export const PixelAgents = () => {
 
                   {/* Force Actions */}
                   <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity mt-3 h-0 group-hover:h-auto overflow-hidden">
-                     <button onClick={() => forceAction(name, 'Bắt đi code')} className="w-full bg-slate-800/80 hover:bg-orange-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-orange-500" title="Bắt Code">💻 BẮT LÀM</button>
+                     <button onClick={() => forceAction(name, 'Bắt Đào Than')} className="w-full bg-slate-800/80 hover:bg-orange-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-orange-500" title="Bắt Làm">⛏️ BẮT ĐÀO THAN</button>
                      <button onClick={() => forceAction(name, 'Bị chích điện')} className="w-full bg-slate-800/80 hover:bg-yellow-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-yellow-500" title="Chích Điện">⚡️ CHÍCH ĐIỆN</button>
-                     <button onClick={() => forceAction(name, 'Đang ngủ')} className="w-full bg-slate-800/80 hover:bg-blue-500 hover:text-white text-slate-300 text-[9px] font-black uppercase py-1.5 rounded transition-colors border border-slate-700 hover:border-blue-500" title="Nghỉ ngơi">🌙 ĐI NGỦ</button>
                   </div>
                 </div>
               );

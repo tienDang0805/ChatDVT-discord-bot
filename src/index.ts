@@ -1,5 +1,13 @@
 // Note: Node 18+ natively supports fetch and ReadableStream
-// Do not override global fetch with node-fetch to avoid deadlock on Linux.
+// Inject Polyfill just in case the execution environment uses < 18 or strips it natively.
+import fetch, { Headers, Request, Response } from 'node-fetch';
+const g = global as any;
+if (!g.fetch) {
+  g.fetch = fetch;
+  g.Headers = Headers;
+  g.Request = Request;
+  g.Response = Response;
+}
 
 import { bot } from './bot/client';
 import { startApiServer } from './api/server';

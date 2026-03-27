@@ -10,12 +10,144 @@ import { geminiService } from '../bot/services/gemini';
 import { GEMINI_CHAT_CONFIG } from '../config/constants';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
+import http from 'http';
+import { Server as SocketServer } from 'socket.io';
 
 // Multer Config
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 const app = express();
+const server = http.createServer(app);
+const io = new SocketServer(server, { cors: { origin: '*' } });
 const PORT = process.env.PORT || 3000;
+
+// Global 8D State
+interface ChatMessage { speaker: string; message: string; }
+const globalMessages: ChatMessage[] = [
+  { speaker: 'HỆ THỐNG', message: 'Chào mừng đến với Văn phòng 8D (Real-time). Nhập câu hỏi để bị chửi hội đồng nhé.' }
+];
+const globalAgentActions: Record<string, string> = {
+  'Tiến Đặng': 'Đang ngủ', 'Quang Huy': 'Đang ngủ', 'Ngọc Tâm': 'Đang rảnh', 'Thái Tài': 'Đang ngủ', 'Hoà Trần': 'Đang rảnh'
+};
+
+const AUTONOMOUS_STATES = ['Đang ngủ', 'Ăn cứt', 'Sục cặc', 'Đi ỉa', 'Đang rảnh', 'Lướt Tiktok', 'Chơi Game'];
+const agentForcedTimeouts: Record<string, NodeJS.Timeout> = {};
+
+setInterval(() => {
+    const names = ['Tiến Đặng', 'Quang Huy', 'Ngọc Tâm', 'Thái Tài', 'Hoà Trần'];
+    const available = names.filter(n => !agentForcedTimeouts[n]);
+    if (available.length > 0) {
+        const agent = available[Math.floor(Math.random() * available.length)];
+        const newState = AUTONOMOUS_STATES[Math.floor(Math.random() * AUTONOMOUS_STATES.length)];
+        
+        globalAgentActions[agent] = newState;
+        io.emit('agent_action_sync', { agentName: agent, action: newState });
+    }
+}, 10000);
+
+io.on('connection', (socket) => {
+    socket.emit('init_state', { messages: globalMessages, agentActions: globalAgentActions });
+    
+    socket.on('chat_message', async (data) => {
+        const { text, tags } = data;
+        const userMsg = { speaker: 'BẠN', message: text };
+        globalMessages.push(userMsg);
+        if (globalMessages.length > 50) globalMessages.shift();
+        io.emit('chat_update', globalMessages);
+        
+        try {
+            const contextStr = `\n[BỐI CẢNH HIỆN TẠI]:\n${Object.entries(globalAgentActions).map(([k, v]) => `- ${k} đang ${v}`).join('\n')}\n`;
+            const tagStr = (tags && tags.length > 0)
+                ? `\n[QUẢN LÝ NGƯỜI NÓI - BẮT BUỘC]: Người dùng CỐ TÌNH tag đích danh ${tags.join(', ')}! Lần này BẮT BUỘC CHỈ CÓ ${tags.join(', ')} được phép trả lời (mỗi người 1 câu). NHỮNG NGƯỜI KHÁC IM LẶNG TUYỆT ĐỐI không được thêm người nào khác vào danh sách trả lời luyên thuyên!\n`
+                : '\n[QUẢN LÝ NGƯỜI NÓI]: Không ai bị tag. Hãy tự động chọn ngẫu nhiên 2 đến 3 thành viên trong Group trả lời bình luận của user.\n';
+                
+            const prompt = `Người dùng vừa nói: "${text}".${contextStr}\n${tagStr}
+Thành viên 8D Group gồm: (Tiến Đặng, Quang Huy, Ngọc Tâm, Thái Tài, Hoà Trần).
+PHONG CÁCH: cực tục, chửi thề, mỏ hỗn, bựa, xạo loz. Kiểu nói chuyện đường phố Gen Z Việt Nam. Khéo léo lồng ghép bối cảnh nếu có.
+MỖI CÂU TỐI ĐA 15 CHỮ (rất ngắn, gọn, cộc lốc).
+QUAN TRỌNG: Dựa vào độ hãm lồn khó chịu của câu hỏi. Trả về JSON ARRAY chứa danh sách các câu nói:
+CHỈ TRẢ VỀ CHÍNH XÁC MẢNG JSON, KHÔNG CÓ DẤU BACKTICK HAY BẤT CỨ CHỮ NÀO KHÁC BÊN NGOÀI:
+[{"speaker": "Tên", "message": "câu ngắn tục"}]`;
+            
+            const responseData: any = await geminiService.generateJSON(prompt, null, 'global');
+            let responses: any[] = [];
+            
+            if (Array.isArray(responseData)) {
+                responses = responseData;
+            } else if (responseData && typeof responseData === 'object') {
+                for (const val of Object.values(responseData)) {
+                    if (Array.isArray(val)) {
+                        responses = val;
+                        break;
+                    }
+                }
+                if (responses.length === 0 && responseData.speaker && responseData.message) {
+                    responses = [responseData];
+                }
+            }
+
+            if (responses.length > 0) {
+                responses.forEach((msg: any, idx) => {
+                    setTimeout(() => {
+                        globalMessages.push({ speaker: msg.speaker || 'LỖI', message: msg.message || 'Lỗi parse' });
+                        if (globalMessages.length > 50) globalMessages.shift();
+                        io.emit('chat_update', globalMessages);
+                        if (msg.speaker && msg.message) {
+                           io.emit('agent_bubble', { speaker: msg.speaker, text: msg.message });
+                        }
+                    }, (idx + 1) * 1200);
+                });
+            } else {
+                throw new Error("Dữ liệu trả về không phải Array JSON.");
+            }
+        } catch (err: any) {
+            console.error("Socket Gemini error", err);
+            globalMessages.push({ speaker: 'HỆ THỐNG', message: `Lỗi Gemini API: ${err.message}`});
+            if (globalMessages.length > 50) globalMessages.shift();
+            io.emit('chat_update', globalMessages);
+        }
+    });
+
+    socket.on('force_action', (data) => {
+        const { agentName, action, hardcodedMsg } = data;
+        globalAgentActions[agentName] = action;
+        if (hardcodedMsg) {
+            globalMessages.push({ speaker: agentName, message: hardcodedMsg });
+            if (globalMessages.length > 50) globalMessages.shift();
+            io.emit('chat_update', globalMessages);
+            io.emit('agent_bubble', { speaker: agentName, text: hardcodedMsg });
+        }
+        io.emit('agent_action_sync', { agentName, action, hardcodedMsg });
+
+        if (action === 'Bắt Đào Than' || action === 'Bị chích điện') {
+            if (agentForcedTimeouts[agentName]) {
+                clearTimeout(agentForcedTimeouts[agentName]);
+            }
+            agentForcedTimeouts[agentName] = setTimeout(() => {
+                const curseLines = [
+                    "Địt mẹ tao đéo làm nữa đâu mệt lồn rồi 🖕", 
+                    "Nghỉ tay đéo thể làm chó mãi được 💀", 
+                    "Làm lồn làm lắm lồn thế, cho tao đi vệ sinh 🚽", 
+                    "Đụ má tao đau tay đéo đào nữa 🤬⛏️",
+                    "Thằng lồn nào cứ bạo hành tao xiên chết mẹ giờ 🔪👹",
+                    "Đcm cút! Bố mày đình công 🛑"
+                ];
+                const newState = AUTONOMOUS_STATES[Math.floor(Math.random() * AUTONOMOUS_STATES.length)];
+                const curse = curseLines[Math.floor(Math.random() * curseLines.length)];
+
+                globalAgentActions[agentName] = newState;
+                globalMessages.push({ speaker: agentName, message: curse });
+                if (globalMessages.length > 50) globalMessages.shift();
+                
+                io.emit('chat_update', globalMessages);
+                io.emit('agent_action_sync', { agentName, action: newState, hardcodedMsg: curse });
+                io.emit('agent_bubble', { speaker: agentName, text: curse });
+
+                delete agentForcedTimeouts[agentName];
+            }, 10000);
+        }
+    });
+});
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
@@ -1366,7 +1498,7 @@ app.get('*', (req, res) => {
 });
 
 export const startApiServer = () => { 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`✅ Web Server running at http://localhost:${PORT}`);
   });
 };
