@@ -810,84 +810,152 @@ BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown,
 
 THÔNG TIN ĐẦU VÀO:
 - Họ và tên đầy đủ: "${fullName}"
-- Ngày sinh dương lịch: ${birthDate}
+- Ngày sinh dương lịch: ${birthDate} (format YYYY-MM-DD)
 - Năm hiện tại: ${currentYear}
 
 QUY TẮC TÍNH TOÁN BẮT BUỘC:
-1. SỐ CHỦ ĐẠO (LIFE PATH NUMBER): Cộng tất cả chữ số trong ngày sinh (DD/MM/YYYY) rồi rút gọn về 1 chữ số (trừ Master Number 11, 22, 33).
-   Ví dụ: 15/03/1990 → 1+5+0+3+1+9+9+0 = 28 → 2+8 = 10 → 1+0 = 1
+1. SỐ CHỦ ĐẠO (LIFE PATH NUMBER): Cộng tất cả chữ số trong ngày sinh (DD/MM/YYYY) rồi rút gọn về 1 chữ số (trừ Master Number 11, 22, 33). Ví dụ: 15/03/1990 → 1+5+0+3+1+9+9+0 = 28 → 2+8 = 10 → 1+0 = 1
 2. SỐ BIỂU ĐẠT (EXPRESSION NUMBER): Gán giá trị cho MỖI CHỮ CÁI trong tên đầy đủ theo bảng Pythagoras (A=1,B=2...I=9,J=1...R=9,S=1...Z=8), cộng tất cả rồi rút gọn.
 3. SỐ LINH HỒN (SOUL URGE / HEART'S DESIRE): Chỉ cộng các NGUYÊN ÂM (A, E, I, O, U, Y) trong tên.
 4. SỐ NHÂN CÁCH (PERSONALITY NUMBER): Chỉ cộng các PHỤ ÂM trong tên.
 5. SỐ NGÀY SINH (BIRTHDAY NUMBER): Rút gọn ngày sinh (chỉ ngày, không tháng/năm).
 6. NĂM CÁ NHÂN (PERSONAL YEAR): Cộng ngày sinh + tháng sinh + năm hiện tại (${currentYear}) rồi rút gọn.
+7. SỐ TRƯỞNG THÀNH (MATURITY NUMBER): Life Path + Expression, rút gọn.
+8. BIỂU ĐỒ NGÀY SINH PYTHAGORAS: Đếm số lần xuất hiện chữ số 1-9 trong ngày sinh đầy đủ (DD/MM/YYYY). VD: 15/03/1990 có: 1 xuất hiện 2 lần, 3 xuất hiện 1 lần, 5 xuất hiện 1 lần, 9 xuất hiện 2 lần, 0 xuất hiện 2 lần (0 bỏ qua).
+9. MŨI TÊN TRONG BIỂU ĐỒ: Dựa trên biểu đồ, xác định các mũi tên (hàng/cột/đường chéo đầy đủ = mũi tên mạnh, hàng/cột/đường chéo trống = mũi tên yếu/thiếu).
+10. 4 ĐỈNH CAO (PINNACLE): Tính 4 chu kỳ Pinnacle dựa trên ngày/tháng/năm sinh.
+11. 4 THÁCH THỨC (CHALLENGE): Tính 4 con số Challenge từ hiệu các thành phần ngày sinh.
+12. NỢ NGHIỆP (KARMIC DEBT): Kiểm tra xem Life Path, Expression, Soul Urge, Birthday có rơi vào số 13, 14, 16, 19 trước khi rút gọn không.
+13. SỐ ĐAM MÊ ẨN (HIDDEN PASSION): Chữ số xuất hiện nhiều nhất trong tên (theo Pythagoras).
 
-LƯU Ý VỚI TÊN TIẾNG VIỆT: Bỏ qua dấu tiếng Việt khi tính toán (ví dụ: Ă→A, Ơ→O, Ư→U, Đ→D...). Chữ Y xem là nguyên âm.
+LƯU Ý VỚI TÊN TIẾNG VIỆT: Bỏ qua dấu tiếng Việt khi tính toán (VD: Ă→A, Ơ→O, Ư→U, Đ→D). Chữ Y xem là nguyên âm.
 
-YÊU CẦU PHÂN TÍCH: Cho mỗi con số, hãy phân tích CHUYÊN SÂU, CHÍNH XÁC theo lý thuyết Thần Số Học chuẩn. Đưa ra nhận định mang tính chất khách quan, sâu sắc, có chiều sâu tâm linh. KHÔNG BỊA ĐẶT, không chung chung.
+YÊU CẦU PHÂN TÍCH: 
+- CHUYÊN SÂU, CHÍNH XÁC theo lý thuyết Thần Số Học chuẩn quốc tế.
+- CÁ NHÂN HÓA cho tên "${fullName}" cụ thể, KHÔNG chung chung.
+- Có chiều sâu tâm linh nhưng vẫn thực tế.
 
 BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON (KHÔNG markdown, KHÔNG backtick):
 {
   "lifePath": {
     "number": <số>,
-    "title": "<Tên gọi con số, VD: Người Tiên Phong>",
-    "keywords": ["<3-5 từ khóa đặc trưng>"],
-    "strengths": ["<3 điểm mạnh>"],
+    "title": "<Tên gọi con số VN, VD: Người Tiên Phong>",
+    "keywords": ["<5 từ khóa đặc trưng>"],
+    "strengths": ["<4 điểm mạnh>"],
     "weaknesses": ["<3 điểm yếu>"],
-    "description": "<Phân tích CHI TIẾT 3-5 câu về ý nghĩa số chủ đạo này đối với cuộc đời người này>"
+    "description": "<Phân tích CHI TIẾT 5-7 câu về ý nghĩa số chủ đạo đối với cuộc đời ${fullName}>"
   },
   "expression": {
     "number": <số>,
     "title": "<Tên gọi>",
-    "keywords": ["<3-5 từ khóa>"],
+    "keywords": ["<4-5 từ khóa>"],
     "strengths": ["<3 điểm mạnh>"],
     "weaknesses": ["<3 điểm yếu>"],
-    "description": "<Phân tích chi tiết 3-4 câu>"
+    "description": "<Phân tích chi tiết 4-5 câu>"
   },
   "soulUrge": {
     "number": <số>,
     "title": "<Tên gọi>",
-    "keywords": ["<3-5 từ khóa>"],
+    "keywords": ["<4-5 từ khóa>"],
     "strengths": ["<3 điểm mạnh>"],
     "weaknesses": ["<3 điểm yếu>"],
-    "description": "<Phân tích chi tiết 3-4 câu về khát khao sâu thẳm của linh hồn>"
+    "description": "<Phân tích chi tiết 4-5 câu về khát khao sâu thẳm của linh hồn>"
   },
   "personality": {
     "number": <số>,
     "title": "<Tên gọi>",
-    "keywords": ["<3-5 từ khóa>"],
+    "keywords": ["<4-5 từ khóa>"],
     "strengths": ["<3 điểm mạnh>"],
     "weaknesses": ["<3 điểm yếu>"],
-    "description": "<Phân tích chi tiết 3-4 câu về hình ảnh bên ngoài>"
+    "description": "<Phân tích chi tiết 4-5 câu về hình ảnh bên ngoài>"
   },
   "birthday": {
     "number": <số>,
     "title": "<Tên gọi>",
-    "keywords": ["<3-5 từ khóa>"],
+    "keywords": ["<4-5 từ khóa>"],
     "strengths": ["<3 điểm mạnh>"],
     "weaknesses": ["<3 điểm yếu>"],
-    "description": "<Phân tích chi tiết 2-3 câu về năng khiếu bẩm sinh>"
+    "description": "<Phân tích chi tiết 3-4 câu về năng khiếu bẩm sinh>"
+  },
+  "maturity": {
+    "number": <số>,
+    "title": "<Tên gọi>",
+    "description": "<Phân tích 3-4 câu về tiềm năng khi trưởng thành (thường biểu hiện rõ sau 40-50 tuổi)>"
   },
   "personalYear": {
     "number": <số>,
-    "theme": "<Chủ đề năm ${currentYear} cho người này>",
-    "advice": "<Lời khuyên chi tiết 3-4 câu cho năm nay>"
+    "theme": "<Chủ đề năm ${currentYear}>",
+    "advice": "<Lời khuyên chi tiết 4-5 câu cho năm nay>"
+  },
+  "pythagorasChart": {
+    "grid": [<Mảng 9 phần tử, mỗi phần tử = số lần chữ số 1-9 xuất hiện trong ngày sinh. Index 0=số 1, index 1=số 2,..., index 8=số 9>],
+    "arrows": {
+      "strong": ["<Tên mũi tên mạnh, VD: Mũi Tên Trí Nhớ (3-5-7), Mũi Tên Quyết Tâm (1-5-9)...>"],
+      "weak": ["<Tên mũi tên yếu/thiếu, VD: Mũi Tên Trống Rỗng (4-5-6)...>"]
+    },
+    "interpretation": "<Phân tích 4-5 câu về biểu đồ: con số nào mạnh, con số nào thiếu, ý nghĩa tổng thể>"
+  },
+  "pinnacles": [
+    { "cycle": 1, "number": <số>, "ageRange": "<VD: 0-30>", "theme": "<Chủ đề>", "description": "<2-3 câu>" },
+    { "cycle": 2, "number": <số>, "ageRange": "<VD: 31-39>", "theme": "<Chủ đề>", "description": "<2-3 câu>" },
+    { "cycle": 3, "number": <số>, "ageRange": "<VD: 40-48>", "theme": "<Chủ đề>", "description": "<2-3 câu>" },
+    { "cycle": 4, "number": <số>, "ageRange": "<VD: 49+>", "theme": "<Chủ đề>", "description": "<2-3 câu>" }
+  ],
+  "challenges": [
+    { "cycle": 1, "number": <số>, "description": "<2 câu về thách thức>" },
+    { "cycle": 2, "number": <số>, "description": "<2 câu>" },
+    { "cycle": 3, "number": <số>, "description": "<2 câu>" },
+    { "cycle": 4, "number": <số>, "description": "<2 câu>" }
+  ],
+  "karmicDebt": {
+    "hasDebt": <true/false>,
+    "numbers": [<Các số nợ nghiệp nếu có: 13, 14, 16, 19>],
+    "description": "<Nếu có nợ nghiệp: phân tích chi tiết 3-4 câu. Nếu không: 1 câu 'Không phát hiện nợ nghiệp trong biểu đồ.'>"
+  },
+  "hiddenPassion": {
+    "number": <số>,
+    "description": "<2-3 câu về đam mê ẩn giấu>"
   },
   "compatibility": {
     "bestMatch": [<3 số hợp nhất>],
-    "challenging": [<2-3 số thách thức>]
+    "challenging": [<3 số thách thức>],
+    "soulmate": "<Mô tả ngắn 2 câu về kiểu người tri kỷ lý tưởng>"
   },
   "luckyInfo": {
-    "colors": ["<2-3 màu may mắn>"],
+    "colors": ["<3 màu may mắn>"],
     "gemstone": "<Đá phong thủy phù hợp>",
     "element": "<Ngũ hành/Nguyên tố>",
-    "planet": "<Hành tinh cai quản>"
+    "planet": "<Hành tinh cai quản>",
+    "luckyDays": ["<2-3 ngày trong tuần may mắn>"],
+    "luckyNumbers": [<3-4 con số may mắn>],
+    "direction": "<Hướng tốt nhất>"
   },
-  "overallReading": "<Tổng quan bức tranh toàn cảnh cuộc đời của ${fullName} dựa trên TẤT CẢ các con số, 4-6 câu, có chiều sâu và giàu cảm xúc>",
-  "detailedCareer": "<Phân tích chi tiết 3-5 câu về sự nghiệp, ngành nghề phù hợp, tiềm năng phát triển>",
-  "detailedLove": "<Phân tích chi tiết 3-5 câu về tình yêu, cách yêu, kiểu người phù hợp>",
-  "detailedHealth": "<Phân tích 2-3 câu về xu hướng sức khỏe cần chú ý và cách cân bằng năng lượng>",
-  "spiritualMessage": "<Một thông điệp tâm linh sâu sắc, truyền cảm hứng 2-3 câu dành riêng cho ${fullName}>"
+  "famousPeople": ["<3-4 người nổi tiếng cùng số Chủ Đạo, VD: Albert Einstein, Steve Jobs...>"],
+  "lifePhases": [
+    { "phase": "Giai đoạn Hình thành", "ageRange": "0-27", "description": "<2-3 câu>" },
+    { "phase": "Giai đoạn Phát triển", "ageRange": "28-54", "description": "<2-3 câu>" },
+    { "phase": "Giai đoạn Thu hoạch", "ageRange": "55+", "description": "<2-3 câu>" }
+  ],
+  "monthlyForecast": [
+    { "month": 1, "theme": "<Chủ đề tháng 1/${currentYear}>", "advice": "<1-2 câu lời khuyên>" },
+    { "month": 2, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 3, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 4, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 5, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 6, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 7, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 8, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 9, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 10, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 11, "theme": "<Chủ đề>", "advice": "<1-2 câu>" },
+    { "month": 12, "theme": "<Chủ đề>", "advice": "<1-2 câu>" }
+  ],
+  "overallReading": "<Tổng quan bức tranh toàn cảnh cuộc đời của ${fullName} dựa trên TẤT CẢ các con số, 5-7 câu, có chiều sâu tâm linh và giàu cảm xúc>",
+  "detailedCareer": "<Phân tích chi tiết 4-6 câu về sự nghiệp, ngành nghề phù hợp nhất, tiềm năng phát triển, kiểu môi trường làm việc lý tưởng>",
+  "detailedLove": "<Phân tích chi tiết 4-6 câu về tình yêu, cách yêu đặc trưng, kiểu người partner phù hợp, cảnh báo trong mối quan hệ>",
+  "detailedHealth": "<Phân tích 3-4 câu về xu hướng sức khỏe, các cơ quan cần chú ý, cách cân bằng năng lượng, loại hình vận động phù hợp>",
+  "detailedFinance": "<Phân tích 3-4 câu về xu hướng tài chính, cách quản lý tiền, tiềm năng thu nhập, lưu ý đầu tư>",
+  "spiritualMessage": "<Một thông điệp tâm linh sâu sắc, truyền cảm hứng, cá nhân hóa 3-4 câu dành riêng cho ${fullName}>"
 }`;
 
           const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };

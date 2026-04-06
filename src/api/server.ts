@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path === '/api/numerology') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1501,6 +1501,40 @@ app.post('/api/numerology', async (req, res) => {
     } catch (err: any) {
         console.error('Numerology API error:', err.message);
         res.status(500).json({ error: 'AI đang thiền định, không thể giải mã thần số lúc này!' });
+    }
+});
+
+app.post('/api/numerology/chat', async (req, res) => {
+    try {
+        const { fullName, birthDate, question, numerologyResult, chatHistory } = req.body;
+        if (!question || !numerologyResult) return res.status(400).json({ error: 'Thiếu thông tin!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'AI'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là CHUYÊN GIA THẦN SỐ HỌC AI. Người dùng "${fullName}" (sinh ${birthDate}) vừa xem kết quả thần số học xong và muốn hỏi thêm.
+
+DỮ LIỆU THẦN SỐ HỌC CỦA HỌ (ĐÃ PHÂN TÍCH):
+${JSON.stringify(numerologyResult, null, 0)}
+
+${historyText ? `LỊCH SỬ HỘI THOẠI GẦN ĐÂY:\n${historyText}\n` : ''}
+CÂU HỎI MỚI: "${question}"
+
+QUY TẮC TRẢ LỜI:
+- Trả lời bằng tiếng Việt, thân thiện, chuyên sâu, dựa CHÍNH XÁC vào dữ liệu thần số học ở trên.
+- Cá nhân hóa cho ${fullName}, tham chiếu các con số cụ thể của họ.
+- Giữ độ dài vừa phải (3-6 câu), đi thẳng vào vấn đề.
+- Nếu câu hỏi không liên quan thần số học, nhẹ nhàng kéo về chủ đề và đưa lời khuyên dựa trên số mệnh.
+- KHÔNG trả JSON, chỉ trả văn bản thuần.`;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        const answer = result.response.text().trim();
+
+        res.json({ answer });
+    } catch (err: any) {
+        console.error('Numerology chat error:', err.message);
+        res.status(500).json({ error: 'AI đang bận thiền, thử lại nhé!' });
     }
 });
 
