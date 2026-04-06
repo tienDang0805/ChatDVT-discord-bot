@@ -76,27 +76,28 @@ const SectionCard = ({ icon: Icon, title, children, color = 'purple', className 
   );
 };
 
-const StrengthWeakness = ({ strengths, weaknesses }: { strengths: string[]; weaknesses: string[] }) => (
+const StrengthWeakness = ({ strengths, weaknesses }: { strengths?: string[]; weaknesses?: string[] }) => (
   <div className="grid grid-cols-2 gap-3 mt-3">
     <div>
       <p className="text-emerald-400 text-[10px] font-bold uppercase mb-1.5 tracking-widest">✦ Điểm mạnh</p>
-      {strengths.map((s, i) => <p key={i} className="text-slate-300 text-xs leading-relaxed">+ {s}</p>)}
+      {(strengths || []).map((s, i) => <p key={i} className="text-slate-300 text-xs leading-relaxed">+ {s}</p>)}
     </div>
     <div>
       <p className="text-red-400 text-[10px] font-bold uppercase mb-1.5 tracking-widest">✧ Điểm yếu</p>
-      {weaknesses.map((w, i) => <p key={i} className="text-slate-500 text-xs leading-relaxed">− {w}</p>)}
+      {(weaknesses || []).map((w, i) => <p key={i} className="text-slate-500 text-xs leading-relaxed">− {w}</p>)}
     </div>
   </div>
 );
 
-const PythagorasGrid = ({ grid }: { grid: number[] }) => {
+const PythagorasGrid = ({ grid }: { grid?: number[] }) => {
+  const safeGrid = grid || [0,0,0,0,0,0,0,0,0];
   const labels = ['Tư duy','Trực giác','Trí nhớ','Thể chất','Ý chí','Cảm xúc','Tài năng','Nghĩa vụ','Lý tưởng'];
   const positions = [[3,6,9],[2,5,8],[1,4,7]];
   return (
     <div className="grid grid-cols-3 gap-2">
       {positions.map((row, ri) => row.map((num) => {
         const idx = num - 1;
-        const count = grid[idx] || 0;
+        const count = safeGrid[idx] || 0;
         const dots = count > 0 ? Array(Math.min(count, 4)).fill(num).join('') : '—';
         const isEmpty = count === 0;
         return (
@@ -288,17 +289,17 @@ export const NumerologyPage = () => {
                     <h2 className="text-2xl md:text-3xl font-black text-white mb-2">{result.lifePath.title}</h2>
                     <p className="text-slate-400 text-sm leading-relaxed">{result.lifePath.description}</p>
                     <div className="flex flex-wrap gap-1.5 mt-3">
-                      {result.lifePath.keywords.map((kw, i) => <span key={i} className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-300 text-[10px] font-medium border border-purple-500/20">{kw}</span>)}
+                      {(result.lifePath?.keywords || []).map((kw, i) => <span key={i} className="px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-300 text-[10px] font-medium border border-purple-500/20">{kw}</span>)}
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap justify-center gap-4 mt-6 pt-6 border-t border-slate-800/60">
-                  <NumberBadge num={result.expression.number} label="Biểu đạt" />
-                  <NumberBadge num={result.soulUrge.number} label="Linh hồn" />
-                  <NumberBadge num={result.personality.number} label="Nhân cách" />
-                  <NumberBadge num={result.birthday.number} label="Ngày sinh" />
-                  <NumberBadge num={result.maturity.number} label="Trưởng thành" />
-                  <NumberBadge num={result.personalYear.number} label={`Năm ${new Date().getFullYear()}`} />
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mt-6 pt-6 border-t border-slate-800/60">
+                  {result.expression && <NumberBadge num={result.expression.number} label="Biểu đạt" />}
+                  {result.soulUrge && <NumberBadge num={result.soulUrge.number} label="Linh hồn" />}
+                  {result.personality && <NumberBadge num={result.personality.number} label="Nhân cách" />}
+                  {result.birthday && <NumberBadge num={result.birthday.number} label="Ngày sinh" />}
+                  {result.maturity && <NumberBadge num={result.maturity.number} label="Trưởng thành" />}
+                  {result.personalYear && <NumberBadge num={result.personalYear.number} label={`Năm ${new Date().getFullYear()}`} />}
                   {result.hiddenPassion && <NumberBadge num={result.hiddenPassion.number} label="Đam mê ẩn" />}
                 </div>
                 {result.famousPeople?.length > 0 && (
@@ -312,48 +313,48 @@ export const NumerologyPage = () => {
 
             <div className="flex gap-1 bg-[#0a0e16] border border-slate-800/60 rounded-2xl p-1.5 animate-slide-up" style={{animationDelay:'100ms'}}>
               {tabs.map(tab => (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-300 border border-purple-500/30' : 'text-slate-600 hover:text-slate-400'}`}>
-                  <tab.icon size={14} /> <span className="hidden sm:inline">{tab.label}</span>
+                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2.5 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition-all ${activeTab === tab.id ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 text-purple-300 border border-purple-500/30' : 'text-slate-600 hover:text-slate-400'}`}>
+                  <tab.icon size={13} /> {tab.label}
                 </button>
               ))}
             </div>
 
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <SectionCard icon={Star} title="Số Biểu Đạt (Expression)" color="pink" delay={0}>
                     <p className="text-white font-bold mb-1">{result.expression.number} — {result.expression.title}</p>
                     <p className="text-slate-400 text-xs leading-relaxed">{result.expression.description}</p>
-                    <StrengthWeakness strengths={result.expression.strengths} weaknesses={result.expression.weaknesses} />
+                    <StrengthWeakness strengths={result.expression?.strengths} weaknesses={result.expression?.weaknesses} />
                   </SectionCard>
                   <SectionCard icon={Heart} title="Số Linh Hồn (Soul Urge)" color="red" delay={50}>
                     <p className="text-white font-bold mb-1">{result.soulUrge.number} — {result.soulUrge.title}</p>
                     <p className="text-slate-400 text-xs leading-relaxed">{result.soulUrge.description}</p>
-                    <StrengthWeakness strengths={result.soulUrge.strengths} weaknesses={result.soulUrge.weaknesses} />
+                    <StrengthWeakness strengths={result.soulUrge?.strengths} weaknesses={result.soulUrge?.weaknesses} />
                   </SectionCard>
                   <SectionCard icon={Shield} title="Số Nhân Cách (Personality)" color="blue" delay={100}>
                     <p className="text-white font-bold mb-1">{result.personality.number} — {result.personality.title}</p>
                     <p className="text-slate-400 text-xs leading-relaxed">{result.personality.description}</p>
-                    <StrengthWeakness strengths={result.personality.strengths} weaknesses={result.personality.weaknesses} />
+                    <StrengthWeakness strengths={result.personality?.strengths} weaknesses={result.personality?.weaknesses} />
                   </SectionCard>
                   <SectionCard icon={Sun} title="Số Ngày Sinh (Birthday)" color="amber" delay={150}>
                     <p className="text-white font-bold mb-1">{result.birthday.number} — {result.birthday.title}</p>
                     <p className="text-slate-400 text-xs leading-relaxed">{result.birthday.description}</p>
-                    <StrengthWeakness strengths={result.birthday.strengths} weaknesses={result.birthday.weaknesses} />
+                    <StrengthWeakness strengths={result.birthday?.strengths} weaknesses={result.birthday?.weaknesses} />
                   </SectionCard>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <SectionCard icon={Flame} title="Sự Nghiệp" color="amber" delay={200}>
                     <p className="text-slate-300 text-xs leading-relaxed">{result.detailedCareer}</p>
                   </SectionCard>
                   <SectionCard icon={Heart} title="Tình Yêu" color="pink" delay={250}>
                     <p className="text-slate-300 text-xs leading-relaxed">{result.detailedLove}</p>
                     {result.compatibility?.soulmate && <p className="text-pink-400/70 text-[10px] italic mt-2 pt-2 border-t border-slate-800/40">💕 {result.compatibility.soulmate}</p>}
-                    <div className="flex gap-1.5 mt-2">
-                      {result.compatibility.bestMatch.map(n => <span key={n} className={`w-6 h-6 rounded-md bg-gradient-to-br ${getNumberColor(n)} flex items-center justify-center text-white text-[10px] font-bold`}>{n}</span>)}
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {(result.compatibility?.bestMatch || []).map(n => <span key={n} className={`w-6 h-6 rounded-md bg-gradient-to-br ${getNumberColor(n)} flex items-center justify-center text-white text-[10px] font-bold`}>{n}</span>)}
                       <span className="text-[9px] text-slate-600 self-center ml-1">hợp</span>
-                      {result.compatibility.challenging.map(n => <span key={n} className="w-6 h-6 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 text-[10px] font-bold">{n}</span>)}
+                      {(result.compatibility?.challenging || []).map(n => <span key={n} className="w-6 h-6 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-500 text-[10px] font-bold">{n}</span>)}
                       <span className="text-[9px] text-slate-600 self-center ml-1">khắc</span>
                     </div>
                   </SectionCard>
@@ -373,7 +374,7 @@ export const NumerologyPage = () => {
                     <div className="bg-[#111827] rounded-xl p-3 text-center"><p className="text-[9px] text-slate-600 uppercase tracking-wider mb-1">Hướng tốt</p><p className="text-sm text-white font-bold">🧭 {result.luckyInfo.direction}</p></div>
                   </div>
                   <div className="flex flex-wrap gap-4 mt-3 text-xs text-slate-400">
-                    <span>🎨 Màu: <span className="text-white">{result.luckyInfo.colors.join(', ')}</span></span>
+                    <span>🎨 Màu: <span className="text-white">{(result.luckyInfo?.colors || []).join(', ')}</span></span>
                     <span>📅 Ngày: <span className="text-white">{result.luckyInfo.luckyDays?.join(', ')}</span></span>
                     <span>🔢 Số: <span className="text-white">{result.luckyInfo.luckyNumbers?.join(', ')}</span></span>
                   </div>
@@ -391,22 +392,22 @@ export const NumerologyPage = () => {
             {activeTab === 'chart' && (
               <div className="space-y-6">
                 <SectionCard icon={Hash} title="Biểu Đồ Ngày Sinh Pythagoras" color="purple" delay={0}>
-                  <PythagorasGrid grid={result.pythagorasChart.grid} />
+                  <PythagorasGrid grid={result.pythagorasChart?.grid} />
                   <div className="mt-4 space-y-2">
-                    {result.pythagorasChart.arrows.strong.length > 0 && (
+                    {(result.pythagorasChart?.arrows?.strong || []).length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         <span className="text-[10px] text-emerald-400 font-bold uppercase">Mũi tên mạnh:</span>
-                        {result.pythagorasChart.arrows.strong.map((a,i) => <span key={i} className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-300 text-[10px]">{a}</span>)}
+                        {(result.pythagorasChart?.arrows?.strong || []).map((a,i) => <span key={i} className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-300 text-[10px]">{a}</span>)}
                       </div>
                     )}
-                    {result.pythagorasChart.arrows.weak.length > 0 && (
+                    {(result.pythagorasChart?.arrows?.weak || []).length > 0 && (
                       <div className="flex flex-wrap gap-1.5">
                         <span className="text-[10px] text-red-400 font-bold uppercase">Mũi tên yếu:</span>
-                        {result.pythagorasChart.arrows.weak.map((a,i) => <span key={i} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-300 text-[10px]">{a}</span>)}
+                        {(result.pythagorasChart?.arrows?.weak || []).map((a,i) => <span key={i} className="px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-full text-red-300 text-[10px]">{a}</span>)}
                       </div>
                     )}
                   </div>
-                  <p className="text-slate-400 text-xs leading-relaxed mt-3 pt-3 border-t border-slate-800/40">{result.pythagorasChart.interpretation}</p>
+                  <p className="text-slate-400 text-xs leading-relaxed mt-3 pt-3 border-t border-slate-800/40">{result.pythagorasChart?.interpretation}</p>
                 </SectionCard>
 
                 <div className="grid md:grid-cols-2 gap-4">
@@ -425,7 +426,7 @@ export const NumerologyPage = () => {
                   <SectionCard icon={AlertTriangle} title="Nợ Nghiệp (Karmic Debt)" color={result.karmicDebt.hasDebt ? 'red' : 'emerald'} delay={200}>
                     {result.karmicDebt.hasDebt ? (
                       <div>
-                        <div className="flex gap-2 mb-3">{result.karmicDebt.numbers.map(n => <span key={n} className="px-3 py-1 bg-red-500/15 border border-red-500/30 rounded-lg text-red-400 font-bold text-sm">{n}</span>)}</div>
+                        <div className="flex gap-2 mb-3">{(result.karmicDebt?.numbers || []).map(n => <span key={n} className="px-3 py-1 bg-red-500/15 border border-red-500/30 rounded-lg text-red-400 font-bold text-sm">{n}</span>)}</div>
                         <p className="text-slate-300 text-xs leading-relaxed">{result.karmicDebt.description}</p>
                       </div>
                     ) : (
@@ -446,7 +447,7 @@ export const NumerologyPage = () => {
                 </SectionCard>
 
                 <SectionCard icon={Calendar} title={`Dự Báo 12 Tháng — ${new Date().getFullYear()}`} color="blue" delay={100}>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     {result.monthlyForecast?.map((m) => {
                       const isCurrent = m.month === new Date().getMonth() + 1;
                       return (
