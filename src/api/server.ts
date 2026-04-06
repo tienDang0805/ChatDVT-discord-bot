@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path === '/api/numerology') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1487,6 +1487,20 @@ app.post('/api/music/remove', async (req, res) => {
     } catch (err) {
         console.error('Music remove error:', err);
         res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// --- Numerology API ---
+app.post('/api/numerology', async (req, res) => {
+    try {
+        const { fullName, birthDate } = req.body;
+        if (!fullName || !birthDate) return res.status(400).json({ error: 'Cần nhập Họ tên và Ngày sinh!' });
+
+        const result = await geminiService.analyzeNumerology(fullName, birthDate);
+        res.json({ result });
+    } catch (err: any) {
+        console.error('Numerology API error:', err.message);
+        res.status(500).json({ error: 'AI đang thiền định, không thể giải mã thần số lúc này!' });
     }
 });
 

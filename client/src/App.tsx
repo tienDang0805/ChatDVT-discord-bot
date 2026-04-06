@@ -24,6 +24,7 @@ import { HandsomeAnalyzer } from './pages/HandsomeAnalyzer';
 import { CVReviewer } from './pages/CVReviewer';
 import MusicStation from './pages/MusicStation';
 import { PixelAgents } from './pages/PixelAgents';
+import { NumerologyPage } from './pages/NumerologyPage';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 import { Toaster } from 'react-hot-toast';
@@ -58,6 +59,7 @@ function App() {
           <Route path="/cv-review" element={<CVReviewer />} />
           <Route path="/music" element={<MusicStation />} />
           <Route path="/pixel-agents" element={<PixelAgents />} />
+          <Route path="/numerology" element={<NumerologyPage />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />

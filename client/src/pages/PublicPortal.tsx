@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -106,6 +106,16 @@ export const PublicPortal = () => {
       href: '/pixel-agents',
       author: 'Pablo Delucca (Ported)',
       category: 'game'
+    },
+    {
+      id: 'numerology',
+      number: '11',
+      title: 'Thần Số Học AI',
+      description: 'Giải mã Bản đồ Số Mệnh (Life Path, Soul Urge, Expression) bằng AI phân tích chuyên sâu từ Họ tên & Ngày sinh.',
+      icon: Hash,
+      href: '/numerology',
+      author: 'Pháp Sư Tiến Đặng',
+      category: 'utility'
     }
   ];
 

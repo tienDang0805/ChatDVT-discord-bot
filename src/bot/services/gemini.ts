@@ -800,6 +800,111 @@ BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown,
           throw new Error(`Lỗi xử lý CV: ${error.message}`);
       }
   }
+
+  public async analyzeNumerology(fullName: string, birthDate: string): Promise<any> {
+      try {
+          const today = new Date();
+          const currentYear = today.getFullYear();
+
+          const prompt = `Bạn là MỘT CHUYÊN GIA THẦN SỐ HỌC (NUMEROLOGY) BẬC THẦY với hơn 30 năm kinh nghiệm, kết hợp giữa hệ thống Pythagoras phương Tây và chiêm tinh học phương Đông.
+
+THÔNG TIN ĐẦU VÀO:
+- Họ và tên đầy đủ: "${fullName}"
+- Ngày sinh dương lịch: ${birthDate}
+- Năm hiện tại: ${currentYear}
+
+QUY TẮC TÍNH TOÁN BẮT BUỘC:
+1. SỐ CHỦ ĐẠO (LIFE PATH NUMBER): Cộng tất cả chữ số trong ngày sinh (DD/MM/YYYY) rồi rút gọn về 1 chữ số (trừ Master Number 11, 22, 33).
+   Ví dụ: 15/03/1990 → 1+5+0+3+1+9+9+0 = 28 → 2+8 = 10 → 1+0 = 1
+2. SỐ BIỂU ĐẠT (EXPRESSION NUMBER): Gán giá trị cho MỖI CHỮ CÁI trong tên đầy đủ theo bảng Pythagoras (A=1,B=2...I=9,J=1...R=9,S=1...Z=8), cộng tất cả rồi rút gọn.
+3. SỐ LINH HỒN (SOUL URGE / HEART'S DESIRE): Chỉ cộng các NGUYÊN ÂM (A, E, I, O, U, Y) trong tên.
+4. SỐ NHÂN CÁCH (PERSONALITY NUMBER): Chỉ cộng các PHỤ ÂM trong tên.
+5. SỐ NGÀY SINH (BIRTHDAY NUMBER): Rút gọn ngày sinh (chỉ ngày, không tháng/năm).
+6. NĂM CÁ NHÂN (PERSONAL YEAR): Cộng ngày sinh + tháng sinh + năm hiện tại (${currentYear}) rồi rút gọn.
+
+LƯU Ý VỚI TÊN TIẾNG VIỆT: Bỏ qua dấu tiếng Việt khi tính toán (ví dụ: Ă→A, Ơ→O, Ư→U, Đ→D...). Chữ Y xem là nguyên âm.
+
+YÊU CẦU PHÂN TÍCH: Cho mỗi con số, hãy phân tích CHUYÊN SÂU, CHÍNH XÁC theo lý thuyết Thần Số Học chuẩn. Đưa ra nhận định mang tính chất khách quan, sâu sắc, có chiều sâu tâm linh. KHÔNG BỊA ĐẶT, không chung chung.
+
+BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON (KHÔNG markdown, KHÔNG backtick):
+{
+  "lifePath": {
+    "number": <số>,
+    "title": "<Tên gọi con số, VD: Người Tiên Phong>",
+    "keywords": ["<3-5 từ khóa đặc trưng>"],
+    "strengths": ["<3 điểm mạnh>"],
+    "weaknesses": ["<3 điểm yếu>"],
+    "description": "<Phân tích CHI TIẾT 3-5 câu về ý nghĩa số chủ đạo này đối với cuộc đời người này>"
+  },
+  "expression": {
+    "number": <số>,
+    "title": "<Tên gọi>",
+    "keywords": ["<3-5 từ khóa>"],
+    "strengths": ["<3 điểm mạnh>"],
+    "weaknesses": ["<3 điểm yếu>"],
+    "description": "<Phân tích chi tiết 3-4 câu>"
+  },
+  "soulUrge": {
+    "number": <số>,
+    "title": "<Tên gọi>",
+    "keywords": ["<3-5 từ khóa>"],
+    "strengths": ["<3 điểm mạnh>"],
+    "weaknesses": ["<3 điểm yếu>"],
+    "description": "<Phân tích chi tiết 3-4 câu về khát khao sâu thẳm của linh hồn>"
+  },
+  "personality": {
+    "number": <số>,
+    "title": "<Tên gọi>",
+    "keywords": ["<3-5 từ khóa>"],
+    "strengths": ["<3 điểm mạnh>"],
+    "weaknesses": ["<3 điểm yếu>"],
+    "description": "<Phân tích chi tiết 3-4 câu về hình ảnh bên ngoài>"
+  },
+  "birthday": {
+    "number": <số>,
+    "title": "<Tên gọi>",
+    "keywords": ["<3-5 từ khóa>"],
+    "strengths": ["<3 điểm mạnh>"],
+    "weaknesses": ["<3 điểm yếu>"],
+    "description": "<Phân tích chi tiết 2-3 câu về năng khiếu bẩm sinh>"
+  },
+  "personalYear": {
+    "number": <số>,
+    "theme": "<Chủ đề năm ${currentYear} cho người này>",
+    "advice": "<Lời khuyên chi tiết 3-4 câu cho năm nay>"
+  },
+  "compatibility": {
+    "bestMatch": [<3 số hợp nhất>],
+    "challenging": [<2-3 số thách thức>]
+  },
+  "luckyInfo": {
+    "colors": ["<2-3 màu may mắn>"],
+    "gemstone": "<Đá phong thủy phù hợp>",
+    "element": "<Ngũ hành/Nguyên tố>",
+    "planet": "<Hành tinh cai quản>"
+  },
+  "overallReading": "<Tổng quan bức tranh toàn cảnh cuộc đời của ${fullName} dựa trên TẤT CẢ các con số, 4-6 câu, có chiều sâu và giàu cảm xúc>",
+  "detailedCareer": "<Phân tích chi tiết 3-5 câu về sự nghiệp, ngành nghề phù hợp, tiềm năng phát triển>",
+  "detailedLove": "<Phân tích chi tiết 3-5 câu về tình yêu, cách yêu, kiểu người phù hợp>",
+  "detailedHealth": "<Phân tích 2-3 câu về xu hướng sức khỏe cần chú ý và cách cân bằng năng lượng>",
+  "spiritualMessage": "<Một thông điệp tâm linh sâu sắc, truyền cảm hứng 2-3 câu dành riêng cho ${fullName}>"
+}`;
+
+          const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };
+          const model = await this.getModel('global', 'logic', config);
+
+          const result = await retryWithBackoff(() => model.generateContent(prompt));
+          let text = result.response.text().trim();
+
+          if (text.startsWith('```json')) text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+          else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+
+          return JSON.parse(text);
+      } catch (error: any) {
+          console.error("Numerology Analysis Error:", error);
+          throw new Error(`Lỗi phân tích Thần Số Học: ${error.message}`);
+      }
+  }
 }
 
 export const geminiService = new GeminiService();
