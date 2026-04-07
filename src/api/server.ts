@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1668,6 +1668,52 @@ Trả lời bằng tiếng Việt, thân thiện, tôn trọng, tích cực. 3-5
     } catch (err: any) {
         console.error('Gender quiz chat error:', err.message);
         res.status(500).json({ error: 'AI bận, thử lại nhé!' });
+    }
+});
+
+// --- Astrology API (Tử Vi Đông Phương) ---
+app.post('/api/astrology', async (req, res) => {
+    try {
+        const { fullName, gender, birthDate, birthTime } = req.body;
+        if (!fullName || !gender || !birthDate || !birthTime) {
+            return res.status(400).json({ error: 'Cần nhập đầy đủ: Họ tên, Giới tính, Ngày sinh, Giờ sinh!' });
+        }
+
+        const result = await geminiService.analyzeAstrology(fullName, gender, birthDate, birthTime, req.body.geminiApiKey);
+        res.json({ result });
+    } catch (err: any) {
+        console.error('Astrology API error:', err.message);
+        res.status(500).json({ error: err.message || 'Thầy tử vi đang bận tu tiên, vui lòng thử lại sau!' });
+    }
+});
+
+app.post('/api/astrology/chat', async (req, res) => {
+    try {
+        const { fullName, gender, birthDate, birthTime, question, astrologyResult, chatHistory } = req.body;
+        if (!question || !astrologyResult) return res.status(400).json({ error: 'Thiếu thông tin!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'Thầy Tử Vi'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là CHIÊM TINH GIA & ĐẠI SƯ TỬ VI ĐẨU SỐ, hãy giải đáp câu hỏi của đương số.
+Thông tin đương số: ${fullName}, giới tính ${gender}, sinh ngày ${birthDate} lúc ${birthTime}.
+Kết quả Tử Vi đã luận: ${JSON.stringify(astrologyResult)}
+
+${historyText ? `LỊCH SỬ CHAT:\n${historyText}\n` : ''}
+NGƯỜI DÙNG HỎI: "${question}"
+
+YÊU CẦU:
+- Tham chiếu lá số tử vi đã luận ở trên và đưa ra lời giải đáp cặn kẽ, sâu sắc.
+- Giữ phong cách huyền học, có thể dùng một số từ Hán Việt cho huyền bí nhưng phải dễ hiểu.
+- KHÔNG trả JSON, chỉ trả văn bản thuần.`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        const answer = result.response.text().trim();
+        res.json({ answer });
+    } catch (err: any) {
+        console.error('Astrology chat API error:', err.message);
+        res.status(500).json({ error: 'Dây thiên cơ đang nhiễu, không phản hồi được!' });
     }
 });
 

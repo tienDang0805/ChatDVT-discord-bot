@@ -126,6 +126,16 @@ export const PublicPortal = () => {
       href: '/gender-quiz',
       author: 'Pháp Sư Tiến Đặng',
       category: 'utility'
+    },
+    {
+      id: 'astrology',
+      number: '13',
+      title: 'Tử Vi Phương Đông',
+      description: 'Lập và bình giải chi tiết lá số Tử Vi. Giải mã Thiên Cơ, dự đoán Đại Vận, Tiểu Hạn bằng AI.',
+      icon: Moon,
+      href: '/astrology',
+      author: 'Pháp Sư Tiến Đặng',
+      category: 'utility'
     }
   ];
 

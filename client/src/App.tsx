@@ -26,6 +26,7 @@ import MusicStation from './pages/MusicStation';
 import { PixelAgents } from './pages/PixelAgents';
 import { NumerologyPage } from './pages/NumerologyPage';
 import { GenderQuizPage } from './pages/GenderQuizPage';
+import { AstrologyPage } from './pages/AstrologyPage';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 import { Toaster } from 'react-hot-toast';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/pixel-agents" element={<PixelAgents />} />
           <Route path="/numerology" element={<NumerologyPage />} />
           <Route path="/gender-quiz" element={<GenderQuizPage />} />
+          <Route path="/astrology" element={<AstrologyPage />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />

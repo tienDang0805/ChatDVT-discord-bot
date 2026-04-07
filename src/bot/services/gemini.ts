@@ -973,6 +973,88 @@ BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON (KHÔNG markdown, KHÔNG back
           throw new Error(`Lỗi phân tích Thần Số Học: ${error.message}`);
       }
   }
+
+  // --- Astrology Analyzer (Tử Vi Đông Phương) ---
+  public async analyzeAstrology(fullName: string, gender: string, birthDate: string, birthTime: string, customApiKey?: string): Promise<any> {
+      try {
+          const prompt = `Bạn là CHIÊM TINH GIA & ĐẠI SƯ TỬ VI ĐẨU SỐ Phương Đông hàng đầu. Hãy lập là số tử vi và bình giải cho người sau:
+
+THÔNG TIN ĐƯƠNG SỐ:
+- Họ và tên: ${fullName}
+- Giới tính: ${gender}
+- Ngày sinh Dương Lịch: ${birthDate}
+- Giờ sinh Dương Lịch: ${birthTime}
+
+NHIỆM VỤ CỦA BẠN:
+1. Hãy tự động nhẩm tính quy đổi Ngày Dương Lịch sang Âm Lịch, Bát tự (Tứ Trụ) và Can Chi tương ứng. Xác định Âm/Dương Nam Nữ (VD: Âm Nam, Dương Nữ) để tính chiều quay của Đại Vận.
+2. Từ đó xác định Cục, Mệnh, Sao Thủ Mệnh và luận giải lá số.
+3. Chú ý: Đây là phần mềm giải trí, bạn không cần tính chính xác 100% bản lá số tử vi thật mà hãy đưa ra phác hoạ "Nghe có vẻ rất chuyên môn và logic theo Tử vi", bao gồm Ngũ hành nạp âm, các sao (Tử Vi, Thiên Phủ, Tham Lang, Thất Sát...).
+
+BẮT BUỘC TRẢ VỀ CHÍNH XÁC PHIÊN BẢN JSON NÀY (Không markdown, không bọc bởi \`\`\`):
+{
+  "summary": {
+    "canchi": "<Ví dụ: Năm Canh Thìn, Tháng Kỷ Mão, Ngày Tân Mùi>",
+    "amDuong": "<Ví dụ: Dương Nam / Âm Nữ>",
+    "banMenh": "<Ví dụ: Bạch Lạp Kim>",
+    "cuc": "<Ví dụ: Thủy Nhị Cục>"
+  },
+  "overview": "<Đánh giá tổng quan nhất về cuộc đời, tính cách và vận mệnh của đương số trong 4-5 câu. Văn phong đậm chất huyền học, bí ẩn nhưng tích cực>",
+  "houses": [
+    {
+      "name": "Cung Mệnh",
+      "stars": "<Các sao chính thủ mệnh, VD: Tử Vi, Thiên Tướng, Tả Phù...>",
+      "description": "<Bình giải cung Mệnh, tính cách cốt lõi và hình quan, 3-4 câu>"
+    },
+    {
+      "name": "Cung Tài Bạch",
+      "stars": "<Các sao, VD: Vũ Khúc, Lộc Tồn...>",
+      "description": "<Bình giải đường Tiền Tài, cách kiếm tiền, vận trúng số hay làm giàu chân chính>"
+    },
+    {
+      "name": "Cung Quan Lộc",
+      "stars": "<Các sao, VD: Liêm Trinh, Thiên Khôi...>",
+      "description": "<Bình giải đường Công Danh Sự Nghiệp>"
+    },
+    {
+      "name": "Cung Phu Thê",
+      "stars": "<Các sao, VD: Tham Lang, Đào Hoa...>",
+      "description": "<Bình giải đường Tình Duyên, hình mẫu gia phối>"
+    },
+    {
+      "name": "Cung Thiên Di",
+      "stars": "<Các sao tại Di>",
+      "description": "<Bình giải việc xuất ngoại, đi xa, quan hệ xã hội>"
+    },
+    {
+      "name": "Cung Phúc Đức",
+      "stars": "<Các sao tại Phúc>",
+      "description": "<Bình giải phúc lộc tổ tiên, đời sống tinh thần>"
+    }
+  ],
+  "currentYearForecast": "<Luận giải Đại Vận và Tiểu hạn năm nay. Nên làm gì, tránh làm gì>",
+  "advice": "<1 Lời khuyên tu tâm dưỡng tính, cải thiện vận mệnh>",
+  "spiritQuote": "<1 Câu thơ hoặc châm ngôn Tử Vi cổ (VD: Mệnh hảo bất như vận hảo...) ứng hợp với lá số>"
+}`;
+
+          const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };
+          const model = await this.getModel('global', 'logic', config, customApiKey);
+
+          const result = await retryWithBackoff(() => model.generateContent(prompt));
+          let text = result.response.text().trim();
+          
+          const jsonMatch = text.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+              text = jsonMatch[0];
+          } else {
+              if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+          }
+
+          return JSON.parse(text);
+      } catch (error: any) {
+          console.error("Astrology Analysis Error:", error);
+          throw new Error(`Lỗi phân tích Tử Vi: ${error.message}`);
+      }
+  }
 }
 
 export const geminiService = new GeminiService();
