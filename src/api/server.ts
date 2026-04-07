@@ -1631,7 +1631,12 @@ TRẢ VỀ JSON (KHÔNG markdown):
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(prompt);
         let text = result.response.text().trim();
-        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            text = jsonMatch[0];
+        } else {
+            if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        }
         res.json({ result: JSON.parse(text) });
     } catch (err: any) {
         console.error('Gender quiz analyze error:', err.message);

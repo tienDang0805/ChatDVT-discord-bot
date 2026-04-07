@@ -98,7 +98,11 @@ export const GenderQuizPage = () => {
   const analyzeResults = async (finalAnswers: Record<number, string>) => {
     setPhase('analyzing');
     try {
-      const payload = questions.map((q, i) => ({ question: q.question, answer: finalAnswers[i] || '' }));
+      const payload = questions.map((q, i) => {
+        const val = finalAnswers[i];
+        const opt = q.options.find(o => o.value === val);
+        return { question: q.question, answer: opt ? opt.label : val || '' };
+      });
       const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ answers: payload, geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
