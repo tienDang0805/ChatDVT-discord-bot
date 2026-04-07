@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -274,7 +275,7 @@ export default function FoodWheel() {
     setResult(null);
     setShowModal(false);
     try {
-      const res = await fetch(`${API_BASE}/api/food-wheel`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/food-wheel`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ geminiApiKey: getStoredGeminiKey() }) });
       if (!res.ok) throw new Error();
       const data: WheelData = await res.json();
       setWheelData(data);
@@ -364,6 +365,7 @@ export default function FoodWheel() {
               {loading ? 'Thầy đang xem quẻ...' : 'Hỏi Thầy Phong Thuỷ'}
             </button>
             {error && <p className="text-red-400 mt-6">{error}</p>}
+            <div className="mt-6 max-w-xs mx-auto"><GeminiKeyInput accent="amber" /></div>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-10 items-center">

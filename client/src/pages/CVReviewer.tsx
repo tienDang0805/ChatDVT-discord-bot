@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'react-hot-toast';
 import { EditableCV, type CVData } from '../components/EditableCV';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 const htmlToMd = (html: string) => {
   if (!html) return '';
@@ -226,6 +227,8 @@ export const CVReviewer = () => {
       if (mode === 'rewrite' && reviewResult) {
         formData.append('reviewContext', JSON.stringify(reviewResult));
       }
+      const storedKey = getStoredGeminiKey();
+      if (storedKey) formData.append('geminiApiKey', storedKey);
 
       const response = await fetch(`${apiUrl}/api/cv-reviewer`, {
         method: 'POST',
@@ -601,6 +604,7 @@ export const CVReviewer = () => {
            {/* CỘT UPLOADER (Trái) */}
            <div className={`flex flex-col gap-8 ${(!reviewResult && !rewriteResult) ? 'w-full' : 'xl:sticky xl:top-8'}`}>
               {renderUploader()}
+              <div className="mt-4"><GeminiKeyInput accent="blue" /></div>
               
               {/* Terminal Logs hiển thị khi đang scan */}
               {isScanning && (

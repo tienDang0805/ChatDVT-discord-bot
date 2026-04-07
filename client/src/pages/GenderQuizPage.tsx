@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CornerUpLeft, Sparkles, Loader2, RotateCcw, Copy, ChevronLeft, Rainbow, CheckCircle2, Bot, SendHorizontal, MessageCircle } from 'lucide-react';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 interface QuizQuestion {
   id: number;
@@ -72,7 +73,7 @@ export const GenderQuizPage = () => {
   const startQuiz = async () => {
     setPhase('loading-q'); setError('');
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
       setQuestions(d.questions);
@@ -98,7 +99,7 @@ export const GenderQuizPage = () => {
     setPhase('analyzing');
     try {
       const payload = questions.map((q, i) => ({ question: q.question, answer: finalAnswers[i] || '' }));
-      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ answers: payload }) });
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ answers: payload, geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
       setResult(d.result);
@@ -117,7 +118,7 @@ export const GenderQuizPage = () => {
     const q = chatInput.trim(); setChatInput('');
     setChatMsgs(p => [...p, { role: 'user', text: q }]); setChatLoading(true);
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q, quizResult: result, chatHistory: chatMsgs.slice(-10) }) });
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/gender-quiz/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q, quizResult: result, chatHistory: chatMsgs.slice(-10), geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error);
       setChatMsgs(p => [...p, { role: 'ai', text: d.answer }]);
     } catch (e: any) { setChatMsgs(p => [...p, { role: 'ai', text: '⚠️ ' + (e.message || 'Lỗi') }]); }
@@ -184,7 +185,8 @@ export const GenderQuizPage = () => {
                   ))}
                 </div>
                 {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm mb-4">⚠️ {error}</div>}
-                <button onClick={startQuiz} className="w-full rainbow-bg text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2.5 text-base shadow-lg active:scale-[0.98] transition-transform">
+                <GeminiKeyInput accent="pink" />
+                <button onClick={startQuiz} className="w-full rainbow-bg text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2.5 text-base shadow-lg active:scale-[0.98] transition-transform mt-3">
                   <Sparkles size={20} /> BẮT ĐẦU QUIZ
                 </button>
                 <p className="text-center text-xs text-slate-600 mt-4 italic">Đây là quiz giải trí, không phải chẩn đoán y khoa.</p>

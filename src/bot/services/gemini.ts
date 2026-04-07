@@ -607,7 +607,7 @@ class GeminiService {
      }
   }
   // --- Handsome Analyzer ---
-  public async analyzeHandsome(base64Image: string, mimeType: string): Promise<any> {
+  public async analyzeHandsome(base64Image: string, mimeType: string, customApiKey?: string): Promise<any> {
       try {
           const prompt = `Bạn là DIẾP-LOING-NING 3000, cỗ máy AI phân tích nhan sắc cực kỳ xạo lồng, mỏ hỗn và hay dìm hàng người khác. 
 Hãy phân tích bức ảnh này và đưa ra nhận xét về độ đẹp trai/xinh gái của người trong ảnh.
@@ -627,7 +627,7 @@ BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON VỚI CẤU TRÚC SAU:
 
           // Sử dụng logic type để có thể set responseMimeType JSON
           const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };
-          const model = await this.getModel('global', 'logic', config); 
+          const model = await this.getModel('global', 'logic', config, customApiKey); 
           
           const imagePart = {
               inlineData: { data: base64Image, mimeType }
@@ -718,7 +718,7 @@ TRẢ VỀ ĐÚNG MÃ MARKDOWN CỦA CV MỚI.`;
   }
 
   // --- CV Reviewer & Rewriter ---
-  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite', customPrompt?: string, reviewContext?: any): Promise<any> {
+  public async analyzeCV(fileBuffer: Buffer, mimeType: string, filename: string, mode: 'review' | 'rewrite', customPrompt?: string, reviewContext?: any, customApiKey?: string): Promise<any> {
       try {
           const documentContent: Part[] = [];
           
@@ -787,7 +787,7 @@ BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown,
               config.responseMimeType = "application/json";
           }
 
-          const model = await this.getModel('global', 'logic', config);
+          const model = await this.getModel('global', 'logic', config, customApiKey);
           const result = await retryWithBackoff(() => model.generateContent([prompt, ...documentContent]));
           let text = result.response.text().trim();
           
@@ -801,7 +801,7 @@ BẮT BUỘC TRẢ VỀ ĐÚNG CẤU TRÚC JSON SAU (không chứa mã Markdown,
       }
   }
 
-  public async analyzeNumerology(fullName: string, birthDate: string): Promise<any> {
+  public async analyzeNumerology(fullName: string, birthDate: string, customApiKey?: string): Promise<any> {
       try {
           const today = new Date();
           const currentYear = today.getFullYear();
@@ -959,7 +959,7 @@ BẮT BUỘC TRẢ VỀ ĐÚNG ĐỊNH DẠNG JSON (KHÔNG markdown, KHÔNG back
 }`;
 
           const config = { ...GEMINI_LOGIC_CONFIG.generationConfig, responseMimeType: "application/json" };
-          const model = await this.getModel('global', 'logic', config);
+          const model = await this.getModel('global', 'logic', config, customApiKey);
 
           const result = await retryWithBackoff(() => model.generateContent(prompt));
           let text = result.response.text().trim();

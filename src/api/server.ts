@@ -1263,7 +1263,7 @@ app.post('/api/web-quiz/:roomId/answer', (req, res) => {
 // --- Food Wheel API (Phong Thuy) ---
 app.post('/api/food-wheel', async (req, res) => {
     try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
 
         const today = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' });
@@ -1303,7 +1303,7 @@ Trả về JSON hợp lệ (KHÔNG markdown, KHÔNG \`\`\`json) theo đúng form
 // --- Excuse Generator API ---
 app.post('/api/excuse-generator', async (req, res) => {
     try {
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
 
         const prompt = `Bạn là một cỗ máy tạo lý do xin nghỉ phép vô tri, hài hước và lầy lội nhất hành tinh.
@@ -1339,7 +1339,7 @@ app.post('/api/handsome-analyzer', async (req, res) => {
         const mimeTypeMatch = imageBase64.match(/^data:(image\/\w+);base64,/);
         const mimeType = mimeTypeMatch ? mimeTypeMatch[1] : "image/jpeg";
 
-        const text = await geminiService.analyzeHandsome(base64Data, mimeType);
+        const text = await geminiService.analyzeHandsome(base64Data, mimeType, req.body.geminiApiKey);
         
         res.json({ result: text });
     } catch (err: any) {
@@ -1359,7 +1359,8 @@ app.post('/api/cv-reviewer', upload.single('cvFile'), async (req, res) => {
 
         const customPrompt = req.body.customPrompt || '';
         const reviewContext = req.body.reviewContext ? JSON.parse(req.body.reviewContext) : undefined;
-        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode, customPrompt, reviewContext);
+        const customApiKey = req.body.geminiApiKey || '';
+        const result = await geminiService.analyzeCV(file.buffer, file.mimetype, file.originalname, mode, customPrompt, reviewContext, customApiKey || undefined);
         
         res.json({ result });
     } catch (err: any) {
@@ -1496,7 +1497,7 @@ app.post('/api/numerology', async (req, res) => {
         const { fullName, birthDate } = req.body;
         if (!fullName || !birthDate) return res.status(400).json({ error: 'Cần nhập Họ tên và Ngày sinh!' });
 
-        const result = await geminiService.analyzeNumerology(fullName, birthDate);
+        const result = await geminiService.analyzeNumerology(fullName, birthDate, req.body.geminiApiKey);
         res.json({ result });
     } catch (err: any) {
         console.error('Numerology API error:', err.message);
@@ -1526,7 +1527,7 @@ QUY TẮC TRẢ LỜI:
 - Nếu câu hỏi không liên quan thần số học, nhẹ nhàng kéo về chủ đề và đưa lời khuyên dựa trên số mệnh.
 - KHÔNG trả JSON, chỉ trả văn bản thuần.`;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
         const result = await model.generateContent(prompt);
         const answer = result.response.text().trim();
@@ -1539,7 +1540,7 @@ QUY TẮC TRẢ LỜI:
 });
 
 // --- Gender Quiz API ---
-app.post('/api/gender-quiz/generate', async (_req, res) => {
+app.post('/api/gender-quiz/generate', async (req, res) => {
     try {
         const prompt = `Bạn là nhà tâm lý học giới tính hàng đầu thế giới. Tạo ĐÚNG 20 câu hỏi quiz khám phá bản dạng giới, theo những nguyên tắc CỰC KỲ QUAN TRỌNG sau:
 
@@ -1577,7 +1578,7 @@ TRẢ VỀ JSON:
   ...đúng 20 câu
 ]`;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(prompt);
         let text = result.response.text().trim();
@@ -1626,7 +1627,7 @@ TRẢ VỀ JSON (KHÔNG markdown):
   ]
 }`;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: "application/json" } });
         const result = await model.generateContent(prompt);
         let text = result.response.text().trim();
@@ -1655,7 +1656,7 @@ CÂU HỎI: "${question}"
 
 Trả lời bằng tiếng Việt, thân thiện, tôn trọng, tích cực. 3-5 câu. KHÔNG JSON, chỉ văn bản.`;
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
         const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
         const result = await model.generateContent(prompt);
         res.json({ answer: result.response.text().trim() });

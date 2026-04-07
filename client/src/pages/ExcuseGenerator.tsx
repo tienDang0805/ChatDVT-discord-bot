@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Copy, Check, RotateCcw, Frown, Sparkles } from 'lucide-react';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -26,7 +27,7 @@ export default function ExcuseGenerator() {
     setData(null);
     setCopied(false);
     try {
-      const res = await fetch(`${API_BASE}/api/excuse-generator`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/excuse-generator`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ geminiApiKey: getStoredGeminiKey() }) });
       if (!res.ok) throw new Error('Server lỗi');
       const json: ExcuseData = await res.json();
       setData(json);
@@ -84,6 +85,7 @@ export default function ExcuseGenerator() {
             <p className="mt-12 text-slate-500 font-medium animate-pulse text-center">
               ⚠️ Cảnh báo: Sử dụng quá liều có thể dẫn đến thất nghiệp thật.
             </p>
+            <div className="mt-6 w-64"><GeminiKeyInput accent="amber" /></div>
             {error && <p className="text-red-400 mt-4 bg-red-500/10 px-4 py-2 rounded-lg">{error}</p>}
           </div>
         )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { CornerUpLeft, Sparkles, Star, Moon, Sun, Flame, Heart, Shield, Compass, Eye, Copy, RotateCcw, Loader2, Hash, TrendingUp, Calendar, Zap, Crown, AlertTriangle, Users, DollarSign, Activity, ChevronDown, ChevronUp, Award, SendHorizontal, MessageCircle, Bot } from 'lucide-react';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 interface LifePathDetail {
   number: number;
@@ -177,7 +178,7 @@ export const NumerologyPage = () => {
     if (!fullName.trim() || !birthDate) { setError('Vui lòng nhập đầy đủ!'); return; }
     setError(''); setIsLoading(true); setResult(null); setLoadingStep(0);
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/numerology`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fullName: fullName.trim(), birthDate }) });
+      const r = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/numerology`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fullName: fullName.trim(), birthDate, geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error); setResult(d.result); setTab('overview');
     } catch (e: any) { setError(e.message || 'Lỗi!'); } finally { setIsLoading(false); }
   };
@@ -188,7 +189,7 @@ export const NumerologyPage = () => {
     const q = chatInput.trim(); setChatInput('');
     setChatMsgs(p => [...p, {role:'user',text:q}]); setChatLoading(true);
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL||''}/api/numerology/chat`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fullName, birthDate, question:q, numerologyResult:result, chatHistory:chatMsgs.slice(-10) }) });
+      const r = await fetch(`${import.meta.env.VITE_API_URL||''}/api/numerology/chat`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fullName, birthDate, question:q, numerologyResult:result, chatHistory:chatMsgs.slice(-10), geminiApiKey: getStoredGeminiKey() }) });
       const d = await r.json(); if (!r.ok) throw new Error(d.error);
       setChatMsgs(p => [...p, {role:'ai',text:d.answer}]);
     } catch (e: any) { setChatMsgs(p => [...p, {role:'ai',text:'⚠️ '+(e.message||'Lỗi')}]); }
@@ -258,6 +259,7 @@ export const NumerologyPage = () => {
                     <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className="w-full bg-[#111827] border border-slate-700 focus:border-purple-500 text-white rounded-xl px-4 py-3.5 text-base outline-none transition [color-scheme:dark]" disabled={isLoading} />
                   </div>
                   {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-sm">⚠️ {error}</div>}
+                  <GeminiKeyInput accent="purple" />
                   <button onClick={submit} disabled={isLoading} className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-600 text-white font-bold py-4 rounded-xl hover:brightness-110 transition disabled:opacity-50 flex items-center justify-center gap-2.5 text-base shadow-lg shadow-purple-500/20 active:scale-[0.98]">
                     {isLoading ? <><Loader2 size={20} className="animate-spin" /><span className="animate-pulse">{steps[loadingStep]}</span></> : <><Sparkles size={20} /> PHÂN TÍCH THẦN SỐ HỌC</>}
                   </button>

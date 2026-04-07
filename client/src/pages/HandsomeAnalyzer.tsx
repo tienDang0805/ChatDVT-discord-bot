@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Scan, AlertTriangle, Share2, CornerUpLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 interface FeatureRating {
   part: string;
@@ -266,7 +267,7 @@ export const HandsomeAnalyzer = () => {
       const response = await fetch(`${apiUrl}/api/handsome-analyzer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: image })
+        body: JSON.stringify({ imageBase64: image, geminiApiKey: getStoredGeminiKey() })
       });
       
       const data = await response.json();
@@ -365,6 +366,7 @@ export const HandsomeAnalyzer = () => {
                 isScanning={isScanning} 
                 hasResult={false} 
               />
+              {!isScanning && <div className="mt-4"><GeminiKeyInput accent="amber" /></div>}
               
               {image && isScanning && (
                 <div className="animate-fade-in">
