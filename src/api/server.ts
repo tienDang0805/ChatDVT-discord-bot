@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1535,6 +1535,113 @@ QUY TẮC TRẢ LỜI:
     } catch (err: any) {
         console.error('Numerology chat error:', err.message);
         res.status(500).json({ error: 'AI đang bận thiền, thử lại nhé!' });
+    }
+});
+
+// --- Gender Quiz API ---
+app.post('/api/gender-quiz/generate', async (_req, res) => {
+    try {
+        const prompt = `Bạn là chuyên gia tâm lý về giới tính và bản dạng giới. Hãy tạo ĐÚNG 20 câu hỏi trắc nghiệm thú vị, sáng tạo, đa chiều để giúp khám phá bản dạng giới của một người.
+
+QUY TẮC:
+- Câu hỏi phải đa dạng: tâm lý, hành vi, sở thích, phản ứng xã hội, cảm xúc, trải nghiệm cá nhân
+- KHÔNG hỏi trực tiếp "Bạn là giới tính gì?" - phải gián tiếp, sáng tạo
+- Mỗi câu có ĐÚNG 4 lựa chọn, mỗi lựa chọn đại diện cho xu hướng giới tính khác nhau nhưng KHÔNG ghi rõ
+- Câu hỏi phải thú vị, đôi khi hài hước, không nhạy cảm quá mức
+- Phủ sóng phổ rộng: Nam, Nữ, Non-binary, Genderfluid, Agender, Bigender, Transgender...
+- Viết bằng tiếng Việt, ngôn ngữ thân thiện
+
+TRẢ VỀ JSON ĐÚNG ĐỊNH DẠNG (KHÔNG markdown):
+[
+  { "id": 1, "question": "<câu hỏi>", "options": [{ "label": "<lựa chọn>", "value": "a" }, { "label": "<lựa chọn>", "value": "b" }, { "label": "<lựa chọn>", "value": "c" }, { "label": "<lựa chọn>", "value": "d" }] },
+  ...20 câu
+]`;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: "application/json" } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        const questions = JSON.parse(text);
+        res.json({ questions });
+    } catch (err: any) {
+        console.error('Gender quiz generate error:', err.message);
+        res.status(500).json({ error: 'AI đang bận suy ngẫm về giới tính, thử lại nhé!' });
+    }
+});
+
+app.post('/api/gender-quiz/analyze', async (req, res) => {
+    try {
+        const { answers } = req.body;
+        if (!answers || !Array.isArray(answers) || answers.length === 0) return res.status(400).json({ error: 'Thiếu câu trả lời!' });
+
+        const answersText = answers.map((a: any, i: number) => `Câu ${i+1}: ${a.question}\nTrả lời: ${a.answer}`).join('\n\n');
+
+        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ GIỚI TÍNH hàng đầu. Dựa trên 20 câu trả lời quiz dưới đây, hãy phân tích và xác định bản dạng giới của người này.
+
+CÂU TRẢ LỜI:
+${answersText}
+
+PHÂN TÍCH YÊU CẦU:
+- Xem xét tổng thể pattern, không dựa vào từng câu riêng lẻ
+- Bao gồm cả phổ LGBTQ+: Nam (Cisgender Male), Nữ (Cisgender Female), Non-binary, Genderfluid, Genderqueer, Agender, Bigender, Transgender (MtF/FtM), Two-Spirit, Demigender, Pangender, v.v.
+- Đưa ra phân tích khách quan, tôn trọng, không phán xét
+- Kết quả phải TRE TRUNG, THÚ VỊ, TÍCH CỰC
+
+TRẢ VỀ JSON (KHÔNG markdown):
+{
+  "genderIdentity": "<Tên bản dạng giới bằng tiếng Việt + tiếng Anh, VD: Non-binary (Phi nhị phân)>",
+  "genderFlag": "<1 emoji đại diện, VD: 🏳️‍🌈, 🏳️‍⚧️, ♂️, ♀️, ⚧️, 🌈>",
+  "confidence": <số 0-100>,
+  "summary": "<Tóm tắt 2-3 câu về kết quả, thú vị và tích cực>",
+  "detailedAnalysis": "<Phân tích chi tiết 5-7 câu dựa trên các câu trả lời, giải thích tại sao đưa ra kết luận này>",
+  "traits": ["<5-6 đặc điểm nổi bật của người này dựa trên câu trả lời>"],
+  "advice": "<Lời khuyên 3-4 câu về việc khám phá bản thân, tích cực và empowering>",
+  "funFact": "<1 fun fact thú vị liên quan đến bản dạng giới này>",
+  "spectrum": [
+    { "label": "Nam tính (Masculine)", "value": <0-100> },
+    { "label": "Nữ tính (Feminine)", "value": <0-100> },
+    { "label": "Phi nhị phân (Non-binary)", "value": <0-100> },
+    { "label": "Fluid / Linh hoạt", "value": <0-100> }
+  ]
+}`;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: "application/json" } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json({ result: JSON.parse(text) });
+    } catch (err: any) {
+        console.error('Gender quiz analyze error:', err.message);
+        res.status(500).json({ error: 'AI gặp khó khăn khi phân tích, thử lại nhé!' });
+    }
+});
+
+app.post('/api/gender-quiz/chat', async (req, res) => {
+    try {
+        const { question, quizResult, chatHistory } = req.body;
+        if (!question || !quizResult) return res.status(400).json({ error: 'Thiếu thông tin!' });
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'AI'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ GIỚI TÍNH thân thiện. Người dùng vừa làm Gender Quiz và nhận kết quả:
+- Bản dạng giới: ${quizResult.genderIdentity}
+- Confidence: ${quizResult.confidence}%
+- Tóm tắt: ${quizResult.summary}
+- Phân tích: ${quizResult.detailedAnalysis}
+
+${historyText ? `LỊCH SỬ CHAT:\n${historyText}\n` : ''}
+CÂU HỎI: "${question}"
+
+Trả lời bằng tiếng Việt, thân thiện, tôn trọng, tích cực. 3-5 câu. KHÔNG JSON, chỉ văn bản.`;
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        res.json({ answer: result.response.text().trim() });
+    } catch (err: any) {
+        console.error('Gender quiz chat error:', err.message);
+        res.status(500).json({ error: 'AI bận, thử lại nhé!' });
     }
 });
 

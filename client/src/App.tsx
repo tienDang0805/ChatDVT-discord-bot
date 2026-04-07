@@ -25,6 +25,7 @@ import { CVReviewer } from './pages/CVReviewer';
 import MusicStation from './pages/MusicStation';
 import { PixelAgents } from './pages/PixelAgents';
 import { NumerologyPage } from './pages/NumerologyPage';
+import { GenderQuizPage } from './pages/GenderQuizPage';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 import { Toaster } from 'react-hot-toast';
@@ -60,6 +61,7 @@ function App() {
           <Route path="/music" element={<MusicStation />} />
           <Route path="/pixel-agents" element={<PixelAgents />} />
           <Route path="/numerology" element={<NumerologyPage />} />
+          <Route path="/gender-quiz" element={<GenderQuizPage />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />
