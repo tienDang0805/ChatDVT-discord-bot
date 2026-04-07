@@ -1541,20 +1541,40 @@ QUY TẮC TRẢ LỜI:
 // --- Gender Quiz API ---
 app.post('/api/gender-quiz/generate', async (_req, res) => {
     try {
-        const prompt = `Bạn là chuyên gia tâm lý về giới tính và bản dạng giới. Hãy tạo ĐÚNG 20 câu hỏi trắc nghiệm thú vị, sáng tạo, đa chiều để giúp khám phá bản dạng giới của một người.
+        const prompt = `Bạn là nhà tâm lý học giới tính hàng đầu thế giới. Tạo ĐÚNG 20 câu hỏi quiz khám phá bản dạng giới, theo những nguyên tắc CỰC KỲ QUAN TRỌNG sau:
 
-QUY TẮC:
-- Câu hỏi phải đa dạng: tâm lý, hành vi, sở thích, phản ứng xã hội, cảm xúc, trải nghiệm cá nhân
-- KHÔNG hỏi trực tiếp "Bạn là giới tính gì?" - phải gián tiếp, sáng tạo
-- Mỗi câu có ĐÚNG 4 lựa chọn, mỗi lựa chọn đại diện cho xu hướng giới tính khác nhau nhưng KHÔNG ghi rõ
-- Câu hỏi phải thú vị, đôi khi hài hước, không nhạy cảm quá mức
-- Phủ sóng phổ rộng: Nam, Nữ, Non-binary, Genderfluid, Agender, Bigender, Transgender...
-- Viết bằng tiếng Việt, ngôn ngữ thân thiện
+=== NGUYÊN TẮC TỐI THƯỢNG ===
+1. CÂU HỎI PHẢI DẠNG TÌNH HUỐNG / KỊch bản cụ thể, KHÔNG BAO GIỜ hỏi trực tiếp về giới tính hay sở thích giới.
+   VÍ DỤ TỐT: "Bạn đang đi dạo lúc 2h sáng và nghe thấy tiếng khóc trong hẻm tối. Bạn sẽ..."
+   VÍ DỤ XẤU: "Bạn thích mặc đồ nam hay nữ?"
 
-TRẢ VỀ JSON ĐÚNG ĐỊNH DẠNG (KHÔNG markdown):
+2. 4 ĐÁP ÁN PHẢI MƠ HỒ, KHÓ ĐOÁN — người chơi KHÔNG THỂ nhận ra đáp án nào ứng với giới tính nào.
+   - TUYỆT ĐỐI KHÔNG theo pattern cố định (VD: A luôn = Nam, B luôn = Nữ)
+   - Mỗi câu phải XÁO TRỘN THỨ TỰ ngẫu nhiên
+   - Đáp án phải TỰ NHIÊN, đọc như phản ứng thật của con người, KHÔNG gượng ép
+
+3. TRÁNH STEREOTYPE:
+   - KHÔNG dùng: "mạnh mẽ = nam", "nhẹ nhàng = nữ", "thích hoa = nữ", "thích xe = nam"
+   - Đáp án phải tinh tế, nhiều lớp nghĩa, một người bất kỳ đều có thể chọn bất kỳ đáp án nào
+   - Dùng tình huống đời thường: phản ứng xã hội, giấc mơ, xử lý xung đột, mối quan hệ, cảm xúc phức tạp
+
+4. ĐA DẠNG CHỦ ĐỀ (chia đều 20 câu):
+   - 4 câu: Phản ứng trong tình huống xã hội bất ngờ
+   - 3 câu: Giấc mơ / tưởng tượng / thế giới song song
+   - 3 câu: Cách xử lý cảm xúc & xung đột
+   - 3 câu: Mối quan hệ & kết nối con người
+   - 3 câu: Tình huống giả định / "Nếu bạn là..."
+   - 2 câu: Thẩm mỹ, nghệ thuật, biểu đạt bản thân
+   - 2 câu: Triết học nhẹ / câu hỏi sâu về bản ngã
+
+5. MỖI ĐÁP ÁN nội bộ AI bạn biết nó map tới xu hướng nào, nhưng TUYỆT ĐỐI KHÔNG viết ra. Chỉ cần 4 đáp án nghe đều hợp lý và thú vị.
+
+6. Viết tiếng Việt, giọng trẻ trung, thân thiện, đôi khi hài hước.
+
+TRẢ VỀ JSON:
 [
-  { "id": 1, "question": "<câu hỏi>", "options": [{ "label": "<lựa chọn>", "value": "a" }, { "label": "<lựa chọn>", "value": "b" }, { "label": "<lựa chọn>", "value": "c" }, { "label": "<lựa chọn>", "value": "d" }] },
-  ...20 câu
+  { "id": 1, "question": "...", "options": [{ "label": "...", "value": "a" }, { "label": "...", "value": "b" }, { "label": "...", "value": "c" }, { "label": "...", "value": "d" }] },
+  ...đúng 20 câu
 ]`;
 
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
