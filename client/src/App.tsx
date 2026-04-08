@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { WeatherFAB } from './pages/WeatherWidget';
 import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Logs } from './pages/Logs';
@@ -88,6 +89,7 @@ function App() {
        } />
         </Routes>
       </div>
+      <WeatherFAB />
     </MusicPlayerProvider>
   );
 }

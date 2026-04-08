@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
-import { WeatherWidget } from './WeatherWidget';
 
 export const PublicPortal = () => {
   const { theme, toggleTheme } = useTheme();
@@ -183,7 +182,7 @@ export const PublicPortal = () => {
   }, []);
 
   useEffect(() => {
-    document.title = "devtiendang.blog | Portal";
+    document.title = "Trang Chủ | ChatDVT Portal";
     
     let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (!link) {
@@ -212,7 +211,7 @@ export const PublicPortal = () => {
 
           <div className="flex-1 space-y-6">
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight">
-              devtiendang.<span className="text-orange-500">blog</span>
+              Trang <span className="text-orange-500">Chủ</span>
             </h1>
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
@@ -260,11 +259,6 @@ export const PublicPortal = () => {
              </div>
              <p className="mt-4 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
           </div>
-        </div>
-
-        {/* Weather Widget */}
-        <div className="mb-16">
-          <WeatherWidget />
         </div>
 
         {/* Goal Section */}

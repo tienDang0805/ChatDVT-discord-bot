@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Cloud, Droplets, Wind, Thermometer, Eye, Sun, Sunrise, Sunset, MapPin, RefreshCw, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, CloudFog, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Cloud, Droplets, Wind, Thermometer, Eye, Sun, Sunrise, Sunset,
+  MapPin, RefreshCw, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, CloudFog,
+  X, ChevronRight, Calendar, Compass, Clock
+} from 'lucide-react';
+
+// @ts-ignore
+import { Solar } from 'lunar-javascript';
 
 const CITY_NAME = 'TP. Hồ Chí Minh';
 
@@ -26,9 +34,7 @@ interface ForecastDay {
   temp_max: number;
   icon: string;
   description: string;
-  main: string;
   humidity: number;
-  wind: number;
   pop: number;
 }
 
@@ -40,369 +46,487 @@ interface HourlyForecast {
   pop: number;
 }
 
-const getWeatherIcon = (main: string, size: number = 24) => {
-  const iconProps = { size, strokeWidth: 1.5 };
+const getWeatherIconEl = (main: string, size: number = 24) => {
+  const p = { size, strokeWidth: 1.5 };
   switch (main.toLowerCase()) {
-    case 'thunderstorm': return <CloudLightning {...iconProps} className="text-yellow-500 dark:text-yellow-400" />;
-    case 'drizzle': return <CloudDrizzle {...iconProps} className="text-blue-400 dark:text-blue-300" />;
-    case 'rain': return <CloudRain {...iconProps} className="text-blue-500 dark:text-blue-400" />;
-    case 'snow': return <CloudSnow {...iconProps} className="text-slate-400 dark:text-white" />;
-    case 'mist':
-    case 'fog':
-    case 'haze':
-      return <CloudFog {...iconProps} className="text-slate-400" />;
-    case 'clear': return <Sun {...iconProps} className="text-amber-500 dark:text-yellow-400" />;
-    case 'clouds': return <Cloud {...iconProps} className="text-slate-400 dark:text-slate-300" />;
-    default: return <Cloud {...iconProps} className="text-slate-400" />;
+    case 'thunderstorm': return <CloudLightning {...p} className="text-yellow-500 dark:text-yellow-400" />;
+    case 'drizzle': return <CloudDrizzle {...p} className="text-blue-400 dark:text-blue-300" />;
+    case 'rain': return <CloudRain {...p} className="text-blue-500 dark:text-blue-400" />;
+    case 'snow': return <CloudSnow {...p} className="text-slate-400 dark:text-white" />;
+    case 'mist': case 'fog': case 'haze': return <CloudFog {...p} className="text-slate-400" />;
+    case 'clear': return <Sun {...p} className="text-amber-500 dark:text-yellow-400" />;
+    case 'clouds': return <Cloud {...p} className="text-slate-400 dark:text-slate-300" />;
+    default: return <Cloud {...p} className="text-slate-400" />;
   }
 };
 
-const getWeatherGradient = (main: string) => {
+const getWeatherEmoji = (main: string) => {
   switch (main.toLowerCase()) {
-    case 'clear': return 'from-amber-100 via-orange-50 to-yellow-50 dark:from-amber-500/20 dark:via-orange-500/10 dark:to-yellow-500/5';
-    case 'clouds': return 'from-slate-100 via-slate-50 to-slate-100 dark:from-slate-500/20 dark:via-slate-600/10 dark:to-slate-700/5';
-    case 'rain':
-    case 'drizzle': return 'from-blue-100 via-blue-50 to-cyan-50 dark:from-blue-500/20 dark:via-blue-600/10 dark:to-cyan-500/5';
-    case 'thunderstorm': return 'from-purple-100 via-indigo-50 to-slate-100 dark:from-purple-500/20 dark:via-indigo-600/10 dark:to-slate-700/5';
-    default: return 'from-cyan-100 via-blue-50 to-indigo-50 dark:from-cyan-500/20 dark:via-blue-500/10 dark:to-indigo-500/5';
+    case 'thunderstorm': return '⛈️';
+    case 'drizzle': return '🌦️';
+    case 'rain': return '🌧️';
+    case 'snow': return '❄️';
+    case 'mist': case 'fog': case 'haze': return '🌫️';
+    case 'clear': return '☀️';
+    case 'clouds': return '☁️';
+    default: return '🌤️';
   }
 };
 
-const getWindDirection = (deg: number) => {
-  const dirs = ['Bắc', 'ĐB', 'Đông', 'ĐN', 'Nam', 'TN', 'Tây', 'TB'];
-  return dirs[Math.round(deg / 45) % 8];
+const getWindDir = (deg: number) => {
+  const d = ['Bắc', 'ĐB', 'Đông', 'ĐN', 'Nam', 'TN', 'Tây', 'TB'];
+  return d[Math.round(deg / 45) % 8];
 };
 
-const formatTime = (timestamp: number) => {
-  return new Date(timestamp * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-};
+const fmtTime = (ts: number) => new Date(ts * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-const getLunarDate = (date: Date) => {
-  const canArr = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
-  const chiArr = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
-  const y = date.getFullYear();
-  const canIndex = (y + 6) % 10;
-  const chiIndex = (y + 8) % 12;
-  return { yearName: `${canArr[canIndex]} ${chiArr[chiIndex]}` };
-};
+const getDayOfWeek = (d: Date) => ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][d.getDay()];
+const getShortDay = (s: string) => ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(s).getDay()];
 
-const getDayOfWeek = (date: Date) => {
-  const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
-  return days[date.getDay()];
-};
+function getLunarInfo() {
+  const solar = Solar.fromDate(new Date());
+  const lunar = solar.getLunar();
 
-const getShortDay = (dateStr: string) => {
-  const d = new Date(dateStr);
-  const days = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
-  return days[d.getDay()];
-};
+  const lunarDay = lunar.getDayInChinese();
+  const lunarMonth = lunar.getMonthInChinese();
+  const lunarYear = lunar.getYearInChinese();
 
-export const WeatherWidget = () => {
+  const yearGZ = lunar.getYearInGanZhi();
+  const monthGZ = lunar.getMonthInGanZhi();
+  const dayGZ = lunar.getDayInGanZhi();
+
+  const yearShengXiao = lunar.getYearShengXiao();
+  const monthShengXiao = lunar.getMonthShengXiao();
+  const dayShengXiao = lunar.getDayShengXiao();
+
+  const jieQi = lunar.getJieQi() || lunar.getPrevJieQi()?.getName() || '';
+
+  const naYin = lunar.getDayNaYin();
+
+  const xiShen = lunar.getDayXiShen();
+  const caiShen = lunar.getDayCaiShen();
+  const fuShen = lunar.getDayFuShen();
+
+  const chong = lunar.getDayChongDesc();
+  const sha = lunar.getDaySha();
+
+  const yi = lunar.getDayYi();
+  const ji = lunar.getDayJi();
+
+  const times = lunar.getTimes();
+  const goodHours: string[] = [];
+  const badHours: string[] = [];
+  
+  const chiNames = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
+  const timeRanges = ['23-01', '01-03', '03-05', '05-07', '07-09', '09-11', '11-13', '13-15', '15-17', '17-19', '19-21', '21-23'];
+
+  times.forEach((t: any, i: number) => {
+    const isGood = t.isLucky();
+    const entry = `${chiNames[i]} (${timeRanges[i]})`;
+    if (isGood) goodHours.push(entry);
+    else badHours.push(entry);
+  });
+
+  return {
+    lunarDate: `${lunarDay} tháng ${lunarMonth} năm ${lunarYear}`,
+    yearGZ: `${yearGZ} (${yearShengXiao})`,
+    monthGZ: `${monthGZ} (${monthShengXiao})`,
+    dayGZ: `${dayGZ} (${dayShengXiao})`,
+    jieQi,
+    naYin,
+    xiShen,
+    caiShen,
+    fuShen,
+    chong,
+    sha,
+    yi,
+    ji,
+    goodHours,
+    badHours,
+  };
+}
+
+type TabId = 'weather' | 'lunar' | 'fengshui';
+
+export const WeatherFAB = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>('weather');
   const [current, setCurrent] = useState<CurrentWeather | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   const [hourly, setHourly] = useState<HourlyForecast[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [now, setNow] = useState(new Date());
+  const [lunarData, setLunarData] = useState<ReturnType<typeof getLunarInfo> | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    try { setLunarData(getLunarInfo()); } catch(e) { console.error('Lunar error:', e); }
+    const t = setInterval(() => {
+      try { setLunarData(getLunarInfo()); } catch(e) {}
+    }, 60000);
+    return () => clearInterval(t);
   }, []);
 
   const fetchWeather = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      const [currentRes, forecastRes] = await Promise.all([
-        fetch(`/api/weather/current`),
-        fetch(`/api/weather/forecast`)
+      const [cRes, fRes] = await Promise.all([
+        fetch('/api/weather/current'), fetch('/api/weather/forecast')
       ]);
-
-      if (!currentRes.ok || !forecastRes.ok) throw new Error('Không thể kết nối server thời tiết');
-
-      const currentData = await currentRes.json();
-      const forecastData = await forecastRes.json();
+      if (!cRes.ok || !fRes.ok) return;
+      const cData = await cRes.json();
+      const fData = await fRes.json();
 
       setCurrent({
-        temp: Math.round(currentData.main.temp),
-        feels_like: Math.round(currentData.main.feels_like),
-        humidity: currentData.main.humidity,
-        pressure: currentData.main.pressure,
-        wind_speed: currentData.wind.speed,
-        wind_deg: currentData.wind.deg || 0,
-        visibility: currentData.visibility / 1000,
-        clouds: currentData.clouds.all,
-        description: currentData.weather[0].description,
-        icon: currentData.weather[0].icon,
-        main: currentData.weather[0].main,
-        sunrise: currentData.sys.sunrise,
-        sunset: currentData.sys.sunset,
+        temp: Math.round(cData.main.temp), feels_like: Math.round(cData.main.feels_like),
+        humidity: cData.main.humidity, pressure: cData.main.pressure,
+        wind_speed: cData.wind.speed, wind_deg: cData.wind.deg || 0,
+        visibility: cData.visibility / 1000, clouds: cData.clouds.all,
+        description: cData.weather[0].description, icon: cData.weather[0].icon,
+        main: cData.weather[0].main,
+        sunrise: cData.sys.sunrise, sunset: cData.sys.sunset,
       });
 
-      const hourlyData: HourlyForecast[] = forecastData.list.slice(0, 8).map((item: any) => ({
-        time: new Date(item.dt * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        temp: Math.round(item.main.temp),
-        icon: item.weather[0].icon,
-        description: item.weather[0].description,
-        pop: Math.round(item.pop * 100),
-      }));
-      setHourly(hourlyData);
+      setHourly(fData.list.slice(0, 8).map((it: any) => ({
+        time: new Date(it.dt * 1000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+        temp: Math.round(it.main.temp), icon: it.weather[0].icon,
+        description: it.weather[0].description, pop: Math.round(it.pop * 100),
+      })));
 
-      const dailyMap: Record<string, any> = {};
-      forecastData.list.forEach((item: any) => {
-        const date = item.dt_txt.split(' ')[0];
-        if (!dailyMap[date]) {
-          dailyMap[date] = {
-            date,
-            dayName: getShortDay(date),
-            temp_min: item.main.temp_min,
-            temp_max: item.main.temp_max,
-            icon: item.weather[0].icon,
-            description: item.weather[0].description,
-            main: item.weather[0].main,
-            humidity: item.main.humidity,
-            wind: item.wind.speed,
-            pop: item.pop,
-          };
-        } else {
-          dailyMap[date].temp_min = Math.min(dailyMap[date].temp_min, item.main.temp_min);
-          dailyMap[date].temp_max = Math.max(dailyMap[date].temp_max, item.main.temp_max);
-          dailyMap[date].pop = Math.max(dailyMap[date].pop, item.pop);
-        }
+      const dm: Record<string, any> = {};
+      fData.list.forEach((it: any) => {
+        const d = it.dt_txt.split(' ')[0];
+        if (!dm[d]) dm[d] = { date: d, dayName: getShortDay(d), temp_min: it.main.temp_min, temp_max: it.main.temp_max, icon: it.weather[0].icon, description: it.weather[0].description, humidity: it.main.humidity, pop: it.pop };
+        else { dm[d].temp_min = Math.min(dm[d].temp_min, it.main.temp_min); dm[d].temp_max = Math.max(dm[d].temp_max, it.main.temp_max); dm[d].pop = Math.max(dm[d].pop, it.pop); }
       });
-
       const today = new Date().toISOString().split('T')[0];
-      setForecast(Object.values(dailyMap).filter((d: any) => d.date !== today).slice(0, 5));
-      setLastUpdated(new Date());
-    } catch (err: any) {
-      setError(err.message || 'Đã xảy ra lỗi');
-    } finally {
-      setLoading(false);
-    }
+      setForecast(Object.values(dm).filter((x: any) => x.date !== today).slice(0, 5));
+    } catch(e) { console.error('Weather fetch error:', e); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchWeather();
-    const interval = setInterval(fetchWeather, 10 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchWeather]);
+  useEffect(() => { fetchWeather(); const t = setInterval(fetchWeather, 10 * 60 * 1000); return () => clearInterval(t); }, [fetchWeather]);
 
-  const lunar = getLunarDate(now);
-
-  if (error) {
-    return (
-      <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-6 text-center">
-        <p className="text-red-500 dark:text-red-400 font-medium">{error}</p>
-        <button onClick={fetchWeather} className="mt-3 text-sm text-red-400 dark:text-red-300 hover:text-red-600 dark:hover:text-white transition-colors flex items-center gap-1 mx-auto">
-          <RefreshCw size={14} /> Thử lại
-        </button>
-      </div>
-    );
-  }
+  const tabs: { id: TabId; label: string; icon: any; emoji: string }[] = [
+    { id: 'weather', label: 'Thời Tiết', icon: Cloud, emoji: '☁️' },
+    { id: 'lunar', label: 'Âm Lịch', icon: Calendar, emoji: '📅' },
+    { id: 'fengshui', label: 'Phong Thuỷ', icon: Compass, emoji: '🧧' },
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* Date & Time Header */}
-      <div className="bg-gradient-to-br from-white to-slate-50 dark:from-[#131923] dark:to-[#0d1117] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-sm">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-orange-500/10 to-transparent rounded-bl-full" />
+    <>
+      {isOpen && (
+        <div className="fixed inset-0 z-[998] bg-black/20 dark:bg-black/40 backdrop-blur-[2px]" onClick={() => setIsOpen(false)} />
+      )}
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <p className="text-slate-400 dark:text-slate-500 text-sm font-medium mb-1">{getDayOfWeek(now)}</p>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              {now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-            </h2>
-            <p className="text-orange-500 dark:text-orange-400/80 text-sm mt-1 font-medium">
-              Năm {lunar.yearName}
-            </p>
-          </div>
-
-          <div className="text-right">
-            <p className="text-5xl md:text-6xl font-black text-slate-900 dark:text-white font-mono tabular-nums tracking-tighter">
-              {now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </p>
-            <div className="flex items-center gap-1.5 justify-end mt-1">
-              <MapPin size={12} className="text-orange-500" />
-              <span className="text-slate-400 text-xs font-medium">{CITY_NAME}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {loading && !current ? (
-        <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center shadow-sm">
-          <RefreshCw size={24} className="text-orange-500 animate-spin mx-auto mb-3" />
-          <p className="text-slate-400 text-sm">Đang tải dữ liệu thời tiết...</p>
-        </div>
-      ) : current ? (
-        <>
-          {/* Current Weather Hero */}
-          <div className={`bg-gradient-to-br ${getWeatherGradient(current.main)} border border-slate-200 dark:border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-sm`}>
-            <div className="absolute top-4 right-4 opacity-5 dark:opacity-10">
-              {getWeatherIcon(current.main, 120)}
-            </div>
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-4">
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.9 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed bottom-20 left-4 z-[999] w-[calc(100vw-2rem)] sm:w-[420px] max-h-[75vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/95 dark:bg-[#0f1419]/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/60 flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔮</span>
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    {getWeatherIcon(current.main, 32)}
-                    <span className="text-slate-600 dark:text-slate-300 capitalize text-lg font-medium">{current.description}</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-7xl md:text-8xl font-black text-slate-900 dark:text-white">{current.temp}°</span>
-                    <span className="text-slate-400 text-lg">C</span>
-                  </div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-                    Cảm giác như <span className="text-slate-700 dark:text-slate-200 font-semibold">{current.feels_like}°C</span>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{getDayOfWeek(now)}</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">
+                    {now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                   </p>
                 </div>
-
-                <button
-                  onClick={fetchWeather}
-                  disabled={loading}
-                  className="p-2 rounded-xl bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-all border border-slate-200 dark:border-white/5"
-                  title="Cập nhật lại"
-                >
-                  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-slate-400">
+                  <MapPin size={10} />
+                  <span className="text-[10px] font-medium">{CITY_NAME}</span>
+                </div>
+                <button onClick={() => setIsOpen(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                  <X size={16} />
                 </button>
               </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
-                <div className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 dark:border-white/5">
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                    <Droplets size={12} /> Độ ẩm
-                  </div>
-                  <p className="text-slate-800 dark:text-white font-bold text-lg">{current.humidity}%</p>
-                </div>
-                <div className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 dark:border-white/5">
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                    <Wind size={12} /> Gió
-                  </div>
-                  <p className="text-slate-800 dark:text-white font-bold text-lg">{current.wind_speed} m/s</p>
-                  <p className="text-slate-400 dark:text-slate-500 text-xs">{getWindDirection(current.wind_deg)}</p>
-                </div>
-                <div className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 dark:border-white/5">
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                    <Eye size={12} /> Tầm nhìn
-                  </div>
-                  <p className="text-slate-800 dark:text-white font-bold text-lg">{current.visibility} km</p>
-                </div>
-                <div className="bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-slate-200/50 dark:border-white/5">
-                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-xs mb-1">
-                    <Thermometer size={12} /> Áp suất
-                  </div>
-                  <p className="text-slate-800 dark:text-white font-bold text-lg">{current.pressure}</p>
-                  <p className="text-slate-400 dark:text-slate-500 text-xs">hPa</p>
-                </div>
-              </div>
-
-              {/* Sunrise / Sunset */}
-              <div className="flex flex-wrap items-center gap-6 mt-4 pt-4 border-t border-slate-200 dark:border-white/5">
-                <div className="flex items-center gap-2">
-                  <Sunrise size={16} className="text-amber-500 dark:text-amber-400" />
-                  <span className="text-slate-600 dark:text-slate-300 text-sm">{formatTime(current.sunrise)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Sunset size={16} className="text-orange-500" />
-                  <span className="text-slate-600 dark:text-slate-300 text-sm">{formatTime(current.sunset)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Cloud size={16} className="text-slate-400" />
-                  <span className="text-slate-600 dark:text-slate-300 text-sm">Mây: {current.clouds}%</span>
-                </div>
-                {lastUpdated && (
-                  <span className="text-slate-400 dark:text-slate-600 text-xs ml-auto hidden md:block">
-                    Cập nhật: {lastUpdated.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
-              </div>
             </div>
-          </div>
 
-          {/* Hourly Forecast */}
-          {hourly.length > 0 && (
-            <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 overflow-hidden shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-slate-600 dark:text-slate-300 font-bold text-sm uppercase tracking-wider">Dự báo theo giờ</h3>
-                <ChevronRight size={14} className="text-slate-300 dark:text-slate-600" />
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
-                {hourly.map((h, i) => (
-                  <div key={i} className="flex flex-col items-center gap-2 min-w-[72px] p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors shrink-0">
-                    <span className="text-slate-500 dark:text-slate-400 text-xs font-medium">{h.time}</span>
-                    <img
-                      src={`https://openweathermap.org/img/wn/${h.icon}.png`}
-                      alt={h.description}
-                      className="w-8 h-8"
-                    />
-                    <span className="text-slate-800 dark:text-white font-bold text-sm">{h.temp}°</span>
-                    {h.pop > 0 && (
-                      <span className="text-blue-500 dark:text-blue-400 text-xs flex items-center gap-0.5">
-                        <Droplets size={10} /> {h.pop}%
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Digital Clock */}
+            <div className="px-4 pb-3 shrink-0">
+              <p className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums tracking-tighter">
+                {now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
             </div>
-          )}
 
-          {/* 5-Day Forecast */}
-          {forecast.length > 0 && (
-            <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-slate-600 dark:text-slate-300 font-bold text-sm uppercase tracking-wider mb-4">Dự báo các ngày tới</h3>
-              <div className="space-y-2">
-                {forecast.map((day, i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors group">
-                    <span className="text-slate-500 dark:text-slate-400 font-bold text-sm w-8 shrink-0">{day.dayName}</span>
-                    <span className="text-slate-400 dark:text-slate-500 text-xs w-20 shrink-0">
-                      {new Date(day.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
-                    </span>
-
-                    <div className="flex items-center gap-2 w-24 shrink-0">
-                      <img
-                        src={`https://openweathermap.org/img/wn/${day.icon}.png`}
-                        alt={day.description}
-                        className="w-8 h-8"
-                      />
-                      <span className="text-slate-500 dark:text-slate-400 text-xs capitalize truncate hidden md:block">{day.description}</span>
-                    </div>
-
-                    <div className="flex-1 flex items-center gap-2">
-                      <span className="text-blue-500 dark:text-blue-400 font-medium text-sm w-10 text-right">{Math.round(day.temp_min)}°</span>
-                      <div className="flex-1 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden relative">
-                        <div
-                          className="absolute h-full rounded-full bg-gradient-to-r from-blue-500 to-orange-500"
-                          style={{
-                            left: `${((day.temp_min - 20) / 20) * 100}%`,
-                            right: `${100 - ((day.temp_max - 20) / 20) * 100}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-orange-500 dark:text-orange-400 font-medium text-sm w-10">{Math.round(day.temp_max)}°</span>
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-3 text-slate-400 dark:text-slate-500 text-xs shrink-0">
-                      <span className="flex items-center gap-1"><Droplets size={10} /> {day.humidity}%</span>
-                      <span className="flex items-center gap-1"><Wind size={10} /> {day.wind.toFixed(1)}</span>
-                      {day.pop > 0 && (
-                        <span className="flex items-center gap-1 text-blue-500 dark:text-blue-400"><CloudRain size={10} /> {Math.round(day.pop * 100)}%</span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Tabs */}
+            <div className="flex gap-1 px-4 pb-3 shrink-0">
+              {tabs.map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === t.id
+                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25'
+                      : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
+                  }`}
+                >
+                  <span className="mr-1">{t.emoji}</span> {t.label}
+                </button>
+              ))}
             </div>
-          )}
-        </>
-      ) : null}
-    </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
+              {activeTab === 'weather' && <WeatherTab current={current} hourly={hourly} forecast={forecast} loading={loading} onRefresh={fetchWeather} />}
+              {activeTab === 'lunar' && lunarData && <LunarTab data={lunarData} />}
+              {activeTab === 'fengshui' && lunarData && <FengShuiTab data={lunarData} />}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* FAB Button */}
+      <motion.button
+        onClick={() => setIsOpen(v => !v)}
+        className="fixed bottom-6 left-4 z-[1000] flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 dark:from-orange-600 dark:to-amber-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-95 transition-all group"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {current ? (
+          <>
+            <span className="text-lg">{getWeatherEmoji(current.main)}</span>
+            <span className="font-bold text-sm">{current.temp}°C</span>
+          </>
+        ) : (
+          <>
+            <Sun size={18} className="animate-spin-slow" />
+            <span className="font-bold text-sm">...</span>
+          </>
+        )}
+        <div className="w-px h-4 bg-white/30" />
+        <Calendar size={14} />
+      </motion.button>
+    </>
   );
 };
 
-export default WeatherWidget;
+function WeatherTab({ current, hourly, forecast, loading, onRefresh }: {
+  current: CurrentWeather | null; hourly: HourlyForecast[]; forecast: ForecastDay[];
+  loading: boolean; onRefresh: () => void;
+}) {
+  if (!current) return <div className="text-center py-8 text-slate-400"><RefreshCw size={20} className="animate-spin mx-auto mb-2" /> Đang tải...</div>;
+
+  return (
+    <div className="space-y-3">
+      {/* Current */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {getWeatherIconEl(current.main, 36)}
+          <div>
+            <span className="text-4xl font-black text-slate-900 dark:text-white">{current.temp}°</span>
+            <p className="text-xs text-slate-500 dark:text-slate-400 capitalize">{current.description}</p>
+          </div>
+        </div>
+        <button onClick={onRefresh} disabled={loading} className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-colors" title="Cập nhật">
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { icon: <Thermometer size={12} />, label: 'Cảm giác', val: `${current.feels_like}°` },
+          { icon: <Droplets size={12} />, label: 'Độ ẩm', val: `${current.humidity}%` },
+          { icon: <Wind size={12} />, label: 'Gió', val: `${current.wind_speed}m/s` },
+          { icon: <Eye size={12} />, label: 'Tầm nhìn', val: `${current.visibility}km` },
+        ].map((s, i) => (
+          <div key={i} className="bg-slate-50 dark:bg-white/5 rounded-xl p-2 text-center">
+            <div className="flex justify-center text-slate-400 mb-1">{s.icon}</div>
+            <p className="text-xs font-bold text-slate-700 dark:text-white">{s.val}</p>
+            <p className="text-[10px] text-slate-400">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Sun */}
+      <div className="flex items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400">
+        <span className="flex items-center gap-1"><Sunrise size={12} className="text-amber-400" /> {fmtTime(current.sunrise)}</span>
+        <span className="flex items-center gap-1"><Sunset size={12} className="text-orange-500" /> {fmtTime(current.sunset)}</span>
+        <span className="flex items-center gap-1"><Cloud size={12} /> {current.clouds}%</span>
+      </div>
+
+      {/* Hourly */}
+      {hourly.length > 0 && (
+        <div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><Clock size={10} /> Theo giờ</p>
+          <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+            {hourly.map((h, i) => (
+              <div key={i} className="flex flex-col items-center gap-1 min-w-[52px] p-2 rounded-xl bg-slate-50 dark:bg-white/5 shrink-0 text-center">
+                <span className="text-[10px] text-slate-400 font-medium">{h.time}</span>
+                <img src={`https://openweathermap.org/img/wn/${h.icon}.png`} alt="" className="w-6 h-6" />
+                <span className="text-xs font-bold text-slate-700 dark:text-white">{h.temp}°</span>
+                {h.pop > 0 && <span className="text-[9px] text-blue-400 flex items-center gap-0.5"><Droplets size={8} />{h.pop}%</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Forecast */}
+      {forecast.length > 0 && (
+        <div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-2 flex items-center gap-1"><ChevronRight size={10} /> Các ngày tới</p>
+          <div className="space-y-1">
+            {forecast.map((d, i) => (
+              <div key={i} className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-white/5 text-xs">
+                <span className="text-slate-500 font-bold w-6">{d.dayName}</span>
+                <img src={`https://openweathermap.org/img/wn/${d.icon}.png`} alt="" className="w-6 h-6" />
+                <span className="text-blue-500 dark:text-blue-400 font-medium w-8 text-right">{Math.round(d.temp_min)}°</span>
+                <div className="flex-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-orange-400" style={{ width: `${Math.min(100, ((d.temp_max - d.temp_min) / 15) * 100)}%` }} />
+                </div>
+                <span className="text-orange-500 font-medium w-8">{Math.round(d.temp_max)}°</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LunarTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
+  return (
+    <div className="space-y-4">
+      {/* Main Lunar Date */}
+      <div className="text-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-5 border border-red-200/50 dark:border-red-800/30">
+        <p className="text-[10px] text-red-400 dark:text-red-300 font-bold uppercase tracking-widest mb-2">Âm Lịch</p>
+        <p className="text-2xl font-black text-red-700 dark:text-red-400">{data.lunarDate}</p>
+      </div>
+
+      {/* Can Chi */}
+      <div className="space-y-2">
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">🐉 Can Chi</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: 'Năm', value: data.yearGZ },
+            { label: 'Tháng', value: data.monthGZ },
+            { label: 'Ngày', value: data.dayGZ },
+          ].map((item, i) => (
+            <div key={i} className="bg-amber-50 dark:bg-amber-900/15 rounded-xl p-3 text-center border border-amber-200/50 dark:border-amber-800/30">
+              <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase mb-1">{item.label}</p>
+              <p className="text-xs font-bold text-amber-800 dark:text-amber-300">{item.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Nap Am & Tiet Khi */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-purple-50 dark:bg-purple-900/15 rounded-xl p-3 border border-purple-200/50 dark:border-purple-800/30">
+          <p className="text-[10px] text-purple-500 dark:text-purple-400 font-bold uppercase mb-1">🎵 Nạp Âm</p>
+          <p className="text-xs font-bold text-purple-700 dark:text-purple-300">{data.naYin}</p>
+        </div>
+        {data.jieQi && (
+          <div className="bg-green-50 dark:bg-green-900/15 rounded-xl p-3 border border-green-200/50 dark:border-green-800/30">
+            <p className="text-[10px] text-green-500 dark:text-green-400 font-bold uppercase mb-1">🌿 Tiết Khí</p>
+            <p className="text-xs font-bold text-green-700 dark:text-green-300">{data.jieQi}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FengShuiTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
+  return (
+    <div className="space-y-4">
+      {/* Deity Directions */}
+      <div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">🧭 Hướng Xuất Hành</p>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-yellow-50 dark:bg-yellow-900/15 rounded-xl p-3 text-center border border-yellow-200/50 dark:border-yellow-800/30">
+            <p className="text-sm mb-1">💛</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Hỷ Thần</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-white mt-1">{data.xiShen}</p>
+          </div>
+          <div className="bg-emerald-50 dark:bg-emerald-900/15 rounded-xl p-3 text-center border border-emerald-200/50 dark:border-emerald-800/30">
+            <p className="text-sm mb-1">💰</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Tài Thần</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-white mt-1">{data.caiShen}</p>
+          </div>
+          <div className="bg-blue-50 dark:bg-blue-900/15 rounded-xl p-3 text-center border border-blue-200/50 dark:border-blue-800/30">
+            <p className="text-sm mb-1">🙏</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Phúc Thần</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-white mt-1">{data.fuShen}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chong Sha */}
+      <div className="bg-red-50 dark:bg-red-900/15 rounded-xl p-3 border border-red-200/50 dark:border-red-800/30 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-red-500 dark:text-red-400 font-bold uppercase">⚔️ Xung</p>
+          <p className="text-xs font-bold text-red-700 dark:text-red-300">{data.chong}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] text-red-500 dark:text-red-400 font-bold uppercase">🔪 Sát</p>
+          <p className="text-xs font-bold text-red-700 dark:text-red-300">{data.sha}</p>
+        </div>
+      </div>
+
+      {/* Good Hours */}
+      <div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">⏰ Giờ Hoàng Đạo</p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.goodHours.map((h, i) => (
+            <span key={i} className="px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold border border-emerald-200/50 dark:border-emerald-800/30">
+              ✅ {h}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Bad Hours */}
+      <div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">⏰ Giờ Hắc Đạo</p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.badHours.map((h, i) => (
+            <span key={i} className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[11px] font-medium border border-slate-200/50 dark:border-white/5">
+              ❌ {h}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Yi (Do) */}
+      <div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">📋 Nghi (Nên Làm)</p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.yi.slice(0, 12).map((item: string, i: number) => (
+            <span key={i} className="px-2 py-1 rounded-lg bg-green-50 dark:bg-green-900/15 text-green-700 dark:text-green-400 text-[11px] font-medium border border-green-200/50 dark:border-green-800/30">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Ji (Don't) */}
+      <div>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">🚫 Kỵ (Không Nên)</p>
+        <div className="flex flex-wrap gap-1.5">
+          {data.ji.slice(0, 12).map((item: string, i: number) => (
+            <span key={i} className="px-2 py-1 rounded-lg bg-red-50 dark:bg-red-900/15 text-red-600 dark:text-red-400 text-[11px] font-medium border border-red-200/50 dark:border-red-800/30">
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default WeatherFAB;
