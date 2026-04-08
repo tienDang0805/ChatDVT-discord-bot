@@ -149,12 +149,10 @@ export const PublicPortal = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  // Filter & Search states
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility'>('all');
   const [showTopBtn, setShowTopBtn] = useState(false);
 
-  // Monitor scroll for Back-To-Top
   useEffect(() => {
     const handleScroll = () => {
       setShowTopBtn(window.scrollY > 400);
@@ -167,7 +165,6 @@ export const PublicPortal = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Lọc dữ liệu
   const filteredFeatures = features.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const term = searchTerm.toLowerCase();
@@ -181,11 +178,10 @@ export const PublicPortal = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % chibiImages.length);
-    }, 2000); // Đổi ảnh mỗi 2 giây
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  // Thay đổi tiêu đề và icon trên tab Chrome khi vào trang này
   useEffect(() => {
     document.title = "devtiendang.blog | Portal";
     
@@ -199,7 +195,7 @@ export const PublicPortal = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200 font-sans selection:bg-orange-500/30">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans selection:bg-orange-500/30 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-6 py-16">
         
         {/* Header Section */}
@@ -208,38 +204,35 @@ export const PublicPortal = () => {
           {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
-            className="absolute -top-10 left-4 lg:left-0 flex items-center justify-center w-10 h-10 rounded-full bg-[#1f2937] border border-slate-700 text-slate-300 hover:text-orange-400 hover:border-orange-500/50 shadow-lg transition-all z-10 group"
+            className="absolute -top-10 left-4 lg:left-0 flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1f2937] border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-orange-400 hover:border-orange-500/50 shadow-lg transition-all z-10 group"
             title={theme === 'dark' ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
           >
             {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
           </button>
 
           <div className="flex-1 space-y-6">
-            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight">
               devtiendang.<span className="text-orange-500">blog</span>
             </h1>
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
-              <p className="text-xl font-bold text-slate-300">
+              <p className="text-xl font-bold text-slate-600 dark:text-slate-300">
                 Make by Tien Dang form 8D with love 
               </p>
-              <p className="text-slate-400 leading-relaxed max-w-2xl">
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
                   Bot Discord Tiến Đặng Làm Cho mấy thằng Mọi 8D 
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4 pt-4">
-                <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-[#1f2937] hover:bg-[#374151] border border-orange-500/50 text-orange-400 hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all">
+                <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-orange-500/50 text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all shadow-sm">
                   <Rocket size={18} /> Tham gia Discord
               </a>
-              {/* <a href="/rankings" className="flex items-center gap-2 bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 text-slate-300 px-6 py-3 rounded-md font-bold transition-all">
-                <Trophy size={18} className="text-emerald-500" /> Bảng Xếp Hạng
-              </a> */}
-                <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-[#161b22] hover:bg-[#1f242c] border border-slate-700 rounded-md overflow-hidden transition-all group">
-                  <div className="flex items-center gap-2 px-4 py-3 text-slate-300 font-bold border-r border-slate-700">
+                <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-white dark:bg-[#161b22] hover:bg-slate-100 dark:hover:bg-[#1f242c] border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden transition-all group shadow-sm">
+                  <div className="flex items-center gap-2 px-4 py-3 text-slate-600 dark:text-slate-300 font-bold border-r border-slate-300 dark:border-slate-700">
                     <Github size={18} /> STARS
                   </div>
-                  <div className="bg-[#007acc] px-4 py-3 text-white font-bold group-hover:bg-[#005c99] transition-colors">
+                  <div className="bg-orange-500 dark:bg-[#007acc] px-4 py-3 text-white font-bold group-hover:bg-orange-600 dark:group-hover:bg-[#005c99] transition-colors">
                     100+
                   </div>
                 </a>
@@ -248,7 +241,7 @@ export const PublicPortal = () => {
 
           {/* Chibi Illustration Area */}
           <div className="lg:w-1/3 shrink-0 flex flex-col items-center">
-             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden border-2 border-slate-800 shadow-2xl">
+             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-800 shadow-2xl">
                 {chibiImages.map((src, idx) => (
                   <img 
                     key={src}
@@ -261,12 +254,11 @@ export const PublicPortal = () => {
                   />
                 ))}
                 
-                {/* Fallback box nếu user chưa upload ảnh */}
-                <div className="absolute inset-0 -z-10 bg-[#161b22] flex items-center justify-center text-slate-600 text-sm text-center p-4">
+                <div className="absolute inset-0 -z-10 bg-slate-100 dark:bg-[#161b22] flex items-center justify-center text-slate-400 dark:text-slate-600 text-sm text-center p-4">
                   (Vui lòng lưu 3 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>chibi-rain.jpg<br/>phide.jpg)
                 </div>
              </div>
-             <p className="mt-4 text-sm text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
+             <p className="mt-4 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
           </div>
         </div>
 
@@ -276,25 +268,23 @@ export const PublicPortal = () => {
         </div>
 
         {/* Goal Section */}
-        <div className="bg-[#161b22] border border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden">
+        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden shadow-sm">
            <div className="flex flex-wrap justify-between items-center mb-6">
-              <h3 className="text-orange-400 font-bold flex items-center gap-2 uppercase tracking-wider">
+              <h3 className="text-orange-500 dark:text-orange-400 font-bold flex items-center gap-2 uppercase tracking-wider">
                 <Heart size={18} className="animate-pulse" /> Mục Tiêu Tháng: Nuôi Server (Bằng cơm mặn)
               </h3>
            </div>
            
            <div className="flex items-baseline gap-2 mb-4">
               <span className="text-5xl font-black text-orange-500">0</span>
-              <span className="text-slate-500 font-medium">/ 69.000.000 VNĐ</span>
+              <span className="text-slate-400 dark:text-slate-500 font-medium">/ 69.000.000 VNĐ</span>
            </div>
 
-           {/* Progress bar */}
-           <div className="relative h-4 bg-slate-800 rounded-full overflow-hidden mt-4">
+           <div className="relative h-4 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden mt-4">
               <div className="absolute top-0 left-0 h-full w-[45%] bg-gradient-to-r from-orange-600 to-orange-400 rounded-full"></div>
-              {/* Glow dot */}
               <div className="absolute top-1/2 -translate-y-1/2 left-[45%] -ml-2 w-4 h-4 bg-white rounded-full shadow-[0_0_10px_#f97316]"></div>
            </div>
-           <div className="flex justify-between text-xs text-slate-600 mt-2 font-bold">
+           <div className="flex justify-between text-xs text-slate-400 dark:text-slate-600 mt-2 font-bold">
               <span>0 đ</span>
               <span>300.000 đ</span>
            </div>
@@ -302,13 +292,13 @@ export const PublicPortal = () => {
 
         {/* Donate / Nuôi Em Section */}
         <div className="mb-16">
-           <h3 className="text-xl font-bold flex items-center gap-2 tracking-wider text-slate-200 mb-6">
+           <h3 className="text-xl font-bold flex items-center gap-2 tracking-wider text-slate-800 dark:text-slate-200 mb-6">
              <Coffee size={24} className="text-amber-500" /> Donate Nuôi Dev
            </h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* VCB */}
-              <div className="bg-[#131923] border border-slate-800 hover:border-green-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
+              <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-green-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group shadow-sm">
                  <div 
                    className="w-24 h-40 sm:w-32 sm:h-48 shrink-0 bg-white rounded-xl p-1.5 border-2 border-green-500 relative overflow-hidden flex items-center justify-center cursor-pointer shadow-lg hover:shadow-green-500/20 transition-all"
                    onClick={() => setSelectedImage('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-vcb.jpg')}
@@ -326,13 +316,13 @@ export const PublicPortal = () => {
                  </div>
                  <div className="flex-1">
                     <h4 className="text-xl font-bold text-green-500 mb-1 flex items-center gap-2"><Wallet size={18} /> Vietcombank</h4>
-                    <p className="text-white font-mono text-xl mb-1 tracking-wider"></p>
+                    <p className="text-slate-800 dark:text-white font-mono text-xl mb-1 tracking-wider"></p>
                     <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
                  </div>
               </div>
 
               {/* MoMo */}
-              <div className="bg-[#131923] border border-slate-800 hover:border-pink-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group">
+              <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-pink-500/50 transition-colors p-6 rounded-xl flex items-center gap-6 group shadow-sm">
                  <div 
                    className="w-24 h-40 sm:w-32 sm:h-48 shrink-0 bg-white rounded-xl p-1.5 border-2 border-pink-500 relative overflow-hidden flex items-center justify-center cursor-pointer shadow-lg hover:shadow-pink-500/20 transition-all"
                    onClick={() => setSelectedImage('https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/qr-momo.jpg')}
@@ -350,7 +340,7 @@ export const PublicPortal = () => {
                  </div>
                  <div className="flex-1">
                     <h4 className="text-xl font-bold text-pink-500 mb-1 flex items-center gap-2"><Wallet size={18} /> MoMo</h4>
-                    <p className="text-white font-mono text-xl mb-1 tracking-wider">*******725</p>
+                    <p className="text-slate-800 dark:text-white font-mono text-xl mb-1 tracking-wider">*******725</p>
                     <p className="text-slate-500 text-sm font-medium">Chủ TK: DANG VAN TIEN</p>
                  </div>
               </div>
@@ -363,31 +353,31 @@ export const PublicPortal = () => {
            <div className="flex flex-wrap gap-2">
              <button 
                onClick={() => setActiveCategory('all')}
-               className={`font-bold py-2 px-4 rounded transition-colors ${activeCategory === 'all' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-[#1f2937] text-slate-300 border border-slate-700 hover:bg-[#374151]'}`}>
+               className={`font-bold py-2 px-4 rounded transition-colors ${activeCategory === 'all' ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  Tất cả ({features.length})
              </button>
              <button 
                onClick={() => setActiveCategory('game')}
-               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'game' ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#1f2937] text-slate-300 border-slate-700 hover:bg-[#374151]'}`}>
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'game' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  🎮 Game ({countGame})
              </button>
              <button 
                onClick={() => setActiveCategory('utility')}
-               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'utility' ? 'bg-orange-500 text-white border-orange-500' : 'bg-[#1f2937] text-slate-300 border-slate-700 hover:bg-[#374151]'}`}>
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'utility' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  🚀 Tiện ích ({countUtility})
              </button>
            </div>
            {/* Search Box */}
            <div className="relative w-full md:w-64">
              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-               <Search size={16} className="text-slate-500" />
+               <Search size={16} className="text-slate-400 dark:text-slate-500" />
              </div>
              <input
                type="text"
                placeholder="Tìm kiếm tính năng..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full bg-[#131923] border border-slate-700 text-slate-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-orange-500 transition-colors"
+               className="w-full bg-white dark:bg-[#131923] border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-orange-500 transition-colors shadow-sm"
              />
            </div>
         </div>
@@ -405,21 +395,20 @@ export const PublicPortal = () => {
                   key={item.id}
                   href={item.href}
                   rel="noopener noreferrer"
-                  className="group relative bg-[#131923] border border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px]"
+                  className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px] shadow-sm"
                 >
-                   {/* Big Number Background */}
-                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-800/30 group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
+                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-200 dark:text-slate-800/30 group-hover:text-slate-300 dark:group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
                      {item.number}
                    </span>
                    
                    <div className="relative z-10 flex flex-col h-full">
-                      <h3 className="text-2xl font-bold text-slate-100 mb-3 group-hover:text-orange-400 transition-colors flex items-center gap-2">
+                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
                         {item.title}
                       </h3>
-                      <p className="text-slate-400 leading-relaxed text-sm flex-1">
+                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm flex-1">
                         {item.description}
                       </p>
-                      <div className="mt-8 text-sm font-medium text-slate-500">
+                      <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
                         bởi <span className="text-orange-500">{item.author}</span>
                       </div>
                    </div>
@@ -428,21 +417,20 @@ export const PublicPortal = () => {
                 <Link
                   key={item.id}
                   to={item.href}
-                  className="group relative bg-[#131923] border border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px]"
+                  className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px] shadow-sm"
                 >
-                   {/* Big Number Background */}
-                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-800/30 group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
+                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-200 dark:text-slate-800/30 group-hover:text-slate-300 dark:group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
                      {item.number}
                    </span>
                    
                    <div className="relative z-10 flex flex-col h-full">
-                      <h3 className="text-2xl font-bold text-slate-100 mb-3 group-hover:text-orange-400 transition-colors flex items-center gap-2">
+                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
                         {item.title}
                       </h3>
-                      <p className="text-slate-400 leading-relaxed text-sm flex-1">
+                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm flex-1">
                         {item.description}
                       </p>
-                      <div className="mt-8 text-sm font-medium text-slate-500">
+                      <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
                         bởi <span className="text-orange-500">{item.author}</span>
                       </div>
                    </div>
@@ -457,7 +445,7 @@ export const PublicPortal = () => {
       {/* Image Zoom Modal */}
       {selectedImage && (
         <div 
-           className="fixed inset-0 z-50 bg-[#0d1117]/95 backdrop-blur-md flex justify-center items-center p-4 sm:p-8 cursor-zoom-out"
+           className="fixed inset-0 z-50 bg-black/80 dark:bg-[#0d1117]/95 backdrop-blur-md flex justify-center items-center p-4 sm:p-8 cursor-zoom-out"
            onClick={() => setSelectedImage(null)}
         >
            <button 
