@@ -194,15 +194,15 @@ app.use((req, res, next) => {
 });
 
 // --- Weather Proxy (Public) ---
-const WEATHER_API_KEY = process.env.APIKEY_WEATHER || '';
 const WEATHER_LAT = 10.8231;
 const WEATHER_LON = 106.6297;
 
 app.get('/api/weather/current', async (req, res) => {
     try {
-        if (!WEATHER_API_KEY) return res.status(500).json({ error: 'Weather API key not configured' });
+        const apiKey = process.env.APIKEY_WEATHER || '';
+        if (!apiKey) return res.status(500).json({ error: 'Weather API key not configured' });
         const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
-            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: WEATHER_API_KEY, units: 'metric', lang: 'vi' }
+            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: apiKey, units: 'metric', lang: 'vi' }
         });
         res.json(response.data);
     } catch (error: any) {
@@ -213,9 +213,10 @@ app.get('/api/weather/current', async (req, res) => {
 
 app.get('/api/weather/forecast', async (req, res) => {
     try {
-        if (!WEATHER_API_KEY) return res.status(500).json({ error: 'Weather API key not configured' });
+        const apiKey = process.env.APIKEY_WEATHER || '';
+        if (!apiKey) return res.status(500).json({ error: 'Weather API key not configured' });
         const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast`, {
-            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: WEATHER_API_KEY, units: 'metric', lang: 'vi' }
+            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: apiKey, units: 'metric', lang: 'vi' }
         });
         res.json(response.data);
     } catch (error: any) {
