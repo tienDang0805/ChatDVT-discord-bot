@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { WeatherWidget } from './WeatherWidget';
 
 export const PublicPortal = () => {
   const { theme, toggleTheme } = useTheme();
@@ -267,6 +268,11 @@ export const PublicPortal = () => {
              </div>
              <p className="mt-4 text-sm text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
           </div>
+        </div>
+
+        {/* Weather Widget */}
+        <div className="mb-16">
+          <WeatherWidget />
         </div>
 
         {/* Goal Section */}

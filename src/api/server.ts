@@ -184,13 +184,44 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
         return authenticateToken(req, res, next);
     }
     next();
+});
+
+// --- Weather Proxy (Public) ---
+const WEATHER_API_KEY = process.env.APIKEY_WEATHER || '';
+const WEATHER_LAT = 10.8231;
+const WEATHER_LON = 106.6297;
+
+app.get('/api/weather/current', async (req, res) => {
+    try {
+        if (!WEATHER_API_KEY) return res.status(500).json({ error: 'Weather API key not configured' });
+        const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
+            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: WEATHER_API_KEY, units: 'metric', lang: 'vi' }
+        });
+        res.json(response.data);
+    } catch (error: any) {
+        console.error('Weather API Error:', error.message);
+        res.status(502).json({ error: 'Failed to fetch weather data' });
+    }
+});
+
+app.get('/api/weather/forecast', async (req, res) => {
+    try {
+        if (!WEATHER_API_KEY) return res.status(500).json({ error: 'Weather API key not configured' });
+        const response = await axios.get(`https://api.openweathermap.org/data/2.5/forecast`, {
+            params: { lat: WEATHER_LAT, lon: WEATHER_LON, appid: WEATHER_API_KEY, units: 'metric', lang: 'vi' }
+        });
+        res.json(response.data);
+    } catch (error: any) {
+        console.error('Forecast API Error:', error.message);
+        res.status(502).json({ error: 'Failed to fetch forecast data' });
+    }
 });
 
 // Config Routes
