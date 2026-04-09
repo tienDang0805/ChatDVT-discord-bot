@@ -83,37 +83,84 @@ const fmtTime = (ts: number) => new Date(ts * 1000).toLocaleTimeString('vi-VN', 
 const getDayOfWeek = (d: Date) => ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][d.getDay()];
 const getShortDay = (s: string) => ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][new Date(s).getDay()];
 
+const GAN = ['Giáp', 'Ất', 'Bính', 'Đinh', 'Mậu', 'Kỷ', 'Canh', 'Tân', 'Nhâm', 'Quý'];
+const ZHI = ['Tý', 'Sửu', 'Dần', 'Mão', 'Thìn', 'Tỵ', 'Ngọ', 'Mùi', 'Thân', 'Dậu', 'Tuất', 'Hợi'];
+const ANIMAL = ['Chuột', 'Trâu', 'Hổ', 'Mèo', 'Rồng', 'Rắn', 'Ngựa', 'Dê', 'Khỉ', 'Gà', 'Chó', 'Heo'];
+
+const DIR_MAP: Record<string, string> = {
+  '东': 'Đông', '南': 'Nam', '西': 'Tây', '北': 'Bắc',
+  '东南': 'Đông Nam', '东北': 'Đông Bắc', '西南': 'Tây Nam', '西北': 'Tây Bắc',
+  '正东': 'Chính Đông', '正南': 'Chính Nam', '正西': 'Chính Tây', '正北': 'Chính Bắc'
+};
+
+const NAYIN_MAP: Record<string, string> = {
+  "海中金": "Hải Trung Kim", "炉中火": "Lư Trung Hỏa", "大林木": "Đại Lâm Mộc", "路旁土": "Lộ Bàng Thổ", "剑锋金": "Kiếm Phong Kim", "山头火": "Sơn Đầu Hỏa",
+  "涧下水": "Giản Hạ Thủy", "城头土": "Thành Đầu Thổ", "白蜡金": "Bạch Lạp Kim", "杨柳木": "Dương Liễu Mộc", "泉中水": "Tuyền Trung Thủy", "屋上土": "Ốc Thượng Thổ",
+  "霹雳火": "Tích Lịch Hỏa", "松柏木": "Tùng Bách Mộc", "长流水": "Trường Lưu Thủy", "沙中金": "Sa Trung Kim", "山下火": "Sơn Hạ Hỏa", "平地木": "Bình Địa Mộc",
+  "壁上土": "Bích Thượng Thổ", "金箔金": "Kim Bạch Kim", "覆灯火": "Phú Đăng Hỏa", "天河水": "Thiên Hà Thủy", "大驿土": "Đại Trạch Thổ", "钗钏金": "Thoa Xuyến Kim",
+  "桑柘木": "Tang Đố Mộc", "大溪水": "Đại Khê Thủy", "沙中土": "Sa Trung Thổ", "天上火": "Thiên Thượng Hỏa", "石榴木": "Thạch Lựu Mộc", "大海水": "Đại Hải Thủy"
+};
+
+const JIEQI_MAP: Record<string, string> = {
+  "冬至": "Đông Chí", "小寒": "Tiểu Hàn", "大寒": "Đại Hàn", "立春": "Lập Xuân", "雨水": "Vũ Thủy", "惊蛰": "Kinh Trập",
+  "春分": "Xuân Phân", "清明": "Thanh Minh", "谷雨": "Cốc Vũ", "立夏": "Lập Hạ", "小满": "Tiểu Mãn", "芒种": "Mang Chủng",
+  "夏至": "Hạ Chí", "小暑": "Tiểu Thử", "大暑": "Đại Thử", "立秋": "Lập Thu", "处暑": "Xử Thử", "白露": "Bạch Lộ",
+  "秋分": "Thu Phân", "寒露": "Hàn Lộ", "霜降": "Sương Giáng", "立冬": "Lập Đông", "小雪": "Tiểu Tuyết", "大雪": "Đại Tuyết"
+};
+
+const ACT_MAP: Record<string, string> = {
+  "嫁娶": "Cưới hỏi", "祭祀": "Tế tự", "动土": "Động thổ", "祈福": "Cầu phúc", "求嗣": "Cầu tự", "出行": "Xuất hành", 
+  "移徙": "Di dời", "安床": "An sàng", "安葬": "An táng", "破土": "Phá thổ", "入宅": "Nhập trạch", "挂匾": "Treo biển", 
+  "开市": "Mở hàng", "交易": "Giao dịch", "纳财": "Nạp tài", "立券": "Lập khoán", "纳畜": "Nạp súc", "解除": "Giải trừ", 
+  "理发": "Cắt tóc", "扫舍": "Quét nhà", "沐浴": "Tắm gội", "修造": "Sửa chữa", "竖柱": "Dựng cột", "上梁": "Cất nóc", 
+  "作灶": "Làm bếp", "除服": "Trừ phục", "成服": "Thành phục", "纳采": "Dạm ngõ", "订盟": "Đính hôn", "纳婿": "Nhận rể", 
+  "冠笄": "Làm lễ trưởng", "裁衣": "Cắt may", "合帐": "May màn", "会亲友": "Hội người thân", "治病": "Trị bệnh", 
+  "造庙": "Xây miếu", "盖屋": "Lợp nhà", "余事勿取": "Trừ các việc trên", "诸事不宜": "Mọi việc đều kỵ", "破屋坏垣": "Phá nhà",
+  "造仓": "Làm kho", "斋醮": "Trai tiếu", "谢土": "Tạ thổ", "起基": "Làm móng", "安香": "Lập bát hương", "放水": "Tháo nước",
+  "开池": "Đào ao", "造桥": "Làm cầu", "掘井": "Đào giếng"
+};
+
 function getLunarInfo() {
   const solar = Solar.fromDate(new Date());
   const lunar = solar.getLunar();
 
-  const lunarDay = lunar.getDayInChinese();
-  const lunarMonth = lunar.getMonthInChinese();
-  const lunarYear = lunar.getYearInChinese();
+  const lunarDay = lunar.getDay();
+  const lunarMonth = lunar.getMonth();
+  const lunarYear = lunar.getYear();
 
-  const yearGZ = lunar.getYearInGanZhi();
-  const monthGZ = lunar.getMonthInGanZhi();
-  const dayGZ = lunar.getDayInGanZhi();
-
-  const yearShengXiao = lunar.getYearShengXiao();
-  const monthShengXiao = lunar.getMonthShengXiao();
-  const dayShengXiao = lunar.getDayShengXiao();
+  const yearGZ = `${GAN[lunar.getYearGanIndex()]} ${ZHI[lunar.getYearZhiIndex()]}`;
+  const monthGZ = `${GAN[lunar.getMonthGanIndex()]} ${ZHI[lunar.getMonthZhiIndex()]}`;
+  const dayGZ = `${GAN[lunar.getDayGanIndex()]} ${ZHI[lunar.getDayZhiIndex()]}`;
 
   const currentJQ = lunar.getCurrentJieQi();
   const prevJQ = lunar.getPrevJieQi();
-  const jieQi = lunar.getJieQi() || (currentJQ ? currentJQ._p?.name : '') || (prevJQ ? prevJQ._p?.name : '') || '';
+  const rawJieQi = lunar.getJieQi() || (currentJQ ? currentJQ._p?.name : '') || (prevJQ ? prevJQ._p?.name : '') || '';
+  const jieQi = JIEQI_MAP[rawJieQi] || rawJieQi;
 
-  const naYin = lunar.getDayNaYin();
+  const naYin = NAYIN_MAP[lunar.getDayNaYin()] || lunar.getDayNaYin();
 
-  const xiShen = lunar.getDayPositionXiDesc();
-  const caiShen = lunar.getDayPositionCaiDesc();
-  const fuShen = lunar.getDayPositionFuDesc();
+  const xiShen = DIR_MAP[lunar.getDayPositionXiDesc()] || lunar.getDayPositionXiDesc();
+  const caiShen = DIR_MAP[lunar.getDayPositionCaiDesc()] || lunar.getDayPositionCaiDesc();
+  const fuShen = DIR_MAP[lunar.getDayPositionFuDesc()] || lunar.getDayPositionFuDesc();
 
-  const chong = lunar.getDayChongDesc();
-  const sha = lunar.getDaySha();
+  // Chong = opposing zhi. Zhi difference is 6.
+  const chongZhiIdx = (lunar.getDayZhiIndex() + 6) % 12;
+  const chongGanIdx = lunar.getDayChongGanIndex !== undefined 
+    ? lunar.getDayChongGanIndex() 
+    : (lunar.getDayGanIndex() + 6) % 10;
+  
+  const chong = `(${GAN[chongGanIdx]} ${ZHI[chongZhiIdx]}) ${ANIMAL[chongZhiIdx]}`;
+  const sha = DIR_MAP[lunar.getDaySha()] || lunar.getDaySha();
 
-  const yi = lunar.getDayYi();
-  const ji = lunar.getDayJi();
+  const yiOrigin: string[] = lunar.getDayYi();
+  const jiOrigin: string[] = lunar.getDayJi();
+  
+  // Translate and filter out unmapped to keep UI clean, unless it's empty then we show "Tùy ý"
+  let yi = yiOrigin.map(x => ACT_MAP[x]).filter(Boolean);
+  let ji = jiOrigin.map(x => ACT_MAP[x]).filter(Boolean);
+  
+  if (yi.length === 0) yi = ["Bình thường"];
+  if (ji.length === 0) ji = ["Không có hạn"];
 
   const times = lunar.getTimes();
   const goodHours: string[] = [];
@@ -131,10 +178,10 @@ function getLunarInfo() {
   });
 
   return {
-    lunarDate: `${lunarDay} tháng ${lunarMonth} năm ${lunarYear}`,
-    yearGZ: `${yearGZ} (${yearShengXiao})`,
-    monthGZ: `${monthGZ} (${monthShengXiao})`,
-    dayGZ: `${dayGZ} (${dayShengXiao})`,
+    lunarDate: `${lunarDay <= 10 ? 'mùng ' + (lunarDay === 10 ? 'mười' : lunarDay) : 'ngày ' + lunarDay} tháng ${lunarMonth} năm ${lunarYear}`,
+    yearGZ: `${yearGZ} (${ANIMAL[lunar.getYearZhiIndex()]})`,
+    monthGZ: `${monthGZ} (${ANIMAL[lunar.getMonthZhiIndex()]})`,
+    dayGZ: `${dayGZ} (${ANIMAL[lunar.getDayZhiIndex()]})`,
     jieQi,
     naYin,
     xiShen,
