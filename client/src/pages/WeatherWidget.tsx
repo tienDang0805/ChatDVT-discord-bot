@@ -99,13 +99,15 @@ function getLunarInfo() {
   const monthShengXiao = lunar.getMonthShengXiao();
   const dayShengXiao = lunar.getDayShengXiao();
 
-  const jieQi = lunar.getJieQi() || lunar.getPrevJieQi()?.getName() || '';
+  const currentJQ = lunar.getCurrentJieQi();
+  const prevJQ = lunar.getPrevJieQi();
+  const jieQi = lunar.getJieQi() || (currentJQ ? currentJQ._p?.name : '') || (prevJQ ? prevJQ._p?.name : '') || '';
 
   const naYin = lunar.getDayNaYin();
 
-  const xiShen = lunar.getDayXiShen();
-  const caiShen = lunar.getDayCaiShen();
-  const fuShen = lunar.getDayFuShen();
+  const xiShen = lunar.getDayPositionXiDesc();
+  const caiShen = lunar.getDayPositionCaiDesc();
+  const fuShen = lunar.getDayPositionFuDesc();
 
   const chong = lunar.getDayChongDesc();
   const sha = lunar.getDaySha();
@@ -121,7 +123,8 @@ function getLunarInfo() {
   const timeRanges = ['23-01', '01-03', '03-05', '05-07', '07-09', '09-11', '11-13', '13-15', '15-17', '17-19', '19-21', '21-23'];
 
   times.forEach((t: any, i: number) => {
-    const isGood = t.isLucky();
+    if (i >= 12) return;
+    const isGood = t.getTianShenLuck() === '吉';
     const entry = `${chiNames[i]} (${timeRanges[i]})`;
     if (isGood) goodHours.push(entry);
     else badHours.push(entry);
