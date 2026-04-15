@@ -113,7 +113,7 @@ function Header({ avatar, name }: { avatar: string; name: string }) {
           {name}
           <span style={{ background:'linear-gradient(135deg,#3b82f6,#8b5cf6)', borderRadius:4, padding:'1px 5px', fontSize:9, fontWeight:700, color:'#fff' }}>BOT</span>
         </div>
-        <div style={{ color:'#22c55e', fontSize:'clamp(10px,2.5vw,11px)', fontWeight:500 }}>online — trợ lý của Tiến Đặng</div>
+        <div style={{ color:'#22c55e', fontSize:'clamp(10px,2.5vw,11px)', fontWeight:500 }}>online — trợ lý của anh Tiến</div>
       </div>
     </div>
   );
@@ -141,12 +141,12 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
 
   const script: Msg[] = [
     { id:0, from:'system', text:'🔐 Kênh bí mật — đã kết nối', delay:700 },
-    { id:1, from:'bot', text:`Ê! 👋 Tui là <b>${botName}</b>, con bot của thằng Tiến Đặng nè.`, delay:1100 },
-    { id:2, from:'bot', text:'Bố Tiến hôm nay bảo con đi giao hàng nè duma <b>shipper</b> 📦', delay:1400 },
-    { id:3, from:'bot', text:'Ổng bảo: <i>"Ngày <b>21/4</b> quan trọng lắm, mày ship cho đúng hẹn, đừng có tào lao!"</i> 😤', delay:1300 },
+    { id:1, from:'bot', text:`Ê! 👋 Tui là <b>${botName}</b>, con bot của anh Tiến nè.`, delay:1100 },
+    { id:2, from:'bot', text:'Anh Tiến hôm nay biểu tui đi giao hàng nè, duma biến tui thành <b>shipper</b> 📦', delay:1400 },
+    { id:3, from:'bot', text:'Ảnh bảo: <i>"Ngày <b>21/4</b> quan trọng lắm, mày ship cho đúng hẹn, đừng có tào lao!"</i> 😤', delay:1300 },
     { id:4, from:'system', text:'📡 Scanning... tìm thấy 1 mục tiêu đang cắm mặt vào điện thoại', delay:900 },
-    { id:5, from:'bot', text:'À nè, trước khi giao hàng tui hỏi chút: <b>bạn có phải người mà thằng Tiến hay kêu "ê mày" không?</b> 🤔', delay:1200 },
-    { id:6, from:'bot', text:'Vì lỡ giao nhầm là ổng <b>chửi tui lắm</b> á 😭', delay:900 },
+    { id:5, from:'bot', text:'Khoan, tui hỏi chút: <b>Chị có phải là người đọc được thiệp của anh Tiến không?</b> 🤔', delay:1200 },
+    { id:6, from:'bot', text:'Vì lỡ giao nhầm là ảnh <b>chửi tui</b> lắm á 😭', delay:900 },
   ];
 
   useEffect(() => {
@@ -175,7 +175,7 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMsgs(p => [...p, { m:{ id:51, from:'bot', text:'Ok phong cách này đúng người quen ổng rồi 😂 Để tui mở hàng ra nha!', delay:0 }, v:true }]);
+      setMsgs(p => [...p, { m:{ id:51, from:'bot', text:'Haha đúng rồi chị Huyền! 😂 Để tui mở hàng ra nha!', delay:0 }, v:true }]);
       setTimeout(() => {
         setMsgs(p => [...p, { m:{ id:52, from:'system', text:'🚀 Chuyển sang chế độ Unbox...', delay:0 }, v:true }]);
         setTimeout(onDone, 1200);
@@ -199,7 +199,7 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
           </button>
         </div>
       )}
-      {toast && <Toast text="Chắc chắn là Huyền rồi, đừng có chối! Nhận đi! 😤💖" onClose={() => setToast(false)} />}
+      {toast && <Toast text="Chắc chắn là Huyền rồi mà, đừng có chối! Nhận đi chị! 😤💖" onClose={() => setToast(false)} />}
     </>
   );
 }
@@ -366,7 +366,7 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
               animation:'pulse 2s ease-in-out infinite',
             }}
           >
-            Xem lời chúc từ Tiến Đặng 💌
+            Xem lời chúc từ anh Tiến 💌
           </button>
         </div>
       </div>
@@ -386,11 +386,59 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
   );
 }
 
+function FloatingParticles() {
+  const particles = Array.from({ length: 25 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 8,
+    dur: 6 + Math.random() * 8,
+    size: 2 + Math.random() * 4,
+    emoji: ['✨','⭐','💫','🌟','·'][i % 5],
+  }));
+  return (
+    <div style={{ position:'fixed', inset:0, pointerEvents:'none', zIndex:1, overflow:'hidden' }}>
+      {particles.map(p => (
+        <div key={p.id} style={{
+          position:'absolute', left:`${p.left}%`, bottom:'-5%',
+          fontSize: p.emoji === '·' ? p.size * 3 : p.size + 6,
+          opacity: p.emoji === '·' ? 0.3 : 0.15,
+          animation: `floatUp ${p.dur}s ${p.delay}s linear infinite`,
+        }}>{p.emoji}</div>
+      ))}
+    </div>
+  );
+}
+
+function useTypewriter(text: string, speed = 40, enabled = true) {
+  const [displayed, setDisplayed] = useState('');
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (!enabled) return;
+    setDisplayed('');
+    setDone(false);
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) { clearInterval(id); setDone(true); }
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed, enabled]);
+  return { displayed, done };
+}
+
 function WishPhase() {
   const [show, setShow] = useState(false);
+  const [cakeTaps, setCakeTaps] = useState(0);
+  const [easterEgg, setEasterEgg] = useState(false);
+  const [startTyping, setStartTyping] = useState(false);
+  const wish1 = useTypewriter('Sinh nhật 27 tuổi vui vẻ nha! 🥳', 50, startTyping);
+  const wish2 = useTypewriter('Donate Khầy 30k ăn hủ tiếu nhé nhé lelele 🍜', 45, wish1.done);
+  const wish3 = useTypewriter('Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là khen á không phải chê đâu nha!', 30, wish2.done);
 
   useEffect(() => {
     setTimeout(() => setShow(true), 200);
+    setTimeout(() => setStartTyping(true), 1200);
     fireConfetti(6000);
   }, []);
 
@@ -405,7 +453,14 @@ function WishPhase() {
       <div style={{ position:'relative', zIndex:10, maxWidth:480, margin:'0 auto', padding:'clamp(32px,8vw,60px) 16px', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
         <div style={{ animation: show ? 'slideUp .8s ease-out' : 'none', opacity: show ? 1 : 0, width:'100%' }}>
           <div style={{ textAlign:'center', marginBottom:12 }}>
-            <div style={{ fontSize:'clamp(50px,14vw,72px)', animation:'bob 4s ease-in-out infinite', marginBottom:8 }}>🎂</div>
+            <div
+              onClick={() => {
+                const n = cakeTaps + 1;
+                setCakeTaps(n);
+                if (n >= 7 && !easterEgg) { setEasterEgg(true); fireConfetti(3000); }
+              }}
+              style={{ fontSize:'clamp(50px,14vw,72px)', animation:'bob 4s ease-in-out infinite', marginBottom:8, cursor:'pointer', transition:'transform .1s', transform: cakeTaps > 0 ? `scale(${1 + cakeTaps * 0.03})` : 'scale(1)' }}
+            >🎂</div>
             <div style={{
               fontSize:'clamp(11px,2.5vw,13px)', color:'#a1a1aa', fontFamily:'monospace',
               background:'rgba(255,255,255,.05)', display:'inline-block', padding:'4px 12px', borderRadius:20,
@@ -421,7 +476,7 @@ function WishPhase() {
             lineHeight:1.1, marginBottom:32,
             animation: show ? 'scaleUp .6s .2s ease-out both' : 'none',
           }}>
-            Happy Birthday!
+            CMSN Huyềnnn!
           </h1>
 
           <div style={{ textAlign:'center', marginBottom:24 }}>
@@ -429,6 +484,19 @@ function WishPhase() {
               <span style={{ color:'#a1a1aa', fontSize:'clamp(12px,3vw,13px)', fontFamily:'monospace' }}>📅 21 / 04</span>
             </div>
           </div>
+
+          {easterEgg && (
+            <div style={{
+              background:'linear-gradient(135deg,rgba(236,72,153,.1),rgba(139,92,246,.1))',
+              borderRadius:16, padding:'16px 20px', marginBottom:24, textAlign:'center',
+              border:'1px solid rgba(236,72,153,.2)', animation:'scaleUp .5s cubic-bezier(.34,1.56,.64,1)',
+            }}>
+              <p style={{ color:'#f9a8d4', fontSize:'clamp(13px,3.5vw,15px)', fontWeight:600, lineHeight:1.6 }}>
+                🤫 Bạn tìm ra rồi á! Thật ra anh Tiến code cái này lúc 3h sáng, vừa code vừa ngáp đó kakaka
+              </p>
+            </div>
+          )}
+
           <div style={{
             background:'rgba(255,255,255,.05)', backdropFilter:'blur(20px)',
             borderRadius:20, padding:'clamp(20px,5vw,28px)', border:'1px solid rgba(255,255,255,.08)',
@@ -437,22 +505,35 @@ function WishPhase() {
           }}>
             <div style={{ position:'relative', marginBottom:20 }}>
               <div style={{ position:'absolute', top:-8, left:4, fontSize:32, color:'rgba(255,255,255,.08)', fontFamily:'serif' }}>"</div>
-              <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500 }}>
-                Sinh nhật <span style={{ background:'linear-gradient(135deg,#fbbf24,#f59e0b)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontWeight:800 }}>27 tuổi</span> vui vẻ nha! 🥳
+              <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, minHeight:'1.8em' }}>
+                {wish1.done
+                  ? <>Sinh nhật <span style={{ background:'linear-gradient(135deg,#fbbf24,#f59e0b)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontWeight:800 }}>27 tuổi</span> vui vẻ nha! 🥳</>
+                  : <>{wish1.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                }
               </p>
-              <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, marginTop:12 }}>
-                Donate Khầy <span style={{ color:'#fbbf24', fontWeight:800 }}>30k</span> ăn hủ tiếu nhé nhé lelele 🍜
-              </p>
+              {wish1.done && (
+                <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, marginTop:12, minHeight:'1.8em' }}>
+                  {wish2.done
+                    ? <>Donate Khầy <span style={{ color:'#fbbf24', fontWeight:800 }}>30k</span> ăn hủ tiếu nhé nhé <span style={{ fontStyle:'italic', color:'#c4b5fd' }}>lelele</span> 🍜</>
+                    : <>{wish2.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                  }
+                </p>
+              )}
             </div>
 
             <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)', margin:'16px 0' }} />
 
-            <p style={{ color:'#a1a1aa', fontSize:'clamp(14px,3.5vw,15px)', lineHeight:1.8, fontStyle:'italic' }}>
-              Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu nha! 💖
-            </p>
+            {wish2.done && (
+              <p style={{ color:'#a1a1aa', fontSize:'clamp(14px,3.5vw,15px)', lineHeight:1.8, fontStyle:'italic', minHeight:'3.6em' }}>
+                {wish3.done
+                  ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu nha!</>
+                  : <>{wish3.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                }
+              </p>
+            )}
 
-            <div style={{ marginTop:16, textAlign:'right' }}>
-              <span style={{ color:'#52525b', fontSize:'clamp(11px,2.5vw,12px)', fontFamily:'monospace' }}>— Tiến Đặng, deployed via ChatDVT 🤖</span>
+            <div style={{ marginTop:16, textAlign:'right', opacity: wish3.done ? 1 : 0, transition:'opacity .5s' }}>
+              <span style={{ color:'#52525b', fontSize:'clamp(11px,2.5vw,12px)', fontFamily:'monospace' }}>— Anh Tiến, deployed via ChatDVT 🤖</span>
             </div>
           </div>
 
@@ -465,7 +546,7 @@ function WishPhase() {
                 boxShadow:'0 6px 24px rgba(236,72,153,.35)', transition:'all .2s', cursor:'pointer',
               }}
             >
-              💬 Reply Tiến Đặng ngay
+              💬 Reply anh Tiến ngay
             </button>
             <button onClick={() => openMessenger('Rảnh quá à ba :v')}
               style={{
@@ -482,17 +563,92 @@ function WishPhase() {
           <p style={{ textAlign:'center', color:'#27272a', fontSize:'clamp(9px,2vw,10px)', fontFamily:'monospace', marginTop:32 }}>
             crafted with ❤️ & mass caffeine ☕ by ChatDVT
           </p>
+
+          <CountdownWidget />
         </div>
       </div>
     </div>
   );
 }
 
+function getTimeDiff(target: Date) {
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return { d:0, h:0, m:0, s:0, done:true };
+  return {
+    d: Math.floor(diff / 86400000),
+    h: Math.floor((diff % 86400000) / 3600000),
+    m: Math.floor((diff % 3600000) / 60000),
+    s: Math.floor((diff % 60000) / 1000),
+    done: false,
+  };
+}
+
+function useDoubleCountdown() {
+  const y = new Date().getFullYear();
+  const thisYearDate = new Date(`${y}-04-21T00:00:00+07:00`);
+  const nextYearDate = new Date(`${y + 1}-04-21T00:00:00+07:00`);
+  const [t1, setT1] = useState(getTimeDiff(thisYearDate));
+  const [t2, setT2] = useState(getTimeDiff(nextYearDate));
+  useEffect(() => {
+    const id = setInterval(() => { setT1(getTimeDiff(thisYearDate)); setT2(getTimeDiff(nextYearDate)); }, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return { thisYear: { year: y, ...t1 }, nextYear: { year: y + 1, ...t2 } };
+}
+
+function MiniTimer({ t }: { t: { d:number; h:number; m:number; s:number } }) {
+  return (
+    <div style={{ display:'flex', gap:'clamp(4px,1.5vw,8px)', justifyContent:'center' }}>
+      {[{ v:t.d, l:'Ngày' },{ v:t.h, l:'Giờ' },{ v:t.m, l:'Phút' },{ v:t.s, l:'Giây' }].map((x, i) => (
+        <div key={i} style={{ background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.06)', borderRadius:10, padding:'clamp(6px,2vw,10px) clamp(5px,1.5vw,8px)', minWidth:'clamp(42px,12vw,54px)' }}>
+          <div style={{ fontSize:'clamp(16px,4.5vw,22px)', fontWeight:800, fontFamily:'monospace', background:'linear-gradient(135deg,#fbbf24,#f472b6)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', lineHeight:1 }}>
+            {String(x.v).padStart(2, '0')}
+          </div>
+          <div style={{ color:'#3f3f46', fontSize:'clamp(7px,1.8vw,8px)', fontWeight:600, marginTop:3, textTransform:'uppercase', letterSpacing:1 }}>{x.l}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CountdownWidget() {
+  const cd = useDoubleCountdown();
+  return (
+    <div style={{ marginTop:32, background:'rgba(255,255,255,.03)', borderRadius:20, padding:'clamp(16px,4vw,24px)', border:'1px solid rgba(255,255,255,.05)', textAlign:'center' }}>
+      <div style={{ marginBottom:20 }}>
+        <p style={{ color:'#71717a', fontSize:'clamp(11px,2.8vw,13px)', marginBottom:10 }}>
+          {cd.thisYear.done ? `✅ 21/04/${cd.thisYear.year} — Đã nhận quà!` : `⏰ Đếm ngược tới 21/04/${cd.thisYear.year}`}
+        </p>
+        {!cd.thisYear.done && <MiniTimer t={cd.thisYear} />}
+      </div>
+      <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.06),transparent)', margin:'16px 0' }} />
+      <div>
+        <p style={{ color:'#71717a', fontSize:'clamp(11px,2.8vw,13px)', marginBottom:10 }}>🎁 Đếm ngược tới 21/04/{cd.nextYear.year}</p>
+        <MiniTimer t={cd.nextYear} />
+      </div>
+      <p style={{ fontSize:'clamp(15px,4.5vw,20px)', fontWeight:800, marginTop:20, background:'linear-gradient(135deg,#fbbf24,#f472b6)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+        Năm sau nhận quà tiếp nha kakakak 🎁
+      </p>
+    </div>
+  );
+}
+
 export default function BirthdayGreeting() {
   const [phase, setPhase] = useState(1);
+  const [transitioning, setTransitioning] = useState(false);
+  const [displayPhase, setDisplayPhase] = useState(1);
   const { avatar, name } = useBotInfo();
 
   useEffect(() => { document.title = `${name} | Nhiệm vụ bí mật 🤫`; preloadConfetti(); }, [name]);
+
+  const goToPhase = (next: number) => {
+    setTransitioning(true);
+    setTimeout(() => {
+      setPhase(next);
+      setDisplayPhase(next);
+      setTimeout(() => setTransitioning(false), 50);
+    }, 600);
+  };
 
   return (
     <div style={{ position:'fixed', inset:0, background:'#09090b', fontFamily:"'Inter',-apple-system,sans-serif", display:'flex', flexDirection:'column', zIndex:9999, overflow:'hidden' }}>
@@ -506,21 +662,48 @@ export default function BirthdayGreeting() {
         @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(236,72,153,.35)} 50%{box-shadow:0 8px 40px rgba(236,72,153,.55),0 0 0 4px rgba(236,72,153,.15)} }
         @keyframes particleOut { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx,100px),var(--ty,-100px)) scale(0)} }
+        @keyframes floatUp { 0%{transform:translateY(0);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateY(-110vh);opacity:0} }
         ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px}
         *{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
       `}</style>
 
-      {phase === 1 && (
-        <>
-          <Header avatar={avatar} name={name} />
-          <div style={{ flex:1, position:'relative', overflow:'hidden' }}>
-            <ChatPhase avatar={avatar} botName={name} onDone={() => setPhase(2)} />
-          </div>
-        </>
+      <div style={{
+        position:'absolute', inset:0,
+        opacity: transitioning ? 0 : 1,
+        transform: transitioning ? 'scale(1.04)' : 'scale(1)',
+        transition: 'opacity .5s ease-in-out, transform .5s ease-in-out',
+        display:'flex', flexDirection:'column',
+        filter: transitioning ? 'blur(6px)' : 'blur(0px)',
+      }}>
+        {displayPhase === 1 && (
+          <>
+            <Header avatar={avatar} name={name} />
+            <div style={{ flex:1, position:'relative', overflow:'hidden' }}>
+              <ChatPhase avatar={avatar} botName={name} onDone={() => goToPhase(2)} />
+            </div>
+          </>
+        )}
+        {displayPhase === 2 && <UnboxPhase onDone={() => goToPhase(3)} />}
+        {displayPhase === 3 && <GalleryPhase onDone={() => goToPhase(4)} />}
+        {displayPhase === 4 && <WishPhase />}
+      </div>
+
+      <FloatingParticles />
+
+      {transitioning && (
+        <div style={{
+          position:'absolute', inset:0, zIndex:100,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          pointerEvents:'none',
+        }}>
+          <div style={{
+            width:40, height:40, border:'3px solid rgba(255,255,255,.1)',
+            borderTopColor:'#ec4899', borderRadius:'50%',
+            animation:'spin .8s linear infinite',
+          }} />
+          <style>{`@keyframes spin { to { transform:rotate(360deg) } }`}</style>
+        </div>
       )}
-      {phase === 2 && <UnboxPhase onDone={() => setPhase(3)} />}
-      {phase === 3 && <GalleryPhase onDone={() => setPhase(4)} />}
-      {phase === 4 && <WishPhase />}
     </div>
   );
 }
