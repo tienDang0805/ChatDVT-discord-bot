@@ -1,7 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../api';
 
-const MESSENGER_ID = 'dvtien8599';
+const MESSENGER_ID = '100006665862022';
+
+function openMessenger() {
+  const deepLink = `fb-messenger://user-thread/${MESSENGER_ID}`;
+  const fallback = `https://m.me/${MESSENGER_ID}`;
+  const start = Date.now();
+  window.location.href = deepLink;
+  setTimeout(() => {
+    if (Date.now() - start < 2500) {
+      window.location.href = fallback;
+    }
+  }, 1500);
+}
 
 const GALLERY_PHOTOS = [
   { id: 1, src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&fit=crop', caption: 'Kỷ niệm 1' },
@@ -438,28 +450,26 @@ function WishPhase() {
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', gap:10, animation: show ? 'slideUp .8s .5s ease-out both' : 'none' }}>
-            <a href={`https://www.facebook.com/messages/t/${MESSENGER_ID}`}
-              target="_blank" rel="noopener noreferrer"
+            <button onClick={openMessenger}
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'15px 20px',
-                background:'linear-gradient(135deg,#ec4899,#8b5cf6)', color:'#fff', textDecoration:'none',
-                borderRadius:14, fontSize:'clamp(14px,3.5vw,15px)', fontWeight:700,
-                boxShadow:'0 6px 24px rgba(236,72,153,.35)', transition:'all .2s',
+                background:'linear-gradient(135deg,#ec4899,#8b5cf6)', color:'#fff', border:'none',
+                borderRadius:14, fontSize:'clamp(14px,3.5vw,15px)', fontWeight:700, width:'100%',
+                boxShadow:'0 6px 24px rgba(236,72,153,.35)', transition:'all .2s', cursor:'pointer',
               }}
             >
               💬 Reply Tiến Đặng ngay
-            </a>
-            <a href={`https://www.facebook.com/messages/t/${MESSENGER_ID}`}
-              target="_blank" rel="noopener noreferrer"
+            </button>
+            <button onClick={openMessenger}
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'14px 20px',
-                background:'rgba(255,255,255,.05)', color:'#a1a1aa', textDecoration:'none',
-                borderRadius:14, fontSize:'clamp(13px,3vw,14px)', fontWeight:600,
-                border:'1px solid rgba(255,255,255,.08)', transition:'all .2s',
+                background:'rgba(255,255,255,.05)', color:'#a1a1aa', border:'1px solid rgba(255,255,255,.08)',
+                borderRadius:14, fontSize:'clamp(13px,3vw,14px)', fontWeight:600, width:'100%',
+                transition:'all .2s', cursor:'pointer',
               }}
             >
               💻 Code web để chúc sinh nhật luôn á?! 
-            </a>
+            </button>
           </div>
 
           <p style={{ textAlign:'center', color:'#27272a', fontSize:'clamp(9px,2vw,10px)', fontFamily:'monospace', marginTop:32 }}>
