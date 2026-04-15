@@ -3,9 +3,11 @@ import api from '../api';
 
 const MESSENGER_ID = '100006665862022';
 
-function openMessenger() {
+function openMessenger(text?: string) {
   const deepLink = `fb-messenger://user-thread/${MESSENGER_ID}`;
-  const fallback = `https://m.me/${MESSENGER_ID}`;
+  const fallback = text
+    ? `https://m.me/${MESSENGER_ID}?text=${encodeURIComponent(text)}`
+    : `https://m.me/${MESSENGER_ID}`;
   const start = Date.now();
   window.location.href = deepLink;
   setTimeout(() => {
@@ -141,7 +143,7 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
     { id:0, from:'system', text:'🔐 Kênh bí mật — đã kết nối', delay:700 },
     { id:1, from:'bot', text:`Ê! 👋 Tui là <b>${botName}</b>, con bot của thằng Tiến Đặng nè.`, delay:1100 },
     { id:2, from:'bot', text:'Bố Tiến hôm nay bảo con đi giao hàng nè duma <b>shipper</b> 📦', delay:1400 },
-    { id:3, from:'bot', text:'Ổng bảo: <i>"Mày đi giao cái này cho tao, quan trọng lắm, đừng có làm rớt!"</i> 😤', delay:1300 },
+    { id:3, from:'bot', text:'Ổng bảo: <i>"Ngày <b>21/4</b> quan trọng lắm, mày ship cho đúng hẹn, đừng có tào lao!"</i> 😤', delay:1300 },
     { id:4, from:'system', text:'📡 Scanning... tìm thấy 1 mục tiêu đang cắm mặt vào điện thoại', delay:900 },
     { id:5, from:'bot', text:'À nè, trước khi giao hàng tui hỏi chút: <b>bạn có phải người mà thằng Tiến hay kêu "ê mày" không?</b> 🤔', delay:1200 },
     { id:6, from:'bot', text:'Vì lỡ giao nhầm là ổng <b>chửi tui lắm</b> á 😭', delay:900 },
@@ -409,7 +411,7 @@ function WishPhase() {
               background:'rgba(255,255,255,.05)', display:'inline-block', padding:'4px 12px', borderRadius:20,
               border:'1px solid rgba(255,255,255,.08)', marginBottom:16,
             }}>
-              v27.0 — Birthday Release 🎉
+              v27.0 — 21/04 Birthday Release 🎉
             </div>
           </div>
 
@@ -422,6 +424,11 @@ function WishPhase() {
             Happy Birthday!
           </h1>
 
+          <div style={{ textAlign:'center', marginBottom:24 }}>
+            <div style={{ display:'inline-block', background:'rgba(255,255,255,.08)', borderRadius:12, padding:'6px 14px', border:'1px solid rgba(255,255,255,.06)' }}>
+              <span style={{ color:'#a1a1aa', fontSize:'clamp(12px,3vw,13px)', fontFamily:'monospace' }}>📅 21 / 04</span>
+            </div>
+          </div>
           <div style={{
             background:'rgba(255,255,255,.05)', backdropFilter:'blur(20px)',
             borderRadius:20, padding:'clamp(20px,5vw,28px)', border:'1px solid rgba(255,255,255,.08)',
@@ -450,7 +457,7 @@ function WishPhase() {
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', gap:10, animation: show ? 'slideUp .8s .5s ease-out both' : 'none' }}>
-            <button onClick={openMessenger}
+            <button onClick={() => openMessenger('Khầy nay màu mè dữ')}
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'15px 20px',
                 background:'linear-gradient(135deg,#ec4899,#8b5cf6)', color:'#fff', border:'none',
@@ -460,7 +467,7 @@ function WishPhase() {
             >
               💬 Reply Tiến Đặng ngay
             </button>
-            <button onClick={openMessenger}
+            <button onClick={() => openMessenger('Rảnh quá à ba :v')}
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'14px 20px',
                 background:'rgba(255,255,255,.05)', color:'#a1a1aa', border:'1px solid rgba(255,255,255,.08)',
