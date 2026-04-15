@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cloud, Droplets, Wind, Thermometer, Eye, Sun, Sunrise, Sunset,
   MapPin, RefreshCw, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, CloudFog,
-  X, ChevronRight, Calendar, Compass, Clock
+  X, ChevronRight, ChevronLeft, Calendar, Compass, Clock
 } from 'lucide-react';
 
 // @ts-ignore
@@ -120,8 +120,8 @@ const ACT_MAP: Record<string, string> = {
   "开池": "Đào ao", "造桥": "Làm cầu", "掘井": "Đào giếng"
 };
 
-function getLunarInfo() {
-  const solar = Solar.fromDate(new Date());
+function getLunarInfo(date?: Date) {
+  const solar = Solar.fromDate(date || new Date());
   const lunar = solar.getLunar();
 
   const lunarDay = lunar.getDay();
@@ -206,6 +206,7 @@ export const WeatherFAB = () => {
   const [hourly, setHourly] = useState<HourlyForecast[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [lunarData, setLunarData] = useState<ReturnType<typeof getLunarInfo> | null>(null);
 
   useEffect(() => {
@@ -214,12 +215,8 @@ export const WeatherFAB = () => {
   }, []);
 
   useEffect(() => {
-    try { setLunarData(getLunarInfo()); } catch(e) { console.error('Lunar error:', e); }
-    const t = setInterval(() => {
-      try { setLunarData(getLunarInfo()); } catch(e) {}
-    }, 60000);
-    return () => clearInterval(t);
-  }, []);
+    try { setLunarData(getLunarInfo(selectedDate)); } catch(e) { console.error('Lunar error:', e); }
+  }, [selectedDate]);
 
   const fetchWeather = useCallback(async () => {
     try {
@@ -331,8 +328,8 @@ export const WeatherFAB = () => {
             {/* Tab Content */}
             <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
               {activeTab === 'weather' && <WeatherTab current={current} hourly={hourly} forecast={forecast} loading={loading} onRefresh={fetchWeather} />}
-              {activeTab === 'lunar' && lunarData && <LunarTab data={lunarData} />}
-              {activeTab === 'fengshui' && lunarData && <FengShuiTab data={lunarData} />}
+              {activeTab === 'lunar' && lunarData && <LunarTab data={lunarData} selectedDate={selectedDate} onSelectDate={setSelectedDate} />}
+              {activeTab === 'fengshui' && lunarData && <FengShuiTab data={lunarData} selectedDate={selectedDate} />}
             </div>
           </motion.div>
         )}
@@ -448,13 +445,146 @@ function WeatherTab({ current, hourly, forecast, loading, onRefresh }: {
   );
 }
 
-function LunarTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
+function LunarTab({ data, selectedDate, onSelectDate }: { data: ReturnType<typeof getLunarInfo>; selectedDate: Date; onSelectDate: (d: Date) => void }) {
+  const [viewYear, setViewYear] = useState(selectedDate.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selectedDate.getMonth());
+
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
+  const selectedStr = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`;
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startDow = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
+
+  const calendarDays: { day: number; month: number; year: number; isCurrentMonth: boolean; lunarDay: number; lunarMonth: number }[] = [];
+
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = daysInPrevMonth - i;
+    const m = viewMonth - 1;
+    const y = m < 0 ? viewYear - 1 : viewYear;
+    const actualM = m < 0 ? 11 : m;
+    try {
+      const s = Solar.fromDate(new Date(y, actualM, d));
+      const l = s.getLunar();
+      calendarDays.push({ day: d, month: actualM, year: y, isCurrentMonth: false, lunarDay: l.getDay(), lunarMonth: l.getMonth() });
+    } catch { calendarDays.push({ day: d, month: actualM, year: y, isCurrentMonth: false, lunarDay: 0, lunarMonth: 0 }); }
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    try {
+      const s = Solar.fromDate(new Date(viewYear, viewMonth, d));
+      const l = s.getLunar();
+      calendarDays.push({ day: d, month: viewMonth, year: viewYear, isCurrentMonth: true, lunarDay: l.getDay(), lunarMonth: l.getMonth() });
+    } catch { calendarDays.push({ day: d, month: viewMonth, year: viewYear, isCurrentMonth: true, lunarDay: 0, lunarMonth: 0 }); }
+  }
+
+  const remaining = 7 - (calendarDays.length % 7);
+  if (remaining < 7) {
+    for (let d = 1; d <= remaining; d++) {
+      const m = viewMonth + 1;
+      const y = m > 11 ? viewYear + 1 : viewYear;
+      const actualM = m > 11 ? 0 : m;
+      try {
+        const s = Solar.fromDate(new Date(y, actualM, d));
+        const l = s.getLunar();
+        calendarDays.push({ day: d, month: actualM, year: y, isCurrentMonth: false, lunarDay: l.getDay(), lunarMonth: l.getMonth() });
+      } catch { calendarDays.push({ day: d, month: actualM, year: y, isCurrentMonth: false, lunarDay: 0, lunarMonth: 0 }); }
+    }
+  }
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(viewYear - 1); }
+    else setViewMonth(viewMonth - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(viewYear + 1); }
+    else setViewMonth(viewMonth + 1);
+  };
+  const goToday = () => {
+    const t = new Date();
+    setViewYear(t.getFullYear()); setViewMonth(t.getMonth()); onSelectDate(t);
+  };
+
+  const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+  const weekDays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  const formatLunarDay = (ld: number, lm: number) => {
+    if (ld === 1) return `${ld}/${lm}`;
+    return `${ld}`;
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Main Lunar Date */}
-      <div className="text-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-5 border border-red-200/50 dark:border-red-800/30">
-        <p className="text-[10px] text-red-400 dark:text-red-300 font-bold uppercase tracking-widest mb-2">Âm Lịch</p>
-        <p className="text-2xl font-black text-red-700 dark:text-red-400">{data.lunarDate}</p>
+    <div className="space-y-3">
+      {/* Month Navigation */}
+      <div className="flex items-center justify-between">
+        <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors">
+          <ChevronLeft size={16} />
+        </button>
+        <div className="text-center">
+          <p className="text-sm font-black text-slate-800 dark:text-white">{monthNames[viewMonth]} {viewYear}</p>
+        </div>
+        <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors">
+          <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* Today button */}
+      {(viewYear !== today.getFullYear() || viewMonth !== today.getMonth()) && (
+        <button onClick={goToday} className="w-full text-[10px] text-orange-500 dark:text-orange-400 font-bold py-1 hover:underline transition-colors">
+          ← Về hôm nay
+        </button>
+      )}
+
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-0.5">
+        {weekDays.map(wd => (
+          <div key={wd} className={`text-center text-[10px] font-bold py-1.5 ${
+            wd === 'CN' ? 'text-red-400 dark:text-red-400' : 'text-slate-400 dark:text-slate-500'
+          }`}>{wd}</div>
+        ))}
+        {calendarDays.map((cd, i) => {
+          const dayStr = `${cd.year}-${cd.month}-${cd.day}`;
+          const isToday = dayStr === todayStr;
+          const isSelected = dayStr === selectedStr;
+          const isSunday = i % 7 === 6;
+
+          return (
+            <button
+              key={i}
+              onClick={() => { onSelectDate(new Date(cd.year, cd.month, cd.day)); }}
+              className={`relative flex flex-col items-center justify-center py-1 rounded-lg transition-all text-center min-h-[40px] ${
+                isSelected
+                  ? 'bg-orange-500 text-white shadow-md shadow-orange-500/30'
+                  : isToday
+                    ? 'bg-orange-100 dark:bg-orange-900/30 ring-1 ring-orange-400/50'
+                    : cd.isCurrentMonth
+                      ? 'hover:bg-slate-100 dark:hover:bg-white/5'
+                      : 'opacity-30 hover:opacity-60'
+              }`}
+            >
+              <span className={`text-xs font-bold leading-none ${
+                isSelected ? 'text-white'
+                  : isToday ? 'text-orange-600 dark:text-orange-400'
+                    : isSunday && cd.isCurrentMonth ? 'text-red-400 dark:text-red-400'
+                      : cd.isCurrentMonth ? 'text-slate-700 dark:text-slate-200'
+                        : 'text-slate-400 dark:text-slate-600'
+              }`}>{cd.day}</span>
+              <span className={`text-[8px] leading-none mt-0.5 ${
+                isSelected ? 'text-white/70'
+                  : cd.lunarDay === 1 ? 'text-red-400 dark:text-red-400 font-bold'
+                    : 'text-slate-400 dark:text-slate-500'
+              }`}>{cd.lunarDay ? formatLunarDay(cd.lunarDay, cd.lunarMonth) : ''}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Selected Day Info */}
+      <div className="text-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-4 border border-red-200/50 dark:border-red-800/30">
+        <p className="text-[10px] text-red-400 dark:text-red-300 font-bold uppercase tracking-widest mb-1">Âm Lịch</p>
+        <p className="text-lg font-black text-red-700 dark:text-red-400">{data.lunarDate}</p>
       </div>
 
       {/* Can Chi */}
@@ -466,9 +596,9 @@ function LunarTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
             { label: 'Tháng', value: data.monthGZ },
             { label: 'Ngày', value: data.dayGZ },
           ].map((item, i) => (
-            <div key={i} className="bg-amber-50 dark:bg-amber-900/15 rounded-xl p-3 text-center border border-amber-200/50 dark:border-amber-800/30">
-              <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase mb-1">{item.label}</p>
-              <p className="text-xs font-bold text-amber-800 dark:text-amber-300">{item.value}</p>
+            <div key={i} className="bg-amber-50 dark:bg-amber-900/15 rounded-xl p-2.5 text-center border border-amber-200/50 dark:border-amber-800/30">
+              <p className="text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase mb-0.5">{item.label}</p>
+              <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300">{item.value}</p>
             </div>
           ))}
         </div>
@@ -476,14 +606,14 @@ function LunarTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
 
       {/* Nap Am & Tiet Khi */}
       <div className="grid grid-cols-2 gap-2">
-        <div className="bg-purple-50 dark:bg-purple-900/15 rounded-xl p-3 border border-purple-200/50 dark:border-purple-800/30">
-          <p className="text-[10px] text-purple-500 dark:text-purple-400 font-bold uppercase mb-1">🎵 Nạp Âm</p>
-          <p className="text-xs font-bold text-purple-700 dark:text-purple-300">{data.naYin}</p>
+        <div className="bg-purple-50 dark:bg-purple-900/15 rounded-xl p-2.5 border border-purple-200/50 dark:border-purple-800/30">
+          <p className="text-[10px] text-purple-500 dark:text-purple-400 font-bold uppercase mb-0.5">🎵 Nạp Âm</p>
+          <p className="text-[11px] font-bold text-purple-700 dark:text-purple-300">{data.naYin}</p>
         </div>
         {data.jieQi && (
-          <div className="bg-green-50 dark:bg-green-900/15 rounded-xl p-3 border border-green-200/50 dark:border-green-800/30">
-            <p className="text-[10px] text-green-500 dark:text-green-400 font-bold uppercase mb-1">🌿 Tiết Khí</p>
-            <p className="text-xs font-bold text-green-700 dark:text-green-300">{data.jieQi}</p>
+          <div className="bg-green-50 dark:bg-green-900/15 rounded-xl p-2.5 border border-green-200/50 dark:border-green-800/30">
+            <p className="text-[10px] text-green-500 dark:text-green-400 font-bold uppercase mb-0.5">🌿 Tiết Khí</p>
+            <p className="text-[11px] font-bold text-green-700 dark:text-green-300">{data.jieQi}</p>
           </div>
         )}
       </div>
@@ -491,9 +621,16 @@ function LunarTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
   );
 }
 
-function FengShuiTab({ data }: { data: ReturnType<typeof getLunarInfo> }) {
+function FengShuiTab({ data, selectedDate }: { data: ReturnType<typeof getLunarInfo>; selectedDate: Date }) {
+  const isToday = (() => { const t = new Date(); return selectedDate.getDate() === t.getDate() && selectedDate.getMonth() === t.getMonth() && selectedDate.getFullYear() === t.getFullYear(); })();
   return (
     <div className="space-y-4">
+      {/* Selected date indicator */}
+      {!isToday && (
+        <div className="text-center bg-orange-50 dark:bg-orange-900/15 rounded-xl p-2 border border-orange-200/50 dark:border-orange-800/30">
+          <p className="text-[11px] font-bold text-orange-600 dark:text-orange-400">📅 {getDayOfWeek(selectedDate)}, {selectedDate.toLocaleDateString('vi-VN')}</p>
+        </div>
+      )}
       {/* Deity Directions */}
       <div>
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2 flex items-center gap-1">🧭 Hướng Xuất Hành</p>
