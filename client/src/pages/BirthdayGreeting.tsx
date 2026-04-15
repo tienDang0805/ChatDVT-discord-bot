@@ -15,6 +15,15 @@ const GALLERY_PHOTOS = [
 type BotInfo = { avatar: string; globalName?: string; username?: string };
 type Msg = { id: number; from: 'bot' | 'user' | 'system'; text: string; delay: number };
 
+function preloadConfetti() {
+  if (!(window as any).__confettiLoaded) {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+    s.onload = () => { (window as any).__confettiLoaded = true; };
+    document.head.appendChild(s);
+  }
+}
+
 function useBotInfo() {
   const [info, setInfo] = useState<BotInfo>({ avatar: '', globalName: 'ChatDVT' });
   useEffect(() => { api.get('/bot-info').then(r => r.data && setInfo(r.data)).catch(() => {}); }, []);
@@ -22,9 +31,7 @@ function useBotInfo() {
 }
 
 function fireConfetti(duration = 3000) {
-  const s = document.createElement('script');
-  s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
-  s.onload = () => {
+  const doFire = () => {
     const c = (window as any).confetti;
     if (!c) return;
     const end = Date.now() + duration;
@@ -36,7 +43,12 @@ function fireConfetti(duration = 3000) {
     })();
     c({ particleCount: 120, spread: 100, origin: { y: 0.5 }, colors });
   };
-  document.head.appendChild(s);
+  if ((window as any).__confettiLoaded) { doFire(); } else {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+    s.onload = () => { (window as any).__confettiLoaded = true; doFire(); };
+    document.head.appendChild(s);
+  }
 }
 
 function Dots({ avatar }: { avatar: string }) {
@@ -93,11 +105,23 @@ function Header({ avatar, name }: { avatar: string; name: string }) {
   );
 }
 
+function Toast({ text, onClose }: { text: string; onClose: () => void }) {
+  useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:999, padding:'16px', display:'flex', justifyContent:'center', animation:'slideUp .4s ease-out', pointerEvents:'none' }}>
+      <div onClick={onClose} style={{ background:'rgba(239,68,68,.15)', backdropFilter:'blur(20px)', border:'1px solid rgba(239,68,68,.3)', borderRadius:14, padding:'14px 20px', color:'#fca5a5', fontSize:'clamp(13px,3.5vw,15px)', fontWeight:600, maxWidth:360, textAlign:'center', pointerEvents:'auto', cursor:'pointer', boxShadow:'0 8px 30px rgba(0,0,0,.3)' }}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
 function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: string; onDone: () => void }) {
   const [msgs, setMsgs] = useState<{m:Msg; v:boolean}[]>([]);
   const [typing, setTyping] = useState(true);
   const [btns, setBtns] = useState(false);
   const [done, setDone] = useState(false);
+  const [toast, setToast] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const started = useRef(false);
 
@@ -156,11 +180,12 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
           <button onClick={confirm} style={{ width:'100%', maxWidth:380, padding:'15px', background:'linear-gradient(135deg,#3b82f6,#2563eb)', color:'#fff', border:'none', borderRadius:14, fontSize:'clamp(14px,3.5vw,15px)', fontWeight:700, cursor:'pointer', boxShadow:'0 6px 20px rgba(37,99,235,.4)' }}>
             Ừa đúng tao nè! Đưa đây mau! 😎
           </button>
-          <button onClick={() => alert('Hông được chối! Tui biết mà. Bấm nút kia đi! 😤')} style={{ width:'100%', maxWidth:380, padding:'12px', background:'rgba(255,255,255,.05)', color:'#71717a', border:'1px solid rgba(255,255,255,.08)', borderRadius:12, fontSize:'clamp(12px,3vw,13px)', fontWeight:600, cursor:'pointer' }}>
+          <button onClick={() => setToast(true)} style={{ width:'100%', maxWidth:380, padding:'12px', background:'rgba(255,255,255,.05)', color:'#71717a', border:'1px solid rgba(255,255,255,.08)', borderRadius:12, fontSize:'clamp(12px,3vw,13px)', fontWeight:600, cursor:'pointer' }}>
             Hông phải, tao lượm được link 🫣
           </button>
         </div>
       )}
+      {toast && <Toast text="Chắc chắn là Huyền rồi, đừng có chối! Nhận đi! 😤💖" onClose={() => setToast(false)} />}
     </>
   );
 }
@@ -211,7 +236,7 @@ function UnboxPhase({ onDone }: { onDone: () => void }) {
   const shake = holding && progress > 40;
 
   return (
-    <div style={{ position:'absolute', inset:0, background:'#09090b', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', overflow:'hidden' }}>
+    <div style={{ position:'absolute', inset:0, background:'#09090b', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', overflow:'hidden', userSelect:'none', WebkitUserSelect:'none', touchAction:'manipulation' }}>
       <div style={{ position:'absolute', inset:0, background:`radial-gradient(circle at 50% 50%, rgba(236,72,153,${progress/500}) 0%, transparent 60%)`, transition:'all .3s', pointerEvents:'none' }} />
 
       {boom && particles.map(p => (
@@ -250,7 +275,8 @@ function UnboxPhase({ onDone }: { onDone: () => void }) {
             transition: boom ? 'all .5s ease-out' : 'transform .1s',
             animation: shake ? `wiggle ${progress > 70 ? '.15s' : '.3s'} infinite` : 'bob 3s ease-in-out infinite',
             filter: `drop-shadow(0 0 ${progress/3}px rgba(236,72,153,.6))`,
-            userSelect:'none', WebkitTapHighlightColor:'transparent',
+            userSelect:'none', WebkitUserSelect:'none', WebkitTapHighlightColor:'transparent',
+            WebkitTouchCallout:'none', touchAction:'none',
           }}
         >
           🎁
@@ -449,12 +475,11 @@ export default function BirthdayGreeting() {
   const [phase, setPhase] = useState(1);
   const { avatar, name } = useBotInfo();
 
-  useEffect(() => { document.title = `${name} | Nhiệm vụ bí mật 🤫`; }, [name]);
+  useEffect(() => { document.title = `${name} | Nhiệm vụ bí mật 🤫`; preloadConfetti(); }, [name]);
 
   return (
     <div style={{ position:'fixed', inset:0, background:'#09090b', fontFamily:"'Inter',-apple-system,sans-serif", display:'flex', flexDirection:'column', zIndex:9999, overflow:'hidden' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         @keyframes blink { 0%,60%,100%{transform:translateY(0);opacity:.4} 30%{transform:translateY(-4px);opacity:1} }
         @keyframes pop { from{opacity:0;transform:translateY(10px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes fade { from{opacity:0} to{opacity:1} }
@@ -465,7 +490,7 @@ export default function BirthdayGreeting() {
         @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(236,72,153,.35)} 50%{box-shadow:0 8px 40px rgba(236,72,153,.55),0 0 0 4px rgba(236,72,153,.15)} }
         @keyframes particleOut { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx,100px),var(--ty,-100px)) scale(0)} }
         ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px}
-        *{-webkit-tap-highlight-color:transparent}
+        *{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
       `}</style>
 
       {phase === 1 && (
