@@ -438,7 +438,7 @@ function WishPhase() {
           </div>
 
           <div style={{ display:'flex', flexDirection:'column', gap:10, animation: show ? 'slideUp .8s .5s ease-out both' : 'none' }}>
-            <a href={`https://m.me/${MESSENGER_ID}?text=${encodeURIComponent('Ê 30k thì donate lại tao đi! Cảm ơn mày nhá! 🫶')}`}
+            <a href={`https://www.facebook.com/messages/t/${MESSENGER_ID}`}
               target="_blank" rel="noopener noreferrer"
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'15px 20px',
@@ -449,7 +449,7 @@ function WishPhase() {
             >
               💬 Reply Tiến Đặng ngay
             </a>
-            <a href={`https://m.me/${MESSENGER_ID}?text=${encodeURIComponent('Code web chúc sinh nhật luôn á hả?! Chịu mày thật! 😂')}`}
+            <a href={`https://www.facebook.com/messages/t/${MESSENGER_ID}`}
               target="_blank" rel="noopener noreferrer"
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'14px 20px',
