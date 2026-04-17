@@ -37,6 +37,14 @@ function preloadConfetti() {
   }
 }
 
+function haptic(ms = 30) {
+  try { navigator?.vibrate?.(ms); } catch {}
+}
+
+function preloadGallery() {
+  GALLERY_PHOTOS.forEach(p => { const img = new Image(); img.src = p.src; });
+}
+
 function useBotInfo() {
   const [info, setInfo] = useState<BotInfo>({ avatar: '', globalName: 'ChatDVT' });
   useEffect(() => { api.get('/bot-info').then(r => r.data && setInfo(r.data)).catch(() => {}); }, []);
@@ -175,6 +183,7 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
     if (done) return;
     setDone(true);
     setBtns(false);
+    haptic(50);
     setMsgs(p => [...p, { m:{ id:50, from:'user', text:'Ừa đúng tao nè! Đưa đây mau! 😎', delay:0 }, v:true }]);
     setTyping(true);
     setTimeout(() => {
@@ -255,6 +264,7 @@ function UnboxPhase({ onDone }: { onDone: () => void }) {
     if (boom) return;
     setBoom(true);
     setHolding(false);
+    haptic(100);
     fireConfetti(4000);
     const ps = Array.from({ length: 20 }, (_, i) => ({
       id: i, x: Math.random() * 300 - 150, y: Math.random() * 300 - 150,
@@ -475,7 +485,7 @@ function WishPhase() {
               onClick={() => {
                 const n = cakeTaps + 1;
                 setCakeTaps(n);
-                if (n >= 7 && !easterEgg) { setEasterEgg(true); fireConfetti(3000); }
+                if (n >= 7 && !easterEgg) { setEasterEgg(true); haptic(80); fireConfetti(3000); }
               }}
               style={{ fontSize:'clamp(50px,14vw,72px)', animation:'bob 4s ease-in-out infinite', marginBottom:8, cursor:'pointer', transition:'transform .1s', transform: cakeTaps > 0 ? `scale(${1 + cakeTaps * 0.03})` : 'scale(1)' }}
             >🎂</div>
@@ -678,7 +688,7 @@ export default function BirthdayGreeting() {
   const [displayPhase, setDisplayPhase] = useState(1);
   const { avatar, name } = useBotInfo();
 
-  useEffect(() => { document.title = `${name} | Nhiệm vụ bí mật 🤫`; preloadConfetti(); }, [name]);
+  useEffect(() => { document.title = `${name} | Nhiệm vụ bí mật 🤫`; preloadConfetti(); preloadGallery(); }, [name]);
 
   const goToPhase = (next: number) => {
     setTransitioning(true);
