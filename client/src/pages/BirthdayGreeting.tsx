@@ -165,8 +165,11 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
       t = t2 + m.delay;
     });
   }, []);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { ref.current && (ref.current.scrollTop = ref.current.scrollHeight); }, [msgs, typing]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [msgs, typing]);
 
   const confirm = () => {
     if (done) return;
@@ -202,9 +205,10 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
 
   return (
     <>
-      <div ref={ref} style={{ flex:1, overflowY:'auto', paddingTop:8, paddingBottom: btns ? 160 : 20, display:'flex', flexDirection:'column', gap:4 }}>
+      <div ref={ref} style={{ flex:1, overflowY:'auto', WebkitOverflowScrolling:'touch', paddingTop:8, paddingBottom: btns ? 180 : 40, display:'flex', flexDirection:'column', gap:4 }}>
         {msgs.map(({m}) => m.from==='system' ? <Sys key={m.id} text={m.text} anim /> : m.from==='bot' ? <Bot key={m.id} text={m.text} avatar={avatar} anim /> : <Me key={m.id} text={m.text} anim />)}
         {typing && <Dots avatar={avatar} />}
+        <div ref={bottomRef} style={{ height:1, flexShrink:0 }} />
       </div>
       {btns && (
         <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'16px 16px calc(env(safe-area-inset-bottom,12px) + 12px)', background:'linear-gradient(transparent,#09090b 40%)', display:'flex', flexDirection:'column', gap:10, alignItems:'center', animation:'slideUp .5s ease-out' }}>
@@ -448,7 +452,7 @@ function WishPhase() {
   const [startTyping, setStartTyping] = useState(false);
   const wish1 = useTypewriter('Sinh nhật 27 tuổi vui vẻ nha! 🥳', 50, startTyping);
   const wish2 = useTypewriter('Donate Khầy 30k ăn hủ tiếu nhé nhé lelele 🍜', 45, wish1.done);
-  const wish3 = useTypewriter('Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là khen á không phải chê đâu :)))))))', 30, wish2.done);
+  const wish3 = useTypewriter('Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là khen á không phải chê đâu Kakaka', 30, wish2.done);
 
   useEffect(() => {
     setTimeout(() => setShow(true), 200);
@@ -540,7 +544,7 @@ function WishPhase() {
             {wish2.done && (
               <p style={{ color:'#a1a1aa', fontSize:'clamp(14px,3.5vw,15px)', lineHeight:1.8, fontStyle:'italic', minHeight:'3.6em' }}>
                 {wish3.done
-                  ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu nha!</>
+                  ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu kakaka </>
                   : <>{wish3.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
                 }
               </p>
