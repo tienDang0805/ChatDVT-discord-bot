@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -135,6 +135,16 @@ export const PublicPortal = () => {
       icon: Moon,
       href: '/astrology',
       author: 'Pháp Sư Tiến Đặng',
+      category: 'utility'
+    },
+    {
+      id: 'qr-generator',
+      number: '14',
+      title: 'Tạo Mã QR Custom',
+      description: 'Tạo mã QR độc đáo với logo/ảnh riêng ở giữa, tuỳ chỉnh màu sắc, dot style. Quét vẫn chuẩn 100%.',
+      icon: QrCode,
+      href: '/qr-generator',
+      author: 'Tiến Đặng (QR Master)',
       category: 'utility'
     }
   ];

@@ -140,10 +140,10 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
 
   const script: Msg[] = [
     { id:0, from:'system', text:'🔐 Kênh bí mật — đã kết nối', delay:700 },
-    { id:1, from:'bot', text:`Ê! 👋 Em là <b>${botName}</b>, con bot của anh Tiến nè.`, delay:1100 },
-    { id:2, from:'bot', text:'Anh Tiến hôm nay biểu em đi giao hàng nè, duma biến em thành <b>shipper</b> 📦', delay:1400 },
+    { id:1, from:'bot', text:`Ê! 👋 Em là <b>${botName}</b>, con bot số khổ của anh Tiến .`, delay:1100 },
+    { id:2, from:'bot', text:'Anh Tiến hôm nay biểu em đi giao hàng , duma biến em thành <b>shipper</b> 📦', delay:1400 },
     { id:3, from:'bot', text:'Ảnh bảo: <i>"Ngày <b>21/4</b> quan trọng lắm, mày ship cho đúng hẹn, đừng có tào lao!"</i> 😤', delay:1300 },
-    { id:4, from:'bot', text:'Em hỏi: <i>"Quan trọng cỡ nào?"</i> — Ảnh trả lời: <i>"Quan trọng hơn cả deploy production đó!"</i> 😱', delay:1200 },
+    { id:4, from:'bot', text:'Em hỏi: <i>"Quan trọng cỡ nào?"</i> — Ảnh trả lời: <i>"Hỏi cl biết quan trọng đc rồi!"</i> 😱', delay:1200 },
     { id:5, from:'system', text:'📡 Scanning... tìm thấy 1 mục tiêu đang cắm mặt vào điện thoại', delay:900 },
     { id:6, from:'bot', text:'Khoan, em hỏi chút: <b>Chị có phải là người đọc được thiệp của anh Tiến không?</b> 🤔', delay:1200 },
     { id:7, from:'bot', text:'Vì lỡ giao nhầm là ảnh <b>chửi em</b> lắm á 😭', delay:800 },
@@ -448,7 +448,7 @@ function WishPhase() {
   const [startTyping, setStartTyping] = useState(false);
   const wish1 = useTypewriter('Sinh nhật 27 tuổi vui vẻ nha! 🥳', 50, startTyping);
   const wish2 = useTypewriter('Donate Khầy 30k ăn hủ tiếu nhé nhé lelele 🍜', 45, wish1.done);
-  const wish3 = useTypewriter('Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là khen á không phải chê đâu nha!', 30, wish2.done);
+  const wish3 = useTypewriter('Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là khen á không phải chê đâu :)))))))', 30, wish2.done);
 
   useEffect(() => {
     setTimeout(() => setShow(true), 200);
