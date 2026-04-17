@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -146,6 +146,16 @@ export const PublicPortal = () => {
       href: '/qr-generator',
       author: 'Tiến Đặng (QR Master)',
       category: 'utility'
+    },
+    {
+      id: 'cost-study',
+      number: '15',
+      title: 'NC Chi Phí Hiệu Quả',
+      description: 'Nghiên cứu so sánh chi phí - hiệu quả can thiệp tiêm nội nhãn vs laze trong điều trị phù hoàng điểm tại BV Mắt TP.HCM.',
+      icon: Eye,
+      href: '/cost-study',
+      author: 'Khoa DKVM - BV Mắt TP.HCM',
+      category: 'utility'
     }
   ];
 
@@ -229,7 +239,7 @@ export const PublicPortal = () => {
                 Make by Tien Dang form 8D with love 
               </p>
               <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-                  Bot Discord Tiến Đặng Làm Cho mấy thằng Mọi 8D 
+                  Mobile dev nhưng lại làm content
               </p>
             </div>
 
