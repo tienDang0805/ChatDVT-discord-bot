@@ -18,12 +18,11 @@ function openMessenger(text?: string) {
 }
 
 const GALLERY_PHOTOS = [
-  { id: 1, src: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&fit=crop', caption: 'Kỷ niệm 1' },
-  { id: 2, src: 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=400&fit=crop', caption: 'Kỷ niệm 2' },
-  { id: 3, src: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&fit=crop', caption: 'Kỷ niệm 3' },
-  { id: 4, src: 'https://images.unsplash.com/photo-1530103862676-de88b394140a?w=400&fit=crop', caption: 'Kỷ niệm 4' },
-  { id: 5, src: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=400&fit=crop', caption: 'Kỷ niệm 5' },
-  { id: 6, src: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&fit=crop', caption: 'Kỷ niệm 6' },
+  { id: 1, src: 'https://lh3.googleusercontent.com/d/1K4mHuS7nleGtukGNCK-X5zLyEuwvAR0M' },
+  { id: 2, src: 'https://lh3.googleusercontent.com/d/1Oss22ujYRFMumfh5Z10AA4gH5ITzwzus' },
+  { id: 3, src: 'https://lh3.googleusercontent.com/d/1_ar_0sazttbF-BES-kAldq5E6Hy8onGO' },
+  { id: 4, src: 'https://lh3.googleusercontent.com/d/1-B22OAV5jxd2-MtDPJmUGqmrlFSA8qSV' },
+  { id: 5, src: 'https://lh3.googleusercontent.com/d/16i2ld_YfXUvEyqXeFJqGrP4XiUC0UHyy' },
 ];
 
 type BotInfo = { avatar: string; globalName?: string; username?: string };
@@ -141,12 +140,14 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
 
   const script: Msg[] = [
     { id:0, from:'system', text:'🔐 Kênh bí mật — đã kết nối', delay:700 },
-    { id:1, from:'bot', text:`Ê! 👋 Tui là <b>${botName}</b>, con bot của anh Tiến nè.`, delay:1100 },
-    { id:2, from:'bot', text:'Anh Tiến hôm nay biểu tui đi giao hàng nè, duma biến tui thành <b>shipper</b> 📦', delay:1400 },
+    { id:1, from:'bot', text:`Ê! 👋 Em là <b>${botName}</b>, con bot của anh Tiến nè.`, delay:1100 },
+    { id:2, from:'bot', text:'Anh Tiến hôm nay biểu em đi giao hàng nè, duma biến em thành <b>shipper</b> 📦', delay:1400 },
     { id:3, from:'bot', text:'Ảnh bảo: <i>"Ngày <b>21/4</b> quan trọng lắm, mày ship cho đúng hẹn, đừng có tào lao!"</i> 😤', delay:1300 },
-    { id:4, from:'system', text:'📡 Scanning... tìm thấy 1 mục tiêu đang cắm mặt vào điện thoại', delay:900 },
-    { id:5, from:'bot', text:'Khoan, tui hỏi chút: <b>Chị có phải là người đọc được thiệp của anh Tiến không?</b> 🤔', delay:1200 },
-    { id:6, from:'bot', text:'Vì lỡ giao nhầm là ảnh <b>chửi tui</b> lắm á 😭', delay:900 },
+    { id:4, from:'bot', text:'Em hỏi: <i>"Quan trọng cỡ nào?"</i> — Ảnh trả lời: <i>"Quan trọng hơn cả deploy production đó!"</i> 😱', delay:1200 },
+    { id:5, from:'system', text:'📡 Scanning... tìm thấy 1 mục tiêu đang cắm mặt vào điện thoại', delay:900 },
+    { id:6, from:'bot', text:'Khoan, em hỏi chút: <b>Chị có phải là người đọc được thiệp của anh Tiến không?</b> 🤔', delay:1200 },
+    { id:7, from:'bot', text:'Vì lỡ giao nhầm là ảnh <b>chửi em</b> lắm á 😭', delay:800 },
+    { id:8, from:'bot', text:'(mà thật ra cũng hơi tò mò bên trong có gì, ảnh cấm em xem 🙄)', delay:900 },
   ];
 
   useEffect(() => {
@@ -175,10 +176,26 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
     setTyping(true);
     setTimeout(() => {
       setTyping(false);
-      setMsgs(p => [...p, { m:{ id:51, from:'bot', text:'Haha đúng rồi chị Huyền! 😂 Để tui mở hàng ra nha!', delay:0 }, v:true }]);
+      setMsgs(p => [...p, { m:{ id:51, from:'bot', text:'Hmm để em verify chút... 🧐', delay:0 }, v:true }]);
+      setTyping(true);
       setTimeout(() => {
-        setMsgs(p => [...p, { m:{ id:52, from:'system', text:'🚀 Chuyển sang chế độ Unbox...', delay:0 }, v:true }]);
-        setTimeout(onDone, 1200);
+        setTyping(false);
+        setMsgs(p => [...p, { m:{ id:52, from:'system', text:'🔍 Xác minh danh tính... IP check... vân tay... mùi hương nước hoa...', delay:0 }, v:true }]);
+        setTimeout(() => {
+          setMsgs(p => [...p, { m:{ id:53, from:'system', text:'✅ Kết quả: 99.9% là Huyền (0.1% còn lại là do wifi lag)', delay:0 }, v:true }]);
+          setTyping(true);
+          setTimeout(() => {
+            setTyping(false);
+            setMsgs(p => [...p, { m:{ id:54, from:'bot', text:'Ok chị Huyền rồi! 😂 Anh Tiến dặn dò: <i>"Đưa cho chị ấy cẩn thận, đừng có làm xước!"</i>', delay:0 }, v:true }]);
+            setTimeout(() => {
+              setMsgs(p => [...p, { m:{ id:55, from:'bot', text:'Ship tận tay luôn nè! Mở ra xem đi chị ơi 📦✨', delay:0 }, v:true }]);
+              setTimeout(() => {
+                setMsgs(p => [...p, { m:{ id:56, from:'system', text:'🚀 Chuyển sang chế độ Unbox...', delay:0 }, v:true }]);
+                setTimeout(onDone, 1200);
+              }, 800);
+            }, 1000);
+          }, 900);
+        }, 1200);
       }, 1000);
     }, 900);
   };
@@ -327,7 +344,7 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
           <h2 style={{ fontSize:'clamp(22px,6vw,30px)', fontWeight:800, background:'linear-gradient(135deg,#f9a8d4,#c4b5fd,#93c5fd)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', marginBottom:8 }}>
             Nhật Ký Kỷ Niệm
           </h2>
-          <p style={{ color:'#71717a', fontSize:'clamp(12px,3vw,14px)' }}>Mấy khoảnh khắc "xàm" mà đáng nhớ</p>
+          <p style={{ color:'#71717a', fontSize:'clamp(12px,3vw,14px)' }}>Em chỉ tìm được mấy hình này thôi, hơi dìm đừng khóc nhé 😜</p>
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:'clamp(8px,2vw,12px)', marginBottom:32 }}>
@@ -347,11 +364,8 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
                 zIndex: activeIdx === i ? 5 : 1,
               }}
             >
-              <img src={photo.src} alt={photo.caption} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
-              <div style={{ position:'absolute', inset:0, background:'linear-gradient(transparent 50%, rgba(0,0,0,.7))' }} />
-              <div style={{ position:'absolute', bottom:0, left:0, right:0, padding:'10px 12px' }}>
-                <span style={{ color:'rgba(255,255,255,.8)', fontSize:'clamp(10px,2.5vw,12px)', fontWeight:600 }}>{photo.caption}</span>
-              </div>
+              <img src={photo.src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+              <div style={{ position:'absolute', inset:0, background:'linear-gradient(transparent 60%, rgba(0,0,0,.5))' }} />
             </div>
           ))}
         </div>
@@ -565,6 +579,27 @@ function WishPhase() {
           </p>
 
           <CountdownWidget />
+
+          <div style={{ display:'flex', gap:10, marginTop:24 }}>
+            <button onClick={() => window.location.reload()}
+              style={{
+                flex:1, padding:'13px 16px', background:'rgba(255,255,255,.05)', color:'#a1a1aa',
+                border:'1px solid rgba(255,255,255,.08)', borderRadius:12,
+                fontSize:'clamp(12px,3vw,13px)', fontWeight:600, cursor:'pointer', transition:'all .2s',
+              }}
+            >
+              🔄 Replay Thiệp
+            </button>
+            <button onClick={() => window.location.href = '/'}
+              style={{
+                flex:1, padding:'13px 16px', background:'rgba(255,255,255,.05)', color:'#a1a1aa',
+                border:'1px solid rgba(255,255,255,.08)', borderRadius:12,
+                fontSize:'clamp(12px,3vw,13px)', fontWeight:600, cursor:'pointer', transition:'all .2s',
+              }}
+            >
+              🏠 Trang chủ
+            </button>
+          </div>
         </div>
       </div>
     </div>

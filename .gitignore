@@ -22,4 +22,6 @@ server-dist/
 #legacy 
 _LEGACY_BACKUP
 
+# Birthday photos (private)
+client/public/hbd/
 
