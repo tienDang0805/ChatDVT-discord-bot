@@ -611,6 +611,7 @@ function WishPhase() {
               💻 Code web để chúc sinh nhật luôn á?! 
             </button>
           </div>
+          )}
 
           <p style={{ textAlign:'center', color:'#27272a', fontSize:'clamp(9px,2vw,10px)', fontFamily:'monospace', marginTop:32 }}>
             crafted with ❤️ & mass caffeine ☕ by ChatDVT
@@ -638,7 +639,6 @@ function WishPhase() {
               🏠 Trang chủ
             </button>
           </div>
-          )}
         </div>
       </div>
     </div>
