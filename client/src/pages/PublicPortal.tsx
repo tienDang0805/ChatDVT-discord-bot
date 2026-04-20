@@ -172,7 +172,8 @@ export const PublicPortal = () => {
   const chibiImages = [
     'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg',
     'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-rain.jpg',
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/phide.jpg'
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/phide.jpg',
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/slide-new.jpg'
   ];
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -287,7 +288,7 @@ export const PublicPortal = () => {
                   (Vui lòng lưu 3 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>chibi-rain.jpg<br/>phide.jpg)
                 </div>
              </div>
-             <p className="mt-4 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Vibe code đang chuyển hoá...</p>
+             <p className="mt-4 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Đang bận giải cứu thế giới...</p>
           </div>
         </div>
 
