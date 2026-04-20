@@ -1759,31 +1759,125 @@ app.post('/api/fb-profile/scrape', async (req, res) => {
         const response = await axios.get(fbUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-                'Accept': 'text/html',
-                'Accept-Language': 'vi-VN,vi;q=0.9',
+                'Accept': 'text/html,application/xhtml+xml',
+                'Accept-Language': 'vi-VN,vi;q=0.9,en;q=0.8',
             },
-            timeout: 10000,
+            timeout: 15000,
+            maxRedirects: 5,
         });
         const html = response.data as string;
+
+        const decode = (s: string) => s
+            .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"').replace(/&#039;/g, "'")
+            .replace(/&#x([0-9a-f]+);/gi, (_m: string, h: string) => String.fromCharCode(parseInt(h, 16)))
+            .replace(/\\u([0-9a-f]{4})/gi, (_m: string, h: string) => String.fromCharCode(parseInt(h, 16)))
+            .replace(/\\\//g, '/');
 
         const getOG = (prop: string) => {
             const m = html.match(new RegExp(`<meta[^>]*property=["']og:${prop}["'][^>]*content=["']([^"']+)["']`, 'i'))
                 || html.match(new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:${prop}["']`, 'i'));
-            return m ? m[1].replace(/&amp;/g, '&').replace(/&#x([0-9a-f]+);/gi, (_m: string, h: string) => String.fromCharCode(parseInt(h, 16))) : '';
+            return m ? decode(m[1]) : '';
         };
-        const getMetaName = (name: string) => {
+        const getMeta = (name: string) => {
             const m = html.match(new RegExp(`<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']+)["']`, 'i'));
-            return m ? m[1].replace(/&amp;/g, '&') : '';
+            return m ? decode(m[1]) : '';
         };
 
-        const title = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const name = getOG('title') || (title ? title[1].replace(/ \|.*$/, '').replace(/ -.*$/, '').trim() : '');
-        const description = getOG('description') || getMetaName('description') || '';
-        const image = getOG('image') || '';
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const name = getOG('title') || (titleMatch ? decode(titleMatch[1]).replace(/ \|.*$/, '').replace(/ -.*$/, '').replace(/ \(.*$/, '').trim() : '');
+        const bio = getOG('description') || getMeta('description') || '';
+        const avatar = getOG('image') || '';
+        const ogType = getOG('type') || '';
+        const ogUrl = getOG('url') || fbUrl;
 
-        if (!name) return res.status(400).json({ error: 'Không đọc được profile. Thử profile public hoặc nhập tay.' });
+        const extracted: Record<string, string[]> = {
+            workplaces: [], education: [], locations: [], relationships: [],
+            posts: [], friends: [], otherInfo: []
+        };
 
-        res.json({ name, bio: description, avatar: image, url: fbUrl, scraped: true });
+        const jsonLdMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+        for (const jm of jsonLdMatches) {
+            try {
+                const ld = JSON.parse(decode(jm[1]));
+                if (ld.name && !name) extracted.otherInfo.push(`Tên: ${ld.name}`);
+                if (ld.jobTitle) extracted.workplaces.push(ld.jobTitle);
+                if (ld.worksFor) extracted.workplaces.push(typeof ld.worksFor === 'string' ? ld.worksFor : ld.worksFor.name || '');
+                if (ld.address) extracted.locations.push(typeof ld.address === 'string' ? ld.address : ld.address.addressLocality || '');
+                if (ld.alumniOf) {
+                    const schools = Array.isArray(ld.alumniOf) ? ld.alumniOf : [ld.alumniOf];
+                    schools.forEach((s: any) => extracted.education.push(typeof s === 'string' ? s : s.name || ''));
+                }
+            } catch (_e) {}
+        }
+
+        const dataPatterns = [
+            { regex: /["']work["']\s*:\s*\[([^\]]+)\]/gi, key: 'workplaces' },
+            { regex: /["']education["']\s*:\s*\[([^\]]+)\]/gi, key: 'education' },
+            { regex: /["']current_city["']\s*:\s*\{[^}]*["']name["']\s*:\s*["']([^"']+)["']/gi, key: 'locations' },
+            { regex: /["']hometown["']\s*:\s*\{[^}]*["']name["']\s*:\s*["']([^"']+)["']/gi, key: 'locations' },
+        ];
+        for (const p of dataPatterns) {
+            const matches = html.matchAll(p.regex);
+            for (const m of matches) {
+                const val = decode(m[1] || m[0]);
+                const names = val.match(/["']name["']\s*:\s*["']([^"']+)["']/gi);
+                if (names) names.forEach(n => {
+                    const extracted_name = n.match(/["']([^"']+)["']\s*$/);
+                    if (extracted_name) (extracted as any)[p.key].push(decode(extracted_name[1]));
+                });
+                else if (m[1] && m[1].length < 100) (extracted as any)[p.key].push(decode(m[1]));
+            }
+        }
+
+        const friendsMatch = html.match(/(\d[\d,.]*)\s*(friends|bạn bè|người bạn)/i)
+            || html.match(/["']friends?_count["']\s*:\s*(\d+)/i);
+        if (friendsMatch) extracted.friends.push(friendsMatch[1].replace(/,/g, ''));
+
+        const followerMatch = html.match(/(\d[\d,.]*)\s*(followers|người theo dõi)/i)
+            || html.match(/["']follower_count["']\s*:\s*(\d+)/i);
+        if (followerMatch) extracted.otherInfo.push(`Followers: ${followerMatch[1]}`);
+
+        const relMatch = html.match(/["']relationship_status["']\s*:\s*["']([^"']+)["']/i);
+        if (relMatch) extracted.relationships.push(decode(relMatch[1]));
+
+        const postTexts: string[] = [];
+        const postMatches = html.matchAll(/["']message["']\s*:\s*\{[^}]*["']text["']\s*:\s*["']([^"']{10,300})["']/gi);
+        for (const pm of postMatches) {
+            if (postTexts.length < 5) postTexts.push(decode(pm[1]));
+        }
+        const storyMatches = html.matchAll(/["']story["']\s*:\s*\{[^}]*["']text["']\s*:\s*["']([^"']{10,200})["']/gi);
+        for (const sm of storyMatches) {
+            if (postTexts.length < 5) postTexts.push(decode(sm[1]));
+        }
+        extracted.posts = postTexts;
+
+        if (!name && !bio) return res.status(400).json({ error: 'Không đọc được profile. Thử profile public hoặc nhập tay.' });
+
+        const clean = (arr: string[]) => [...new Set(arr.filter(s => s && s.trim().length > 0))];
+
+        res.json({
+            name: name || 'Unknown',
+            bio,
+            avatar,
+            url: ogUrl,
+            type: ogType,
+            scraped: true,
+            extracted: {
+                workplaces: clean(extracted.workplaces),
+                education: clean(extracted.education),
+                locations: clean(extracted.locations),
+                relationships: clean(extracted.relationships),
+                friends: clean(extracted.friends),
+                posts: clean(extracted.posts),
+                otherInfo: clean(extracted.otherInfo),
+            },
+            rawDataFound: {
+                hasJsonLd: html.includes('application/ld+json'),
+                hasStructuredData: html.includes('"work"') || html.includes('"education"'),
+                htmlLength: html.length,
+            }
+        });
     } catch (err: any) {
         console.error('FB scrape error:', err.message);
         res.status(500).json({ error: 'Không fetch được. Profile có thể private hoặc FB chặn.' });

@@ -210,8 +210,8 @@ export const PublicPortal = () => {
     {
       id: 'fb-card',
       number: '21',
-      title: 'FB Profile Card',
-      description: 'Biến profile Facebook thành thẻ bài sưu tầm! 6 style: Trading Card, RPG, Tinder, Cyberpunk, Anime, Wanted.',
+      title: 'FB Profile Reskin',
+      description: 'Nhập link FB → đọc thông tin → render profile theo 6 phong cách: Glass, Cyberpunk, Minimal, Luxury, Retro, Nature.',
       icon: CreditCard,
       href: '/fb-card',
       author: 'Card Master Tiến Đặng',
