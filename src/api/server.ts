@@ -1750,6 +1750,17 @@ YÊU CẦU:
 });
 
 // --- FB Profile Card Generator API ---
+app.get('/api/fb-profile/proxy-image', async (req, res) => {
+    try {
+        const imgUrl = req.query.url as string;
+        if (!imgUrl) return res.status(400).send('Missing url');
+        const response = await axios.get(imgUrl, { responseType: 'arraybuffer', timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const ct = response.headers['content-type'] || 'image/jpeg';
+        res.set({ 'Content-Type': ct, 'Cache-Control': 'public, max-age=86400', 'Access-Control-Allow-Origin': '*' });
+        res.send(Buffer.from(response.data));
+    } catch { res.status(404).send('Image not found'); }
+});
+
 app.post('/api/fb-profile/scrape', async (req, res) => {
     try {
         const { url } = req.body;
