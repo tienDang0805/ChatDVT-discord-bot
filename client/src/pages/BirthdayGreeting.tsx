@@ -366,17 +366,15 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
           {GALLERY_PHOTOS.map((photo, i) => (
             <div
               key={photo.id}
-              onClick={() => setActiveIdx(activeIdx === i ? null : i)}
+              onClick={() => setActiveIdx(i)}
               style={{
                 position:'relative', borderRadius:16, overflow:'hidden', cursor:'pointer',
                 aspectRatio: i === 0 || i === 5 ? '1/1.2' : '1/1',
                 gridRow: i === 0 ? 'span 2' : undefined,
                 animation: show ? `scaleUp .6s ${i * 100}ms ease-out both` : 'none',
                 border: '1px solid rgba(255,255,255,.08)',
-                transform: activeIdx === i ? 'scale(1.05)' : 'scale(1)',
-                transition: 'transform .3s cubic-bezier(.34,1.56,.64,1)',
-                boxShadow: activeIdx === i ? '0 12px 40px rgba(0,0,0,.5)' : '0 4px 12px rgba(0,0,0,.3)',
-                zIndex: activeIdx === i ? 5 : 1,
+                transition: 'transform .2s',
+                boxShadow: '0 4px 12px rgba(0,0,0,.3)',
               }}
             >
               <img src={photo.src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
@@ -384,6 +382,39 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
             </div>
           ))}
         </div>
+
+        {activeIdx !== null && (
+          <div
+            onClick={() => setActiveIdx(null)}
+            style={{
+              position:'fixed', inset:0, zIndex:999, background:'rgba(0,0,0,.92)', backdropFilter:'blur(10px)',
+              display:'flex', alignItems:'center', justifyContent:'center', padding:16,
+              animation:'fade .25s ease-out',
+            }}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setActiveIdx(null); }}
+              style={{
+                position:'absolute', top:'max(16px, env(safe-area-inset-top))', right:16, zIndex:1000,
+                width:40, height:40, borderRadius:'50%', border:'none',
+                background:'rgba(255,255,255,.15)', color:'#fff', fontSize:20,
+                cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center',
+              }}
+            >✕</button>
+            <img
+              src={GALLERY_PHOTOS[activeIdx].src}
+              alt=""
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth:'100%', maxHeight:'85vh', objectFit:'contain',
+                borderRadius:12, animation:'scaleUp .3s cubic-bezier(.34,1.56,.64,1)',
+              }}
+            />
+            <div style={{ position:'absolute', bottom:'max(20px, env(safe-area-inset-bottom))', color:'#71717a', fontSize:12, fontFamily:'monospace' }}>
+              {activeIdx + 1} / {GALLERY_PHOTOS.length} — tap để đóng
+            </div>
+          </div>
+        )}
 
         <div style={{ display:'flex', justifyContent:'center', animation: show ? 'slideUp 1s .6s ease-out both' : 'none' }}>
           <button
