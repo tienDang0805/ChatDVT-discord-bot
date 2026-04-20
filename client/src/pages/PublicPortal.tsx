@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, CreditCard } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -205,6 +205,16 @@ export const PublicPortal = () => {
       icon: Zap,
       href: '/burnout-check',
       author: 'HR Bot Tiến Đặng',
+      category: 'utility'
+    },
+    {
+      id: 'fb-card',
+      number: '21',
+      title: 'FB Profile Card',
+      description: 'Biến profile Facebook thành thẻ bài sưu tầm! 6 style: Trading Card, RPG, Tinder, Cyberpunk, Anime, Wanted.',
+      icon: CreditCard,
+      href: '/fb-card',
+      author: 'Card Master Tiến Đặng',
       category: 'utility'
     }
   ];

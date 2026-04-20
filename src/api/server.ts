@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/fb-profile') || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1746,6 +1746,99 @@ YÊU CẦU:
     } catch (err: any) {
         console.error('Astrology chat API error:', err.message);
         res.status(500).json({ error: 'Dây thiên cơ đang nhiễu, không phản hồi được!' });
+    }
+});
+
+// --- FB Profile Card Generator API ---
+app.post('/api/fb-profile/scrape', async (req, res) => {
+    try {
+        const { url } = req.body;
+        if (!url?.trim()) return res.status(400).json({ error: 'Nhập link Facebook!' });
+
+        const fbUrl = url.trim().replace(/\/$/, '');
+        const response = await fetch(fbUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                'Accept': 'text/html',
+                'Accept-Language': 'vi-VN,vi;q=0.9',
+            },
+        });
+        const html = await response.text();
+
+        const getOG = (prop: string) => {
+            const m = html.match(new RegExp(`<meta[^>]*property=["']og:${prop}["'][^>]*content=["']([^"']+)["']`, 'i'))
+                || html.match(new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:${prop}["']`, 'i'));
+            return m ? m[1].replace(/&amp;/g, '&').replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16))) : '';
+        };
+        const getMetaName = (name: string) => {
+            const m = html.match(new RegExp(`<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']+)["']`, 'i'));
+            return m ? m[1].replace(/&amp;/g, '&') : '';
+        };
+
+        const title = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const name = getOG('title') || (title ? title[1].replace(/ \|.*$/, '').replace(/ -.*$/, '').trim() : '');
+        const description = getOG('description') || getMetaName('description') || '';
+        const image = getOG('image') || '';
+
+        if (!name) return res.status(400).json({ error: 'Không đọc được profile. Thử profile public hoặc nhập tay.' });
+
+        res.json({ name, bio: description, avatar: image, url: fbUrl, scraped: true });
+    } catch (err: any) {
+        console.error('FB scrape error:', err.message);
+        res.status(500).json({ error: 'Không fetch được. Profile có thể private hoặc FB chặn.' });
+    }
+});
+
+app.post('/api/fb-profile/generate-card', async (req, res) => {
+    try {
+        const { name, bio, job, location, relationship, hobbies, style } = req.body;
+        if (!name?.trim()) return res.status(400).json({ error: 'Cần ít nhất tên!' });
+
+        const styleGuide: Record<string, string> = {
+            trading: 'Thẻ bài sưu tầm (Trading Card) như Pokémon/Yu-Gi-Oh. Tạo stats: ATK/DEF/HP/INT/CHA, rarity, element, special ability.',
+            rpg: 'Character Sheet RPG. Tạo class, level, HP/MP, skills, equipment, alignment.',
+            tinder: 'Profile Tinder/dating app. Tạo bio thả thính, deal-breakers, green flags, conversation starter.',
+            cyberpunk: 'Thẻ căn cước Cyberpunk 2077. Tạo cyberware, faction, street cred, wanted level, net runner rating.',
+            anime: 'Nhân vật Anime. Tạo anime archetype, power level, catchphrase, rival, backstory 1 câu.',
+            wanted: 'Poster Wanted kiểu One Piece. Tạo bounty (tiền thưởng), crime, alias, danger level, last seen.',
+        };
+
+        const prompt = `Dựa trên thông tin profile Facebook này, hãy tạo dữ liệu cho thẻ profile style: ${styleGuide[style] || styleGuide.trading}
+
+THÔNG TIN:
+- Tên: ${name}
+- Bio: ${bio || 'Không có'}
+- Nghề: ${job || 'Không rõ'}
+- Nơi ở: ${location || 'Không rõ'}
+- Quan hệ: ${relationship || 'Không rõ'}
+- Sở thích: ${hobbies || 'Không rõ'}
+
+QUY TẮC:
+- Sáng tạo, hài hước, dựa trên info thật nhưng phóng đại vui.
+- Tất cả bằng tiếng Việt, mix English nếu cool.
+- Stats phải dựa trên info thực (VD: dev → INT cao, gym → ATK cao).
+
+TRẢ VỀ JSON:
+{
+  "displayName": "<tên hiển thị trên thẻ>",
+  "tagline": "<1 câu tagline/catchphrase hay>",
+  "stats": [{"label":"<tên stat>","value":<0-100>}],
+  "badges": ["<3-4 badge/tag ngắn>"],
+  "specialAbility": "<1 skill đặc biệt hài hước>",
+  "rarity": "<Common/Uncommon/Rare/Epic/Legendary>",
+  "flavorText": "<1-2 câu mô tả huyền thoại về người này>",
+  "extraFields": [{"label":"<field name>","value":"<value>"}]
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('FB card gen error:', err.message);
+        res.status(500).json({ error: 'AI tạo thẻ thất bại, thử lại!' });
     }
 });
 
