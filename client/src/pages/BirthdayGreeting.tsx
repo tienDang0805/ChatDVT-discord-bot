@@ -18,12 +18,13 @@ function openMessenger(text?: string) {
 }
 
 const GALLERY_PHOTOS = [
-  { id: 1, src: 'https://lh3.googleusercontent.com/d/1K4mHuS7nleGtukGNCK-X5zLyEuwvAR0M' },
-  { id: 2, src: 'https://lh3.googleusercontent.com/d/1Oss22ujYRFMumfh5Z10AA4gH5ITzwzus' },
-  { id: 3, src: 'https://lh3.googleusercontent.com/d/1_ar_0sazttbF-BES-kAldq5E6Hy8onGO' },
-  { id: 4, src: 'https://lh3.googleusercontent.com/d/1-B22OAV5jxd2-MtDPJmUGqmrlFSA8qSV' },
-  { id: 5, src: 'https://lh3.googleusercontent.com/d/16i2ld_YfXUvEyqXeFJqGrP4XiUC0UHyy' },
-  { id: 6, src: 'https://lh3.googleusercontent.com/d/1hgt8GNBUlGfxJtKqlNdyT71FHnan7Pf0' },
+   { id: 1, src: 'https://lh3.googleusercontent.com/d/1hgt8GNBUlGfxJtKqlNdyT71FHnan7Pf0' },
+  { id: 2, src: 'https://lh3.googleusercontent.com/d/1K4mHuS7nleGtukGNCK-X5zLyEuwvAR0M' },
+  { id: 3, src: 'https://lh3.googleusercontent.com/d/1Oss22ujYRFMumfh5Z10AA4gH5ITzwzus' },
+  { id: 4, src: 'https://lh3.googleusercontent.com/d/1_ar_0sazttbF-BES-kAldq5E6Hy8onGO' },
+  { id: 5, src: 'https://lh3.googleusercontent.com/d/1-B22OAV5jxd2-MtDPJmUGqmrlFSA8qSV' },
+  { id: 6, src: 'https://lh3.googleusercontent.com/d/16i2ld_YfXUvEyqXeFJqGrP4XiUC0UHyy' },
+ 
 ];
 
 type BotInfo = { avatar: string; globalName?: string; username?: string };
