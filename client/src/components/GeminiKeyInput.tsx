@@ -17,7 +17,7 @@ export const useGeminiKey = () => {
 
 export const getStoredGeminiKey = () => localStorage.getItem(STORAGE_KEY) || '';
 
-export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pink' | 'blue' | 'amber' }) => {
+export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pink' | 'blue' | 'amber' | 'orange' }) => {
   const { geminiKey, saveGeminiKey } = useGeminiKey();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState(geminiKey);
@@ -31,6 +31,7 @@ export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pin
     pink: { border: 'border-pink-500/30', text: 'text-pink-400', bg: 'bg-pink-500/10', hover: 'hover:border-pink-500/50', btn: 'from-pink-600 to-rose-600', focusBorder: 'focus:border-pink-500' },
     blue: { border: 'border-blue-500/30', text: 'text-blue-400', bg: 'bg-blue-500/10', hover: 'hover:border-blue-500/50', btn: 'from-blue-600 to-cyan-600', focusBorder: 'focus:border-blue-500' },
     amber: { border: 'border-amber-500/30', text: 'text-amber-400', bg: 'bg-amber-500/10', hover: 'hover:border-amber-500/50', btn: 'from-amber-600 to-orange-600', focusBorder: 'focus:border-amber-500' },
+    orange: { border: 'border-orange-500/30', text: 'text-orange-400', bg: 'bg-orange-500/10', hover: 'hover:border-orange-500/50', btn: 'from-orange-600 to-red-600', focusBorder: 'focus:border-orange-500' },
   };
   const a = accentMap[accent];
 
@@ -49,8 +50,8 @@ export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pin
     <div className={`rounded-xl border ${geminiKey ? 'border-emerald-500/30 bg-emerald-500/5' : `border-slate-800/50 ${a.bg}`} transition-all`}>
       <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left">
         <Key size={14} className={geminiKey ? 'text-emerald-400' : a.text} />
-        <span className={`text-xs font-semibold ${geminiKey ? 'text-emerald-400' : 'text-slate-400'}`}>
-          {geminiKey ? '✓ Đang dùng API Key của bạn' : 'Sử dụng API Key của bạn (tùy chọn)'}
+        <span className={`text-xs font-semibold truncate ${geminiKey ? 'text-emerald-400' : 'text-slate-400'}`}>
+          {geminiKey ? '✓ Đang dùng API Key của bạn' : 'Sử dụng API Key (tùy chọn)'}
         </span>
         <span className={`ml-auto text-xs text-slate-600 transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>

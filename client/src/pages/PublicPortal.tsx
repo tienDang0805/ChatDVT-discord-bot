@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, CreditCard } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -206,16 +206,6 @@ export const PublicPortal = () => {
       href: '/burnout-check',
       author: 'HR Bot Tiến Đặng',
       category: 'utility'
-    },
-    {
-      id: 'fb-card',
-      number: '21',
-      title: 'FB Profile Reskin',
-      description: 'Nhập link FB → đọc thông tin → render profile theo 6 phong cách: Glass, Cyberpunk, Minimal, Luxury, Retro, Nature.',
-      icon: CreditCard,
-      href: '/fb-card',
-      author: 'Card Master Tiến Đặng',
-      category: 'utility'
     }
   ];
 
@@ -297,7 +287,7 @@ export const PublicPortal = () => {
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
               <p className="text-xl font-bold text-slate-600 dark:text-slate-300">
-                Make by Tien Dang form 8D with love 
+                Make by Tien Dang from 8D with love 
               </p>
               <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
                   Mobile dev nhưng lại làm content

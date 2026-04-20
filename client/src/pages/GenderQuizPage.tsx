@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { CornerUpLeft, Sparkles, Loader2, RotateCcw, Copy, ChevronLeft, Rainbow, CheckCircle2, Bot, SendHorizontal, MessageCircle } from 'lucide-react';
+import { Sparkles, Loader2, RotateCcw, Copy, ChevronLeft, Rainbow, CheckCircle2, Bot, SendHorizontal, MessageCircle } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 interface QuizQuestion {
   id: number;
@@ -138,27 +138,13 @@ export const GenderQuizPage = () => {
   const getConfidenceColor = (c: number) => c >= 80 ? 'text-emerald-400' : c >= 60 ? 'text-amber-400' : 'text-blue-400';
 
   return (
-    <div className="min-h-screen bg-[#060810] text-slate-200 font-sans relative">
+    <PageShell title="Gender Quiz AI" subtitle="Khám phá bản dạng giới của bạn" icon="🌈">
       <style>{`
         @keyframes slideUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}} .slide-up{animation:slideUp .5s ease-out both}
         @keyframes rainbow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}} .rainbow-bg{background:linear-gradient(135deg,#FF0018,#FFA52C,#FFFF41,#008018,#0000F9,#86007D,#FF0018);background-size:400% 400%;animation:rainbow 6s ease infinite}
         @keyframes pulse-rainbow{0%,100%{box-shadow:0 0 20px rgba(255,0,24,.2),0 0 40px rgba(0,0,249,.1)}50%{box-shadow:0 0 30px rgba(255,165,44,.3),0 0 60px rgba(134,0,125,.2)}} .pulse-rainbow{animation:pulse-rainbow 3s ease-in-out infinite}
         @keyframes optionIn{0%{opacity:0;transform:translateX(-10px)}100%{opacity:1;transform:translateX(0)}} .option-in{animation:optionIn .3s ease-out both}
-        .grid-bg{background-image:linear-gradient(rgba(255,0,24,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,249,.02) 1px,transparent 1px);background-size:48px 48px}
       `}</style>
-      <div className="fixed inset-0 grid-bg pointer-events-none" />
-
-      <div className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-14 relative z-10">
-
-        <header className="flex items-center gap-3 mb-10">
-          <Link to="/" className="text-slate-500 hover:text-pink-400 transition p-2.5 bg-[#0c1018] rounded-xl border border-slate-800/60">
-            <CornerUpLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text rainbow-bg">Gender Quiz AI</h1>
-            <p className="text-slate-600 text-xs md:text-sm mt-0.5 tracking-wider">KHÁM PHÁ BẢN DẠNG GIỚI CỦA BẠN</p>
-          </div>
-        </header>
 
         {phase === 'intro' && (
           <div className="max-w-lg mx-auto slide-up">
@@ -370,7 +356,6 @@ export const GenderQuizPage = () => {
 
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 };

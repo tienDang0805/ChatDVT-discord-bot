@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { CornerUpLeft, MoonStar, Sun, Cloud, Sparkles, Loader2, SendHorizontal, Bot, BookOpen, Quote, RotateCcw } from 'lucide-react';
+import { MoonStar, Sun, Cloud, Sparkles, Loader2, SendHorizontal, Bot, BookOpen, Quote, RotateCcw } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 interface AstrologyTheme {
   canchi: string;
@@ -104,38 +104,14 @@ export const AstrologyPage = () => {
   };
 
   return (
-    <div className="min-h-screen font-sans relative" style={{ backgroundColor: '#0a0505', color: '#e5e7eb' }}>
+    <PageShell title="Tử Vi AI Phương Đông" subtitle="Mệnh Hảo Bất Như Vận Hảo" icon="🌙" maxWidth="4xl">
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
         .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        .bg-astrology {
-           background: radial-gradient(circle at 50% 0%, #300d11 0%, #150505 50%, #0a0505 100%);
-        }
         .gold-border { border-color: rgba(212, 175, 55, 0.3); }
         .gold-text { background: linear-gradient(135deg, #FFDF73, #D4AF37, #997A15); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .gold-bg { background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05)); }
-        .pattern-overlay { background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2H0v-2h20v-2H0V8h20V6H0V4h20V2H0V0h22v2h20v2H22v2h20v2H22v2h20v2H22v2.5h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20v2H22v2h20M0 20.5h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2zm0 4h20v2H0v-2z' fill='%23d4af37' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E"); }
       `}</style>
-      
-      <div className="absolute inset-0 bg-astrology pointer-events-none" />
-      <div className="absolute inset-0 pattern-overlay pointer-events-none opacity-50" />
-
-      <div className="relative max-w-4xl mx-auto px-4 md:px-8 py-10 md:py-16">
-        
-        {/* HEADER */}
-        <header className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 relative">
-          <Link to="/" className="absolute left-0 md:static flex items-center justify-center w-12 h-12 bg-[#1a0a0a] rounded-xl border border-red-900/30 hover:border-[#D4AF37] hover:bg-[#2a0e0e] transition-all text-[#D4AF37]">
-             <CornerUpLeft size={20} />
-          </Link>
-          <div className="text-center flex-1">
-             <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-[#1a0a0a] border border-[#D4AF37]/40 mb-4 shadow-[0_0_20px_rgba(212,175,55,0.2)]">
-                <MoonStar size={26} className="text-[#D4AF37]" />
-             </div>
-             <h1 className="text-3xl md:text-5xl font-black uppercase tracking-widest gold-text mb-2" style={{ fontFamily: 'serif' }}>TỬ VI AI Phương Đông</h1>
-             <p className="text-[#a3947c] text-sm md:text-base tracking-widest uppercase">Mệnh Hảo Bất Như Vận Hảo</p>
-          </div>
-          <div className="w-12 hidden md:block" />
-        </header>
 
         {/* INPUT FORM */}
         {!result && (
@@ -301,7 +277,6 @@ export const AstrologyPage = () => {
 
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

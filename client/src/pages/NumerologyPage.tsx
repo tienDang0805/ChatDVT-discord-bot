@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { CornerUpLeft, Sparkles, Star, Moon, Sun, Flame, Heart, Shield, Compass, Eye, Copy, RotateCcw, Loader2, Hash, TrendingUp, Calendar, Zap, Crown, AlertTriangle, Users, DollarSign, Activity, ChevronDown, ChevronUp, Award, SendHorizontal, MessageCircle, Bot } from 'lucide-react';
+import { Sparkles, Star, Moon, Sun, Flame, Heart, Shield, Compass, Eye, Copy, RotateCcw, Loader2, Hash, TrendingUp, Calendar, Zap, Crown, AlertTriangle, Users, DollarSign, Activity, ChevronDown, ChevronUp, Award, SendHorizontal, MessageCircle, Bot } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 interface LifePathDetail {
   number: number;
@@ -210,7 +210,7 @@ export const NumerologyPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060810] text-slate-200 font-sans relative">
+    <PageShell title="Thần Số Học AI" subtitle="Numerology · Pythagoras System" icon="🔮" stars>
       <style>{`
         @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
         .shimmer{background-size:200% auto;animation:shimmer 3s linear infinite}
@@ -218,25 +218,7 @@ export const NumerologyPage = () => {
         .glow{animation:glow 2.5s ease-in-out infinite}
         @keyframes slideUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
         .animate-slide-up{animation:slideUp .5s ease-out both}
-        .grid-bg{background-image:linear-gradient(rgba(168,85,247,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,.03) 1px,transparent 1px);background-size:48px 48px}
       `}</style>
-
-      <div className="fixed inset-0 grid-bg pointer-events-none" />
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8 md:py-14 relative z-10">
-
-        <header className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="text-slate-500 hover:text-purple-400 transition p-2.5 bg-[#0c1018] rounded-xl border border-slate-800/60">
-              <CornerUpLeft size={20} />
-            </Link>
-            <div>
-              <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 shimmer">Thần Số Học AI</h1>
-              <p className="text-slate-600 text-xs md:text-sm mt-0.5 tracking-wider">NUMEROLOGY · PYTHAGORAS SYSTEM</p>
-            </div>
-          </div>
-        </header>
 
         {!result && (
           <div className="max-w-lg mx-auto animate-slide-up">
@@ -589,7 +571,6 @@ export const NumerologyPage = () => {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 };

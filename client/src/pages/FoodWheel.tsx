@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -327,8 +328,7 @@ export default function FoodWheel() {
   };
 
   return (
-    <div className="min-h-screen text-white" style={{ background: 'radial-gradient(ellipse at top, #1a1a3e 0%, #0d0d1a 60%)', fontFamily: "'Inter', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+    <PageShell title="Hôm Nay Ăn Gì?" subtitle="Phong Thuỷ Ẩm Thực AI" icon="🍜" maxWidth="5xl">
       <Confetti active={showConfetti} />
       {showModal && result && (
         <ResultModal
@@ -338,19 +338,11 @@ export default function FoodWheel() {
         />
       )}
 
-      <div className="max-w-5xl mx-auto px-4 pt-12 pb-20">
-        {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2 rounded-full mb-6" style={{ background: 'rgba(255,107,53,0.15)', border: '1px solid rgba(255,107,53,0.4)', color: '#ff6b35' }}>
-            🔮 Phong Thuỷ Ẩm Thực AI · devtiendang.blog
+          <div className="inline-flex items-center gap-2 text-sm font-bold px-5 py-2 rounded-full mb-6 bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/30 text-orange-500">
+            🔮 Phong Thuỷ Ẩm Thực AI
           </div>
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-4">
-            Hôm Nay <br />
-            <span style={{ background: 'linear-gradient(90deg, #ff6b35, #ffd700)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Ăn Gì?
-            </span>
-          </h1>
-          <p className="text-slate-400 text-lg">Để thầy AI phong thuỷ quyết định — khoa học hoàn toàn, vô tri hoàn hảo.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-lg">Để thầy AI phong thuỷ quyết định — khoa học hoàn toàn, vô tri hoàn hảo.</p>
         </div>
 
         {!wheelData ? (
@@ -358,13 +350,12 @@ export default function FoodWheel() {
             <button
               onClick={fetchFoods}
               disabled={loading}
-              className="group relative text-white font-black text-xl px-14 py-5 rounded-3xl transition-all duration-300 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #ff6b35, #c0392b)', boxShadow: '0 8px 40px rgba(255,107,53,0.5)' }}
+              className="group relative text-white font-black text-xl px-14 py-5 rounded-3xl transition-all duration-300 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed bg-orange-500 hover:bg-orange-600 shadow-lg active:scale-[0.98]"
             >
               {loading ? <span className="animate-spin inline-block mr-2">🔮</span> : '🀄 '}
               {loading ? 'Thầy đang xem quẻ...' : 'Hỏi Thầy Phong Thuỷ'}
             </button>
-            {error && <p className="text-red-400 mt-6">{error}</p>}
+            {error && <p className="text-red-500 dark:text-red-400 mt-6">{error}</p>}
             <div className="mt-6 max-w-xs mx-auto"><GeminiKeyInput accent="amber" /></div>
           </div>
         ) : (
@@ -414,41 +405,34 @@ export default function FoodWheel() {
 
             {/* Food list */}
             <div className="flex-1 w-full space-y-3">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">5 Lựa Chọn Của Thầy Hôm Nay</p>
+              <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">5 Lựa Chọn Của Thầy Hôm Nay</p>
               {wheelData.foods.map((f, i) => {
                 const isWin = result?.name === f.name;
                 const badge = TYPE_BADGE[f.type] || TYPE_BADGE.normal;
                 return (
                   <div
                     key={i}
-                    className="flex items-center gap-4 p-4 rounded-2xl transition-all duration-500 cursor-pointer"
-                    style={{
-                      background: isWin ? 'rgba(255,107,53,0.15)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${isWin ? 'rgba(255,107,53,0.6)' : 'rgba(255,255,255,0.07)'}`,
-                      transform: isWin ? 'scale(1.02)' : 'scale(1)',
-                      boxShadow: isWin ? '0 0 20px rgba(255,107,53,0.2)' : 'none',
-                    }}
+                    className={`flex items-center gap-4 p-4 rounded-2xl transition-all duration-500 cursor-pointer border ${isWin ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-300 dark:border-orange-500/40 scale-[1.02] shadow-md' : 'bg-white dark:bg-[#131923] border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-500/30'}`}
                     onClick={() => { setResult(f); setShowModal(true); }}
                   >
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: SLICE_COLORS[i % SLICE_COLORS.length] + '33' }}>
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: SLICE_COLORS[i % SLICE_COLORS.length] + '22' }}>
                       {f.emoji}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-white leading-tight">{f.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 truncate">{f.description}</p>
+                      <p className="font-bold text-slate-800 dark:text-white leading-tight">{f.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{f.description}</p>
                     </div>
-                    <span className="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0" style={{ backgroundColor: badge.color + '22', color: badge.color }}>
+                    <span className="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0" style={{ backgroundColor: badge.color + '15', color: badge.color }}>
                       {badge.label}
                     </span>
-                    {isWin && <span className="text-yellow-400 text-lg animate-bounce">⭐</span>}
+                    {isWin && <span className="text-yellow-500 text-lg animate-bounce">⭐</span>}
                   </div>
                 );
               })}
-              <p className="text-xs text-slate-600 text-center pt-2">Nhấn vào tên món để xem luận giải</p>
+              <p className="text-xs text-slate-400 dark:text-slate-600 text-center pt-2">Nhấn vào tên món để xem luận giải</p>
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 }

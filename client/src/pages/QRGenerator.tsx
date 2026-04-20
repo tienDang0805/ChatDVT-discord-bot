@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import * as htmlToImage from 'html-to-image';
-import { useTheme } from '../contexts/ThemeContext';
-import { Link } from 'react-router-dom';
 import {
-  ArrowLeft, Download, Upload, Trash2, Palette, Sun, Moon,
+  Download, Upload, Trash2, Palette,
   Type, Image, Sliders, Sparkles, QrCode, ChevronDown, ImagePlus, PenLine, Frame
 } from 'lucide-react';
+import { PageShell } from '../components/PageShell';
 
 const FONT_OPTIONS = [
   { name: 'Sans Serif', value: '"Inter", "Segoe UI", sans-serif' },
@@ -54,7 +53,6 @@ const presets: PresetTheme[] = [
 ];
 
 export const QRGenerator = () => {
-  const { theme, toggleTheme } = useTheme();
   const qrRef = useRef<QRCode>(null);
 
   const [text, setText] = useState('https://chatdvt.com');
@@ -181,24 +179,7 @@ export const QRGenerator = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-
-        <div className="flex items-center justify-between mb-8">
-          <Link
-            to="/"
-            className="flex items-center gap-2 text-slate-500 hover:text-orange-500 transition-colors font-medium"
-          >
-            <ArrowLeft size={20} />
-            <span className="hidden sm:inline">Trang Chủ</span>
-          </Link>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1f2937] border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-orange-400 hover:border-orange-500/50 shadow-lg transition-all group"
-          >
-            {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
-          </button>
-        </div>
+    <PageShell title="Tạo Mã QR Custom" subtitle="QR Generator v1.0" icon="" maxWidth="6xl">
 
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 mb-4">
@@ -206,15 +187,12 @@ export const QRGenerator = () => {
               <QrCode size={32} />
             </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-            Tạo Mã <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500">QR Custom</span>
-          </h1>
           <p className="mt-3 text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
             Tạo mã QR độc đáo với logo riêng, tuỳ chỉnh màu sắc và kiểu dáng. Quét vẫn chuẩn 100%.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-5 gap-6 lg:gap-8">
 
           <div className="lg:col-span-3 space-y-4">
 
@@ -754,11 +732,7 @@ export const QRGenerator = () => {
           </div>
         </div>
 
-        <div className="mt-16 text-center text-xs text-slate-400 dark:text-slate-600">
-          <p>Powered by <span className="font-bold text-orange-500">ChatDVT Portal</span> • QR Generator v1.0</p>
-        </div>
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

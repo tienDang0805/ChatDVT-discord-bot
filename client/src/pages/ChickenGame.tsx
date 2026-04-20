@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { CornerUpLeft, Play, RotateCcw } from 'lucide-react';
+import { Play, RotateCcw } from 'lucide-react';
+import { PageShell } from '../components/PageShell';
 
 const W = 400, H = 600;
 
@@ -294,70 +294,63 @@ export const ChickenGame = () => {
   useEffect(() => { document.title = 'Bắn Gà | devtiendang.blog'; }, []);
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a1a', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui', color: '#e5e7eb', padding: 16 }}>
+    <PageShell title="Bắn Gà" subtitle="Chicken Invaders" icon="🐔" maxWidth="2xl">
       <style>{`
-        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        .fade-up{animation:fadeUp .5s ease-out both}
-        canvas{image-rendering:pixelated;border-radius:12px;border:2px solid rgba(96,165,250,.2);max-width:100%;height:auto!important}
+        canvas{image-rendering:pixelated;border-radius:12px;border:2px solid rgba(96,165,250,.15);max-width:100%;height:auto!important}
       `}</style>
 
-      <header style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, width: '100%', maxWidth: 400 }}>
-        <Link to="/" style={{ color: '#6b7280', padding: 10, background: '#111', borderRadius: 12, border: '1px solid rgba(96,165,250,.2)', display: 'flex', textDecoration: 'none' }}><CornerUpLeft size={20} /></Link>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: '#60a5fa' }}>🐔 Bắn Gà</h1>
-          <p style={{ color: '#374151', fontSize: 11, letterSpacing: 2 }}>CHICKEN INVADERS</p>
-        </div>
-        <div style={{ textAlign: 'right', fontSize: 12, color: '#6b7280' }}>
-          <div>🏆 {highScore}</div>
-        </div>
-      </header>
+      <div className="flex justify-end mb-3">
+        <span className="text-sm text-slate-400 dark:text-slate-500">🏆 {highScore}</span>
+      </div>
 
-      <div style={{ position: 'relative' }}>
-        <canvas ref={canvasRef} width={W} height={H} style={{ display: gameState === 'playing' ? 'block' : 'none', touchAction: 'none' }} />
+      <div className="flex justify-center">
+        <div className="relative">
+          <canvas ref={canvasRef} width={W} height={H} style={{ display: gameState === 'playing' ? 'block' : 'none', touchAction: 'none' }} />
 
-        {gameState === 'menu' && (
-          <div className="fade-up" style={{ width: W, maxWidth: '100%', textAlign: 'center', padding: '60px 20px', background: '#111', borderRadius: 16, border: '1px solid rgba(96,165,250,.15)' }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🐔</div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: '#60a5fa', marginBottom: 8 }}>CHICKEN INVADERS</h2>
-            <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-              ← → hoặc A D để di chuyển<br />Space để bắn · Hỗ trợ cảm ứng
-            </p>
-            <button onClick={startGame} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#3b82f6,#6366f1)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
-              <Play size={20} /> BẮT ĐẦU
-            </button>
-            {highScore > 0 && <p style={{ color: '#374151', fontSize: 12, marginTop: 16 }}>Kỷ lục: {highScore} điểm</p>}
-          </div>
-        )}
-
-        {gameState === 'gameover' && (
-          <div className="fade-up" style={{ width: W, maxWidth: '100%', textAlign: 'center', padding: '60px 20px', background: '#111', borderRadius: 16, border: '1px solid rgba(239,68,68,.2)' }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>💥</div>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: '#ef4444', marginBottom: 8 }}>GAME OVER</h2>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginBottom: 24 }}>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: 12 }}>Điểm</p>
-                <p style={{ color: '#fbbf24', fontSize: 28, fontWeight: 900 }}>{score}</p>
-              </div>
-              <div>
-                <p style={{ color: '#6b7280', fontSize: 12 }}>Level</p>
-                <p style={{ color: '#60a5fa', fontSize: 28, fontWeight: 900 }}>{level}</p>
-              </div>
+          {gameState === 'menu' && (
+            <div className="fade-up bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center shadow-sm" style={{width:W,maxWidth:'100%'}}>
+              <div className="text-6xl mb-4">🐔</div>
+              <h2 className="text-2xl font-black text-blue-500 mb-2">CHICKEN INVADERS</h2>
+              <p className="text-slate-400 dark:text-slate-500 text-sm mb-6 leading-relaxed">
+                ← → hoặc A D để di chuyển<br />Space để bắn · Hỗ trợ cảm ứng
+              </p>
+              <button onClick={startGame} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-all shadow-sm active:scale-[0.98] uppercase tracking-wider">
+                <Play size={20} /> BẮT ĐẦU
+              </button>
+              {highScore > 0 && <p className="text-slate-400 dark:text-slate-500 text-xs mt-4">Kỷ lục: {highScore} điểm</p>}
             </div>
-            {score >= highScore && score > 0 && <p style={{ color: '#fbbf24', fontSize: 14, fontWeight: 700, marginBottom: 16 }}>🏆 KỶ LỤC MỚI!</p>}
-            <button onClick={startGame} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg,#3b82f6,#6366f1)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
-              <RotateCcw size={18} /> CHƠI LẠI
-            </button>
-          </div>
-        )}
+          )}
+
+          {gameState === 'gameover' && (
+            <div className="fade-up bg-white dark:bg-[#131923] border border-red-200 dark:border-red-500/20 rounded-2xl p-10 text-center shadow-sm" style={{width:W,maxWidth:'100%'}}>
+              <div className="text-6xl mb-4">💥</div>
+              <h2 className="text-2xl font-black text-red-500 mb-2">GAME OVER</h2>
+              <div className="flex justify-center gap-10 mb-6">
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs">Điểm</p>
+                  <p className="text-yellow-500 text-2xl font-black">{score}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400 dark:text-slate-500 text-xs">Level</p>
+                  <p className="text-blue-500 text-2xl font-black">{level}</p>
+                </div>
+              </div>
+              {score >= highScore && score > 0 && <p className="text-yellow-500 text-sm font-bold mb-4">🏆 KỶ LỤC MỚI!</p>}
+              <button onClick={startGame} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-all shadow-sm active:scale-[0.98] uppercase tracking-wider">
+                <RotateCcw size={18} /> CHƠI LẠI
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {gameState === 'playing' && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+        <div className="flex justify-center gap-6 mt-3 text-sm text-slate-400 dark:text-slate-500">
           <span>⭐ {score}</span>
           <span>Lv.{level}</span>
           <span>{'❤️'.repeat(lives)}</span>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };

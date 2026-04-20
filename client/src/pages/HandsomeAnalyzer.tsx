@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Scan, AlertTriangle, Share2, CornerUpLeft } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Upload, Scan, AlertTriangle, Share2 } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 interface FeatureRating {
   part: string;
@@ -323,7 +323,7 @@ export const HandsomeAnalyzer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-4 md:px-8 font-mono overflow-x-hidden">
+    <PageShell title="DIẾP-LOING-NING 3000" subtitle="AI Nhan Sắc Scanner" icon="" maxWidth="6xl">
       <style>{`
         @keyframes scan {
           0% { top: 0; opacity: 0; }
@@ -337,21 +337,6 @@ export const HandsomeAnalyzer = () => {
         }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
       `}</style>
-      
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-10">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-3 bg-[#161b22] rounded-xl border border-slate-800 shadow-xl">
-              <CornerUpLeft size={24} />
-            </Link>
-            <h1 className="text-2xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-pink-500 uppercase tracking-widest flex items-center gap-3">
-              <Scan size={32} className="text-orange-500 hidden md:block" /> DIẾP-LOING-NING 3000
-            </h1>
-          </div>
-          <p className="text-slate-400 max-w-sm text-xs md:text-sm text-right border-r-4 border-pink-500 pr-4 hidden md:block italic">
-            "Máy quét chạy bằng cơm mặn của ChatDVT. Gửi ảnh lên để nhận về sự thật phũ phàng."
-          </p>
-        </div>
 
         {/* TRẠNG THÁI 1: CHƯA UPLOAD & TRẠNG THÁI 2: ĐANG UPLOAD / QUÉT */}
         {!result && (
@@ -408,7 +393,6 @@ export const HandsomeAnalyzer = () => {
            </div>
         )}
 
-      </div>
-    </div>
+    </PageShell>
   );
 };

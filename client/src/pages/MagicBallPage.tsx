@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { CornerUpLeft, Loader2, RotateCcw } from 'lucide-react';
+import { Loader2, RotateCcw } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { PageShell } from '../components/PageShell';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -62,109 +62,96 @@ export const MagicBallPage = () => {
 
   const reset = () => { setResult(null); setQuestion(''); };
 
-  const typeColor = (t: string) => t === 'positive' ? '#22c55e' : t === 'negative' ? '#ef4444' : '#a78bfa';
-  const typeBg = (t: string) => t === 'positive' ? 'rgba(34,197,94,.1)' : t === 'negative' ? 'rgba(239,68,68,.1)' : 'rgba(167,139,250,.1)';
+  const typeTextClass = (t: string) => t === 'positive' ? 'text-emerald-500 dark:text-emerald-400' : t === 'negative' ? 'text-red-500 dark:text-red-400' : 'text-violet-500 dark:text-violet-400';
+  const typeBorderClass = (t: string) => t === 'positive' ? 'border-emerald-300 dark:border-emerald-500/30' : t === 'negative' ? 'border-red-300 dark:border-red-500/30' : 'border-violet-300 dark:border-violet-500/30';
+  const typeBgClass = (t: string) => t === 'positive' ? 'bg-emerald-50 dark:bg-emerald-500/10' : t === 'negative' ? 'bg-red-50 dark:bg-red-500/10' : 'bg-violet-50 dark:bg-violet-500/10';
 
   return (
-    <div style={{ minHeight:'100vh', background:'radial-gradient(ellipse at 50% 20%, #0f0a2e 0%, #080518 50%, #050310 100%)', color:'#e5e7eb', fontFamily:'system-ui, sans-serif', position:'relative', overflow:'hidden' }}>
+    <PageShell title="Cầu Pha Lê" subtitle="Magic 8 Ball" icon="🔮" maxWidth="2xl" stars>
       <style>{`
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
         @keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}10%{transform:translate(-8px,4px) rotate(-3deg)}20%{transform:translate(6px,-6px) rotate(2deg)}30%{transform:translate(-4px,8px) rotate(-2deg)}40%{transform:translate(8px,-4px) rotate(3deg)}50%{transform:translate(-6px,6px) rotate(-1deg)}60%{transform:translate(4px,-8px) rotate(2deg)}70%{transform:translate(-8px,4px) rotate(-3deg)}80%{transform:translate(6px,-6px) rotate(1deg)}90%{transform:translate(-4px,8px) rotate(-2deg)}}
-        @keyframes glow{0%,100%{box-shadow:0 0 30px rgba(139,92,246,.3),0 0 60px rgba(139,92,246,.1)}50%{box-shadow:0 0 50px rgba(139,92,246,.5),0 0 100px rgba(139,92,246,.2)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+        @keyframes ballGlow{0%,100%{box-shadow:0 0 30px rgba(139,92,246,.15),0 0 60px rgba(139,92,246,.05)}50%{box-shadow:0 0 50px rgba(139,92,246,.3),0 0 100px rgba(139,92,246,.1)}}
         @keyframes pulseRing{0%{transform:scale(.8);opacity:.5}100%{transform:scale(1.6);opacity:0}}
-        @keyframes starTwinkle{0%,100%{opacity:.1}50%{opacity:.8}}
         .ball-float{animation:float 4s ease-in-out infinite}
         .ball-shake{animation:shake 1.5s ease-in-out}
-        .ball-glow{animation:glow 3s ease-in-out infinite}
-        .fade-up{animation:fadeUp .5s ease-out both}
-        .shimmer-text{background-size:200% auto;animation:shimmer 3s linear infinite}
+        .ball-glow{animation:ballGlow 3s ease-in-out infinite}
       `}</style>
 
-      {Array.from({length:40}).map((_,i)=>(
-        <div key={i} style={{position:'absolute',width:Math.random()>0.7?3:2,height:Math.random()>0.7?3:2,background:'white',borderRadius:'50%',left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,animation:`starTwinkle ${2+Math.random()*3}s ${Math.random()*3}s infinite`,opacity:0.1+Math.random()*0.3}}/>
-      ))}
-
-      <div style={{ maxWidth:500, margin:'0 auto', padding:'32px 16px', position:'relative', zIndex:10 }}>
-        <header style={{ display:'flex', alignItems:'center', gap:12, marginBottom:40 }}>
-          <Link to="/" style={{ color:'#6b7280', padding:10, background:'#0f0a1a', borderRadius:12, border:'1px solid rgba(139,92,246,.2)', display:'flex', textDecoration:'none' }}><CornerUpLeft size={20}/></Link>
-          <div>
-            <h1 style={{ fontSize:'clamp(22px,6vw,32px)', fontWeight:900, background:'linear-gradient(135deg,#a78bfa,#818cf8,#c084fc)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundSize:'200% auto', animation:'shimmer 3s linear infinite' }}>🔮 Cầu Pha Lê</h1>
-            <p style={{ color:'rgba(139,92,246,.4)', fontSize:12, letterSpacing:3, textTransform:'uppercase' }}>Magic 8 Ball</p>
-          </div>
-        </header>
-
-        {/* Ball */}
-        <div style={{ display:'flex', justifyContent:'center', marginBottom:32 }}>
-          <div style={{ position:'relative' }}>
-            {isShaking && (
-              <div style={{ position:'absolute', inset:-20, borderRadius:'50%', border:'2px solid rgba(139,92,246,.3)', animation:'pulseRing 1s ease-out infinite' }}/>
-            )}
-            <div className={isShaking ? 'ball-shake' : result ? '' : 'ball-float'} style={{ width:200, height:200, borderRadius:'50%', background:'radial-gradient(circle at 35% 35%, #2d1b69, #0f0a2e 60%, #050310)', boxShadow: result ? `0 0 40px ${typeColor(result.type)}40, 0 0 80px ${typeColor(result.type)}15, inset 0 0 30px rgba(0,0,0,.5)` : '0 0 40px rgba(139,92,246,.3), 0 0 80px rgba(139,92,246,.1), inset 0 0 30px rgba(0,0,0,.5)', display:'flex', alignItems:'center', justifyContent:'center', cursor: !isShaking && question.trim() ? 'pointer' : 'default', transition:'box-shadow .5s' }} onClick={shake}>
-              <div style={{ width:90, height:90, borderRadius:'50%', background: result ? `radial-gradient(circle, ${typeBg(result.type)}, rgba(0,0,0,.8))` : 'radial-gradient(circle, rgba(139,92,246,.15), rgba(0,0,0,.8))', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid rgba(139,92,246,.2)', transition:'all .5s' }}>
-                {isShaking ? (
-                  <Loader2 size={28} style={{ color:'#a78bfa', animation:'spin 1s linear infinite' }} />
-                ) : result ? (
-                  <span style={{ fontSize:32 }}>{result.emoji}</span>
-                ) : (
-                  <span style={{ fontSize:28, opacity:.6 }}>8</span>
-                )}
-              </div>
+      <div className="flex justify-center mb-8">
+        <div className="relative">
+          {isShaking && (
+            <div className="absolute -inset-5 rounded-full border-2 border-violet-300 dark:border-violet-500/30" style={{animation:'pulseRing 1s ease-out infinite'}}/>
+          )}
+          <div
+            className={`${isShaking ? 'ball-shake' : result ? '' : 'ball-float'} w-48 h-48 rounded-full flex items-center justify-center cursor-pointer transition-shadow duration-500 bg-gradient-to-br from-slate-200 via-slate-100 to-white dark:from-[#2d1b69] dark:via-[#0f0a2e] dark:to-[#050310] border-2 border-slate-300 dark:border-violet-500/20 shadow-lg dark:shadow-[0_0_40px_rgba(139,92,246,.15)]`}
+            onClick={shake}
+          >
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${result ? `${typeBgClass(result.type)} ${typeBorderClass(result.type)}` : 'bg-slate-50 dark:bg-violet-500/10 border-slate-200 dark:border-violet-500/20'}`}>
+              {isShaking ? (
+                <Loader2 size={28} className="text-violet-500 dark:text-violet-400 animate-spin" />
+              ) : result ? (
+                <span className="text-3xl">{result.emoji}</span>
+              ) : (
+                <span className="text-2xl text-slate-300 dark:text-slate-600 font-black">8</span>
+              )}
             </div>
-            <div style={{ position:'absolute', top:'15%', left:'25%', width:30, height:15, borderRadius:'50%', background:'linear-gradient(180deg, rgba(255,255,255,.15), transparent)', transform:'rotate(-30deg)', pointerEvents:'none' }}/>
           </div>
+          <div className="absolute top-[15%] left-[25%] w-8 h-4 rounded-full bg-gradient-to-b from-white/40 dark:from-white/10 to-transparent -rotate-[30deg] pointer-events-none"/>
         </div>
+      </div>
 
-        {/* Answer */}
-        {result && !isShaking && (
-          <div className="fade-up" style={{ textAlign:'center', marginBottom:24, padding:'20px 24px', background:'rgba(15,10,26,.8)', border:`1px solid ${typeColor(result.type)}30`, borderRadius:16, backdropFilter:'blur(10px)' }}>
-            <p style={{ fontSize:'clamp(16px,4.5vw,20px)', fontWeight:700, color: typeColor(result.type), lineHeight:1.6 }}>{result.answer}</p>
-            <button onClick={reset} style={{ marginTop:12, display:'inline-flex', alignItems:'center', gap:6, padding:'8px 16px', background:'rgba(139,92,246,.1)', border:'1px solid rgba(139,92,246,.3)', borderRadius:10, color:'#a78bfa', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-              <RotateCcw size={14}/> Hỏi lại
-            </button>
-          </div>
-        )}
-
-        {/* Input */}
-        <div className="fade-up" style={{ background:'rgba(15,10,26,.6)', border:'1px solid rgba(139,92,246,.15)', borderRadius:20, padding:'20px 20px 16px', backdropFilter:'blur(10px)' }}>
-          <input type="text" value={question} onChange={e=>setQuestion(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')shake()}} placeholder="Đặt câu hỏi Yes/No..." disabled={isShaking} style={{ width:'100%', background:'rgba(26,16,40,.8)', border:'1px solid rgba(139,92,246,.25)', borderRadius:12, padding:'14px 16px', color:'#e5e7eb', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:12 }}/>
-
-          <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-            {(['quick','ai'] as const).map(m => (
-              <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:'10px 0', borderRadius:10, border: mode===m ? '1px solid rgba(139,92,246,.5)' : '1px solid rgba(139,92,246,.15)', background: mode===m ? 'rgba(139,92,246,.15)' : 'transparent', color: mode===m ? '#c4b5fd' : '#6b7280', fontSize:13, fontWeight:700, cursor:'pointer', textTransform:'uppercase', letterSpacing:1, transition:'all .2s' }}>
-                {m==='quick' ? '⚡ Nhanh' : '🤖 AI'}
-              </button>
-            ))}
-          </div>
-
-          {mode==='ai' && <GeminiKeyInput accent="purple"/>}
-          {error && <p style={{ color:'#ef4444', fontSize:13, textAlign:'center', marginTop:8 }}>⚠️ {error}</p>}
-
-          <button onClick={shake} disabled={isShaking||!question.trim()} style={{ width:'100%', padding:'14px 0', borderRadius:12, border:'none', background: isShaking||!question.trim() ? 'rgba(139,92,246,.2)' : 'linear-gradient(135deg,#7c3aed,#6366f1)', color:'white', fontSize:15, fontWeight:700, cursor: isShaking||!question.trim() ? 'not-allowed' : 'pointer', opacity: isShaking||!question.trim() ? 0.5 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:8, marginTop:12, transition:'all .2s', letterSpacing:1, textTransform:'uppercase' }}>
-            {isShaking ? <><Loader2 size={18} style={{animation:'spin 1s linear infinite'}}/> Đang lắc...</> : '🔮 Lắc Cầu Pha Lê'}
+      {result && !isShaking && (
+        <div className={`fade-up text-center mb-6 p-5 ${typeBgClass(result.type)} border ${typeBorderClass(result.type)} rounded-2xl`}>
+          <p className={`text-lg md:text-xl font-bold ${typeTextClass(result.type)} leading-relaxed`}>{result.answer}</p>
+          <button onClick={reset} className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 rounded-xl text-slate-500 dark:text-slate-400 text-sm font-semibold hover:text-orange-500 dark:hover:text-orange-400 hover:border-orange-500/50 transition-colors">
+            <RotateCcw size={14}/> Hỏi lại
           </button>
         </div>
+      )}
 
-        {/* History */}
-        {history.length > 0 && (
-          <div className="fade-up" style={{ marginTop:24 }}>
-            <p style={{ fontSize:11, fontWeight:700, color:'rgba(139,92,246,.5)', textTransform:'uppercase', letterSpacing:2, marginBottom:10 }}>Lịch sử hỏi</p>
-            <div style={{ display:'flex', flexDirection:'column', gap:6, maxHeight:300, overflowY:'auto' }}>
-              {history.map((h,i) => (
-                <div key={i} style={{ padding:'10px 14px', background:'rgba(15,10,26,.5)', border:'1px solid rgba(139,92,246,.1)', borderRadius:12, fontSize:13 }}>
-                  <p style={{ color:'#6b7280', marginBottom:4 }}>❓ {h.q}</p>
-                  <p style={{ color: typeColor(h.type), fontWeight:600 }}>{h.a}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+      <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+        <input
+          type="text" value={question} onChange={e=>setQuestion(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')shake()}}
+          placeholder="Đặt câu hỏi Yes/No..."
+          disabled={isShaking}
+          className="w-full bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3.5 text-[15px] outline-none focus:border-orange-500 transition-colors mb-3 placeholder:text-slate-400 dark:placeholder:text-slate-600"
+        />
 
-        <p style={{ textAlign:'center', color:'rgba(139,92,246,.2)', fontSize:10, marginTop:32, fontFamily:'monospace' }}>
-          Chế độ Nhanh dùng câu trả lời random · Chế độ AI dùng Gemini
-        </p>
+        <div className="flex gap-2 mb-3">
+          {(['quick','ai'] as const).map(m => (
+            <button key={m} onClick={()=>setMode(m)} className={`flex-1 py-2.5 rounded-xl text-sm font-bold uppercase tracking-wider transition-all border ${mode===m ? 'bg-orange-50 dark:bg-orange-500/10 border-orange-300 dark:border-orange-500/30 text-orange-500 dark:text-orange-400' : 'bg-slate-50 dark:bg-transparent border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400'}`}>
+              {m==='quick' ? '⚡ Nhanh' : '🤖 AI'}
+            </button>
+          ))}
+        </div>
+
+        {mode==='ai' && <GeminiKeyInput accent="purple"/>}
+        {error && <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 px-4 py-3 rounded-xl text-sm text-center mt-2">⚠️ {error}</div>}
+
+        <button onClick={shake} disabled={isShaking||!question.trim()} className="w-full mt-3 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white disabled:text-slate-400 dark:disabled:text-slate-600 font-bold py-3.5 rounded-xl transition-all shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:shadow-none uppercase tracking-wider text-[15px] flex items-center justify-center gap-2">
+          {isShaking ? <><Loader2 size={18} className="animate-spin"/> Đang lắc...</> : '🔮 Lắc Cầu Pha Lê'}
+        </button>
       </div>
-    </div>
+
+      {history.length > 0 && (
+        <div className="fade-up mt-6">
+          <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">Lịch sử hỏi</p>
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1" style={{scrollbarWidth:'thin'}}>
+            {history.map((h,i) => (
+              <div key={i} className="p-3 bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl text-sm transition-colors">
+                <p className="text-slate-400 dark:text-slate-500 mb-1">❓ {h.q}</p>
+                <p className={`font-semibold ${typeTextClass(h.type)}`}>{h.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p className="text-center text-slate-300 dark:text-slate-700 text-[10px] mt-8 font-mono">
+        Chế độ Nhanh dùng câu trả lời random · Chế độ AI dùng Gemini
+      </p>
+    </PageShell>
   );
 };
