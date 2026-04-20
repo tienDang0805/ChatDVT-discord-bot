@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -155,6 +155,16 @@ export const PublicPortal = () => {
       icon: Eye,
       href: '/cost-study',
       author: 'Khoa DKVM - BV Mắt TP.HCM',
+      category: 'utility'
+    },
+    {
+      id: 'tarot',
+      number: '16',
+      title: 'Bói Bài Tarot AI',
+      description: 'Rút 3 lá bài Tarot cổ điển Rider-Waite, AI Pháp Sư giải nghĩa Quá Khứ — Hiện Tại — Tương Lai. Có chat hỏi thầy bói.',
+      icon: Flame,
+      href: '/tarot',
+      author: 'Pháp Sư Tiến Đặng',
       category: 'utility'
     }
   ];

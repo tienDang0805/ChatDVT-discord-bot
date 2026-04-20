@@ -23,6 +23,7 @@ const GALLERY_PHOTOS = [
   { id: 3, src: 'https://lh3.googleusercontent.com/d/1_ar_0sazttbF-BES-kAldq5E6Hy8onGO' },
   { id: 4, src: 'https://lh3.googleusercontent.com/d/1-B22OAV5jxd2-MtDPJmUGqmrlFSA8qSV' },
   { id: 5, src: 'https://lh3.googleusercontent.com/d/16i2ld_YfXUvEyqXeFJqGrP4XiUC0UHyy' },
+  { id: 6, src: 'https://lh3.googleusercontent.com/d/1hgt8GNBUlGfxJtKqlNdyT71FHnan7Pf0' },
 ];
 
 type BotInfo = { avatar: string; globalName?: string; username?: string };
@@ -356,7 +357,7 @@ function GalleryPhase({ onDone }: { onDone: () => void }) {
         <div style={{ textAlign:'center', marginBottom:32, animation: show ? 'slideUp .8s ease-out' : 'none', opacity: show ? 1 : 0 }}>
           <div style={{ fontSize:'clamp(40px,10vw,56px)', marginBottom:8, animation:'bob 3s ease-in-out infinite' }}>📸</div>
           <h2 style={{ fontSize:'clamp(22px,6vw,30px)', fontWeight:800, background:'linear-gradient(135deg,#f9a8d4,#c4b5fd,#93c5fd)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', marginBottom:8 }}>
-            Nhật Ký Kỷ Niệm
+            Nhật Ký Dìm Hàng
           </h2>
           <p style={{ color:'#71717a', fontSize:'clamp(12px,3vw,14px)' }}>Em chỉ tìm được mấy hình này thôi, hơi dìm đừng khóc nhé 😜</p>
         </div>

@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1746,6 +1746,56 @@ YÊU CẦU:
     } catch (err: any) {
         console.error('Astrology chat API error:', err.message);
         res.status(500).json({ error: 'Dây thiên cơ đang nhiễu, không phản hồi được!' });
+    }
+});
+
+// --- Tarot AI API ---
+app.post('/api/tarot', async (req, res) => {
+    try {
+        const { topic, question, drawnCards } = req.body;
+        if (!topic || !drawnCards || !Array.isArray(drawnCards) || drawnCards.length !== 3) {
+            return res.status(400).json({ error: 'Cần chọn chủ đề và rút đúng 3 lá bài!' });
+        }
+
+        const result = await geminiService.analyzeTarot(topic, question || '', drawnCards, req.body.geminiApiKey);
+        res.json({ result });
+    } catch (err: any) {
+        console.error('Tarot API error:', err.message);
+        res.status(500).json({ error: err.message || 'Pháp sư đang nhập định, không thể giải bài lúc này!' });
+    }
+});
+
+app.post('/api/tarot/chat', async (req, res) => {
+    try {
+        const { question, tarotResult, drawnCards, chatHistory } = req.body;
+        if (!question || !tarotResult) return res.status(400).json({ error: 'Thiếu thông tin!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'Pháp Sư'}: ${m.text}`).join('\n');
+        const cardsText = (drawnCards || []).map((c: any) => `${c.position}: ${c.nameVi} (${c.name}) - ${c.isReversed ? 'Ngược' : 'Xuôi'}`).join(', ');
+
+        const prompt = `Bạn là PHÁP SƯ TAROT HUYỀN BÍ, đang giải đáp thêm cho người rút bài.
+
+BÀI ĐÃ RÚT: ${cardsText}
+KẾT QUẢ ĐÃ GIẢI: ${JSON.stringify(tarotResult)}
+
+${historyText ? `LỊCH SỬ CHAT:\n${historyText}\n` : ''}
+NGƯỜI DÙNG HỎI: "${question}"
+
+YÊU CẦU:
+- Trả lời dựa trên kết quả Tarot đã giải ở trên, tham chiếu cụ thể các lá bài.
+- Giọng huyền bí, sâu sắc nhưng dễ hiểu.
+- Có thể mở rộng thêm ý nghĩa chưa được đề cập.
+- 3-6 câu, đi thẳng vào vấn đề.
+- KHÔNG trả JSON, chỉ trả văn bản thuần.`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        const answer = result.response.text().trim();
+        res.json({ answer });
+    } catch (err: any) {
+        console.error('Tarot chat error:', err.message);
+        res.status(500).json({ error: 'Pháp sư đang thiền, thử lại nhé!' });
     }
 });
 
