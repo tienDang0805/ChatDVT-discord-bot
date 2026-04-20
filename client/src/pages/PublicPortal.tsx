@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -196,6 +196,16 @@ export const PublicPortal = () => {
       href: '/chicken-game',
       author: 'Game Dev Tiến Đặng',
       category: 'game'
+    },
+    {
+      id: 'burnout-check',
+      number: '20',
+      title: 'Burnout Check',
+      description: '10 câu hỏi nhanh để kiểm tra bạn có đang "cháy sạch". AI phân tích mức độ burnout và tư vấn nên ở hay nên đi.',
+      icon: Zap,
+      href: '/burnout-check',
+      author: 'HR Bot Tiến Đặng',
+      category: 'utility'
     }
   ];
 

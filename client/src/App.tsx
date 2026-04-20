@@ -35,6 +35,7 @@ import { TarotPage } from './pages/TarotPage';
 import { MagicBallPage } from './pages/MagicBallPage';
 import { DeepStatusPage } from './pages/DeepStatusPage';
 import { ChickenGame } from './pages/ChickenGame';
+import { BurnoutCheckPage } from './pages/BurnoutCheckPage';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 import { Toaster } from 'react-hot-toast';
@@ -79,6 +80,7 @@ function App() {
           <Route path="/magic-ball" element={<MagicBallPage />} />
           <Route path="/deep-status" element={<DeepStatusPage />} />
           <Route path="/chicken-game" element={<ChickenGame />} />
+          <Route path="/burnout-check" element={<BurnoutCheckPage />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />

@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path === '/api/burnout-check' || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1749,42 +1749,84 @@ YÊU CẦU:
     }
 });
 
+// --- Burnout Check API ---
+app.post('/api/burnout-check', async (req, res) => {
+    try {
+        const { answers, jobInfo } = req.body;
+        if (!answers || !Array.isArray(answers)) return res.status(400).json({ error: 'Thiếu câu trả lời!' });
+
+        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ NGHỀ NGHIỆP kết hợp phong cách Gen Z hài hước nhưng thấu hiểu.
+
+THÔNG TIN CÔNG VIỆC: ${jobInfo || 'Không cung cấp'}
+
+CÂU TRẢ LỜI KHẢO SÁT BURNOUT (thang 1-5, 1=Không bao giờ, 5=Luôn luôn):
+${answers.map((a: any, i: number) => `Q${i+1}: ${a.question} → ${a.value}/5`).join('\n')}
+
+TỔNG ĐIỂM: ${answers.reduce((s: number, a: any) => s + a.value, 0)}/${answers.length * 5}
+
+PHÂN TÍCH VÀ TRẢ VỀ JSON:
+{
+  "burnoutLevel": <0-100 phần trăm burnout>,
+  "verdict": "<XANH (0-30%: Ổn) / VÀNG (31-60%: Cảnh báo) / ĐỎ (61-85%: Burnout) / TÍM (86-100%: Cháy sạch rồi)>",
+  "verdictEmoji": "<emoji phù hợp>",
+  "title": "<Tiêu đề kết quả ngắn gọn, hài hước VD: 'Bạn vẫn chill mà!' hoặc 'Houston, we have a problem'>",
+  "analysis": "<Phân tích 3-4 câu dựa trên pattern câu trả lời - chỉ ra vấn đề chính>",
+  "shouldQuit": "<honest / stay / consider - đánh giá thật lòng>",
+  "quitAdvice": "<2-3 câu tư vấn có nên nghỉ việc không, thực tế và thẳng thắn>",
+  "selfCare": ["<3 lời khuyên chăm sóc bản thân ngắn gọn>"],
+  "funFact": "<1 câu fun fact hoặc quote motivational hài hước về burnout>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Burnout check error:', err.message);
+        res.status(500).json({ error: 'AI cũng burnout rồi, thử lại nhé!' });
+    }
+});
+
 // --- Deep Status Generator API ---
 app.post('/api/deep-status', async (req, res) => {
     try {
-        const { context, style } = req.body;
+        const { context, style, language } = req.body;
         if (!context?.trim()) return res.status(400).json({ error: 'Nhập tâm trạng/ngữ cảnh đi!' });
 
+        const lang = language === 'en' ? 'English' : 'Tiếng Việt';
         const styleMap: Record<string, string> = {
-          deep: 'Sâu lắng, triết lý, đau đớn nhẹ nhàng kiểu "đêm nay lại mất ngủ vì nghĩ nhiều"',
-          funny: 'Hài hước tự giễu, tự châm biếm, kiểu "cười ra nước mắt"',
-          savage: 'Gắt gỏng, thả thính ngầm, slay, giọng "queen/king energy"',
-          poetic: 'Thơ mộng, lãng mạn, bay bổng, có vần điệu nhẹ',
-          chill: 'Bình thản, "kệ hết", vibe "sống chậm lại giữa thế giới vội vàng"',
+          deep: 'Sâu lắng, triết lý, đau đớn nhẹ nhàng',
+          funny: 'Hài hước tự giễu, tự châm biếm',
+          savage: 'Gắt gỏng, thả thính ngầm, slay',
+          poetic: 'Thơ mộng, lãng mạn, CÓ VẦN ĐIỆU rõ ràng',
+          chill: 'Bình thản, kệ hết, vibe sống chậm',
         };
         const styleDesc = styleMap[style] || styleMap.deep;
 
-        const prompt = `Bạn là CHUYÊN GIA tạo status/caption mạng xã hội cực "deep" và viral cho Gen Z Việt Nam.
+        const prompt = `Bạn là CHUYÊN GIA tạo status/caption mạng xã hội cực "deep", viral, đầy nghệ thuật ngôn từ.
 
-NGỮ CẢNH/TÂM TRẠNG CỦA NGƯỜI DÙNG: "${context.trim()}"
-PHONG CÁCH YÊU CẦU: ${styleDesc}
+NGỮ CẢNH/TÂM TRẠNG: "${context.trim()}"
+PHONG CÁCH: ${styleDesc}
+NGÔN NGỮ OUTPUT: ${lang}
 
 QUY TẮC:
-- Tạo ĐÚNG 5 status/caption khác nhau dựa trên ngữ cảnh.
-- Mỗi status 1-3 câu, NGẮN GỌN, đọc xong phải "ồ deep ghê".
-- Dùng tiếng Việt tự nhiên, có thể mix tiếng Anh nếu hợp.
-- Có thể dùng emoji nhưng TIẾT CHẾ (tối đa 1-2 emoji mỗi status).
-- Phải đủ "deep" để người ta muốn copy paste ngay.
-- MỖI status phải có góc nhìn KHÁC NHAU về cùng ngữ cảnh.
+1. Tạo ĐÚNG 5 status khác nhau.
+2. Mỗi status 1-3 câu, NGẮN GỌN, đọc xong phải "ồ deep ghê".
+3. BẮT BUỘC dùng KỸ THUẬT VĂN HỌC — mỗi status ít nhất 1:
+   - ẨN DỤ (Metaphor): So sánh ngầm sâu sắc
+   - HOÁN DỤ (Metonymy): Bộ phận thay tổng thể
+   - PUNCHLINE VẦN: Câu cuối có vần, catchy, đọc "đã tai" (VD: "Yêu em là lỗi, mà quên em là tội")
+   - TƯƠNG PHẢN (Antithesis): 2 ý đối lập cạnh nhau
+   - CHƠI CHỮ (Wordplay): Đồng âm, đa nghĩa, twist
+4. ${language === 'en' ? 'Write in literary English. Think Rupi Kaur, Atticus style.' : 'Viết tiếng Việt tự nhiên, có thể mix tiếng Anh.'}
+5. Emoji TIẾT CHẾ (tối đa 1-2 mỗi status). MỖI status góc nhìn KHÁC NHAU.
 
-BẮT BUỘC TRẢ VỀ JSON (không backtick):
+BẮT BUỘC TRẢ VỀ JSON:
 {
   "statuses": [
-    { "text": "<status 1>", "mood": "<1 từ mô tả mood: melancholy/hopeful/savage/dreamy/numb/fierce/peaceful>" },
-    { "text": "<status 2>", "mood": "<mood>" },
-    { "text": "<status 3>", "mood": "<mood>" },
-    { "text": "<status 4>", "mood": "<mood>" },
-    { "text": "<status 5>", "mood": "<mood>" }
+    { "text": "<status>", "mood": "<melancholy/hopeful/savage/dreamy/numb/fierce/peaceful>", "technique": "<metaphor/metonymy/rhyme/antithesis/wordplay>" }
   ]
 }`;
 
