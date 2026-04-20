@@ -1756,19 +1756,20 @@ app.post('/api/fb-profile/scrape', async (req, res) => {
         if (!url?.trim()) return res.status(400).json({ error: 'Nhập link Facebook!' });
 
         const fbUrl = url.trim().replace(/\/$/, '');
-        const response = await fetch(fbUrl, {
+        const response = await axios.get(fbUrl, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
                 'Accept': 'text/html',
                 'Accept-Language': 'vi-VN,vi;q=0.9',
             },
+            timeout: 10000,
         });
-        const html = await response.text();
+        const html = response.data as string;
 
         const getOG = (prop: string) => {
             const m = html.match(new RegExp(`<meta[^>]*property=["']og:${prop}["'][^>]*content=["']([^"']+)["']`, 'i'))
                 || html.match(new RegExp(`<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:${prop}["']`, 'i'));
-            return m ? m[1].replace(/&amp;/g, '&').replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCharCode(parseInt(h, 16))) : '';
+            return m ? m[1].replace(/&amp;/g, '&').replace(/&#x([0-9a-f]+);/gi, (_m: string, h: string) => String.fromCharCode(parseInt(h, 16))) : '';
         };
         const getMetaName = (name: string) => {
             const m = html.match(new RegExp(`<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']+)["']`, 'i'));
