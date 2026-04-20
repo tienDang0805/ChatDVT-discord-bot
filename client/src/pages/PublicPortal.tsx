@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -166,14 +166,44 @@ export const PublicPortal = () => {
       href: '/tarot',
       author: 'Pháp Sư Tiến Đặng',
       category: 'utility'
+    },
+    {
+      id: 'magic-ball',
+      number: '17',
+      title: 'Cầu Pha Lê AI',
+      description: 'Đặt câu hỏi Yes/No, lắc cầu pha lê huyền bí — nhận câu trả lời tiên tri từ vũ trụ. Chế độ Nhanh hoặc AI.',
+      icon: Sparkles,
+      href: '/magic-ball',
+      author: 'Pháp Sư Tiến Đặng',
+      category: 'utility'
+    },
+    {
+      id: 'deep-status',
+      number: '18',
+      title: 'Gen Status Deep',
+      description: 'AI tạo status/caption mạng xã hội cực "deep" dựa trên tâm trạng của bạn. 5 style: Sâu lắng, Hài, Savage, Thơ, Chill.',
+      icon: PenLine,
+      href: '/deep-status',
+      author: 'Deep Master Tiến Đặng',
+      category: 'utility'
+    },
+    {
+      id: 'chicken-game',
+      number: '19',
+      title: 'Bắn Gà Invaders',
+      description: 'Game arcade bắn gà cổ điển! Điều khiển phi thuyền, tiêu diệt đàn gà xâm lược. Hỗ trợ bàn phím + cảm ứng.',
+      icon: Crosshair,
+      href: '/chicken-game',
+      author: 'Game Dev Tiến Đặng',
+      category: 'game'
     }
   ];
 
   const chibiImages = [
+    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/slide-new.jpg',
     'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg',
     'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-rain.jpg',
     'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/phide.jpg',
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/slide-new.jpg'
   ];
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);

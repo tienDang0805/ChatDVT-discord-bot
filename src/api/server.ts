@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1746,6 +1746,93 @@ YÊU CẦU:
     } catch (err: any) {
         console.error('Astrology chat API error:', err.message);
         res.status(500).json({ error: 'Dây thiên cơ đang nhiễu, không phản hồi được!' });
+    }
+});
+
+// --- Deep Status Generator API ---
+app.post('/api/deep-status', async (req, res) => {
+    try {
+        const { context, style } = req.body;
+        if (!context?.trim()) return res.status(400).json({ error: 'Nhập tâm trạng/ngữ cảnh đi!' });
+
+        const styleMap: Record<string, string> = {
+          deep: 'Sâu lắng, triết lý, đau đớn nhẹ nhàng kiểu "đêm nay lại mất ngủ vì nghĩ nhiều"',
+          funny: 'Hài hước tự giễu, tự châm biếm, kiểu "cười ra nước mắt"',
+          savage: 'Gắt gỏng, thả thính ngầm, slay, giọng "queen/king energy"',
+          poetic: 'Thơ mộng, lãng mạn, bay bổng, có vần điệu nhẹ',
+          chill: 'Bình thản, "kệ hết", vibe "sống chậm lại giữa thế giới vội vàng"',
+        };
+        const styleDesc = styleMap[style] || styleMap.deep;
+
+        const prompt = `Bạn là CHUYÊN GIA tạo status/caption mạng xã hội cực "deep" và viral cho Gen Z Việt Nam.
+
+NGỮ CẢNH/TÂM TRẠNG CỦA NGƯỜI DÙNG: "${context.trim()}"
+PHONG CÁCH YÊU CẦU: ${styleDesc}
+
+QUY TẮC:
+- Tạo ĐÚNG 5 status/caption khác nhau dựa trên ngữ cảnh.
+- Mỗi status 1-3 câu, NGẮN GỌN, đọc xong phải "ồ deep ghê".
+- Dùng tiếng Việt tự nhiên, có thể mix tiếng Anh nếu hợp.
+- Có thể dùng emoji nhưng TIẾT CHẾ (tối đa 1-2 emoji mỗi status).
+- Phải đủ "deep" để người ta muốn copy paste ngay.
+- MỖI status phải có góc nhìn KHÁC NHAU về cùng ngữ cảnh.
+
+BẮT BUỘC TRẢ VỀ JSON (không backtick):
+{
+  "statuses": [
+    { "text": "<status 1>", "mood": "<1 từ mô tả mood: melancholy/hopeful/savage/dreamy/numb/fierce/peaceful>" },
+    { "text": "<status 2>", "mood": "<mood>" },
+    { "text": "<status 3>", "mood": "<mood>" },
+    { "text": "<status 4>", "mood": "<mood>" },
+    { "text": "<status 5>", "mood": "<mood>" }
+  ]
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Deep Status error:', err.message);
+        res.status(500).json({ error: 'Cảm xúc quá sâu, AI xử lý không kịp!' });
+    }
+});
+
+// --- Magic 8 Ball API ---
+app.post('/api/magic-ball', async (req, res) => {
+    try {
+        const { question } = req.body;
+        if (!question?.trim()) return res.status(400).json({ error: 'Hãy đặt một câu hỏi!' });
+
+        const prompt = `Bạn là QUẢ CẦU PHA LÊ HUYỀN BÍ (Magic 8 Ball) cổ đại. Bạn trả lời câu hỏi Yes/No bằng phong cách tiên tri bí ẩn.
+
+CÂU HỎI: "${question.trim()}"
+
+QUY TẮC:
+- Trả lời NGẮN GỌN tối đa 2 câu.
+- Giọng huyền bí, tiên tri, đôi khi mỉa mai nhẹ nhàng.
+- Có thể trả lời Có/Không/Có thể/Chưa chắc — giống Magic 8 Ball thật.
+- Thêm 1 emoji phù hợp ở đầu câu.
+- KHÔNG dùng markdown, chỉ text thuần.
+
+BẮT BUỘC TRẢ VỀ JSON (không backtick):
+{
+  "answer": "<Câu trả lời tiên tri 1-2 câu>",
+  "type": "<positive / negative / neutral>",
+  "emoji": "<1 emoji phù hợp>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Magic Ball error:', err.message);
+        res.status(500).json({ error: 'Cầu pha lê đang mờ, thử lại nhé!' });
     }
 });
 

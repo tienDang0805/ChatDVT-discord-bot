@@ -32,6 +32,9 @@ import BirthdayGreeting from './pages/BirthdayGreeting';
 import { QRGenerator } from './pages/QRGenerator';
 import { CostStudy } from './pages/CostStudy';
 import { TarotPage } from './pages/TarotPage';
+import { MagicBallPage } from './pages/MagicBallPage';
+import { DeepStatusPage } from './pages/DeepStatusPage';
+import { ChickenGame } from './pages/ChickenGame';
 import { MusicPlayerProvider } from './contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './components/GlobalMusicPlayer';
 import { Toaster } from 'react-hot-toast';
@@ -73,6 +76,9 @@ function App() {
           <Route path="/qr-generator" element={<QRGenerator />} />
           <Route path="/cost-study" element={<CostStudy />} />
           <Route path="/tarot" element={<TarotPage />} />
+          <Route path="/magic-ball" element={<MagicBallPage />} />
+          <Route path="/deep-status" element={<DeepStatusPage />} />
+          <Route path="/chicken-game" element={<ChickenGame />} />
           <Route path="/petlandingpage" element={<PetLandingPage />} />
        <Route path="/tutien" element={<TuTienGame />} />
        <Route path="/login" element={<Login />} />
