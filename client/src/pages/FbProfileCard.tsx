@@ -153,8 +153,9 @@ export const FbProfileCard = () => {
       const ex=data.extracted||{};
       const av=data.avatar?`${API}/api/fb-profile/proxy-image?url=${encodeURIComponent(data.avatar)}`:'';
       const fol=ex.otherInfo?.find((i:string)=>i.startsWith('Followers:'))?.replace('Followers:','').trim()||'';
+      const isFakeBio = (b:string) => !b || /^(Xem|View|See|Log in|Join|Tham gia)/i.test(b) || b.includes('Facebook') && b.length < 100;
       setProfile(p=>({
-        name:data.name||p.name,bio:data.bio||p.bio,avatar:av||p.avatar,coverColor:p.coverColor,
+        name:data.name||p.name,bio:isFakeBio(data.bio)?p.bio:data.bio,avatar:av||p.avatar,coverColor:p.coverColor,
         job:ex.workplaces?.join(' · ')||p.job,location:ex.locations?.join(', ')||p.location,
         relationship:ex.relationships?.[0]||p.relationship,education:ex.education?.join(' · ')||p.education,
         friends:ex.friends?.[0]||p.friends,followers:fol||p.followers,
@@ -193,7 +194,10 @@ export const FbProfileCard = () => {
                 {phase==='scraping'?<Loader2 size={14} style={{animation:'spin 1s linear infinite'}}/>:<Search size={14}/>}Đọc
               </button>
             </div>
-            {scraped&&<p style={{color:'#22c55e',fontSize:11,marginTop:6}}>✅ Đã đọc profile</p>}
+            {scraped&&<div style={{marginTop:8,padding:'10px 12px',background:'rgba(34,197,94,.05)',borderRadius:10,border:'1px solid rgba(34,197,94,.1)'}}>
+              <p style={{color:'#22c55e',fontSize:11,fontWeight:600}}>✅ Đã đọc được: {[profile.name&&'Tên',profile.avatar&&'Avatar',profile.job&&'Nghề',profile.location&&'Nơi ở',profile.education&&'Học vấn',profile.relationship&&'Tình trạng',profile.friends&&'Bạn bè',profile.posts.some(p=>p)&&'Bài đăng'].filter(Boolean).join(' · ')||'Chỉ tên'}</p>
+              <p style={{color:'#6b7280',fontSize:10,marginTop:4,lineHeight:1.5}}>Thiếu gì thì <b>bổ sung bên dưới</b> để render đẹp hơn!</p>
+            </div>}
             {error&&<p style={{color:'#ef4444',fontSize:11,marginTop:6}}>⚠️ {error}</p>}
           </div>
 

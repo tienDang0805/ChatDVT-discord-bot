@@ -1807,6 +1807,71 @@ app.post('/api/fb-profile/scrape', async (req, res) => {
             posts: [], friends: [], otherInfo: []
         };
 
+        let mbasicHtml = '';
+        try {
+            const username = fbUrl.match(/facebook\.com\/([^/?#]+)/)?.[1] || '';
+            if (username && username !== 'profile.php') {
+                const mbRes = await axios.get(`https://mbasic.facebook.com/${username}`, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36',
+                        'Accept': 'text/html',
+                        'Accept-Language': 'vi-VN,vi;q=0.9',
+                    },
+                    timeout: 12000, maxRedirects: 3,
+                });
+                mbasicHtml = mbRes.data as string;
+            } else {
+                const idMatch = fbUrl.match(/id=(\d+)/);
+                if (idMatch) {
+                    const mbRes = await axios.get(`https://mbasic.facebook.com/profile.php?id=${idMatch[1]}`, {
+                        headers: { 'User-Agent': 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36', 'Accept': 'text/html', 'Accept-Language': 'vi-VN,vi;q=0.9' },
+                        timeout: 12000, maxRedirects: 3,
+                    });
+                    mbasicHtml = mbRes.data as string;
+                }
+            }
+        } catch (_e) {}
+
+        if (mbasicHtml) {
+            const profileSection = mbasicHtml.replace(/\n/g, ' ');
+
+            const workMatches = profileSection.match(/(?:Làm việc tại|Works at|Worked at|Từng làm việc tại)\s*<[^>]*>([^<]+)/gi);
+            if (workMatches) workMatches.forEach(w => { const m = w.match(/>([^<]+)$/); if (m) extracted.workplaces.push(decode(m[1].trim())); });
+
+            const eduMatches = profileSection.match(/(?:Đã học tại|Studied at|Học tại|Goes to|Went to)\s*<[^>]*>([^<]+)/gi);
+            if (eduMatches) eduMatches.forEach(e => { const m = e.match(/>([^<]+)$/); if (m) extracted.education.push(decode(m[1].trim())); });
+
+            const livesMatch = profileSection.match(/(?:Sống tại|Lives in|Đang sống tại)\s*<[^>]*>([^<]+)/i);
+            if (livesMatch) { const m = livesMatch[0].match(/>([^<]+)$/); if (m) extracted.locations.push(decode(m[1].trim())); }
+
+            const fromMatch = profileSection.match(/(?:Đến từ|From)\s*<[^>]*>([^<]+)/i);
+            if (fromMatch) { const m = fromMatch[0].match(/>([^<]+)$/); if (m) extracted.locations.push(decode(m[1].trim())); }
+
+            const relMatch2 = profileSection.match(/(?:Độc thân|Single|Đã kết hôn|Married|Hẹn hò|In a relationship|Đã đính hôn|Engaged)/i);
+            if (relMatch2) extracted.relationships.push(decode(relMatch2[0]));
+
+            const bioMatch = profileSection.match(/id="bio"[^>]*>[\s\S]*?<div[^>]*>([^<]+)/i)
+                || profileSection.match(/class="[^"]*bio[^"]*"[^>]*>([^<]+)/i);
+            if (bioMatch && bioMatch[1]?.trim()) extracted.otherInfo.push(`Bio: ${decode(bioMatch[1].trim())}`);
+
+            const friendCountMatch = mbasicHtml.match(/(\d[\d,.]*)\s*(?:friends|bạn bè)/i);
+            if (friendCountMatch) extracted.friends.push(friendCountMatch[1].replace(/[,.]/g, ''));
+
+            const followerCountMatch = mbasicHtml.match(/(\d[\d,.]*)\s*(?:followers|người theo dõi)/i);
+            if (followerCountMatch) extracted.otherInfo.push(`Followers: ${followerCountMatch[1]}`);
+
+            const postDivs = mbasicHtml.match(/<div[^>]*class="[^"]*(?:story_body|userContent)[^"]*"[^>]*>([\s\S]*?)<\/div>/gi);
+            if (postDivs) postDivs.slice(0, 5).forEach(pd => {
+                const textOnly = pd.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                if (textOnly.length > 10 && textOnly.length < 300) extracted.posts.push(decode(textOnly));
+            });
+
+            if (!name) {
+                const mbTitle = mbasicHtml.match(/<title>([^<]+)<\/title>/i);
+                if (mbTitle) extracted.otherInfo.push(`Tên: ${decode(mbTitle[1].trim())}`);
+            }
+        }
+
         const jsonLdMatches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
         for (const jm of jsonLdMatches) {
             try {
