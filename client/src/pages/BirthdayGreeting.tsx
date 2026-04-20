@@ -559,14 +559,14 @@ function WishPhase() {
               <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, minHeight:'1.8em' }}>
                 {wish1.done
                   ? <>Sinh nhật <span style={{ background:'linear-gradient(135deg,#fbbf24,#f59e0b)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontWeight:800 }}>27 tuổi</span> vui vẻ nha! 🥳</>
-                  : <>{wish1.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                  : <>{wish1.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
                 }
               </p>
               {wish1.done && (
                 <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, marginTop:12, minHeight:'1.8em' }}>
                   {wish2.done
                     ? <>Donate Khầy <span style={{ color:'#fbbf24', fontWeight:800 }}>30k</span> ăn hủ tiếu nhé nhé <span style={{ fontStyle:'italic', color:'#c4b5fd' }}>lelele</span> 🍜</>
-                    : <>{wish2.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                    : <>{wish2.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
                   }
                 </p>
               )}
@@ -578,7 +578,7 @@ function WishPhase() {
               <p style={{ color:'#a1a1aa', fontSize:'clamp(14px,3.5vw,15px)', lineHeight:1.8, fontStyle:'italic', minHeight:'3.6em' }}>
                 {wish3.done
                   ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu kakaka </>
-                  : <>{wish3.displayed}<span style={{ animation:'blink 1s infinite', color:'#f472b6' }}>|</span></>
+                  : <>{wish3.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
                 }
               </p>
             )}
@@ -588,7 +588,8 @@ function WishPhase() {
             </div>
           </div>
 
-          <div style={{ display:'flex', flexDirection:'column', gap:10, animation: show ? 'slideUp .8s .5s ease-out both' : 'none' }}>
+          {wish3.done && (
+          <div style={{ display:'flex', flexDirection:'column', gap:10, animation:'slideUp .8s ease-out both' }}>
             <button onClick={() => openMessenger('Khầy nay màu mè dữ')}
               style={{
                 display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'15px 20px',
@@ -637,6 +638,7 @@ function WishPhase() {
               🏠 Trang chủ
             </button>
           </div>
+          )}
         </div>
       </div>
     </div>
@@ -735,6 +737,7 @@ export default function BirthdayGreeting() {
         @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(236,72,153,.35)} 50%{box-shadow:0 8px 40px rgba(236,72,153,.55),0 0 0 4px rgba(236,72,153,.15)} }
         @keyframes particleOut { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--tx,100px),var(--ty,-100px)) scale(0)} }
         @keyframes floatUp { 0%{transform:translateY(0);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateY(-110vh);opacity:0} }
+        @keyframes cursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
         ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:10px}
         *{-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
       `}</style>
