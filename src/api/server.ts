@@ -184,7 +184,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path === '/api/burnout-check' || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1750,31 +1750,36 @@ YÊU CẦU:
 });
 
 // --- Burnout Check API ---
-app.post('/api/burnout-check', async (req, res) => {
+app.post('/api/burnout-check/questions', async (req, res) => {
     try {
-        const { answers, jobInfo } = req.body;
-        if (!answers || !Array.isArray(answers)) return res.status(400).json({ error: 'Thiếu câu trả lời!' });
+        const { jobInfo } = req.body;
 
-        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ NGHỀ NGHIỆP kết hợp phong cách Gen Z hài hước nhưng thấu hiểu.
+        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ NGHỀ NGHIỆP sáng tạo. Tạo bộ 10 câu hỏi khảo sát burnout ĐỘC ĐÁO, THÚ VỊ, KHÔNG NHẠT.
 
-THÔNG TIN CÔNG VIỆC: ${jobInfo || 'Không cung cấp'}
+${jobInfo ? `CÔNG VIỆC CỦA NGƯỜI DÙNG: "${jobInfo}" — hãy tuỳ chỉnh 2-3 câu hỏi cho phù hợp ngành nghề này.` : 'Không biết ngành nghề — hỏi chung.'}
 
-CÂU TRẢ LỜI KHẢO SÁT BURNOUT (thang 1-5, 1=Không bao giờ, 5=Luôn luôn):
-${answers.map((a: any, i: number) => `Q${i+1}: ${a.question} → ${a.value}/5`).join('\n')}
+QUY TẮC TẠO CÂU HỎI:
+- KHÔNG hỏi kiểu "Bạn có mệt không?" nhạt nhẽo. Phải SẮC SẢO, ĐI VÀO THỰC TẾ.
+- Dùng tình huống CỤ THỂ, gần gũi đời thực (VD: "Khi alarm báo thức sáng thứ 2, phản ứng đầu tiên của bạn là gì?")
+- Mỗi câu có 4 lựa chọn A/B/C/D từ nhẹ → nặng, MỖI LỰA CHỌN phải hài hước và relatable.
+- Trộn đều 4 khía cạnh: Thể chất, Tinh thần, Mối quan hệ công sở, Động lực nghề nghiệp.
+- Giọng văn Gen Z, hài hước nhưng chạm đúng vấn đề.
 
-TỔNG ĐIỂM: ${answers.reduce((s: number, a: any) => s + a.value, 0)}/${answers.length * 5}
-
-PHÂN TÍCH VÀ TRẢ VỀ JSON:
+BẮT BUỘC TRẢ VỀ JSON:
 {
-  "burnoutLevel": <0-100 phần trăm burnout>,
-  "verdict": "<XANH (0-30%: Ổn) / VÀNG (31-60%: Cảnh báo) / ĐỎ (61-85%: Burnout) / TÍM (86-100%: Cháy sạch rồi)>",
-  "verdictEmoji": "<emoji phù hợp>",
-  "title": "<Tiêu đề kết quả ngắn gọn, hài hước VD: 'Bạn vẫn chill mà!' hoặc 'Houston, we have a problem'>",
-  "analysis": "<Phân tích 3-4 câu dựa trên pattern câu trả lời - chỉ ra vấn đề chính>",
-  "shouldQuit": "<honest / stay / consider - đánh giá thật lòng>",
-  "quitAdvice": "<2-3 câu tư vấn có nên nghỉ việc không, thực tế và thẳng thắn>",
-  "selfCare": ["<3 lời khuyên chăm sóc bản thân ngắn gọn>"],
-  "funFact": "<1 câu fun fact hoặc quote motivational hài hước về burnout>"
+  "questions": [
+    {
+      "id": 1,
+      "text": "<Câu hỏi tình huống thú vị>",
+      "category": "<physical / mental / social / motivation>",
+      "options": [
+        { "label": "A", "text": "<Lựa chọn nhẹ — vẫn ổn>", "score": 1 },
+        { "label": "B", "text": "<Hơi có vấn đề>", "score": 2 },
+        { "label": "C", "text": "<Đang burnout>", "score": 3 },
+        { "label": "D", "text": "<Cháy sạch rồi>", "score": 4 }
+      ]
+    }
+  ]
 }`;
 
         const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
@@ -1784,10 +1789,51 @@ PHÂN TÍCH VÀ TRẢ VỀ JSON:
         if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
         res.json(JSON.parse(text));
     } catch (err: any) {
-        console.error('Burnout check error:', err.message);
+        console.error('Burnout questions error:', err.message);
+        res.status(500).json({ error: 'AI đang nghĩ câu hỏi, thử lại nhé!' });
+    }
+});
+
+app.post('/api/burnout-check/analyze', async (req, res) => {
+    try {
+        const { answers, jobInfo, totalScore, maxScore } = req.body;
+        if (!answers || !Array.isArray(answers)) return res.status(400).json({ error: 'Thiếu câu trả lời!' });
+
+        const prompt = `Bạn là CHUYÊN GIA TÂM LÝ NGHỀ NGHIỆP kết hợp phong cách Gen Z hài hước nhưng thấu hiểu sâu sắc.
+
+THÔNG TIN CÔNG VIỆC: ${jobInfo || 'Không cung cấp'}
+
+KẾT QUẢ KHẢO SÁT BURNOUT:
+${answers.map((a: any) => `• [${a.category}] ${a.question} → Chọn: "${a.chosen}" (${a.score}/4)`).join('\n')}
+
+TỔNG ĐIỂM: ${totalScore}/${maxScore} (${Math.round((totalScore / maxScore) * 100)}%)
+
+PHÂN TÍCH THẬT SÂU VÀ TRẢ VỀ JSON:
+{
+  "burnoutLevel": <0-100 phần trăm burnout>,
+  "verdict": "<XANH (0-30%: Ổn) / VÀNG (31-60%: Cảnh báo) / ĐỎ (61-85%: Burnout) / TÍM (86-100%: Cháy sạch rồi)>",
+  "verdictEmoji": "<emoji phù hợp>",
+  "title": "<Tiêu đề hài hước nhưng chính xác>",
+  "analysis": "<Phân tích 4-5 câu dựa trên PATTERN câu trả lời — chỉ ra khía cạnh nào đang tệ nhất (thể chất/tinh thần/xã hội/động lực)>",
+  "redFlags": ["<2-3 dấu hiệu đáng lo nhất từ câu trả lời>"],
+  "shouldQuit": "<stay / consider / honest>",
+  "quitAdvice": "<3-4 câu tư vấn THẲNG THẮN có nên nghỉ việc không, dựa trên mức độ burnout>",
+  "selfCare": ["<4 lời khuyên chăm sóc bản thân CỤ THỂ, HÀNH ĐỘNG ĐƯỢC>"],
+  "funFact": "<1 câu quote/fun fact hài hước nhưng thấm về burnout>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Burnout analyze error:', err.message);
         res.status(500).json({ error: 'AI cũng burnout rồi, thử lại nhé!' });
     }
 });
+
 
 // --- Deep Status Generator API ---
 app.post('/api/deep-status', async (req, res) => {

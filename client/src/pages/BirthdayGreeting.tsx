@@ -610,6 +610,16 @@ function WishPhase() {
             >
               💻 Code web để chúc sinh nhật luôn á?! 
             </button>
+            <button onClick={() => openMessenger('Anh ơi em muốn yêu cầu thêm tính năng mới cho web nè!')}
+              style={{
+                display:'flex', alignItems:'center', justifyContent:'center', gap:8, padding:'14px 20px',
+                background:'rgba(255,255,255,.05)', color:'#a1a1aa', border:'1px solid rgba(255,255,255,.08)',
+                borderRadius:14, fontSize:'clamp(13px,3vw,14px)', fontWeight:600, width:'100%',
+                transition:'all .2s', cursor:'pointer',
+              }}
+            >
+              🚀 Yêu cầu thêm tính năng mới ngay
+            </button>
           </div>
           )}
 
