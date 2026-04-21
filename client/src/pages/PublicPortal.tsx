@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -245,6 +245,16 @@ export const PublicPortal = () => {
       icon: MoonStar,
       href: '/dream-interpreter',
       author: 'Chu Công Tiến Đặng',
+      category: 'utility'
+    },
+    {
+      id: 'tech-duel',
+      number: '25',
+      title: 'So Kèo Công Nghệ',
+      description: 'So sánh 2 sản phẩm công nghệ bất kỳ. AI search Google lấy data real-time, phân tích chi tiết + roast sản phẩm thua.',
+      icon: Swords,
+      href: '/tech-duel',
+      author: 'Tư Vấn Viên Đồ Chơi (Tiến Đặng)',
       category: 'utility'
     }
   ];

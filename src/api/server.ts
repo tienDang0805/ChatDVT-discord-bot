@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2355,6 +2355,168 @@ Hãy trả lời ngắn gọn, thâm thúy nhưng hài hước, phân tích sâu
     } catch (err: any) {
         console.error('Dream interpreter chat error:', err.message);
         res.status(500).json({ error: 'Chu Công đang bận đánh cờ tướng với Tiên đế, thử lại nhé!' });
+    }
+});
+
+app.post('/api/tech-duel/consult', async (req, res) => {
+    try {
+        const { category, budget, purpose, priority, currentDevice, geminiApiKey } = req.body;
+        if (!category) return res.status(400).json({ error: 'Cho tao biết mày muốn mua gì đã!' });
+
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const searchResult = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Search Google tìm TOP 3 sản phẩm ${category} tốt nhất hiện tại (tháng ${new Date().getMonth()+1}/${new Date().getFullYear()}) tại Việt Nam với tiêu chí:\n- Ngân sách: ${budget || 'không giới hạn'}\n- Mục đích: ${purpose || 'đa năng'}\n- Ưu tiên: ${priority || 'không có yêu cầu đặc biệt'}\n${currentDevice ? `- Đang dùng: ${currentDevice}` : ''}\n\nTrả về tên sản phẩm, giá bán VNĐ mới nhất, và thông số nổi bật.`,
+            config: { tools: [{ googleSearch: {} }] }
+        });
+
+        const searchData = searchResult.text || '';
+        const sources = searchResult.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+
+        const oldGenAI = new GoogleGenerativeAI(apiKey);
+        const model = oldGenAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+
+        const prompt = `Bạn là anh bạn thân rành công nghệ — kiểu người bạn bè hay nhờ tư vấn mua đồ. Nói chuyện tự nhiên, có hồn, như đang nhắn tin cho bạn thân, KHÔNG phải robot.
+
+Người dùng cần mua: ${category}
+Ngân sách: ${budget || 'chưa rõ'}
+Mục đích: ${purpose || 'dùng chung'}
+Điều quan trọng nhất: ${priority || 'chưa rõ'}
+${currentDevice ? `Đang dùng: ${currentDevice}` : ''}
+
+DỮ LIỆU THẬT TỪ GOOGLE (BẮT BUỘC DÙNG):
+${searchData}
+
+NHIỆM VỤ: Tư vấn TOP 3 sản phẩm phù hợp nhất. Mỗi sản phẩm phải nói:
+- Tại sao nó phù hợp với NHU CẦU CỤ THỂ của người này (không liệt kê spec vô hồn)
+- Điểm mạnh thực tế (VD: "chơi Genshin max setting vẫn mát lịm" thay vì "chip mạnh")
+- Điểm yếu thật (VD: "camera chụp đêm hơi tệ" thay vì "camera trung bình")
+- Giá bán VNĐ mới nhất
+- Ai nên mua, ai KHÔNG nên mua
+
+Cuối cùng đưa ra lời khuyên: nếu chỉ được chọn 1, chọn cái nào và tại sao.
+
+BẮT BUỘC TRẢ VỀ JSON:
+{
+  "greeting": "<1 câu chào hỏi tự nhiên liên quan đến nhu cầu người dùng>",
+  "recommendations": [
+    {
+      "name": "<tên đầy đủ>",
+      "price": "<giá VNĐ>",
+      "whyGood": "<tại sao phù hợp với người này, 2-3 câu thực tế>",
+      "whyBad": "<điểm yếu thật, 1-2 câu>",
+      "bestFor": "<ai nên mua>",
+      "notFor": "<ai KHÔNG nên mua>"
+    }
+  ],
+  "topPick": "<tên sản phẩm recommend nhất>",
+  "topPickReason": "<lý do chọn, 2-3 câu như đang nhắn tin cho bạn>",
+  "bonusTip": "<1 mẹo mua hàng hoặc lưu ý thực tế>"
+}`;
+
+        const formatResult = await model.generateContent(prompt);
+        let text = formatResult.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+
+        res.json({
+            ...JSON.parse(text),
+            sources: sources.map((s: any) => ({ title: s.web?.title || '', uri: s.web?.uri || '' }))
+        });
+    } catch (err: any) {
+        console.error('Tech consult error:', err.message);
+        res.status(500).json({ error: 'Tư vấn viên đang bận review hàng, thử lại sau nhé!' });
+    }
+});
+
+app.post('/api/tech-duel/compare', async (req, res) => {
+    try {
+        const { product1, product2, usage, geminiApiKey } = req.body;
+        if (!product1 || !product2) return res.status(400).json({ error: 'Chọn 2 sản phẩm để so kèo!' });
+
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const searchResult = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: `Search Google lấy TOÀN BỘ thông số kỹ thuật + giá bán VNĐ mới nhất:\n1. ${product1}\n2. ${product2}\nChi tiết: Màn hình, Chip, RAM, Camera, Pin, Giá, Thiết kế, HĐH, Tính năng đặc biệt.`,
+            config: { tools: [{ googleSearch: {} }] }
+        });
+
+        const searchData = searchResult.text || '';
+        const sources = searchResult.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+
+        const oldGenAI = new GoogleGenerativeAI(apiKey);
+        const model = oldGenAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+
+        const prompt = `Bạn là reviewer công nghệ mỏ hỗn nhưng công tâm. So sánh "${product1}" vs "${product2}".
+${usage ? `Người dùng cần: ${usage}` : ''}
+
+DỮ LIỆU GOOGLE SEARCH:
+${searchData}
+
+Phân tích từng hạng mục, nói THỰC TẾ (VD: "chơi LMHT 60fps ổn nhưng Genshin thì lag" thay vì "hiệu năng tốt").
+
+BẮT BUỘC JSON:
+{
+  "product1": { "name": "", "shortName": "" },
+  "product2": { "name": "", "shortName": "" },
+  "specs": [
+    { "category": "Màn hình", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Hiệu năng", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Camera", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Pin & Sạc", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Giá VNĐ", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Thiết kế", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" },
+    { "category": "Phần mềm", "p1": "", "p2": "", "winner": "p1|p2|draw", "comment": "" }
+  ],
+  "score": { "p1": 0, "p2": 0 },
+  "overallWinner": "p1|p2",
+  "verdict": "<3-4 câu kết luận thực tế>",
+  "roast": "<cà khịa sản phẩm thua 2 câu>"
+}`;
+
+        const formatResult = await model.generateContent(prompt);
+        let text = formatResult.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+
+        res.json({
+            ...JSON.parse(text),
+            sources: sources.map((s: any) => ({ title: s.web?.title || '', uri: s.web?.uri || '' }))
+        });
+    } catch (err: any) {
+        console.error('Tech compare error:', err.message);
+        res.status(500).json({ error: 'Đang bận so kèo, thử lại sau!' });
+    }
+});
+
+app.post('/api/tech-duel/chat', async (req, res) => {
+    try {
+        const { question, context, geminiApiKey, chatHistory } = req.body;
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'User' : 'AI'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là anh bạn rành công nghệ, nói chuyện tự nhiên như nhắn tin.
+NGỮ CẢNH: ${context || ''}
+${historyText ? `LỊCH SỬ:\n${historyText}\n` : ''}
+User: "${question}"
+Trả lời ngắn gọn, có ích, hài hước. Dùng Google Search nếu cần data mới.`;
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const result = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { tools: [{ googleSearch: {} }] }
+        });
+        res.json({ text: result.text || '' });
+    } catch (err: any) {
+        console.error('Tech chat error:', err.message);
+        res.status(500).json({ error: 'Đang bận, hỏi lại sau!' });
     }
 });
 
