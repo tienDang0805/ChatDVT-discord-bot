@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MoonStar, Sparkles, BrainCircuit, Eye, Hash } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { MoonStar, Sparkles, BrainCircuit, Eye, Hash, MessageSquare, Bot, Send } from 'lucide-react';
 import { PageShell } from '../components/PageShell';
 import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
@@ -17,6 +17,11 @@ export const DreamInterpreter = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<DreamResult | null>(null);
   const [error, setError] = useState('');
+
+  const [chatMsgs, setChatMsgs] = useState<{role: 'user'|'ai', text: string}[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const generateReading = async () => {
     if (!dream.trim() || dream.length < 10) {
@@ -43,10 +48,43 @@ export const DreamInterpreter = () => {
       
       if (!res.ok) throw new Error(data.error || 'Chu Công đang ngủ quên, thử lại sau nhé!');
       setResult(data);
+      setChatMsgs([]);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChat = async () => {
+    if (!chatInput.trim() || chatLoading) return;
+    const apiKey = getStoredGeminiKey();
+    if (!apiKey) {
+      setChatMsgs(prev => [...prev, { role: 'ai', text: 'Nhập API Key trước khi hỏi Chu Công nhé!' }]);
+      return;
+    }
+
+    const q = chatInput.trim();
+    setChatInput('');
+    setChatMsgs(prev => [...prev, { role: 'user', text: q }]);
+    setChatLoading(true);
+
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/dream-interpreter/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, dreamResult: result, dreamContext: dream, chatHistory: chatMsgs, geminiApiKey: apiKey })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Lỗi kết nối bồng lai tiên cảnh');
+      setChatMsgs(prev => [...prev, { role: 'ai', text: data.text }]);
+    } catch (err: any) {
+      setChatMsgs(prev => [...prev, { role: 'ai', text: 'Lỗi: ' + err.message }]);
+    } finally {
+      setChatLoading(false);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
   };
 
@@ -125,6 +163,46 @@ export const DreamInterpreter = () => {
           <div className="bg-slate-800 dark:bg-[#1a2332] text-white rounded-2xl p-5 shadow-sm text-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
             <p className="text-sm font-semibold italic relative z-10">"{result.summary}"</p>
+          </div>
+
+          <div className="bg-[#131923] border border-indigo-500/20 rounded-2xl overflow-hidden shadow-sm mt-8">
+            <div className="flex items-center gap-2 px-5 py-3.5 border-b border-indigo-500/20 bg-indigo-500/5">
+              <Bot size={18} className="text-indigo-400"/><span className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Trò Chuyện Với Chu Công</span>
+            </div>
+            <div className="max-h-[350px] overflow-y-auto p-4 space-y-3" style={{scrollbarWidth:'thin',scrollbarColor:'#1f2937 transparent'}}>
+              {chatMsgs.length === 0 && (
+                <div className="text-center py-6">
+                  <Bot size={36} className="text-indigo-500/50 mx-auto mb-3"/>
+                  <p className="text-slate-500 text-sm mb-4">Bạn muốn hỏi thêm chi tiết nào trong giấc mơ không?</p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {['Ý nghĩa sâu xa hơn là gì?', 'Mình nên làm gì tiếp theo?', 'Vậy có báo mộng số nào khác không?'].map((q,i)=>(
+                      <button key={i} onClick={()=>{setChatInput(q);}} className="px-3 py-1.5 bg-slate-800 rounded-lg border border-indigo-500/30 text-xs text-slate-300 hover:text-indigo-400 hover:border-indigo-500/50 transition">{q}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {chatMsgs.map((m,i)=>(
+                <div key={i} className={`flex gap-3 ${m.role==='user'?'justify-end':''}`}>
+                  {m.role==='ai' && <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0 mt-0.5"><Bot size={16} className="text-white"/></div>}
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role==='user'?'bg-indigo-500/20 border border-indigo-500/30 text-indigo-100 rounded-tr-sm':'bg-slate-800 border border-slate-700 text-slate-300 rounded-tl-sm'}`}>{m.text}</div>
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0"><Bot size={16} className="text-white"/></div>
+                  <div className="bg-slate-800 border border-slate-700 rounded-2xl rounded-tl-sm px-4 py-3.5">
+                    <div className="flex gap-1.5"><span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay:'0ms'}}/><span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}}/><span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay:'300ms'}}/></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef}/>
+            </div>
+            <div className="p-3 border-t border-indigo-500/20 bg-indigo-500/5">
+              <div className="flex gap-2">
+                <input type="text" value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleChat()}} placeholder="Hỏi Chu Công..." className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:border-indigo-500 outline-none transition"/>
+                <button onClick={handleChat} disabled={!chatInput.trim()||chatLoading} className="w-11 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl transition-colors"><Send size={16}/></button>
+              </div>
+            </div>
           </div>
         </div>
       )}

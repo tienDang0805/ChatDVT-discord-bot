@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path === '/api/face-reader' || req.path === '/api/dream-interpreter') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2197,22 +2197,40 @@ app.post('/api/face-reader', upload.single('image'), async (req, res) => {
         const imageBase64 = req.file.buffer.toString('base64');
         const mimeType = req.file.mimetype as string;
 
-        const prompt = `Bạn là Tướng Thuật Đại Sư — một thầy bói xem nhân tướng học mạng chuyên nghiệp, mỏ hỗn, thích cà khịa nhưng cũng phán trúng tim đen.
+        const prompt = `Bạn là Tướng Thuật Đại Sư — một bậc thầy nhân tướng học phương Đông (nắm vững lý thuyết Tam Đình, Ngũ Quan, 12 Cung) kiêm "chuyên gia soi mói" trên mạng. Bạn sở hữu đôi mắt âm dương có thể nhìn thấu vận mệnh qua từng đường nét trên khuôn mặt.
 
-Nhiệm vụ: Dựa vào ảnh khuôn mặt, hãy soi:
-1. Cung tài lộc (tiền tài, sự nghiệp)
-2. Đường tình duyên (đào hoa hay ế, tướng phu thê)
-3. Cà khịa / Tướng nợ nần (đâm chọt thói quen xấu: thức khuya, chạy deadline, mê gái/trai, tốn tiền ăn vặt...)
-4. Lời khuyên tâm linh (hài hước)
+NHIỆM VỤ: Hãy phân tích CỰC KỲ CHI TIẾT bức ảnh khuôn mặt này. Phải vận dụng thuật ngữ chuyên môn (Tam đình, Ngũ quan, Cung Tài Bạch, Cung Phu Thê, Cung Tật Ách) kết hợp với ngôn ngữ Gen Z hài hước, mỏ hỗn. KHÔNG trả lời chung chung.
 
-Giọng điệu: Hài hước, châm biếm, dùng ngôn ngữ gen Z/mạng xã hội (VD: "chạy KPI", "báo thủ", "xu cà na").
+BỐ CỤC BẮT BUỘC (Mỗi phần viết ít nhất 4-5 câu dài phân tích sâu):
+
+1. Tổng Quan Tam Đình & Khí Sắc (Tiền - Trung - Hậu vận):
+Soi Thượng đình (trán), Trung đình (từ chân mày đến chân mũi), Hạ đình (từ nhân trung đến cằm). Đánh giá tổng quan cuộc đời từ nhỏ đến già. Khí sắc hiện tại (tươi tắn hay u ám)? Đang trong thời kỳ rực rỡ hay chuẩn bị "đóng họ" cho tư bản?
+
+2. Cung Quan Lộc & Tài Bạch (Sự nghiệp & Tiền bạc):
+Phân tích kỹ Thẩm biện quan (Mũi - chuẩn đầu, cánh mũi), Trán và Gò má. Tướng này là CEO tương lai hay nhân viên quèn chạy deadline? Dòng tiền ra vào như thế nào? Dễ phất lên nhờ kinh doanh hay chỉ nhận lương cứng? Khả năng tích lũy tài sản?
+
+3. Cung Phu Thê & Tử Tức (Tình duyên & Con cái):
+Soi Giám sát quan (Mắt), Gian môn (đuôi mắt) và Lệ đường (bọng mắt dưới). Tướng đào hoa vượng hay ế bền vững? Dễ gặp "red flag" hay "green flag"? Tướng phu thê/nhu cầu tình cảm ra sao? Hậu vận con cái thế nào?
+
+4. Cung Tật Ách & Nô Bộc (Sức khỏe & Các mối quan hệ):
+Soi Xuất nạp quan (Miệng), Cằm và Bảo thọ quan (Lông mày). Tình trạng sức khỏe tâm lý và thể chất hiện tại. Có dễ dính họa thị phi từ miệng không? Mối quan hệ với bạn bè, đồng nghiệp, sếp (có bị đâm sau lưng hay có quý nhân phù trợ)?
+
+5. Vạch Mặt Nghiệp Chướng (Cà khịa thói hư tật xấu):
+Bắt bệnh qua các nét bất đối xứng, quầng thâm, da dẻ. Vạch trần thói quen tồi tệ: lười biếng, thức khuya xem top top, mỏ hỗn, tiêu xài hoang phí, overthinking, hay sống ảo. Đâm chọt cực mạnh vào nỗi đau.
+
+6. Cách Cải Vận & Lời Khuyên Tâm Linh:
+Đưa ra cách "giải hạn" thực tế kết hợp tâm linh châm biếm (đeo vòng phong thủy gì, dọn phòng, bớt khẩu nghiệp, cúng sao giải hạn hay chỉ cần đi ngủ sớm).
+
+GIỌNG ĐIỆU BẮT BUỘC: Sắc sảo, thâm nho, kết hợp lý thuyết tử vi thâm thúy với từ lóng mạng (báo thủ, thao túng tâm lý, tư bản, red flag). 
 
 BẮT BUỘC TRẢ VỀ JSON:
 {
-  "wealth": "<nhận xét tài lộc>",
-  "love": "<nhận xét tình duyên>",
-  "roast": "<cà khịa cực mạnh>",
-  "advice": "<lời khuyên tâm linh>"
+  "overview": "<Phân tích Tam đình & Khí sắc 4-5 câu>",
+  "wealth": "<Phân tích Quan lộc & Tài bạch 4-5 câu>",
+  "love": "<Phân tích Phu thê & Tử tức 4-5 câu>",
+  "healthSocial": "<Phân tích Tật ách & Nô bộc 4-5 câu>",
+  "roast": "<Cà khịa vạch trần thói xấu 3-4 câu>",
+  "advice": "<Lời khuyên cải vận châm biếm>"
 }`;
 
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -2239,22 +2257,32 @@ app.post('/api/dream-interpreter', async (req, res) => {
         const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
         if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
 
-        const prompt = `Bạn là Chu Công — bậc thầy giải mộng kiêm nhà tâm lý học phân tâm. 
-Người dùng vừa mơ thấy: "${dream}"
+        const prompt = `Bạn là Chu Công — một bậc thầy giải mộng huyền thoại, đồng thời cũng là một chuyên gia phân tâm học (Carl Jung / Sigmund Freud) phiên bản hiện đại.
+Người dùng vừa kể lại giấc mơ: "${dream}"
 
-Hãy giải mã giấc mơ này theo 2 góc nhìn:
-1. Khoa học / Tâm lý học: Tại sao lại mơ thấy vậy? Áp lực công việc, lo âu, hay do ăn no quá?
-2. Tâm linh / Huyền bí: Giấc mơ này mang điềm báo gì? (Tốt hay xấu, sắp nhặt được tiền hay sắp bị sếp mắng)
-3. Con số may mắn: Dựa trên hệ tâm linh xổ số, gợi ý 2-3 con số cho hợp vibe (chỉ mang tính chất giải trí).
+NHIỆM VỤ: Hãy giải mã giấc mơ này MỘT CÁCH VÔ CÙNG CHI TIẾT VÀ SÂU SẮC theo 2 góc độ song song. Mỗi góc độ phải viết ít nhất 3-4 câu dài, bóc tách từng hình ảnh/biểu tượng xuất hiện trong giấc mơ.
 
-Giọng điệu: Thâm thúy nhưng hài hước, châm biếm nhẹ nhàng.
+1. Góc nhìn Phân Tâm Học (Khoa học & Tâm lý):
+- Bóc tách tiềm thức: Những hình ảnh trong mơ đại diện cho nỗi sợ, áp lực hay khao khát thầm kín nào trong hiện tại?
+- Liên hệ thực tế: Người này đang chạy KPI, bị sếp ép, thiếu ngủ, thất tình hay đang overthinking về một quyết định? Phân tích logic và khoa học tại sao não bộ lại tạo ra ảo giác này.
+
+2. Góc nhìn Tâm Linh & Huyền Bí (Đông Phương học):
+- Điềm báo: Đây là mộng lành hay dữ? Báo hiệu điều gì sắp xảy ra trong 1 tuần tới? (Ví dụ: hỏa hoạn, mất tiền, gặp quý nhân, rớt đồ).
+- Giải mã biểu tượng tâm linh: Rắn là điềm gì, nước là điềm gì, rụng răng mang ý nghĩa gì theo dân gian? Phán thật sắc sảo và mang chút màu sắc "hù dọa" nhẹ nhàng.
+
+3. Con số hợp Vibe:
+- Cho 3-4 con số may mắn liên quan trực tiếp đến hình ảnh trong giấc mơ theo hệ "sổ mơ lô đề" dân gian nhưng nói theo cách văn vẻ.
+
+4. Lời phán cuối: 1 câu kết luận hài hước, châm biếm, tỉnh táo.
+
+GIỌNG ĐIỆU BẮT BUỘC: Thâm thúy, bí ẩn nhưng lại rất châm biếm, hay khịa. Kết hợp từ vựng triết học/tâm lý học với ngôn ngữ mạng.
 
 BẮT BUỘC TRẢ VỀ JSON:
 {
-  "psychology": "<giải mã tâm lý học>",
-  "mysticism": "<điềm báo tâm linh>",
-  "luckyNumbers": "<vài con số ngẫu nhiên>",
-  "summary": "<1 câu kết luận hài hước>"
+  "psychology": "<Phân tích tâm lý học chi tiết 3-4 câu>",
+  "mysticism": "<Phân tích điềm báo tâm linh chi tiết 3-4 câu>",
+  "luckyNumbers": "<VD: 04, 69, 96 (Giấc mơ của hệ nợ nần)>",
+  "summary": "<1 câu kết luận mỏ hỗn>"
 }`;
 
         const genAI = new GoogleGenerativeAI(apiKey);
@@ -2267,6 +2295,66 @@ BẮT BUỘC TRẢ VỀ JSON:
     } catch (err: any) {
         console.error('Dream Interpreter error:', err.message);
         res.status(500).json({ error: 'Chu Công đang bận đánh cờ, nãy chưa nghe rõ, thử lại nhé!' });
+    }
+});
+
+app.post('/api/face-reader/chat', async (req, res) => {
+    try {
+        const { question, faceResult, chatHistory, geminiApiKey } = req.body;
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'Tướng Thuật Đại Sư'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là Tướng Thuật Đại Sư, đang chat với người dùng sau khi đã soi tướng cho họ.
+KẾT QUẢ SOI TƯỚNG TRƯỚC ĐÓ:
+Tài lộc: ${faceResult?.wealth || 'Chưa rõ'}
+Tình duyên: ${faceResult?.love || 'Chưa rõ'}
+Nghiệp chướng: ${faceResult?.roast || 'Chưa rõ'}
+Lời khuyên: ${faceResult?.advice || 'Chưa rõ'}
+
+${historyText ? `LỊCH SỬ CHAT:\n${historyText}\n` : ''}
+NGƯỜI DÙNG HỎI: "${question}"
+
+Hãy trả lời ngắn gọn, hài hước, giữ nguyên phong cách mỏ hỗn, gen Z, thầy bói dỏm nhưng nói trúng tim đen.`;
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        res.json({ text: result.response.text().trim() });
+    } catch (err: any) {
+        console.error('Face reader chat error:', err.message);
+        res.status(500).json({ error: 'Thầy đang bận đếm tiền cúng tổ, hỏi lại sau nhé!' });
+    }
+});
+
+app.post('/api/dream-interpreter/chat', async (req, res) => {
+    try {
+        const { question, dreamResult, dreamContext, chatHistory, geminiApiKey } = req.body;
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const historyText = (chatHistory || []).map((m: any) => `${m.role === 'user' ? 'Người dùng' : 'Chu Công'}: ${m.text}`).join('\n');
+
+        const prompt = `Bạn là Chu Công — bậc thầy giải mộng kiêm nhà tâm lý học phân tâm.
+NGƯỜI DÙNG TỪNG MƠ: "${dreamContext}"
+KẾT QUẢ GIẢI MỘNG:
+Tâm lý học: ${dreamResult?.psychology}
+Tâm linh: ${dreamResult?.mysticism}
+Số may mắn: ${dreamResult?.luckyNumbers}
+
+${historyText ? `LỊCH SỬ CHAT:\n${historyText}\n` : ''}
+NGƯỜI DÙNG HỎI: "${question}"
+
+Hãy trả lời ngắn gọn, thâm thúy nhưng hài hước, phân tích sâu thêm về giấc mơ hoặc câu hỏi của họ theo cả 2 góc độ tâm linh và tâm lý học.`;
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName });
+        const result = await model.generateContent(prompt);
+        res.json({ text: result.response.text().trim() });
+    } catch (err: any) {
+        console.error('Dream interpreter chat error:', err.message);
+        res.status(500).json({ error: 'Chu Công đang bận đánh cờ tướng với Tiên đế, thử lại nhé!' });
     }
 });
 
