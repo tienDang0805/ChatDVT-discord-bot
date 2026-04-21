@@ -182,9 +182,9 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
   }, [msgs, typing]);
 
 function playAudio() {
-  const iframe = document.getElementById('hbd-audio') as HTMLIFrameElement;
-  if (iframe?.contentWindow) {
-    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+  const audio = document.getElementById('hbd-audio') as HTMLAudioElement;
+  if (audio) {
+    audio.play().catch(e => console.log('Autoplay blocked:', e));
   }
 }
 
@@ -798,9 +798,7 @@ export default function BirthdayGreeting() {
         </div>
       )}
 
-      <div style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none', zIndex: -1 }}>
-        <iframe id="hbd-audio" width="1" height="1" src="https://www.youtube.com/embed/1wb85WSobiQ?enablejsapi=1&autoplay=0&controls=0&playsinline=1" allow="autoplay" frameBorder="0" />
-      </div>
+      <audio id="hbd-audio" src="/audio/hbd.mp3" preload="auto" />
     </div>
   );
 }
