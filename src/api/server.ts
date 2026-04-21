@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
+import { GoogleGenAI } from '@google/genai';
 
 // Multer Config
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
@@ -184,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -1971,6 +1972,218 @@ YÊU CẦU:
     } catch (err: any) {
         console.error('Tarot chat error:', err.message);
         res.status(500).json({ error: 'Pháp sư đang thiền, thử lại nhé!' });
+    }
+});
+
+app.post('/api/poem-generator', async (req, res) => {
+    try {
+        const { poemType, style, context, wish, mood, lineCount, language, keywords } = req.body;
+        if (!poemType) return res.status(400).json({ error: 'Chọn thể loại thơ!' });
+
+        const lang = language === 'en' ? 'English' : 'Tiếng Việt';
+        const poemTypeMap: Record<string, string> = {
+            'luc-bat': 'Lục bát (câu 6 chữ xen câu 8 chữ, vần chân)',
+            'tu-do': 'Thơ tự do (không giới hạn chữ, tự nhiên)',
+            '5-chu': 'Thơ 5 chữ (mỗi câu 5 chữ)',
+            '7-chu': 'Thơ 7 chữ (mỗi câu 7 chữ, vần điệu chuẩn)',
+            '8-chu': 'Thơ 8 chữ (mỗi câu 8 chữ)',
+            'duong-luat': 'Thơ Đường luật (bát cú, thất ngôn, niêm luật chặt)',
+            'song-that-luc-bat': 'Song thất lục bát (2 câu 7 chữ rồi 1 cặp lục bát)',
+            'haiku': 'Haiku (3 dòng: 5-7-5 âm tiết)',
+            'sonnet': 'Sonnet (14 dòng, vần abab cdcd efef gg)',
+        };
+        const styleMap: Record<string, string> = {
+            'lang-man': 'Lãng mạn, bay bổng, đầy cảm xúc yêu thương',
+            'tru-tinh': 'Trữ tình, sâu lắng, chạm đến tâm hồn',
+            'hien-dai': 'Hiện đại, phá cách, ngôn ngữ đời thường',
+            'co-dien': 'Cổ điển, trang nghiêm, dùng từ Hán-Việt',
+            'hai-huoc': 'Hài hước, dí dỏm, vui tươi',
+            'triet-ly': 'Triết lý, suy tư, chiêm nghiệm cuộc đời',
+            'bi-ai': 'Bi ai, buồn bã, đau thương',
+            'hung-trang': 'Hùng tráng, mạnh mẽ, khí phách',
+        };
+
+        const poemTypeDesc = poemTypeMap[poemType] || poemType;
+        const styleDesc = styleMap[style] || style || 'Tự do';
+
+        const rulesByType: Record<string, string> = {
+            'luc-bat': `LUẬT LỤC BÁT (BẮT BUỘC):
+- Cấu trúc: Câu 6 chữ xen kẽ câu 8 chữ. Bắt đầu bằng câu 6.
+- VẦN: Chữ thứ 6 của câu 6 PHẢI CÙNG VẦN với chữ thứ 6 của câu 8 (vần bằng). Chữ thứ 8 của câu 8 PHẢI CÙNG VẦN với chữ thứ 6 của câu 6 tiếp theo.
+- THANH: Chữ thứ 6 câu 6 = BẰNG. Chữ thứ 6 câu 8 = BẰNG. Chữ thứ 8 câu 8 = BẰNG. Chữ thứ 4 câu 6 = TRẮC. Chữ thứ 4 câu 8 = TRẮC.
+- Thanh BẰNG: các dấu ngang (không dấu), huyền. Thanh TRẮC: sắc, hỏi, ngã, nặng.
+- VÍ DỤ CHUẨN: "Trăm năm trong cõi người ta(B) / Chữ tài chữ mệnh khéo là(B) ghét nhau(B)"
+- SAU KHI VIẾT: Đếm lại TỪNG CÂU, xác nhận câu 6 đúng 6 chữ, câu 8 đúng 8 chữ. Kiểm tra vần giữa các cặp câu.`,
+            'tu-do': `THƠ TỰ DO: Không bắt buộc vần/nhịp cố định nhưng cần nhịp điệu tự nhiên, có nhạc tính nội tại. Ưu tiên hình ảnh và cảm xúc.`,
+            '5-chu': `THƠ 5 CHỮ: Mỗi câu ĐÚNG 5 chữ (đếm kỹ). Vần chân hoặc vần cách. Nhịp 2/3 hoặc 3/2. SAU KHI VIẾT: Đếm lại từng câu phải đúng 5 chữ.`,
+            '7-chu': `THƠ 7 CHỮ: Mỗi câu ĐÚNG 7 chữ (đếm kỹ). Thường gieo vần ở câu 1-2-4 (hoặc 2-4-6-8). Nhịp 4/3 hoặc 3/4. SAU KHI VIẾT: Đếm lại từng câu phải đúng 7 chữ.`,
+            '8-chu': `THƠ 8 CHỮ: Mỗi câu ĐÚNG 8 chữ (đếm kỹ). Vần chân liền hoặc cách. Nhịp 3/2/3 hoặc 3/3/2. SAU KHI VIẾT: Đếm lại từng câu phải đúng 8 chữ.`,
+            'duong-luat': `THƠ ĐƯỜNG LUẬT THẤT NGÔN BÁT CÚ:
+- ĐÚNG 8 câu, mỗi câu ĐÚNG 7 chữ.
+- VẦN: Gieo vần bằng ở cuối câu 1-2-4-6-8. Các câu 3,5,7 cuối câu là thanh trắc.
+- ĐỐI: Câu 3-4 ĐỐI NHAU (đối ý + đối từ). Câu 5-6 ĐỐI NHAU.
+- BỐ CỤC: Câu 1-2 (đề), Câu 3-4 (thực), Câu 5-6 (luận), Câu 7-8 (kết).
+- NIÊM: Chữ thứ 2 câu 1 niêm với chữ thứ 2 câu 8, câu 2 niêm câu 3, câu 4 niêm câu 5, câu 6 niêm câu 7.
+- SAU KHI VIẾT: Đếm đúng 8 câu × 7 chữ. Kiểm tra đối ở câu 3-4 và 5-6.`,
+            'song-that-luc-bat': `SONG THẤT LỤC BÁT:
+- Cấu trúc lặp: 2 câu 7 chữ + 1 cặp lục bát (6-8).
+- Câu 7 thứ nhất vần với câu 7 thứ hai. Câu 7 thứ hai vần với câu 6. Câu 6 vần với câu 8 theo luật lục bát.
+- SAU KHI VIẾT: Đếm 7-7-6-8 cho mỗi khổ.`,
+            'haiku': `HAIKU:
+- ĐÚNG 3 dòng: dòng 1 = 5 âm tiết, dòng 2 = 7 âm tiết, dòng 3 = 5 âm tiết.
+- Tiếng Việt: mỗi chữ = 1 âm tiết. Đếm số CHỮ mỗi dòng.
+- Nội dung: hình ảnh thiên nhiên, khoảnh khắc, gợi cảm xúc sâu trong sự tối giản.
+- SAU KHI VIẾT: Đếm lại 5-7-5 chữ chính xác.`,
+            'sonnet': `SONNET:
+- ĐÚNG 14 dòng. Vần: abab cdcd efef gg (Shakespeare) hoặc abbaabba cdecde (Petrarch).
+- 3 khổ 4 dòng + 1 couplet kết (2 dòng).
+- SAU KHI VIẾT: Đếm đúng 14 dòng, kiểm tra vần.`,
+        };
+
+        const typeRule = rulesByType[poemType] || rulesByType['tu-do'] || '';
+
+        const prompt = `Bạn là ĐẠI THI HÀO — bậc thầy thi ca ${lang === 'English' ? 'phương Tây' : 'Việt Nam'} với 50 năm kinh nghiệm sáng tác.
+
+=== NHIỆM VỤ ===
+Sáng tác 1 bài thơ thể loại "${poemTypeDesc}" theo phong cách "${styleDesc}".
+
+=== THÔNG TIN BỔ SUNG ===
+${context ? `Bối cảnh: ${context.trim()}` : ''}
+${wish ? `Mong muốn: ${wish.trim()}` : ''}
+${mood ? `Tâm trạng: ${mood}` : ''}
+${keywords ? `Từ khóa phải có: ${keywords}` : ''}
+Số câu: ${lineCount || 'theo chuẩn thể loại'}
+Ngôn ngữ: ${lang}
+
+=== LUẬT THƠ — ĐỌC KỸ VÀ TUÂN THỦ TUYỆT ĐỐI ===
+${typeRule}
+
+=== QUY TẮC CHUNG ===
+1. KHÔNG BAO GIỜ sai số chữ mỗi câu. Đếm lại TỪNG CÂU trước khi trả kết quả.
+2. KHÔNG BAO GIỜ sai vần. Hai chữ cùng vần = cùng phần vần (VD: "ta" vần với "là", "hoa" vần với "xa" — SAI vì "oa" ≠ "a").
+3. Thơ phải có HỒN — hình ảnh sống động, cảm xúc chân thật, không sáo rỗng.
+4. Sử dụng biện pháp tu từ tự nhiên: ẩn dụ, nhân hoá, so sánh, điệp ngữ.
+5. Từ ngữ phải mượt mà, tránh ép vần gượng gạo.
+
+=== KIỂM TRA TRƯỚC KHI TRẢ VỀ ===
+- Đếm số chữ từng câu có đúng quy định không?
+- Vần có khớp đúng vị trí không?
+- Nếu Đường luật: câu 3-4 và 5-6 có đối không?
+- Nếu Lục bát: thanh bằng/trắc có đúng không?
+- Đọc lại toàn bài xem có vần nào bị ép không?
+
+BẮT BUỘC TRẢ VỀ JSON (không markdown, không giải thích ngoài JSON):
+{
+  "title": "<tên bài thơ>",
+  "poem": "<bài thơ hoàn chỉnh, mỗi dòng cách nhau bằng \\n>",
+  "explanation": "<giải thích ý nghĩa 2-3 câu>",
+  "techniques": ["<liệt kê biện pháp tu từ đã dùng>"],
+  "ruleCheck": "<tự kiểm tra: liệt kê số chữ từng câu và vần đã gieo>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(req.body.geminiApiKey || process.env.GEMINI_API_KEY || '');
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Poem Generator error:', err.message);
+        res.status(500).json({ error: 'Thi hứng đang dở dang, thử lại nhé!' });
+    }
+});
+
+app.post('/api/chibi-sticker', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'Vui lòng upload ảnh!' });
+
+        const { mode, chibiStyle, poses, background, geminiApiKey, aiModel } = req.body;
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const allowedModels = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'];
+        const selectedModel = allowedModels.includes(aiModel) ? aiModel : 'gemini-2.5-flash-image';
+
+        const imageBase64 = req.file.buffer.toString('base64');
+        const mimeType = req.file.mimetype as string;
+
+        const parsedPoses: string[] = JSON.parse(poses || '[]');
+        const poseList = parsedPoses.length > 0 ? parsedPoses : [
+            'Vẫy tay chào', 'Cầm quà tặng', 'Ôm gấu bông',
+            'Cầm trái tim', 'Cầm bóng bay', 'Selfie',
+            'Ăn vặt cookie', 'Ngủ gật', 'Ăn mừng với nón party'
+        ];
+
+        const styleMap: Record<string, string> = {
+            'kawaii': 'Kawaii chibi (oversized head 3:1, large sparkly eyes, tiny body, pastel colors)',
+            'anime-sd': 'Anime SD / Super Deformed (2-head tall, bold outlines, dynamic poses)',
+            'line-sticker': 'LINE Sticker style (clean vector, bold outline, flat colors, minimal shading)',
+            'cartoon': 'Cartoon chibi (round face, exaggerated expressions, vibrant colors)',
+            'pixel': 'Pixel art chibi (16-bit retro, blocky, nostalgic)',
+        };
+        const bgMap: Record<string, string> = {
+            'transparent': 'transparent/white background for easy cropping',
+            'white': 'clean pure white background',
+            'gradient': 'soft pastel gradient background',
+        };
+
+        const styleDesc = styleMap[chibiStyle] || styleMap['kawaii'];
+        const bgDesc = bgMap[background] || bgMap['transparent'];
+        const isFromReal = mode !== 'chibi-ref';
+
+        const poseGrid = poseList.slice(0, 9).map((p, i) => `${i + 1}. ${p}`).join('\n');
+
+        const prompt = `${isFromReal
+            ? 'Look at this photo of a real person. Create a chibi/sticker version that preserves their key features (hair, glasses, clothing, accessories).'
+            : 'Look at this chibi character reference. Create sticker variations keeping the EXACT same character design.'}
+
+Generate a 3x3 GRID image (3 columns, 3 rows) containing 9 separate chibi stickers of this character.
+
+Each sticker shows a DIFFERENT pose/action:
+${poseGrid}
+
+Style: ${styleDesc}
+Background: ${bgDesc}
+Each sticker cell should be clearly separated with consistent sizing.
+Keep character features CONSISTENT across all 9 poses.
+Sticker quality: clean, bold outlines, suitable for messaging apps.
+Do NOT add any text labels.`;
+
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+            model: selectedModel,
+            contents: [
+                {
+                    role: 'user',
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType, data: imageBase64 } }
+                    ]
+                }
+            ],
+            config: {
+                responseModalities: ['TEXT', 'IMAGE'],
+            }
+        });
+
+        const images: string[] = [];
+        if (response.candidates && response.candidates[0]?.content?.parts) {
+            for (const part of response.candidates[0].content.parts) {
+                if (part.inlineData?.data) {
+                    images.push(part.inlineData.data);
+                }
+            }
+        }
+
+        if (images.length === 0) {
+            return res.status(500).json({ error: 'AI không tạo được hình, thử lại nhé!' });
+        }
+
+        res.json({ images, gridMode: true });
+    } catch (err: any) {
+        console.error('Chibi Sticker error:', err.message);
+        const msg = err.message?.includes('SAFETY') ? 'Ảnh bị chặn bởi bộ lọc an toàn, thử ảnh khác nhé!' : 'Lỗi tạo sticker, thử lại nhé!';
+        res.status(500).json({ error: msg });
     }
 });
 

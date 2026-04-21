@@ -17,7 +17,7 @@ export const useGeminiKey = () => {
 
 export const getStoredGeminiKey = () => localStorage.getItem(STORAGE_KEY) || '';
 
-export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pink' | 'blue' | 'amber' | 'orange' }) => {
+export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pink' | 'blue' | 'amber' | 'orange' | 'violet' }) => {
   const { geminiKey, saveGeminiKey } = useGeminiKey();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState(geminiKey);
@@ -32,6 +32,7 @@ export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pin
     blue: { border: 'border-blue-500/30', text: 'text-blue-400', bg: 'bg-blue-500/10', hover: 'hover:border-blue-500/50', btn: 'from-blue-600 to-cyan-600', focusBorder: 'focus:border-blue-500' },
     amber: { border: 'border-amber-500/30', text: 'text-amber-400', bg: 'bg-amber-500/10', hover: 'hover:border-amber-500/50', btn: 'from-amber-600 to-orange-600', focusBorder: 'focus:border-amber-500' },
     orange: { border: 'border-orange-500/30', text: 'text-orange-400', bg: 'bg-orange-500/10', hover: 'hover:border-orange-500/50', btn: 'from-orange-600 to-red-600', focusBorder: 'focus:border-orange-500' },
+    violet: { border: 'border-violet-500/30', text: 'text-violet-400', bg: 'bg-violet-500/10', hover: 'hover:border-violet-500/50', btn: 'from-violet-600 to-fuchsia-600', focusBorder: 'focus:border-violet-500' },
   };
   const a = accentMap[accent];
 

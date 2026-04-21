@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -13,7 +13,7 @@ export const PublicPortal = () => {
       description: 'Chơi trắc nghiệm Real-time với câu hỏi do Bot ChatDVT gen bằng AI tự động.',
       icon: BrainCircuit,
       href: '/quiz',
-      author: 'Gấu bự (Tiến Đặng lúc sảng đá)',
+      author: 'Trí Giả Tiến Đặng',
       category: 'game'
     },
     {
@@ -23,7 +23,7 @@ export const PublicPortal = () => {
       description: 'Giao diện xem danh sách Thú cưng đáng yêu, tiến hoá, và bảng xếp hạng Pet Server.',
       icon: Cat,
       href: '/petlandingpage',
-      author: 'Lãng tử content ( Là Tiến Đặng lúc làm content)',
+      author: 'Ngự Thú Tông Chủ Tiến Đặng',
       category: 'game'
     },
     {
@@ -33,7 +33,7 @@ export const PublicPortal = () => {
       description: 'Hệ thống Tu luyện Cảnh giới, độ kiếp, pháp bảo và thế giới quan RPG Text-based.',
       icon: Sparkles,
       href: '/tutien',
-      author: 'Phì Đế (Tiến Đặng lúc đói)',
+      author: 'Đạo Tôn Tiến Đặng',
       category: 'game'
     },
     {
@@ -54,7 +54,7 @@ export const PublicPortal = () => {
       description: 'Thầy AI phong thuỷ chọn giúp bạn. 5 món ăn, 1 vòng quay, vô tri hoàn toàn.',
       icon: Coffee,
       href: '/food-wheel',
-      author: 'Tiến Đặng (Lúc k biết ăn gì)',
+      author: 'Ăn Uống Thiên Tôn (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -64,7 +64,7 @@ export const PublicPortal = () => {
       description: 'Máy phát điện lý do nghỉ phép vô tri, giúp bạn dõng dạc xin sếp nghỉ hưu non.',
       icon: AlertTriangle,
       href: '/excuse-generator',
-      author: 'ChatDVT (Lúc lười biếng)',
+      author: 'Tạp Dịch Trốn Việc (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -74,7 +74,7 @@ export const PublicPortal = () => {
       description: 'Lưu playlist Youtube bằng Mã Bí Mật nặc danh, phát nhạc xuyên suốt Portal.',
       icon: Music2,
       href: '/music',
-      author: 'Tiến Đặng (hêhhe)',
+      author: 'Cầm Sư Tiến Đặng',
       category: 'utility'
     },
     {
@@ -84,7 +84,7 @@ export const PublicPortal = () => {
       description: 'Công nghệ phân tích khuôn mặt Deep Learning chạy bằng cơm mặn, chuyên trả kết quả xạo chó dìm hàng.',
       icon: Scan,
       href: '/handsome',
-      author: 'Super AI Lỏ',
+      author: 'Huyễn Cảnh Chân Nhân (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -94,7 +94,7 @@ export const PublicPortal = () => {
       description: 'AI đóng vai HR khó tính soi lỗi CV của bạn mỏ hỗn, hoặc tự động viết lại mới hoàn toàn (Rewrite) chuyên nghiệp.',
       icon: Briefcase,
       href: '/cv-review',
-      author: 'HR Tiến Đặng',
+      author: 'Diêm Vương Tuyển Dụng (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -104,7 +104,7 @@ export const PublicPortal = () => {
       description: 'Văn phòng làm việc thu nhỏ của các AI Agents (Giao diện giả lập). Trải nghiệm tương tác với pixel art!',
       icon: Bot,
       href: '/pixel-agents',
-      author: 'Pablo Delucca (Ported)',
+      author: 'Khôi Lỗi Sư (Tiến Đặng)',
       category: 'game'
     },
     {
@@ -114,7 +114,7 @@ export const PublicPortal = () => {
       description: 'Giải mã Bản đồ Số Mệnh (Life Path, Soul Urge, Expression) bằng AI phân tích chuyên sâu từ Họ tên & Ngày sinh.',
       icon: Hash,
       href: '/numerology',
-      author: 'Pháp Sư Tiến Đặng',
+      author: 'Toán Quái Tiên Sinh (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -124,7 +124,7 @@ export const PublicPortal = () => {
       description: '20 câu hỏi trắc nghiệm do AI tạo để khám phá bản dạng giới của bạn trên phổ LGBTQ+ đa dạng.',
       icon: Rainbow,
       href: '/gender-quiz',
-      author: 'Pháp Sư Tiến Đặng',
+      author: 'Âm Dương Đại Sư (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -134,7 +134,7 @@ export const PublicPortal = () => {
       description: 'Lập và bình giải chi tiết lá số Tử Vi. Giải mã Thiên Cơ, dự đoán Đại Vận, Tiểu Hạn bằng AI.',
       icon: Moon,
       href: '/astrology',
-      author: 'Pháp Sư Tiến Đặng',
+      author: 'Thiên Cơ Các Chủ (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -144,7 +144,7 @@ export const PublicPortal = () => {
       description: 'Tạo mã QR độc đáo với logo/ảnh riêng ở giữa, tuỳ chỉnh màu sắc, dot style. Quét vẫn chuẩn 100%.',
       icon: QrCode,
       href: '/qr-generator',
-      author: 'Tiến Đặng (QR Master)',
+      author: 'Phù Chú Sư (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -154,7 +154,7 @@ export const PublicPortal = () => {
       description: 'Nghiên cứu so sánh chi phí - hiệu quả can thiệp tiêm nội nhãn vs laze trong điều trị phù hoàng điểm tại BV Mắt TP.HCM.',
       icon: Eye,
       href: '/cost-study',
-      author: 'Khoa DKVM - BV Mắt TP.HCM',
+      author: 'Dược Vương Tiến Đặng',
       category: 'utility'
     },
     {
@@ -164,7 +164,7 @@ export const PublicPortal = () => {
       description: 'Rút 3 lá bài Tarot cổ điển Rider-Waite, AI Pháp Sư giải nghĩa Quá Khứ — Hiện Tại — Tương Lai. Có chat hỏi thầy bói.',
       icon: Flame,
       href: '/tarot',
-      author: 'Pháp Sư Tiến Đặng',
+      author: 'Vu Sư Tây Vực (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -174,7 +174,7 @@ export const PublicPortal = () => {
       description: 'Đặt câu hỏi Yes/No, lắc cầu pha lê huyền bí — nhận câu trả lời tiên tri từ vũ trụ. Chế độ Nhanh hoặc AI.',
       icon: Sparkles,
       href: '/magic-ball',
-      author: 'Pháp Sư Tiến Đặng',
+      author: 'Mù Tán Nhân Tiến Đặng',
       category: 'utility'
     },
     {
@@ -184,7 +184,7 @@ export const PublicPortal = () => {
       description: 'AI tạo status/caption mạng xã hội cực "deep" dựa trên tâm trạng của bạn. 5 style: Sâu lắng, Hài, Savage, Thơ, Chill.',
       icon: PenLine,
       href: '/deep-status',
-      author: 'Deep Master Tiến Đặng',
+      author: 'Triết Gia Vô Danh (Tiến Đặng)',
       category: 'utility'
     },
     {
@@ -194,7 +194,7 @@ export const PublicPortal = () => {
       description: 'Game arcade bắn gà cổ điển! Điều khiển phi thuyền, tiêu diệt đàn gà xâm lược. Hỗ trợ bàn phím + cảm ứng.',
       icon: Crosshair,
       href: '/chicken-game',
-      author: 'Game Dev Tiến Đặng',
+      author: 'Xạ Thủ Đặng Gia (Tiến Đặng)',
       category: 'game'
     },
     {
@@ -204,7 +204,27 @@ export const PublicPortal = () => {
       description: '10 câu hỏi nhanh để kiểm tra bạn có đang "cháy sạch". AI phân tích mức độ burnout và tư vấn nên ở hay nên đi.',
       icon: Zap,
       href: '/burnout-check',
-      author: 'HR Bot Tiến Đặng',
+      author: 'Thức Thần Tiến Đặng (Lúc cạn kiệt linh lực)',
+      category: 'utility'
+    },
+    {
+      id: 'poem-generator',
+      number: '21',
+      title: 'Tạo Thơ AI',
+      description: 'Đại Thi Hào AI sáng tác thơ theo yêu cầu. Hỗ trợ Lục Bát, Đường Luật, Haiku, Tự Do... với 8 phong cách từ Lãng Mạn đến Hùng Tráng.',
+      icon: Feather,
+      href: '/poem-generator',
+      author: 'Thi Tiên Mõm (Lúc xuất khẩu thành thơ)',
+      category: 'utility'
+    },
+    {
+      id: 'chibi-sticker',
+      number: '22',
+      title: 'Chibi Sticker AI',
+      description: 'Biến ảnh thật thành bộ sticker chibi 9 tấm siêu cute. Hỗ trợ Kawaii, Anime SD, LINE Sticker, Pixel Art với 15+ poses.',
+      icon: Palette,
+      href: '/chibi-sticker',
+      author: 'Họa Thánh (Tiến Đặng)',
       category: 'utility'
     }
   ];
@@ -306,6 +326,9 @@ export const PublicPortal = () => {
                     100+
                   </div>
                 </a>
+                <Link to="/profile" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-bold transition-all shadow-sm active:scale-[0.98]">
+                  <Sparkles size={18} /> Về tác giả
+                </Link>
             </div>
           </div>
 
@@ -474,7 +497,7 @@ export const PublicPortal = () => {
                         {item.description}
                       </p>
                       <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
-                        bởi <span className="text-orange-500">{item.author}</span>
+                        bởi <Link to="/profile" onClick={e => e.stopPropagation()} className="text-orange-500 hover:text-violet-500 hover:underline transition-colors">{item.author}</Link>
                       </div>
                    </div>
                 </a>
@@ -496,7 +519,7 @@ export const PublicPortal = () => {
                         {item.description}
                       </p>
                       <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
-                        bởi <span className="text-orange-500">{item.author}</span>
+                        bởi <Link to="/profile" onClick={e => e.stopPropagation()} className="text-orange-500 hover:text-violet-500 hover:underline transition-colors">{item.author}</Link>
                       </div>
                    </div>
                 </Link>
