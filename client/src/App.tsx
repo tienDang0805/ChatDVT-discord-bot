@@ -27,6 +27,8 @@ const ChickenGame = lazy(() => import('./pages/ChickenGame').then(m => ({ defaul
 const BurnoutCheckPage = lazy(() => import('./pages/BurnoutCheckPage').then(m => ({ default: m.BurnoutCheckPage })));
 const PoemGenerator = lazy(() => import('./pages/PoemGenerator').then(m => ({ default: m.PoemGenerator })));
 const ChibiSticker = lazy(() => import('./pages/ChibiSticker').then(m => ({ default: m.ChibiSticker })));
+const FaceReader = lazy(() => import('./pages/FaceReader').then(m => ({ default: m.FaceReader })));
+const DreamInterpreter = lazy(() => import('./pages/DreamInterpreter').then(m => ({ default: m.DreamInterpreter })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const PetLandingPage = lazy(() => import('./pages/PetLandingPage').then(m => ({ default: m.PetLandingPage })));
 const TuTienGame = lazy(() => import('./pages/TuTienGame'));
@@ -97,6 +99,8 @@ function App() {
             <Route path="/burnout-check" element={<BurnoutCheckPage />} />
             <Route path="/poem-generator" element={<PoemGenerator />} />
             <Route path="/chibi-sticker" element={<ChibiSticker />} />
+            <Route path="/face-reader" element={<FaceReader />} />
+            <Route path="/dream-interpreter" element={<DreamInterpreter />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             <Route path="/petlandingpage" element={<PetLandingPage />} />

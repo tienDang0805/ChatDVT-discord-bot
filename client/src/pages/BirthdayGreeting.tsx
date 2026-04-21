@@ -181,11 +181,19 @@ function ChatPhase({ avatar, botName, onDone }: { avatar: string; botName: strin
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [msgs, typing]);
 
+function playAudio() {
+  const iframe = document.getElementById('hbd-audio') as HTMLIFrameElement;
+  if (iframe?.contentWindow) {
+    iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+  }
+}
+
   const confirm = () => {
     if (done) return;
     setDone(true);
     setBtns(false);
     haptic(50);
+    playAudio();
     setMsgs(p => [...p, { m:{ id:50, from:'user', text:'Ừa đúng tao nè! Đưa đây mau! 😎', delay:0 }, v:true }]);
     setTyping(true);
     setTimeout(() => {
@@ -549,42 +557,54 @@ function WishPhase() {
           )}
 
           <div style={{
-            background:'rgba(255,255,255,.05)', backdropFilter:'blur(20px)',
-            borderRadius:20, padding:'clamp(20px,5vw,28px)', border:'1px solid rgba(255,255,255,.08)',
-            boxShadow:'0 20px 50px rgba(0,0,0,.3)', marginBottom:24,
+            position: 'relative',
+            background: '#fef3c7',
+            borderRadius: '4px 4px 20px 4px',
+            padding: 'clamp(24px,6vw,32px)',
+            boxShadow: '2px 10px 30px rgba(0,0,0,.5), inset 0 0 40px rgba(217,119,6,.15)',
+            marginBottom: 32,
+            transform: 'rotate(-1.5deg)',
             animation: show ? 'slideUp .8s .3s ease-out both' : 'none',
+            color: '#1e3a8a',
+            fontFamily: "'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive, sans-serif",
           }}>
+            {/* Giấy dán băng keo */}
+            <div style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%) rotate(2deg)',
+              width: 110, height: 32, background: 'rgba(255,255,255,0.7)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)', borderRadius: 2
+            }} />
+
             <div style={{ position:'relative', marginBottom:20 }}>
-              <div style={{ position:'absolute', top:-8, left:4, fontSize:32, color:'rgba(255,255,255,.08)', fontFamily:'serif' }}>"</div>
-              <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, minHeight:'1.8em' }}>
+              <p style={{ fontSize:'clamp(18px,5vw,22px)', lineHeight:1.6, fontWeight:600, minHeight:'1.6em' }}>
                 {wish1.done
-                  ? <>Sinh nhật <span style={{ background:'linear-gradient(135deg,#fbbf24,#f59e0b)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', fontWeight:800 }}>27 tuổi</span> vui vẻ nha! 🥳</>
-                  : <>{wish1.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
+                  ? <>Sinh nhật <strong style={{color:'#be123c'}}>27 tuổi</strong> vui vẻ nha! 🥳</>
+                  : <>{wish1.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#be123c' }}>|</span></>
                 }
               </p>
               {wish1.done && (
-                <p style={{ color:'#e4e4e7', fontSize:'clamp(15px,4vw,17px)', lineHeight:1.8, paddingLeft:8, fontWeight:500, marginTop:12, minHeight:'1.8em' }}>
+                <p style={{ fontSize:'clamp(18px,5vw,22px)', lineHeight:1.6, fontWeight:600, marginTop:12, minHeight:'1.6em' }}>
                   {wish2.done
-                    ? <>Donate Khầy <span style={{ color:'#fbbf24', fontWeight:800 }}>30k</span> ăn hủ tiếu nhé nhé <span style={{ fontStyle:'italic', color:'#c4b5fd' }}>lelele</span> 🍜</>
-                    : <>{wish2.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
+                    ? <>Donate Khầy <strong style={{color:'#be123c'}}>30k</strong> ăn hủ tiếu nhé nhé <span style={{textDecoration:'line-through', opacity:0.6}}>lelele</span> 🍜</>
+                    : <>{wish2.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#be123c' }}>|</span></>
                   }
                 </p>
               )}
             </div>
 
-            <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)', margin:'16px 0' }} />
+            <div style={{ height:1, background:'rgba(30,58,138,.1)', margin:'16px 0', borderBottom:'1px dashed rgba(30,58,138,.2)' }} />
 
             {wish2.done && (
-              <p style={{ color:'#a1a1aa', fontSize:'clamp(14px,3.5vw,15px)', lineHeight:1.8, fontStyle:'italic', minHeight:'3.6em' }}>
+              <p style={{ fontSize:'clamp(16px,4vw,19px)', lineHeight:1.6, fontStyle:'italic', minHeight:'3.2em' }}>
                 {wish3.done
-                  ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{ color:'#f472b6' }}>khen</strong> á không phải chê đâu kakaka </>
-                  : <>{wish3.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#f472b6' }}>|</span></>
+                  ? <>Tuổi mới hi vọng chúc m bớt khó tính nhoa 😜 — khó tính là <strong style={{color:'#be123c'}}>khen</strong> á không phải chê đâu kakaka</>
+                  : <>{wish3.displayed}<span style={{ animation:'cursorBlink .8s infinite', color:'#be123c' }}>|</span></>
                 }
               </p>
             )}
 
             <div style={{ marginTop:16, textAlign:'right', opacity: wish3.done ? 1 : 0, transition:'opacity .5s' }}>
-              <span style={{ color:'#52525b', fontSize:'clamp(11px,2.5vw,12px)', fontFamily:'monospace' }}>— Anh Tiến, deployed via ChatDVT 🤖</span>
+              <span style={{ fontSize:'clamp(14px,3vw,16px)', fontWeight:'bold' }}>— Ký tên: Khầy Tiến dz —</span>
             </div>
           </div>
 
@@ -789,6 +809,10 @@ export default function BirthdayGreeting() {
           <style>{`@keyframes spin { to { transform:rotate(360deg) } }`}</style>
         </div>
       )}
+
+      <div style={{ position: 'absolute', opacity: 0, width: 1, height: 1, pointerEvents: 'none', zIndex: -1 }}>
+        <iframe id="hbd-audio" width="1" height="1" src="https://www.youtube.com/embed/1wb85WSobiQ?enablejsapi=1&autoplay=0&controls=0&playsinline=1" allow="autoplay" frameBorder="0" />
+      </div>
     </div>
   );
 }

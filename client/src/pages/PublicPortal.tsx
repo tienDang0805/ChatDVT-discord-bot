@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 export const PublicPortal = () => {
@@ -225,6 +225,26 @@ export const PublicPortal = () => {
       icon: Palette,
       href: '/chibi-sticker',
       author: 'Họa Thánh (Tiến Đặng)',
+      category: 'utility'
+    },
+    {
+      id: 'face-reader',
+      number: '23',
+      title: 'Tướng Thuật AI',
+      description: 'Upload ảnh cận mặt. Thầy bói AI soi cung tài lộc, tình duyên, vạch mặt tướng nợ nần, phán trúng tim đen.',
+      icon: ScanFace,
+      href: '/face-reader',
+      author: 'Tướng Thuật Đại Sư (Tiến Đặng)',
+      category: 'utility'
+    },
+    {
+      id: 'dream-interpreter',
+      number: '24',
+      title: 'Giải Mộng AI',
+      description: 'Kể lại giấc mơ đêm qua. Chu Công AI giải mã theo góc nhìn tâm lý học & điềm báo tâm linh, kèm chốt số hợp vibe.',
+      icon: MoonStar,
+      href: '/dream-interpreter',
+      author: 'Chu Công Tiến Đặng',
       category: 'utility'
     }
   ];

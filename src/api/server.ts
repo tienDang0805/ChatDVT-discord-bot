@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path === '/api/face-reader' || req.path === '/api/dream-interpreter') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2184,6 +2184,89 @@ Do NOT add any text labels.`;
         console.error('Chibi Sticker error:', err.message);
         const msg = err.message?.includes('SAFETY') ? 'Ảnh bị chặn bởi bộ lọc an toàn, thử ảnh khác nhé!' : 'Lỗi tạo sticker, thử lại nhé!';
         res.status(500).json({ error: msg });
+    }
+});
+
+app.post('/api/face-reader', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'Vui lòng upload ảnh khuôn mặt!' });
+        
+        const apiKey = req.body.geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const imageBase64 = req.file.buffer.toString('base64');
+        const mimeType = req.file.mimetype as string;
+
+        const prompt = `Bạn là Tướng Thuật Đại Sư — một thầy bói xem nhân tướng học mạng chuyên nghiệp, mỏ hỗn, thích cà khịa nhưng cũng phán trúng tim đen.
+
+Nhiệm vụ: Dựa vào ảnh khuôn mặt, hãy soi:
+1. Cung tài lộc (tiền tài, sự nghiệp)
+2. Đường tình duyên (đào hoa hay ế, tướng phu thê)
+3. Cà khịa / Tướng nợ nần (đâm chọt thói quen xấu: thức khuya, chạy deadline, mê gái/trai, tốn tiền ăn vặt...)
+4. Lời khuyên tâm linh (hài hước)
+
+Giọng điệu: Hài hước, châm biếm, dùng ngôn ngữ gen Z/mạng xã hội (VD: "chạy KPI", "báo thủ", "xu cà na").
+
+BẮT BUỘC TRẢ VỀ JSON:
+{
+  "wealth": "<nhận xét tài lộc>",
+  "love": "<nhận xét tình duyên>",
+  "roast": "<cà khịa cực mạnh>",
+  "advice": "<lời khuyên tâm linh>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent([
+            prompt,
+            { inlineData: { data: imageBase64, mimeType } }
+        ]);
+        
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Face Reader error:', err.message);
+        res.status(500).json({ error: 'Thầy bói đang bận chạy KPI, thử lại sau nhé!' });
+    }
+});
+
+app.post('/api/dream-interpreter', async (req, res) => {
+    try {
+        const { dream, geminiApiKey } = req.body;
+        if (!dream) return res.status(400).json({ error: 'Bạn phải kể giấc mơ thì thầy mới giải được chứ!' });
+
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Cần Gemini API Key!' });
+
+        const prompt = `Bạn là Chu Công — bậc thầy giải mộng kiêm nhà tâm lý học phân tâm. 
+Người dùng vừa mơ thấy: "${dream}"
+
+Hãy giải mã giấc mơ này theo 2 góc nhìn:
+1. Khoa học / Tâm lý học: Tại sao lại mơ thấy vậy? Áp lực công việc, lo âu, hay do ăn no quá?
+2. Tâm linh / Huyền bí: Giấc mơ này mang điềm báo gì? (Tốt hay xấu, sắp nhặt được tiền hay sắp bị sếp mắng)
+3. Con số may mắn: Dựa trên hệ tâm linh xổ số, gợi ý 2-3 con số cho hợp vibe (chỉ mang tính chất giải trí).
+
+Giọng điệu: Thâm thúy nhưng hài hước, châm biếm nhẹ nhàng.
+
+BẮT BUỘC TRẢ VỀ JSON:
+{
+  "psychology": "<giải mã tâm lý học>",
+  "mysticism": "<điềm báo tâm linh>",
+  "luckyNumbers": "<vài con số ngẫu nhiên>",
+  "summary": "<1 câu kết luận hài hước>"
+}`;
+
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: { responseMimeType: 'application/json' } });
+        const result = await model.generateContent(prompt);
+        
+        let text = result.response.text().trim();
+        if (text.startsWith('```')) text = text.replace(/^```json?\n?/, '').replace(/\n?```$/, '');
+        res.json(JSON.parse(text));
+    } catch (err: any) {
+        console.error('Dream Interpreter error:', err.message);
+        res.status(500).json({ error: 'Chu Công đang bận đánh cờ, nãy chưa nghe rõ, thử lại nhé!' });
     }
 });
 
