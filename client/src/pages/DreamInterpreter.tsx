@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { MoonStar, Sparkles, BrainCircuit, Eye, Hash } from 'lucide-react';
 import { PageShell } from '../components/PageShell';
-import GeminiKeyInput, { getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 

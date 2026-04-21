@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { ScanFace, Upload, Sparkles, Coins, Heart, Skull, Zap } from 'lucide-react';
 import { PageShell } from '../components/PageShell';
-import GeminiKeyInput, { getStoredGeminiKey } from '../components/GeminiKeyInput';
+import { GeminiKeyInput, getStoredGeminiKey } from '../components/GeminiKeyInput';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
