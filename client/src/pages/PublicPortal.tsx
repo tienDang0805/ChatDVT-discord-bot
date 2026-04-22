@@ -1,10 +1,91 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Copy, ExternalLink } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import toast from 'react-hot-toast';
+
+const RevealCard = ({ children, index, skipAnimation = false }: { children: React.ReactNode; index: number; skipAnimation?: boolean }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(skipAnimation);
+
+  useEffect(() => {
+    if (skipAnimation) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(el);
+        }
+      },
+      { threshold: 0.05, rootMargin: '50px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [skipAnimation]);
+
+  if (skipAnimation) return <div>{children}</div>;
+
+  const staggerDelay = (index % 3) * 0.08;
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(24px) scale(0.97)',
+        transition: `opacity 0.5s ease ${staggerDelay}s, transform 0.5s ease ${staggerDelay}s`,
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+const ConfettiOverlay = () => {
+  const [particles] = useState(() =>
+    Array.from({ length: 50 }, () => ({
+      left: Math.random() * 100,
+      delay: Math.random() * 2,
+      duration: 2 + Math.random() * 3,
+      color: ['#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'][Math.floor(Math.random() * 6)],
+      size: 5 + Math.random() * 8,
+      isCircle: Math.random() > 0.5,
+      drift: -30 + Math.random() * 60,
+    }))
+  );
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
+      {particles.map((p, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: `${p.left}%`,
+            top: '-10px',
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            borderRadius: p.isCircle ? '50%' : '2px',
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            animationName: 'confettiFall',
+            animationTimingFunction: 'ease-in',
+            animationFillMode: 'forwards',
+            ['--drift' as string]: `${p.drift}px`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const PublicPortal = () => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const searchRef = useRef<HTMLInputElement>(null);
   const features = [
     {
       id: 'quiz',
@@ -235,7 +316,8 @@ export const PublicPortal = () => {
       icon: ScanFace,
       href: '/face-reader',
       author: 'Tướng Thuật Đại Sư (Tiến Đặng)',
-      category: 'utility'
+      category: 'utility',
+      isNew: true
     },
     {
       id: 'dream-interpreter',
@@ -245,7 +327,8 @@ export const PublicPortal = () => {
       icon: MoonStar,
       href: '/dream-interpreter',
       author: 'Chu Công Tiến Đặng',
-      category: 'utility'
+      category: 'utility',
+      isNew: true
     },
     {
       id: 'tech-duel',
@@ -255,7 +338,8 @@ export const PublicPortal = () => {
       icon: Swords,
       href: '/tech-duel',
       author: 'Tư Vấn Viên Đồ Chơi (Tiến Đặng)',
-      category: 'utility'
+      category: 'utility',
+      isNew: true
     }
   ];
 
@@ -272,18 +356,99 @@ export const PublicPortal = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility'>('all');
   const [showTopBtn, setShowTopBtn] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isScrollRestored, setIsScrollRestored] = useState(false);
+
+  const scrollSaveEnabled = useRef(false);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('portal_scrollY');
+    if (!saved) {
+      scrollSaveEnabled.current = true;
+      return;
+    }
+    const pos = parseInt(saved, 10);
+    if (pos <= 50) {
+      scrollSaveEnabled.current = true;
+      return;
+    }
+
+    setIsScrollRestored(true);
+    let attempts = 0;
+    const maxAttempts = 50;
+
+    const tryRestore = () => {
+      attempts++;
+      if (document.body.scrollHeight >= pos + 200 || attempts >= maxAttempts) {
+        const html = document.documentElement;
+        html.style.scrollBehavior = 'auto';
+        window.scrollTo(0, pos);
+        setTimeout(() => {
+          html.style.scrollBehavior = '';
+          scrollSaveEnabled.current = true;
+        }, 100);
+        return;
+      }
+      requestAnimationFrame(tryRestore);
+    };
+
+    requestAnimationFrame(tryRestore);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
       setShowTopBtn(window.scrollY > 400);
+      if (scrollSaveEnabled.current) {
+        sessionStorage.setItem('portal_scrollY', String(Math.round(window.scrollY)));
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const visited = localStorage.getItem('portal_visited');
+    if (!visited) {
+      setShowConfetti(true);
+      localStorage.setItem('portal_visited', '1');
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        searchRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleRandomFeature = useCallback(() => {
+    const f = features[Math.floor(Math.random() * features.length)];
+    if (f.external) {
+      window.open(f.href, '_blank');
+    } else {
+      navigate(f.href);
+    }
+  }, [navigate]);
+
+  const handleCopyLink = useCallback((e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${window.location.origin}${href}`);
+    toast.success('Đã copy link!', { icon: '🔗' });
+  }, []);
 
   const filteredFeatures = features.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
@@ -316,6 +481,12 @@ export const PublicPortal = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans selection:bg-orange-500/30 transition-colors duration-300">
+      <style>{`
+        @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg) translateX(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg) translateX(var(--drift,0px));opacity:0}}
+        @keyframes iconFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-4px) rotate(6deg)}}
+        .group:hover .icon-float{animation:iconFloat 0.6s ease-in-out}
+      `}</style>
+      {showConfetti && <ConfettiOverlay />}
       <div className="max-w-6xl mx-auto px-6 py-16">
         
         {/* Header Section */}
@@ -334,6 +505,11 @@ export const PublicPortal = () => {
             <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight">
               Trang <span className="text-orange-500">Chủ</span>
             </h1>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="bg-orange-500/10 text-orange-500 text-xs font-bold px-3 py-1 rounded-full">{features.length} Tính Năng</span>
+              <span className="bg-emerald-500/10 text-emerald-500 text-xs font-bold px-3 py-1 rounded-full">{countGame} Game</span>
+              <span className="bg-blue-500/10 text-blue-500 text-xs font-bold px-3 py-1 rounded-full">{countUtility} Tiện ích</span>
+            </div>
             
             <div className="border-l-4 border-orange-500 pl-5 space-y-3">
               <p className="text-xl font-bold text-slate-600 dark:text-slate-300">
@@ -381,7 +557,16 @@ export const PublicPortal = () => {
                   (Vui lòng lưu 3 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>chibi-rain.jpg<br/>phide.jpg)
                 </div>
              </div>
-             <p className="mt-4 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Đang bận giải cứu thế giới...</p>
+             <div className="flex justify-center gap-2 mt-3">
+               {chibiImages.map((_, idx) => (
+                 <button
+                   key={idx}
+                   onClick={() => setCurrentImageIndex(idx)}
+                   className={`h-2 rounded-full transition-all duration-300 ${idx === currentImageIndex ? 'bg-orange-500 w-5' : 'bg-slate-300 dark:bg-slate-700 hover:bg-orange-400 w-2'}`}
+                 />
+               ))}
+             </div>
+             <p className="mt-3 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Đang bận giải cứu thế giới...</p>
           </div>
         </div>
 
@@ -484,77 +669,107 @@ export const PublicPortal = () => {
                className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'utility' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  🚀 Tiện ích ({countUtility})
              </button>
+             <button
+               onClick={handleRandomFeature}
+               className="font-medium py-2 px-4 rounded transition-all border border-dashed border-orange-400 dark:border-orange-600 text-orange-500 hover:bg-orange-500 hover:text-white hover:border-orange-500 flex items-center gap-1.5 active:scale-95"
+               title="Mở ngẫu nhiên 1 tính năng">
+                 <Shuffle size={14} /> Ngẫu Nhiên
+             </button>
            </div>
-           {/* Search Box */}
-           <div className="relative w-full md:w-64">
+           <div className="relative w-full md:w-72">
              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                <Search size={16} className="text-slate-400 dark:text-slate-500" />
              </div>
              <input
+               ref={searchRef}
                type="text"
                placeholder="Tìm kiếm tính năng..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full bg-white dark:bg-[#131923] border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-orange-500 transition-colors shadow-sm"
+               className="w-full bg-white dark:bg-[#131923] border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg pl-10 pr-12 py-2 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/30 transition-all shadow-sm"
              />
+             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+               <kbd className="hidden sm:inline-block text-[10px] font-mono font-bold text-slate-400 dark:text-slate-600 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded px-1.5 py-0.5">/</kbd>
+             </div>
            </div>
         </div>
+        {searchTerm && (
+          <p className="text-sm text-slate-400 dark:text-slate-500 mb-4 -mt-4">
+            Tìm thấy <span className="text-orange-500 font-bold">{filteredFeatures.length}</span> kết quả cho "{searchTerm}"
+          </p>
+        )}
 
-        {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredFeatures.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-slate-500">
-              Không tìm thấy tính năng nào phù hợp. (Thử dùng từ khoá khác)
+            <div className="col-span-full py-16 text-center">
+              <Search size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-4" />
+              <p className="text-slate-500 font-medium">Không tìm thấy tính năng nào phù hợp.</p>
+              <p className="text-slate-400 dark:text-slate-600 text-sm mt-1">Thử dùng từ khoá khác</p>
             </div>
           ) : (
-            filteredFeatures.map((item) => (
-             item.external ? (
-                <a
-                  key={item.id}
-                  href={item.href}
-                  rel="noopener noreferrer"
-                  className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px] shadow-sm"
-                >
-                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-200 dark:text-slate-800/30 group-hover:text-slate-300 dark:group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
-                     {item.number}
-                   </span>
-                   
-                   <div className="relative z-10 flex flex-col h-full">
-                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
-                        {item.title}
-                      </h3>
-                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm flex-1">
-                        {item.description}
-                      </p>
-                      <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
-                        bởi <Link to="/profile" onClick={e => e.stopPropagation()} className="text-orange-500 hover:text-violet-500 hover:underline transition-colors">{item.author}</Link>
-                      </div>
-                   </div>
-                </a>
-             ) : (
-                <Link
-                  key={item.id}
-                  to={item.href}
-                  className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 block min-h-[220px] shadow-sm"
-                >
-                   <span className="absolute top-4 right-4 text-7xl font-black text-slate-200 dark:text-slate-800/30 group-hover:text-slate-300 dark:group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
-                     {item.number}
-                   </span>
-                   
-                   <div className="relative z-10 flex flex-col h-full">
-                      <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-3 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
-                        {item.title}
-                      </h3>
-                      <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm flex-1">
-                        {item.description}
-                      </p>
-                      <div className="mt-8 text-sm font-medium text-slate-400 dark:text-slate-500">
-                        bởi <Link to="/profile" onClick={e => e.stopPropagation()} className="text-orange-500 hover:text-violet-500 hover:underline transition-colors">{item.author}</Link>
-                      </div>
-                   </div>
-                </Link>
-             )
-            ))
+            filteredFeatures.map((item, index) => {
+              const Icon = item.icon;
+              const cardContent = (
+                <>
+                  {'isNew' in item && item.isNew && (
+                    <span className="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider z-20 animate-pulse shadow-lg shadow-orange-500/20">
+                      NEW
+                    </span>
+                  )}
+                  <span className="absolute top-4 right-4 text-7xl font-black text-slate-200 dark:text-slate-800/30 group-hover:text-slate-300 dark:group-hover:text-slate-700/30 transition-colors pointer-events-none select-none">
+                    {item.number}
+                  </span>
+                  {!item.external && (
+                    <button
+                      onClick={(e) => handleCopyLink(e, item.href)}
+                      className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-orange-500 transition-all z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur p-1.5 rounded-lg shadow-sm"
+                      title="Copy link"
+                    >
+                      <Copy size={14} />
+                    </button>
+                  )}
+                  {item.external && (
+                    <ExternalLink size={14} className="absolute bottom-4 right-4 text-slate-300 dark:text-slate-700" />
+                  )}
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="mb-3 text-orange-500/60 dark:text-orange-400/40 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors">
+                      <Icon size={28} className="icon-float" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2 group-hover:text-orange-500 dark:group-hover:text-orange-400 transition-colors flex items-center gap-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm flex-1">
+                      {item.description}
+                    </p>
+                    <div className="mt-6 text-sm font-medium text-slate-400 dark:text-slate-500">
+                      bởi <Link to="/profile" onClick={e => e.stopPropagation()} className="text-orange-500 hover:text-violet-500 hover:underline transition-colors">{item.author}</Link>
+                    </div>
+                  </div>
+                </>
+              );
+
+              return (
+                <RevealCard key={`${activeCategory}-${item.id}`} index={index} skipAnimation={isScrollRestored}>
+                  {item.external ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/5 block min-h-[260px] shadow-sm"
+                    >
+                      {cardContent}
+                    </a>
+                  ) : (
+                    <Link
+                      to={item.href}
+                      className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/5 block min-h-[260px] shadow-sm"
+                    >
+                      {cardContent}
+                    </Link>
+                  )}
+                </RevealCard>
+              );
+            })
           )}
         </div>
 
@@ -581,7 +796,6 @@ export const PublicPortal = () => {
         </div>
       )}
 
-      {/* Back To Top Button */}
       {showTopBtn && (
         <button
           onClick={scrollToTop}
@@ -591,6 +805,28 @@ export const PublicPortal = () => {
           <ArrowUp size={24} className="group-hover:animate-bounce" />
         </button>
       )}
+
+      <footer className="border-t border-slate-200 dark:border-slate-800 mt-0">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              © 2024 ChatDVT Portal — Made with <Heart size={12} className="inline text-red-500 animate-pulse" /> by Tiến Đặng
+            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-600 mt-1">
+              Mobile dev nhưng lại làm web
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-orange-500 transition-colors hover:scale-110">
+              <Github size={18} />
+            </a>
+            <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-orange-500 transition-colors hover:scale-110">
+              <Rocket size={18} />
+            </a>
+            <span className="text-[10px] text-slate-400 dark:text-slate-600 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">v2.5.0</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
