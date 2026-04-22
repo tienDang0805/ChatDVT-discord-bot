@@ -1,8 +1,8 @@
 # 📐 ChatDVT Client — Feature Architecture Rules
 
-> **BẮT BUỘC ĐỌC FILE NÀY + `Rule.md` TRƯỚC KHI TẠO BẤT KỲ FEATURE MỚI NÀO.**
+> **BẮT BUỘC ĐỌC FILE NÀY + `rule_ui.md` TRƯỚC KHI TẠO BẤT KỲ FEATURE MỚI NÀO.**
 >
-> - `Rule.md` = Design System (colors, components, UI patterns)
+> - `rule_ui.md` = Design System (colors, components, UI patterns)
 > - `feat_rule.md` = Architecture (folder structure, routing, state)
 > - `rule_[feature].md` = Rule riêng cho complex feature
 
@@ -159,7 +159,7 @@ Admin (/admin)
 □ Tạo page:   [Name].tsx (PageShell + export named + default)
 □ App.tsx:     Thêm lazy import + <Route>
 □ Portal:     Thêm card trong PublicPortal.tsx
-□ Design:     Follow Rule.md
+□ Design:     Follow rule_ui.md
 □ Mobile:     Test 375px, touch targets ≥ 44px
 □ TypeScript: npx tsc --noEmit pass
 ```
@@ -224,7 +224,7 @@ Admin (/admin)
 ## 9. DOs and DON'Ts
 
 ### ✅ DO:
-- Đọc `Rule.md` + `feat_rule.md` trước khi code
+- Đọc `rule_ui.md` + `feat_rule.md` trước khi code
 - Tạo folder riêng cho mỗi feature, kể cả 1 page
 - Public feature → `features/public/`, Admin → `features/admin/`
 - `PageShell` + `backTo` đúng hierarchy

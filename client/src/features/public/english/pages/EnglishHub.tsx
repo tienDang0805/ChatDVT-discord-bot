@@ -54,6 +54,21 @@ export const EnglishHub = () => {
 
         <GeminiKeyInput accent="orange" />
 
+        <Link 
+          to="/english/course"
+          className="block bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-6 shadow-lg active:scale-[0.98] transition-all relative overflow-hidden"
+        >
+          <div className="relative z-10">
+            <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mb-3 inline-block tracking-widest uppercase">Học Từ Đầu</span>
+            <h2 className="text-2xl font-black mb-1">Lộ Trình Học Tập (Textbook)</h2>
+            <p className="text-orange-100 text-sm mb-4 max-w-[250px]">Bắt đầu học tiếng Anh lại từ đầu theo từng Unit. AI tự soạn bài riêng cho bạn!</p>
+            <div className="inline-block bg-white text-orange-600 px-5 py-2 rounded-xl font-bold text-sm shadow-sm">
+              Học Ngay
+            </div>
+          </div>
+          <BookOpen className="absolute -right-4 -bottom-4 w-40 h-40 text-orange-400 opacity-30" />
+        </Link>
+
         <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">

@@ -88,8 +88,20 @@ export const PublicPortal = () => {
   const searchRef = useRef<HTMLInputElement>(null);
   const features = [
     {
-      id: 'quiz',
+      id: 'english-hub',
       number: '01',
+      title: 'English Learning Hub',
+      description: 'Luyện tiếng Anh với AI Tutor, Flashcard SRS, Daily Challenge, Dictionary. Mobile-first, học mọi lúc.',
+      icon: BookOpen,
+      href: '/english',
+      author: 'Ngữ Văn Đại Sư (Tiến Đặng)',
+      category: 'learning',
+      isNew: true
+    }
+,
+    {
+      id: 'quiz',
+      number: '02',
       title: 'Web Quiz AI',
       description: 'Chơi trắc nghiệm Real-time với câu hỏi do Bot ChatDVT gen bằng AI tự động.',
       icon: BrainCircuit,
@@ -99,7 +111,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'pets',
-      number: '02',
+      number: '03',
       title: 'Hệ Thống Pet Hub',
       description: 'Giao diện xem danh sách Thú cưng đáng yêu, tiến hoá, và bảng xếp hạng Pet Server.',
       icon: Cat,
@@ -109,7 +121,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'tutien',
-      number: '03',
+      number: '04',
       title: 'Tu Tiên Giới',
       description: 'Hệ thống Tu luyện Cảnh giới, độ kiếp, pháp bảo và thế giới quan RPG Text-based.',
       icon: Sparkles,
@@ -119,7 +131,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'github',
-      number: '04',
+      number: '05',
       title: 'ChatDVT Source Code',
       description: 'Mã nguồn mở Discord Bot - Tích hợp AI, Game Economy, Leveling.',
       icon: Github,
@@ -130,7 +142,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'food-wheel',
-      number: '05',
+      number: '06',
       title: 'Hôm Nay Ăn Gì?',
       description: 'Thầy AI phong thuỷ chọn giúp bạn. 5 món ăn, 1 vòng quay, vô tri hoàn toàn.',
       icon: Coffee,
@@ -140,7 +152,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'excuse-generator',
-      number: '06',
+      number: '07',
       title: 'Tạo Lý Do Nghỉ Phép',
       description: 'Máy phát điện lý do nghỉ phép vô tri, giúp bạn dõng dạc xin sếp nghỉ hưu non.',
       icon: AlertTriangle,
@@ -150,7 +162,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'music-station',
-      number: '07',
+      number: '08',
       title: 'Trạm Giai Điệu',
       description: 'Lưu playlist Youtube bằng Mã Bí Mật nặc danh, phát nhạc xuyên suốt Portal.',
       icon: Music2,
@@ -160,7 +172,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'handsome-analyzer',
-      number: '08',
+      number: '09',
       title: 'Máy Quét Nhan Sắc AI',
       description: 'Công nghệ phân tích khuôn mặt Deep Learning chạy bằng cơm mặn, chuyên trả kết quả xạo chó dìm hàng.',
       icon: Scan,
@@ -170,7 +182,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'cv-reviewer',
-      number: '09',
+      number: '10',
       title: 'Khám Điền Thổ CV',
       description: 'AI đóng vai HR khó tính soi lỗi CV của bạn mỏ hỗn, hoặc tự động viết lại mới hoàn toàn (Rewrite) chuyên nghiệp.',
       icon: Briefcase,
@@ -180,7 +192,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'pixel-agents',
-      number: '10',
+      number: '11',
       title: 'Pixel Agents Office',
       description: 'Văn phòng làm việc thu nhỏ của các AI Agents (Giao diện giả lập). Trải nghiệm tương tác với pixel art!',
       icon: Bot,
@@ -190,7 +202,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'numerology',
-      number: '11',
+      number: '12',
       title: 'Thần Số Học AI',
       description: 'Giải mã Bản đồ Số Mệnh (Life Path, Soul Urge, Expression) bằng AI phân tích chuyên sâu từ Họ tên & Ngày sinh.',
       icon: Hash,
@@ -200,7 +212,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'gender-quiz',
-      number: '12',
+      number: '13',
       title: 'Gender Quiz AI',
       description: '20 câu hỏi trắc nghiệm do AI tạo để khám phá bản dạng giới của bạn trên phổ LGBTQ+ đa dạng.',
       icon: Rainbow,
@@ -210,7 +222,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'astrology',
-      number: '13',
+      number: '14',
       title: 'Tử Vi Phương Đông',
       description: 'Lập và bình giải chi tiết lá số Tử Vi. Giải mã Thiên Cơ, dự đoán Đại Vận, Tiểu Hạn bằng AI.',
       icon: Moon,
@@ -220,7 +232,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'qr-generator',
-      number: '14',
+      number: '15',
       title: 'Tạo Mã QR Custom',
       description: 'Tạo mã QR độc đáo với logo/ảnh riêng ở giữa, tuỳ chỉnh màu sắc, dot style. Quét vẫn chuẩn 100%.',
       icon: QrCode,
@@ -230,7 +242,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'cost-study',
-      number: '15',
+      number: '16',
       title: 'NC Chi Phí Hiệu Quả',
       description: 'Nghiên cứu so sánh chi phí - hiệu quả can thiệp tiêm nội nhãn vs laze trong điều trị phù hoàng điểm tại BV Mắt TP.HCM.',
       icon: Eye,
@@ -240,7 +252,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'tarot',
-      number: '16',
+      number: '17',
       title: 'Bói Bài Tarot AI',
       description: 'Rút 3 lá bài Tarot cổ điển Rider-Waite, AI Pháp Sư giải nghĩa Quá Khứ — Hiện Tại — Tương Lai. Có chat hỏi thầy bói.',
       icon: Flame,
@@ -250,7 +262,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'magic-ball',
-      number: '17',
+      number: '18',
       title: 'Cầu Pha Lê AI',
       description: 'Đặt câu hỏi Yes/No, lắc cầu pha lê huyền bí — nhận câu trả lời tiên tri từ vũ trụ. Chế độ Nhanh hoặc AI.',
       icon: Sparkles,
@@ -260,7 +272,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'deep-status',
-      number: '18',
+      number: '19',
       title: 'Gen Status Deep',
       description: 'AI tạo status/caption mạng xã hội cực "deep" dựa trên tâm trạng của bạn. 5 style: Sâu lắng, Hài, Savage, Thơ, Chill.',
       icon: PenLine,
@@ -270,7 +282,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'chicken-game',
-      number: '19',
+      number: '20',
       title: 'Bắn Gà Invaders',
       description: 'Game arcade bắn gà cổ điển! Điều khiển phi thuyền, tiêu diệt đàn gà xâm lược. Hỗ trợ bàn phím + cảm ứng.',
       icon: Crosshair,
@@ -280,7 +292,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'burnout-check',
-      number: '20',
+      number: '21',
       title: 'Burnout Check',
       description: '10 câu hỏi nhanh để kiểm tra bạn có đang "cháy sạch". AI phân tích mức độ burnout và tư vấn nên ở hay nên đi.',
       icon: Zap,
@@ -290,7 +302,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'poem-generator',
-      number: '21',
+      number: '22',
       title: 'Tạo Thơ AI',
       description: 'Đại Thi Hào AI sáng tác thơ theo yêu cầu. Hỗ trợ Lục Bát, Đường Luật, Haiku, Tự Do... với 8 phong cách từ Lãng Mạn đến Hùng Tráng.',
       icon: Feather,
@@ -300,7 +312,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'chibi-sticker',
-      number: '22',
+      number: '23',
       title: 'Chibi Sticker AI',
       description: 'Biến ảnh thật thành bộ sticker chibi 9 tấm siêu cute. Hỗ trợ Kawaii, Anime SD, LINE Sticker, Pixel Art với 15+ poses.',
       icon: Palette,
@@ -310,7 +322,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'face-reader',
-      number: '23',
+      number: '24',
       title: 'Tướng Thuật AI',
       description: 'Upload ảnh cận mặt. Thầy bói AI soi cung tài lộc, tình duyên, vạch mặt tướng nợ nần, phán trúng tim đen.',
       icon: ScanFace,
@@ -321,7 +333,7 @@ export const PublicPortal = () => {
     },
     {
       id: 'dream-interpreter',
-      number: '24',
+      number: '25',
       title: 'Giải Mộng AI',
       description: 'Kể lại giấc mơ đêm qua. Chu Công AI giải mã theo góc nhìn tâm lý học & điềm báo tâm linh, kèm chốt số hợp vibe.',
       icon: MoonStar,
@@ -332,23 +344,12 @@ export const PublicPortal = () => {
     },
     {
       id: 'tech-duel',
-      number: '25',
+      number: '26',
       title: 'So Kèo Công Nghệ',
       description: 'So sánh 2 sản phẩm công nghệ bất kỳ. AI search Google lấy data real-time, phân tích chi tiết + roast sản phẩm thua.',
       icon: Swords,
       href: '/tech-duel',
       author: 'Tư Vấn Viên Đồ Chơi (Tiến Đặng)',
-      category: 'utility',
-      isNew: true
-    },
-    {
-      id: 'english-hub',
-      number: '26',
-      title: 'English Learning Hub',
-      description: 'Luyện tiếng Anh với AI Tutor, Flashcard SRS, Daily Challenge, Dictionary. Mobile-first, học mọi lúc.',
-      icon: BookOpen,
-      href: '/english',
-      author: 'Ngữ Văn Đại Sư (Tiến Đặng)',
       category: 'utility',
       isNew: true
     }
@@ -365,7 +366,7 @@ export const PublicPortal = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility' | 'learning'>('all');
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isScrollRestored, setIsScrollRestored] = useState(false);
@@ -470,6 +471,7 @@ export const PublicPortal = () => {
 
   const countGame = features.filter(f => f.category === 'game').length;
   const countUtility = features.filter(f => f.category === 'utility').length;
+  const countLearning = features.filter(f => f.category === 'learning').length;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -679,6 +681,11 @@ export const PublicPortal = () => {
                onClick={() => setActiveCategory('utility')}
                className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'utility' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  🚀 Tiện ích ({countUtility})
+             </button>
+             <button 
+               onClick={() => setActiveCategory('learning')}
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'learning' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
+                 📚 Học tập ({countLearning})
              </button>
              <button
                onClick={handleRandomFeature}

@@ -161,16 +161,18 @@ Tất cả feature pages phải hỗ trợ **Light/Dark mode** thông qua Tailwi
 
 ```
 client/src/
-├── components/
-│   ├── PageShell.tsx          ← Shared page wrapper
-│   ├── GeminiKeyInput.tsx     ← API key input (existing)
-│   └── Layout.tsx             ← Admin layout (existing)
-├── contexts/
-│   └── ThemeContext.tsx        ← L/D toggle (existing)
-├── pages/
-│   ├── PublicPortal.tsx        ← Reference design
-│   ├── TarotPage.tsx
-│   ├── MagicBallPage.tsx
-│   └── ...
-└── Rule.md                    ← THIS FILE
+├── shared/
+│   ├── components/
+│   │   ├── PageShell.tsx          ← Shared page wrapper
+│   │   ├── GeminiKeyInput.tsx     ← API key input (existing)
+│   │   └── Layout.tsx             ← Admin layout (existing)
+│   └── contexts/
+│       └── ThemeContext.tsx       ← L/D toggle (existing)
+├── features/
+│   └── public/
+│       ├── portal/pages/
+│       │   └── PublicPortal.tsx   ← Reference design
+│       └── tarot/pages/
+│           └── TarotPage.tsx
+└── rule_ui.md                     ← THIS FILE
 ```

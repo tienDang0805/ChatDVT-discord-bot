@@ -40,6 +40,8 @@ const DailyPuzzle = lazy(() => import('./features/public/english/pages/DailyPuzz
 const WordSprint = lazy(() => import('./features/public/english/pages/WordSprint').then(m => ({ default: m.WordSprint })));
 const SpellingBee = lazy(() => import('./features/public/english/pages/SpellingBee').then(m => ({ default: m.SpellingBee })));
 const PetLandingPage = lazy(() => import('./features/public/pet-landing/pages/PetLandingPage').then(m => ({ default: m.PetLandingPage })));
+const EnglishCourseMap = lazy(() => import('./features/public/english/pages/EnglishCourseMap').then(m => ({ default: m.EnglishCourseMap })));
+const EnglishUnitPlayer = lazy(() => import('./features/public/english/pages/EnglishUnitPlayer').then(m => ({ default: m.EnglishUnitPlayer })));
 const TuTienGame = lazy(() => import('./features/public/tutien/pages/TuTienGame'));
 const Login = lazy(() => import('./features/public/auth/pages/Login').then(m => ({ default: m.Login })));
 const WebQuizLobby = lazy(() => import('./features/public/web-quiz/pages/Lobby').then(m => ({ default: m.WebQuizLobby })));
@@ -112,6 +114,8 @@ function App() {
             <Route path="/dream-interpreter" element={<DreamInterpreter />} />
             <Route path="/tech-duel" element={<TechDuel />} />
             <Route path="/english" element={<EnglishHub />} />
+            <Route path="/english/course" element={<EnglishCourseMap />} />
+            <Route path="/english/course/:unitId" element={<EnglishUnitPlayer />} />
             <Route path="/english/chat" element={<EnglishChat />} />
             <Route path="/english/flashcard" element={<EnglishFlashcard />} />
             <Route path="/english/challenge" element={<EnglishChallenge />} />
