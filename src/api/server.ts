@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2517,6 +2517,191 @@ Trả lời ngắn gọn, có ích, hài hước. Dùng Google Search nếu cầ
     } catch (err: any) {
         console.error('Tech chat error:', err.message);
         res.status(500).json({ error: 'Đang bận, hỏi lại sau!' });
+    }
+});
+
+// --- English Learning Hub API ---
+app.post('/api/english/chat', async (req, res) => {
+    try {
+        const { message, scenario, chatHistory, geminiApiKey } = req.body;
+        if (!message) return res.status(400).json({ error: 'Message is required' });
+
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Gemini API Key is required' });
+
+        const historyText = (chatHistory || []).slice(-10).map((m: any) => `${m.role === 'user' ? 'Learner' : 'Tutor'}: ${m.text}`).join('\n');
+
+        const scenarioContext: Record<string, string> = {
+            'free-talk': 'You are having a casual friendly conversation. Talk about anything naturally.',
+            'job-interview': 'You are a hiring manager conducting a job interview for a software developer position. Ask professional questions.',
+            'ordering-food': 'You are a waiter/waitress at a restaurant. Help the customer order food and drinks.',
+            'meeting': 'You are a colleague in a team standup meeting. Discuss project progress and blockers.',
+            'small-talk': 'You are a new colleague. Make small talk about hobbies, weekend plans, weather etc.',
+            'travel': 'You are a local guide helping a tourist. Discuss places to visit, transportation, local food.',
+            'shopping': 'You are a shop assistant. Help the customer find what they need, discuss sizes/colors/prices.',
+            'tech-discussion': 'You are a senior developer discussing architecture decisions, code review, or debugging strategies.'
+        };
+
+        const activeScenario = scenarioContext[scenario || 'free-talk'] || scenarioContext['free-talk'];
+
+        const prompt = `You are an expert English conversation partner and tutor. Your job is to help a Vietnamese learner practice speaking English naturally.
+
+SCENARIO: ${activeScenario}
+
+RULES:
+1. ALWAYS respond in English only.
+2. Keep your replies conversational, natural, and not too long (2-4 sentences max for the reply).
+3. After EVERY response, analyze the learner's message for grammar/vocabulary mistakes.
+4. If there are mistakes, provide corrections. If the message is perfect, say so.
+5. Occasionally suggest a useful vocabulary word or phrase related to the conversation.
+6. Ask a follow-up question to keep the conversation going.
+7. Adapt difficulty to the learner's level based on their messages.
+
+${historyText ? `CONVERSATION SO FAR:\n${historyText}\n` : ''}
+Learner: "${message}"
+
+Respond with ONLY valid JSON (no markdown, no backticks):
+{
+  "reply": "Your conversational response here (2-4 sentences)",
+  "corrections": [
+    {
+      "original": "the incorrect part",
+      "corrected": "the corrected version",
+      "rule": "Brief explanation of the grammar rule"
+    }
+  ],
+  "vocabularyTips": [
+    {
+      "word": "a useful word",
+      "meaning": "Vietnamese meaning",
+      "example": "Example sentence using this word"
+    }
+  ],
+  "pronunciation": "Optional: if any word might be hard to pronounce, give IPA and tip"
+}`;
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const result = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { temperature: 0.7 }
+        });
+
+        const text = (result.text || '').trim();
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        res.json(data);
+    } catch (err: any) {
+        console.error('English chat error:', err.message);
+        res.status(500).json({ error: 'AI tutor is taking a break, try again!' });
+    }
+});
+
+app.post('/api/english/challenge', async (req, res) => {
+    try {
+        const { type, geminiApiKey } = req.body;
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Gemini API Key is required' });
+
+        const challengeTypes: Record<string, string> = {
+            'fill-blank': 'Create a fill-in-the-blank exercise. Provide a sentence with ONE word missing (marked as ___). Give 4 options (A, B, C, D) where only one is correct.',
+            'reorder': 'Create a sentence reordering exercise. Provide 5-8 English words in SCRAMBLED order. The learner must arrange them into a correct sentence.',
+            'translate': 'Create a Vietnamese-to-English translation exercise. Provide a simple Vietnamese sentence and the correct English translation.',
+            'error-spot': 'Create an error-spotting exercise. Provide an English sentence that contains exactly ONE grammar error. The learner must find and fix it.',
+            'describe': 'Create a picture description exercise. Describe a common everyday scenario (at a cafe, in an office, at a park) and ask the learner to describe what is happening using specific vocabulary.'
+        };
+
+        const types = Object.keys(challengeTypes);
+        const selectedType = type || types[Math.floor(Math.random() * types.length)];
+        const instruction = challengeTypes[selectedType] || challengeTypes['fill-blank'];
+
+        const prompt = `You are an English exercise generator for intermediate Vietnamese learners.
+
+${instruction}
+
+Difficulty: Intermediate (B1-B2 level)
+Topic: Random everyday topic (work, daily life, technology, social interactions)
+
+Respond with ONLY valid JSON (no markdown, no backticks):
+{
+  "type": "${selectedType}",
+  "title": "Short catchy title for this challenge",
+  "instruction": "Clear instruction in Vietnamese for what the learner should do",
+  "question": "The main question/exercise content",
+  "options": ["A", "B", "C", "D"],
+  "correctAnswer": "The correct answer",
+  "explanation": "Brief explanation in Vietnamese why this is correct",
+  "hint": "A subtle hint if the learner is stuck",
+  "bonusWord": {
+    "word": "A vocabulary word from the exercise",
+    "ipa": "/phonetic/",
+    "meaning": "Vietnamese meaning",
+    "example": "Example sentence"
+  }
+}`;
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const result = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { temperature: 0.9 }
+        });
+
+        const text = (result.text || '').trim();
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        res.json(data);
+    } catch (err: any) {
+        console.error('English challenge error:', err.message);
+        res.status(500).json({ error: 'Challenge generator is offline!' });
+    }
+});
+
+app.post('/api/english/review', async (req, res) => {
+    try {
+        const { text, geminiApiKey } = req.body;
+        if (!text) return res.status(400).json({ error: 'Text is required' });
+
+        const apiKey = geminiApiKey || process.env.GEMINI_API_KEY || '';
+        if (!apiKey) return res.status(400).json({ error: 'Gemini API Key is required' });
+
+        const prompt = `You are a strict but encouraging English writing teacher for Vietnamese learners.
+
+Review the following text written by a Vietnamese learner:
+"${text}"
+
+Provide a detailed review. Respond with ONLY valid JSON (no markdown, no backticks):
+{
+  "score": 85,
+  "grade": "B+",
+  "correctedText": "The fully corrected version of their text",
+  "errors": [
+    {
+      "type": "grammar|spelling|vocabulary|style",
+      "original": "the error",
+      "corrected": "the fix",
+      "explanation": "Vietnamese explanation of why"
+    }
+  ],
+  "strengths": ["What they did well (in Vietnamese)"],
+  "improvements": ["Specific advice to improve (in Vietnamese)"],
+  "rewrittenVersion": "A more natural, polished version of the same text"
+}`;
+
+        const genAI = new GoogleGenAI({ apiKey });
+        const result = await genAI.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { temperature: 0.4 }
+        });
+
+        const responseText = (result.text || '').trim();
+        const cleaned = responseText.replace(/```json|```/g, '').trim();
+        const data = JSON.parse(cleaned);
+        res.json(data);
+    } catch (err: any) {
+        console.error('English review error:', err.message);
+        res.status(500).json({ error: 'Writing reviewer is unavailable!' });
     }
 });
 
