@@ -277,9 +277,8 @@ export const WeatherFAB = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed bottom-20 left-4 z-[999] w-[calc(100vw-2rem)] sm:w-[420px] max-h-[75vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/95 dark:bg-[#0f1419]/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/60 flex flex-col"
+            className="fixed bottom-[148px] right-3 md:right-5 z-[999] w-[calc(100vw-1.5rem)] sm:w-[420px] max-h-[60vh] overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700/50 bg-white/95 dark:bg-[#0f1419]/95 backdrop-blur-xl shadow-2xl shadow-black/20 dark:shadow-black/60 flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-4 pt-4 pb-2 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🔮</span>
@@ -301,14 +300,12 @@ export const WeatherFAB = () => {
               </div>
             </div>
 
-            {/* Digital Clock */}
             <div className="px-4 pb-3 shrink-0">
               <p className="text-3xl font-black text-slate-900 dark:text-white font-mono tabular-nums tracking-tighter">
                 {now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </p>
             </div>
 
-            {/* Tabs */}
             <div className="flex gap-1 px-4 pb-3 shrink-0">
               {tabs.map(t => (
                 <button
@@ -325,7 +322,6 @@ export const WeatherFAB = () => {
               ))}
             </div>
 
-            {/* Tab Content */}
             <div className="flex-1 overflow-y-auto px-4 pb-4 custom-scrollbar">
               {activeTab === 'weather' && <WeatherTab current={current} hourly={hourly} forecast={forecast} loading={loading} onRefresh={fetchWeather} />}
               {activeTab === 'lunar' && lunarData && <LunarTab data={lunarData} selectedDate={selectedDate} onSelectDate={setSelectedDate} />}
@@ -335,26 +331,17 @@ export const WeatherFAB = () => {
         )}
       </AnimatePresence>
 
-      {/* FAB Button */}
       <motion.button
         onClick={() => setIsOpen(v => !v)}
-        className="fixed bottom-6 left-4 z-[1000] flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 dark:from-orange-600 dark:to-amber-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-105 active:scale-95 transition-all group"
-        whileHover={{ scale: 1.05 }}
+        className="fixed bottom-[92px] right-[22px] md:bottom-[96px] md:right-[30px] z-[9998] w-11 h-11 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 dark:from-orange-600 dark:to-amber-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
         {current ? (
-          <>
-            <span className="text-lg">{getWeatherEmoji(current.main)}</span>
-            <span className="font-bold text-sm">{current.temp}°C</span>
-          </>
+          <span className="text-lg leading-none">{getWeatherEmoji(current.main)}</span>
         ) : (
-          <>
-            <Sun size={18} className="animate-spin-slow" />
-            <span className="font-bold text-sm">...</span>
-          </>
+          <Sun size={18} className="animate-spin-slow" />
         )}
-        <div className="w-px h-4 bg-white/30" />
-        <Calendar size={14} />
       </motion.button>
     </>
   );

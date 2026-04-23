@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2702,6 +2702,84 @@ Provide a detailed review. Respond with ONLY valid JSON (no markdown, no backtic
     } catch (err: any) {
         console.error('English review error:', err.message);
         res.status(500).json({ error: 'Writing reviewer is unavailable!' });
+    }
+});
+
+// --- Web Chat Widget API (Public) ---
+app.post('/api/web-chat', async (req, res) => {
+    try {
+        const { message, history } = req.body;
+        if (!message || typeof message !== 'string' || message.trim() === '') {
+            return res.status(400).json({ error: 'Message is required' });
+        }
+
+        let systemPromptText = 'Bạn là chatDVT, trợ lý AI trên web. Trả lời ngắn gọn, thân thiện, dùng tiếng Việt.';
+        try {
+            const promptConfig = await prisma.botConfig.findUnique({ where: { key: 'web-chat-prompt' } });
+            if (promptConfig && promptConfig.systemPrompts && promptConfig.systemPrompts.trim() !== '') {
+                systemPromptText = promptConfig.systemPrompts;
+            }
+        } catch (e) {
+            console.error('[WebChat] Failed to load prompt config, using default.', e);
+        }
+
+        const chatHistory = (history || []).slice(-20).map((m: any) => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+        }));
+
+        const apiKey = process.env.GEMINI_API_KEY || '';
+        const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        const finalApiKey = globalConfig?.geminiApiKey || apiKey;
+
+        const genAI = new GoogleGenerativeAI(finalApiKey);
+        const model = genAI.getGenerativeModel({
+            model: GEMINI_CHAT_CONFIG.modelName,
+            generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
+        });
+
+        const chatSession = model.startChat({
+            history: chatHistory as any,
+            systemInstruction: { role: 'system', parts: [{ text: systemPromptText }] },
+        });
+
+        const result = await chatSession.sendMessage([{ text: message }]);
+        const responseText = result.response.text();
+        res.json({ response: responseText });
+    } catch (err: any) {
+        console.error('[WebChat] Error:', err.message);
+        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!' });
+    }
+});
+
+// Web Chat Prompt Config (Admin - protected)
+app.get('/api/web-chat/prompt', authenticateToken, async (req, res) => {
+    try {
+        const config = await prisma.botConfig.findUnique({ where: { key: 'web-chat-prompt' } });
+        res.json({ prompt: config?.systemPrompts || '' });
+    } catch (err: any) {
+        console.error('[WebChat Prompt GET] Error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch prompt' });
+    }
+});
+
+app.post('/api/web-chat/prompt', authenticateToken, async (req, res) => {
+    try {
+        const { prompt } = req.body;
+        if (typeof prompt !== 'string') {
+            return res.status(400).json({ error: 'Prompt must be a string' });
+        }
+
+        await prisma.botConfig.upsert({
+            where: { key: 'web-chat-prompt' },
+            update: { systemPrompts: prompt },
+            create: { key: 'web-chat-prompt', systemPrompts: prompt, features: '{}' }
+        });
+
+        res.json({ success: true });
+    } catch (err: any) {
+        console.error('[WebChat Prompt POST] Error:', err.message);
+        res.status(500).json({ error: 'Failed to save prompt' });
     }
 });
 

@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Copy, ExternalLink, BookOpen } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
+
+const WeatherFAB = lazy(() => import('../../weather/pages/WeatherWidget').then(m => ({ default: m.WeatherFAB })));
 
 const RevealCard = ({ children, index, skipAnimation = false }: { children: React.ReactNode; index: number; skipAnimation?: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -817,10 +819,10 @@ export const PublicPortal = () => {
       {showTopBtn && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 bg-orange-500 text-white p-3 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:bg-orange-600 hover:scale-110 hover:-translate-y-1 transition-all z-40 group"
+          className="fixed bottom-[152px] right-[24px] md:right-[32px] w-10 h-10 bg-orange-500 text-white rounded-full shadow-[0_0_15px_rgba(249,115,22,0.5)] hover:bg-orange-600 hover:scale-110 hover:-translate-y-1 transition-all z-40 group flex items-center justify-center"
           title="Lên đầu trang"
         >
-          <ArrowUp size={24} className="group-hover:animate-bounce" />
+          <ArrowUp size={18} className="group-hover:animate-bounce" />
         </button>
       )}
 
@@ -845,6 +847,9 @@ export const PublicPortal = () => {
           </div>
         </div>
       </footer>
+      <Suspense fallback={null}>
+        <WeatherFAB />
+      </Suspense>
     </div>
   );
 };

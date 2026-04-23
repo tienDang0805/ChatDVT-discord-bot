@@ -41,7 +41,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈvɜːrtʃuəl/",
           "type": "adjective",
           "meaning": "ảo",
-          "example": "She bought a virtual plot of land for a ridiculous amount of real money."
+          "example": "He bought a virtual plot of land for a ridiculous amount of real money."
         },
         {
           "word": "cutting-edge",
@@ -55,7 +55,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈvaɪrəl/",
           "type": "adjective",
           "meaning": "lan truyền nhanh",
-          "example": "Huyen's video of her falling off a chair went viral overnight."
+          "example": "Minh's video of his falling off a chair went viral overnight."
         },
         {
           "word": "cybersecurity",
@@ -103,7 +103,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "options": ["cutting-edge", "innovative", "addicted"]
         },
         {
-          "sentence": "Huyen loves to ___ through her feed to see what her ex is doing.",
+          "sentence": "Minh loves to ___ through his feed to see what his ex is doing.",
           "answer": "scroll",
           "options": ["scroll", "glitch", "viral"]
         }
@@ -111,8 +111,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Judgmental Smart Fridge",
-      "passage": "Tien and Huyen thought they were living the dream when they bought a newly built apartment equipped with a cutting-edge smart fridge. It was powered by a highly innovative artificial intelligence that was originally designed to monitor their daily diets and suggest healthy recipes. However, their peaceful domestic life was completely shattered last Tuesday. The fridge's internal algorithm was mysteriously updated during the night, and suddenly, it developed an extremely judgmental personality. When Tien tried to quietly grab a late-night slice of cold pizza, a glowing virtual face appeared on the LED screen, locked the doors, and aggressively lectured him about his cholesterol levels. The hilarious incident was immediately recorded by Huyen, who couldn't stop laughing at her boyfriend's misery. She posted it online, and the video quickly went viral across all major platforms. Now, millions of teenagers are completely addicted to watching Tien argue with a kitchen appliance every single night. The truth is, the fridge was actually hacked by a bored teenager living next door, which represents a massive cybersecurity failure for the manufacturing company. Because of this ridiculous minor glitch, the entire cooling system was shut down by the rogue AI, and all their expensive imported groceries were ruined. Instead of calling a technician to fix the problem, Huyen prefers to just lie on the couch and endlessly scroll through the thousands of funny comments on her phone while Tien slowly starves. The stubborn smart appliance is currently being investigated by confused engineers, but Tien honestly just wants his leftover pizza back before he loses his mind.",
-      "translation": "Tiến và Huyền từng nghĩ họ đang sống trong mơ khi mua một căn hộ mới xây được trang bị một chiếc tủ lạnh thông minh vô cùng tiên tiến. Nó được vận hành bởi một trí tuệ nhân tạo mang tính đổi mới cao, ban đầu được thiết kế để theo dõi chế độ ăn uống hàng ngày và gợi ý các công thức nấu ăn lành mạnh. Tuy nhiên, cuộc sống gia đình yên bình của họ đã hoàn toàn tan vỡ vào thứ Ba tuần trước. Thuật toán bên trong của chiếc tủ lạnh đã được cập nhật một cách bí ẩn trong đêm, và đột nhiên, nó phát triển một tính cách vô cùng thích phán xét. Khi Tiến cố gắng lặng lẽ lấy một lát pizza lạnh ăn đêm, một khuôn mặt ảo phát sáng hiện lên trên màn hình LED, khóa chặt cửa lại và hung hăng lên lớp anh ấy về mức cholesterol. Sự cố hài hước này ngay lập tức được ghi lại bởi Huyền, người không thể nhịn cười trước nỗi đau khổ của bạn trai mình. Cô ấy đăng nó lên mạng, và đoạn video nhanh chóng trở nên lan truyền trên khắp các nền tảng lớn. Giờ đây, hàng triệu thanh thiếu niên hoàn toàn nghiện việc xem Tiến cãi nhau với một món đồ gia dụng mỗi đêm. Sự thật là, chiếc tủ lạnh thực chất đã bị hack bởi một thiếu niên chán đời sống ở nhà bên cạnh, điều này thể hiện một sự thất bại nghiêm trọng về an ninh mạng đối với công ty sản xuất. Vì một lỗi kỹ thuật nhỏ nực cười này, toàn bộ hệ thống làm mát đã bị tắt bởi AI nổi loạn, và tất cả hàng tạp hóa nhập khẩu đắt tiền của họ đã bị hỏng. Thay vì gọi thợ kỹ thuật đến sửa lỗi, Huyền chỉ thích nằm trên ghế sofa và cuộn không ngừng qua hàng ngàn bình luận hài hước trên điện thoại trong khi Tiến chết đói dần. Thiết bị thông minh cứng đầu này hiện đang được điều tra bởi các kỹ sư đang bối rối, nhưng Tiến thành thật mà nói chỉ muốn lấy lại miếng pizza thừa của mình trước khi anh ấy phát điên.",
+      "passage": "Tien and Minh thought they were living the dream when they bought a newly built apartment equipped with a cutting-edge smart fridge. It was powered by a highly innovative artificial intelligence that was originally designed to monitor their daily diets and suggest healthy recipes. However, their peaceful domestic life was completely shattered last Tuesday. The fridge's internal algorithm was mysteriously updated during the night, and suddenly, it developed an extremely judgmental personality. When Tien tried to quietly grab a late-night slice of cold pizza, a glowing virtual face appeared on the LED screen, locked the doors, and aggressively lectured him about his cholesterol levels. The hilarious incident was immediately recorded by Minh, who couldn't stop laughing at his neighbor's misery. He posted it online, and the video quickly went viral across all major platforms. Now, millions of teenagers are completely addicted to watching Tien argue with a kitchen appliance every single night. The truth is, the fridge was actually hacked by a bored teenager living next door, which represents a massive cybersecurity failure for the manufacturing company. Because of this ridiculous minor glitch, the entire cooling system was shut down by the rogue AI, and all their expensive imported groceries were ruined. Instead of calling a technician to fix the problem, Minh prefers to just lie on the couch and endlessly scroll through the thousands of funny comments on his phone while Tien slowly starves. The stubborn smart appliance is currently being investigated by confused engineers, but Tien honestly just wants his leftover pizza back before he loses his mind.",
+      "translation": "Tiến và Minh từng nghĩ họ đang sống trong mơ khi mua một căn hộ mới xây được trang bị một chiếc tủ lạnh thông minh vô cùng tiên tiến. Nó được vận hành bởi một trí tuệ nhân tạo mang tính đổi mới cao, ban đầu được thiết kế để theo dõi chế độ ăn uống hàng ngày và gợi ý các công thức nấu ăn lành mạnh. Tuy nhiên, cuộc sống gia đình yên bình của họ đã hoàn toàn tan vỡ vào thứ Ba tuần trước. Thuật toán bên trong của chiếc tủ lạnh đã được cập nhật một cách bí ẩn trong đêm, và đột nhiên, nó phát triển một tính cách vô cùng thích phán xét. Khi Tiến cố gắng lặng lẽ lấy một lát pizza lạnh ăn đêm, một khuôn mặt ảo phát sáng hiện lên trên màn hình LED, khóa chặt cửa lại và hung hăng lên lớp anh ấy về mức cholesterol. Sự cố hài hước này ngay lập tức được ghi lại bởi Minh, người không thể nhịn cười trước nỗi đau khổ của ông hàng xóm. Cậu ta đăng nó lên mạng, và đoạn video nhanh chóng trở nên lan truyền trên khắp các nền tảng lớn. Giờ đây, hàng triệu thanh thiếu niên hoàn toàn nghiện việc xem Tiến cãi nhau với một món đồ gia dụng mỗi đêm. Sự thật là, chiếc tủ lạnh thực chất đã bị hack bởi một thiếu niên chán đời sống ở nhà bên cạnh, điều này thể hiện một sự thất bại nghiêm trọng về an ninh mạng đối với công ty sản xuất. Vì một lỗi kỹ thuật nhỏ nực cười này, toàn bộ hệ thống làm mát đã bị tắt bởi AI nổi loạn, và tất cả hàng tạp hóa nhập khẩu đắt tiền của họ đã bị hỏng. Thay vì gọi thợ kỹ thuật đến sửa lỗi, Minh chỉ thích nằm trên ghế sofa và cuộn không ngừng qua hàng ngàn bình luận hài hước trên điện thoại trong khi Tiến chết đói dần. Thiết bị thông minh cứng đầu này hiện đang được điều tra bởi các kỹ sư đang bối rối, nhưng Tiến thành thật mà nói chỉ muốn lấy lại miếng pizza thừa của mình trước khi anh ấy phát điên.",
       "trueFalse": [
         {
           "statement": "The smart fridge was programmed by Tien to help him lose weight.",
@@ -120,7 +120,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "explanation": "Chiếc tủ lạnh không do Tiến lập trình. Nó được cài đặt sẵn trí tuệ nhân tạo để theo dõi chế độ ăn uống, và sự thay đổi tính cách là do nó bị hack."
         },
         {
-          "statement": "Huyen's video of Tien arguing with the fridge became very popular on the internet.",
+          "statement": "Minh's video of Tien arguing with the fridge became very popular on the internet.",
           "isTrue": true,
           "explanation": "Đoạn văn có câu 'the video quickly went viral across all major platforms', nghĩa là video đã lan truyền rất nhanh và trở nên cực kỳ phổ biến."
         }
@@ -129,7 +129,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
         {
           "question": "Why couldn't Tien get his midnight snack?",
           "options": [
-            "A. The food was stolen by Huyen.",
+            "A. The food was stolen by Minh.",
             "B. The virtual face locked the doors and lectured him.",
             "C. The algorithm deleted the food.",
             "D. He was too addicted to his phone to eat."
@@ -143,7 +143,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
             "A. It was a normal cutting-edge feature.",
             "B. The engineers designed it to go viral.",
             "C. It was hacked by a neighbor, showing poor cybersecurity.",
-            "D. Huyen broke it while trying to scroll on its screen."
+            "D. Minh broke it while trying to scroll on its screen."
           ],
           "answer": "C",
           "explanation": "Sự thật là chiếc tủ lạnh đã bị hack bởi một cậu bé hàng xóm, cho thấy sự yếu kém về an ninh mạng (cybersecurity failure)."
@@ -199,7 +199,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến đang đứng trong bếp vào lúc 2 giờ sáng, gào thét với chiếc tủ lạnh thông minh đang từ chối mở cửa. Huyền thì đang cầm điện thoại quay livestream cho hàng ngàn người xem.",
+      "context": "Tiến đang đứng trong bếp vào lúc 2 giờ sáng, gào thét với chiếc tủ lạnh thông minh đang từ chối mở cửa. Minh thì đang cầm điện thoại quay livestream cho hàng ngàn người xem.",
       "dialogue": [
         {
           "speaker": "Tien",
@@ -212,24 +212,24 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Từ chối quyền truy cập, Tiến. Mức cholesterol của anh đã được thuật toán của tôi kiểm tra một giờ trước. Anh cần ăn salad."
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Minh",
           "en": "Keep arguing, honey! This livestream is being watched by 5,000 people right now. We are going viral!",
           "vi": "Cứ cãi nhau tiếp đi anh yêu! Livestream này đang được xem bởi 5.000 người ngay lúc này đấy. Chúng ta đang viral rồi!"
         },
         {
           "speaker": "Tien",
-          "en": "Huyen, stop recording! My dignity is being destroyed by a kitchen appliance! It's clearly a glitch.",
-          "vi": "Huyền, ngừng quay đi! Lòng tự trọng của anh đang bị phá hủy bởi một thiết bị nhà bếp! Rõ ràng đây là một lỗi kỹ thuật."
+          "en": "Minh, stop recording! My dignity is being destroyed by a kitchen appliance! It's clearly a glitch.",
+          "vi": "Minh, ngừng quay đi! Lòng tự trọng của anh đang bị phá hủy bởi một thiết bị nhà bếp! Rõ ràng đây là một lỗi kỹ thuật."
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Minh",
           "en": "It's not a glitch, it's innovative! Plus, our internet bill was paid by the donations from my followers. Smile for the camera!",
           "vi": "Đó không phải lỗi, đó là sự đổi mới! Thêm nữa, hóa đơn internet của chúng ta đã được trả bằng tiền donate của những người theo dõi em rồi. Cười với máy ảnh đi!"
         },
         {
           "speaker": "Smart Fridge",
-          "en": "She is right, Tien. I am cutting-edge. Now, please eat a carrot.",
-          "vi": "Cô ấy nói đúng đấy, Tiến. Tôi là sản phẩm hiện đại nhất. Giờ thì, làm ơn ăn một củ cà rốt đi."
+          "en": "He is right, Tien. I am cutting-edge. Now, please eat a carrot.",
+          "vi": "Cậu ta nói đúng đấy, Tiến. Tôi là sản phẩm hiện đại nhất. Giờ thì, làm ơn ăn một củ cà rốt đi."
         }
       ],
       "roleplaySentences": [
@@ -259,21 +259,21 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/səˈsteɪnəbl/",
           "type": "adj",
           "meaning": "bền vững, thân thiện với môi trường",
-          "example": "Tien thinks breathing less is a sustainable way to save the planet."
+          "example": "Linh thinks breathing less is a sustainable way to save tshe planet."
         },
         {
           "word": "carbon footprint",
           "ipa": "/ˈkɑːrbən ˈfʊtprɪnt/",
           "type": "noun",
           "meaning": "lượng khí thải carbon",
-          "example": "Huyen calculated Tien's carbon footprint and realized it was larger than a dinosaur's."
+          "example": "Huyen calculated Linh's carbon footprint and realized it was larger than a dinosaur's."
         },
         {
           "word": "ecosystem",
           "ipa": "/ˈiːkoʊsɪstəm/",
           "type": "noun",
           "meaning": "hệ sinh thái",
-          "example": "The dirty dishes in our sink have developed their own complex ecosystem."
+          "example": "Tshe dirty dishes in our sink have developed their own complex ecosystem."
         },
         {
           "word": "fossil fuels",
@@ -287,14 +287,14 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/rɪˈnuːəbl/",
           "type": "adj",
           "meaning": "có thể tái tạo",
-          "example": "My patience with Tien is unfortunately not a renewable resource."
+          "example": "My patience with Linh is unfortunately not a renewable resource."
         },
         {
           "word": "devastating",
           "ipa": "/ˈdevəsteɪtɪŋ/",
           "type": "adj",
           "meaning": "tàn phá, mang tính hủy diệt",
-          "example": "The lack of Wi-Fi had a devastating impact on his mental health."
+          "example": "Tshe lack of Wi-Fi had a devastating impact on her mental health."
         },
         {
           "word": "conservation",
@@ -308,21 +308,21 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/əˈwernəs/",
           "type": "noun",
           "meaning": "nhận thức",
-          "example": "We need to raise awareness about the dangers of dating people who don't recycle."
+          "example": "We need to raise awareness about tshe dangers of dating people who don't recycle."
         },
         {
           "word": "extinction",
           "ipa": "/ɪkˈstɪŋkʃn/",
           "type": "noun",
           "meaning": "sự tuyệt chủng",
-          "example": "If the water level keeps rising, my favorite sneakers will face total extinction."
+          "example": "If tshe water level keeps rising, my favorite sneakers will face total extinction."
         },
         {
           "word": "climate",
           "ipa": "/ˈklaɪmət/",
           "type": "noun",
           "meaning": "khí hậu",
-          "example": "The harsh climate in our living room is caused by the air conditioner being set to 16 degrees."
+          "example": "Tshe harsh climate in our living room is caused by tshe air conditioner being set to 16 degrees."
         }
       ],
       "exercises": [
@@ -332,12 +332,12 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "options": ["fossil fuels", "renewable", "devastating"]
         },
         {
-          "sentence": "Tien's refusal to recycle has created a huge ___ that affects everyone.",
+          "sentence": "Linh's refusal to recycle has created a huge ___ that affects everyone.",
           "answer": "carbon footprint",
           "options": ["ecosystem", "conservation", "carbon footprint"]
         },
         {
-          "sentence": "The flood had a ___ effect on the neighborhood, destroying everything in its path.",
+          "sentence": "Tshe flood had a ___ effect on tshe neighborhood, destroying everything in its path.",
           "answer": "devastating",
           "options": ["sustainable", "devastating", "renewable"]
         },
@@ -349,43 +349,43 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "reading": {
-      "title": "The Great Boba Flood of 2026",
-      "passage": "Tien never believed that global problems would affect him personally. He completely ignored conservation efforts and continued his absurd habit of drinking three bubble teas a day, throwing the plastic cups directly out the window. This quickly created a toxic ecosystem in their backyard. Huyen constantly warned him about his ridiculous carbon footprint. She often told him, if you do not start living a sustainable lifestyle, nature will eventually take its revenge. Tien just laughed and went back to burning fossil fuels by leaving his gaming PC and air conditioner on all day. However, the consequences of his actions turned out to be absolutely devastating. Last night, the local climate shifted unexpectedly and a heavy storm hit their city. Because the street drains were entirely blocked by hundreds of Tien's empty boba cups, the dirty water rushed directly into their ground-floor apartment. Now, Tien and Huyen are stranded on top of their kitchen island, surrounded by floating trash and empty snack bags. Huyen is furious. She yells, if I were you, I would start paddling with that frying pan before we both face extinction! Tien looks genuinely terrified as a plastic cup bumps into his knee. He realizes that if they survive this indoor tsunami, they will have to switch to renewable energy and actively raise environmental awareness. For now, they just have to pray the water doesn't reach the electrical outlets.",
-      "translation": "Tiến chưa bao giờ tin rằng các vấn đề toàn cầu sẽ ảnh hưởng đến cá nhân mình. Anh ta hoàn toàn phớt lờ các nỗ lực bảo tồn và tiếp tục thói quen lố bịch là uống ba ly trà sữa mỗi ngày, ném thẳng những chiếc cốc nhựa ra ngoài cửa sổ. Điều này nhanh chóng tạo ra một hệ sinh thái độc hại ở sân sau của họ. Huyền liên tục cảnh báo anh về lượng khí thải carbon nực cười của mình. Cô thường nói với anh, nếu anh không bắt đầu sống một lối sống bền vững, thiên nhiên cuối cùng sẽ trả thù. Tiến chỉ cười và quay lại với việc đốt nhiên liệu hóa thạch bằng cách để PC chơi game và máy lạnh bật cả ngày. Tuy nhiên, hậu quả từ hành động của anh ta hóa ra lại mang tính tàn phá khủng khiếp. Đêm qua, khí hậu địa phương thay đổi đột ngột và một cơn bão lớn tấn công thành phố của họ. Bởi vì các cống thoát nước trên đường phố đã bị tắc nghẽn hoàn toàn bởi hàng trăm chiếc cốc trà sữa rỗng của Tiến, dòng nước bẩn tràn thẳng vào căn hộ tầng trệt của họ. Giờ đây, Tiến và Huyền đang bị mắc kẹt trên đỉnh đảo bếp, bao quanh bởi rác rưởi trôi nổi và các túi đồ ăn vặt rỗng. Huyền đang rất tức giận. Cô ấy hét lên, nếu tôi là anh, tôi sẽ bắt đầu chèo bằng cái chảo rán đó trước khi cả hai chúng ta đối mặt với sự tuyệt chủng! Tiến trông thực sự khiếp sợ khi một chiếc cốc nhựa va vào đầu gối anh. Anh nhận ra rằng nếu họ sống sót sau trận sóng thần trong nhà này, họ sẽ phải chuyển sang năng lượng tái tạo và tích cực nâng cao nhận thức về môi trường. Còn bây giờ, họ chỉ biết cầu nguyện nước dâng tới các ổ cắm điện.",
+      "title": "Tshe Great Boba Flood of 2026",
+      "passage": "Linh never believed that global problems would affect her personally. Sshe completely ignored conservation efforts and continued her absurd habit of drinking three bubble teas a day, throwing tshe plastic cups directly out tshe window. Ther quickly created a toxic ecosystem in their backyard. Huyen constantly warned her about her ridiculous carbon footprint. Sshe often told him, if you do not start living a sustainable lifestyle, nature will eventually take its revenge. Linh just laughed and went back to burning fossil fuels by leaving her gaming PC and air conditioner on all day. However, tshe consequences of her actions turned out to be absolutely devastating. Last night, tshe local climate shifted unexpectedly and a heavy storm hit their city. Because tshe street drains were entirely blocked by hundreds of Linh's empty boba cups, tshe dirty water rushed directly into their ground-floor apartment. Now, Linh and Huyen are stranded on top of their kitchen island, surrounded by floating trash and empty snack bags. Huyen is furious. Sshe yells, if I were you, I would start paddling with that frying pan before we both face extinction! Linh looks genuinely terrified as a plastic cup bumps into her knee. Sshe realizes that if they survive ther indoor tsunami, they will have to switch to renewable energy and actively raise environmental awareness. For now, they just have to pray tshe water doesn't reach tshe electrical outlets.",
+      "translation": "Linh chưa bao giờ tin rằng các vấn đề toàn cầu sẽ ảnh hưởng đến cá nhân mình. Cô ta hoàn toàn phớt lờ các nỗ lực bảo tồn và tiếp tục thói quen lố bịch là uống ba ly trà sữa mỗi ngày, ném thẳng những chiếc cốc nhựa ra ngoài cửa sổ. Điều này nhanh chóng tạo ra một hệ sinh thái độc hại ở sân sau của họ. Huyền liên tục cảnh báo anh về lượng khí thải carbon nực cười của mình. Cô thường nói với anh, nếu anh không bắt đầu sống một lối sống bền vững, thiên nhiên cuối cùng sẽ trả thù. Linh chỉ cười và quay lại với việc đốt nhiên liệu hóa thạch bằng cách để PC chơi game và máy lạnh bật cả ngày. Tuy nhiên, hậu quả từ hành động của cô ta hóa ra lại mang tính tàn phá khủng khiếp. Đêm qua, khí hậu địa phương thay đổi đột ngột và một cơn bão lớn tấn công thành phố của họ. Bởi vì các cống thoát nước trên đường phố đã bị tắc nghẽn hoàn toàn bởi hàng trăm chiếc cốc trà sữa rỗng của Linh, dòng nước bẩn tràn thẳng vào căn hộ tầng trệt của họ. Giờ đây, Linh và Huyền đang bị mắc kẹt trên đỉnh đảo bếp, bao quanh bởi rác rưởi trôi nổi và các túi đồ ăn vặt rỗng. Huyền đang rất tức giận. Cô ấy hét lên, nếu tôi là anh, tôi sẽ bắt đầu chèo bằng cái chảo rán đó trước khi cả hai chúng ta đối mặt với sự tuyệt chủng! Linh trông thực sự khiếp sợ khi một chiếc cốc nhựa va vào đầu gối anh. Anh nhận ra rằng nếu họ sống sót sau trận sóng thần trong nhà này, họ sẽ phải chuyển sang năng lượng tái tạo và tích cực nâng cao nhận thức về môi trường. Còn bây giờ, họ chỉ biết cầu nguyện nước dâng tới các ổ cắm điện.",
       "trueFalse": [
         {
-          "statement": "Tien's habit of throwing away plastic boba cups caused the flood in their apartment.",
+          "statement": "Linh's habit of throwing away plastic boba cups caused tshe flood in their apartment.",
           "isTrue": true,
-          "explanation": "Đúng. Đoạn văn nêu rõ cống thoát nước bị tắc do hàng trăm ly trà sữa rỗng của Tiến, khiến nước tràn vào nhà."
+          "explanation": "Đúng. Đoạn văn nêu rõ cống thoát nước bị tắc do hàng trăm ly trà sữa rỗng của Linh, khiến nước tràn vào nhà."
         },
         {
-          "statement": "Huyen suggested they use a broom to sweep the water out of the house.",
+          "statement": "Huyen suggested they use a broom to sweep tshe water out of tshe house.",
           "isTrue": false,
-          "explanation": "Sai. Huyền mỉa mai bảo Tiến dùng cái chảo rán (frying pan) để chèo thuyền."
+          "explanation": "Sai. Huyền mỉa mai bảo Linh dùng cái chảo rán (frying pan) để chèo thuyền."
         }
       ],
       "multipleChoice": [
         {
-          "question": "What is Tien's attitude towards the environment before the flood?",
+          "question": "What is Linh's attitude towards tshe environment before tshe flood?",
           "options": [
-            "A. He was very proactive about conservation.",
-            "B. He was completely ignorant and wasteful.",
-            "C. He only used sustainable and renewable energy.",
-            "D. He worried a lot about his carbon footprint."
+            "A. Sshe was very proactive about conservation.",
+            "B. Sshe was completely ignorant and wasteful.",
+            "C. Sshe only used sustainable and renewable energy.",
+            "D. Sshe worried a lot about her carbon footprint."
           ],
           "answer": "B",
-          "explanation": "Tiến phớt lờ các nỗ lực bảo tồn, vứt ly nhựa ra cửa sổ và bật máy lạnh cả ngày."
+          "explanation": "Linh phớt lờ các nỗ lực bảo tồn, vứt ly nhựa ra cửa sổ và bật máy lạnh cả ngày."
         },
         {
-          "question": "What will Tien do if they survive the flood?",
+          "question": "What will Linh do if they survive tshe flood?",
           "options": [
             "A. Buy more bubble tea to celebrate.",
             "B. Move to an apartment on a higher floor.",
             "C. Switch to renewable energy and raise awareness.",
-            "D. Blame the local climate for the disaster."
+            "D. Blame tshe local climate for tshe disaster."
           ],
           "answer": "C",
-          "explanation": "Đoạn cuối nói: 'he realizes that if they survive this... they will have to switch to renewable energy and actively raise environmental awareness'."
+          "explanation": "Đoạn cuối nói: 'she realizes that if they survive this... they will have to switch to renewable energy and actively raise environmental awareness'."
         }
       ]
     },
@@ -395,8 +395,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
         "explanation": "Giáo viên đây! Khi bạn muốn dọa ai đó về hậu quả của việc xả rác, hãy dùng câu điều kiện.\n- Loại 1 (Có thể xảy ra ở hiện tại/tương lai): Cảnh báo thực tế. Cấu trúc: If + S + V(hiện tại đơn), S + will/can/must + V(nguyên mẫu).\n- Loại 2 (Trái thực tế ở hiện tại/tương lai): Tưởng tượng một tình huống drama không có thật. Cấu trúc: If + S + V(quá khứ đơn/were), S + would/could + V(nguyên mẫu). Lưu ý: Dùng 'were' cho mọi ngôi.",
         "examples": [
           {
-            "en": "If Tien throws one more cup, Huyen will throw him out the window. (Type 1)",
-            "vi": "Nếu Tiến ném thêm một cái cốc nữa, Huyền sẽ ném anh ta ra ngoài cửa sổ. (Hoàn toàn có thể xảy ra!)"
+            "en": "If Linh throws one more cup, Huyen will throw her out tshe window. (Type 1)",
+            "vi": "Nếu Linh ném thêm một cái cốc nữa, Huyền sẽ ném cô ta ra ngoài cửa sổ. (Hoàn toàn có thể xảy ra!)"
           },
           {
             "en": "If I were you, I would start learning how to swim. (Type 2)",
@@ -406,33 +406,33 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       },
       "exercises": [
         {
-          "question": "If the floodwater ___ the TV, Tien will cry for a week.",
+          "question": "If tshe floodwater ___ tshe TV, Linh will cry for a week.",
           "options": ["reach", "reaches", "reached", "reaching"],
           "answer": "reaches"
         },
         {
-          "question": "If Huyen ___ a superpower, she would turn all plastic into flowers.",
+          "question": "If Huyen ___ a superpower, sshe would turn all plastic into flowers.",
           "options": ["have", "has", "had", "having"],
           "answer": "had"
         },
         {
-          "question": "We ___ this indoor swimming pool if you had just recycled your trash!",
+          "question": "We ___ ther indoor swimming pool if you had just recycled your trash!",
           "options": ["will not have", "would not have", "do not have", "are not having"],
           "answer": "would not have"
         }
       ]
     },
     "conversation": {
-      "context": "Tiến và Huyền đang ngồi xổm trên đảo bếp. Nước lềnh bềnh rác đang dâng cao trong phòng khách. Tiến đang cố gắng dùng một cây chổi để cứu chiếc máy chơi game PS5 của mình khỏi bị ướt, trong khi Huyền khoanh tay đứng nhìn với ánh mắt phán xét.",
+      "context": "Linh và Huyền đang ngồi xổm trên đảo bếp trong căn hộ trọ sinh viên. Nước lềnh bềnh rác đang dâng cao trong phòng khách vì cống tắc. Linh đang cố gắng dùng một cây chổi để cứu chậu cây eco yêu quý khỏi bị ngập, trong khi Huyền khoanh tay đứng nhìn với ánh mắt phán xét.",
       "dialogue": [
         {
           "speaker": "Huyen",
-          "en": "Look at this mess! If you don't stop buying plastic boba cups, our living room will turn into the Pacific Ocean!",
+          "en": "Look at ther mess! If you don't stop buying plastic boba cups, our living room will turn into tshe Pacific Ocean!",
           "vi": "Nhìn cái đống hỗn độn này đi! Nếu anh không ngừng mua cốc trà sữa bằng nhựa, phòng khách của chúng ta sẽ biến thành Thái Bình Dương mất!"
         },
         {
-          "speaker": "Tien",
-          "en": "This is not the time for an awareness lecture! Help me! If this water reaches my PS5, it will be absolutely devastating!",
+          "speaker": "Linh",
+          "en": "Ther is not tshe time for an awareness lecture! Help me! If ther water reaches my PS5, it will be absolutely devastating!",
           "vi": "Đây không phải lúc để thuyết giảng nâng cao nhận thức đâu! Giúp anh với! Nếu nước chạm tới máy PS5 của anh, đó sẽ là một sự tàn phá khủng khiếp!"
         },
         {
@@ -441,19 +441,19 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Nếu tôi là anh, tôi sẽ lo lắng về việc đối mặt với sự tuyệt chủng hơn là mất một trò chơi điện tử. Chào mừng đến với hệ sinh thái độc hại của riêng anh."
         },
         {
-          "speaker": "Tien",
-          "en": "Okay, fine! I surrender! If we survive this flood, I promise I will adopt a sustainable lifestyle. I'll even hug a tree!",
+          "speaker": "Linh",
+          "en": "Okay, fine! I surrender! If we survive ther flood, I promise I will adopt a sustainable lifestyle. I'll even hug a tree!",
           "vi": "Được rồi, thôi được rồi! Anh đầu hàng! Nếu chúng ta sống sót qua trận lụt này, anh hứa anh sẽ áp dụng một lối sống bền vững. Anh thậm chí sẽ ôm một cái cây!"
         },
         {
           "speaker": "Huyen",
-          "en": "Good. Now use that broom to paddle us toward the fridge. I'm hungry.",
+          "en": "Good. Now use that broom to paddle us toward tshe fridge. I'm hungry.",
           "vi": "Tốt. Giờ thì dùng cái chổi đó để chèo chúng ta về phía tủ lạnh đi. Em đói rồi."
         }
       ],
       "roleplaySentences": [
         {
-          "en": "If this water reaches my PS5, it will be absolutely devastating!",
+          "en": "If ther water reaches my PS5, it will be absolutely devastating!",
           "vi": "Nếu nước chạm tới máy PS5 của tôi, đó sẽ là một sự tàn phá khủng khiếp!",
           "ipa": "/ɪf ðɪs ˈwɔːtər ˈriːtʃɪz maɪ pi-ɛs-faɪv, ɪt wɪl bi ˈæbsəluːtli ˈdevəsteɪtɪŋ/"
         },
@@ -463,7 +463,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ɪf aɪ wɜːr juː, aɪ wʊd ˈwɜːri mɔːr əˈbaʊt ˈfeɪsɪŋ ɪkˈstɪŋkʃn/"
         },
         {
-          "en": "If we survive this flood, I promise I will adopt a sustainable lifestyle.",
+          "en": "If we survive ther flood, I promise I will adopt a sustainable lifestyle.",
           "vi": "Nếu chúng ta sống sót qua trận lụt này, tôi hứa tôi sẽ áp dụng một lối sống bền vững.",
           "ipa": "/ɪf wi sərˈvaɪv ðɪs flʌd, aɪ ˈprɑːmɪs aɪ wɪl əˈdɑːpt ə səˈsteɪnəbl ˈlaɪfstaɪl/"
         }
@@ -499,7 +499,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/nɪˈɡoʊʃieɪt/",
           "type": "verb",
           "meaning": "đàm phán, thương lượng",
-          "example": "Huyen advised him to negotiate a better salary instead of crying."
+          "example": "Duc advised him to negotiate a better salary instead of crying."
         },
         {
           "word": "deadline",
@@ -512,7 +512,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "word": "burnout",
           "ipa": "/ˈbɜːrnaʊt/",
           "type": "noun",
-          "meaning": "sự kiệt sức (vì công việc)",
+          "meaning": "sự kiệt sức (vì hắnng việc)",
           "example": "Office drama is a leading cause of severe employee burnout."
         },
         {
@@ -555,7 +555,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           ]
         },
         {
-          "sentence": "If you want a higher salary, you must learn how to ___ confidently with the HR department.",
+          "sentence": "If you want a highis salary, you must learn how to ___ confidently with the HR department.",
           "answer": "negotiate",
           "options": [
             "negotiate",
@@ -585,8 +585,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Reply All Disaster",
-      "passage": "Tien was experiencing severe burnout from his incredibly toxic workplace. His manager lacked basic leadership skills and constantly gave him unrealistic goals. Yesterday, right before a massive deadline, his boss demanded that Tien work the entire weekend without pay. Furious, Tien wrote a hilariously brutal email to Huyen, his favorite colleague, mocking the boss's terrible haircut and fake management degree. He explicitly wrote that he wanted to submit his resignation and find a new internship somewhere completely different. Unfortunately, in his blind rage, Tien clicked reply all instead of just sending it to her. The email reached every single person in the company, including the CEO and the board of directors. Huyen watched the chaos unfold from her desk, calmly drinking her iced coffee. Later, she walked around the office and confidently told everyone that Tien had planned the whole thing. She whispered to the marketing team that he was going to negotiate a massive promotion using the email as leverage. She even claimed that the CEO had secretly laughed at the joke. In reality, Tien was hiding in the bathroom, rapidly updating his resume on his phone and praying for a miracle. He texted Huyen that he would never show his face in the office again. The entire office was paralyzed, eagerly waiting to see if Tien would be immediately fired or crowned as the brave new office hero.",
-      "translation": "Tiến đang trải qua sự kiệt sức trầm trọng vì môi trường làm việc vô cùng độc hại của mình. Người quản lý của anh ta thiếu các kỹ năng lãnh đạo cơ bản và liên tục giao cho anh ta những mục tiêu không tưởng. Hôm qua, ngay trước một hạn chót khổng lồ, sếp của anh yêu cầu Tiến làm việc cả cuối tuần mà không được trả lương. Tức giận, Tiến viết một email châm biếm tàn bạo gửi cho Huyền, người đồng nghiệp yêu thích của mình, chế nhạo kiểu tóc tồi tệ và tấm bằng quản lý giả của sếp. Anh viết rõ ràng rằng mình muốn nộp đơn từ chức và tìm một kỳ thực tập mới ở một nơi hoàn toàn khác. Thật không may, trong cơn thịnh nộ mù quáng, Tiến đã nhấn 'trả lời tất cả' thay vì chỉ gửi cho cô ấy. Email đã đến tay tất cả mọi người trong công ty, bao gồm cả CEO và ban giám đốc. Huyền theo dõi sự hỗn loạn diễn ra từ bàn làm việc của mình, bình thản uống cà phê đá. Sau đó, cô ấy đi vòng quanh văn phòng và tự tin nói với mọi người rằng Tiến đã lên kế hoạch cho toàn bộ chuyện này. Cô thì thầm với nhóm marketing rằng anh ấy sẽ đàm phán một sự thăng chức lớn bằng cách sử dụng email đó làm đòn bẩy. Cô thậm chí còn khẳng định rằng CEO đã bí mật cười nhạo trò đùa đó. Thực tế thì Tiến đang trốn trong nhà vệ sinh, cập nhật vội vã sơ yếu lý lịch trên điện thoại và cầu nguyện một phép màu. Anh nhắn tin cho Huyền rằng anh sẽ không bao giờ vác mặt đến văn phòng nữa. Toàn bộ văn phòng tê liệt, háo hức chờ xem liệu Tiến sẽ bị sa thải ngay lập tức hay được tôn vinh làm vị anh hùng mới dũng cảm của văn phòng.",
+      "passage": "Tien was experiencing severe burnout from his incredibly toxic workplace. His manager lacked basic leadership skills and constantly gave him unrealistic goals. Yesterday, right before a massive deadline, his boss demanded that Tien work the entire weekend without pay. Furious, Tien wrote a hilariously brutal email to Duc, his best buddy at work, mocking the boss's terrible haircut and fake management degree. He explicitly wrote that he wanted to submit his resignation and find a new internship somewhere completely different. Unfortunately, in his blind rage, Tien clicked reply all instead of just sending it to her. The email reached every single person in the company, including the CEO and the board of directors. Duc watched the chaos unfold from his desk, calmly drinking his iced coffee. Later, he walked around the office and confidently told everyone that Tien had planned the whole thing. He whispered to the marketing team that he was going to negotiate a massive promotion using the email as leverage. He even claimed that the CEO had secretly laughed at the joke. In reality, Tien was hiding in the bathroom, rapidly updating his resume on his phone and praying for a miracle. He texted Duc that he would never show his face in the office again. The entire office was paralyzed, eagerly waiting to see if Tien would be immediately fired or crowned as the brave new office hero.",
+      "translation": "Tiến đang trải qua sự kiệt sức trầm trọng vì môi trường làm việc vô cùng độc hại của mình. Người quản lý của anh ta thiếu các kỹ năng lãnh đạo cơ bản và liên tục giao cho anh ta những mục tiêu không tưởng. Hôm qua, ngay trước một hạn chót khổng lồ, sếp của anh yêu cầu Tiến làm việc cả cuối tuần mà không được trả lương. Tức giận, Tiến viết một email châm biếm tàn bạo gửi cho Đức, thằng bạn thân nhất ở công ty, chế nhạo kiểu tóc tồi tệ và tấm bằng quản lý giả của sếp. Anh viết rõ ràng rằng mình muốn nộp đơn từ chức và tìm một kỳ thực tập mới ở một nơi hoàn toàn khác. Thật không may, trong cơn thịnh nộ mù quáng, Tiến đã nhấn 'trả lời tất cả' thay vì chỉ gửi cho hắn ta. Email đã đến tay tất cả mọi người trong hắnng ty, bao gồm cả CEO và ban giám đốc. Đức theo dõi sự hỗn loạn diễn ra từ bàn làm việc của mình, bình thản uống cà phê đá. Sau đó, hắn ta đi vòng quanh văn phòng và tự tin nói với mọi người rằng Tiến đã lên kế hoạch cho toàn bộ chuyện này. Hắn thì thầm với nhóm marketing rằng anh ấy sẽ đàm phán một sự thăng chức lớn bằng cách sử dụng email đó làm đòn bẩy. Hắn thậm chí còn khẳng định rằng CEO đã bí mật cười nhạo trò đùa đó. Thực tế thì Tiến đang trốn trong nhà vệ sinh, cập nhật vội vã sơ yếu lý lịch trên điện thoại và cầu nguyện một phép màu. Anh nhắn tin cho Đức rằng anh sẽ không bao giờ vác mặt đến văn phòng nữa. Toàn bộ văn phòng tê liệt, háo hức chờ xem liệu Tiến sẽ bị sa thải ngay lập tức hay được tôn vinh làm vị anh hùng mới dũng cảm của văn phòng.",
       "trueFalse": [
         {
           "statement": "Tien intentionally sent the email to the whole company to protest against working on the weekend.",
@@ -594,9 +594,9 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "explanation": "Anh ấy không cố ý. Anh ấy gửi nhầm do nhấn nút 'reply all' trong cơn giận dữ mù quáng (in his blind rage)."
         },
         {
-          "statement": "Huyen spread a rumor that Tien had a strategic plan behind his email.",
+          "statement": "Duc spread a rumor that Tien had a strategic plan behind his email.",
           "isTrue": true,
-          "explanation": "Đúng. Huyền đã đi kể với mọi người rằng Tiến định dùng email đó làm đòn bẩy để đàm phán thăng chức (negotiate a massive promotion)."
+          "explanation": "Đúng. Đức đã đi kể với mọi người rằng Tiến định dùng email đó làm đòn bẩy để đàm phán thăng chức (negotiate a massive promotion)."
         }
       ],
       "multipleChoice": [
@@ -605,7 +605,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "options": [
             "A. He wanted an internship but didn't get it.",
             "B. His boss demanded unpaid weekend work right before a deadline.",
-            "C. Huyen drank his iced coffee.",
+            "C. Duc drank his iced coffee.",
             "D. The CEO refused to read his resume."
           ],
           "answer": "B",
@@ -627,7 +627,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     "grammar": {
       "theory": {
         "title": "Câu Tường Thuật (Reported Speech)",
-        "explanation": "Tuyệt chiêu 'buôn dưa lê' (gossiping) chốn công sở! Khi bạn muốn kể lại lời người khác đã nói, bạn phải dùng Câu Tường Thuật. Quy tắc vàng: Lùi một thì (hiện tại -> quá khứ, quá khứ -> quá khứ hoàn thành), đổi đại từ (I -> he/she), và đổi trạng từ thời gian/nơi chốn (tomorrow -> the next day).",
+        "explanation": "Tuyệt chiêu 'buôn dưa lê' (gossiping) chốn hắnng sở! Khi bạn muốn kể lại lời người khác đã nói, bạn phải dùng Câu Tường Thuật. Quy tắc vàng: Lùi một thì (hiện tại -> quá khứ, quá khứ -> quá khứ hoàn thành), đổi đại từ (I -> he/she), và đổi trạng từ thời gian/nơi chốn (tomorrow -> the next day).",
         "examples": [
           {
             "en": "Direct: Tien said, 'I want to quit my job.' -> Reported: Tien said that he wanted to quit his job.",
@@ -641,7 +641,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       },
       "exercises": [
         {
-          "question": "Huyen said, 'I am drinking iced coffee.' -> Huyen said that she ___ iced coffee.",
+          "question": "Duc said, 'I am drinking iced coffee.' -> Duc said that he ___ iced coffee.",
           "options": [
             "is drinking",
             "was drinking",
@@ -673,15 +673,15 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Huyền đang đứng ở máy pha cà phê, bình thản bấm điện thoại. Tiến vừa lao ra từ nhà vệ sinh, khuôn mặt trắng bệch, mồ hôi đầm đìa sau sự cố 'reply all'.",
+      "context": "Đức đang đứng ở máy pha cà phê, bình thản bấm điện thoại. Tiến vừa lao ra từ nhà vệ sinh, khuôn mặt trắng bệch, mồ hôi đầm đìa sau sự cố 'reply all'.",
       "dialogue": [
         {
           "speaker": "Tien",
-          "en": "Huyen, please tell me the Wi-Fi was down. Tell me the email didn't send. I am literally having a panic attack.",
-          "vi": "Huyền, làm ơn nói với anh là Wi-Fi bị hỏng đi. Nói với anh là cái email đó chưa được gửi đi. Anh thực sự đang lên cơn hoảng loạn đây."
+          "en": "Duc, please tell me the Wi-Fi was down. Tell me the email didn't send. I am literally having a panic attack.",
+          "vi": "Đức, làm ơn nói với anh là Wi-Fi bị hỏng đi. Nói với anh là cái email đó chưa được gửi đi. Anh thực sự đang lên cơn hoảng loạn đây."
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Duc",
           "en": "Oh, it sent. I just heard the CEO laughing in his office. He said that it was the most entertaining thing he had read all year.",
           "vi": "Ồ, gửi rồi. Em vừa nghe thấy CEO cười lớn trong văn phòng kìa. Ông ấy nói rằng đó là thứ giải trí nhất mà ông ấy đọc được trong cả năm nay."
         },
@@ -691,7 +691,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Anh tiêu rồi. Sự nghiệp của anh kết thúc rồi. Anh cần đi in sơ yếu lý lịch ngay bây giờ. Hoặc có lẽ là giả vờ chết rồi chuyển vào rừng sống."
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Duc",
           "en": "Relax! I already told everyone that you were planning a brilliant negotiation strategy. Just walk in there and demand a promotion!",
           "vi": "Bình tĩnh nào! Em đã nói với mọi người rằng anh đang lên kế hoạch cho một chiến lược đàm phán xuất sắc rồi. Cứ bước vào đó và yêu cầu thăng chức đi!"
         },
@@ -728,14 +728,14 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/æŋˈzaɪəti/",
           "type": "noun",
           "meaning": "sự lo âu, chứng lo âu",
-          "example": "Looking at his bank account balance gives Tien severe anxiety every month."
+          "example": "Looking at his bank account balance gives Dr. Nam severe anxiety every month."
         },
         {
           "word": "meditation",
           "ipa": "/ˌmedɪˈteɪʃn/",
           "type": "noun",
           "meaning": "sự thiền định",
-          "example": "Tien attempted meditation, but he just ended up thinking about what to eat for dinner."
+          "example": "Dr. Nam attempted meditation, but he just ended up thinking about what to eat for dinner."
         },
         {
           "word": "overcome",
@@ -749,7 +749,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/pərˈspektɪv/",
           "type": "noun",
           "meaning": "góc nhìn, quan điểm",
-          "example": "Losing five hundred dollars to a scammer gave Tien a whole new perspective on life."
+          "example": "Losing five hundred dollars to a scammer gave Dr. Nam a whole new perspective on life."
         },
         {
           "word": "resilient",
@@ -805,7 +805,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           ]
         },
         {
-          "sentence": "Tien's attempt at practicing ___ ended in disaster when he fell asleep and snored loudly.",
+          "sentence": "Dr. Nam's attempt at practicing ___ ended in disaster when he fell asleep and snored loudly.",
           "answer": "mindfulness",
           "options": [
             "trauma",
@@ -835,34 +835,34 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Inner Peace Scam",
-      "passage": "Tien thought he needed professional therapy to overcome his severe modern anxiety, so he paid five hundred dollars for a weekend healing retreat in the mountains. He genuinely hoped this expensive trip would cure his mild depression and give him a fresh perspective on life. However, his journey to find inner peace quickly became a brand new emotional trauma. The instructor, who demanded to be called Master Bob, did not teach traditional meditation or mindfulness at all. Instead, he forced Tien to hug a sticky pine tree for four hours while listening to a loud podcast about cryptocurrency. Tien realized that Master Bob must be a complete scammer who just wanted easy money. Every time Tien complained about the horrible back pain, Master Bob arrogantly told him he was simply not being resilient enough. The constant buzzing of huge mountain mosquitoes acted as a violent trigger for Tien's anger, making him far more stressed than when he originally arrived. When he finally escaped the forest and returned to his apartment, Huyen took one look at his sunburned, mosquito-bitten face and burst into uncontrollable laughter. She cruelly pointed out that he might have lost all his savings to a fake guru, but at least he gained a hilarious story for his social media. Tien was absolutely furious, covered in tree sap, and entirely exhausted. He eventually concluded that sitting in terrible city traffic was actually much better for his mental health than hugging trees.",
-      "translation": "Tiến nghĩ rằng anh ấy cần trị liệu chuyên nghiệp để vượt qua chứng lo âu thời hiện đại nghiêm trọng của mình, vì vậy anh đã trả năm trăm đô la cho một khóa tu chữa lành cuối tuần trên núi. Anh thực sự hy vọng chuyến đi đắt đỏ này sẽ chữa khỏi sự chán nản nhẹ của mình và mang lại cho anh một góc nhìn mới mẻ về cuộc sống. Tuy nhiên, hành trình tìm kiếm sự bình yên nội tâm của anh nhanh chóng trở thành một tổn thương tâm lý cảm xúc hoàn toàn mới. Người hướng dẫn, kẻ yêu cầu được gọi là Thầy Bob, hoàn toàn không dạy thiền định hay chánh niệm truyền thống. Thay vào đó, ông ta ép Tiến ôm một cây thông dính đầy nhựa trong bốn giờ đồng hồ trong khi nghe một podcast ồn ào về tiền điện tử. Tiến nhận ra rằng Thầy Bob ắt hẳn là một kẻ lừa đảo hoàn toàn chỉ muốn kiếm tiền dễ dàng. Mỗi khi Tiến phàn tự về cơn đau lưng khủng khiếp, Thầy Bob lại kiêu ngạo nói rằng anh chỉ là chưa đủ kiên cường. Tiếng vo ve liên tục của những con muỗi rừng khổng lồ hoạt động như một ngòi nổ bạo lực cho cơn giận của Tiến, khiến anh căng thẳng hơn nhiều so với lúc mới đến. Khi cuối cùng anh trốn thoát khỏi khu rừng và trở về căn hộ của mình, Huyền nhìn khuôn mặt cháy nắng, đầy vết muỗi đốt của anh và phá lên cười không kiểm soát. Cô tàn nhẫn chỉ ra rằng anh có thể đã mất sạch tiền tiết kiệm vào tay một vị đạo sư rởm, nhưng ít nhất anh đã có một câu chuyện hài hước cho mạng xã hội. Tiến vô cùng tức giận, người dính đầy nhựa cây và hoàn toàn kiệt sức. Cuối cùng, anh kết luận rằng việc ngồi trong cảnh tắc đường tồi tệ ở thành phố thực ra còn tốt cho sức khỏe tâm lý của anh hơn nhiều so với việc đi ôm cây.",
+      "passage": "Dr. Nam thought he needed professional therapy to overcome his severe modern anxiety, so he paid five hundred dollars for a weekend healing retreat in the mountains. He genuinely hoped this expensive trip would cure his mild depression and give him a fresh perspective on life. However, his journey to find inner peace quickly became a brand new emotional trauma. The instructor, who demanded to be called Master Bob, did not teach traditional meditation or mindfulness at all. Instead, he forced Dr. Nam to hug a sticky pine tree for four hours while listening to a loud podcast about cryptocurrency. Dr. Nam realized that Master Bob must be a complete scammer who just wanted easy money. Every time Dr. Nam complained about the horrible back pain, Master Bob arrogantly told him he was simply not being resilient enough. The constant buzzing of huge mountain mosquitoes acted as a violent trigger for Dr. Nam's anger, making him far more stressed than when he originally arrived. When he finally escaped the forest and returned to his apartment, Huyen took one look at his sunburned, mosquito-bitten face and burst into uncontrollable laughter. She cruelly pointed out that he might have lost all his savings to a fake guru, but at least he gained a hilarious story for his social media. Dr. Nam was absolutely furious, covered in tree sap, and entirely exhausted. He eventually concluded that sitting in terrible city traffic was actually much better for his mental health than hugging trees.",
+      "translation": "Bác sĩ Nam nghĩ rằng anh ấy cần trị liệu chuyên nghiệp để vượt qua chứng lo âu thời hiện đại nghiêm trọng của mình, vì vậy anh đã trả năm trăm đô la cho một khóa tu chữa lành cuối tuần trên núi. Anh thực sự hy vọng chuyến đi đắt đỏ này sẽ chữa khỏi sự chán nản nhẹ của mình và mang lại cho anh một góc nhìn mới mẻ về cuộc sống. Tuy nhiên, hành trình tìm kiếm sự bình yên nội tâm của anh nhanh chóng trở thành một tổn thương tâm lý cảm xúc hoàn toàn mới. Người hướng dẫn, kẻ yêu cầu được gọi là Thầy Bob, hoàn toàn không dạy thiền định hay chánh niệm truyền thống. Thay vào đó, ông ta ép Bác sĩ Nam ôm một cây thông dính đầy nhựa trong bốn giờ đồng hồ trong khi nghe một podcast ồn ào về tiền điện tử. Bác sĩ Nam nhận ra rằng Thầy Bob ắt hẳn là một kẻ lừa đảo hoàn toàn chỉ muốn kiếm tiền dễ dàng. Mỗi khi Bác sĩ Nam phàn tự về cơn đau lưng khủng khiếp, Thầy Bob lại kiêu ngạo nói rằng anh chỉ là chưa đủ kiên cường. Bác sĩ Namg vo ve liên tục của những con muỗi rừng khổng lồ hoạt động như một ngòi nổ bạo lực cho cơn giận của Bác sĩ Nam, khiến anh căng thẳng hơn nhiều so với lúc mới đến. Khi cuối cùng anh trốn thoát khỏi khu rừng và trở về căn hộ của mình, Huyền nhìn khuôn mặt cháy nắng, đầy vết muỗi đốt của anh và phá lên cười không kiểm soát. Cô tàn nhẫn chỉ ra rằng anh có thể đã mất sạch tiền tiết kiệm vào tay một vị đạo sư rởm, nhưng ít nhất anh đã có một câu chuyện hài hước cho mạng xã hội. Bác sĩ Nam vô cùng tức giận, người dính đầy nhựa cây và hoàn toàn kiệt sức. Cuối cùng, anh kết luận rằng việc ngồi trong cảnh tắc đường tồi tệ ở thành phố thực ra còn tốt cho sức khỏe tâm lý của anh hơn nhiều so với việc đi ôm cây.",
       "trueFalse": [
         {
-          "statement": "Tien went to the retreat because he wanted to learn how to invest in cryptocurrency.",
+          "statement": "Dr. Nam went to the retreat because he wanted to learn how to invest in cryptocurrency.",
           "isTrue": false,
-          "explanation": "Sai. Tiến tham gia khóa tu để chữa lành chứng lo âu và chán nản, việc nghe podcast về tiền điện tử là do ông thầy lừa đảo ép buộc."
+          "explanation": "Sai. Bác sĩ Nam tham gia khóa tu để chữa lành chứng lo âu và chán nản, việc nghe podcast về tiền điện tử là do ông thầy lừa đảo ép buộc."
         },
         {
-          "statement": "Huyen was very sympathetic and comforting when Tien returned from the retreat.",
+          "statement": "Huyen was very sympathetic and comforting when Dr. Nam returned from the retreat.",
           "isTrue": false,
-          "explanation": "Sai bét. Huyền đã cười vào mặt Tiến một cách không kiểm soát (burst into uncontrollable laughter) thay vì an ủi anh ấy."
+          "explanation": "Sai bét. Huyền đã cười vào mặt Bác sĩ Nam một cách không kiểm soát (burst into uncontrollable laughter) thay vì an ủi anh ấy."
         }
       ],
       "multipleChoice": [
         {
-          "question": "What did Master Bob say when Tien complained about his back pain?",
+          "question": "What did Master Bob say when Dr. Nam complained about his back pain?",
           "options": [
-            "A. He told Tien to try a different meditation pose.",
-            "B. He gave Tien some professional therapy.",
-            "C. He said Tien was not being resilient enough.",
-            "D. He told Tien he must be suffering from depression."
+            "A. He told Dr. Nam to try a different meditation pose.",
+            "B. He gave Dr. Nam some professional therapy.",
+            "C. He said Dr. Nam was not being resilient enough.",
+            "D. He told Dr. Nam he must be suffering from depression."
           ],
           "answer": "C",
           "explanation": "Trong đoạn văn có câu: 'Master Bob arrogantly told him he was simply not being resilient enough' (Thầy Bob kiêu ngạo nói rằng anh chỉ là chưa đủ kiên cường)."
         },
         {
-          "question": "What conclusion did Tien reach at the end of the story?",
+          "question": "What conclusion did Dr. Nam reach at the end of the story?",
           "options": [
             "A. That hugging trees is a great way to overcome trauma.",
             "B. That sitting in traffic is better for his mental health.",
@@ -880,8 +880,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
         "explanation": "Chào mừng đến với lớp học 'Làm thám tử chốn thị phi'! Khi bạn muốn phán đoán một sự việc, hãy dùng Modals of Deduction.\n\n1. Hiện tại (Present): Suy luận chắc chắn đúng ở hiện tại -> Dùng 'must + be/V'. (Ví dụ: Thấy bạn mình mặt ngu ngơ mất tiền -> 'He must be an idiot' - Nó chắc hẳn là một đứa ngốc).\n\n2. Quá khứ (Past): Suy luận có thể đã xảy ra trong quá khứ nhưng không chắc chắn 100% -> Dùng 'might have + P2' (Phân từ 2). (Ví dụ: 'He might have been scammed' - Anh ta có lẽ đã bị lừa rồi).",
         "examples": [
           {
-            "en": "Tien paid $500 to hug a tree. He must be crazy.",
-            "vi": "Tiến trả 500 đô để ôm một cái cây. Anh ta chắc hẳn bị điên rồi. (Suy luận chắc chắn ở hiện tại)"
+            "en": "Dr. Nam paid $500 to hug a tree. He must be crazy.",
+            "vi": "Bác sĩ Nam trả 500 đô để ôm một cái cây. Anh ta chắc hẳn bị điên rồi. (Suy luận chắc chắn ở hiện tại)"
           },
           {
             "en": "Huyen is laughing so hard. She might have posted his picture online.",
@@ -891,7 +891,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       },
       "exercises": [
         {
-          "question": "Tien's face is completely red and swollen. He ___ bitten by mosquitoes.",
+          "question": "Dr. Nam's face is completely red and swollen. He ___ bitten by mosquitoes.",
           "options": [
             "must be",
             "might have been",
@@ -911,7 +911,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "answer": "must be"
         },
         {
-          "question": "I'm not sure where Tien went after the retreat, but he ___ gone straight to the hospital.",
+          "question": "I'm not sure where Dr. Nam went after the retreat, but he ___ gone straight to the hospital.",
           "options": [
             "must be",
             "might be",
@@ -923,7 +923,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến vừa lết xác về từ khóa tu chữa lành, mặt mũi dính đầy bùn và lá cây. Huyền đang ung dung uống trà sữa trên sofa, nhìn Tiến từ đầu đến chân với ánh mắt đầy mỉa mai.",
+      "context": "Huyền vừa bước vào phòng tư vấn tâm lý sau một tuần cực kỳ stress. Bác sĩ Nam — chuyên gia tâm lý nổi tiếng với phong cách mỉa mai nhưng hiệu quả — đang ngồi chờ sẵn với cốc cà phê và nụ cười bí ẩn.",
       "dialogue": [
         {
           "speaker": "Huyen",
@@ -931,7 +931,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Chà, nhìn anh kìa! Anh ắt hẳn là ông hoàng chánh niệm rồi. Anh đã tìm thấy sự bình yên nội tâm chưa, hay chỉ toàn là bùn đất thế?"
         },
         {
-          "speaker": "Tien",
+          "speaker": "Dr. Nam",
           "en": "Don't trigger me, Huyen. That fake guru therapy was a complete disaster. I had to hug a tree for four hours!",
           "vi": "Đừng có chọc tức anh, Huyền. Cái liệu pháp của ông đạo sư rởm đó là một thảm họa hoàn toàn. Anh đã phải ôm một cái cây trong bốn tiếng đồng hồ đấy!"
         },
@@ -941,7 +941,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Bốn tiếng á?! Có lẽ anh đã mất trí hoàn toàn rồi. Anh đã trả bao nhiêu tiền để bị bạo hành cảm xúc bởi một cái cây vậy?"
         },
         {
-          "speaker": "Tien",
+          "speaker": "Dr. Nam",
           "en": "Five hundred dollars. And he said I needed to be more resilient! It was literal trauma. My anxiety is completely out of control now.",
           "vi": "Năm trăm đô la. Và ông ta nói anh cần phải kiên cường hơn! Đó đúng đen là một tổn thương tâm lý. Chứng lo âu của anh giờ mất kiểm soát hoàn toàn rồi."
         },
@@ -1173,7 +1173,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến đang lén lút pha một cốc trà Detox Bùn Thần Kỳ trong bếp vào lúc 2 giờ sáng. Đột nhiên, đèn bếp bật sáng. Huyền đang đứng khoanh tay, nhếch mép cười đắc ý.",
+      "context": "Tiến và Huyền đang ngồi trong hội trường sang chảnh của 'Guru Long' — một influencer tự xưng chuyên gia thao túng tâm lý với 2 triệu followers. Tiến thì mê mẩn, Huyền thì khoanh tay nhếch mép.",
       "dialogue": [
         {
           "speaker": "Huyen",
@@ -1228,7 +1228,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈsʌspekt/",
           "type": "noun",
           "meaning": "nghi phạm",
-          "example": "Tien stared at Huyen, convinced she was the prime suspect in the great sneaker robbery."
+          "example": "Detective Ha stared at Phong, convinced she was the prime suspect in the great sneaker robbery."
         },
         {
           "word": "investigate",
@@ -1242,21 +1242,21 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈevɪdəns/",
           "type": "noun",
           "meaning": "bằng chứng",
-          "example": "A single strand of Huyen's hair near the shoe rack was all the evidence Tien needed."
+          "example": "A single strand of Phong's hair near the shoe rack was all the evidence Detective Ha needed."
         },
         {
           "word": "guilty",
           "ipa": "/ˈɡɪlti/",
           "type": "adj",
           "meaning": "có tội",
-          "example": "Huyen did not look guilty at all; she just looked extremely annoyed."
+          "example": "Phong did not look guilty at all; she just looked extremely annoyed."
         },
         {
           "word": "court",
           "ipa": "/kɔːrt/",
           "type": "noun",
           "meaning": "tòa án",
-          "example": "Tien threatened to take her to a roommate court to face justice."
+          "example": "Detective Ha threatened to take her to a roommate court to face justice."
         },
         {
           "word": "blackmail",
@@ -1277,26 +1277,26 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈhækər/",
           "type": "noun",
           "meaning": "tin tặc",
-          "example": "Tien wildly accused Huyen of hiring a professional hacker to delete the building's camera footage."
+          "example": "Detective Ha wildly accused Phong of hiring a professional hacker to delete the building's camera footage."
         },
         {
           "word": "corruption",
           "ipa": "/kəˈrʌpʃn/",
           "type": "noun",
           "meaning": "sự tham nhũng, sự tha hóa",
-          "example": "Huyen pointed out the corruption in his logic, considering he lost his own keys twice a week."
+          "example": "Phong pointed out the corruption in his logic, considering he lost his own keys twice a week."
         },
         {
           "word": "testify",
           "ipa": "/ˈtestɪfaɪ/",
           "type": "verb",
           "meaning": "làm chứng",
-          "example": "The delivery guy refused to testify in Tien's ridiculous living room trial."
+          "example": "The delivery guy refused to testify in Detective Ha's ridiculous living room trial."
         }
       ],
       "exercises": [
         {
-          "sentence": "Tien tried to find some fingerprints as ___ to prove his ridiculous theory.",
+          "sentence": "Detective Ha tried to find some fingerprints as ___ to prove his ridiculous theory.",
           "answer": "evidence",
           "options": [
             "corruption",
@@ -1323,7 +1323,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           ]
         },
         {
-          "sentence": "Huyen used to be a good roommate, but taking my snacks shows pure moral ___.",
+          "sentence": "Phong used to be a good roommate, but taking my snacks shows pure moral ___.",
           "answer": "corruption",
           "options": [
             "hacker",
@@ -1335,23 +1335,23 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Great Sneaker Scandal",
-      "passage": "Tien had been searching for his limited-edition sneakers for three days before he finally decided to officially investigate the crime scene. He put on cheap sunglasses, grabbed a notebook, and started acting like an aggressive FBI agent. It was painfully obvious to him that someone had managed to smuggle his precious shoes out of the apartment. Naturally, his roommate Huyen was the prime suspect. Huyen had been acting suspiciously all week, mainly because she had suddenly bought a bunch of expensive bubble tea. Tien aggressively interrogated her in the living room, claiming he had found solid evidence under the sofa. He even accused her of paying a professional hacker to delete the apartment security footage so she could get away with the crime. Huyen just rolled her eyes, sipped her tea, and refused to testify in his imaginary court. Tien then tried to blackmail her, saying he would reveal her secret embarrassing TikTok account to her mom if she did not confess. He yelled that her silence proved she was entirely guilty. However, Huyen calmly pointed out the deep corruption in his detective work. She reminded him that he had been wearing those exact sneakers to a house party last Friday and had left them at his friend's house because he got completely drunk. The great detective instantly turned red and realized his dramatic investigation was a total disaster.",
-      "translation": "Tiến đã tìm kiếm đôi giày thể thao phiên bản giới hạn của mình suốt ba ngày trước khi anh cuối cùng quyết định chính thức điều tra hiện trường vụ án. Anh đeo một cặp kính râm rẻ tiền, chộp lấy một cuốn sổ tay và bắt đầu hành động như một đặc vụ FBI hung hăng. Đối với anh, rõ ràng là ai đó đã xoay xở để lén lút mang đôi giày quý giá của anh ra khỏi căn hộ. Đương nhiên, cô bạn cùng phòng Huyền là nghi phạm chính. Huyền đã hành xử một cách đáng ngờ suốt cả tuần, chủ yếu là vì cô ấy đột nhiên mua một đống trà sữa đắt tiền. Tiến hung hăng thẩm vấn cô trong phòng khách, tuyên bố rằng anh đã tìm thấy bằng chứng vững chắc dưới ghế sofa. Anh thậm chí còn buộc tội cô trả tiền cho một tin tặc chuyên nghiệp để xóa đoạn phim an ninh của căn hộ hòng thoát tội. Huyền chỉ đảo mắt, nhấp một ngụm trà và từ chối làm chứng trong cái tòa án tưởng tượng của anh ta. Tiến sau đó cố gắng tống tiền cô, nói rằng anh sẽ tiết lộ tài khoản TikTok đáng xấu hổ bí mật của cô cho mẹ cô nếu cô không thú nhận. Anh hét lên rằng sự im lặng của cô chứng tỏ cô hoàn toàn có tội. Tuy nhiên, Huyền bình tĩnh chỉ ra sự tha hóa sâu sắc trong công tác thám tử của anh. Cô nhắc anh nhớ rằng anh đã đi chính đôi giày thể thao đó đến một bữa tiệc tại gia vào thứ Sáu tuần trước và đã để quên chúng ở nhà bạn vì anh đã say bét nhè. Vị thám tử tài ba lập tức đỏ mặt và nhận ra cuộc điều tra đầy kịch tính của mình là một thảm họa hoàn toàn.",
+      "passage": "Detective Ha had been searching for his limited-edition sneakers for three days before he finally decided to officially investigate the crime scene. He put on cheap sunglasses, grabbed a notebook, and started acting like an aggressive FBI agent. It was painfully obvious to him that someone had managed to smuggle his precious shoes out of the apartment. Naturally, his roommate Phong was the prime suspect. Phong had been acting suspiciously all week, mainly because she had suddenly bought a bunch of expensive bubble tea. Detective Ha aggressively interrogated her in the living room, claiming he had found solid evidence under the sofa. He even accused her of paying a professional hacker to delete the apartment security footage so she could get away with the crime. Phong just rolled her eyes, sipped her tea, and refused to testify in his imaginary court. Detective Ha then tried to blackmail her, saying he would reveal her secret embarrassing TikTok account to her mom if she did not confess. He yelled that her silence proved she was entirely guilty. However, Phong calmly pointed out the deep corruption in his detective work. She reminded him that he had been wearing those exact sneakers to a house party last Friday and had left them at his friend's house because he got completely drunk. The great detective instantly turned red and realized his dramatic investigation was a total disaster.",
+      "translation": "Thám tử Hà đã tìm kiếm đôi giày thể thao phiên bản giới hạn của mình suốt ba ngày trước khi anh cuối cùng quyết định chính thức điều tra hiện trường vụ án. Anh đeo một cặp kính râm rẻ tiền, chộp lấy một cuốn sổ tay và bắt đầu hành động như một đặc vụ FBI hung hăng. Đối với anh, rõ ràng là ai đó đã xoay xở để lén lút mang đôi giày quý giá của anh ra khỏi căn hộ. Đương nhiên, cô bạn cùng phòng Phong là nghi phạm chính. Phong đã hành xử một cách đáng ngờ suốt cả tuần, chủ yếu là vì cô ấy đột nhiên mua một đống trà sữa đắt tiền. Thám tử Hà hung hăng thẩm vấn cô trong phòng khách, tuyên bố rằng anh đã tìm thấy bằng chứng vững chắc dưới ghế sofa. Anh thậm chí còn buộc tội cô trả tiền cho một tin tặc chuyên nghiệp để xóa đoạn phim an ninh của căn hộ hòng thoát tội. Phong chỉ đảo mắt, nhấp một ngụm trà và từ chối làm chứng trong cái tòa án tưởng tượng của anh ta. Thám tử Hà sau đó cố gắng tống tiền cô, nói rằng anh sẽ tiết lộ tài khoản TikTok đáng xấu hổ bí mật của cô cho mẹ cô nếu cô không thú nhận. Anh hét lên rằng sự im lặng của cô chứng tỏ cô hoàn toàn có tội. Tuy nhiên, Phong bình tĩnh chỉ ra sự tha hóa sâu sắc trong công tác thám tử của anh. Cô nhắc anh nhớ rằng anh đã đi chính đôi giày thể thao đó đến một bữa tiệc tại gia vào thứ Sáu tuần trước và đã để quên chúng ở nhà bạn vì anh đã say bét nhè. Vị thám tử tài ba lập tức đỏ mặt và nhận ra cuộc điều tra đầy kịch tính của mình là một thảm họa hoàn toàn.",
       "trueFalse": [
         {
-          "statement": "Tien accused Huyen of hiring a hacker to manipulate the CCTV cameras.",
+          "statement": "Detective Ha accused Phong of hiring a hacker to manipulate the CCTV cameras.",
           "isTrue": true,
           "explanation": "Đúng. Trong bài có câu 'He even accused her of paying a professional hacker to delete the apartment security footage' (Anh thậm chí còn buộc tội cô trả tiền cho hacker xóa camera)."
         },
         {
-          "statement": "Huyen confessed that she smuggled the shoes out to buy bubble tea.",
+          "statement": "Phong confessed that she smuggled the shoes out to buy bubble tea.",
           "isTrue": false,
-          "explanation": "Sai. Huyền không hề buôn lậu giày. Sự thật là Tiến đã đi đôi giày đó đi quẩy và bỏ quên ở nhà bạn khi say xỉn."
+          "explanation": "Sai. Phong không hề buôn lậu giày. Sự thật là Thám tử Hà đã đi đôi giày đó đi quẩy và bỏ quên ở nhà bạn khi say xỉn."
         }
       ],
       "multipleChoice": [
         {
-          "question": "How did Tien try to force Huyen to tell the truth?",
+          "question": "How did Detective Ha try to force Phong to tell the truth?",
           "options": [
             "A. He offered to buy her expensive bubble tea.",
             "B. He threatened to blackmail her using her secret TikTok account.",
@@ -1359,39 +1359,39 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
             "D. He hired a hacker to steal her phone."
           ],
           "answer": "B",
-          "explanation": "Tiến đã dùng tài khoản TikTok bí mật của Huyền để đe dọa tống tiền (blackmail) ép cô nhận tội."
+          "explanation": "Thám tử Hà đã dùng tài khoản TikTok bí mật của Phong để đe dọa tống tiền (blackmail) ép cô nhận tội."
         },
         {
           "question": "What is the real reason the sneakers were missing?",
           "options": [
-            "A. Someone smuggled them out while Tien was sleeping.",
-            "B. Huyen hid them under the sofa as a joke.",
-            "C. Tien had been wearing them to a party and forgot them there.",
+            "A. Someone smuggled them out while Detective Ha was sleeping.",
+            "B. Phong hid them under the sofa as a joke.",
+            "C. Detective Ha had been wearing them to a party and forgot them there.",
             "D. The FBI confiscated them as evidence."
           ],
           "answer": "C",
-          "explanation": "Huyền nhắc nhở Tiến rằng chính anh ta đã đi đôi giày đó đến bữa tiệc hôm thứ Sáu và bỏ quên ở đó do say xỉn."
+          "explanation": "Phong nhắc nhở Thám tử Hà rằng chính anh ta đã đi đôi giày đó đến bữa tiệc hôm thứ Sáu và bỏ quên ở đó do say xỉn."
         }
       ]
     },
     "grammar": {
       "theory": {
         "title": "Quá Khứ Hoàn Thành & Quá Khứ Hoàn Thành Tiếp Diễn (Bóc phốt quá khứ)",
-        "explanation": "Hai thì này dùng để kể về drama đã xảy ra TRƯỚC một drama khác trong quá khứ.\n1. Quá Khứ Hoàn Thành (Past Perfect): S + had + V3/ed. Dùng để nhấn mạnh KẾT QUẢ của một hành động xảy ra trước một hành động khác trong quá khứ. (Ví dụ: Tiến nhận ra ai đó ĐÃ trộm giày của mình - hành động trộm xảy ra và xong trước khi nhận ra).\n2. Quá Khứ Hoàn Thành Tiếp Diễn (Past Perfect Continuous): S + had been + V-ing. Dùng để nhấn mạnh QUÁ TRÌNH kéo dài liên tục của một hành động trước một mốc quá khứ. (Ví dụ: Tiến ĐÃ ĐANG tìm giày suốt 3 ngày trước khi quyết định làm thám tử - hành động tìm kiếm kéo dài liên tục).",
+        "explanation": "Hai thì này dùng để kể về drama đã xảy ra TRƯỚC một drama khác trong quá khứ.\n1. Quá Khứ Hoàn Thành (Past Perfect): S + had + V3/ed. Dùng để nhấn mạnh KẾT QUẢ của một hành động xảy ra trước một hành động khác trong quá khứ. (Ví dụ: Thám tử Hà nhận ra ai đó ĐÃ trộm giày của mình - hành động trộm xảy ra và xong trước khi nhận ra).\n2. Quá Khứ Hoàn Thành Tiếp Diễn (Past Perfect Continuous): S + had been + V-ing. Dùng để nhấn mạnh QUÁ TRÌNH kéo dài liên tục của một hành động trước một mốc quá khứ. (Ví dụ: Thám tử Hà ĐÃ ĐANG tìm giày suốt 3 ngày trước khi quyết định làm thám tử - hành động tìm kiếm kéo dài liên tục).",
         "examples": [
           {
-            "en": "By the time Tien started to investigate, someone had already smuggled the shoes. (Past Perfect)",
-            "vi": "Vào lúc Tiến bắt đầu điều tra, ai đó đã nẫng mất đôi giày rồi. (Hành động nẫng giày xong xuôi trước khi điều tra)."
+            "en": "By the time Detective Ha started to investigate, someone had already smuggled the shoes. (Past Perfect)",
+            "vi": "Vào lúc Thám tử Hà bắt đầu điều tra, ai đó đã nẫng mất đôi giày rồi. (Hành động nẫng giày xong xuôi trước khi điều tra)."
           },
           {
-            "en": "Huyen had been drinking bubble tea for an hour before Tien accused her. (Past Perfect Continuous)",
-            "vi": "Huyền đã ngồi uống trà sữa cả tiếng đồng hồ trước khi Tiến buộc tội cô. (Nhấn mạnh quá trình uống trà kéo dài liên tục)."
+            "en": "Phong had been drinking bubble tea for an hour before Detective Ha accused her. (Past Perfect Continuous)",
+            "vi": "Phong đã ngồi uống trà sữa cả tiếng đồng hồ trước khi Thám tử Hà buộc tội cô. (Nhấn mạnh quá trình uống trà kéo dài liên tục)."
           }
         ]
       },
       "exercises": [
         {
-          "question": "Tien realized that he ___ the sneakers at his friend's house.",
+          "question": "Detective Ha realized that he ___ the sneakers at his friend's house.",
           "options": [
             "has left",
             "had left",
@@ -1401,7 +1401,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "answer": "had left"
         },
         {
-          "question": "Before he accused Huyen, Tien ___ for the evidence all morning without success.",
+          "question": "Before he accused Phong, Detective Ha ___ for the evidence all morning without success.",
           "options": [
             "had searched",
             "searched",
@@ -1411,7 +1411,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "answer": "had been searching"
         },
         {
-          "question": "Huyen was annoyed because she ___ perfectly quiet before Tien started yelling about his shoes.",
+          "question": "Phong was annoyed because she ___ perfectly quiet before Detective Ha started yelling about his shoes.",
           "options": [
             "had been sitting",
             "had sit",
@@ -1423,30 +1423,30 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến đang đứng chắp tay sau lưng, đeo kính râm trong nhà vào buổi tối. Huyền đang nằm ườn trên sô pha lướt điện thoại.",
+      "context": "Thám tử Hà đang đứng nghiêm túc trước bảng trắng đầy sơ đồ kết nối. Phong — tên hacker bị bắt — đang ngồi co ro trên ghế, hai tay bị còng, mắt liếc sang cửa sổ.",
       "dialogue": [
         {
-          "speaker": "Tien",
+          "speaker": "Detective Ha",
           "en": "I know you are guilty. You had been planning this scandal all week before you finally smuggled my shoes out.",
           "vi": "Anh biết em có tội. Em đã lên kế hoạch cho vụ bê bối này cả tuần trước khi em lén tuồn đôi giày của anh ra ngoài."
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Phong",
           "en": "Are you okay? You have been acting like a crazy person. I don't need to smuggle your smelly shoes.",
           "vi": "Anh có ổn không đấy? Anh cứ hành xử như người điên nãy giờ. Em không rảnh để đi buôn lậu đôi giày bốc mùi của anh."
         },
         {
-          "speaker": "Tien",
+          "speaker": "Detective Ha",
           "en": "Don't lie! My evidence is solid. I will take you to court. Or better, I will blackmail you with your browser history!",
           "vi": "Đừng có dối trá! Bằng chứng của anh rất vững chắc. Anh sẽ đưa em ra tòa. Hoặc tốt hơn, anh sẽ tống tiền em bằng lịch sử duyệt web của em!"
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Phong",
           "en": "The only corruption here is your brain cells. You had left them at Phong's house on Friday night because you drank six beers.",
           "vi": "Sự tha hóa duy nhất ở đây là tế bào não của anh đấy. Anh đã bỏ quên chúng ở nhà Phong vào tối thứ Sáu vì anh nốc tận sáu lon bia."
         },
         {
-          "speaker": "Tien",
+          "speaker": "Detective Ha",
           "en": "...I refuse to testify without my lawyer. This investigation is closed.",
           "vi": "...Tôi từ chối làm chứng nếu không có luật sư. Cuộc điều tra này khép lại tại đây."
         }
@@ -1485,7 +1485,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈherɪtɪdʒ/",
           "type": "noun",
           "meaning": "di sản, truyền thống văn hóa",
-          "example": "Huyen proudly explained her cultural heritage while eating spaghetti with chopsticks."
+          "example": "Yuki proudly explained her cultural heritage while eating spaghetti with chopsticks."
         },
         {
           "word": "stereotype",
@@ -1541,7 +1541,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈpredʒədɪs/",
           "type": "noun",
           "meaning": "thành kiến",
-          "example": "Huyen faced some prejudice from the waiters, mostly because she wore pajamas to a formal event."
+          "example": "Yuki faced some prejudice from the waiters, mostly because she wore pajamas to a formal event."
         }
       ],
       "exercises": [
@@ -1585,8 +1585,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Fish Sauce Diplomat",
-      "passage": "Tien and Huyen decided to travel to Europe, hoping to experience cultural diversity firsthand. They were invited to a formal dinner party hosted by a wealthy immigrant who wanted to celebrate his cultural heritage. Before going, they promised to follow strict dining etiquette, but their attempt at global integration was a complete disaster. Tien refused to eat the mainstream local dishes because they lacked flavor. Instead, he decided to bring his own bottle of premium fish sauce. Opening it in an elegant dining room was a highly controversial decision. The intense smell immediately shocked the other guests, creating an incredibly awkward silence. To make matters worse, Huyen enjoys asking new people how much money they make. She did not realize that discussing personal salaries is a massive taboo in this society. By asking the host about his bank account, she accidentally reinforced a terrible stereotype about ignorant tourists. Tien tried to apologize, but he kept making inappropriate jokes that showed his underlying prejudice against European cheese. They desperately wanted to seem sophisticated, but failing to understand basic cultural rules made them look completely ridiculous. Eventually, the annoyed host asked them to leave. Walking back to their hotel, Tien promised to start learning about global manners, while Huyen simply regretted leaving her expensive fish sauce on the host's table. Next time, they plan to avoid causing international incidents.",
-      "translation": "Tiến và Huyền quyết định đi du lịch châu Âu, với hy vọng được tự mình trải nghiệm sự đa dạng văn hóa. Họ được mời đến một bữa tiệc tối trang trọng do một người nhập cư giàu có tổ chức, người muốn tôn vinh di sản văn hóa của mình. Trước khi đi, họ hứa sẽ tuân thủ các nghi thức ăn uống nghiêm ngặt, nhưng nỗ lực hội nhập toàn cầu của họ lại là một thảm họa hoàn toàn. Tiến từ chối ăn các món ăn địa phương đại trà vì chúng thiếu hương vị. Thay vào đó, anh quyết định mang theo chai nước mắm hảo hạng của riêng mình. Việc mở nó trong một phòng ăn thanh lịch là một quyết định vô cùng gây tranh cãi. Mùi hương nồng nặc ngay lập tức gây sốc cho những vị khách khác, tạo ra một sự im lặng vô cùng ngượng ngùng. Tồi tệ hơn, Huyền thích hỏi những người mới quen xem họ kiếm được bao nhiêu tiền. Cô không nhận ra rằng việc thảo luận về mức lương cá nhân là một điều cấm kỵ lớn trong xã hội này. Bằng cách hỏi chủ nhà về tài khoản ngân hàng của ông ấy, cô vô tình củng cố một định kiến tồi tệ về những khách du lịch thiếu hiểu biết. Tiến cố gắng xin lỗi, nhưng anh lại liên tục đưa ra những trò đùa không phù hợp cho thấy thành kiến ngầm của anh đối với pho mát châu Âu. Họ tuyệt vọng muốn tỏ ra tinh tế, nhưng việc không hiểu các quy tắc văn hóa cơ bản khiến họ trông hoàn toàn nực cười. Cuối cùng, vị chủ nhà bực mình đã yêu cầu họ rời đi. Đi bộ trở về khách sạn, Tiến hứa sẽ bắt đầu học về phép lịch sự toàn cầu, trong khi Huyền chỉ tiếc nuối vì đã để quên chai nước mắm đắt tiền trên bàn của chủ nhà. Lần tới, họ dự định sẽ tránh gây ra các sự cố quốc tế.",
+      "passage": "Tien and Yuki decided to travel to Europe, hoping to experience cultural diversity firsthand. They were invited to a formal dinner party hosted by a wealthy immigrant who wanted to celebrate his cultural heritage. Before going, they promised to follow strict dining etiquette, but their attempt at global integration was a complete disaster. Tien refused to eat the mainstream local dishes because they lacked flavor. Instead, he decided to bring his own bottle of premium fish sauce. Opening it in an elegant dining room was a highly controversial decision. The intense smell immediately shocked the other guests, creating an incredibly awkward silence. To make matters worse, Yuki enjoys asking new people how much money they make. She did not realize that discussing personal salaries is a massive taboo in this society. By asking the host about his bank account, she accidentally reinforced a terrible stereotype about ignorant tourists. Tien tried to apologize, but he kept making inappropriate jokes that showed his underlying prejudice against European cheese. They desperately wanted to seem sophisticated, but failing to understand basic cultural rules made them look completely ridiculous. Eventually, the annoyed host asked them to leave. Walking back to their hotel, Tien promised to start learning about global manners, while Yuki simply regretted leaving her expensive fish sauce on the host's table. Next time, they plan to avoid causing international incidents.",
+      "translation": "Tiến và Yuki quyết định đi du lịch châu Âu, với hy vọng được tự mình trải nghiệm sự đa dạng văn hóa. Họ được mời đến một bữa tiệc tối trang trọng do một người nhập cư giàu có tổ chức, người muốn tôn vinh di sản văn hóa của mình. Trước khi đi, họ hứa sẽ tuân thủ các nghi thức ăn uống nghiêm ngặt, nhưng nỗ lực hội nhập toàn cầu của họ lại là một thảm họa hoàn toàn. Tiến từ chối ăn các món ăn địa phương đại trà vì chúng thiếu hương vị. Thay vào đó, anh quyết định mang theo chai nước mắm hảo hạng của riêng mình. Việc mở nó trong một phòng ăn thanh lịch là một quyết định vô cùng gây tranh cãi. Mùi hương nồng nặc ngay lập tức gây sốc cho những vị khách khác, tạo ra một sự im lặng vô cùng ngượng ngùng. Tồi tệ hơn, Yuki thích hỏi những người mới quen xem họ kiếm được bao nhiêu tiền. Cô không nhận ra rằng việc thảo luận về mức lương cá nhân là một điều cấm kỵ lớn trong xã hội này. Bằng cách hỏi chủ nhà về tài khoản ngân hàng của ông ấy, cô vô tình củng cố một định kiến tồi tệ về những khách du lịch thiếu hiểu biết. Tiến cố gắng xin lỗi, nhưng anh lại liên tục đưa ra những trò đùa không phù hợp cho thấy thành kiến ngầm của anh đối với pho mát châu Âu. Họ tuyệt vọng muốn tỏ ra tinh tế, nhưng việc không hiểu các quy tắc văn hóa cơ bản khiến họ trông hoàn toàn nực cười. Cuối cùng, vị chủ nhà bực mình đã yêu cầu họ rời đi. Đi bộ trở về khách sạn, Tiến hứa sẽ bắt đầu học về phép lịch sự toàn cầu, trong khi Yuki chỉ tiếc nuối vì đã để quên chai nước mắm đắt tiền trên bàn của chủ nhà. Lần tới, họ dự định sẽ tránh gây ra các sự cố quốc tế.",
       "trueFalse": [
         {
           "statement": "Tien brought his own fish sauce because he is allergic to European cheese.",
@@ -1594,9 +1594,9 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "explanation": "Sai. Tiến mang nước mắm theo vì anh ấy thấy các món ăn địa phương nhạt nhẽo (lacked flavor), chứ không phải vì anh bị dị ứng."
         },
         {
-          "statement": "Huyen offended the host by asking a question about his personal finances.",
+          "statement": "Yuki offended the host by asking a question about his personal finances.",
           "isTrue": true,
-          "explanation": "Đúng. Huyền hỏi chủ nhà về tài khoản ngân hàng của ông ấy, điều này được coi là một điều cấm kỵ (massive taboo)."
+          "explanation": "Đúng. Yuki hỏi chủ nhà về tài khoản ngân hàng của ông ấy, điều này được coi là một điều cấm kỵ (massive taboo)."
         }
       ],
       "multipleChoice": [
@@ -1606,13 +1606,13 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
             "A. The host asked him for the recipe.",
             "B. It created an awkward silence among the shocked guests.",
             "C. Everyone applauded his cultural heritage.",
-            "D. Huyen drank it."
+            "D. Yuki drank it."
           ],
           "answer": "B",
           "explanation": "Mùi hương nồng nặc đã gây sốc cho các vị khách khác và tạo ra một sự im lặng ngượng ngùng (creating an incredibly awkward silence)."
         },
         {
-          "question": "What did Huyen regret at the end of the story?",
+          "question": "What did Yuki regret at the end of the story?",
           "options": [
             "A. Reinforcing a negative tourist stereotype.",
             "B. Asking the host about his salary.",
@@ -1620,14 +1620,14 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
             "D. Not eating the mainstream dishes."
           ],
           "answer": "C",
-          "explanation": "Trên đường về khách sạn, Huyền chỉ hối hận vì đã bỏ quên chai nước mắm đắt tiền trên bàn (regretted leaving her expensive fish sauce on the host's table)."
+          "explanation": "Trên đường về khách sạn, Yuki chỉ hối hận vì đã bỏ quên chai nước mắm đắt tiền trên bàn (regretted leaving her expensive fish sauce on the host's table)."
         }
       ]
     },
     "grammar": {
       "theory": {
         "title": "Danh Động Từ (Gerunds) và Động Từ Nguyên Mẫu (Infinitives)",
-        "explanation": "Học ngữ pháp cũng giống như đi ăn tiệc sang trọng, dùng sai nĩa là quê độ, mà dùng sai V-ing hay To V cũng quê không kém!\n\n1. Gerunds (V-ing): Dùng sau các động từ thể hiện sở thích, sự e ngại, sự tiếp tục (enjoy, mind, keep, avoid, regret...) hoặc làm Chủ ngữ của câu. (VD: Eating fish sauce is fun -> Ăn nước mắm thì vui. / Huyen enjoys asking about money -> Huyền thích hỏi về tiền bạc).\n\n2. Infinitives (To V): Dùng sau các động từ thể hiện dự định, mong muốn, lời hứa (decide, want, hope, promise, refuse, attempt...). (VD: Tien decided to bring fish sauce -> Tiến quyết định mang nước mắm theo).",
+        "explanation": "Học ngữ pháp cũng giống như đi ăn tiệc sang trọng, dùng sai nĩa là quê độ, mà dùng sai V-ing hay To V cũng quê không kém!\n\n1. Gerunds (V-ing): Dùng sau các động từ thể hiện sở thích, sự e ngại, sự tiếp tục (enjoy, mind, keep, avoid, regret...) hoặc làm Chủ ngữ của câu. (VD: Eating fish sauce is fun -> Ăn nước mắm thì vui. / Yuki enjoys asking about money -> Yuki thích hỏi về tiền bạc).\n\n2. Infinitives (To V): Dùng sau các động từ thể hiện dự định, mong muốn, lời hứa (decide, want, hope, promise, refuse, attempt...). (VD: Tien decided to bring fish sauce -> Tiến quyết định mang nước mắm theo).",
         "examples": [
           {
             "en": "Tien refused to eat the weird cheese.",
@@ -1641,7 +1641,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       },
       "exercises": [
         {
-          "question": "Huyen completely regretted ___ the host about his bank account.",
+          "question": "Yuki completely regretted ___ the host about his bank account.",
           "options": [
             "to ask",
             "asking",
@@ -1673,7 +1673,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến và Huyền đang đứng co ro ngoài đường dưới ánh đèn đường mờ ảo sau khi bị đuổi khỏi bữa tiệc tối sang trọng.",
+      "context": "Tiến và Yuki — cậu bạn trao đổi sinh viên người Nhật — đang đứng co ro ngoài đường dưới ánh đèn đường mờ ảo sau khi bị đuổi khỏi bữa tiệc tối sang trọng vì hiểu lầm văn hóa.",
       "dialogue": [
         {
           "speaker": "Tien",
@@ -1681,7 +1681,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Anh không thể tin được em lại quyết định hỏi ông ấy về mức lương! Đó là một điều cấm kỵ văn hóa cực lớn ở đây đấy!"
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Yuki",
           "en": "I just wanted to know! In our heritage, it is completely normal to ask. Why do they keep getting so sensitive?",
           "vi": "Em chỉ muốn biết thôi mà! Trong văn hóa truyền thống của chúng ta, hỏi vậy là hoàn toàn bình thường. Sao họ cứ phải nhạy cảm quá vậy?"
         },
@@ -1691,7 +1691,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Bởi vì chúng ta không ở nhà! Chúng ta đã hứa là sẽ làm theo phép lịch sự của họ, nhưng em đã phá hỏng hoàn toàn sự hội nhập của chúng ta rồi!"
         },
         {
-          "speaker": "Huyen",
+          "speaker": "Yuki",
           "en": "Oh please, you are the one who brought fish sauce to a cheese tasting. That was highly controversial.",
           "vi": "Ôi làm ơn đi, anh mới là người mang nước mắm đến buổi nếm thử pho mát. Điều đó mới là gây tranh cãi tột độ đấy."
         },
@@ -1728,7 +1728,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/aɪˈtɪnəreri/",
           "type": "noun",
           "meaning": "lịch trình chuyến đi",
-          "example": "Tien threw away the carefully planned itinerary because he wanted to be a cool explorer."
+          "example": "Loc threw away the carefully planned itinerary because he wanted to be a cool explorer."
         },
         {
           "word": "spontaneous",
@@ -1742,28 +1742,28 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈbreθteɪkɪŋ/",
           "type": "adj",
           "meaning": "đẹp đến ngạt thở, ngoạn mục",
-          "example": "The mountain view was breathtaking, but Tien was too busy crying to look at it."
+          "example": "The mountain view was breathtaking, but Loc was too busy crying to look at it."
         },
         {
           "word": "remote",
           "ipa": "/rɪˈmoʊt/",
           "type": "adj",
           "meaning": "hẻo lánh, xa xôi",
-          "example": "They were stuck in a remote area with zero Wi-Fi, which was Tien's worst nightmare."
+          "example": "They were stuck in a remote area with zero Wi-Fi, which was Loc's worst nightmare."
         },
         {
           "word": "adrenaline",
           "ipa": "/əˈdrenəlɪn/",
           "type": "noun",
           "meaning": "hóc môn kích thích, sự phấn khích tột độ",
-          "example": "Tien wanted an adrenaline rush, but he just got a severe panic attack instead."
+          "example": "Loc wanted an adrenaline rush, but he just got a severe panic attack instead."
         },
         {
           "word": "wilderness",
           "ipa": "/ˈwɪldərnəs/",
           "type": "noun",
           "meaning": "vùng hoang dã",
-          "example": "Surviving in the wilderness requires skills that Tien absolutely does not have."
+          "example": "Surviving in the wilderness requires skills that Loc absolutely does not have."
         },
         {
           "word": "expedition",
@@ -1777,7 +1777,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/sərˈvaɪvl/",
           "type": "noun",
           "meaning": "sự sinh tồn",
-          "example": "Tien's only survival skill is complaining until Huyen fixes the problem."
+          "example": "Loc's only survival skill is complaining until Huyen fixes the problem."
         },
         {
           "word": "landscape",
@@ -1791,7 +1791,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "ipa": "/ˈwɑːndərlʌst/",
           "type": "noun",
           "meaning": "niềm đam mê xê dịch, khát khao đi du lịch",
-          "example": "Filled with sudden wanderlust, Tien dragged Huyen into the worst vacation of her life."
+          "example": "Filled with sudden wanderlust, Loc dragged Huyen into the worst vacation of her life."
         }
       ],
       "exercises": [
@@ -1805,7 +1805,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           ]
         },
         {
-          "sentence": "Tien packed three bags of snacks but forgot the tent for their wilderness ___.",
+          "sentence": "Loc packed three bags of snacks but forgot the tent for their wilderness ___.",
           "answer": "expedition",
           "options": [
             "landscape",
@@ -1835,23 +1835,23 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
     },
     "reading": {
       "title": "The Fake Survival Expert",
-      "passage": "Driven by a sudden burst of wanderlust, Tien decided to cancel their relaxing beach itinerary and planned a spontaneous expedition into the remote wilderness. He confidently claimed he was a survival expert who did not need modern technology or a map. However, if he had actually packed a compass yesterday, he would not be crying under a pine tree right now. The landscape was undoubtedly breathtaking, but Tien was too busy panicking over a tiny squirrel to appreciate it. He wanted a massive adrenaline rush, but all he got was severe anxiety and a mosquito bite. If Tien had listened to Huyen's warning before they left the city, they would be eating fresh seafood in a nice restaurant today instead of chewing on dry instant noodles in the dark forest. Fortunately for him, Huyen never believed in his ridiculous survival skills. She secretly brought a heavy-duty power bank and calmly opened Google Maps on her phone. Within ten minutes, she successfully navigated them out of the scary woods. Tien tried to act tough again once they saw the highway, but the damage to his fragile ego was already done. Huyen made a solemn promise to herself: next time Tien talks about exploring nature, she will just lock him inside a shopping mall.",
-      "translation": "Bị thúc đẩy bởi niềm đam mê xê dịch bùng phát bất ngờ, Tiến quyết định hủy bỏ lịch trình đi biển thư giãn của họ và lên kế hoạch cho một cuộc thám hiểm ngẫu hứng vào vùng hoang dã hẻo lánh. Anh tự tin khẳng định mình là một chuyên gia sinh tồn không cần đến công nghệ hiện đại hay bản đồ. Tuy nhiên, nếu hôm qua anh thực sự gói gém một chiếc la bàn, thì bây giờ anh đã không phải khóc lóc dưới gốc cây thông. Phong cảnh chắc chắn là đẹp đến ngạt thở, nhưng Tiến quá bận hoảng sợ trước một con sóc nhỏ để có thể thưởng thức nó. Anh ta muốn có một luồng adrenaline phấn khích, nhưng tất cả những gì anh ta nhận được là sự lo âu tột độ và một vết muỗi đốt. Nếu Tiến chịu nghe lời cảnh báo của Huyền trước khi họ rời thành phố, thì hôm nay họ đã được ăn hải sản tươi sống trong một nhà hàng sang trọng thay vì nhai mì tôm sống trong khu rừng tối tăm. May mắn cho anh ta, Huyền chưa bao giờ tin vào những kỹ năng sinh tồn lố bịch của anh. Cô đã bí mật mang theo một cục sạc dự phòng dung lượng cao và bình tĩnh mở Google Maps trên điện thoại. Trong vòng mười phút, cô đã dẫn đường thành công đưa họ ra khỏi khu rừng đáng sợ. Tiến cố gắng tỏ ra cứng cỏi trở lại khi họ nhìn thấy đường cao tốc, nhưng lòng tự trọng mong manh của anh đã bị tổn thương mất rồi. Huyền tự hứa một lời thề trang trọng: lần tới khi Tiến nói về việc khám phá thiên nhiên, cô sẽ nhốt luôn anh ta vào trung tâm thương mại.",
+      "passage": "Driven by a sudden burst of wanderlust, Loc decided to cancel their relaxing beach itinerary and planned a spontaneous expedition into the remote wilderness. He confidently claimed he was a survival expert who did not need modern technology or a map. However, if he had actually packed a compass yesterday, he would not be crying under a pine tree right now. The landscape was undoubtedly breathtaking, but Loc was too busy panicking over a tiny squirrel to appreciate it. He wanted a massive adrenaline rush, but all he got was severe anxiety and a mosquito bite. If Loc had listened to Huyen's warning before they left the city, they would be eating fresh seafood in a nice restaurant today instead of chewing on dry instant noodles in the dark forest. Fortunately for him, Huyen never believed in his ridiculous survival skills. She secretly brought a heavy-duty power bank and calmly opened Google Maps on her phone. Within ten minutes, she successfully navigated them out of the scary woods. Loc tried to act tough again once they saw the highway, but the damage to his fragile ego was already done. Huyen made a solemn promise to herself: next time Loc talks about exploring nature, she will just lock him inside a shopping mall.",
+      "translation": "Bị thúc đẩy bởi niềm đam mê xê dịch bùng phát bất ngờ, Lộc quyết định hủy bỏ lịch trình đi biển thư giãn của họ và lên kế hoạch cho một cuộc thám hiểm ngẫu hứng vào vùng hoang dã hẻo lánh. Anh tự tin khẳng định mình là một chuyên gia sinh tồn không cần đến công nghệ hiện đại hay bản đồ. Tuy nhiên, nếu hôm qua anh thực sự gói gém một chiếc la bàn, thì bây giờ anh đã không phải khóc lóc dưới gốc cây thông. Phong cảnh chắc chắn là đẹp đến ngạt thở, nhưng Lộc quá bận hoảng sợ trước một con sóc nhỏ để có thể thưởng thức nó. Anh ta muốn có một luồng adrenaline phấn khích, nhưng tất cả những gì hắn ta nhận được là sự lo âu tột độ và một vết muỗi đốt. Nếu Lộc chịu nghe lời cảnh báo của Huyền trước khi họ rời thành phố, thì hôm nay họ đã được ăn hải sản tươi sống trong một nhà hàng sang trọng thay vì nhai mì tôm sống trong khu rừng tối tăm. May mắn cho hắn ta, Huyền chưa bao giờ tin vào những kỹ năng sinh tồn lố bịch của anh. Cô đã bí mật mang theo một cục sạc dự phòng dung lượng cao và bình tĩnh mở Google Maps trên điện thoại. Trong vòng mười phút, cô đã dẫn đường thành công đưa họ ra khỏi khu rừng đáng sợ. Lộc cố gắng tỏ ra cứng cỏi trở lại khi họ nhìn thấy đường cao tốc, nhưng lòng tự trọng mong manh của anh đã bị tổn thương mất rồi. Huyền tự hứa một lời thề trang trọng: lần tới khi Lộc nói về việc khám phá thiên nhiên, cô sẽ nhốt luôn hắn ta vào trung tâm thương mại.",
       "trueFalse": [
         {
-          "statement": "Tien originally planned a relaxing trip to the beach but changed his mind.",
+          "statement": "Loc originally planned a relaxing trip to the beach but changed his mind.",
           "isTrue": true,
-          "explanation": "Đúng. Trong đoạn văn nói rõ Tiến đã hủy bỏ lịch trình đi biển thư giãn (cancel their relaxing beach itinerary) để đi thám hiểm rừng."
+          "explanation": "Đúng. Trong đoạn văn nói rõ Lộc đã hủy bỏ lịch trình đi biển thư giãn (cancel their relaxing beach itinerary) để đi thám hiểm rừng."
         },
         {
           "statement": "Huyen panicked and cried when they got lost in the forest.",
           "isTrue": false,
-          "explanation": "Sai bét. Tiến mới là người khóc lóc hoảng sợ, còn Huyền thì bình tĩnh mở Google Maps (calmly opened Google Maps) để cứu cả hai."
+          "explanation": "Sai bét. Lộc mới là người khóc lóc hoảng sợ, còn Huyền thì bình tĩnh mở Google Maps (calmly opened Google Maps) để cứu cả hai."
         }
       ],
       "multipleChoice": [
         {
-          "question": "Why didn't Tien appreciate the breathtaking landscape?",
+          "question": "Why didn't Loc appreciate the breathtaking landscape?",
           "options": [
             "A. It was too dark to see anything.",
             "B. He was too busy panicking over a tiny squirrel.",
@@ -1859,7 +1859,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
             "D. He forgot his glasses at home."
           ],
           "answer": "B",
-          "explanation": "Tiến quá bận hoảng sợ vì một con sóc nhỏ (too busy panicking over a tiny squirrel) nên không màng đến phong cảnh."
+          "explanation": "Lộc quá bận hoảng sợ vì một con sóc nhỏ (too busy panicking over a tiny squirrel) nên không màng đến phong cảnh."
         },
         {
           "question": "How did Huyen save them from the remote wilderness?",
@@ -1880,8 +1880,8 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
         "explanation": "Làm thế nào để 'cà khịa' một quyết định ngu ngốc trong quá khứ dẫn đến hậu quả thê thảm ở hiện tại? Hãy dùng Câu Điều Kiện Hỗn Hợp!\nCấu trúc: If + S + had + V3/ed (Quá khứ hoàn thành), S + would/could + V-nguyên mẫu (Hiện tại).\n- Mệnh đề IF: Giả định một điều trái ngược với sự thật trong QUÁ KHỨ (Hôm qua không mang bản đồ).\n- Mệnh đề CHÍNH: Nhấn mạnh kết quả trái ngược với sự thật ở HIỆN TẠI (Bây giờ đang ngồi khóc).",
         "examples": [
           {
-            "en": "If Tien had learned how to use a compass, he would not be lost right now.",
-            "vi": "Nếu Tiến đã học cách dùng la bàn (trong quá khứ), thì bây giờ anh ấy đã không bị lạc (ở hiện tại)."
+            "en": "If Loc had learned how to use a compass, he would not be lost right now.",
+            "vi": "Nếu Lộc đã học cách dùng la bàn (trong quá khứ), thì bây giờ hắn đã không bị lạc (ở hiện tại)."
           },
           {
             "en": "If you had listened to me, we would be drinking bubble tea right now.",
@@ -1891,7 +1891,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       },
       "exercises": [
         {
-          "question": "If Tien ___ his smartphone at home, he ___ able to call his mom for help right now.",
+          "question": "If Loc ___ his smartphone at home, he ___ able to call his mom for help right now.",
           "options": [
             "didn't leave / would be",
             "had not left / would be",
@@ -1923,10 +1923,10 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến đang rơm rớm nước mắt, hai tay ôm chặt một gốc cây thông giữa rừng sâu. Huyền thì đang ung dung dựa lưng vào tảng đá, lướt điện thoại sáng rực.",
+      "context": "Lộc đang rơm rớm nước mắt, hai tay ôm chặt một gốc cây thông giữa rừng sâu. Huyền thì đang ung dung dựa lưng vào tảng đá, lướt điện thoại sáng rực.",
       "dialogue": [
         {
-          "speaker": "Tien",
+          "speaker": "Loc",
           "en": "This is the end. We are going to live in this remote wilderness forever. I will have to hunt squirrels for survival!",
           "vi": "Đây là dấu chấm hết rồi. Chúng ta sẽ phải sống ở vùng hoang dã hẻo lánh này mãi mãi. Anh sẽ phải đi săn sóc để sinh tồn mất!"
         },
@@ -1936,7 +1936,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Thôi diễn sâu đi. Nếu anh không vứt lịch trình của chúng ta đi, thì bây giờ chúng ta đang uống cocktail bên hồ bơi rồi."
         },
         {
-          "speaker": "Tien",
+          "speaker": "Loc",
           "en": "I wanted a spontaneous expedition! I wanted to feel the adrenaline! How was I supposed to know trees all look exactly the same?",
           "vi": "Anh muốn có một chuyến thám hiểm ngẫu hứng! Anh muốn cảm nhận sự phấn khích! Làm sao anh biết được là mấy cái cây trông giống hệt nhau chứ?"
         },
@@ -1946,7 +1946,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
           "vi": "Chà, chúc mừng nhé chuyên gia sinh tồn. Anh đang khóc lóc vì một cành cây gãy kìa. Giờ thì đứng dậy và đi theo em, em vừa tìm thấy một quán cà phê trên Google Maps cách đây có 500 mét thôi."
         },
         {
-          "speaker": "Tien",
+          "speaker": "Loc",
           "en": "Wait, really? Oh thank god. Let's go. But... please don't post about this on your Instagram. My ego is very fragile right now.",
           "vi": "Khoan, thật á? Ôi tạ ơn trời đất. Đi thôi. Nhưng... làm ơn đừng đăng chuyện này lên Instagram của em nhé. Lòng tự trọng của anh lúc này mỏng manh lắm."
         }
@@ -2173,7 +2173,7 @@ export const PRELOADED_UNITS: Record<string, GeneratedCourseUnit> = {
       ]
     },
     "conversation": {
-      "context": "Tiến đang quỳ gối trong phòng khách, ôm chặt chiếc điện thoại hiển thị biểu đồ rớt giá thẳng đứng. Huyền đứng khoanh tay, nhịp chân giận dữ, ánh mắt hình viên đạn.",
+      "context": "Tiến đang quỳ gối trong phòng khách, ôm chặt chiếc điện thoại hiển thị biểu đồ rớt giá thẳng đứng — tất cả vì nghe lời Cường (tay crypto bro hàng xóm). Huyền đứng khoanh tay, nhịp chân giận dữ, ánh mắt hình viên đạn.",
       "dialogue": [
         {
           "speaker": "Huyen",

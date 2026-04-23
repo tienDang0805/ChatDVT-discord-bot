@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, Menu, X, Heart, BrainCircuit } from 'lucide-react';
+import { LayoutDashboard, ScrollText, Settings, Bot, LogOut, Moon, Sun, Menu, X, Heart, BrainCircuit, MessageCircle } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import api from '../api';
@@ -144,6 +144,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/admin/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/admin/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/admin/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/web-chat-prompt" icon={MessageCircle} label="Web Chat Prompt" onClick={() => setIsMobileMenuOpen(false)} />
 
           {/* Spacer */}
           <div className="flex-1" />

@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, Schema, Type } from '@google/generative-ai';
+import { GoogleGenerativeAI, Schema } from '@google/generative-ai';
 import { PRELOADED_UNITS } from '../data/preloadedUnits';
 
 // ============================================================================
@@ -158,6 +158,14 @@ export const COURSE_SKELETON: CourseUnitSkeleton[] = [
     grammarFocus: 'Thì Tương Lai Hoàn Thành & Tương Lai Tiếp Diễn'
   }
 ];
+
+// ============================================================================
+// 2.5. PRELOADED UNIT LOADER (LOCAL - KHÔNG CẦN API KEY)
+// ============================================================================
+
+export const loadPreloadedUnit = (unitId: string): GeneratedCourseUnit | null => {
+  return PRELOADED_UNITS[unitId] ?? null;
+};
 
 // ============================================================================
 // 3. AI PROMPT GENERATOR - TẠO SÁCH GIÁO KHOA CHUẨN

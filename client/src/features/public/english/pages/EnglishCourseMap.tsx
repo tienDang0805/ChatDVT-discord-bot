@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { PageShell } from '../../../../shared/components/PageShell';
-import { COURSE_SKELETON } from '../utils/courseGenerator';
+import { COURSE_SKELETON, loadPreloadedUnit } from '../utils/courseGenerator';
 import { getCourseState } from '../utils/courseState';
 import { CheckCircle, Lock, Play } from 'lucide-react';
 
@@ -30,6 +30,7 @@ export const EnglishCourseMap = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Unit {index + 1}</span>
                     <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500">{unit.level}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${loadPreloadedUnit(unit.id) ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>{loadPreloadedUnit(unit.id) ? 'Local' : 'AI'}</span>
                   </div>
                   <h3 className={`font-black text-lg ${isUnlocked ? 'text-slate-800 dark:text-white' : 'text-slate-500'}`}>{unit.title}</h3>
                   <p className="text-sm text-slate-500 mt-1">{unit.topic}</p>

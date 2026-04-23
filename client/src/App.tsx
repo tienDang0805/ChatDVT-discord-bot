@@ -2,10 +2,11 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MusicPlayerProvider } from './shared/contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './shared/components/GlobalMusicPlayer';
+import { ChatWidget } from './shared/components/ChatWidget';
 import { Toaster } from 'react-hot-toast';
 
 const PublicPortal = lazy(() => import('./features/public/portal/pages/PublicPortal').then(m => ({ default: m.PublicPortal })));
-const WeatherFAB = lazy(() => import('./features/public/weather/pages/WeatherWidget').then(m => ({ default: m.WeatherFAB })));
+// Removed WeatherFAB from global imports
 const FoodWheel = lazy(() => import('./features/public/food-wheel/pages/FoodWheel'));
 const ExcuseGenerator = lazy(() => import('./features/public/excuse-generator/pages/ExcuseGenerator'));
 const HandsomeAnalyzer = lazy(() => import('./features/public/handsome-analyzer/pages/HandsomeAnalyzer').then(m => ({ default: m.HandsomeAnalyzer })));
@@ -57,6 +58,7 @@ const Pets = lazy(() => import('./features/admin/pets-admin/pages/Pets').then(m 
 const UserManagement = lazy(() => import('./features/admin/user-management/pages/UserManagement').then(m => ({ default: m.UserManagement })));
 const Identity = lazy(() => import('./features/admin/identity/pages/Identity').then(m => ({ default: m.Identity })));
 const CoupleLandingPage = lazy(() => import('./features/admin/couple/pages/CoupleLandingPage').then(m => ({ default: m.CoupleLandingPage })));
+const WebChatPrompt = lazy(() => import('./features/admin/web-chat-prompt/pages/WebChatPrompt').then(m => ({ default: m.WebChatPrompt })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0d1117]">
@@ -87,6 +89,7 @@ function App() {
           style: { borderRadius: '12px', padding: '16px' }
         }} />
         <GlobalMusicPlayer />
+        <ChatWidget />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<PublicPortal />} />
@@ -143,6 +146,7 @@ function App() {
                     <Route path="/pets" element={<Pets />} />
                     <Route path="/logs" element={<Logs />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/web-chat-prompt" element={<WebChatPrompt />} />
                   </Routes>
                 </Layout>
               </RequireAuth>
@@ -150,9 +154,7 @@ function App() {
           </Routes>
         </Suspense>
       </div>
-      <Suspense fallback={null}>
-        <WeatherFAB />
-      </Suspense>
+      {/* WeatherFAB moved to PublicPortal */}
     </MusicPlayerProvider>
   );
 }
