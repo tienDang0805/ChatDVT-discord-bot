@@ -46,10 +46,17 @@ const SpellingBee = lazy(() => import('./features/public/english/pages/SpellingB
 const PetLandingPage = lazy(() => import('./features/public/pet-landing/pages/PetLandingPage').then(m => ({ default: m.PetLandingPage })));
 const EnglishCourseMap = lazy(() => import('./features/public/english/pages/EnglishCourseMap').then(m => ({ default: m.EnglishCourseMap })));
 const EnglishUnitPlayer = lazy(() => import('./features/public/english/pages/EnglishUnitPlayer').then(m => ({ default: m.EnglishUnitPlayer })));
+const WritingLab = lazy(() => import('./features/public/english/pages/WritingLab').then(m => ({ default: m.WritingLab })));
+const DictationLab = lazy(() => import('./features/public/english/pages/DictationLab').then(m => ({ default: m.DictationLab })));
+const SentenceScramble = lazy(() => import('./features/public/english/pages/SentenceScramble').then(m => ({ default: m.SentenceScramble })));
+const WordMatch = lazy(() => import('./features/public/english/pages/WordMatch').then(m => ({ default: m.WordMatch })));
+const IdiomQuest = lazy(() => import('./features/public/english/pages/IdiomQuest').then(m => ({ default: m.IdiomQuest })));
+const ContextClues = lazy(() => import('./features/public/english/pages/ContextClues').then(m => ({ default: m.ContextClues })));
 const TuTienGame = lazy(() => import('./features/public/tutien/pages/TuTienGame'));
 const Login = lazy(() => import('./features/public/auth/pages/Login').then(m => ({ default: m.Login })));
 const WebQuizLobby = lazy(() => import('./features/public/web-quiz/pages/Lobby').then(m => ({ default: m.WebQuizLobby })));
 const WebQuizRoom = lazy(() => import('./features/public/web-quiz/pages/Room').then(m => ({ default: m.WebQuizRoom })));
+const EmulatorCheck = lazy(() => import('./features/public/emulator-check/pages/EmulatorCheck').then(m => ({ default: m.EmulatorCheck })));
 
 const Layout = lazy(() => import('./shared/components/Layout').then(m => ({ default: m.Layout })));
 const Dashboard = lazy(() => import('./features/admin/dashboard/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -145,6 +152,12 @@ function App() {
             <Route path="/english/daily-puzzle" element={<DailyPuzzle />} />
             <Route path="/english/word-sprint" element={<WordSprint />} />
             <Route path="/english/spelling-bee" element={<SpellingBee />} />
+            <Route path="/english/writing" element={<WritingLab />} />
+            <Route path="/english/dictation" element={<DictationLab />} />
+            <Route path="/english/scramble" element={<SentenceScramble />} />
+            <Route path="/english/word-match" element={<WordMatch />} />
+            <Route path="/english/idiom-quest" element={<IdiomQuest />} />
+            <Route path="/english/context-clues" element={<ContextClues />} />
             <Route path="/profile" element={<ProfilePage />} />
 
             <Route path="/petlandingpage" element={<PetLandingPage />} />
@@ -152,6 +165,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/quiz" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8"><WebQuizLobby /></div>} />
             <Route path="/quiz/room/:roomId" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8 flex items-center justify-center"><WebQuizRoom /></div>} />
+            <Route path="/emulator-check" element={<EmulatorCheck />} />
             <Route path="/admin/*" element={
               <RequireAuth>
                 <Layout>

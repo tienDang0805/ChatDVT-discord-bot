@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageShell } from '../../../../shared/components/PageShell';
 import { generateDynamicUnitContent, loadPreloadedUnit, COURSE_SKELETON, GeneratedCourseUnit } from '../utils/courseGenerator';
-import { completeUnitAndUnlockNext } from '../utils/courseState';
-import { addXP } from '../utils/gamification';
+import { completeUnitAndUnlockNext, saveUnitProgress, addWrongAnswer, type WrongAnswer } from '../utils/courseState';
+import { addXP, getStats, saveStats, trackStudyTime } from '../utils/gamification';
+import { playTTS } from '../utils/tts';
 import { getStoredGeminiKey } from '../../../../shared/components/GeminiKeyInput';
-import { BookOpen, BookText, CheckCircle, GraduationCap, MessageSquare, Volume2 } from 'lucide-react';
+import { BookOpen, BookText, CheckCircle, GraduationCap, MessageSquare, Volume2, Mic, X, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const EnglishUnitPlayer = () => {
@@ -23,6 +24,16 @@ export const EnglishUnitPlayer = () => {
   const [grammarAnswers, setGrammarAnswers] = useState<Record<number, string>>({});
   const [flippedCards, setFlippedCards] = useState<Record<number, boolean>>({});
   const [vocabTooltip, setVocabTooltip] = useState<{ word: string; x: number; y: number } | null>(null);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
+  const [pronScores, setPronScores] = useState<Record<number, { score: number; matched: string[]; missed: string[] }>>({});
+  const [recording, setRecording] = useState<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => trackStudyTime(10), 10000);
+    return () => clearInterval(intervalRef.current);
+  }, []);
 
   useEffect(() => {
     if (!unit) return;
@@ -66,25 +77,120 @@ export const EnglishUnitPlayer = () => {
     </PageShell>
   );
 
-  const handleComplete = () => {
+  const collectWrongAnswers = (): WrongAnswer[] => {
+    const wrongs: WrongAnswer[] = [];
+    if (content) {
+      content.vocabulary.exercises.forEach((ex, i) => {
+        if (vocabAnswers[i] && vocabAnswers[i] !== ex.answer) {
+          wrongs.push({ section: 'vocab', question: ex.sentence, userAnswer: vocabAnswers[i], correctAnswer: ex.answer });
+        }
+      });
+      content.reading.trueFalse.forEach((q, i) => {
+        if (readingTFAnswers[i] !== undefined && readingTFAnswers[i] !== q.isTrue) {
+          wrongs.push({ section: 'reading_tf', question: q.statement, userAnswer: String(readingTFAnswers[i]), correctAnswer: String(q.isTrue) });
+        }
+      });
+      content.reading.multipleChoice.forEach((q, i) => {
+        if (readingMCAnswers[i] && readingMCAnswers[i] !== q.answer) {
+          wrongs.push({ section: 'reading_mc', question: q.question, userAnswer: readingMCAnswers[i], correctAnswer: q.answer });
+        }
+      });
+      content.grammar.exercises.forEach((ex, i) => {
+        if (grammarAnswers[i] && grammarAnswers[i] !== ex.answer) {
+          wrongs.push({ section: 'grammar', question: ex.question, userAnswer: grammarAnswers[i], correctAnswer: ex.answer });
+        }
+      });
+    }
+    return wrongs;
+  };
+
+  const handleShowComplete = () => {
+    const wrongs = collectWrongAnswers();
+    setWrongAnswers(wrongs);
+    wrongs.forEach(w => addWrongAnswer(unitId!, w));
+    const vCorrect = (content?.vocabulary.exercises.length || 0) - wrongs.filter(w => w.section === 'vocab').length;
+    const rCorrect = (content?.reading.trueFalse.length || 0) + (content?.reading.multipleChoice.length || 0) - wrongs.filter(w => w.section.startsWith('reading')).length;
+    const gCorrect = (content?.grammar.exercises.length || 0) - wrongs.filter(w => w.section === 'grammar').length;
+    saveUnitProgress(unitId!, {
+      vocabDone: true, readingDone: true, grammarDone: true,
+      vocabCorrect: vCorrect, vocabTotal: content?.vocabulary.exercises.length || 0,
+      readingCorrect: rCorrect, readingTotal: (content?.reading.trueFalse.length || 0) + (content?.reading.multipleChoice.length || 0),
+      grammarCorrect: gCorrect, grammarTotal: content?.grammar.exercises.length || 0,
+      wrongAnswers: wrongs,
+    });
+    setShowCompleteModal(true);
+
+    const stats = getStats();
+    stats.correctAnswers += (vCorrect + rCorrect + gCorrect);
+    stats.totalAnswers += ((content?.vocabulary.exercises.length || 0) + (content?.reading.trueFalse.length || 0) + (content?.reading.multipleChoice.length || 0) + (content?.grammar.exercises.length || 0));
+    saveStats(stats);
+  };
+
+  const handleFinalComplete = () => {
     completeUnitAndUnlockNext(unitId!);
-    addXP(200); // Tăng điểm vì textbook dài hơn
-    toast.success('Xuất sắc! Bạn đã hoàn thành Unit và nhận +200 XP');
+    addXP(200);
+    toast.success('Xuất sắc! +200 XP');
     navigate('/english/course');
   };
 
-  const speak = (text: string) => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US';
-    speechSynthesis.speak(u);
+  const handleRetry = () => {
+    setVocabAnswers({}); setReadingTFAnswers({}); setReadingMCAnswers({}); setGrammarAnswers({});
+    setShowCompleteModal(false); setActiveTab('vocab');
   };
 
-  const tabs = [
-    { id: 'vocab', icon: BookOpen, label: 'Vocabulary' },
-    { id: 'reading', icon: BookText, label: 'Reading' },
-    { id: 'grammar', icon: GraduationCap, label: 'Grammar' },
-    { id: 'conversation', icon: MessageSquare, label: 'Conversation' }
-  ] as const;
+  const handleAddToFlashcard = () => {
+    try {
+      const cards = JSON.parse(localStorage.getItem('eng_srs_cards') || '[]');
+      let added = 0;
+      wrongAnswers.forEach(w => {
+        if (w.section === 'vocab' && content) {
+          const word = content.vocabulary.words.find(v => w.correctAnswer.toLowerCase().includes(v.word.toLowerCase()));
+          if (word && !cards.some((c: any) => c.word === word.word)) {
+            cards.push({ word: word.word, meaning: word.meaning, ipa: word.ipa, example: word.example, nextReview: 0, interval: 0, ease: 2.5, reps: 0 });
+            added++;
+          }
+        }
+      });
+      if (added > 0) {
+        localStorage.setItem('eng_srs_cards', JSON.stringify(cards));
+        toast.success(`Đã thêm ${added} từ vào Flashcard để ôn lại!`);
+      } else {
+        toast.success('Không có từ vựng liên quan để thêm.');
+      }
+    } catch { toast.error('Lỗi thêm vào Flashcard'); }
+  };
+
+  const startPronRecording = (index: number, expected: string) => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      toast.error('Trình duyệt không hỗ trợ Speech Recognition');
+      return;
+    }
+    setRecording(index);
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US'; recognition.continuous = false; recognition.interimResults = false;
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const eWords = expected.toLowerCase().replace(/[^a-z\s']/g, '').split(/\s+/).filter(Boolean);
+      const rWords = transcript.toLowerCase().replace(/[^a-z\s']/g, '').split(/\s+/).filter(Boolean);
+      const matched = eWords.filter(w => rWords.includes(w));
+      const missed = eWords.filter(w => !rWords.includes(w));
+      const score = Math.round((matched.length / eWords.length) * 100);
+      setPronScores(p => ({ ...p, [index]: { score, matched, missed } }));
+      if (score >= 90) addXP(15);
+      else if (score >= 70) addXP(10);
+      else if (score >= 50) addXP(5);
+      else addXP(2);
+      setRecording(null);
+    };
+    recognition.onerror = () => { setRecording(null); toast.error('Không nghe rõ, thử lại!'); };
+    recognition.onend = () => setRecording(null);
+    recognition.start();
+  };
+
+  const speak = (text: string) => {
+    playTTS(text);
+  };
 
   const isVocabDone = content?.vocabulary.exercises.every((_, i) => vocabAnswers[i] !== undefined) ?? false;
   const isReadingTFDone = content?.reading.trueFalse.every((_, i) => readingTFAnswers[i] !== undefined) ?? false;
@@ -92,6 +198,13 @@ export const EnglishUnitPlayer = () => {
   const isGrammarDone = content?.grammar.exercises.every((_, i) => grammarAnswers[i] !== undefined) ?? false;
 
   const canComplete = isVocabDone && isReadingTFDone && isReadingMCDone && isGrammarDone;
+
+  const tabs = [
+    { id: 'vocab', icon: BookOpen, label: 'Vocabulary', done: isVocabDone },
+    { id: 'reading', icon: BookText, label: 'Reading', done: isReadingTFDone && isReadingMCDone },
+    { id: 'grammar', icon: GraduationCap, label: 'Grammar', done: isGrammarDone },
+    { id: 'conversation', icon: MessageSquare, label: 'Conversation', done: false }
+  ] as const;
 
   const getWordInfo = (word: string) => {
     if (!content) return null;
@@ -161,6 +274,7 @@ export const EnglishUnitPlayer = () => {
             >
               <t.icon size={16} className="md:w-5 md:h-5" />
               {t.label}
+              {t.done && <CheckCircle size={14} className={`${activeTab === t.id ? 'text-white' : 'text-emerald-500'}`} />}
             </button>
           ))}
         </div>
@@ -387,15 +501,37 @@ export const EnglishUnitPlayer = () => {
               <h2 className="text-base md:text-xl font-black text-slate-800 dark:text-white mt-6 md:mt-8 mb-3 md:mb-4 border-t pt-6 md:pt-8">🎙️ Luyện tập phát âm</h2>
               <div className="space-y-3 md:space-y-4">
                 {content.conversation.roleplaySentences.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 md:gap-4 p-3 md:p-4 border rounded-xl border-slate-200 dark:border-slate-700 hover:border-orange-500 transition-colors">
-                    <button onClick={() => speak(s.en)} className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all shrink-0">
-                      <Volume2 size={18} className="md:w-6 md:h-6" />
-                    </button>
-                    <div className="min-w-0">
-                      <p className="text-sm md:text-xl font-black text-slate-800 dark:text-white break-words">{s.en}</p>
-                      <p className="text-[10px] md:text-sm text-orange-500 font-mono mt-0.5 md:mt-1 break-all">{s.ipa}</p>
-                      <p className="text-[10px] md:text-sm text-slate-500 mt-0.5 md:mt-1">{s.vi}</p>
+                  <div key={i} className="p-3 md:p-4 border rounded-xl border-slate-200 dark:border-slate-700 hover:border-orange-500 transition-colors">
+                    <div className="flex items-center gap-3 md:gap-4">
+                      <button onClick={() => speak(s.en)} className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all shrink-0">
+                        <Volume2 size={18} className="md:w-6 md:h-6" />
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm md:text-xl font-black text-slate-800 dark:text-white break-words">{s.en}</p>
+                        <p className="text-[10px] md:text-sm text-orange-500 font-mono mt-0.5 md:mt-1 break-all">{s.ipa}</p>
+                        <p className="text-[10px] md:text-sm text-slate-500 mt-0.5 md:mt-1">{s.vi}</p>
+                      </div>
+                      <button
+                        onClick={() => startPronRecording(i, s.en)}
+                        className={`w-10 h-10 md:w-14 md:h-14 rounded-full flex items-center justify-center shrink-0 transition-all ${recording === i ? 'bg-red-500 text-white animate-pulse' : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white'}`}
+                      >
+                        <Mic size={18} className="md:w-6 md:h-6" />
+                      </button>
                     </div>
+                    {pronScores[i] && (
+                      <div className="mt-3 p-3 rounded-lg bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-lg font-black ${pronScores[i].score >= 80 ? 'text-emerald-500' : pronScores[i].score >= 50 ? 'text-amber-500' : 'text-red-500'}`}>{pronScores[i].score}%</span>
+                          <span className="text-xs text-slate-400">{pronScores[i].score >= 90 ? '⭐ Excellent! +15 XP' : pronScores[i].score >= 70 ? '👍 Good! +10 XP' : pronScores[i].score >= 50 ? '💪 Keep going! +5 XP' : '🔄 Try again! +2 XP'}</span>
+                        </div>
+                        {pronScores[i].matched.length > 0 && (
+                          <p className="text-xs text-emerald-500 mb-1">✅ Matched: {pronScores[i].matched.join(', ')}</p>
+                        )}
+                        {pronScores[i].missed.length > 0 && (
+                          <p className="text-xs text-red-500">❌ Missed: {pronScores[i].missed.join(', ')}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -408,7 +544,7 @@ export const EnglishUnitPlayer = () => {
                 toast.error('Vui lòng làm hết các bài tập (Vocab, Reading, Grammar) để hoàn thành Unit!');
                 return;
               }
-              handleComplete();
+              handleShowComplete();
             }}
             className={`mt-6 w-full flex items-center gap-2 justify-center p-4 rounded-xl font-black text-white transition-all shadow-md ${canComplete ? 'bg-emerald-500 hover:bg-emerald-600 active:scale-95' : 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed opacity-50'}`}
           >
@@ -440,6 +576,43 @@ export const EnglishUnitPlayer = () => {
               <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed border-t border-slate-200 dark:border-slate-700 pt-2">"{info.example}"</p>
             </div>
           </>
+        );
+      })()}
+      {showCompleteModal && (() => {
+        const totalQ = (content?.vocabulary.exercises.length || 0) + (content?.reading.trueFalse.length || 0) + (content?.reading.multipleChoice.length || 0) + (content?.grammar.exercises.length || 0);
+        const correctQ = totalQ - wrongAnswers.length;
+        const pct = totalQ > 0 ? Math.round((correctQ / totalQ) * 100) : 0;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#131923] rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-300">
+              <div className="text-center mb-5">
+                <p className="text-5xl mb-3">{pct >= 80 ? '🎉' : pct >= 50 ? '👏' : '💪'}</p>
+                <h2 className="text-2xl font-black text-slate-800 dark:text-white">Hoàn Thành {unit?.title}!</h2>
+                <p className="text-4xl font-black mt-2" style={{ color: pct >= 80 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444' }}>{pct}%</p>
+                <p className="text-sm text-slate-400">{correctQ}/{totalQ} câu đúng · +200 XP</p>
+              </div>
+              {wrongAnswers.length > 0 && (
+                <div className="mb-5">
+                  <h3 className="text-sm font-bold text-red-500 mb-3">⚠️ {wrongAnswers.length} câu sai:</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {wrongAnswers.map((w, i) => (
+                      <div key={i} className="p-3 rounded-lg bg-red-50 dark:bg-red-500/5 border border-red-100 dark:border-red-500/10 text-xs">
+                        <p className="text-slate-600 dark:text-slate-400 mb-1 line-clamp-2">{w.question}</p>
+                        <p><span className="text-red-500 line-through">{w.userAnswer}</span> → <span className="text-emerald-600 font-bold">{w.correctAnswer}</span></p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2">
+                {wrongAnswers.length > 0 && (
+                  <button onClick={handleAddToFlashcard} className="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-all active:scale-95">📇 Thêm từ sai vào Flashcard</button>
+                )}
+                <button onClick={handleFinalComplete} className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-all active:scale-95">✅ Về Lộ Trình</button>
+                <button onClick={handleRetry} className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold text-sm transition-all flex items-center justify-center gap-2"><RotateCcw size={14} /> Làm lại Unit</button>
+              </div>
+            </div>
+          </div>
         );
       })()}
     </PageShell>

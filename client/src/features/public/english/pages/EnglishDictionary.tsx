@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PageShell } from '../../../../shared/components/PageShell';
 import { Search, Volume2, Loader2, BookOpen } from 'lucide-react';
 import axios from 'axios';
+import { playTTS } from '../utils/tts';
 
 interface DictionaryResult {
   word: string;
@@ -51,7 +52,7 @@ export const EnglishDictionary = () => {
 
   const playAudio = useCallback((url?: string, word?: string) => {
     if (url) { new Audio(url).play().catch(() => {}); }
-    else if (word) { const u = new SpeechSynthesisUtterance(word); u.lang = 'en-US'; u.rate = 0.8; speechSynthesis.speak(u); }
+    else if (word) { playTTS(word, 0.8); }
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); searchWord(query); };

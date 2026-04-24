@@ -1,31 +1,102 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { PageShell } from '../../../../shared/components/PageShell';
 import { GeminiKeyInput } from '../../../../shared/components/GeminiKeyInput';
-import { MessageCircle, Layers, Zap, Search, TrendingUp, Flame, Volume2, BookOpen, Target, ChevronRight, Gamepad2, Trophy, Star, Award } from 'lucide-react';
-import { getStats, getLevelInfo, BADGES, type PlayerStats, type LevelInfo } from '../utils/gamification';
+import { MessageCircle, Layers, Zap, Search, TrendingUp, Flame, Volume2, BookOpen, Target, ChevronRight, Gamepad2, Trophy, Star, Award, PenLine, RotateCcw, Headphones, Crosshair } from 'lucide-react';
+import { getStats, getLevelInfo, BADGES, setDailyGoal, trackStudyTime, getDailyProgress, type PlayerStats, type LevelInfo, type DailyGoalProgress } from '../utils/gamification';
 import vocabData from '../data/english-vocab.json';
+import { playTTS } from '../utils/tts';
+
+const GoalRing = ({ progress }: { progress: DailyGoalProgress }) => {
+  const radius = 40;
+  const stroke = 6;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (progress.percent / 100) * circumference;
+
+  return (
+    <div className="relative w-24 h-24">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeWidth={stroke} className="text-slate-200 dark:text-slate-700" />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="currentColor" strokeWidth={stroke} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className={`transition-all duration-700 ${progress.isComplete ? 'text-green-500' : 'text-orange-500'}`} />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-black text-slate-800 dark:text-white">{progress.studiedMinutes}</span>
+        <span className="text-[10px] text-slate-400">/{progress.goalMinutes}m</span>
+      </div>
+    </div>
+  );
+};
+
+const GOAL_OPTIONS = [5, 10, 15, 20];
 
 export const EnglishHub = () => {
   const [stats, setStats] = useState<PlayerStats>(getStats);
   const [levelInfo, setLevelInfo] = useState<LevelInfo>(getLevelInfo(0));
   const [dueCards, setDueCards] = useState(0);
   const [showBadges, setShowBadges] = useState(false);
+  const [dailyGoal, setDailyGoalState] = useState<DailyGoalProgress>(getDailyProgress);
+  const [phraseOffset, setPhraseOffset] = useState(0);
+  const [confettiFired, setConfettiFired] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
     const s = getStats();
     setStats(s);
     setLevelInfo(getLevelInfo(s.xp));
+    setDailyGoalState(getDailyProgress());
     try {
       const cards = JSON.parse(localStorage.getItem('eng_srs_cards') || '[]');
       setDueCards(cards.filter((c: any) => c.nextReview <= Date.now()).length);
     } catch { setDueCards(0); }
+
+    intervalRef.current = setInterval(() => {
+      trackStudyTime(10);
+      setDailyGoalState(getDailyProgress());
+    }, 10000);
+    return () => clearInterval(intervalRef.current);
   }, []);
+
+  useEffect(() => {
+    if (dailyGoal.isComplete && !confettiFired) {
+      setConfettiFired(true);
+      if (!(window as any).__confettiLoaded) {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+        s.onload = () => { (window as any).__confettiLoaded = true; fireConfetti(); };
+        document.body.appendChild(s);
+      } else {
+        fireConfetti();
+      }
+    }
+  }, [dailyGoal.isComplete, confettiFired]);
+
+  const fireConfetti = () => {
+    const c = (window as any).confetti;
+    if (!c) return;
+    const end = Date.now() + 2 * 1000;
+    const colors = ['#f97316', '#22c55e', '#3b82f6', '#fbbf24'];
+    (function frame() {
+      c({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 }, colors });
+      c({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    }());
+  };
 
   const wordOfDay = useMemo(() => {
     const allWords = vocabData.topics.flatMap(t => t.words);
     return allWords[Math.floor(Date.now() / 86400000) % allWords.length];
   }, []);
+
+  const dailyPhrases = useMemo(() => {
+    const dayIndex = Math.floor(Date.now() / 86400000);
+    const phrases = vocabData.commonPhrases || [];
+    const start = ((dayIndex * 3) + phraseOffset) % phrases.length;
+    return [
+      phrases[start % phrases.length],
+      phrases[(start + 1) % phrases.length],
+      phrases[(start + 2) % phrases.length],
+    ];
+  }, [phraseOffset]);
 
   const accuracy = stats.totalAnswers > 0 ? Math.round((stats.correctAnswers / stats.totalAnswers) * 100) : 0;
   const xpProgress = levelInfo.xpNext > levelInfo.xpRequired
@@ -35,16 +106,31 @@ export const EnglishHub = () => {
   const earnedBadges = BADGES.filter(b => stats.badges.includes(b.id));
   const lockedBadges = BADGES.filter(b => !stats.badges.includes(b.id));
 
+  const handleSetGoal = (minutes: number) => {
+    setDailyGoal(minutes);
+    setDailyGoalState(getDailyProgress());
+  };
+
+  const speakPhrase = (text: string) => {
+    playTTS(text, 0.85);
+  };
+
   const games = [
     { id: 'puzzle', emoji: '🧩', title: 'Daily Puzzle', desc: 'Đoán từ kiểu Wordle — 1 puzzle/ngày', href: '/english/daily-puzzle', badge: 'Daily', highlight: true },
     { id: 'sprint', emoji: '🏃', title: 'Word Sprint', desc: '60 giây gõ nhanh — beat your record!', href: '/english/word-sprint', badge: stats.bestWordSprint > 0 ? `Best: ${stats.bestWordSprint}` : 'New' },
     { id: 'spelling', emoji: '🐝', title: 'Spelling Bee', desc: 'Nghe phát âm → gõ chính tả đúng', href: '/english/spelling-bee', badge: stats.bestSpellingBee > 0 ? `Best: ${stats.bestSpellingBee}/10` : 'New' },
+    { id: 'scramble', emoji: '🔀', title: 'Sentence Scramble', desc: 'Xếp từ thành câu — luyện ngữ pháp', href: '/english/scramble', badge: 'Mới' },
+    { id: 'match', emoji: '🃏', title: 'Word Match', desc: 'Lật thẻ ghép cặp EN↔VI theo topic', href: '/english/word-match', badge: 'Mới' },
+    { id: 'idiom', emoji: '💬', title: 'Idiom Quest', desc: 'Học phrases qua tình huống IT thực tế', href: '/english/idiom-quest', badge: 'Mới' },
   ];
 
   const tools = [
     { id: 'chat', icon: MessageCircle, title: 'AI English Tutor', desc: 'Chat với AI, sửa lỗi grammar realtime', href: '/english/chat', badge: `${stats.totalChats || 0} chats` },
     { id: 'flashcard', icon: Layers, title: 'Flashcard SRS', desc: 'Ôn từ vựng thông minh SM-2', href: '/english/flashcard', badge: dueCards > 0 ? `${dueCards} cần ôn` : 'Up to date', urgent: dueCards > 0 },
     { id: 'challenge', icon: Zap, title: 'Daily Challenge', desc: 'Bài tập AI tạo mới liên tục', href: '/english/challenge', badge: `${stats.challengesDone || 0} done` },
+    { id: 'writing', icon: PenLine, title: 'Writing Lab', desc: 'Viết tự do, AI chấm & sửa grammar', href: '/english/writing', badge: stats.writingSubmissions > 0 ? `${stats.writingSubmissions} bài` : 'Mới', isNew: true },
+    { id: 'dictation', icon: Headphones, title: 'Listening Lab', desc: 'Dictation + Fill-in — luyện tai & recall', href: '/english/dictation', badge: 'Mới', isNew: true },
+    { id: 'context', icon: Crosshair, title: 'Context Clues', desc: 'Đoán nghĩa từ qua ngữ cảnh câu', href: '/english/context-clues', badge: 'Mới', isNew: true },
     { id: 'dictionary', icon: Search, title: 'Quick Dictionary', desc: 'Tra từ nhanh, nghe phát âm chuẩn', href: '/english/dictionary', badge: 'Free' },
   ];
 
@@ -68,6 +154,44 @@ export const EnglishHub = () => {
           </div>
           <BookOpen className="absolute -right-4 -bottom-4 w-40 h-40 text-orange-400 opacity-30" />
         </Link>
+
+        <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
+          <label className="block text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">
+            <Target size={14} className="inline mr-1.5" /> Mục tiêu hôm nay
+          </label>
+          {dailyGoal.goalMinutes > 0 ? (
+            <div className="flex items-center gap-5">
+              <GoalRing progress={dailyGoal} />
+              <div className="flex-1">
+                <p className="text-sm font-bold text-slate-800 dark:text-white">
+                  {dailyGoal.isComplete ? '🎉 Hoàn thành mục tiêu!' : `Còn ${Math.max(dailyGoal.goalMinutes - dailyGoal.studiedMinutes, 0)} phút nữa`}
+                </p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Đã học {dailyGoal.studiedMinutes} / {dailyGoal.goalMinutes} phút</p>
+                <button
+                  onClick={() => handleSetGoal(0)}
+                  className="mt-2 text-[10px] text-slate-400 hover:text-orange-500 flex items-center gap-1 transition-colors"
+                >
+                  <RotateCcw size={10} /> Đổi mục tiêu
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">Bạn muốn học bao nhiêu phút/ngày?</p>
+              <div className="flex gap-2">
+                {GOAL_OPTIONS.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => handleSetGoal(m)}
+                    className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:border-orange-500 hover:text-orange-500 transition-all active:scale-95"
+                  >
+                    {m}'
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
           <div className="flex items-center justify-between mb-3">
@@ -112,7 +236,7 @@ export const EnglishHub = () => {
             <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-widest text-orange-500 bg-orange-500/10 px-2.5 py-1 rounded-full">Word of the Day</span>
             <div className="flex items-start gap-3 mt-1">
               <button
-                onClick={() => { const u = new SpeechSynthesisUtterance(wordOfDay.word); u.lang = 'en-US'; u.rate = 0.8; speechSynthesis.speak(u); }}
+                onClick={() => playTTS(wordOfDay.word, 0.8)}
                 className="mt-1 w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 hover:bg-orange-500/20 transition-colors active:scale-90 shrink-0"
               >
                 <Volume2 size={18} />
@@ -126,6 +250,39 @@ export const EnglishHub = () => {
             </div>
           </div>
         )}
+
+        <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm transition-colors">
+          <div className="flex items-center justify-between mb-4">
+            <label className="text-xs font-bold text-orange-500 uppercase tracking-widest">
+              🗣️ Daily Phrases
+            </label>
+            <button
+              onClick={() => setPhraseOffset(prev => prev + 3)}
+              className="text-[10px] text-slate-400 hover:text-orange-500 font-bold transition-colors flex items-center gap-1"
+            >
+              <RotateCcw size={10} /> Xem thêm
+            </button>
+          </div>
+          <div className="space-y-3">
+            {dailyPhrases.map((p, i) => (
+              <div key={`${p.phrase}-${i}`} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#1a2332] border border-slate-100 dark:border-slate-700/50">
+                <button
+                  onClick={() => speakPhrase(p.phrase)}
+                  className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 hover:bg-orange-500/20 transition-colors active:scale-90 shrink-0"
+                >
+                  <Volume2 size={14} />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-snug">"{p.phrase}"</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{p.vi}</p>
+                </div>
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 whitespace-nowrap shrink-0">
+                  {p.situation}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <div>
           <label className="block text-xs font-bold text-orange-500 uppercase tracking-widest mb-3">
@@ -167,17 +324,26 @@ export const EnglishHub = () => {
                 <Link
                   key={f.id}
                   to={f.href}
-                  className="group flex items-center gap-4 p-4 bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 rounded-xl shadow-sm transition-all active:scale-[0.98]"
+                  className={`group flex items-center gap-4 p-4 rounded-xl border shadow-sm transition-all active:scale-[0.98] ${
+                    f.isNew
+                      ? 'bg-emerald-50 dark:bg-emerald-500/5 border-emerald-200 dark:border-emerald-500/20 hover:border-emerald-500/50'
+                      : 'bg-white dark:bg-[#131923] border-slate-200 dark:border-slate-800 hover:border-orange-500/50'
+                  }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0 group-hover:bg-orange-500/20 transition-colors">
-                    <Icon size={20} className="text-orange-500" />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                    f.isNew ? 'bg-emerald-500/10 group-hover:bg-emerald-500/20' : 'bg-orange-500/10 group-hover:bg-orange-500/20'
+                  }`}>
+                    <Icon size={20} className={f.isNew ? 'text-emerald-500' : 'text-orange-500'} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">{f.title}</h3>
+                      {f.isNew && (
+                        <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500 text-white animate-pulse">NEW</span>
+                      )}
                       {f.urgent ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500 animate-pulse">{f.badge}</span>
-                      ) : (
+                      ) : !f.isNew && (
                         <span className="text-[10px] text-slate-400 dark:text-slate-500">{f.badge}</span>
                       )}
                     </div>

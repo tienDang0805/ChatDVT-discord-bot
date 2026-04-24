@@ -3,6 +3,7 @@ import { PageShell } from '../../../../shared/components/PageShell';
 import { Share2, RotateCcw, Volume2, HelpCircle } from 'lucide-react';
 import { getDailyPuzzleWord, addXP, getStats, XP_VALUES } from '../utils/gamification';
 import toast from 'react-hot-toast';
+import { playTTS } from '../utils/tts';
 
 type CellStatus = 'correct' | 'present' | 'absent' | 'empty' | 'active';
 
@@ -153,10 +154,7 @@ export const DailyPuzzle = () => {
   };
 
   const speak = (text: string) => {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US'; u.rate = 0.8;
-    speechSynthesis.speak(u);
+    playTTS(text, 0.8);
   };
 
   const KEYBOARD_ROWS = [

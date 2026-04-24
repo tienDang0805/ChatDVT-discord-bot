@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -354,6 +354,17 @@ export const PublicPortal = () => {
       author: 'Tư Vấn Viên Đồ Chơi (Tiến Đặng)',
       category: 'utility',
       isNew: true
+    },
+    {
+      id: 'emulator-check',
+      number: '27',
+      title: 'WebView Simulator',
+      description: 'Giả lập WebView mobile ngay trên web. Paste HTML/JS script, preview trong khung iPhone/Android/iPad. Khỏi build app!',
+      icon: Shield,
+      href: '/emulator-check',
+      author: 'Mobile Dev Tools (Tiến Đặng)',
+      category: 'mobile_unity',
+      isNew: true
     }
   ];
 
@@ -368,7 +379,7 @@ export const PublicPortal = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility' | 'learning'>('all');
+  const [activeCategory, setActiveCategory] = useState<'all' | 'game' | 'utility' | 'learning' | 'mobile_unity'>('all');
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isScrollRestored, setIsScrollRestored] = useState(false);
@@ -504,6 +515,7 @@ export const PublicPortal = () => {
   const countGame = features.filter(f => f.category === 'game').length;
   const countUtility = features.filter(f => f.category === 'utility').length;
   const countLearning = features.filter(f => f.category === 'learning').length;
+  const countMobileUnity = features.filter(f => f.category === 'mobile_unity').length;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -718,6 +730,11 @@ export const PublicPortal = () => {
                onClick={() => setActiveCategory('learning')}
                className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'learning' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
                  📚 Học tập ({countLearning})
+             </button>
+             <button 
+               onClick={() => setActiveCategory('mobile_unity')}
+               className={`font-medium py-2 px-4 rounded transition-colors border ${activeCategory === 'mobile_unity' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-[#374151]'}`}>
+                 📱 Mobile Unity ({countMobileUnity})
              </button>
              <button
                onClick={handleRandomFeature}

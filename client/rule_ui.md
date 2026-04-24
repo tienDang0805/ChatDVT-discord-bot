@@ -63,9 +63,14 @@ Tất cả feature pages phải hỗ trợ **Light/Dark mode** thông qua Tailwi
 | Section gap | `space-y-6` |
 
 ### Back Button
-- Luôn có ở header, `Link to="/"` 
+- Luôn có ở header, mặc định `backTo="/"` (PublicPortal)
+- **Sub-pages trong một feature PHẢI set `backTo` về Hub/parent page**, KHÔNG để default `"/"`
+  - English sub-pages → `backTo="/english"`
+  - English Unit Player → `backTo="/english/course"`
 - Style: `bg-white dark:bg-[#1f2937] border rounded-xl p-2.5`
 - Icon: `CornerUpLeft` from lucide-react
+
+> **⚠️ Lỗi thường gặp**: Quên truyền `backTo` → user bấm back bị bay về PublicPortal thay vì Hub.
 
 ---
 

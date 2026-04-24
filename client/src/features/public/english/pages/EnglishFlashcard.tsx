@@ -4,6 +4,7 @@ import { PageShell } from '../../../../shared/components/PageShell';
 import { Volume2, RotateCcw, Check, X, Trophy, Clock } from 'lucide-react';
 import { addXP, XP_VALUES } from '../utils/gamification';
 import vocabData from '../data/english-vocab.json';
+import { playTTS } from '../utils/tts';
 
 interface SRSCard {
   word: string;
@@ -96,8 +97,7 @@ export const EnglishFlashcard = () => {
   }, [currentCard, allCards, currentIndex, dueCards.length]);
 
   const speak = useCallback((text: string) => {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 0.8; speechSynthesis.speak(u);
+    playTTS(text, 0.8);
   }, []);
 
   const resetSession = () => { setCurrentIndex(0); setCompleted(false); setSessionStats({ reviewed: 0, correct: 0, total: 0 }); setFlipped(false); setAllCards(initializeCards()); };

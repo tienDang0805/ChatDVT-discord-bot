@@ -15,10 +15,14 @@ export interface PlayerStats {
   puzzlesSolved: number;
   puzzleStreak: number;
   sentencesBuilt: number;
+  writingSubmissions: number;
   badges: string[];
   learnedWords: string[];
   dailyActions: number;
   lastDailyReset: string;
+  dailyGoalMinutes: number;
+  dailyStudySeconds: number;
+  lastStudyTimestamp: number;
 }
 
 export interface LevelInfo {
@@ -74,8 +78,9 @@ const DEFAULT_STATS: PlayerStats = {
   xp: 0, level: 1, streak: 0, lastStudyDate: '', wordsLearned: 0,
   totalChats: 0, challengesDone: 0, correctAnswers: 0, totalAnswers: 0,
   gamesPlayed: 0, bestWordSprint: 0, bestSpellingBee: 0, longestChain: 0,
-  puzzlesSolved: 0, puzzleStreak: 0, sentencesBuilt: 0,
+  puzzlesSolved: 0, puzzleStreak: 0, sentencesBuilt: 0, writingSubmissions: 0,
   badges: [], learnedWords: [], dailyActions: 0, lastDailyReset: '',
+  dailyGoalMinutes: 0, dailyStudySeconds: 0, lastStudyTimestamp: 0,
 };
 
 export const getStats = (): PlayerStats => {
@@ -198,4 +203,39 @@ export const getDailyPuzzleWord = (): { word: string; definition: string; vi: st
 
   const dayIndex = Math.floor(Date.now() / 86400000) % PUZZLE_WORDS.length;
   return PUZZLE_WORDS[dayIndex];
+};
+
+export const setDailyGoal = (minutes: number): void => {
+  const stats = getStats();
+  stats.dailyGoalMinutes = minutes;
+  saveStats(stats);
+};
+
+export const trackStudyTime = (seconds: number = 10): void => {
+  const stats = getStats();
+  const today = new Date().toISOString().split('T')[0];
+  if (stats.lastDailyReset !== today) {
+    stats.dailyStudySeconds = 0;
+    stats.lastDailyReset = today;
+  }
+  stats.dailyStudySeconds += seconds;
+  stats.lastStudyTimestamp = Date.now();
+  saveStats(stats);
+};
+
+export interface DailyGoalProgress {
+  goalMinutes: number;
+  studiedMinutes: number;
+  percent: number;
+  isComplete: boolean;
+}
+
+export const getDailyProgress = (): DailyGoalProgress => {
+  const stats = getStats();
+  const today = new Date().toISOString().split('T')[0];
+  const studiedSeconds = stats.lastDailyReset === today ? stats.dailyStudySeconds : 0;
+  const studiedMinutes = Math.floor(studiedSeconds / 60);
+  const goal = stats.dailyGoalMinutes || 0;
+  const percent = goal > 0 ? Math.min(Math.round((studiedMinutes / goal) * 100), 100) : 0;
+  return { goalMinutes: goal, studiedMinutes, percent, isComplete: goal > 0 && studiedMinutes >= goal };
 };

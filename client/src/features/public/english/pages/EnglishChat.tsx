@@ -5,6 +5,7 @@ import { GeminiKeyInput, getStoredGeminiKey } from '../../../../shared/component
 import { Send, Volume2, Mic, MicOff, ChevronDown, ChevronUp, AlertCircle, BookOpen, Loader2, RotateCcw, Sparkles } from 'lucide-react';
 import { addXP, XP_VALUES } from '../utils/gamification';
 import axios from 'axios';
+import { playTTS } from '../utils/tts';
 
 interface ChatMessage {
   id: string;
@@ -53,11 +54,7 @@ export const EnglishChat = () => {
   }, [messages]);
 
   const speak = useCallback((text: string) => {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US';
-    u.rate = 0.85;
-    speechSynthesis.speak(u);
+    playTTS(text, 0.85);
   }, []);
 
   const toggleSpeech = useCallback(() => {

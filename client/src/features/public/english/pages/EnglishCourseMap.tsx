@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { PageShell } from '../../../../shared/components/PageShell';
 import { COURSE_SKELETON, loadPreloadedUnit } from '../utils/courseGenerator';
-import { getCourseState } from '../utils/courseState';
-import { CheckCircle, Lock, Play } from 'lucide-react';
+import { getCourseState, getUnitProgress } from '../utils/courseState';
+import { CheckCircle, Lock, Play, RotateCcw } from 'lucide-react';
 
 export const EnglishCourseMap = () => {
   const state = getCourseState();
@@ -34,11 +34,39 @@ export const EnglishCourseMap = () => {
                   </div>
                   <h3 className={`font-black text-lg ${isUnlocked ? 'text-slate-800 dark:text-white' : 'text-slate-500'}`}>{unit.title}</h3>
                   <p className="text-sm text-slate-500 mt-1">{unit.topic}</p>
+                  {isUnlocked && (() => {
+                    const up = getUnitProgress(unit.id);
+                    const done = [up.vocabDone, up.readingDone, up.grammarDone, up.conversationRead].filter(Boolean).length;
+                    return done > 0 ? (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex gap-1">
+                          {[up.vocabDone, up.readingDone, up.grammarDone, up.conversationRead].map((d, j) => (
+                            <div key={j} className={`w-2 h-2 rounded-full ${d ? 'bg-orange-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-bold">{done}/4</span>
+                      </div>
+                    ) : null;
+                  })()}
                   
                   {isUnlocked && (
-                    <Link to={`/english/course/${unit.id}`} className={`mt-4 block text-center py-2.5 rounded-xl font-bold transition-all active:scale-95 ${isCompleted ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm'}`}>
-                      {isCompleted ? 'Ôn tập lại' : 'Bắt đầu học'}
-                    </Link>
+                    <>
+                      <Link to={`/english/course/${unit.id}`} className={`mt-4 block text-center py-2.5 rounded-xl font-bold transition-all active:scale-95 ${isCompleted ? 'bg-orange-100 dark:bg-orange-500/20 text-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm'}`}>
+                        {isCompleted ? 'Ôn tập lại' : 'Bắt đầu học'}
+                      </Link>
+                      {isCompleted && (() => {
+                        const completedAt = state.completedAt?.[unit.id];
+                        if (!completedAt) return null;
+                        const daysSince = Math.floor((Date.now() - completedAt) / 86400000);
+                        if (daysSince < 3) return null;
+                        return (
+                          <div className="flex items-center gap-1.5 mt-2 text-amber-500">
+                            <RotateCcw size={12} />
+                            <span className="text-[10px] font-bold">Cần ôn lại ({daysSince} ngày trước)</span>
+                          </div>
+                        );
+                      })()}
+                    </>
                   )}
                 </div>
               </div>

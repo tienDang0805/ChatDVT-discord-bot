@@ -3,6 +3,7 @@ import { PageShell } from '../../../../shared/components/PageShell';
 import { Volume2, RotateCcw, Trophy, CheckCircle2, XCircle, ArrowRight, Headphones } from 'lucide-react';
 import { addXP, getStats, XP_VALUES } from '../utils/gamification';
 import vocabData from '../data/english-vocab.json';
+import { playTTS } from '../utils/tts';
 
 type GameState = 'ready' | 'playing' | 'finished';
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -55,10 +56,7 @@ export const SpellingBee = () => {
   }, []);
 
   const speak = useCallback((text: string, rate = 0.7) => {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US'; u.rate = rate;
-    speechSynthesis.speak(u);
+    playTTS(text, rate);
   }, []);
 
   const startGame = useCallback(() => {
