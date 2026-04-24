@@ -87,6 +87,15 @@ export const ChatWidget = () => {
     }
   }, [isOpen, scrollToBottom]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen]);
+
   const resetTextarea = useCallback(() => {
     if (inputRef.current) {
       inputRef.current.style.height = '40px';
@@ -160,6 +169,8 @@ export const ChatWidget = () => {
   };
 
   const clearHistory = () => {
+    if (messages.length === 0) return;
+    if (!window.confirm('Xoá toàn bộ lịch sử chat?')) return;
     setMessages([]);
     localStorage.removeItem(STORAGE_KEY);
   };

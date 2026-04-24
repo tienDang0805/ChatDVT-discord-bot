@@ -30,28 +30,34 @@
 
 ```
 client/src/
-├── App.tsx                              # Routing + Providers
+├── App.tsx                              # Routing + Providers + ErrorBoundary
 ├── main.tsx                             # Entry: BrowserRouter + ThemeProvider + App
-├── index.css                            # Global CSS
-├── App.css                              # App-level CSS
+├── index.css                            # Global CSS + a11y focus-visible
+├── App.css                              # (Trống — đã dọn boilerplate)
 │
 ├── shared/                              # SHARED across mọi feature
 │   ├── components/
-│   │   ├── PageShell.tsx                #   Layout wrapper (backTo, title, icon)
+│   │   ├── PageShell.tsx                #   Layout wrapper (backTo, title, icon, auto page title)
 │   │   ├── GeminiKeyInput.tsx           #   BYOK Gemini API key input
 │   │   ├── Layout.tsx                   #   Admin sidebar layout
 │   │   ├── EditableCV.tsx               #   CV editor component
-│   │   └── GlobalMusicPlayer.tsx        #   Music FAB (floating)
+│   │   ├── GlobalMusicPlayer.tsx        #   Music FAB (floating) + progress bar + seek
+│   │   ├── ChatWidget.tsx               #   AI chat floating widget (Escape close, confirm clear)
+│   │   ├── ErrorBoundary.tsx            #   Global error catch → friendly UI + retry
+│   │   ├── OfflineBanner.tsx            #   Network status banner (offline/online)
+│   │   └── NavigationProgress.tsx       #   Route transition progress bar (NProgress-style)
+│   ├── hooks/
+│   │   └── usePageMeta.ts               #   Auto set document.title + meta description
 │   ├── contexts/
 │   │   ├── ThemeContext.tsx              #   Light/Dark toggle (default: dark)
-│   │   └── MusicPlayerContext.tsx        #   Global music state
+│   │   └── MusicPlayerContext.tsx        #   Global music state + currentTime/duration/seekTo
 │   ├── api/
 │   │   └── index.ts                     #   Axios instance + tất cả API functions
 │   └── assets/                          #   Static files
 │
 └── features/
     ├── public/                          # 🌐 PUBLIC — 30 features
-    │   ├── portal/pages/PublicPortal    #   Trang chủ
+    │   ├── portal/pages/PublicPortal    #   Trang chủ (prefetch on hover, Web Share API)
     │   ├── english/                     #   English Hub (complex, có data/utils)
     │   ├── food-wheel/pages/            #   Vòng quay món ăn
     │   ├── excuse-generator/pages/      #   Máy tạo lý do nghỉ phép
@@ -107,10 +113,14 @@ React.StrictMode
        └── ThemeProvider
             └── App
                  └── MusicPlayerProvider
+                      ├── OfflineBanner           (z-[10000], fixed top)
+                      ├── NavigationProgress       (z-[10001], route transition bar)
                       ├── Toaster
-                      ├── GlobalMusicPlayer
-                      └── Suspense (LoadingFallback)
-                           └── Routes
+                      ├── GlobalMusicPlayer        (progress bar + seek + time)
+                      ├── ChatWidget               (Escape close, confirm clear)
+                      └── ErrorBoundary
+                           └── Suspense (SkeletonFallback)
+                                └── Routes
 ```
 
 ### Route Types
@@ -277,7 +287,24 @@ animation: {
 | Context | File | Provides |
 |:--------|:-----|:---------|
 | `ThemeProvider` | `ThemeContext.tsx` | `{ theme, toggleTheme }` — default dark |
-| `MusicPlayerProvider` | `MusicPlayerContext.tsx` | Global music state + controls |
+| `MusicPlayerProvider` | `MusicPlayerContext.tsx` | Global music state + controls + `currentTime`, `duration`, `seekTo()` |
+
+### Shared Hooks
+
+| Hook | File | Mô tả |
+|:-----|:-----|:------|
+| `usePageMeta(title, description?)` | `shared/hooks/usePageMeta.ts` | Auto set `document.title` = `"{title} \| ChatDVT"` + meta description. Cleanup on unmount. |
+
+> **Lưu ý**: `PageShell` đã gọi `usePageMeta(title)` tự động. Nếu page dùng `PageShell`, KHÔNG cần gọi `usePageMeta` riêng.
+> Chỉ cần gọi trực tiếp khi page KHÔNG dùng PageShell (ví dụ: PublicPortal, Login).
+
+### Shared QoL Components
+
+| Component | File | Chức năng |
+|:----------|:-----|:----------|
+| `ErrorBoundary` | `shared/components/ErrorBoundary.tsx` | Class component, wrap quanh Suspense. Catch JS crash → hiện UI "Thử lại" / "Về trang chủ" |
+| `OfflineBanner` | `shared/components/OfflineBanner.tsx` | Detect offline/online → banner đỏ "Mất kết nối" / banner xanh "Đã kết nối lại" (auto-hide 3s) |
+| `NavigationProgress` | `shared/components/NavigationProgress.tsx` | NProgress-style bar 3px top page, animate trên mỗi route change. Không cần dependency |
 
 ---
 
@@ -289,14 +316,15 @@ animation: {
 □ 1. Tạo folder: src/features/public/[kebab-name]/pages/
 □ 2. Tạo page:   [PascalName].tsx
 □ 3. Export:      export const PascalName + export default
-□ 4. Wrapper:     <PageShell title="..." backTo="/" icon="🎯">
+□ 4. Wrapper:     <PageShell title="..." backTo="/" icon="🎯">  (auto set page title)
 □ 5. App.tsx:     Thêm lazy import + <Route path="/name" element={...} />
-□ 6. Portal:      Thêm card trong PublicPortal.tsx
+□ 6. Portal:      Thêm card trong PublicPortal.tsx (tự có prefetch + share)
 □ 7. Backend:     Thêm API route trong server.ts (nếu cần)
 □ 8. Whitelist:   Thêm path vào auth bypass middleware (nếu public API)
 □ 9. Dark mode:   Support cả Light + Dark
 □ 10. Mobile:     Test 375px, touch targets ≥ 44px
 □ 11. TypeScript: npx tsc --noEmit pass
+□ 12. Page title: PageShell tự handle. Nếu KHÔNG dùng PageShell → gọi usePageMeta()
 ```
 
 ### Admin Feature Checklist
@@ -422,13 +450,17 @@ app.get('*', (req, res) => {
 - Đọc `RULES_BACKEND.md` + `RULES_CLIENT.md` + `feat_rule.md` + `rule_ui.md` trước khi code
 - Mỗi feature = 1 folder riêng biệt
 - Luôn support Light + Dark mode
-- Luôn dùng `PageShell` cho public pages
+- Luôn dùng `PageShell` cho public pages (tự động set page title)
 - Luôn lazy load pages trong App.tsx
 - AI logic tập trung trong `gemini.ts` (backend)
 - API functions tập trung trong `shared/api/index.ts` (client)
 - Error handling: try/catch + user-friendly message + retry
 - Mobile-first, test 375px
 - TypeScript strict, pass `tsc --noEmit`
+- Destructive actions (xoá data) phải có `confirm()` dialog
+- Dùng `usePageMeta()` nếu page KHÔNG dùng `PageShell`
+- Keyboard: Support `Escape` để đóng modal/overlay
+- A11y: Interactive elements tự có `focus-visible` ring (global CSS)
 
 ### ❌ DON'T
 
@@ -440,3 +472,51 @@ app.get('*', (req, res) => {
 - Dùng inline styles cho colors (chỉ cho dynamic values)
 - Tạo localStorage key mới mà không document
 - Ship code không pass TypeScript check
+- Thêm component mới vào `App.tsx` mà quên update `RULES_CLIENT.md`
+- Tự set `document.title` trong feature page (dùng PageShell hoặc usePageMeta)
+
+---
+
+## 13. SEO & Meta Tags
+
+### index.html (Đã cấu hình sẵn)
+
+```html
+<html lang="vi">
+<meta name="description" content="ChatDVT Portal - 30+ tính năng AI, Game, Tiện ích" />
+<meta property="og:title" content="ChatDVT Portal — AI Tools & Games" />
+<meta property="og:description" content="30+ tính năng AI, Game, Tiện ích miễn phí" />
+<meta property="og:image" content="...chibi-bear.jpg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#f97316" />
+```
+
+### Quy tắc SEO
+
+- `<html lang="vi">` — KHÔNG đổi sang `en`
+- Page title format: `"{Feature Title} | ChatDVT"` (PageShell/usePageMeta tự handle)
+- Mỗi page nên có 1 `<h1>` duy nhất
+
+---
+
+## 14. Accessibility (a11y)
+
+### Focus Visible (Global CSS — Đã cấu hình)
+
+```css
+*:focus-visible {
+  outline: 2px solid rgb(249 115 22 / 0.7);
+  outline-offset: 2px;
+}
+*:focus:not(:focus-visible) {
+  outline: none;  /* Ẩn khi click mouse, chỉ hiện khi Tab */
+}
+```
+
+### Quy tắc a11y
+
+- KHÔNG override focus-visible outline trên interactive elements
+- Buttons, links phải có `title` hoặc `aria-label` nếu chỉ chứa icon
+- Modal/overlay phải support `Escape` key để đóng
+- Touch targets ≥ 44px trên mobile

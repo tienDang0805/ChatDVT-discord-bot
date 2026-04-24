@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Copy, ExternalLink, BookOpen } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -457,11 +457,41 @@ export const PublicPortal = () => {
     }
   }, [navigate]);
 
-  const handleCopyLink = useCallback((e: React.MouseEvent, href: string) => {
+  const prefetchRouteMap: Record<string, () => Promise<any>> = {
+    '/food-wheel': () => import('../../food-wheel/pages/FoodWheel'),
+    '/tarot': () => import('../../tarot/pages/TarotPage'),
+    '/english': () => import('../../english/pages/EnglishHub'),
+    '/tech-duel': () => import('../../tech-duel/pages/TechDuel'),
+    '/magic-ball': () => import('../../magic-ball/pages/MagicBallPage'),
+    '/numerology': () => import('../../numerology/pages/NumerologyPage'),
+    '/chicken-game': () => import('../../chicken-game/pages/ChickenGame'),
+    '/tutien': () => import('../../tutien/pages/TuTienGame'),
+    '/qr-generator': () => import('../../qr-generator/pages/QRGenerator'),
+    '/quiz': () => import('../../web-quiz/pages/Lobby'),
+  };
+
+  const prefetchedRef = useRef<Set<string>>(new Set());
+  const handlePrefetch = useCallback((href: string) => {
+    if (prefetchedRef.current.has(href)) return;
+    const loader = prefetchRouteMap[href];
+    if (loader) {
+      prefetchedRef.current.add(href);
+      loader();
+    }
+  }, []);
+
+  const handleShareOrCopy = useCallback(async (e: React.MouseEvent, href: string, title: string) => {
     e.preventDefault();
     e.stopPropagation();
-    navigator.clipboard.writeText(`${window.location.origin}${href}`);
-    toast.success('Đã copy link!', { icon: '🔗' });
+    const url = `${window.location.origin}${href}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${title} | ChatDVT`, url });
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(url);
+      toast.success('Đã copy link!', { icon: '🔗' });
+    }
   }, []);
 
   const filteredFeatures = features.filter(item => {
@@ -741,11 +771,11 @@ export const PublicPortal = () => {
                   </span>
                   {!item.external && (
                     <button
-                      onClick={(e) => handleCopyLink(e, item.href)}
+                      onClick={(e) => handleShareOrCopy(e, item.href, item.title)}
                       className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-orange-500 transition-all z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur p-1.5 rounded-lg shadow-sm"
-                      title="Copy link"
+                      title="Chia sẻ"
                     >
-                      <Copy size={14} />
+                      <Share2 size={14} />
                     </button>
                   )}
                   {item.external && (
@@ -782,6 +812,8 @@ export const PublicPortal = () => {
                   ) : (
                     <Link
                       to={item.href}
+                      onMouseEnter={() => handlePrefetch(item.href)}
+                      onTouchStart={() => handlePrefetch(item.href)}
                       className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/5 block min-h-[260px] shadow-sm"
                     >
                       {cardContent}

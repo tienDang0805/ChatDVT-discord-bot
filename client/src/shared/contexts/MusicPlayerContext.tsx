@@ -29,6 +29,9 @@ interface MusicPlayerContextType {
   toggleShuffle: () => void;
   isLooping: boolean;
   toggleLoop: () => void;
+  currentTime: number;
+  duration: number;
+  seekTo: (seconds: number) => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -44,6 +47,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     const saved = localStorage.getItem('music_volume');
     return saved !== null ? Number(saved) : 100;
   });
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   
   const playerRef = useRef<any>(null);
   const isHandlingEnd = useRef(false);
@@ -133,6 +138,13 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   const toggleShuffle = () => setIsShuffling(prev => !prev);
   const toggleLoop = () => setIsLooping(prev => !prev);
 
+  const seekTo = (seconds: number) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(seconds, true);
+      setCurrentTime(seconds);
+    }
+  };
+
   const handleSongEnd = () => {
     if (isHandlingEnd.current) return;
     isHandlingEnd.current = true;
@@ -178,7 +190,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
 
         const currentTime = player.getCurrentTime();
         const duration = player.getDuration();
-        // Check nếu gần hết bài (cách 0.5s)
+        setCurrentTime(currentTime || 0);
+        setDuration(duration || 0);
         if (duration > 0 && currentTime >= duration - 0.5) {
           handleSongEnd();
         }
@@ -234,7 +247,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
         isPlaying, togglePlay, currentSong,
         volume, setVolume,
         isShuffling, toggleShuffle,
-        isLooping, toggleLoop
+        isLooping, toggleLoop,
+        currentTime, duration, seekTo
       }}
     >
       {children}

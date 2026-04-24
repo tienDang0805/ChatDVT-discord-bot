@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CornerUpLeft } from 'lucide-react';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 interface PageShellProps {
   title: string;
@@ -29,6 +30,7 @@ export const PageShell = ({
   children,
   stars = false,
 }: PageShellProps) => {
+  usePageMeta(title);
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 relative">
       <style>{`

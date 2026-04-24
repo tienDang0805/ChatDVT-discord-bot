@@ -125,6 +125,7 @@ Tất cả feature pages phải hỗ trợ **Light/Dark mode** thông qua Tailwi
 - `shimmer`: Title gradient text
 - `transition-colors duration-300`: Theme toggle
 - Feature-specific animations (ball shake, card flip...) OK nhưng phải dùng `@keyframes` trong `<style>` tag
+- `NavigationProgress`: Tự có progress bar khi route change, KHÔNG cần thêm animation riêng
 
 ---
 
@@ -154,6 +155,9 @@ Tất cả feature pages phải hỗ trợ **Light/Dark mode** thông qua Tailwi
 - KHÔNG tạo page mới mà không có back button
 - KHÔNG skip light mode support
 - KHÔNG viết CSS riêng nếu Tailwind đã có utility tương đương
+- KHÔNG override global `focus-visible` outline
+- KHÔNG tự set `document.title` — dùng `PageShell` hoặc `usePageMeta()`
+- KHÔNG tạo modal/overlay mà không support `Escape` key
 
 ---
 
@@ -163,16 +167,41 @@ Tất cả feature pages phải hỗ trợ **Light/Dark mode** thông qua Tailwi
 client/src/
 ├── shared/
 │   ├── components/
-│   │   ├── PageShell.tsx          ← Shared page wrapper
-│   │   ├── GeminiKeyInput.tsx     ← API key input (existing)
-│   │   └── Layout.tsx             ← Admin layout (existing)
+│   │   ├── PageShell.tsx          ← Shared page wrapper (auto page title via usePageMeta)
+│   │   ├── GeminiKeyInput.tsx     ← API key input
+│   │   ├── Layout.tsx             ← Admin layout
+│   │   ├── ChatWidget.tsx         ← AI chat FAB (Escape close, confirm clear)
+│   │   ├── GlobalMusicPlayer.tsx  ← Music FAB + progress bar + seek
+│   │   ├── ErrorBoundary.tsx      ← Global error catch → retry UI
+│   │   ├── OfflineBanner.tsx      ← Offline/online detection banner
+│   │   └── NavigationProgress.tsx ← Route transition bar (NProgress-style)
+│   ├── hooks/
+│   │   └── usePageMeta.ts         ← Auto set document.title + meta
 │   └── contexts/
-│       └── ThemeContext.tsx       ← L/D toggle (existing)
+│       ├── ThemeContext.tsx       ← L/D toggle
+│       └── MusicPlayerContext.tsx ← Music state + currentTime/duration/seekTo
 ├── features/
 │   └── public/
 │       ├── portal/pages/
-│       │   └── PublicPortal.tsx   ← Reference design
+│       │   └── PublicPortal.tsx   ← Reference design (prefetch, Share API)
 │       └── tarot/pages/
 │           └── TarotPage.tsx
 └── rule_ui.md                     ← THIS FILE
 ```
+
+---
+
+## 9. A11y (Accessibility)
+
+### Focus Visible (Đã cấu hình global trong `index.css`)
+
+- Tất cả interactive elements tự có orange outline khi Tab navigate
+- Outline ẩn khi click mouse (`focus:not(:focus-visible)`)
+- KHÔNG override hoặc xóa outline này
+
+### Quy tắc
+
+- Icon-only buttons: luôn có `title` hoặc `aria-label`
+- Modal/overlay: support `Escape` key để đóng
+- Touch targets: ≥ 44px trên mobile
+- Destructive actions: luôn có `confirm()` dialog

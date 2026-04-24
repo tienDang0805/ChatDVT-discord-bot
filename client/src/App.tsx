@@ -3,6 +3,9 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MusicPlayerProvider } from './shared/contexts/MusicPlayerContext';
 import GlobalMusicPlayer from './shared/components/GlobalMusicPlayer';
 import { ChatWidget } from './shared/components/ChatWidget';
+import { ErrorBoundary } from './shared/components/ErrorBoundary';
+import { OfflineBanner } from './shared/components/OfflineBanner';
+import { NavigationProgress } from './shared/components/NavigationProgress';
 import { Toaster } from 'react-hot-toast';
 
 const PublicPortal = lazy(() => import('./features/public/portal/pages/PublicPortal').then(m => ({ default: m.PublicPortal })));
@@ -61,10 +64,23 @@ const CoupleLandingPage = lazy(() => import('./features/admin/couple/pages/Coupl
 const WebChatPrompt = lazy(() => import('./features/admin/web-chat-prompt/pages/WebChatPrompt').then(m => ({ default: m.WebChatPrompt })));
 
 const LoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#0d1117]">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-      <p className="text-slate-400 dark:text-slate-500 text-sm font-medium animate-pulse">Đang tải...</p>
+  <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] transition-colors">
+    <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-14">
+      <div className="flex items-center gap-3 mb-8 md:mb-10">
+        <div className="w-11 h-11 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse shrink-0" />
+        <div className="space-y-2 flex-1">
+          <div className="h-7 w-52 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+          <div className="h-3 w-32 bg-slate-100 dark:bg-slate-800/60 rounded animate-pulse" />
+        </div>
+      </div>
+      <div className="space-y-5">
+        <div className="h-44 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="h-28 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+          <div className="h-28 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse" />
+        </div>
+        <div className="h-32 bg-slate-100 dark:bg-slate-800/50 rounded-xl animate-pulse" />
+      </div>
     </div>
   </div>
 );
@@ -84,12 +100,15 @@ function App() {
   return (
     <MusicPlayerProvider>
       <div className="min-h-screen">
+        <OfflineBanner />
+        <NavigationProgress />
         <Toaster position="top-right" toastOptions={{ 
           className: 'dark:bg-slate-800 dark:text-white',
           style: { borderRadius: '12px', padding: '16px' }
         }} />
         <GlobalMusicPlayer />
         <ChatWidget />
+        <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<PublicPortal />} />
@@ -153,6 +172,7 @@ function App() {
             } />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </div>
       {/* WeatherFAB moved to PublicPortal */}
     </MusicPlayerProvider>
