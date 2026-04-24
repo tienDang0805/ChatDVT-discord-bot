@@ -3,6 +3,7 @@ import { X, Send, Trash2, Bot, User, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { getStoredGeminiKey } from './GeminiKeyInput';
 
 interface ChatMessage {
   id: string;
@@ -121,6 +122,7 @@ export const ChatWidget = () => {
       const res = await axios.post('/api/web-chat', {
         message: text,
         history: historyForApi.slice(0, -1),
+        geminiApiKey: getStoredGeminiKey(),
       });
 
       const botMsg: ChatMessage = {

@@ -2708,7 +2708,7 @@ Provide a detailed review. Respond with ONLY valid JSON (no markdown, no backtic
 // --- Web Chat Widget API (Public) ---
 app.post('/api/web-chat', async (req, res) => {
     try {
-        const { message, history } = req.body;
+        const { message, history, geminiApiKey } = req.body;
         if (!message || typeof message !== 'string' || message.trim() === '') {
             return res.status(400).json({ error: 'Message is required' });
         }
@@ -2728,9 +2728,9 @@ app.post('/api/web-chat', async (req, res) => {
             parts: [{ text: m.content }]
         }));
 
-        const apiKey = process.env.GEMINI_API_KEY || '';
+        const envKey = process.env.GEMINI_API_KEY || '';
         const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
-        const finalApiKey = globalConfig?.geminiApiKey || apiKey;
+        const finalApiKey = geminiApiKey || globalConfig?.geminiApiKey || envKey;
 
         const genAI = new GoogleGenerativeAI(finalApiKey);
         const model = genAI.getGenerativeModel({
