@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Play, RotateCcw, Smartphone, Tablet, Monitor, Copy, Trash2, Maximize2, Minimize2, Sun, Moon, Wifi, Battery, Signal, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Play, RotateCcw, Smartphone, Tablet, Monitor, Copy, Trash2, Maximize2, Minimize2, Sun, Moon, Wifi, Battery, Signal, ChevronDown, Terminal, X as XIcon, AlertTriangle, Info, Bug } from 'lucide-react';
+
+interface DebugLog {
+  id: number;
+  type: 'log' | 'warn' | 'error' | 'info' | 'postMessage' | 'event' | 'network';
+  content: string;
+  timestamp: number;
+}
 
 interface DevicePreset {
   id: string;
@@ -70,12 +77,30 @@ const wrapSnippet = (snippet: string): string => {
       Object.defineProperty(Navigator.prototype, 'userAgentData', { get: function() { return { mobile: true, platform: 'iOS' }; } });
     }
     window.ontouchstart = function(){};
-    const originalMatchMedia = window.matchMedia;
+    var originalMatchMedia = window.matchMedia;
     window.matchMedia = function(query) {
       if (query.includes('pointer: coarse') || query.includes('hover: none')) return { matches: true, media: query, addListener: function(){}, removeListener: function(){} };
       if (query.includes('pointer: fine') || query.includes('hover: hover')) return { matches: false, media: query, addListener: function(){}, removeListener: function(){} };
       return originalMatchMedia.call(window, query);
     };
+    (function(){
+      function s(o){try{return JSON.stringify(o)}catch(e){return String(o)}}
+      function send(t,c){parent.postMessage({__debug:true,type:t,content:c},'*');}
+      var ol=console.log,ow=console.warn,oe=console.error,oi=console.info;
+      console.log=function(){var a=[].slice.call(arguments).map(s).join(' ');ol.apply(console,arguments);send('log',a);};
+      console.warn=function(){var a=[].slice.call(arguments).map(s).join(' ');ow.apply(console,arguments);send('warn',a);};
+      console.error=function(){var a=[].slice.call(arguments).map(s).join(' ');oe.apply(console,arguments);send('error',a);};
+      console.info=function(){var a=[].slice.call(arguments).map(s).join(' ');oi.apply(console,arguments);send('info',a);};
+      window.addEventListener('error',function(e){send('error','[JS] '+e.message+' at '+e.filename+':'+e.lineno);});
+      window.addEventListener('unhandledrejection',function(e){send('error','[Promise] '+String(e.reason));});
+      var origPM=window.postMessage;
+      window.addEventListener('message',function(e){if(e.data&&!e.data.__debug){send('postMessage','[IN] '+s(e.data));}});
+      var origFetch=window.fetch;
+      if(origFetch){window.fetch=function(){var url=arguments[0];var opts=arguments[1]||{};send('network','[Fetch] '+(opts.method||'GET')+' '+url);return origFetch.apply(window,arguments).then(function(r){send('network','[Fetch] '+r.status+' '+url);return r;}).catch(function(e){send('error','[Fetch] FAIL '+url+' '+e.message);throw e;});};}
+      var origXHR=XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open=function(m,u){this.__dbg_url=m+' '+u;send('network','[XHR] '+m+' '+u);origXHR.apply(this,arguments);};
+      send('info','[Debug] Bridge initialized');
+    })();
   </script>
 </head>
 <body>
@@ -92,6 +117,11 @@ export const EmulatorCheck = () => {
   const [showDeviceMenu, setShowDeviceMenu] = useState(false);
   const [scale, setScale] = useState(1);
   const [isDarkStatusBar, setIsDarkStatusBar] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugFilter, setDebugFilter] = useState<'all' | 'log' | 'warn' | 'error' | 'postMessage' | 'network'>('all');
+  const debugLogIdRef = useRef(0);
+  const debugScrollRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -132,6 +162,24 @@ export const EmulatorCheck = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data && e.data.__debug) {
+        debugLogIdRef.current++;
+        const entry: DebugLog = { id: debugLogIdRef.current, type: e.data.type, content: e.data.content, timestamp: Date.now() };
+        setDebugLogs(prev => [...prev.slice(-500), entry]);
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  useEffect(() => {
+    if (debugScrollRef.current) {
+      debugScrollRef.current.scrollTop = debugScrollRef.current.scrollHeight;
+    }
+  }, [debugLogs]);
+
   const renderPreview = useCallback(() => {
     const iframe = iframeRef.current;
     if (!iframe || !code.trim()) return;
@@ -145,6 +193,7 @@ export const EmulatorCheck = () => {
 
   const handleClear = () => {
     setCode('');
+    setDebugLogs([]);
     const iframe = iframeRef.current;
     if (!iframe) return;
     iframe.srcdoc = '';
@@ -209,6 +258,17 @@ export const EmulatorCheck = () => {
           </button>
 
           <button
+            onClick={() => setShowDebug(!showDebug)}
+            className={`p-1.5 rounded-lg border transition-colors relative ${showDebug ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'}`}
+            title="Debug Console"
+          >
+            <Terminal size={14} />
+            {debugLogs.filter(l => l.type === 'error').length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] font-black text-white flex items-center justify-center">{debugLogs.filter(l => l.type === 'error').length > 9 ? '9+' : debugLogs.filter(l => l.type === 'error').length}</span>
+            )}
+          </button>
+
+          <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-slate-200 transition-colors"
             title={isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình preview'}
@@ -239,9 +299,61 @@ export const EmulatorCheck = () => {
               value={code}
               onChange={e => setCode(e.target.value)}
               spellCheck={false}
-              className="flex-1 w-full bg-[#0a0e17] text-emerald-300 font-mono text-[12px] leading-relaxed p-4 resize-none focus:outline-none selection:bg-cyan-500/30 min-h-0"
+              className={`w-full bg-[#0a0e17] text-emerald-300 font-mono text-[12px] leading-relaxed p-4 resize-none focus:outline-none selection:bg-cyan-500/30 min-h-0 ${showDebug ? 'flex-1 basis-1/2' : 'flex-1'}`}
               placeholder="Paste HTML/JS script vào đây..."
             />
+
+            {showDebug && (
+              <div className="flex-1 basis-1/2 border-t border-slate-800 bg-[#0d1220] flex flex-col min-h-0">
+                <div className="flex items-center justify-between px-3 py-1.5 border-b border-slate-800 shrink-0">
+                  <div className="flex items-center gap-1.5">
+                    <Terminal size={13} className="text-emerald-400" />
+                    <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Debug Console</span>
+                    <span className="text-[10px] text-slate-600 ml-1">{debugLogs.length}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {(['all', 'log', 'warn', 'error', 'postMessage', 'network'] as const).map(f => (
+                      <button
+                        key={f}
+                        onClick={() => setDebugFilter(f)}
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded transition-colors ${debugFilter === f ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                      >
+                        {f === 'all' ? 'All' : f === 'postMessage' ? 'Msg' : f === 'network' ? 'Net' : f.charAt(0).toUpperCase() + f.slice(1)}
+                      </button>
+                    ))}
+                    <button onClick={() => setDebugLogs([])} className="text-slate-600 hover:text-red-400 ml-1 transition-colors" title="Xóa logs"><Trash2 size={12} /></button>
+                    <button onClick={() => setShowDebug(false)} className="text-slate-600 hover:text-slate-300 ml-1 transition-colors"><XIcon size={14} /></button>
+                  </div>
+                </div>
+                <div ref={debugScrollRef} className="flex-1 overflow-y-auto overflow-x-hidden font-mono text-[11px] leading-relaxed min-h-0">
+                  {debugLogs.filter(l => debugFilter === 'all' || l.type === debugFilter).map(log => {
+                    const colors: Record<string, string> = {
+                      log: 'text-slate-400', warn: 'text-yellow-400', error: 'text-red-400',
+                      info: 'text-cyan-400', postMessage: 'text-purple-400', event: 'text-blue-400', network: 'text-emerald-400'
+                    };
+                    const icons: Record<string, any> = {
+                      error: <AlertTriangle size={10} className="shrink-0 mt-0.5" />,
+                      warn: <AlertTriangle size={10} className="shrink-0 mt-0.5" />,
+                      info: <Info size={10} className="shrink-0 mt-0.5" />,
+                      postMessage: <Bug size={10} className="shrink-0 mt-0.5" />,
+                    };
+                    const ts = new Date(log.timestamp);
+                    const time = `${String(ts.getHours()).padStart(2,'0')}:${String(ts.getMinutes()).padStart(2,'0')}:${String(ts.getSeconds()).padStart(2,'0')}.${String(ts.getMilliseconds()).padStart(3,'0')}`;
+                    return (
+                      <div key={log.id} className={`flex items-start gap-1.5 px-2 py-0.5 hover:bg-slate-800/40 border-b border-slate-800/30 ${colors[log.type] || 'text-slate-400'}`}>
+                        <span className="text-slate-700 shrink-0 text-[9px]">{time}</span>
+                        {icons[log.type] || <Terminal size={10} className="shrink-0 mt-0.5" />}
+                        <span className={`text-[9px] font-bold uppercase shrink-0 ${log.type === 'error' ? 'text-red-500' : log.type === 'warn' ? 'text-yellow-500' : 'text-slate-600'}`}>{log.type === 'postMessage' ? 'MSG' : log.type === 'network' ? 'NET' : log.type.slice(0, 3).toUpperCase()}</span>
+                        <span className="break-all">{log.content}</span>
+                      </div>
+                    );
+                  })}
+                  {debugLogs.filter(l => debugFilter === 'all' || l.type === debugFilter).length === 0 && (
+                    <div className="flex items-center justify-center h-full text-slate-700 text-xs">Chưa có log nào{debugFilter !== 'all' ? ` (filter: ${debugFilter})` : ''}</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -277,7 +389,6 @@ export const EmulatorCheck = () => {
                       <Battery size={11} />
                     </div>
                   </div>
-
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[120px] h-[4px] bg-slate-600 rounded-full" />
                 </>
               )}

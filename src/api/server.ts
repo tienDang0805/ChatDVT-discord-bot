@@ -2723,10 +2723,24 @@ app.post('/api/web-chat', async (req, res) => {
             console.error('[WebChat] Failed to load prompt config, using default.', e);
         }
 
-        const chatHistory = (history || []).slice(-20).map((m: any) => ({
+        let rawHistory = (history || []).slice(-20).map((m: any) => ({
             role: m.role === 'user' ? 'user' : 'model',
             parts: [{ text: m.content }]
         }));
+
+        let validHistory: any[] = [];
+        for (const msg of rawHistory) {
+            if (validHistory.length === 0) {
+                if (msg.role === 'user') validHistory.push(msg);
+            } else {
+                if (msg.role !== validHistory[validHistory.length - 1].role) {
+                    validHistory.push(msg);
+                }
+            }
+        }
+        if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') {
+            validHistory.pop();
+        }
 
         const envKey = process.env.GEMINI_API_KEY || '';
         const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
@@ -2739,7 +2753,7 @@ app.post('/api/web-chat', async (req, res) => {
         });
 
         const chatSession = model.startChat({
-            history: chatHistory as any,
+            history: validHistory,
             systemInstruction: { role: 'system', parts: [{ text: systemPromptText }] },
         });
 
