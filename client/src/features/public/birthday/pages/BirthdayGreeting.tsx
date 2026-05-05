@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../../../../shared/api';
+import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 
 const MESSENGER_ID = '100006665862022';
 
@@ -726,6 +727,7 @@ function CountdownWidget() {
 }
 
 export default function BirthdayGreeting() {
+  usePageTracker('BirthdayGreeting');
   const [phase, setPhase] = useState(1);
   const [transitioning, setTransitioning] = useState(false);
   const [displayPhase, setDisplayPhase] = useState(1);

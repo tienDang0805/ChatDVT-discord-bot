@@ -57,6 +57,8 @@ const Login = lazy(() => import('./features/public/auth/pages/Login').then(m => 
 const WebQuizLobby = lazy(() => import('./features/public/web-quiz/pages/Lobby').then(m => ({ default: m.WebQuizLobby })));
 const WebQuizRoom = lazy(() => import('./features/public/web-quiz/pages/Room').then(m => ({ default: m.WebQuizRoom })));
 const EmulatorCheck = lazy(() => import('./features/public/emulator-check/pages/EmulatorCheck').then(m => ({ default: m.EmulatorCheck })));
+const MermaidEditor = lazy(() => import('./features/public/mermaid-editor/pages/MermaidEditor').then(m => ({ default: m.MermaidEditor })));
+const MermaidTutorial = lazy(() => import('./features/public/mermaid-editor/pages/MermaidTutorial').then(m => ({ default: m.MermaidTutorial })));
 
 const Layout = lazy(() => import('./shared/components/Layout').then(m => ({ default: m.Layout })));
 const Dashboard = lazy(() => import('./features/admin/dashboard/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -166,6 +168,8 @@ function App() {
             <Route path="/quiz" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8"><WebQuizLobby /></div>} />
             <Route path="/quiz/room/:roomId" element={<div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-4 md:p-8 flex items-center justify-center"><WebQuizRoom /></div>} />
             <Route path="/emulator-check" element={<EmulatorCheck />} />
+            <Route path="/mermaid-editor" element={<MermaidEditor />} />
+            <Route path="/mermaid-tutorial" element={<MermaidTutorial />} />
             <Route path="/admin/*" element={
               <RequireAuth>
                 <Layout>

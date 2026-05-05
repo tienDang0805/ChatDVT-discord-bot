@@ -38,7 +38,7 @@ jobs:
               'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
               'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
               'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL',
-              'NASA_API_KEY'
+              'NASA_API_KEY', 'DiscrodTrackingWebhook'
             ];
             let content = '';
             for (const key of keys) {
@@ -68,6 +68,7 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DiscrodTrackingWebhook: ${{ secrets.DiscrodTrackingWebhook }}
 
       # --- DEPLOY FILES VIA SCP ---
       - name: Copy Files to Server

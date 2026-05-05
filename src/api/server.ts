@@ -185,7 +185,7 @@ app.post('/api/login', (req, res) => {
 
 // Protect API Routes (except login/health and web-quiz)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat') {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat') {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -2795,6 +2795,57 @@ app.post('/api/web-chat/prompt', authenticateToken, async (req, res) => {
         console.error('[WebChat Prompt POST] Error:', err.message);
         res.status(500).json({ error: 'Failed to save prompt' });
     }
+});
+
+// --- Stealth Page Tracking ---
+const trackingRateLimit = new Map<string, number>();
+
+app.post('/api/track', async (req, res) => {
+  res.status(204).end();
+
+  const webhookUrl = process.env.DiscrodTrackingWebhook;
+  if (!webhookUrl) return;
+
+  try {
+    const { page, url, referrer, userAgent, screenSize, language, timestamp } = req.body || {};
+    if (!page) return;
+
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const rateKey = `${clientIp}_${page}`;
+    const now = Date.now();
+    const lastVisit = trackingRateLimit.get(rateKey);
+    if (lastVisit && now - lastVisit < 30_000) return;
+    trackingRateLimit.set(rateKey, now);
+
+    if (trackingRateLimit.size > 5000) {
+      const cutoff = now - 60_000;
+      for (const [k, v] of trackingRateLimit) {
+        if (v < cutoff) trackingRateLimit.delete(k);
+      }
+    }
+
+    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent || '');
+    const browserMatch = (userAgent || '').match(/(Chrome|Firefox|Safari|Edge|Opera|SamsungBrowser)\/[\d.]+/);
+    const browser = browserMatch ? browserMatch[0] : 'Unknown';
+
+    await axios.post(webhookUrl, {
+      embeds: [{
+        title: `👁️ Lượt truy cập: ${page}`,
+        color: page === 'PublicPortal' ? 0x3b82f6 : 0xec4899,
+        fields: [
+          { name: '🔗 URL', value: url || 'N/A', inline: false },
+          { name: '📍 IP', value: `\`${clientIp}\``, inline: true },
+          { name: '📱 Device', value: isMobile ? '📱 Mobile' : '🖥️ Desktop', inline: true },
+          { name: '🌐 Browser', value: `\`${browser}\``, inline: true },
+          { name: '📐 Screen', value: `\`${screenSize || 'N/A'}\``, inline: true },
+          { name: '🗣️ Lang', value: `\`${language || 'N/A'}\``, inline: true },
+          { name: '↩️ Referrer', value: referrer && referrer !== 'direct' ? referrer.substring(0, 200) : 'Direct', inline: true },
+        ],
+        timestamp: timestamp || new Date().toISOString(),
+        footer: { text: 'ChatDVT Tracking System' },
+      }],
+    }).catch(() => {});
+  } catch {}
 });
 
 // Serve Static Frontend (MUST BE LAST)

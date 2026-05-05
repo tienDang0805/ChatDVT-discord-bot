@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -85,6 +86,7 @@ const ConfettiOverlay = () => {
 };
 
 export const PublicPortal = () => {
+  usePageTracker('PublicPortal');
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -364,6 +366,17 @@ export const PublicPortal = () => {
       href: '/emulator-check',
       author: 'Mobile Dev Tools (Tiến Đặng)',
       category: 'mobile_unity',
+      isNew: true
+    },
+    {
+      id: 'mermaid-editor',
+      number: '28',
+      title: 'Mermaid Editor',
+      description: 'Editor trực quan cho Mermaid diagram. Live preview, import/export MD, SVG, PNG, HTML. Tree view cấu trúc, 9+ loại diagram.',
+      icon: GitBranch,
+      href: '/mermaid-editor',
+      author: 'Diagram Master (Tiến Đặng)',
+      category: 'utility',
       isNew: true
     }
   ];
