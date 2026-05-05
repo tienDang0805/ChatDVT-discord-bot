@@ -170,6 +170,177 @@ flowchart LR
     style CLEAR fill:#10b981,color:#fff
     style RETRY fill:#ef4444,color:#fff
 \`\`\`
+
+---
+
+## 6. Session lifecycle
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Active: App mở lần đầu
+    Active --> Background: User rời app
+    Background --> Active: Quay lại < 30 phút
+    Background --> SessionEnd: Quay lại >= 30 phút
+    SessionEnd --> Active: Tạo session MỚI
+    Active --> SessionEnd: User tắt app hẳn
+
+    state Active {
+        [*] --> Tracking
+        Tracking --> Tracking: screen_view, events
+        Tracking --> Flushing: Đủ 30 events / 60s
+        Flushing --> Tracking: Buffer cleared
+    }
+\`\`\`
+
+> **Rule:** Background > 30 phút = session mới. Dưới 30 phút = session cũ tiếp tục.
+
+---
+
+## 7. Data journey
+
+\`\`\`mermaid
+flowchart TB
+    subgraph STEP1["1. User action"]
+        TAP["User bấm vào TicketDetail"]
+    end
+    subgraph STEP2["2. SDK capture"]
+        EV["event: screen_view\\nscreen_name: TicketDetail"]
+    end
+    subgraph STEP3["3. Buffer + Flush"]
+        BF["MMKV lưu 30 events\\nPOST /analytics/v1/ingest"]
+    end
+    subgraph STEP4["4. Server process"]
+        SV["findOrCreate session\\nbulkCreate events"]
+    end
+    subgraph STEP5["5. Database"]
+        TB2["analytics_events table"]
+    end
+    subgraph STEP6["6. Dashboard"]
+        DS["Top Screens: TicketDetail — 6 views"]
+    end
+
+    STEP1 --> STEP2 --> STEP3 --> STEP4 --> STEP5 --> STEP6
+
+    style STEP1 fill:#dbeafe,color:#1e40af
+    style STEP2 fill:#fef3c7,color:#92400e
+    style STEP3 fill:#fce7f3,color:#9d174d
+    style STEP4 fill:#d1fae5,color:#065f46
+    style STEP5 fill:#e0e7ff,color:#3730a3
+    style STEP6 fill:#f0fdf4,color:#166534
+\`\`\`
+
+---
+
+## 8. Server xử lý data
+
+\`\`\`mermaid
+flowchart TD
+    REQ["POST /analytics/v1/ingest"] --> AUTH{"Có X-Analytics-Key?"}
+    AUTH -->|"Có"| VALIDATE["Validate key từ DB"]
+    AUTH -->|"Không"| PROCESS
+    VALIDATE -->|"OK"| PROCESS
+    VALIDATE -->|"Invalid"| REJECT["403 Forbidden"]
+    PROCESS["Process payload"] --> SESSION{"Session exists?"}
+    SESSION -->|"Mới"| CREATE["INSERT analytics_sessions"]
+    SESSION -->|"Đã có"| UPDATE2["UPDATE customer_code"]
+    CREATE --> EVENTS
+    UPDATE2 --> EVENTS
+    EVENTS["bulkCreate analytics_events"] --> ERRORS{"Có error events?"}
+    ERRORS -->|"Có"| ERRTBL["INSERT analytics_errors"]
+    ERRORS -->|"Không"| DONE
+    ERRTBL --> DONE["200 OK"]
+
+    style REQ fill:#6366f1,color:#fff
+    style PROCESS fill:#10b981,color:#fff
+    style DONE fill:#22c55e,color:#fff
+    style REJECT fill:#ef4444,color:#fff
+\`\`\`
+
+---
+
+## 9. Hook points
+
+\`\`\`mermaid
+flowchart TB
+    subgraph BOOTSTRAP["initializeApp.ts"]
+        INIT["analytics.init()"]
+    end
+    subgraph LOGIN["AuthStack.js"]
+        CTX["analytics.setUserContext()"]
+    end
+    subgraph PERM["AuthStack.js — permissions"]
+        MOD["analytics.setActiveModules()"]
+    end
+    subgraph NAV["NavigationContainer"]
+        SCR["analytics.trackScreen()"]
+    end
+
+    INIT -->|"App start"| CTX
+    CTX -->|"User login"| MOD
+    MOD -->|"Permissions loaded"| SCR
+    SCR -->|"Mỗi khi chuyển màn"| SCR
+
+    style BOOTSTRAP fill:#6366f1,color:#fff
+    style LOGIN fill:#10b981,color:#fff
+    style PERM fill:#f59e0b,color:#fff
+    style NAV fill:#8b5cf6,color:#fff
+\`\`\`
+
+---
+
+## 10. Database — 4 tables
+
+\`\`\`mermaid
+erDiagram
+    analytics_sessions ||--o{ analytics_events : "1 session N events"
+    analytics_sessions ||--o{ analytics_errors : "1 session N errors"
+    analytics_daily_stats }o--|| analytics_sessions : "aggregated from"
+
+    analytics_sessions {
+        string session_id UK
+        string customer_code
+        string user_id
+        string device_model
+        string os_name
+        json active_modules
+        timestamp started_at
+        int duration_seconds
+    }
+
+    analytics_events {
+        string event_name
+        string event_category
+        string module
+        json properties
+    }
+
+    analytics_errors {
+        string error_type
+        text message
+        string screen_name
+    }
+
+    analytics_daily_stats {
+        date date
+        int total_sessions
+        int unique_users
+        json top_screens
+    }
+\`\`\`
+
+---
+
+## Quick Reference
+
+| Khái niệm | Giải thích |
+|-----------|-----------|
+| **Session** | 1 lần dùng app liên tục. Background > 30 phút = session mới |
+| **Event** | 1 hành động cụ thể: xem màn hình, bắt đầu session, lỗi |
+| **Buffer** | Hàng đợi tạm trong MMKV, gom events rồi gửi batch |
+| **Flush** | Gửi toàn bộ buffer lên server 1 lần |
+| **Ingest** | Server nhận và lưu data vào DB |
+| **Customer Code** | Mã khách hàng B2B (ví dụ C0384) |
+| **Active Modules** | Modules mà user có quyền dùng: tickets, omnichat, call... |
 `;
 
 export const MermaidEditor = () => {
@@ -177,7 +348,13 @@ export const MermaidEditor = () => {
   usePageMeta('Mermaid Editor');
   const [viewMode, setViewMode] = useState<ViewMode>('editor');
   const [rawCode, setRawCode] = useState(() => localStorage.getItem('mermaid_editor_code') || DEFAULT_CODE);
-  const [docContent, setDocContent] = useState(() => localStorage.getItem('mermaid_doc_content') || SAMPLE_MD);
+  const [docContent, setDocContent] = useState(() => {
+    const ver = localStorage.getItem('mermaid_doc_version');
+    if (ver === 'v3') return localStorage.getItem('mermaid_doc_content') || SAMPLE_MD;
+    localStorage.setItem('mermaid_doc_version', 'v3');
+    localStorage.setItem('mermaid_doc_content', SAMPLE_MD);
+    return SAMPLE_MD;
+  });
   const [showTree, setShowTree] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
   const [expandedDiagram, setExpandedDiagram] = useState<{ index: number; code: string } | null>(null);
