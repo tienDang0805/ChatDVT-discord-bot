@@ -18,6 +18,7 @@ import { GoogleGenAI } from '@google/genai';
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 const app = express();
+app.set('trust proxy', true);
 const server = http.createServer(app);
 const io = new SocketServer(server, { cors: { origin: '*' } });
 const PORT = process.env.PORT || 3000;
@@ -2798,8 +2799,6 @@ app.post('/api/web-chat/prompt', authenticateToken, async (req, res) => {
 });
 
 // --- Stealth Page Tracking ---
-const trackingRateLimit = new Map<string, number>();
-
 app.post('/api/track', async (req, res) => {
   res.status(204).end();
 
@@ -2807,44 +2806,56 @@ app.post('/api/track', async (req, res) => {
   if (!webhookUrl) return;
 
   try {
-    const { page, url, referrer, userAgent, screenSize, language, timestamp } = req.body || {};
+    const { page, url, referrer, os, browser, screenSize, viewport, pixelRatio, language, timezone, timestamp, connection, touchSupport } = req.body || {};
     if (!page) return;
 
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
-    const rateKey = `${clientIp}_${page}`;
-    const now = Date.now();
-    const lastVisit = trackingRateLimit.get(rateKey);
-    if (lastVisit && now - lastVisit < 30_000) return;
-    trackingRateLimit.set(rateKey, now);
+    const clientIp = (req.ip || 'unknown').replace(/^::ffff:/, '');
 
-    if (trackingRateLimit.size > 5000) {
-      const cutoff = now - 60_000;
-      for (const [k, v] of trackingRateLimit) {
-        if (v < cutoff) trackingRateLimit.delete(k);
+    const isMobile = touchSupport || /Mobile|Android|iPhone|iPad/i.test(req.body?.userAgent || '');
+    const deviceEmoji = isMobile ? '📱' : '🖥️';
+    const deviceType = isMobile ? 'Mobile' : 'Desktop';
+
+    let geoStr = '';
+    try {
+      if (clientIp !== '127.0.0.1' && clientIp !== '::1' && clientIp !== 'unknown') {
+        const geoRes = await axios.get(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,isp,org`, { timeout: 3000 });
+        if (geoRes.data?.status === 'success') {
+          const g = geoRes.data;
+          geoStr = `${g.city || ''}, ${g.regionName || ''}, ${g.country || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '');
+          if (g.isp) geoStr += ` (${g.isp})`;
+        }
       }
-    }
+    } catch {}
 
-    const isMobile = /Mobile|Android|iPhone|iPad/i.test(userAgent || '');
-    const browserMatch = (userAgent || '').match(/(Chrome|Firefox|Safari|Edge|Opera|SamsungBrowser)\/[\d.]+/);
-    const browser = browserMatch ? browserMatch[0] : 'Unknown';
+    const pageColors: Record<string, number> = {
+      PublicPortal: 0x3b82f6,
+      BirthdayGreeting: 0xec4899,
+    };
 
-    await axios.post(webhookUrl, {
-      embeds: [{
-        title: `👁️ Lượt truy cập: ${page}`,
-        color: page === 'PublicPortal' ? 0x3b82f6 : 0xec4899,
-        fields: [
-          { name: '🔗 URL', value: url || 'N/A', inline: false },
-          { name: '📍 IP', value: `\`${clientIp}\``, inline: true },
-          { name: '📱 Device', value: isMobile ? '📱 Mobile' : '🖥️ Desktop', inline: true },
-          { name: '🌐 Browser', value: `\`${browser}\``, inline: true },
-          { name: '📐 Screen', value: `\`${screenSize || 'N/A'}\``, inline: true },
-          { name: '🗣️ Lang', value: `\`${language || 'N/A'}\``, inline: true },
-          { name: '↩️ Referrer', value: referrer && referrer !== 'direct' ? referrer.substring(0, 200) : 'Direct', inline: true },
-        ],
-        timestamp: timestamp || new Date().toISOString(),
-        footer: { text: 'ChatDVT Tracking System' },
-      }],
-    }).catch(() => {});
+    const embed: any = {
+      title: `${deviceEmoji} ${page}`,
+      color: pageColors[page] || 0xfbbf24,
+      fields: [
+        { name: '🔗 URL', value: url || 'N/A', inline: false },
+        { name: '📍 IP', value: `\`${clientIp}\``, inline: true },
+        { name: '🌍 Location', value: geoStr || '_Unknown_', inline: true },
+        { name: '\u200b', value: '\u200b', inline: true },
+        { name: `${deviceEmoji} Device`, value: `\`${deviceType}\``, inline: true },
+        { name: '💻 OS', value: `\`${os || 'N/A'}\``, inline: true },
+        { name: '🌐 Browser', value: `\`${browser || 'N/A'}\``, inline: true },
+        { name: '📐 Screen', value: `\`${screenSize || 'N/A'}\``, inline: true },
+        { name: '📏 Viewport', value: `\`${viewport || 'N/A'}\``, inline: true },
+        { name: '🔍 DPR', value: `\`${pixelRatio || 1}x\``, inline: true },
+        { name: '🗣️ Lang', value: `\`${language || 'N/A'}\``, inline: true },
+        { name: '🕐 Timezone', value: `\`${timezone || 'N/A'}\``, inline: true },
+        { name: '📶 Network', value: `\`${connection || 'N/A'}\``, inline: true },
+        { name: '↩️ Referrer', value: referrer && referrer !== 'direct' ? referrer.substring(0, 200) : '_Direct_', inline: false },
+      ],
+      timestamp: timestamp || new Date().toISOString(),
+      footer: { text: 'ChatDVT Tracking System' },
+    };
+
+    await axios.post(webhookUrl, { embeds: [embed] }).catch(() => {});
   } catch {}
 });
 
