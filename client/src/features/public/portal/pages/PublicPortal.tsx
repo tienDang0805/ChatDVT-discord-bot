@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -555,88 +555,145 @@ export const PublicPortal = () => {
         @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg) translateX(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg) translateX(var(--drift,0px));opacity:0}}
         @keyframes iconFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-4px) rotate(6deg)}}
         .group:hover .icon-float{animation:iconFloat 0.6s ease-in-out}
+        @keyframes courseGlow{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+        .course-glow{animation:courseGlow 6s ease-in-out infinite}
+        @keyframes courseFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        .course-float{animation:courseFloat 4s ease-in-out infinite}
       `}</style>
       {showConfetti && <ConfettiOverlay />}
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        
-        {/* Header Section */}
-        <div className="flex flex-col lg:flex-row gap-12 items-start justify-between mb-20 relative">
-          
-          {/* Theme Toggle */}
-          <button 
+      <div className="max-w-6xl mx-auto px-6 py-10">
+
+        {/* Theme Toggle */}
+        <div className="flex justify-end mb-4">
+          <button
             onClick={toggleTheme}
-            className="absolute -top-10 left-4 lg:left-0 flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1f2937] border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-orange-400 hover:border-orange-500/50 shadow-lg transition-all z-10 group"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1f2937] border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-orange-500 hover:border-orange-500/50 shadow-sm transition-all group"
             title={theme === 'dark' ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
           >
-            {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
+            {theme === 'dark' ? <Sun size={18} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={18} className="group-hover:-rotate-12 transition-transform duration-500" />}
           </button>
+        </div>
 
-          <div className="flex-1 space-y-6">
-            <h1 className="text-5xl md:text-7xl font-black text-slate-900 dark:text-white tracking-tight">
-              Trang <span className="text-orange-500">Chủ</span>
-            </h1>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="bg-orange-500/10 text-orange-500 text-xs font-bold px-3 py-1 rounded-full">{features.length} Tính Năng</span>
-              <span className="bg-emerald-500/10 text-emerald-500 text-xs font-bold px-3 py-1 rounded-full">{countGame} Game</span>
-              <span className="bg-blue-500/10 text-blue-500 text-xs font-bold px-3 py-1 rounded-full">{countUtility} Tiện ích</span>
-            </div>
-            
-            <div className="border-l-4 border-orange-500 pl-5 space-y-3">
-              <p className="text-xl font-bold text-slate-600 dark:text-slate-300">
-                Make by Tien Dang from 8D with love 
-              </p>
-              <p className="text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
-                  Mobile dev nhưng lại làm content
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 pt-4">
-                <a href="https://discord.gg/" target="_blank" rel="noreferrer" className="flex items-center gap-2 bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-orange-500/50 text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300 px-6 py-3 rounded-md font-bold transition-all shadow-sm">
-                  <Rocket size={18} /> Tham gia Discord
-              </a>
-                <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex items-center bg-white dark:bg-[#161b22] hover:bg-slate-100 dark:hover:bg-[#1f242c] border border-slate-300 dark:border-slate-700 rounded-md overflow-hidden transition-all group shadow-sm">
-                  <div className="flex items-center gap-2 px-4 py-3 text-slate-600 dark:text-slate-300 font-bold border-r border-slate-300 dark:border-slate-700">
-                    <Github size={18} /> STARS
-                  </div>
-                  <div className="bg-orange-500 dark:bg-[#007acc] px-4 py-3 text-white font-bold group-hover:bg-orange-600 dark:group-hover:bg-[#005c99] transition-colors">
-                    100+
-                  </div>
-                </a>
-                <Link to="/profile" className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-md font-bold transition-all shadow-sm active:scale-[0.98]">
-                  <Sparkles size={18} /> Về tác giả
-                </Link>
-            </div>
+        {/* === KHOÁ HỌC AI TRAINING === */}
+        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-10 mb-8 relative overflow-hidden shadow-sm">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-orange-500/[0.04] dark:bg-orange-500/[0.06] rounded-full blur-[120px] course-glow" />
+            <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-violet-500/[0.03] dark:bg-violet-500/[0.05] rounded-full blur-[100px]" />
           </div>
 
-          {/* Chibi Illustration Area */}
-          <div className="lg:w-1/3 shrink-0 flex flex-col items-center">
-             <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden border-2 border-slate-300 dark:border-slate-800 shadow-2xl">
-                {chibiImages.map((src, idx) => (
-                  <img 
-                    key={src}
-                    src={src} 
-                    alt={`Tiến Đặng Vibe ${idx}`} 
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
-                      idx === currentImageIndex ? 'opacity-100' : 'opacity-0'
-                    }`}
+          <div className="relative z-10">
+            <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-center">
+
+              <div className="flex-1 space-y-5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="bg-orange-500/10 text-orange-500 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-orange-500/20 flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                    LIVE ONLINE · 3 BUỔI
+                  </span>
+                  <span className="bg-rose-500/10 text-rose-500 text-xs font-bold px-3 py-1.5 rounded-full border border-rose-500/20">🔥 ĐẶC BIỆT</span>
+                </div>
+
+                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white leading-[1.1]">
+                  Claude AI
+                  <br />
+                  <span className="text-orange-500">Vô Thượng Đạo</span>
+                </h2>
+
+                <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-xl">
+                  Vượt qua <span className="text-orange-500 font-bold">69 kiếp nạn</span> để chinh phục chân kinh — Học cách dùng AI để tự động hoá mọi thứ trong công việc. Không yêu cầu biết code.
+                </p>
+
+                <ul className="space-y-2">
+                  {[
+                    'Nâng cao tư duy sử dụng AI, nhưng tư duy code ngu đi',
+                    'Cài đặt và dùng AI với file thật của mình',
+                    'Tạo task tự động chạy khi bạn không có mặt',
+                    'Giao việc cho AI từ điện thoại bàn',
+                    'Xác định lộ trình áp dụng AI vào công việc',
+                    'Xem ngay bài giảng recorded video',
+                    'Tham gia cộng đồng những người thiểu năng thích làm việc bằng AI',
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 group">
+                      <div className="w-5 h-5 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-orange-500 group-hover:border-orange-500 transition-all">
+                        <Check size={12} className="text-orange-500 group-hover:text-white transition-colors" />
+                      </div>
+                      <span className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <Link to="/profile" className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] shadow-sm">
+                    <Rocket size={16} />
+                    Liên hệ Tiến Đặng
+                  </Link>
+                  <button
+                    onClick={() => window.dispatchEvent(new Event('open-chat-widget'))}
+                    className="bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98]"
+                  >
+                    <Bot size={16} className="text-orange-500" />
+                    Tư vấn ngay
+                  </button>
+                  <button
+                    onClick={() => document.getElementById('features-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98]"
+                  >
+                    <ChevronRight size={16} className="text-orange-500 rotate-90" />
+                    Xem tính năng Portal
+                  </button>
+                </div>
+
+                <div className="flex items-baseline gap-2 pt-1">
+                  <span className="text-3xl md:text-4xl font-black text-orange-500">6,999,000</span>
+                  <span className="text-slate-400 dark:text-slate-500 font-medium">VND / toàn khoá</span>
+                </div>
+              </div>
+
+              <div className="lg:w-[42%] shrink-0 space-y-4">
+                <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm group course-float">
+                  <img
+                    src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/course-hero.jpg"
+                    alt="Claude AI - Vô Thượng Đạo - 69 Kiếp Nạn"
+                    className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
-                ))}
-                
-                <div className="absolute inset-0 -z-10 bg-slate-100 dark:bg-[#161b22] flex items-center justify-center text-slate-400 dark:text-slate-600 text-sm text-center p-4">
-                  (Vui lòng lưu 3 ảnh chibi vào<br/>client/public/images/chibi-bear.jpg<br/>chibi-rain.jpg<br/>phide.jpg)
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <span className="bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-lg">🐻 69 KIẾP NẠN · HIGHEST PATH</span>
+                  </div>
                 </div>
-             </div>
-             <div className="flex justify-center gap-2 mt-3">
-               {chibiImages.map((_, idx) => (
-                 <button
-                   key={idx}
-                   onClick={() => setCurrentImageIndex(idx)}
-                   className={`h-2 rounded-full transition-all duration-300 ${idx === currentImageIndex ? 'bg-orange-500 w-5' : 'bg-slate-300 dark:bg-slate-700 hover:bg-orange-400 w-2'}`}
-                 />
-               ))}
-             </div>
-             <p className="mt-3 text-sm text-slate-400 dark:text-slate-500 font-medium italic animate-pulse">Đang bận giải cứu thế giới...</p>
+
+                <div className="bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
+                  <h4 className="text-slate-800 dark:text-white font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
+                    📅 Lịch khoá tiếp theo
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Calendar size={16} className="text-orange-500 shrink-0" />
+                      <div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Ngày học (Chủ nhật)</p>
+                        <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">10/5 · 17/5 · 24/5</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Clock size={16} className="text-orange-500 shrink-0" />
+                      <div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Thời gian</p>
+                        <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">6:00 PM – 7:30 PM (Giờ VN)</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CreditCard size={16} className="text-orange-500 shrink-0" />
+                      <div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Học phí</p>
+                        <p className="text-orange-500 font-black text-lg">6,999,000 VND</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
 
@@ -722,7 +779,7 @@ export const PublicPortal = () => {
         </div>
 
         {/* Filters & Search */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div id="features-grid" className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
            <div className="flex flex-wrap gap-2">
              <button 
                onClick={() => setActiveCategory('all')}

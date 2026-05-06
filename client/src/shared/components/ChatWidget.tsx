@@ -88,6 +88,12 @@ export const ChatWidget = () => {
   }, [isOpen, scrollToBottom]);
 
   useEffect(() => {
+    const handleOpenChat = () => setIsOpen(true);
+    window.addEventListener('open-chat-widget', handleOpenChat);
+    return () => window.removeEventListener('open-chat-widget', handleOpenChat);
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsOpen(false);
@@ -179,6 +185,7 @@ export const ChatWidget = () => {
   const botAvatar = botInfo.avatar;
 
   const quickQuestions = [
+    'Khoá học AI Training là gì? Giá bao nhiêu?',
     'Giới thiệu về trang web này đi!',
     'Web này có những tính năng gì?',
     'Ai tạo ra mày vậy?',
