@@ -1,0 +1,470 @@
+import { Router } from 'express';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../../database/prisma';
+import { bot } from '../../bot/client';
+import { geminiService } from '../../bot/services/gemini';
+import { userIdentityService } from '../../bot/services/identity';
+import { authenticateToken, JWT_SECRET, ADMIN_USER, ADMIN_PASS } from '../middleware/auth';
+
+const router = Router();
+
+// --- Login ---
+router.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+        const token = jwt.sign({ username: username }, JWT_SECRET, { expiresIn: '24h' });
+        res.json({ token });
+    } else {
+        res.status(401).json({ error: 'Invalid credentials' });
+    }
+});
+
+// --- Config Routes ---
+router.get('/config/:guildId', async (req, res) => {
+  try {
+    const config = await prisma.guildConfig.findUnique({ where: { guildId: req.params.guildId } });
+    if (config) {
+        res.json({
+            ...config,
+            systemPrompts: JSON.parse(config.systemPrompts),
+            activeModules: JSON.parse(config.activeModules)
+        });
+    } else {
+        res.json({ systemPrompts: {}, activeModules: {} });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/config/:guildId', async (req, res) => {
+  try {
+    const promptsStr = JSON.stringify(req.body.systemPrompts || {}); 
+    const modulesStr = JSON.stringify(req.body.activeModules || {});
+
+    const config = await prisma.guildConfig.upsert({
+        where: { guildId: req.params.guildId },
+        update: { systemPrompts: promptsStr, activeModules: modulesStr },
+        create: { guildId: req.params.guildId, systemPrompts: promptsStr, activeModules: modulesStr }
+    });
+    
+    res.json({
+        ...config,
+        systemPrompts: JSON.parse(config.systemPrompts),
+        activeModules: JSON.parse(config.activeModules)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// --- Logs ---
+router.get('/logs/:guildId', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+    const search = req.query.search as string;
+
+    const where: any = {};
+    if (req.params.guildId !== 'global') { where.guildId = req.params.guildId; }
+    if (search) {
+        where.OR = [
+            { content: { contains: search } },
+            { username: { contains: search } },
+            { response: { contains: search } }
+        ];
+    }
+
+    const [logs, total] = await Promise.all([
+        prisma.chatLog.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit }),
+        prisma.chatLog.count({ where })
+    ]);
+
+    res.json({
+      data: logs,
+      pagination: { current: page, total: Math.ceil(total / limit), totalRecords: total }
+    });
+  } catch (error) {
+    console.error("Logs Error:", error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// --- Dashboard Stats ---
+router.get('/dashboard/stats', async (req, res) => {
+    try {
+        const totalMessages = await prisma.chatLog.count();
+        const startOfDay = new Date();
+        startOfDay.setHours(0,0,0,0);
+        const messagesToday = await prisma.chatLog.count({ where: { createdAt: { gte: startOfDay } } });
+        const users = await prisma.chatLog.groupBy({ by: ['userId'] });
+        
+        res.json({ totalUsers: users.length, messagesToday, avgResponseTime: "1.5s", uptime: process.uptime() });
+    } catch (error) {
+         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// --- Bot Info ---
+router.get('/bot-info', async (req, res) => {
+    try {
+        if (!bot.user) { res.status(503).json({ error: 'Bot is not ready yet' }); return; }
+        res.json({
+            id: bot.user.id, username: bot.user.username,
+            globalName: bot.user.globalName || bot.user.username,
+            avatar: bot.user.displayAvatarURL({ size: 128 }), status: 'online'
+        });
+    } catch (error) {
+        console.error("Fetch Bot Info Error:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// --- User Identity ---
+router.get('/identity/:userId', async (req, res) => {
+    try {
+        const identity = await userIdentityService.getOrCreateIdentity(req.params.userId);
+        res.json({ userId: identity.userId, nickname: identity.nickname, signature: identity.signature });
+    } catch (error) {
+        console.error("Fetch Identity Error:", error);
+        res.status(500).json({ error: 'Failed to fetch identity' });
+    }
+});
+
+router.post('/identity/:userId', async (req, res) => {
+    try {
+        const { nickname, signature } = req.body;
+        const updated = await userIdentityService.updateIdentity(req.params.userId, { nickname: nickname || '', signature: signature || '' });
+        res.json({ userId: updated.userId, nickname: updated.nickname, signature: updated.signature });
+    } catch (error) {
+         console.error("Update Identity Error:", error);
+         res.status(500).json({ error: 'Failed to update identity' });
+    }
+});
+
+router.get('/identities/list', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        if (!guildId) { return res.json([]); }
+
+        const guild = await bot.guilds.fetch(guildId).catch(() => null);
+        if (!guild) { res.status(404).json({ error: 'Guild not found or bot not in guild' }); return; }
+
+        let members;
+        try { members = await guild.members.fetch(); } catch (err: any) {
+            console.warn(`[API /list] Fetch members failed: ${err.message}. Fallback to cache.`);
+            members = guild.members.cache;
+        }
+        
+        const humanMembers = members.filter(m => !m.user.bot);
+        const dbIdentities = await prisma.userIdentity.findMany();
+        const identityMap = new Map(dbIdentities.map(i => [i.userId, i]));
+
+        const results = humanMembers.map(member => {
+            const dbInfo = identityMap.get(member.user.id);
+            return {
+                id: member.user.id, username: member.user.username,
+                globalName: member.user.globalName || member.user.username,
+                avatar: member.user.displayAvatarURL({ size: 128 }),
+                serverNickname: member.nickname,
+                dbNickname: dbInfo?.nickname || '', dbSignature: dbInfo?.signature || ''
+            };
+        });
+        res.json(Array.from(results.values()));
+    } catch (error) {
+        console.error("Fetch Identity List Error:", error);
+        res.status(500).json({ error: 'Failed to fetch identity list' });
+    }
+});
+
+// --- Gemini API Key ---
+router.get('/gemini-api-key', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        let apiKey = '';
+        if (guildId && guildId !== 'global') {
+            const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            if (guildConfig && guildConfig.geminiApiKey) apiKey = guildConfig.geminiApiKey;
+        } else {
+            const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+            if (globalConfig && globalConfig.geminiApiKey) apiKey = globalConfig.geminiApiKey;
+        }
+        res.json({ apiKey });
+    } catch (error) {
+        console.error("Fetch API Key Error:", error);
+        res.status(500).json({ error: 'Failed to fetch API key' });
+    }
+});
+
+router.post('/gemini-api-key', async (req, res) => {
+    try {
+        const { guildId, apiKey } = req.body;
+        if (guildId && guildId !== 'global') {
+            await prisma.guildConfig.upsert({
+                where: { guildId },
+                update: { geminiApiKey: apiKey || null },
+                create: { guildId, systemPrompts: '{}', activeModules: '{}', geminiApiKey: apiKey || null }
+            });
+        } else {
+            await prisma.botConfig.upsert({
+                where: { key: 'global' },
+                update: { geminiApiKey: apiKey || null },
+                create: { key: 'global', systemPrompts: '{}', features: '{}', geminiApiKey: apiKey || null }
+            });
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Update API Key Error:", error);
+        res.status(500).json({ error: 'Failed to update API key' });
+    }
+});
+
+// --- Bot Persona ---
+router.get('/bot-persona', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        let personaStr = null;
+        if (guildId && guildId !== 'global') {
+            const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            if (guildConfig) {
+                const modules = JSON.parse(guildConfig.activeModules) as any;
+                if (modules.persona) personaStr = JSON.stringify(modules.persona);
+            }
+        }
+        if (!personaStr) {
+            const config = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+            if (config) personaStr = config.systemPrompts;
+        }
+        if (personaStr) {
+            res.json(JSON.parse(personaStr));
+        } else {
+            res.json({
+                identity: "Tôi là trợ lý AI ảo được tạo ra bởi Admin.",
+                purpose: "Hỗ trợ người dùng trong server giải trí, quản lý và hỏi đáp.",
+                hobbies: "Thích đọc sách, tìm hiểu công nghệ và chơi game.",
+                personality: "Thân thiện, vui vẻ, thích dùng emoji và đôi khi hơi nhây.",
+                writing_style: "Ngắn gọn, súc tích, dễ hiểu. Luôn dạ vâng với người lớn tuổi."
+            });
+        }
+    } catch (error) {
+        console.error("Fetch Persona Error:", error);
+        res.status(500).json({ error: 'Failed to fetch persona' });
+    }
+});
+
+router.post('/bot-persona', async (req, res) => {
+    try {
+        const { identity, purpose, hobbies, personality, writing_style, guildId } = req.body;
+        const personaData = { identity: identity || '', purpose: purpose || '', hobbies: hobbies || '', personality: personality || '', writing_style: writing_style || '' };
+        const personaStr = JSON.stringify(personaData);
+
+        if (guildId && guildId !== 'global') {
+            let guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            let modules = guildConfig ? JSON.parse(guildConfig.activeModules) : {};
+            modules.persona = personaData;
+            await prisma.guildConfig.upsert({
+                where: { guildId },
+                update: { activeModules: JSON.stringify(modules) },
+                create: { guildId, systemPrompts: '{}', activeModules: JSON.stringify(modules) }
+            });
+            res.json({ success: true, data: personaData, source: 'guild' });
+            return;
+        }
+
+        const config = await prisma.botConfig.upsert({
+            where: { key: 'persona' },
+            update: { systemPrompts: personaStr },
+            create: { key: 'persona', systemPrompts: personaStr, features: '{}' }
+        });
+        res.json({ success: true, data: JSON.parse(config.systemPrompts), source: 'global' });
+    } catch (error) {
+        console.error("Update Persona Error:", error);
+        res.status(500).json({ error: 'Failed to update persona' });
+    }
+});
+
+// --- Features Toggle ---
+router.get('/features', async (req, res) => {
+    try {
+        const config = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        res.json(config && config.features ? JSON.parse(config.features) : {});
+    } catch (error) {
+        console.error("Fetch Features Error:", error);
+        res.status(500).json({ error: 'Failed to fetch features' });
+    }
+});
+
+router.post('/features', async (req, res) => {
+    try {
+        let config = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        let currentFeatures = {};
+        if (config && config.features) { try { currentFeatures = JSON.parse(config.features); } catch(e){} }
+        const newFeatures = { ...currentFeatures, ...req.body };
+        const newFeaturesStr = JSON.stringify(newFeatures);
+        const updatedConfig = await prisma.botConfig.upsert({
+            where: { key: 'global' },
+            update: { features: newFeaturesStr },
+            create: { key: 'global', systemPrompts: '{}', features: newFeaturesStr }
+        });
+        res.json({ success: true, data: JSON.parse(updatedConfig.features) });
+    } catch (error) {
+        console.error("Update Features Error:", error);
+        res.status(500).json({ error: 'Failed to update features' });
+    }
+});
+
+// --- Prompts ---
+router.get('/prompts', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        if (guildId && guildId !== 'global') {
+            const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+            if (!guildConfig) { res.json({ global: "", quiz: "", catchTheWord: "", pet: "", pkGame: "", videoAnalysis: "", imageAnalysis: "" }); return; }
+            res.json(JSON.parse(guildConfig.systemPrompts));
+            return;
+        }
+        let config = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        if (!config) {
+            const defaults = { global: process.env.SYSTEM_PROMPT || "You are a helpful AI.", quiz: "You are a quiz master.", catchTheWord: "You are a game host.", pet: "You are a pet system AI.", pkGame: "You are a battle referee.", videoAnalysis: "Analyze this video.", imageAnalysis: "Analyze this image." };
+            config = await prisma.botConfig.create({ data: { key: 'global', systemPrompts: JSON.stringify(defaults), features: '{}' } });
+        }
+        res.json(JSON.parse(config.systemPrompts));
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.post('/prompts', async (req, res) => {
+    try {
+        const { systemPrompts, guildId } = req.body;
+        const promptsStr = JSON.stringify(systemPrompts);
+        if (guildId && guildId !== 'global') {
+            const config = await prisma.guildConfig.upsert({ where: { guildId }, update: { systemPrompts: promptsStr }, create: { guildId, systemPrompts: promptsStr, activeModules: '{}' } });
+            res.json(config); return;
+        }
+        const config = await prisma.botConfig.upsert({ where: { key: 'global' }, update: { systemPrompts: promptsStr }, create: { key: 'global', systemPrompts: promptsStr, features: '{}' } });
+        res.json(config);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/prompts/preview', async (req, res) => {
+    try {
+        const guildId = req.query.guildId as string;
+        const feature = req.query.feature as string || 'global';
+        const raw = req.query.raw === 'true';
+        const compiledPrompt = await geminiService.getSystemPrompt(guildId === 'global' ? '' : guildId, 'preview_user', feature);
+        if (raw) {
+            res.json({ text: JSON.stringify({ systemInstruction: { role: 'system', parts: [{ text: compiledPrompt }] } }, null, 2) });
+        } else {
+            res.json({ text: compiledPrompt });
+        }
+    } catch (error) {
+         console.error(error);
+         res.status(500).json({ error: 'Failed to preview prompt' });
+    }
+});
+
+router.delete('/prompts/history/:guildId', async (req, res) => {
+    try {
+        const guildId = req.params.guildId;
+        if (!guildId || guildId === 'global') { res.status(400).json({ error: 'Invalid guildId. Cannot reset global history.' }); return; }
+        await prisma.chatLog.deleteMany({ where: { guildId } });
+        res.json({ success: true, message: `Chat history for server ${guildId} has been reset.` });
+    } catch (error) {
+        console.error("Error resetting history:", error);
+        res.status(500).json({ error: 'Failed to reset chat history' });
+    }
+});
+
+// --- Guilds ---
+router.get('/guilds', (req, res) => {
+    try {
+        const guilds = bot.guilds.cache.map(g => ({ id: g.id, name: g.name, memberCount: g.memberCount, icon: g.iconURL() }));
+        res.json(guilds);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// --- Stats ---
+router.get('/stats/users', async (req, res) => {
+    try {
+         const topUsers = await prisma.chatLog.groupBy({ by: ['userId', 'username'], _count: { _all: true }, _max: { createdAt: true }, orderBy: { _count: { userId: 'desc' } }, take: 10 });
+         const formatted = topUsers.map(u => ({ _id: u.userId, username: u.username, count: u._count._all, lastActive: u._max.createdAt })).sort((a,b) => b.count - a.count);
+         res.json(formatted);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/stats/activity-history', async (req, res) => {
+    try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const logs = await prisma.chatLog.findMany({ where: { createdAt: { gte: sevenDaysAgo } }, select: { createdAt: true } });
+        const activityMap: Record<string, number> = {};
+        logs.forEach(log => { const date = log.createdAt.toISOString().split('T')[0]; activityMap[date] = (activityMap[date] || 0) + 1; });
+        const result = [];
+        for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const dateString = d.toISOString().split('T')[0]; result.push({ date: dateString, count: activityMap[dateString] || 0 }); }
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.get('/stats/usage-distribution', async (req, res) => {
+    try {
+        const distribution = await prisma.chatLog.groupBy({ by: ['type'], _count: { _all: true } });
+        const formatted = distribution.map(d => ({ name: (d.type || 'unknown').toUpperCase(), value: d._count._all }));
+        res.json(formatted);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// --- Guild Channels & Announce ---
+router.get('/guilds/:guildId/channels', async (req, res) => {
+    try {
+        const guild = bot.guilds.cache.get(req.params.guildId);
+        if (!guild) return res.status(404).json({ error: 'Guild not found' });
+        const channels = guild.channels.cache.filter(c => c.isTextBased() && !c.isDMBased()).map(c => ({ id: c.id, name: c.name, parentId: c.parentId || null, parentName: c.parent ? c.parent.name : 'Uncategorized' }));
+        res.json(channels);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+router.post('/guilds/:guildId/announce', async (req, res) => {
+    try {
+        const { channelId, message, title } = req.body;
+        const guild = bot.guilds.cache.get(req.params.guildId);
+        if (!guild) return res.status(404).json({ error: 'Guild not found' });
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel || !channel.isTextBased()) return res.status(400).json({ error: 'Invalid channel' });
+        const embed = { title: title || '📢 Announcement', description: message, color: 0x00FF00, footer: { text: 'Sent via EvoVerse Dashboard' }, timestamp: new Date().toISOString() };
+        await channel.send({ embeds: [embed] });
+        res.json({ success: true });
+    } catch (error) {
+        console.error("Announcement Error:", error);
+        res.status(500).json({ error: 'Failed to send announcement' });
+    }
+});
+
+router.delete('/guilds/:guildId', async (req, res) => {
+    try {
+        const guild = bot.guilds.cache.get(req.params.guildId);
+        if (!guild) return res.status(404).json({ error: 'Guild not found' });
+        await guild.leave();
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to leave guild' });
+    }
+});
+
+export default router;
