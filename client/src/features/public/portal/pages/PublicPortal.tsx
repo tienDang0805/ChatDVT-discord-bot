@@ -755,7 +755,11 @@ export const PublicPortal = () => {
                       <CreditCard size={16} className="text-orange-500 shrink-0" />
                       <div>
                         <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Học phí</p>
-                        <p className="text-orange-500 font-black text-lg">6,999,000 VND</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-slate-400 dark:text-slate-600 font-bold text-sm line-through">69,000,000 VND</p>
+                          <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide animate-pulse">-90%</span>
+                        </div>
+                        <p className="text-orange-500 font-black text-xl">6,999,000 VND</p>
                       </div>
                     </div>
                   </div>
