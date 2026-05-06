@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import axios from 'axios';
 
 import { prisma } from '../database/prisma';
 import { geminiService } from '../bot/services/gemini';
