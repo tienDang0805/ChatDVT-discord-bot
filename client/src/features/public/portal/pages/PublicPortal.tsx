@@ -396,8 +396,16 @@ export const PublicPortal = () => {
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isScrollRestored, setIsScrollRestored] = useState(false);
+  const [botAvatar, setBotAvatar] = useState('');
 
   const scrollSaveEnabled = useRef(false);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL || ''}/api/bot-info`)
+      .then(r => r.json())
+      .then(d => { if (d.avatar) setBotAvatar(d.avatar); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('portal_scrollY');
@@ -778,6 +786,38 @@ export const PublicPortal = () => {
            </div>
         </div>
 
+        {/* Discord Bot Promotion Banner */}
+        <div className="bg-gradient-to-r from-[#5865F2] to-[#4752C4] rounded-xl p-6 md:p-8 mb-12 relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 group border border-white/10">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+          <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-black/10 rounded-full blur-xl"></div>
+          
+          <div className="relative z-10 flex items-center gap-5">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md shrink-0 border border-white/20 shadow-inner overflow-hidden">
+              {botAvatar ? (
+                <img src={botAvatar} alt="ChatDVT" className="w-full h-full object-cover" />
+              ) : (
+                <Bot size={32} className="text-white drop-shadow-md" />
+              )}
+            </div>
+            <div>
+              <h3 className="text-xl md:text-2xl font-black text-white mb-1.5 drop-shadow-sm">Thêm ChatDVT vào Server Discord!</h3>
+              <p className="text-white/85 font-medium text-sm md:text-base max-w-xl leading-relaxed">
+                Đưa toàn bộ 28+ tính năng AI, Game Economy, vòng quay Tarot và Music Bot xịn xò vào server của mày. Miễn phí 100%!
+              </p>
+            </div>
+          </div>
+          
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot"
+            target="_blank"
+            rel="noreferrer"
+            className="relative z-10 w-full md:w-auto whitespace-nowrap bg-white text-[#5865F2] hover:bg-slate-50 font-black px-8 py-4 rounded-xl flex justify-center items-center gap-2.5 transition-all hover:scale-105 active:scale-95 shadow-xl"
+          >
+            <Bot size={20} className="text-[#5865F2]" />
+            Thêm Bot Ngay
+          </a>
+        </div>
+
         {/* Filters & Search */}
         <div id="features-grid" className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
            <div className="flex flex-wrap gap-2">
@@ -956,6 +996,9 @@ export const PublicPortal = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <a href="https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot" target="_blank" rel="noreferrer" className="text-[#5865F2] hover:text-[#4752C4] transition-colors hover:scale-110" title="Add ChatDVT Bot">
+              <Bot size={18} />
+            </a>
             <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-orange-500 transition-colors hover:scale-110">
               <Github size={18} />
             </a>

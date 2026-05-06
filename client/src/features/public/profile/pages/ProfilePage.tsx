@@ -173,13 +173,18 @@ export const ProfilePage = () => {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 mt-4">
-          <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-orange-500/50 transition-colors">
-            <Github size={14} /> Source Code
+        <div className="flex flex-col gap-2 mt-4">
+          <a href="https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot" target="_blank" rel="noreferrer" className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] rounded-xl text-sm font-bold text-white transition-colors shadow-sm">
+            <Bot size={16} /> Add ChatDVT to Server
           </a>
-          <a href="https://discord.com/users/448507913879945216" target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-[#5865F2] hover:bg-[#4752C4] rounded-xl text-xs font-bold text-white transition-colors shadow-sm">
-            <ExternalLink size={14} /> Discord
-          </a>
+          <div className="flex gap-2">
+            <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-orange-500/50 transition-colors">
+              <Github size={14} /> Source Code
+            </a>
+            <a href="https://discord.com/users/448507913879945216" target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:border-orange-500/50 transition-colors">
+              <ExternalLink size={14} /> My Discord
+            </a>
+          </div>
         </div>
       </div>
 
