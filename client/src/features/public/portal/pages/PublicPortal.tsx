@@ -85,6 +85,75 @@ const ConfettiOverlay = () => {
   );
 };
 
+const PortalHeader = () => {
+  const { theme, toggleTheme } = useTheme();
+
+  const handleScroll = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <header className="max-w-6xl mx-auto px-6 pt-6 sticky top-0 z-50 transition-colors duration-300">
+      <div className="w-full bg-white/90 dark:bg-[#161b22]/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl h-16 flex items-center justify-between px-6 shadow-sm">
+        {/* Logo */}
+        <div className="flex items-center gap-2 font-black text-xl text-slate-800 dark:text-white">
+          <span>Chat<span className="text-orange-500">DVT</span> Community</span>
+        </div>
+
+        {/* Nav Links - Center/Right */}
+        <nav className="hidden md:flex items-center gap-6">
+          <button onClick={() => handleScroll('course-section')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
+            <Sparkles size={18} /> Khoá Học
+          </button>
+          <button onClick={() => handleScroll('features-grid')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
+            <BrainCircuit size={18} /> Tính Năng
+          </button>
+          <button onClick={() => handleScroll('goal-section')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
+            <Heart size={18} /> Mục Tiêu
+          </button>
+          <button onClick={() => handleScroll('donate-section')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-amber-500 dark:hover:text-white transition-colors">
+            <Coffee size={18} /> Donate
+          </button>
+          <button onClick={() => handleScroll('discord-banner')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-[#5865F2] dark:hover:text-white transition-colors">
+            <Bot size={18} /> Discord Bot
+          </button>
+          
+          <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-2"></div>
+          
+          {/* Tác giả & Theme Toggle */}
+          <div className="flex items-center gap-4">
+            <Link to="/profile" className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
+              <Briefcase size={18} /> Tác Giả
+            </Link>
+            
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1f2937] text-slate-600 dark:text-slate-300 hover:text-orange-500 dark:hover:text-orange-400 transition-all group"
+              title={theme === 'dark' ? 'Giao diện Sáng' : 'Giao diện Tối'}
+            >
+              {theme === 'dark' ? <Sun size={16} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={16} className="group-hover:-rotate-12 transition-transform duration-500" />}
+            </button>
+          </div>
+        </nav>
+        
+        {/* Mobile Nav */}
+        <div className="md:hidden flex items-center gap-3">
+           <button
+             onClick={toggleTheme}
+             className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1f2937] text-slate-600 dark:text-slate-300"
+           >
+             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+           </button>
+        </div>
+      </div>
+    </header>
+  );
+};
+
 export const PublicPortal = () => {
   usePageTracker('PublicPortal');
   const { theme, toggleTheme } = useTheme();
@@ -567,23 +636,15 @@ export const PublicPortal = () => {
         .course-glow{animation:courseGlow 6s ease-in-out infinite}
         @keyframes courseFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
         .course-float{animation:courseFloat 4s ease-in-out infinite}
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+      <PortalHeader />
       {showConfetti && <ConfettiOverlay />}
-      <div className="max-w-6xl mx-auto px-6 py-10">
-
-        {/* Theme Toggle */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-[#1f2937] border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-orange-500 hover:border-orange-500/50 shadow-sm transition-all group"
-            title={theme === 'dark' ? 'Chuyển sang Giao diện Sáng' : 'Chuyển sang Giao diện Tối'}
-          >
-            {theme === 'dark' ? <Sun size={18} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={18} className="group-hover:-rotate-12 transition-transform duration-500" />}
-          </button>
-        </div>
+      <div className="max-w-6xl mx-auto px-6 pb-10 pt-4">
 
         {/* === KHOÁ HỌC AI TRAINING === */}
-        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-10 mb-8 relative overflow-hidden shadow-sm">
+        <div id="course-section" className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-10 mb-8 relative overflow-hidden shadow-sm">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-orange-500/[0.04] dark:bg-orange-500/[0.06] rounded-full blur-[120px] course-glow" />
             <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-violet-500/[0.03] dark:bg-violet-500/[0.05] rounded-full blur-[100px]" />
@@ -706,7 +767,7 @@ export const PublicPortal = () => {
         </div>
 
         {/* Goal Section */}
-        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden shadow-sm">
+        <div id="goal-section" className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden shadow-sm">
            <div className="flex flex-wrap justify-between items-center mb-6">
               <h3 className="text-orange-500 dark:text-orange-400 font-bold flex items-center gap-2 uppercase tracking-wider">
                 <Heart size={18} className="animate-pulse" /> Mục Tiêu Tháng: Nuôi Server (Bằng cơm mặn)
@@ -729,7 +790,7 @@ export const PublicPortal = () => {
         </div>
 
         {/* Donate / Nuôi Em Section */}
-        <div className="mb-16">
+        <div id="donate-section" className="mb-16">
            <h3 className="text-xl font-bold flex items-center gap-2 tracking-wider text-slate-800 dark:text-slate-200 mb-6">
              <Coffee size={24} className="text-amber-500" /> Donate Nuôi Dev
            </h3>
@@ -787,7 +848,7 @@ export const PublicPortal = () => {
         </div>
 
         {/* Discord Bot Promotion Banner */}
-        <div className="bg-gradient-to-r from-[#5865F2] to-[#4752C4] rounded-xl p-6 md:p-8 mb-12 relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 group border border-white/10">
+        <div id="discord-banner" className="bg-gradient-to-r from-[#5865F2] to-[#4752C4] rounded-xl p-6 md:p-8 mb-12 relative overflow-hidden shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 group border border-white/10">
           <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
           <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-black/10 rounded-full blur-xl"></div>
           
