@@ -712,9 +712,15 @@ export const PublicPortal = () => {
                   </button>
                 </div>
 
-                <div className="flex items-baseline gap-2 pt-1">
-                  <span className="text-3xl md:text-4xl font-black text-orange-500">6,999,000</span>
-                  <span className="text-slate-400 dark:text-slate-500 font-medium">VND / toàn khoá</span>
+                <div className="flex flex-col gap-1.5 pt-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg md:text-xl text-slate-400 dark:text-slate-500 font-bold line-through decoration-red-500/50 decoration-2">69,000,000 VND</span>
+                    <span className="bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider animate-bounce shadow-[0_0_15px_rgba(239,68,68,0.5)] border border-red-400/50">🔥 GIẢM 90%</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 drop-shadow-sm" style={{ backgroundSize: '200% auto', animation: 'courseGlow 3s linear infinite' }}>6,999,000</span>
+                    <span className="text-slate-500 dark:text-slate-400 font-bold text-sm">VND / toàn khoá</span>
+                  </div>
                 </div>
               </div>
 
