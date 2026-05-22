@@ -447,6 +447,17 @@ export const PublicPortal = () => {
       author: 'Diagram Master (Tiến Đặng)',
       category: 'utility',
       isNew: true
+    },
+    {
+      id: 'love8d',
+      number: '29',
+      title: 'Mãi Yêu 8D ❤️',
+      description: 'Nơi thổ lộ những lời sến sẩm, ngập tràn tim hồng bay phấp phới dành riêng cho 8D yêu dấu.',
+      icon: Heart,
+      href: '/love8d',
+      author: 'Kẻ Lụy Tình (Tiến Đặng)',
+      category: 'utility',
+      isNew: true
     }
   ];
 
@@ -569,6 +580,7 @@ export const PublicPortal = () => {
     '/tutien': () => import('../../tutien/pages/TuTienGame'),
     '/qr-generator': () => import('../../qr-generator/pages/QRGenerator'),
     '/quiz': () => import('../../web-quiz/pages/Lobby'),
+    '/love8d': () => import('../../love-8d/pages/Love8dPage'),
   };
 
   const prefetchedRef = useRef<Set<string>>(new Set());

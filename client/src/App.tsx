@@ -59,6 +59,7 @@ const WebQuizRoom = lazy(() => import('./features/public/web-quiz/pages/Room').t
 const EmulatorCheck = lazy(() => import('./features/public/emulator-check/pages/EmulatorCheck').then(m => ({ default: m.EmulatorCheck })));
 const MermaidEditor = lazy(() => import('./features/public/mermaid-editor/pages/MermaidEditor').then(m => ({ default: m.MermaidEditor })));
 const MermaidTutorial = lazy(() => import('./features/public/mermaid-editor/pages/MermaidTutorial').then(m => ({ default: m.MermaidTutorial })));
+const Love8dPage = lazy(() => import('./features/public/love-8d/pages/Love8dPage').then(m => ({ default: m.Love8dPage })));
 
 const Layout = lazy(() => import('./shared/components/Layout').then(m => ({ default: m.Layout })));
 const Dashboard = lazy(() => import('./features/admin/dashboard/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -170,6 +171,7 @@ function App() {
             <Route path="/emulator-check" element={<EmulatorCheck />} />
             <Route path="/mermaid-editor" element={<MermaidEditor />} />
             <Route path="/mermaid-tutorial" element={<MermaidTutorial />} />
+            <Route path="/love8d" element={<Love8dPage />} />
             <Route path="/admin/*" element={
               <RequireAuth>
                 <Layout>
