@@ -51,6 +51,9 @@ export const Love8dPage = () => {
   const [showMarriage, setShowMarriage] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isTextToSpeechEnabled, setIsTextToSpeechEnabled] = useState(true);
+  const [speechStyle, setSpeechStyle] = useState<'wet' | 'whisper' | 'cute'>('wet');
+  const [speechRate, setSpeechRate] = useState(0.52);
+  const [speechPitch, setSpeechPitch] = useState(1.35);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clickHeartsRef = useRef<{ x: number; y: number; size: number; speedX: number; speedY: number; opacity: number; color: string }[]>([]);
@@ -68,14 +71,66 @@ export const Love8dPage = () => {
     }
   }, []);
 
+  const formatWetText = (text: string, style: 'wet' | 'whisper' | 'cute') => {
+    let formatted = text.toLowerCase();
+    formatted = formatted.replace(/\b8d\b/g, 'tám đê');
+    if (style === 'wet') {
+      formatted = formatted
+        .replace(/\byêu\b/g, 'yêuuuu')
+        .replace(/\btám\b/g, 'támmm')
+        .replace(/\bđê\b/g, 'đêêê')
+        .replace(/\bvãi\b/g, 'vãiii')
+        .replace(/\blồn\b/g, 'lồnnn... ưmmm');
+      return `ôi dào... ${formatted}... chụt...`;
+    }
+    if (style === 'whisper') {
+      formatted = formatted
+        .replace(/\byêu\b/g, 'yêu')
+        .replace(/\btám\b/g, 'tám')
+        .replace(/\bđê\b/g, 'đê')
+        .replace(/\bvãi\b/g, 'vãi')
+        .replace(/\blồn\b/g, 'lồnnn');
+      return `hơơơ... ${formatted.split(' ').join('... ')}...`;
+    }
+    if (style === 'cute') {
+      formatted = formatted
+        .replace(/\byêu\b/g, 'yêuu')
+        .replace(/\btám\b/g, 'tám')
+        .replace(/\bđê\b/g, 'đê')
+        .replace(/\bvãi\b/g, 'vãi')
+        .replace(/\blồn\b/g, 'lồng');
+      return `${formatted}... chụt chụt... hihi...`;
+    }
+    return text;
+  };
+
   const speakText = (text: string) => {
     if (!isTextToSpeechEnabled) return;
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
+      const processedText = formatWetText(text, speechStyle);
+      const utterance = new SpeechSynthesisUtterance(processedText);
       utterance.lang = 'vi-VN';
-      utterance.rate = 0.85;
-      utterance.pitch = 1.2;
+      utterance.rate = speechRate;
+      utterance.pitch = speechPitch;
+      const voices = window.speechSynthesis.getVoices();
+      const candidates = ['linh', 'google', 'female', 'huyen', 'an', 'mai', 'nam'];
+      let targetVoice = null;
+      for (const name of candidates) {
+        const found = voices.find(
+          (v) => v.lang.includes('vi') && v.name.toLowerCase().includes(name)
+        );
+        if (found) {
+          targetVoice = found;
+          break;
+        }
+      }
+      if (!targetVoice) {
+        targetVoice = voices.find((v) => v.lang.includes('vi')) || null;
+      }
+      if (targetVoice) {
+        utterance.voice = targetVoice;
+      }
       window.speechSynthesis.speak(utterance);
     } catch (e) {}
   };
@@ -338,7 +393,7 @@ export const Love8dPage = () => {
             spawnClickHearts(arrow.targetX, 260, 25);
             setLoveMeter((m) => Math.min(m + 8, 100));
             playArrowHitSound();
-            speakText('Bắn trúng tim 8D rồi nè cưng!');
+            speakText('Ối... Yêu tám đê vãi lồn... chụt... chụt... chụt...');
           } else {
             next.push({
               ...arrow,
@@ -381,7 +436,7 @@ export const Love8dPage = () => {
     setMessages(updated);
     localStorage.setItem('love8d_messages', JSON.stringify(updated));
 
-    const readText = `Bạn ${sender} gửi tới 8D lời nhắn: ${message}`;
+    const readText = `Bạn ${sender} gửi tới 8D lời nhắn sến súa: ${message}`;
     speakText(readText);
 
     setSender('');
@@ -400,7 +455,7 @@ export const Love8dPage = () => {
     if (!husbandName.trim() || !wifeName.trim()) return;
     setShowMarriage(true);
     setLoveMeter(100);
-    speakText(`Chúc mừng hôn lễ thế kỷ giữa ${husbandName} và ${wifeName} đã được thiết lập thành công!`);
+    speakText(`Trời ơi... ôi trời ơi... chúc mừng hôn lễ thế kỷ chảy nước giữa ${husbandName} và ${wifeName} đã được thiết lập thành công mỹ mãn!`);
   };
 
   const cardColors = [
@@ -519,7 +574,7 @@ export const Love8dPage = () => {
               spawnClickHearts(e.clientX, e.clientY, 20);
               setLoveMeter((m) => Math.min(m + 4, 100));
               playArrowHitSound();
-              speakText('Yêu 8D cốt tủy!');
+              speakText('Ôi dào... Yêu tám đê vãi lồn... sướng quá đi mà...');
             }}
           >
             <Heart size={72} className="text-rose-500 fill-rose-500 drop-shadow-lg" />
@@ -581,7 +636,7 @@ export const Love8dPage = () => {
                 setLoveMeter(100);
                 spawnClickHearts(window.innerWidth / 2, 260, 50);
                 playArrowHitSound();
-                speakText('Vô lượng sến sẩm bùng nổ, mãi yêu 8D vô điều kiện!');
+                speakText('Ôi chao ôi... Yêu tám đê vãi lồn... sướng chảy cả nước mắt rồi này cưng ơi...');
               }}
               className="py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black rounded-xl transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
@@ -607,6 +662,66 @@ export const Love8dPage = () => {
             <p className="text-lg md:text-xl font-bold text-rose-600 dark:text-rose-400 italic">
               &ldquo;{currentQuote}&rdquo;
             </p>
+          </div>
+          <div className="mt-4 p-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur rounded-xl border border-rose-300/40 space-y-3">
+            <div className="text-xs font-black text-rose-500 uppercase tracking-widest text-center">
+              💋 Bộ Điều Chỉnh Độ Chảy Nước 💋
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {(['wet', 'whisper', 'cute'] as const).map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  onClick={() => setSpeechStyle(style)}
+                  className={`py-1.5 px-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border ${
+                    speechStyle === style
+                      ? 'bg-rose-500 text-white border-rose-500 shadow-sm'
+                      : 'bg-white/50 dark:bg-slate-800/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/30'
+                  }`}
+                >
+                  {style === 'wet' ? 'Ướt át 💋' : style === 'whisper' ? 'Thì thầm 🤫' : 'Cute 🧸'}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <div>
+                <div className="flex justify-between text-[10px] font-bold text-rose-400 dark:text-rose-500 uppercase tracking-wider">
+                  <span>Tốc độ đọc (Rate)</span>
+                  <span>{speechRate.toFixed(2)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.3"
+                  max="1.0"
+                  step="0.05"
+                  value={speechRate}
+                  onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+                  className="w-full accent-rose-500 h-1 bg-rose-100 dark:bg-rose-950/40 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] font-bold text-rose-400 dark:text-rose-500 uppercase tracking-wider">
+                  <span>Độ cao giọng (Pitch)</span>
+                  <span>{speechPitch.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2.0"
+                  step="0.05"
+                  value={speechPitch}
+                  onChange={(e) => setSpeechPitch(parseFloat(e.target.value))}
+                  className="w-full accent-rose-500 h-1 bg-rose-100 dark:bg-rose-950/40 rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => speakText('Yêu 8D vãi lồn!')}
+              className="w-full bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white py-2.5 rounded-xl font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all"
+            >
+              🔊 Phát âm: Yêu 8D vãi lồn
+            </button>
           </div>
         </div>
 
