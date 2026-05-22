@@ -1,23 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Sparkles, Send, RefreshCw, Trash2, Award, Zap, Volume2 } from 'lucide-react';
+import { Heart, Sparkles, Send, RefreshCw, Trash2, Award, Zap, Volume2, VolumeX, Music, HeartHandshake } from 'lucide-react';
 import { PageShell } from '../../../../shared/components/PageShell';
 
 const CHEESY_QUOTES = [
   'Dù trái đất có ngừng quay, tình yêu dành cho 8D vẫn mãi đong đầy! ❤️',
-  '8D không chỉ là một cái tên, đó là cả một bầu trời thương nhớ. 🌟',
-  'Nếu yêu 8D là một tội lỗi, tôi nguyện làm kẻ phạm tội thiên thu. 🌹',
-  'Mãi yêu 8D! Love 8D all! Trái tim này chỉ đập vì 8D mà thôi! 😍',
-  'Có 8D, mùa đông cũng hóa ấm áp, bão giông cũng hóa dịu êm. 💕',
-  '8D ơi, cậu có biết cậu là cả thế giới của tụi mình không? 😘',
-  'Yêu 8D từ cái nhìn đầu tiên, thương 8D đến hơi thở cuối cùng. 🥰',
-  'Trứng rán cần mỡ, bắp cần bơ. Yêu không cần cớ, cần 8D cơ! 💖',
-  '8D là nắng, 8D là mưa. Gặp 8D rồi, lòng đã say chưa? 💓',
-  'Nguyện một đời, một kiếp, chỉ để làm fan cứng của 8D! 💘',
-  'Khoảng cách giữa tớ và 8D là 0 bước chân, vì 8D luôn ở trong tim tớ rồi. 💞',
-  'Đã hơn một vạn năm trôi qua, lòng ta vẫn vẹn nguyên một chữ Yêu dành cho 8D. 💮',
-  'Dùng cả thiên hà này cũng không thể đo được tình cảm to lớn dành cho 8D! 🌌',
-  '8D là động lực để mỗi ngày thức dậy đều thấy cuộc đời đáng yêu đến lạ. 🦄',
-  'Cảm ơn 8D vì đã xuất hiện và làm rực rỡ thêm thanh xuân của chúng mình! 🌸'
+  '8D không chỉ là một cái tên, đó là cả một bầu trời thương nhớ da diết. 🌟',
+  'Nếu yêu 8D là một tội lỗi, tôi nguyện làm kẻ phạm tội thiên thu vạn kiếp. 🌹',
+  'Mãi yêu 8D! Love 8D all! Trái tim rỉ máu này chỉ đập vì 8D mà thôi! 😍',
+  'Có 8D, mùa đông lạnh giá cũng hóa ấm áp, bão giông cuộc đời cũng hóa dịu êm. 💕',
+  '8D ơi, cậu có biết cậu là cả thế giới, là vầng thái dương của đời tụi mình không? 😘',
+  'Yêu 8D từ cái nhìn đầu tiên, thương 8D đến hơi thở cuối cùng của sinh mệnh. 🥰',
+  'Trứng rán cần mỡ, bắp cần bơ. Yêu không cần cớ, cần 8D cơ! Hứa yêu suốt đời! 💖',
+  '8D là nắng, 8D là mưa. Gặp 8D rồi, linh hồn ta đã say đắm ngàn năm chưa? 💓',
+  'Nguyện một đời, một kiếp, chỉ để làm nô bệ tình yêu, làm fan cứng của 8D! 💘',
+  'Khoảng cách giữa tớ và 8D là 0 bước chân, vì 8D đã hòa vào làm một trong tim tớ. 💞',
+  'Đã hơn một vạn năm trôi qua, lòng ta vẫn vẹn nguyên một chữ Yêu khắc cốt ghi tâm dành cho 8D. 💮',
+  'Dùng cả dải ngân hà lấp lánh này cũng không thể đo được tình cảm vĩ đại dành cho 8D! 🌌',
+  '8D là nguồn sống, là oxy để mỗi ngày thức dậy đều thấy cuộc đời tràn đầy mật ngọt. 🦄',
+  'Cảm ơn 8D vì đã hạ thế và làm rực rỡ thêm thanh xuân đầy nắng gió của chúng mình! 🌸'
 ];
 
 interface LoveMessage {
@@ -43,14 +43,19 @@ export const Love8dPage = () => {
   const [sender, setSender] = useState('');
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<LoveMessage[]>([]);
-  const [loveMeter, setLoveMeter] = useState(50);
+  const [loveMeter, setLoveMeter] = useState(70);
   const [arrows, setArrows] = useState<CupidArrow[]>([]);
   const [isBigHeartBeating, setIsBigHeartBeating] = useState(false);
-  const [covenantName, setCovenantName] = useState('');
-  const [showCovenant, setShowCovenant] = useState(false);
+  const [husbandName, setHusbandName] = useState('');
+  const [wifeName, setWifeName] = useState('8D Yêu Dấu');
+  const [showMarriage, setShowMarriage] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [isTextToSpeechEnabled, setIsTextToSpeechEnabled] = useState(true);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const clickHeartsRef = useRef<{ x: number; y: number; size: number; speedY: number; opacity: number; color: string }[]>([]);
+  const clickHeartsRef = useRef<{ x: number; y: number; size: number; speedX: number; speedY: number; opacity: number; color: string }[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const synthIntervalRef = useRef<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('love8d_messages');
@@ -63,50 +68,109 @@ export const Love8dPage = () => {
     }
   }, []);
 
-  const playLoveTune = () => {
+  const speakText = (text: string) => {
+    if (!isTextToSpeechEnabled) return;
     try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
-      notes.forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.12);
-        gain.gain.setValueAtTime(0.08, audioCtx.currentTime + i * 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + i * 0.12 + 0.25);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(audioCtx.currentTime + i * 0.12);
-        osc.stop(audioCtx.currentTime + i * 0.12 + 0.3);
-      });
-    } catch (err) {}
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      utterance.rate = 0.85;
+      utterance.pitch = 1.2;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
   };
+
+  const playBackgroundMelody = () => {
+    if (isMusicPlaying) {
+      stopBackgroundMelody();
+      return;
+    }
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioContextClass();
+      audioContextRef.current = ctx;
+      setIsMusicPlaying(true);
+
+      const notes = [
+        261.63, 329.63, 392.00, 329.63,
+        293.66, 349.23, 440.00, 349.23,
+        329.63, 392.00, 493.88, 392.00,
+        349.23, 440.00, 523.25, 440.00
+      ];
+
+      let noteIndex = 0;
+
+      const playNextNote = () => {
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[noteIndex], ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start();
+        osc.stop(ctx.currentTime + 0.7);
+
+        noteIndex = (noteIndex + 1) % notes.length;
+      };
+
+      synthIntervalRef.current = setInterval(playNextNote, 600);
+      playNextNote();
+    } catch (e) {}
+  };
+
+  const stopBackgroundMelody = () => {
+    if (synthIntervalRef.current) {
+      clearInterval(synthIntervalRef.current);
+      synthIntervalRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    setIsMusicPlaying(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (synthIntervalRef.current) clearInterval(synthIntervalRef.current);
+      if (audioContextRef.current) audioContextRef.current.close();
+    };
+  }, []);
 
   const playArrowHitSound = () => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.stop(audioCtx.currentTime + 0.35);
     } catch (err) {}
   };
 
-  const spawnClickHearts = (x: number, y: number, count = 10) => {
-    const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f72585', '#b5179e', '#7209b7'];
+  const spawnClickHearts = (x: number, y: number, count = 12) => {
+    const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f72585', '#b5179e', '#7209b7', '#f43f5e', '#ec4899'];
     for (let i = 0; i < count; i++) {
       clickHeartsRef.current.push({
-        x: x + (Math.random() * 40 - 20),
-        y: y + (Math.random() * 40 - 20),
-        size: Math.random() * 15 + 8,
-        speedY: -(Math.random() * 2 + 1),
+        x,
+        y,
+        size: Math.random() * 20 + 8,
+        speedX: Math.random() * 4 - 2,
+        speedY: -(Math.random() * 3 + 1),
         opacity: 1,
         color: colors[Math.floor(Math.random() * colors.length)]
       });
@@ -132,6 +196,22 @@ export const Love8dPage = () => {
 
     window.addEventListener('resize', handleResize);
 
+    const handleMouseMove = (e: MouseEvent) => {
+      if (Math.random() < 0.15) {
+        clickHeartsRef.current.push({
+          x: e.clientX,
+          y: e.clientY,
+          size: Math.random() * 10 + 6,
+          speedX: Math.random() * 1 - 0.5,
+          speedY: -(Math.random() * 1 + 0.5),
+          opacity: 0.8,
+          color: ['#ff0a54', '#ff7096', '#f72585', '#ec4899', '#f43f5e'][Math.floor(Math.random() * 5)]
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
     class HeartParticle {
       x: number;
       y: number;
@@ -144,11 +224,11 @@ export const Love8dPage = () => {
       constructor() {
         this.x = Math.random() * width;
         this.y = height + Math.random() * 100;
-        this.size = Math.random() * 18 + 8;
-        this.speedX = Math.random() * 2 - 1;
-        this.speedY = -(Math.random() * 1.8 + 0.8);
-        this.opacity = Math.random() * 0.5 + 0.4;
-        const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f72585', '#ec4899', '#f43f5e', '#fb7185'];
+        this.size = Math.random() * 20 + 8;
+        this.speedX = Math.random() * 2.5 - 1.25;
+        this.speedY = -(Math.random() * 2 + 0.8);
+        this.opacity = Math.random() * 0.6 + 0.4;
+        const colors = ['#ff0a54', '#ff477e', '#ff7096', '#ff85a1', '#f72585', '#ec4899', '#f43f5e', '#fb7185', '#d946ef'];
         this.color = colors[Math.floor(Math.random() * colors.length)];
       }
 
@@ -180,7 +260,7 @@ export const Love8dPage = () => {
       }
     }
 
-    const particles: HeartParticle[] = Array.from({ length: 45 }, () => new HeartParticle());
+    const particles: HeartParticle[] = Array.from({ length: 50 }, () => new HeartParticle());
 
     const animate = () => {
       ctx.clearRect(0, 0, width, height);
@@ -192,8 +272,9 @@ export const Love8dPage = () => {
 
       for (let i = clickHeartsRef.current.length - 1; i >= 0; i--) {
         const h = clickHeartsRef.current[i];
+        h.x += h.speedX;
         h.y += h.speedY;
-        h.opacity -= 0.02;
+        h.opacity -= 0.015;
         if (h.opacity <= 0) {
           clickHeartsRef.current.splice(i, 1);
         } else {
@@ -219,13 +300,14 @@ export const Love8dPage = () => {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
       cancelAnimationFrame(animationId);
     };
   }, []);
 
   const shootCupidArrow = () => {
-    const startX = 50;
-    const startY = 150;
+    const startX = 60;
+    const startY = 160;
     const targetX = window.innerWidth / 2;
     const targetY = 320;
 
@@ -249,19 +331,20 @@ export const Love8dPage = () => {
       setArrows((prev) => {
         const next: CupidArrow[] = [];
         prev.forEach((arrow) => {
-          const nextProgress = arrow.progress + 0.05;
+          const nextProgress = arrow.progress + 0.06;
           if (nextProgress >= 1) {
             setIsBigHeartBeating(true);
             setTimeout(() => setIsBigHeartBeating(false), 200);
-            spawnClickHearts(arrow.targetX, 260, 20);
-            setLoveMeter((m) => Math.min(m + 5, 100));
-            playLoveTune();
+            spawnClickHearts(arrow.targetX, 260, 25);
+            setLoveMeter((m) => Math.min(m + 8, 100));
+            playArrowHitSound();
+            speakText('Bắn trúng tim 8D rồi nè cưng!');
           } else {
             next.push({
               ...arrow,
               progress: nextProgress,
-              x: arrow.x + (arrow.targetX - arrow.x) * 0.05,
-              y: arrow.y + (arrow.targetY - arrow.y) * 0.05
+              x: arrow.x + (arrow.targetX - arrow.x) * 0.06,
+              y: arrow.y + (arrow.targetY - arrow.y) * 0.06
             });
           }
         });
@@ -278,8 +361,8 @@ export const Love8dPage = () => {
       next = CHEESY_QUOTES[Math.floor(Math.random() * CHEESY_QUOTES.length)];
     } while (next === currentQuote && CHEESY_QUOTES.length > 1);
     setCurrentQuote(next);
-    setLoveMeter((m) => Math.min(m + 2, 100));
-    playLoveTune();
+    setLoveMeter((m) => Math.min(m + 5, 100));
+    speakText(next);
   };
 
   const handleSend = (e: React.FormEvent) => {
@@ -298,10 +381,12 @@ export const Love8dPage = () => {
     setMessages(updated);
     localStorage.setItem('love8d_messages', JSON.stringify(updated));
 
+    const readText = `Bạn ${sender} gửi tới 8D lời nhắn: ${message}`;
+    speakText(readText);
+
     setSender('');
     setMessage('');
-    setLoveMeter((m) => Math.min(m + 10, 100));
-    playLoveTune();
+    setLoveMeter((m) => Math.min(m + 15, 100));
   };
 
   const handleDelete = (id: string) => {
@@ -310,173 +395,215 @@ export const Love8dPage = () => {
     localStorage.setItem('love8d_messages', JSON.stringify(filtered));
   };
 
-  const generateCovenant = (e: React.FormEvent) => {
+  const generateMarriage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!covenantName.trim()) return;
-    setShowCovenant(true);
+    if (!husbandName.trim() || !wifeName.trim()) return;
+    setShowMarriage(true);
     setLoveMeter(100);
-    playLoveTune();
+    speakText(`Chúc mừng hôn lễ thế kỷ giữa ${husbandName} và ${wifeName} đã được thiết lập thành công!`);
   };
 
   const cardColors = [
-    'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40 text-rose-800 dark:text-rose-200',
-    'bg-pink-50 dark:bg-pink-950/20 border-pink-200 dark:border-pink-900/40 text-pink-800 dark:text-pink-200',
-    'bg-fuchsia-50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-900/40 text-fuchsia-800 dark:text-fuchsia-200',
-    'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/40 text-red-800 dark:text-red-200'
+    'bg-rose-100/70 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/50 text-rose-800 dark:text-rose-200',
+    'bg-pink-100/70 dark:bg-pink-950/30 border-pink-300 dark:border-pink-900/50 text-pink-800 dark:text-pink-200',
+    'bg-fuchsia-100/70 dark:bg-fuchsia-950/30 border-fuchsia-300 dark:border-fuchsia-900/50 text-fuchsia-800 dark:text-fuchsia-200',
+    'bg-red-100/70 dark:bg-red-950/30 border-red-300 dark:border-red-900/50 text-red-800 dark:text-red-200'
   ];
 
   return (
-    <PageShell title="Mãi Yêu 8D" subtitle="Siêu Cấp Sến Sẩm Vô Địch Thiên Hạ" icon="💝" maxWidth="3xl" stars>
+    <PageShell title="Siêu Cấp Yêu 8D Vô Cực" subtitle="Cung Điện Tình Yêu Hồng Hoa Lấp Lánh" icon="💖" maxWidth="3xl" stars>
       <style>{`
         @keyframes pulseGlow {
-          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(244,63,94,0.7)); }
-          50% { transform: scale(1.15); filter: drop-shadow(0 0 35px rgba(244,63,94,1)); }
+          0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(244,63,94,0.8)); }
+          50% { transform: scale(1.2); filter: drop-shadow(0 0 45px rgba(236,72,153,1)); }
         }
         @keyframes borderRainbow {
-          0%, 100% { border-color: #f43f5e; }
-          50% { border-color: #d946ef; }
+          0%, 100% { border-color: #f43f5e; box-shadow: 0 0 10px rgba(244,63,94,0.5); }
+          33% { border-color: #d946ef; box-shadow: 0 0 15px rgba(217,70,239,0.5); }
+          66% { border-color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.5); }
         }
         @keyframes cupidFloat {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(3deg); }
+          0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
+          50% { transform: translateY(-15px) rotate(8deg) scale(1.1); }
         }
         @keyframes textShimmer {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes bgGradientMove {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
         .pulse-glow {
-          animation: pulseGlow 1.5s infinite ease-in-out;
+          animation: pulseGlow 1.2s infinite ease-in-out;
         }
-        .rainbow-border {
-          animation: borderRainbow 3s infinite linear;
+        .rainbow-border-max {
+          animation: borderRainbow 2.5s infinite linear;
         }
-        .cupid-float {
-          animation: cupidFloat 3.5s infinite ease-in-out;
+        .cupid-float-max {
+          animation: cupidFloat 2.8s infinite ease-in-out;
         }
-        .shimmer-text {
+        .shimmer-text-max {
           background-size: 200% auto;
-          animation: textShimmer 3s infinite linear;
+          animation: textShimmer 2s infinite linear;
         }
-        .love-card-shadow {
-          box-shadow: 0 15px 35px -10px rgba(244,63,94,0.4);
+        .bg-gradient-sudu {
+          background: linear-gradient(-45deg, #ffe4e6, #fbcfe8, #f472b6, #fda4af);
+          background-size: 400% 400%;
+          animation: bgGradientMove 8s ease infinite;
+        }
+        .dark .bg-gradient-sudu {
+          background: linear-gradient(-45deg, #881337, #5c0632, #4c0519, #2e0817);
+          background-size: 400% 400%;
+          animation: bgGradientMove 8s ease infinite;
+        }
+        .love-card-shadow-max {
+          box-shadow: 0 20px 45px -10px rgba(244,63,94,0.5);
+        }
+        .custom-cursor-heart {
+          cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23f43f5e"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>') 12 12, auto;
         }
       `}</style>
 
       <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" />
 
-      <div className="relative z-10 space-y-8 pb-10">
-        <div className="absolute top-0 left-0 hidden md:block cupid-float z-30 pointer-events-none">
-          <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 30 C 50 10, 80 10, 80 30 C 80 50, 50 70, 50 85 C 50 70, 20 50, 20 30 C 20 10, 50 10, 50 30" fill="#f43f5e" opacity="0.15" />
+      <div className="relative z-10 space-y-8 pb-10 custom-cursor-heart">
+        <div className="fixed top-24 right-6 z-50 flex flex-col gap-2">
+          <button
+            onClick={playBackgroundMelody}
+            className={`p-3 rounded-full shadow-lg transition-all active:scale-95 flex items-center justify-center ${
+              isMusicPlaying ? 'bg-rose-500 text-white animate-spin' : 'bg-white dark:bg-slate-800 text-rose-500'
+            }`}
+            title={isMusicPlaying ? 'Tắt nhạc sến' : 'Bật nhạc sến'}
+          >
+            {isMusicPlaying ? <Music size={20} /> : <Volume2 size={20} />}
+          </button>
+          <button
+            onClick={() => setIsTextToSpeechEnabled(!isTextToSpeechEnabled)}
+            className={`p-3 rounded-full shadow-lg transition-all active:scale-95 flex items-center justify-center ${
+              isTextToSpeechEnabled ? 'bg-pink-500 text-white' : 'bg-white dark:bg-slate-800 text-pink-500'
+            }`}
+            title={isTextToSpeechEnabled ? 'Tắt đọc chị Google' : 'Bật đọc chị Google'}
+          >
+            {isTextToSpeechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+        </div>
+
+        <div className="absolute top-0 left-0 hidden md:block cupid-float-max z-30 pointer-events-none">
+          <svg width="150" height="150" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 30 C 50 10, 80 10, 80 30 C 80 50, 50 70, 50 85 C 50 70, 20 50, 20 30 C 20 10, 50 10, 50 30" fill="#f43f5e" opacity="0.3" />
             <circle cx="50" cy="40" r="10" fill="#fbcfe8" stroke="#ec4899" strokeWidth="2" />
             <path d="M40 50 Q 50 65 60 50 Q 70 70 50 80 Q 30 70 40 50" fill="#fbcfe8" stroke="#ec4899" strokeWidth="2" />
             <path d="M30 45 Q 15 35 25 25 Q 35 25 35 40" fill="#ffffff" stroke="#ec4899" strokeWidth="1.5" />
             <path d="M70 45 Q 85 35 75 25 Q 65 25 65 40" fill="#ffffff" stroke="#ec4899" strokeWidth="1.5" />
-            <path d="M42 38 A 1.5 1.5 0 1 1 41.9 38" fill="#ec4899" />
-            <path d="M58 38 A 1.5 1.5 0 1 1 57.9 38" fill="#ec4899" />
+            <circle cx="47" cy="38" r="1.5" fill="#f43f5e" />
+            <circle cx="53" cy="38" r="1.5" fill="#f43f5e" />
             <path d="M46 43 Q 50 46 54 43" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
-            <path d="M25 60 L 65 60 M 60 55 L 67 60 L 60 65" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M25 60 L 65 60 M 60 55 L 67 60 L 60 65" stroke="#eab308" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-pink-200 dark:border-pink-900/40 rounded-xl px-3 py-1.5 text-[10px] font-black text-rose-500 absolute -bottom-2 left-0 shadow-md">
-            Cupid 8D
+          <div className="bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full absolute -bottom-1 left-2 shadow-lg animate-pulse uppercase tracking-wider">
+            Thần Tình Yêu 8D
           </div>
         </div>
 
         <div className="flex flex-col items-center text-center">
           <div
-            className={`w-32 h-32 bg-gradient-to-tr from-rose-100 to-pink-200 dark:from-rose-950/60 dark:to-pink-950/60 rounded-full flex items-center justify-center cursor-pointer select-none transition-transform duration-100 ${
+            className={`w-36 h-36 bg-gradient-to-tr from-rose-200 via-pink-300 to-red-200 dark:from-rose-950 dark:via-pink-900 dark:to-red-950 rounded-full flex items-center justify-center cursor-pointer select-none transition-transform duration-700 ${
               isBigHeartBeating ? 'scale-125' : 'pulse-glow'
             }`}
             onClick={(e) => {
               setIsBigHeartBeating(true);
               setTimeout(() => setIsBigHeartBeating(false), 150);
-              spawnClickHearts(e.clientX, e.clientY, 15);
-              setLoveMeter((m) => Math.min(m + 3, 100));
-              playLoveTune();
+              spawnClickHearts(e.clientX, e.clientY, 20);
+              setLoveMeter((m) => Math.min(m + 4, 100));
+              playArrowHitSound();
+              speakText('Yêu 8D cốt tủy!');
             }}
           >
-            <Heart size={64} className="text-rose-500 fill-rose-500" />
+            <Heart size={72} className="text-rose-500 fill-rose-500 drop-shadow-lg" />
           </div>
-          <h2 className="text-4xl font-black bg-gradient-to-r from-rose-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mt-4 shimmer-text">
-            ❤️ SIÊU CẤP YÊU 8D ❤️
+          <h2 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 bg-clip-text text-transparent mt-5 shimmer-text-max">
+            💋 YÊU 8D VÔ LƯỢNG KIẾP 💋
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 max-w-lg">
-            Nơi tình yêu sến súa nhân lên gấp 10 lần! Nhấp vào tim to ở trên, bắn cung Cupid, hoặc lập cam kết trọn đời để đong đầy tình cảm.
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 max-w-lg italic font-medium">
+            &ldquo;Hỡi thế gian tình ái là chi, mà đôi lứa thề nguyền sống chết vì 8D?&rdquo;
           </p>
         </div>
 
         {arrows.map((arrow) => (
           <div
             key={arrow.id}
-            className="fixed z-50 pointer-events-none text-rose-500"
+            className="fixed z-50 pointer-events-none text-rose-500 animate-pulse"
             style={{
               left: `${arrow.x}px`,
               top: `${arrow.y}px`,
               transform: 'translate(-50%, -50%) rotate(45deg)'
             }}
           >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 22 L 22 2 M 16 2 L 22 2 L 22 8 M 2 22 L 6 18" stroke="#f43f5e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M12 8 C 12 8, 15 5, 18 8 C 18 8, 21 11, 18 14" stroke="#f43f5e" strokeWidth="2" />
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M2 22 L 22 2 M 16 2 L 22 2 L 22 8 M 2 22 L 6 18" stroke="#ff0a54" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M12 8 C 12 8, 15 5, 18 8 C 18 8, 21 11, 18 14" fill="#ff0a54" />
             </svg>
           </div>
         ))}
 
-        <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md space-y-4">
+        <div className="bg-white dark:bg-[#131923] border-2 border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md space-y-4 rainbow-border-max">
           <div className="flex justify-between items-center">
-            <span className="text-xs font-black uppercase tracking-widest text-rose-500 flex items-center gap-1.5">
-              <Zap size={14} className="animate-bounce" /> Thanh Đo Độ Sến Sẩm Gửi 8D
+            <span className="text-xs font-black uppercase tracking-widest text-rose-500 flex items-center gap-1.5 animate-pulse">
+              <Zap size={14} className="text-amber-500" /> Chỉ Số Cuồng Yêu 8D
             </span>
             <span className="text-sm font-black text-rose-500">{loveMeter}%</span>
           </div>
-          <div className="h-5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border border-pink-100 dark:border-pink-900/30 p-0.5">
+          <div className="h-6 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden border-2 border-pink-200 dark:border-pink-900/40 p-0.5">
             <div
-              className="h-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 rounded-full transition-all duration-300 flex items-center justify-end pr-2"
+              className="h-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
               style={{ width: `${loveMeter}%` }}
             >
-              {loveMeter > 20 && <Heart size={10} className="text-white fill-white animate-pulse" />}
+              {loveMeter > 15 && <Heart size={12} className="text-white fill-white animate-bounce" />}
             </div>
           </div>
           {loveMeter === 100 && (
-            <div className="text-center bg-rose-500/10 dark:bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400 p-3 rounded-xl text-xs font-black uppercase tracking-wider animate-bounce">
-              🎉 8D ĐÃ BỊ THỐNG TRỊ BỞI TÌNH YÊU VÔ TẬN CỦA ANH EM! 🎉
+            <div className="text-center bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white p-3 rounded-xl text-xs font-black uppercase tracking-wider animate-bounce shadow-lg">
+              🔥 8D LÀ LẼ SỐNG, LÀ HƠI THỞ, LÀ ĐỊNH MỆNH DUY NHẤT! 🔥
             </div>
           )}
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={shootCupidArrow}
-              className="py-3 bg-pink-100 hover:bg-pink-200 dark:bg-pink-950/40 dark:hover:bg-pink-950/60 border border-pink-300 dark:border-pink-900/50 text-pink-700 dark:text-pink-300 font-black rounded-xl transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95"
+              className="py-3 bg-pink-500 hover:bg-pink-600 text-white font-black rounded-xl transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
-              🏹 Bắn Tim Cupid
+              🏹 Bắn Cung Cupid
             </button>
             <button
               onClick={() => {
                 setLoveMeter(100);
-                spawnClickHearts(window.innerWidth / 2, 260, 40);
-                playLoveTune();
+                spawnClickHearts(window.innerWidth / 2, 260, 50);
+                playArrowHitSound();
+                speakText('Vô lượng sến sẩm bùng nổ, mãi yêu 8D vô điều kiện!');
               }}
-              className="py-3 bg-rose-100 hover:bg-rose-200 dark:bg-rose-950/40 dark:hover:bg-rose-950/60 border border-rose-300 dark:border-rose-900/50 text-rose-700 dark:text-rose-300 font-black rounded-xl transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95"
+              className="py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black rounded-xl transition-all text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
-              💥 Quá Tải Sến Sẩm
+              🎇 Siêu Bão Tỏ Tình
             </button>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#131923] border-2 border-rose-200 dark:border-rose-900/50 rounded-2xl p-6 love-card-shadow rainbow-border">
+        <div className="bg-gradient-sudu border-2 border-rose-300 dark:border-rose-900/60 rounded-2xl p-6 love-card-shadow-max rainbow-border-max">
           <div className="flex justify-between items-center mb-4">
-            <span className="text-xs font-black uppercase tracking-widest text-rose-500 flex items-center gap-1.5">
-              <Sparkles size={14} /> Lời Thề Non Hẹn Biển Ngẫu Nhiên
+            <span className="text-xs font-black uppercase tracking-widest text-rose-700 dark:text-rose-300 flex items-center gap-1.5">
+              <Sparkles size={14} /> Thư Tình Ướt Át Nhất Vũ Trụ
             </span>
             <button
               onClick={changeQuote}
-              className="p-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg text-rose-500 transition-colors"
-              title="Đổi câu tỏ tình sến hơn"
+              className="p-2 hover:bg-white/20 rounded-lg text-rose-700 dark:text-rose-300 transition-colors"
+              title="Tìm lời sến hơn"
             >
               <RefreshCw size={16} />
             </button>
           </div>
-          <div className="min-h-[80px] flex items-center justify-center p-4 bg-rose-50/50 dark:bg-rose-950/10 rounded-xl border border-rose-100 dark:border-rose-950/30 text-center">
+          <div className="min-h-[90px] flex items-center justify-center p-5 bg-white/70 dark:bg-slate-900/60 backdrop-blur rounded-xl border border-rose-200 dark:border-rose-950/40 text-center shadow-inner">
             <p className="text-lg md:text-xl font-bold text-rose-600 dark:text-rose-400 italic">
               &ldquo;{currentQuote}&rdquo;
             </p>
@@ -485,48 +612,82 @@ export const Love8dPage = () => {
 
         <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-md">
           <h3 className="text-xs font-black uppercase tracking-widest text-rose-500 flex items-center gap-1.5 mb-4">
-            <Award size={14} /> Lập Bản Cam Kết Mãi Yêu 8D
+            <HeartHandshake size={14} /> Hôn Thư Ước Nguyện Kết Hôn Ảo Với 8D
           </h3>
-          {!showCovenant ? (
-            <form onSubmit={generateCovenant} className="flex gap-2">
-              <input
-                type="text"
-                required
-                value={covenantName}
-                onChange={(e) => setCovenantName(e.target.value)}
-                placeholder="Nhập tên thật/biệt danh của bạn..."
-                className="flex-1 bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 outline-none focus:border-rose-500 transition-colors text-sm"
-              />
+          {!showMarriage ? (
+            <form onSubmit={generateMarriage} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1.5">
+                    Tên Chồng (Ông xã)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={husbandName}
+                    onChange={(e) => setHusbandName(e.target.value)}
+                    placeholder="Nhập tên chú rể..."
+                    className="w-full bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 outline-none focus:border-rose-500 transition-colors text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-rose-400 uppercase tracking-widest mb-1.5">
+                    Tên Vợ (Bà xã)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={wifeName}
+                    onChange={(e) => setWifeName(e.target.value)}
+                    placeholder="Mặc định là 8D..."
+                    className="w-full bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 outline-none focus:border-rose-500 transition-colors text-sm"
+                  />
+                </div>
+              </div>
               <button
                 type="submit"
-                className="bg-rose-500 hover:bg-rose-600 text-white font-bold px-6 rounded-xl transition-all active:scale-95 text-xs uppercase tracking-wider shrink-0"
+                className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-md active:scale-95 text-xs uppercase tracking-wider"
               >
-                Ký Thề Ước
+                🌹 Tiến Hành Bái Đường Thành Thân 🌹
               </button>
             </form>
           ) : (
-            <div className="relative border-4 border-dashed border-rose-300 dark:border-rose-900/60 p-6 rounded-xl text-center bg-rose-50/30 dark:bg-rose-950/5 space-y-4">
-              <div className="absolute top-2 right-2 text-rose-500 animate-pulse">
+            <div className="relative border-4 border-double border-pink-400 dark:border-pink-800/80 p-8 rounded-xl text-center bg-rose-50/20 dark:bg-rose-950/5 space-y-6">
+              <div className="absolute top-3 right-3 text-rose-500 animate-ping">
                 <Heart size={20} className="fill-rose-500" />
               </div>
-              <h4 className="text-xl font-black text-rose-600 dark:text-rose-400">
-                CHỨNG NHẬN CAM KẾT TÌNH YÊU
+              <h4 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-widest font-serif">
+                HÔN THƯ KẾT TÓC PHU THÊ
               </h4>
-              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-serif italic">
-                &ldquo;Tôi là <span className="font-bold text-rose-500 underline">{covenantName}</span>, xin tự nguyện thề trước thần tình yêu Cupid rằng sẽ luôn yêu mến, ủng hộ và bảo vệ <span className="font-bold text-rose-500">8D</span> trong mọi hoàn cảnh, mãi mãi không thay lòng đổi dạ!&rdquo;
+              <p className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Thiên Địa Chứng Giám · Nhân Duyên Tiền Định
+              </p>
+              <div className="text-base md:text-lg text-slate-700 dark:text-slate-300 leading-relaxed font-serif italic max-w-xl mx-auto border-t border-b border-pink-200 dark:border-pink-900/40 py-4">
+                &ldquo;Hôm nay, trước thanh thiên bạch nhật, chúng tôi là{' '}
+                <span className="font-bold text-rose-500 underline">{husbandName}</span> và{' '}
+                <span className="font-bold text-rose-500 underline">{wifeName}</span>, nguyện kết làm phu thê ảo trọn đời, đồng cam cộng khổ, chia ngọt sẻ bùi, yêu thương vô điều kiện, mãi mãi thủy chung với tình yêu 8D vĩ đại!&rdquo;
               </div>
-              <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-600 font-mono">
-                <span>Người thề: {covenantName}</span>
-                <span>Chứng nhận bởi: Cupid 8D</span>
+              <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400 px-4">
+                <div className="flex flex-col items-center">
+                  <span>Tân Lang (Ký tên)</span>
+                  <span className="font-bold text-rose-500 mt-2 font-serif">{husbandName}</span>
+                </div>
+                <div className="w-16 h-16 border-2 border-pink-400 rounded-full flex items-center justify-center text-[10px] text-pink-500 font-bold uppercase tracking-wider transform -rotate-12">
+                  Đã Đóng Dấu
+                </div>
+                <div className="flex flex-col items-center">
+                  <span>Tân Nương (Ký tên)</span>
+                  <span className="font-bold text-rose-500 mt-2 font-serif">{wifeName}</span>
+                </div>
               </div>
               <button
                 onClick={() => {
-                  setShowCovenant(false);
-                  setCovenantName('');
+                  setShowMarriage(false);
+                  setHusbandName('');
                 }}
                 className="text-xs text-rose-500 hover:underline font-bold"
               >
-                Làm bản cam kết khác
+                Hủy ước thề kết hôn lại
               </button>
             </div>
           )}
@@ -535,10 +696,10 @@ export const Love8dPage = () => {
         <div className="flex flex-col items-center">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="px-8 py-4 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-black rounded-xl transition-all shadow-lg shadow-rose-500/20 active:scale-95 flex items-center gap-2"
+            className="px-8 py-4 bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 text-white font-black rounded-xl transition-all shadow-lg shadow-rose-500/25 active:scale-95 flex items-center gap-2"
           >
             <Heart size={20} className="fill-white" />
-            {isOpen ? 'Đóng Hòm Thư 8D' : 'Gửi Thư Tỏ Tình Sến Sẩm'}
+            {isOpen ? 'Đóng Thư Tình Đẫm Lệ' : 'Gửi Thư Tình Sến Sẩm Siêu Cấp'}
           </button>
 
           {isOpen && (
@@ -546,27 +707,27 @@ export const Love8dPage = () => {
               <form onSubmit={handleSend} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-rose-500 uppercase tracking-widest mb-2">
-                    Tên của bạn
+                    Biệt danh đáng yêu của bạn
                   </label>
                   <input
                     type="text"
                     required
                     value={sender}
                     onChange={(e) => setSender(e.target.value)}
-                    placeholder="Nhập biệt danh đáng yêu của bạn..."
+                    placeholder="Nhập tên để 8D biết bạn là ai..."
                     className="w-full bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 outline-none focus:border-rose-500 transition-colors text-sm"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-rose-500 uppercase tracking-widest mb-2">
-                    Lời nhắn sến cẩm nhất gửi 8D
+                    Những lời sến súa nổ da gà gửi 8D
                   </label>
                   <textarea
                     required
                     rows={3}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Hãy để trái tim bạn lên tiếng..."
+                    placeholder="Gõ lời yêu thương đến mức người đọc phải rùng mình..."
                     className="w-full bg-slate-100 dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 outline-none focus:border-rose-500 transition-colors text-sm resize-none"
                   />
                 </div>
@@ -574,7 +735,7 @@ export const Love8dPage = () => {
                   type="submit"
                   className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-sm"
                 >
-                  <Send size={16} /> GỬI TRỌN CON TIM
+                  <Send size={16} /> BẮN TIM GỬI ĐI
                 </button>
               </form>
             </div>
@@ -585,7 +746,7 @@ export const Love8dPage = () => {
           <div className="flex items-center gap-2 border-b border-rose-200 dark:border-rose-900/30 pb-2">
             <Heart size={18} className="text-rose-500 fill-rose-500 animate-pulse" />
             <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
-              Bức Tường Yêu Thương 8D
+              Bức Tường Cuồng Yêu 8D
             </h3>
           </div>
 
@@ -593,7 +754,7 @@ export const Love8dPage = () => {
             <div className="text-center py-10 bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-2xl">
               <Heart size={36} className="mx-auto text-rose-300 dark:text-rose-900/40 mb-2 animate-bounce" />
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Bức tường đang trống.</p>
-              <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Hãy viết lời nhắn đầu tiên để sưởi ấm tim 8D!</p>
+              <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Hãy viết lời thề thốt đầu tiên để làm 8D rung động!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[450px] overflow-y-auto pr-1">
@@ -622,13 +783,6 @@ export const Love8dPage = () => {
               ))}
             </div>
           )}
-        </div>
-
-        <div className="bg-rose-50 dark:bg-rose-950/10 border border-rose-200 dark:border-rose-900/30 rounded-2xl p-5 text-center flex items-center justify-center gap-3">
-          <Volume2 size={18} className="text-rose-500 animate-pulse" />
-          <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
-            Nhấp chuột vào màn hình hoặc tương tác để nghe âm thanh tình yêu lãng mạn từ Web Audio!
-          </p>
         </div>
       </div>
     </PageShell>
