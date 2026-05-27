@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Scan, AlertTriangle, FileText, CornerUpLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github, TrendingUp, ArrowRight } from 'lucide-react';
+import { Upload, Scan, AlertTriangle, FileText, ArrowLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github, TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -573,7 +573,7 @@ export const CVReviewer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-12 px-4 md:px-8 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#0d1117] text-slate-200 py-6 md:py-12 px-3 sm:px-6 md:px-8 font-sans overflow-x-hidden">
        <style>{`
         @keyframes scan {
           0% { top: 0; opacity: 0; }
@@ -584,11 +584,10 @@ export const CVReviewer = () => {
       `}</style>
 
       <div className="max-w-[1500px] mx-auto">
-         {/* HEADER */}
          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
           <div className="flex items-center gap-5">
-            <Link to="/" className="text-slate-400 hover:text-cyan-500 transition-colors p-3.5 bg-[#161b22] rounded-xl border border-slate-800 shadow-xl group">
-              <CornerUpLeft size={24} className="group-hover:-translate-x-1 transition-transform" />
+            <Link to="/" className="text-slate-400 hover:text-cyan-500 transition-all p-2 bg-[#161b22] hover:bg-[#1f2937] rounded-full border border-slate-800 shadow-xl shrink-0 flex items-center justify-center w-10 h-10 active:scale-90">
+              <ArrowLeft size={18} />
             </Link>
             <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-500 uppercase tracking-tighter flex items-center gap-3">
               <FileIcon size={36} className="text-cyan-500 hidden md:block" /> CỨU RỖI CV CHẶP VÁ

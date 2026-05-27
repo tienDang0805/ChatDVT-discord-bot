@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { CornerUpLeft, Upload, Download, FileText, Image, FileCode, BookOpen, Code2, PanelLeftClose, PanelLeft, FileDown, FileType, HelpCircle, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Upload, Download, FileText, Image, FileCode, BookOpen, Code2, PanelLeftClose, PanelLeft, FileDown, FileType, HelpCircle, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
@@ -461,7 +461,7 @@ export const MermaidEditor = () => {
 
       <header className="shrink-0 flex items-center justify-between px-3 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131923]">
         <div className="flex items-center gap-2">
-          <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-1.5 bg-white dark:bg-[#1f2937] rounded-lg border border-slate-200 dark:border-slate-700" title="Về Portal"><CornerUpLeft size={16} /></Link>
+          <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-1.5 bg-white dark:bg-[#1f2937] rounded-lg border border-slate-200 dark:border-slate-700" title="Về Portal"><ArrowLeft size={16} /></Link>
           <span className="text-sm font-black text-slate-800 dark:text-white">📐 Mermaid Editor</span>
           <div className="flex bg-slate-100 dark:bg-[#1f2937] rounded-lg p-0.5 ml-2">
             <button onClick={() => setViewMode('editor')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === 'editor' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-orange-500'}`}><Code2 size={11} className="inline mr-1" />Editor</button>

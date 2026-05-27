@@ -106,9 +106,6 @@ const PortalHeader = () => {
 
         {/* Nav Links - Center/Right */}
         <nav className="hidden md:flex items-center gap-6">
-          <button onClick={() => handleScroll('course-section')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
-            <Sparkles size={18} /> Khoá Học
-          </button>
           <button onClick={() => handleScroll('features-grid')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
             <BrainCircuit size={18} /> Tính Năng
           </button>
@@ -644,10 +641,6 @@ export const PublicPortal = () => {
         @keyframes confettiFall{0%{transform:translateY(0) rotate(0deg) translateX(0);opacity:1}100%{transform:translateY(100vh) rotate(720deg) translateX(var(--drift,0px));opacity:0}}
         @keyframes iconFloat{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-4px) rotate(6deg)}}
         .group:hover .icon-float{animation:iconFloat 0.6s ease-in-out}
-        @keyframes courseGlow{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
-        .course-glow{animation:courseGlow 6s ease-in-out infinite}
-        @keyframes courseFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-        .course-float{animation:courseFloat 4s ease-in-out infinite}
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -655,138 +648,7 @@ export const PublicPortal = () => {
       {showConfetti && <ConfettiOverlay />}
       <div className="max-w-6xl mx-auto px-6 pb-10 pt-4">
 
-        {/* === KHOÁ HỌC AI TRAINING === */}
-        <div id="course-section" className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-10 mb-8 relative overflow-hidden shadow-sm">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-orange-500/[0.04] dark:bg-orange-500/[0.06] rounded-full blur-[120px] course-glow" />
-            <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-violet-500/[0.03] dark:bg-violet-500/[0.05] rounded-full blur-[100px]" />
-          </div>
 
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row gap-10 lg:gap-14 items-center">
-
-              <div className="flex-1 space-y-5">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="bg-orange-500/10 text-orange-500 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider border border-orange-500/20 flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
-                    LIVE ONLINE · 3 BUỔI
-                  </span>
-                  <span className="bg-rose-500/10 text-rose-500 text-xs font-bold px-3 py-1.5 rounded-full border border-rose-500/20">🔥 ĐẶC BIỆT</span>
-                </div>
-
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white leading-[1.1]">
-                  Claude AI
-                  <br />
-                  <span className="text-orange-500">Vô Thượng Đạo</span>
-                </h2>
-
-                <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base leading-relaxed max-w-xl">
-                  Vượt qua <span className="text-orange-500 font-bold">69 kiếp nạn</span> để chinh phục chân kinh — Học cách dùng AI để tự động hoá mọi thứ trong công việc. Không yêu cầu biết code.
-                </p>
-
-                <ul className="space-y-2">
-                  {[
-                    'Nâng cao tư duy sử dụng AI, nhưng tư duy code ngu đi',
-                    'Cài đặt và dùng AI với file thật của mình',
-                    'Tạo task tự động chạy khi bạn không có mặt',
-                    'Giao việc cho AI từ điện thoại bàn',
-                    'Xác định lộ trình áp dụng AI vào công việc',
-                    'Xem ngay bài giảng recorded video',
-                    'Tham gia cộng đồng những người thiểu năng thích làm việc bằng AI',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 group">
-                      <div className="w-5 h-5 rounded-full bg-orange-500/10 border border-orange-500/30 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-orange-500 group-hover:border-orange-500 transition-all">
-                        <Check size={12} className="text-orange-500 group-hover:text-white transition-colors" />
-                      </div>
-                      <span className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <Link to="/profile" className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98] shadow-sm">
-                    <Rocket size={16} />
-                    Liên hệ Tiến Đặng
-                  </Link>
-                  <button
-                    onClick={() => window.dispatchEvent(new Event('open-chat-widget'))}
-                    className="bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98]"
-                  >
-                    <Bot size={16} className="text-orange-500" />
-                    Tư vấn ngay
-                  </button>
-                  <button
-                    onClick={() => document.getElementById('features-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className="bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-all active:scale-[0.98]"
-                  >
-                    <ChevronRight size={16} className="text-orange-500 rotate-90" />
-                    Xem tính năng Portal
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-1.5 pt-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg md:text-xl text-slate-400 dark:text-slate-500 font-bold line-through decoration-red-500/50 decoration-2">69,000,000 VND</span>
-                    <span className="bg-gradient-to-r from-red-600 to-red-500 text-white text-[11px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider animate-bounce shadow-[0_0_15px_rgba(239,68,68,0.5)] border border-red-400/50">🔥 GIẢM 90%</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-orange-500 drop-shadow-sm" style={{ backgroundSize: '200% auto', animation: 'courseGlow 3s linear infinite' }}>6,999,000</span>
-                    <span className="text-slate-500 dark:text-slate-400 font-bold text-sm">VND / toàn khoá</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:w-[42%] shrink-0 space-y-4">
-                <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm group course-float">
-                  <img
-                    src="https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/course-hero.jpg"
-                    alt="Claude AI - Vô Thượng Đạo - 69 Kiếp Nạn"
-                    className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-700"
-                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <span className="bg-black/50 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-lg">🐻 69 KIẾP NẠN · HIGHEST PATH</span>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 dark:bg-[#0d1117] border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4">
-                  <h4 className="text-slate-800 dark:text-white font-bold flex items-center gap-2 text-sm uppercase tracking-wider">
-                    📅 Lịch khoá tiếp theo
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Calendar size={16} className="text-orange-500 shrink-0" />
-                      <div>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Ngày học (Chủ nhật)</p>
-                        <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">10/5 · 17/5 · 24/5</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Clock size={16} className="text-orange-500 shrink-0" />
-                      <div>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Thời gian</p>
-                        <p className="text-slate-800 dark:text-slate-200 font-bold text-sm">6:00 PM – 7:30 PM (Giờ VN)</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <CreditCard size={16} className="text-orange-500 shrink-0" />
-                      <div>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">Học phí</p>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-slate-400 dark:text-slate-600 font-bold text-sm line-through">69,000,000 VND</p>
-                          <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wide animate-pulse">-90%</span>
-                        </div>
-                        <p className="text-orange-500 font-black text-xl">6,999,000 VND</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
 
         {/* Goal Section */}
         <div id="goal-section" className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-6 md:p-8 mb-8 relative overflow-hidden shadow-sm">

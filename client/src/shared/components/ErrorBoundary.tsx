@@ -1,5 +1,5 @@
 import React from 'react';
-import { CornerUpLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -71,7 +71,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
                 onClick={this.handleGoHome}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:border-orange-500/50 transition-all active:scale-95"
               >
-                <CornerUpLeft size={16} /> Về trang chủ
+                <ArrowLeft size={16} /> Về trang chủ
               </button>
             </div>
           </div>
