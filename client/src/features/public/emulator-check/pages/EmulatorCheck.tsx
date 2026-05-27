@@ -27,16 +27,21 @@ const DEVICES: DevicePreset[] = [
   { id: 'ipad-pro', name: 'iPad Pro 11"', width: 834, height: 1194, type: 'tablet' },
 ];
 
-const EXAMPLE_SCRIPT = `<script src="https://uat-worldchatbox.worldfone.vn/assets/js/widget_mobile_test.js"><\/script>
+const EXAMPLE_SCRIPT = `<div style="padding: 20px; text-align: center; background: linear-gradient(135deg, #f97316, #ec4899); color: white; border-radius: 12px; margin: 20px; font-family: sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <h2 style="margin-bottom: 10px; font-weight: 800;">ChatDVT Simulator</h2>
+  <p style="font-size: 13px; opacity: 0.9; margin-bottom: 20px;">Trình giả lập WebView chạy mượt mà</p>
+  <button onclick="runTest()" style="background: white; color: #f97316; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: transform 0.2s;">
+    Bấm test Console
+  </button>
+</div>
 <script>
-window.oscWidget.init({ token: "67c12e78ea19c71800d42620" });
-(function () {
-  setTimeout(function () { window.oscWidget.open(); }, 600);
-  setTimeout(function () {
-    if (window.oscWidget.isOpen() != true) { window.oscWidget.open(); }
-  }, 1500);
-})();
-<\/script>`;
+function runTest() {
+  console.log("Xin chào từ WebView Simulator!");
+  console.warn("Cảnh báo mẫu trong simulator");
+  console.error("Lỗi mẫu trong simulator");
+  alert("Test thành công!");
+}
+</script>`;
 
 const wrapSnippet = (snippet: string): string => {
   const trimmed = snippet.trim();
