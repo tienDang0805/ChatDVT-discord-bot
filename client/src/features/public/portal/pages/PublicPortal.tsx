@@ -109,6 +109,9 @@ const PortalHeader = () => {
           <button onClick={() => handleScroll('features-grid')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
             <BrainCircuit size={18} /> Tính Năng
           </button>
+          <Link to="/english" className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
+            <BookOpen size={18} /> English Hub
+          </Link>
           <button onClick={() => handleScroll('goal-section')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
             <Heart size={18} /> Mục Tiêu
           </button>
@@ -148,6 +151,44 @@ const PortalHeader = () => {
         </div>
       </div>
     </header>
+  );
+};
+
+const AlertTicker = () => {
+  const alerts = [
+    "🚀 Tính năng mới: 'Tướng Thuật AI' & 'Giải Mộng AI' đã được tích hợp thành công!",
+    "🔥 Tin tức: ChatDVT Bot hiện vẫn đang hoạt động ổn định nhờ nguồn năng lượng cơm mặn của dev.",
+    "💡 Mẹo học: Luyện tập 5 phút mỗi ngày với English Learning Hub để duy trì streak nhé!",
+    "⚠️ Cảnh báo: Burnout Check phát hiện nhiều đạo hữu đang cạn kiệt linh lực, hãy nghỉ ngơi!",
+    "🍜 Hôm nay ăn gì? Hãy để Thầy AI phong thủy của ChatDVT quay hộ bạn một món ngon.",
+  ];
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % alerts.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [alerts.length]);
+
+  return (
+    <div className="w-full bg-orange-500/5 dark:bg-orange-500/10 border border-orange-500/20 dark:border-orange-500/20 rounded-xl py-2.5 px-4 mb-6 flex items-center gap-3 overflow-hidden text-xs md:text-sm transition-colors duration-300">
+      <span className="flex items-center gap-1.5 bg-orange-500 text-white font-black px-2.5 py-0.5 rounded text-[10px] tracking-wider uppercase shrink-0 animate-pulse">
+        <Sparkles size={12} /> Live
+      </span>
+      <div className="flex-1 overflow-hidden relative h-5">
+        {alerts.map((alert, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 truncate font-semibold text-slate-700 dark:text-slate-300 transition-all duration-500 flex items-center ${
+              i === index ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            }`}
+          >
+            {alert}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -459,10 +500,10 @@ export const PublicPortal = () => {
   ];
 
   const chibiImages = [
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/slide-new.jpg',
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg',
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-rain.jpg',
-    'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/phide.jpg',
+    '/images/slide-new.jpg',
+    '/images/chibi-bear.jpg',
+    '/images/chibi-rain.jpg',
+    '/images/phide.jpg',
   ];
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -632,7 +673,7 @@ export const PublicPortal = () => {
       link.rel = 'icon';
       document.head.appendChild(link);
     }
-    link.href = "https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg";
+    link.href = "/images/chibi-bear.jpg";
   }, []);
 
   return (
@@ -647,6 +688,58 @@ export const PublicPortal = () => {
       <PortalHeader />
       {showConfetti && <ConfettiOverlay />}
       <div className="max-w-6xl mx-auto px-6 pb-10 pt-4">
+        <AlertTicker />
+        <div className="relative bg-gradient-to-br from-white via-slate-50 to-slate-100 dark:from-slate-900 dark:via-[#161b22] dark:to-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 md:p-12 mb-8 overflow-hidden shadow-xl transition-all duration-300">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-[400px] h-[400px] bg-orange-500/[0.05] rounded-full blur-[100px]" />
+            <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-cyan-500/[0.04] rounded-full blur-[100px]" />
+          </div>
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="space-y-4 max-w-xl">
+              <span className="bg-orange-500/10 text-orange-500 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-orange-500/20 inline-flex items-center gap-1.5">
+                <Sparkles size={10} className="animate-spin" />
+                ChatDVT Community Portal
+              </span>
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white leading-[1.15]">
+                Trạm Tiện Ích
+                <br />
+                <span className="text-orange-500">Trí Tuệ Nhân Tạo</span>
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base leading-relaxed">
+                Nền tảng kết nối các công cụ AI thông minh và mini-game giải trí độc đáo. Khám phá các tính năng thú vị và đưa con bot ChatDVT xịn xò vào server Discord của bạn.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={() => document.getElementById('features-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-all active:scale-[0.98] shadow-sm text-sm"
+                >
+                  Khám Phá Tính Năng
+                </button>
+                <a
+                  href="https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="bg-white dark:bg-[#1f2937] hover:bg-slate-100 dark:hover:bg-[#374151] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold px-6 py-3 rounded-xl transition-all active:scale-[0.98] text-sm flex items-center gap-2"
+                >
+                  <Bot size={16} className="text-orange-500" />
+                  Mời Bot Discord
+                </a>
+              </div>
+            </div>
+            <div className="w-full md:w-[350px] shrink-0 aspect-[4/3] md:aspect-square flex items-center justify-center relative group">
+              <div className="absolute w-56 h-56 rounded-full bg-gradient-to-tr from-orange-500 to-amber-500 opacity-20 blur-xl group-hover:opacity-40 transition-opacity duration-700" />
+              <div className="absolute w-52 h-52 rounded-full p-[3px] bg-gradient-to-tr from-orange-500 via-amber-400 to-orange-600 animate-[spin_8s_linear_infinite] opacity-80 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="w-full h-full rounded-full bg-slate-50 dark:bg-[#161b22]" />
+              </div>
+              <img
+                src="/images/chibi-bear.jpg"
+                alt="ChatDVT Character"
+                className="w-48 h-48 object-cover rounded-full z-10 border-4 border-slate-50 dark:border-[#161b22] shadow-2xl group-hover:scale-105 transition-transform duration-500"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            </div>
+          </div>
+        </div>
 
 
 
