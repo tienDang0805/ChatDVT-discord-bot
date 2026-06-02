@@ -11,12 +11,15 @@
 
 <h1>React Native & Mobile Dev</h1>
 <h1>Lộ trình Học tập & Phỏng vấn — 2-4 YOE</h1>
-<p class="intro-note">15 module nội dung + 1 practice track + roadmap. Học theo flow khuyến nghị bên dưới, tick checkbox khi hoàn thành.</p>
+<p class="intro-note">3 bridge pages tùy chọn + 15 module nội dung + 1 practice track + roadmap. Học theo flow khuyến nghị bên dưới, tick checkbox khi hoàn thành.</p>
 
 <h2>📋 Tiến độ tổng quan</h2>
 <p class="muted-note">Đánh dấu các module đã hoàn thành để track progress</p>
 
 <div class="checklist">
+  <label><input type="checkbox"> Bridge 00A — Setup & First App</label>
+  <label><input type="checkbox"> Bridge 00B — React for React Native</label>
+  <label><input type="checkbox"> Bridge 00C — React Native Mental Model</label>
   <label><input type="checkbox"> Module 01 — JavaScript & TypeScript Nền tảng</label>
   <label><input type="checkbox"> Module 02 — React Core Concepts</label>
   <label><input type="checkbox"> Module 04 — Hooks Deep Dive</label>
@@ -39,6 +42,41 @@
 <div class="card card-accent">
 <h4>Trục học chính: hiểu bản chất → thấy bug thật → debug → fix → trả lời phỏng vấn → áp dụng vào app</h4>
 <p>Đọc mỗi module song song với <a href="16-RN-Learning-Playground.html">RN Learning Playground</a>. Mỗi concept quan trọng phải có một output cụ thể: code chạy được, bug đã debug, hoặc câu trả lời phỏng vấn đã luyện thành tiếng.</p>
+</div>
+
+<div class="week-header">
+  <span class="week-badge">Bridge</span>
+  <span><strong>Nếu chưa từng học React Native</strong> — đọc nhanh để không kẹt setup và mental model</span>
+</div>
+
+<div class="module-grid">
+  <a href="00A-Setup-First-App.html" class="module-card">
+    <div class="mc-num">Bridge 00A</div>
+    <div class="mc-title">Setup & First App</div>
+    <div class="mc-desc">Expo vs CLI, toolchain, chạy app đầu tiên, lỗi setup thường gặp.</div>
+    <div class="mc-meta">
+      <span class="badge badge-should">Tùy chọn</span>
+      <span class="meta-item">⏱ 2-4h</span>
+    </div>
+  </a>
+  <a href="00B-React-For-RN.html" class="module-card">
+    <div class="mc-num">Bridge 00B</div>
+    <div class="mc-title">React for React Native</div>
+    <div class="mc-desc">Component, props, state, list, input và bug React cơ bản trong RN.</div>
+    <div class="mc-meta">
+      <span class="badge badge-should">Tùy chọn</span>
+      <span class="meta-item">⏱ 3-5h</span>
+    </div>
+  </a>
+  <a href="00C-RN-Mental-Model.html" class="module-card">
+    <div class="mc-num">Bridge 00C</div>
+    <div class="mc-title">React Native Mental Model</div>
+    <div class="mc-desc">Native UI, core components, styling, ScrollView vs FlatList, thread model.</div>
+    <div class="mc-meta">
+      <span class="badge badge-should">Tùy chọn</span>
+      <span class="meta-item">⏱ 3-5h</span>
+    </div>
+  </a>
 </div>
 
 <div class="module-grid">
@@ -243,6 +281,7 @@
 <div class="card card-success">
 <ol>
   <li><strong>Học theo flow khuyến nghị:</strong> thứ tự trên ưu tiên khả năng build app thật. Số module vẫn giữ nguyên để link giữa file không bị thay đổi.</li>
+  <li><strong>Nếu mới với React Native:</strong> đọc Bridge 00A-00C trước để có app chạy được và hiểu khác biệt web/mobile. Nếu đã có kinh nghiệm, skim nhanh hoặc bỏ qua.</li>
   <li><strong>Mỗi module:</strong> Đọc phần "Hướng dẫn học" TRƯỚC → làm theo step by step → làm bài tập → tự kiểm tra bằng checklist.</li>
   <li><strong>Đừng chỉ đọc:</strong> Mỗi concept phải CODE THỬ. Tạo 1 project <code>rn-learning-playground</code> để thực hành.</li>
   <li><strong>Dùng playground làm bằng chứng học:</strong> Mỗi module phải để lại ít nhất 1 commit/note trong <a href="16-RN-Learning-Playground.html">RN Learning Playground</a>.</li>
@@ -255,7 +294,7 @@
 <div class="card card-warning">
 <h4>⚠️ Lưu ý quan trọng</h4>
 <ul>
-  <li>Tổng thời gian ước tính: <strong>~110-130 giờ</strong> (8 tuần × 15h/tuần).</li>
+  <li>Tổng thời gian ước tính: <strong>~110-130 giờ</strong> cho track chính; thêm <strong>~8-14 giờ</strong> nếu cần Bridge 00A-00C.</li>
   <li>Nếu đã có kinh nghiệm, có thể skim Module 01-03 nhanh, nhưng vẫn nên làm bài tập thực tế cuối module.</li>
   <li>Module 08 (Performance) và Module 06 (State Management) là 2 chủ đề hay bị hỏi NHIỀU NHẤT.</li>
   <li>Kotlin/Android (Module 14) — nếu apply vị trí React Native, biết cơ bản là đủ. Nếu vị trí yêu cầu hybrid, cần sâu hơn.</li>
@@ -265,7 +304,7 @@
 <div class="divider"></div>
 
 <p class="footer-note">
-  React Native & Mobile Developer Learning Guide &bull; 15 Modules + Practice Track &bull; 2-4 YOE<br>
+  React Native & Mobile Developer Learning Guide &bull; 3 Bridge Pages + 15 Modules + Practice Track &bull; 2-4 YOE<br>
   Mở file bằng browser &bull; <code>Cmd+P</code> để lưu PDF từng module
 </p>
 

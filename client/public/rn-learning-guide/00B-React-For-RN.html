@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge 00B — React for React Native</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Bridge 00B — React for React Native</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Bridge</span>
+  <span class="meta-item">⏱ 3-5 giờ</span>
+  <span class="meta-item">📋 Prerequisites: đã chạy được app đầu tiên</span>
+</div>
+
+<div class="card card-accent">
+<h4>Vai trò của trang này</h4>
+<p>Nếu đã vững React, có thể skim nhanh. Nếu mới học RN, trang này giúp hiểu React ở mức đủ để đọc Module 02 và Module 04 mà không bị ngợp.</p>
+</div>
+
+<h2>🎯 Mục tiêu bài học</h2>
+<ul>
+  <li>Hiểu component, props, state, render và event trong ngữ cảnh React Native.</li>
+  <li>Biết tách UI thành component nhỏ có contract rõ ràng.</li>
+  <li>Biết dùng list, conditional rendering và form input cơ bản.</li>
+  <li>Nhìn được bug phổ biến: mutate state, key sai, stale value, component quá nhiều trách nhiệm.</li>
+</ul>
+
+<h2>🧠 Kiến thức cốt lõi</h2>
+
+<h3>1. Component là function nhận input và trả UI</h3>
+<p>Trong RN, UI không phải HTML. Component trả về các native primitives như <code>View</code>, <code>Text</code>, <code>Pressable</code>, <code>TextInput</code>. Nhưng mental model React vẫn giữ nguyên: props đi xuống, event đi lên, state làm UI render lại.</p>
+
+<pre><code>type UserCardProps = {
+  name: string;
+  role: string;
+  onPress: () =&gt; void;
+};
+
+function UserCard({ name, role, onPress }: UserCardProps) {
+  return (
+    &lt;Pressable onPress={onPress} style={styles.card}&gt;
+      &lt;Text style={styles.name}&gt;{name}&lt;/Text&gt;
+      &lt;Text style={styles.role}&gt;{role}&lt;/Text&gt;
+    &lt;/Pressable&gt;
+  );
+}</code></pre>
+
+<h3>2. Props là contract, không phải chỗ chứa logic lung tung</h3>
+<p>Props nên thể hiện component cần gì để render và emit event gì. Component con không nên tự biết quá nhiều về API, navigation, storage nếu không cần.</p>
+
+<table>
+  <thead>
+    <tr><th>Không tốt</th><th>Tốt hơn</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>UserCard</code> tự fetch user, tự navigate, tự format mọi thứ.</td>
+      <td>Parent fetch data; <code>UserCard</code> nhận props và bắn <code>onPress</code>.</td>
+    </tr>
+    <tr>
+      <td>Props kiểu <code>any</code>.</td>
+      <td>Props type rõ, optional có default hợp lý.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3. State là dữ liệu khiến UI thay đổi</h3>
+<p>Đừng đưa mọi thứ vào state. Chỉ đưa dữ liệu cần render lại UI hoặc cần giữ qua nhiều render.</p>
+
+<pre><code>const [query, setQuery] = useState('');
+const [selectedId, setSelectedId] = useState&lt;string | null&gt;(null);
+
+const filteredUsers = users.filter(user =&gt;
+  user.name.toLowerCase().includes(query.toLowerCase())
+);</code></pre>
+
+<p><code>filteredUsers</code> là derived data, không cần state riêng nếu tính toán nhẹ.</p>
+
+<h2>💻 Ví dụ code / ví dụ thực tế</h2>
+
+<h3>Mini screen: Search user list</h3>
+<pre><code>import { useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+
+type User = {
+  id: string;
+  name: string;
+  role: 'admin' | 'member';
+};
+
+const USERS: User[] = [
+  { id: '1', name: 'Tien Dang', role: 'admin' },
+  { id: '2', name: 'React Native Dev', role: 'member' },
+  { id: '3', name: 'Mobile Engineer', role: 'member' },
+];
+
+export function UserListScreen() {
+  const [query, setQuery] = useState('');
+  const [selectedId, setSelectedId] = useState&lt;string | null&gt;(null);
+
+  const users = useMemo(() =&gt; {
+    const q = query.trim().toLowerCase();
+    if (!q) return USERS;
+    return USERS.filter(user =&gt; user.name.toLowerCase().includes(q));
+  }, [query]);
+
+  return (
+    &lt;View style={styles.screen}&gt;
+      &lt;TextInput
+        value={query}
+        onChangeText={setQuery}
+        placeholder="Search user"
+        style={styles.input}
+      /&gt;
+
+      &lt;FlatList
+        data={users}
+        keyExtractor={item =&gt; item.id}
+        renderItem={({ item }) =&gt; (
+          &lt;Pressable
+            style={[styles.row, selectedId === item.id &amp;&amp; styles.selectedRow]}
+            onPress={() =&gt; setSelectedId(item.id)}
+          &gt;
+            &lt;Text style={styles.name}&gt;{item.name}&lt;/Text&gt;
+            &lt;Text style={styles.role}&gt;{item.role}&lt;/Text&gt;
+          &lt;/Pressable&gt;
+        )}
+        ListEmptyComponent={&lt;Text style={styles.empty}&gt;No users found&lt;/Text&gt;}
+      /&gt;
+    &lt;/View&gt;
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  input: {
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+  row: {
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  selectedRow: { borderColor: '#2563eb', backgroundColor: '#eff6ff' },
+  name: { fontWeight: '700', color: '#0f172a' },
+  role: { color: '#64748b', marginTop: 4 },
+  empty: { textAlign: 'center', color: '#64748b', marginTop: 24 },
+});</code></pre>
+
+<h2>🐞 Lỗi thường gặp</h2>
+<table>
+  <thead>
+    <tr><th>Lỗi</th><th>Vì sao sai?</th><th>Fix</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Mutate state trực tiếp</td>
+      <td>React không thấy reference đổi hoặc UI update khó đoán.</td>
+      <td>Tạo object/array mới: <code>setItems(prev =&gt; [...prev, item])</code>.</td>
+    </tr>
+    <tr>
+      <td>Dùng index làm key cho list động</td>
+      <td>Insert/delete/reorder làm React reuse nhầm row.</td>
+      <td>Dùng id ổn định từ data.</td>
+    </tr>
+    <tr>
+      <td>Component quá to</td>
+      <td>Fetch, form, list, modal, navigation dồn một chỗ.</td>
+      <td>Tách container, presentational component, custom hook khi cần.</td>
+    </tr>
+    <tr>
+      <td>Derived data thành state riêng</td>
+      <td>Dễ lệch giữa source state và derived state.</td>
+      <td>Tính từ state gốc bằng biến thường hoặc <code>useMemo</code> khi nặng.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card">
+<h4>Case: Form edit profile render sai sau khi save</h4>
+<p>Một bug phổ biến là screen có <code>user</code> từ API, copy sang <code>formState</code>, sau đó API trả user mới nhưng form vẫn giữ state cũ. Người mới thường fix bằng cách set state lung tung trong render. Cách đúng là xác định source of truth: form đang edit draft hay sync theo server? Nếu là draft, chỉ reset khi đổi user id hoặc khi user bấm discard.</p>
+</div>
+
+<h2>🧪 Mini exercise thực tế</h2>
+<ol>
+  <li>Tạo <code>UserListScreen</code> như ví dụ.</li>
+  <li>Thêm nút clear search.</li>
+  <li>Thêm filter theo role admin/member.</li>
+  <li>Cố tình dùng index làm key, insert một user vào đầu list, quan sát selected row có thể sai như thế nào.</li>
+  <li>Tách <code>UserRow</code> thành component riêng với props rõ ràng.</li>
+</ol>
+
+<h2>⚡ Ghi nhớ nhanh</h2>
+<ul>
+  <li>Component tốt có input/output rõ: props vào, event ra.</li>
+  <li>State là source of truth cho UI thay đổi; derived data không nhất thiết là state.</li>
+  <li>List cần key ổn định, nhất là khi item có state hoặc animation.</li>
+  <li>Trong RN, mọi text phải nằm trong <code>Text</code>; không có div/span như web.</li>
+</ul>
+
+<h2>✅ Câu hỏi tự kiểm tra</h2>
+<ol>
+  <li>Props khác state như thế nào?</li>
+  <li>Khi nào nên tách component?</li>
+  <li>Vì sao không nên mutate array state?</li>
+  <li>Vì sao index key có thể gây bug?</li>
+  <li>Derived state là gì? Khi nào nó nguy hiểm?</li>
+</ol>
+
+<h2>🎤 Câu hỏi phỏng vấn</h2>
+<ol>
+  <li>How do props and state work in React?</li>
+  <li>How would you structure a list screen in React Native?</li>
+  <li>Why are stable keys important in React lists?</li>
+  <li>What is the difference between controlled and uncontrolled input?</li>
+  <li>How do you avoid over-engineering small components?</li>
+</ol>
+
+<div class="nav-links">
+  <a href="00A-Setup-First-App.html">&larr; Bridge 00A: Setup</a>
+  <a href="00C-RN-Mental-Model.html">Bridge 00C: RN Mental Model &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

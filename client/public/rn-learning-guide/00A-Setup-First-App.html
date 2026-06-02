@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge 00A — Setup & First App</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Bridge 00A — Setup & First App</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Bridge</span>
+  <span class="meta-item">⏱ 2-4 giờ</span>
+  <span class="meta-item">📋 Dành cho người chưa từng chạy RN app</span>
+</div>
+
+<div class="card card-accent">
+<h4>Vai trò của trang này</h4>
+<p>Đây không phải module chính của track ôn tập. Mục tiêu chỉ là giúp người mới có app chạy được, hiểu toolchain tối thiểu, và không kẹt ở lỗi setup trước khi học Module 01-03.</p>
+</div>
+
+<h2>🎯 Mục tiêu bài học</h2>
+<ul>
+  <li>Biết chọn Expo hay React Native Community CLI theo ngữ cảnh.</li>
+  <li>Chạy được app đầu tiên trên device hoặc emulator/simulator.</li>
+  <li>Hiểu Metro, native build, JavaScript bundle và hot reload ở mức đủ dùng.</li>
+  <li>Biết đọc lỗi setup cơ bản thay vì copy/paste lệnh mù.</li>
+</ul>
+
+<h2>🧠 Kiến thức cốt lõi</h2>
+
+<h3>1. React Native app gồm những lớp nào?</h3>
+<table>
+  <thead>
+    <tr><th>Lớp</th><th>Nó làm gì?</th><th>Khi nào cần quan tâm?</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>JavaScript/TypeScript</td><td>Code UI, state, business logic.</td><td>Ngày nào cũng đụng.</td></tr>
+    <tr><td>Metro</td><td>Bundler đóng JS thành bundle để app native load.</td><td>Khi lỗi import, cache, asset, hot reload.</td></tr>
+    <tr><td>Native runtime</td><td>Android/iOS app shell chạy code RN.</td><td>Khi install native dependency, build release, permission.</td></tr>
+    <tr><td>Device/emulator</td><td>Môi trường thật để render UI và test gesture, network, storage.</td><td>Khi debug layout, performance, native behavior.</td></tr>
+  </tbody>
+</table>
+
+<h3>2. Expo hay Community CLI?</h3>
+<table>
+  <thead>
+    <tr><th>Lựa chọn</th><th>Nên dùng khi</th><th>Trade-off</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Expo</td>
+      <td>App mới, muốn setup nhanh, học RN, cần thư viện phổ biến, muốn dùng EAS.</td>
+      <td>Dễ bắt đầu hơn, nhưng một số native use case cần config/plugin hoặc prebuild.</td>
+    </tr>
+    <tr>
+      <td>Community CLI</td>
+      <td>Dự án có native constraints rõ, tích hợp vào app native sẵn có, team kiểm soát Android/iOS sâu.</td>
+      <td>Setup nặng hơn, phải hiểu Android Studio/Xcode/CocoaPods nhiều hơn.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="card card-warning">
+<h4>Ghi chú thực tế</h4>
+<p>Để học và làm playground, ưu tiên Expo. Khi đi làm, nhiều dự án RN vẫn dùng bare/CLI vì cần native module, build pipeline, signing, hoặc legacy setup. Biết cả hai mental model sẽ giúp debug tốt hơn.</p>
+</div>
+
+<h2>💻 Ví dụ code / ví dụ thực tế</h2>
+
+<h3>1. Tạo app bằng Expo</h3>
+<pre><code>npx create-expo-app@latest rn-first-app
+cd rn-first-app
+npm run android
+# hoặc
+npm run ios
+# hoặc mở bằng Expo Go qua QR nếu project hỗ trợ</code></pre>
+
+<p>Sau khi chạy được, sửa màn hình đầu tiên thành ví dụ nhỏ:</p>
+<pre><code>import { useState } from 'react';
+import { SafeAreaView, Text, Pressable, StyleSheet } from 'react-native';
+
+export default function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    &lt;SafeAreaView style={styles.screen}&gt;
+      &lt;Text style={styles.title}&gt;RN First App&lt;/Text&gt;
+      &lt;Text style={styles.value}&gt;Tap count: {count}&lt;/Text&gt;
+      &lt;Pressable style={styles.button} onPress={() =&gt; setCount(c =&gt; c + 1)}&gt;
+        &lt;Text style={styles.buttonText}&gt;Increase&lt;/Text&gt;
+      &lt;/Pressable&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+    backgroundColor: '#f8fafc',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+  },
+  value: {
+    fontSize: 18,
+  },
+  button: {
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 8,
+    backgroundColor: '#2563eb',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+});</code></pre>
+
+<h3>2. Tạo app bằng Community CLI khi cần bare native</h3>
+<pre><code>npx @react-native-community/cli@latest init RnBareApp
+cd RnBareApp
+npm run android
+# macOS + Xcode setup đúng:
+npm run ios</code></pre>
+
+<p>Nếu dùng CLI, hãy kiểm tra Android Studio, JDK, Xcode, CocoaPods theo docs chính thức. Đừng học RN bằng cách sửa bừa biến môi trường.</p>
+
+<h2>🐞 Lỗi thường gặp</h2>
+<table>
+  <thead>
+    <tr><th>Lỗi</th><th>Nguyên nhân hay gặp</th><th>Cách nghĩ để fix</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Metro không load bundle</td>
+      <td>Terminal Metro chết, port bị chiếm, cache cũ.</td>
+      <td>Restart Metro, clear cache, kiểm tra app đang trỏ đúng dev server.</td>
+    </tr>
+    <tr>
+      <td>Android build fail</td>
+      <td>JDK/Gradle/SDK mismatch hoặc thiếu emulator.</td>
+      <td>Đọc dòng lỗi đầu tiên có nghĩa, không chỉ nhìn dòng cuối.</td>
+    </tr>
+    <tr>
+      <td>iOS build fail</td>
+      <td>Pod chưa install, Xcode version, signing, simulator runtime.</td>
+      <td>Phân biệt lỗi compile native với lỗi JS runtime.</td>
+    </tr>
+    <tr>
+      <td>App chạy nhưng màn hình trắng</td>
+      <td>JS exception, import sai, component return invalid.</td>
+      <td>Mở dev menu/log, xem console trước khi rebuild native.</td>
+    </tr>
+    <tr>
+      <td>Hot reload không ăn</td>
+      <td>Metro cache, file watcher, import cycle.</td>
+      <td>Save lại, reload app, restart bundler, sau cùng mới reinstall app.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card">
+<h4>Case: Người mới vào dự án không build được app</h4>
+<p>Trong dự án thật, lỗi setup thường không phải vì React Native khó, mà vì môi trường chưa khớp: Node version, JDK, Android SDK, Xcode, CocoaPods, env file, hoặc certificate. Cách xử lý tốt là xin checklist setup của team, chạy đúng version manager, rồi ghi lại lỗi/fix thành onboarding note.</p>
+<p>Điểm phỏng vấn: đừng nói “em cài lại máy là được”. Hãy nói cách em phân loại lỗi: JS/Metro, native build, device runtime, config/env, network.</p>
+</div>
+
+<h2>🧪 Mini exercise thực tế</h2>
+<ol>
+  <li>Tạo app <code>rn-first-app</code>.</li>
+  <li>Thêm counter screen như ví dụ.</li>
+  <li>Đổi background, font size, button color.</li>
+  <li>Cố tình import sai một component, xem lỗi Metro/log hiện ở đâu.</li>
+  <li>Viết note: lỗi đó thuộc JS, Metro, native build hay runtime?</li>
+</ol>
+
+<h2>⚡ Ghi nhớ nhanh</h2>
+<ul>
+  <li>Expo giúp bắt đầu nhanh; CLI giúp kiểm soát native sâu hơn.</li>
+  <li>Metro là bundler JS, không phải Android/iOS build system.</li>
+  <li>Không phải lỗi nào cũng cần rebuild native. JS exception thường chỉ cần sửa code/reload.</li>
+  <li>Debug setup bằng cách phân lớp: command, Metro, native build, device, app runtime.</li>
+</ul>
+
+<h2>✅ Câu hỏi tự kiểm tra</h2>
+<ol>
+  <li>Metro khác gì với Gradle/Xcode build?</li>
+  <li>Khi nào chọn Expo, khi nào chọn Community CLI?</li>
+  <li>Màn hình trắng sau khi app launch thì kiểm tra gì đầu tiên?</li>
+  <li>Vì sao cùng một code chạy Android nhưng fail iOS?</li>
+  <li>Em sẽ viết onboarding setup note cho team như thế nào?</li>
+</ol>
+
+<h2>🎤 Câu hỏi phỏng vấn</h2>
+<ol>
+  <li>Explain the React Native development toolchain from code save to UI update.</li>
+  <li>What are the trade-offs between Expo and bare React Native?</li>
+  <li>How do you debug a build failure for a React Native project?</li>
+  <li>What is Metro and why does clearing Metro cache sometimes fix issues?</li>
+</ol>
+
+<div class="nav-links">
+  <a href="00-ROADMAP.html">&larr; Roadmap</a>
+  <a href="00B-React-For-RN.html">Bridge 00B: React for RN &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

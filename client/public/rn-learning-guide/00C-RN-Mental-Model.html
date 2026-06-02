@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bridge 00C — React Native Mental Model</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Bridge 00C — React Native Mental Model</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Bridge</span>
+  <span class="meta-item">⏱ 3-5 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Bridge 00A-00B hoặc biết React cơ bản</span>
+</div>
+
+<div class="card card-accent">
+<h4>Vai trò của trang này</h4>
+<p>Trang này nối giữa “biết React” và “làm được React Native”. Nó giải thích các khác biệt quan trọng nhất để người mới không áp dụng thói quen web sai vào mobile.</p>
+</div>
+
+<h2>🎯 Mục tiêu bài học</h2>
+<ul>
+  <li>Hiểu RN render ra native UI, không render ra DOM.</li>
+  <li>Biết dùng core components: <code>View</code>, <code>Text</code>, <code>ScrollView</code>, <code>FlatList</code>, <code>Image</code>, <code>TextInput</code>, <code>Pressable</code>.</li>
+  <li>Hiểu styling bằng object, Flexbox mặc định theo column, không dùng CSS selector.</li>
+  <li>Biết phân biệt JS thread, UI thread, native module ở mức đủ để đọc tiếp performance/architecture.</li>
+</ul>
+
+<h2>🧠 Kiến thức cốt lõi</h2>
+
+<h3>1. React Native không phải webview</h3>
+<p>React Native dùng React để mô tả UI, nhưng output là native views. <code>View</code> tương đương container native, <code>Text</code> tương đương text native, <code>Image</code> tương đương image native. Vì vậy không có DOM, không có CSS cascade, không có thẻ <code>div</code>.</p>
+
+<table>
+  <thead>
+    <tr><th>Web React</th><th>React Native</th><th>Ghi nhớ</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>div</code></td><td><code>View</code></td><td>Container layout.</td></tr>
+    <tr><td><code>span/p</code></td><td><code>Text</code></td><td>Text phải nằm trong <code>Text</code>.</td></tr>
+    <tr><td><code>button</code></td><td><code>Pressable</code></td><td>Tự style state pressed/disabled.</td></tr>
+    <tr><td><code>img</code></td><td><code>Image</code></td><td>Cần width/height hoặc style rõ.</td></tr>
+    <tr><td><code>input</code></td><td><code>TextInput</code></td><td>Keyboard, focus, secure input là mobile behavior.</td></tr>
+  </tbody>
+</table>
+
+<h3>2. Layout: Flexbox nhưng default khác web</h3>
+<p>Trong RN, <code>flexDirection</code> mặc định là <code>column</code>. Kích thước thường phải rõ hơn web, đặc biệt với image, list item, touch target.</p>
+
+<pre><code>const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    height: 56,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e2e8f0',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+});</code></pre>
+
+<h3>3. ScrollView và FlatList không thay thế nhau</h3>
+<table>
+  <thead>
+    <tr><th>Component</th><th>Dùng khi</th><th>Rủi ro</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ScrollView</code></td>
+      <td>Nội dung ít, form, static content.</td>
+      <td>Render toàn bộ children, list dài sẽ nặng.</td>
+    </tr>
+    <tr>
+      <td><code>FlatList</code></td>
+      <td>Danh sách động/dài.</td>
+      <td>Cần key, item height/layout, memoization khi list phức tạp.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4. Thread model ở mức cần nhớ</h3>
+<ul>
+  <li><strong>JS thread:</strong> chạy React logic, state update, business logic.</li>
+  <li><strong>UI/Main thread:</strong> render native UI, gesture, animation native.</li>
+  <li><strong>Native modules:</strong> cầu nối tới camera, storage, biometrics, location, file system.</li>
+</ul>
+<p>Khi JS thread bị block, app có thể lag dù native UI vẫn tồn tại. Đây là nền để học Module 08 Performance và Module 10 Architecture.</p>
+
+<h2>💻 Ví dụ code / ví dụ thực tế</h2>
+
+<h3>Screen cơ bản: profile layout mobile</h3>
+<pre><code>import { Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+
+export function ProfileSummaryScreen() {
+  return (
+    &lt;SafeAreaView style={styles.screen}&gt;
+      &lt;View style={styles.header}&gt;
+        &lt;Image
+          source={{ uri: 'https://placehold.co/96x96/png' }}
+          style={styles.avatar}
+        /&gt;
+        &lt;View style={styles.info}&gt;
+          &lt;Text style={styles.name}&gt;Mobile Developer&lt;/Text&gt;
+          &lt;Text style={styles.subtitle}&gt;React Native • Kotlin&lt;/Text&gt;
+        &lt;/View&gt;
+      &lt;/View&gt;
+
+      &lt;View style={styles.statsRow}&gt;
+        &lt;StatBox label="Apps" value="4" /&gt;
+        &lt;StatBox label="YOE" value="3" /&gt;
+        &lt;StatBox label="Modules" value="18" /&gt;
+      &lt;/View&gt;
+
+      &lt;Pressable style={styles.primaryButton} onPress={() =&gt; {}}&gt;
+        &lt;Text style={styles.primaryButtonText}&gt;Open portfolio&lt;/Text&gt;
+      &lt;/Pressable&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string }) {
+  return (
+    &lt;View style={styles.statBox}&gt;
+      &lt;Text style={styles.statValue}&gt;{value}&lt;/Text&gt;
+      &lt;Text style={styles.statLabel}&gt;{label}&lt;/Text&gt;
+    &lt;/View&gt;
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, padding: 16, backgroundColor: '#f8fafc' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  avatar: { width: 72, height: 72, borderRadius: 36 },
+  info: { flex: 1 },
+  name: { fontSize: 20, fontWeight: '700', color: '#0f172a' },
+  subtitle: { marginTop: 4, color: '#64748b' },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 12 },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+  },
+  statValue: { fontSize: 20, fontWeight: '700', color: '#2563eb' },
+  statLabel: { marginTop: 4, color: '#64748b' },
+  primaryButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    borderRadius: 10,
+    backgroundColor: '#2563eb',
+  },
+  primaryButtonText: { color: '#fff', fontWeight: '700' },
+});</code></pre>
+
+<h2>🐞 Lỗi thường gặp</h2>
+<table>
+  <thead>
+    <tr><th>Lỗi</th><th>Vì sao xảy ra?</th><th>Fix</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Text nằm trực tiếp trong <code>View</code></td>
+      <td>RN yêu cầu string phải nằm trong <code>Text</code>.</td>
+      <td>Bọc bằng <code>&lt;Text&gt;</code>.</td>
+    </tr>
+    <tr>
+      <td><code>Image</code> không hiện</td>
+      <td>Thiếu width/height hoặc URI không hợp lệ.</td>
+      <td>Đặt style kích thước rõ, kiểm tra network/image source.</td>
+    </tr>
+    <tr>
+      <td>Button khó bấm</td>
+      <td>Touch target quá nhỏ.</td>
+      <td>Dùng min height khoảng 44-48, padding đủ, state disabled rõ.</td>
+    </tr>
+    <tr>
+      <td>List dài bị lag</td>
+      <td>Dùng <code>ScrollView</code> render tất cả item.</td>
+      <td>Dùng <code>FlatList</code>, key ổn định, tối ưu render item.</td>
+    </tr>
+    <tr>
+      <td>Layout vỡ giữa Android/iOS</td>
+      <td>Safe area, font rendering, keyboard, status bar khác nhau.</td>
+      <td>Test cả hai platform, dùng safe area và keyboard handling đúng.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card">
+<h4>Case: Màn profile nhìn ổn trên iPhone nhưng vỡ trên Android nhỏ</h4>
+<p>Nguyên nhân thường là hard-code width/height, text không cho wrap, touch target quá sát, hoặc không tính safe area/status bar. Cách fix không phải scale toàn bộ theo màn hình, mà là dùng flex, min/max constraints, test device nhỏ, và xác định phần nào scroll được.</p>
+</div>
+
+<h2>🧪 Mini exercise thực tế</h2>
+<ol>
+  <li>Tạo <code>ProfileSummaryScreen</code> như ví dụ.</li>
+  <li>Đổi layout stats từ row sang column trên màn hình nhỏ bằng điều kiện đơn giản theo width.</li>
+  <li>Thêm một đoạn text dài và đảm bảo không tràn khỏi card.</li>
+  <li>Thay <code>ScrollView</code> bằng <code>FlatList</code> cho danh sách 100 item.</li>
+  <li>Ghi lại 3 khác biệt giữa RN styling và CSS web.</li>
+</ol>
+
+<h2>⚡ Ghi nhớ nhanh</h2>
+<ul>
+  <li>RN không render DOM; RN render native views.</li>
+  <li>Không có CSS cascade/selector; style là object và truyền qua prop.</li>
+  <li><code>flexDirection</code> mặc định là <code>column</code>.</li>
+  <li><code>ScrollView</code> cho nội dung ít; <code>FlatList</code> cho list dài.</li>
+  <li>Mobile UI phải nghĩ đến safe area, keyboard, touch target, platform differences.</li>
+</ul>
+
+<h2>✅ Câu hỏi tự kiểm tra</h2>
+<ol>
+  <li>React Native khác webview như thế nào?</li>
+  <li>Vì sao text phải nằm trong <code>Text</code>?</li>
+  <li>Khi nào dùng <code>FlatList</code> thay vì <code>ScrollView</code>?</li>
+  <li>Vì sao <code>Image</code> cần kích thước rõ?</li>
+  <li>JS thread bị block ảnh hưởng app như thế nào?</li>
+</ol>
+
+<h2>🎤 Câu hỏi phỏng vấn</h2>
+<ol>
+  <li>Does React Native render HTML? Explain the rendering model.</li>
+  <li>What are the main differences between styling in React Native and CSS on the web?</li>
+  <li>When would you use FlatList instead of ScrollView?</li>
+  <li>What are common platform differences you test for in React Native?</li>
+  <li>How can JS thread work affect perceived app performance?</li>
+</ol>
+
+<div class="nav-links">
+  <a href="00B-React-For-RN.html">&larr; Bridge 00B: React for RN</a>
+  <a href="01-JS-TS-Fundamentals.html">Module 01: JS/TS Fundamentals &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>
