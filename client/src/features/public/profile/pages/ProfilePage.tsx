@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Github, Linkedin, Facebook, Mail, Smartphone, Bot, ExternalLink, Sparkles, Heart, Code2, Gamepad2, Music, Wand2, Copy, Check } from 'lucide-react';
+import { Github, Linkedin, Facebook, Mail, Smartphone, Bot, ExternalLink, Sparkles, Heart, Code2, Gamepad2, Music, Wand2, Copy, Check, BookOpen } from 'lucide-react';
 import { PageShell } from '../../../../shared/components/PageShell';
 
 const AVATAR = 'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/slide-new.jpg';
@@ -145,6 +145,34 @@ export const ProfilePage = () => {
               {t}
             </span>
           ))}
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm mt-5">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen size={16} className="text-orange-500" />
+          <h2 className="text-xs font-bold text-orange-500 uppercase tracking-widest">Tài liệu học & ôn tập</h2>
+        </div>
+        <div className="rounded-xl border border-orange-200 dark:border-orange-500/20 bg-orange-50/70 dark:bg-orange-500/10 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">React Native Learning Guide</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Bộ tài liệu cá nhân để ôn React Native theo hướng thực chiến: hiểu bản chất, thấy bug thật, debug, fix, trả lời phỏng vấn và áp dụng vào app.
+              </p>
+            </div>
+            <a
+              href="/rn-learning-guide/"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-orange-600"
+            >
+              Mở tài liệu <ExternalLink size={13} />
+            </a>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {['React Native', 'Interview', 'Debugging', 'Mobile Architecture'].map(tag => (
+              <span key={tag} className="text-[9px] px-2 py-0.5 rounded-full bg-white dark:bg-[#131923] text-orange-600 dark:text-orange-400 font-bold border border-orange-200 dark:border-orange-500/20">{tag}</span>
+            ))}
+          </div>
         </div>
       </div>
 

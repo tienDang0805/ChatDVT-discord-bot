@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 03 — React Native Cơ bản</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 03 — React Native Cơ bản</h1>
+<div class="module-meta">
+  <span class="badge badge-must">Phải có</span>
+  <span class="meta-item">⏱ 8-10 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01, 02</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Hiểu RN khác React Web thế nào — tại sao không có DOM, CSS cascade</li>
+  <li>Thành thạo Core Components và biết khi nào dùng component nào</li>
+  <li>Master Flexbox layout trong RN (default column, Yoga engine)</li>
+  <li>Build được responsive UI hoạt động trên cả iOS và Android</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Setup project</strong><br>
+    Dùng Expo: <code>npx create-expo-app@latest rn-playground</code> hoặc CLI: <code>npx react-native init RNPlayground</code><br>
+    Chạy trên emulator/device. Thời gian: ~1h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Đọc RN Official Docs</strong> — <a href="https://reactnative.dev/docs/getting-started" target="_blank">reactnative.dev</a><br>
+    Focus: Core Components, Style, Layout with Flexbox, Handling Text Input, Lists.<br>
+    Thời gian: ~3h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Xem video tutorial</strong><br>
+    - "React Native Tutorial" — Net Ninja (YouTube, miễn phí)<br>
+    - "React Native — The Practical Guide" — Maximilian (Udemy)<br>
+    Thời gian: ~2h (chọn 1)
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Clone Instagram Profile Screen</strong><br>
+    Thực hành layout: header, avatar, stats row, grid photos. Dùng FlatList numColumns.<br>
+    Thời gian: ~2-3h
+  </div>
+</div>
+
+<h2>⚡ Ôn nhanh</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>RN không phải web:</strong> không DOM, không CSS cascade, text phải nằm trong <code>Text</code>.</li>
+  <li><strong>Layout:</strong> default <code>flexDirection: 'column'</code>, mobile ưu tiên layout dọc.</li>
+  <li><strong>List:</strong> content ngắn dùng ScrollView, list dài/dynamic dùng FlatList.</li>
+  <li><strong>Image remote:</strong> luôn set kích thước hoặc aspectRatio.</li>
+  <li><strong>Keyboard:</strong> test trên cả iOS và Android, không chỉ simulator một platform.</li>
+</ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> RN render native views, layout bằng Yoga, không dùng DOM/CSS cascade.</li>
+  <li><strong>Thấy bug thật:</strong> keyboard che form, remote image không hiện, ScrollView lag khi data tăng.</li>
+  <li><strong>Debug:</strong> test màn hình nhỏ, iOS/Android, inspect layout, đọc warning của FlatList/Image.</li>
+  <li><strong>Fix:</strong> SafeArea, KeyboardAvoidingView, kích thước image rõ, FlatList cho list dài.</li>
+  <li><strong>Áp dụng playground:</strong> build Login/Profile screen có keyboard, safe area, responsive grid.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. React Native vs React Web</h3>
+<div class="concept">
+<table>
+<tr><th>Khía cạnh</th><th>React Web</th><th>React Native</th></tr>
+<tr><td>Render target</td><td>DOM (div, span, p)</td><td>Native Views (UIView, android.view.View)</td></tr>
+<tr><td>Styling</td><td>CSS files, cascade, inheritance</td><td>JS objects (StyleSheet), no cascade</td></tr>
+<tr><td>Layout</td><td>CSS (box model, grid, flexbox)</td><td>Yoga engine (flexbox only, default column)</td></tr>
+<tr><td>Units</td><td>px, em, rem, %, vh/vw</td><td>dp (density-independent pixels), %</td></tr>
+<tr><td>Animation</td><td>CSS transitions, Web Animations API</td><td>Animated API, Reanimated</td></tr>
+<tr><td>Navigation</td><td>React Router (URL-based)</td><td>React Navigation (stack-based)</td></tr>
+</table>
+<p><strong>Key insight:</strong> RN không dùng WebView. JSX compile thành native platform components thông qua Bridge/JSI.</p>
+</div>
+
+<h3>2. Core Components</h3>
+
+<h4>Layout Components</h4>
+<table>
+<tr><th>Component</th><th>Vai trò</th><th>Khi nào dùng</th></tr>
+<tr><td><code>View</code></td><td>Container (như div)</td><td>Mọi nơi cần wrapper, layout</td></tr>
+<tr><td><code>SafeAreaView</code></td><td>Tránh notch/status bar</td><td>Root container trên iOS</td></tr>
+<tr><td><code>KeyboardAvoidingView</code></td><td>Đẩy content lên khi keyboard hiện</td><td>Screens có form input</td></tr>
+<tr><td><code>ScrollView</code></td><td>Scrollable container</td><td>Content ngắn (&lt;50 items), forms</td></tr>
+</table>
+
+<h4>Display Components</h4>
+<table>
+<tr><th>Component</th><th>Vai trò</th><th>Lưu ý</th></tr>
+<tr><td><code>Text</code></td><td>Hiển thị text</td><td>BẮT BUỘC wrap text trong Text (khác web)</td></tr>
+<tr><td><code>Image</code></td><td>Hiển thị ảnh</td><td>require() cho local, {uri} cho remote</td></tr>
+<tr><td><code>StatusBar</code></td><td>Control status bar style</td><td>barStyle, backgroundColor (Android)</td></tr>
+<tr><td><code>Modal</code></td><td>Overlay screen</td><td>animationType, transparent</td></tr>
+</table>
+
+<h4>Interactive Components</h4>
+<table>
+<tr><th>Component</th><th>Vai trò</th><th>Ưu tiên dùng</th></tr>
+<tr><td><code>Pressable</code></td><td>Universal pressable wrapper</td><td>⭐ Recommended (mới nhất)</td></tr>
+<tr><td><code>TouchableOpacity</code></td><td>Press với opacity feedback</td><td>Vẫn phổ biến, quen thuộc</td></tr>
+<tr><td><code>TextInput</code></td><td>Input field</td><td>Controlled component</td></tr>
+</table>
+
+<h4>List Components</h4>
+<div class="card card-accent">
+<table>
+<tr><th></th><th>ScrollView</th><th>FlatList</th><th>SectionList</th></tr>
+<tr><td>Render</td><td>Tất cả cùng lúc</td><td>Virtualized (chỉ render visible)</td><td>Virtualized + sections</td></tr>
+<tr><td>Performance</td><td>Kém với nhiều items</td><td>Tốt (recycle views)</td><td>Tốt</td></tr>
+<tr><td>Khi nào</td><td>&lt;50 items, forms</td><td>Long lists, homogeneous</td><td>Grouped data (contacts)</td></tr>
+</table>
+</div>
+
+<h3>3. Styling & StyleSheet</h3>
+<div class="concept">
+<p><strong>StyleSheet.create()</strong> — tạo style objects. Tại sao không dùng inline objects?</p>
+<ul>
+  <li>Validation: báo lỗi sớm nếu property sai</li>
+  <li>Performance: style ID được gửi qua Bridge 1 lần thay vì mỗi render</li>
+  <li>Readability: tách logic khỏi styling</li>
+</ul>
+</div>
+
+<pre><code>const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0f1117',
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#e4e6f0',
+    marginBottom: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+});</code></pre>
+
+<p><strong>Không có CSS cascade:</strong> Mỗi component phải khai báo style riêng. <code>Text</code> bên trong <code>View</code> không kế thừa <code>color</code> từ View (trừ <code>Text</code> nested trong <code>Text</code>).</p>
+
+<h3>4. Flexbox Deep Dive</h3>
+<div class="deep-dive">
+<p><strong>RN default:</strong> <code>flexDirection: 'column'</code> (khác web mặc định <code>row</code>)</p>
+<table>
+<tr><th>Property</th><th>Giá trị phổ biến</th><th>Mẹo nhớ</th></tr>
+<tr><td><code>flexDirection</code></td><td>column | row</td><td>column = dọc (default), row = ngang</td></tr>
+<tr><td><code>justifyContent</code></td><td>center | space-between | flex-start</td><td>Main axis (theo flexDirection)</td></tr>
+<tr><td><code>alignItems</code></td><td>center | flex-start | stretch</td><td>Cross axis (vuông góc)</td></tr>
+<tr><td><code>flex: 1</code></td><td>number</td><td>Chiếm hết không gian còn lại</td></tr>
+<tr><td><code>flexWrap</code></td><td>wrap | nowrap</td><td>Có xuống dòng không</td></tr>
+<tr><td><code>gap</code></td><td>number</td><td>Khoảng cách giữa children (RN 0.71+)</td></tr>
+<tr><td><code>position</code></td><td>relative | absolute</td><td>absolute: thoát khỏi flex flow</td></tr>
+</table>
+<p><strong>Mẹo:</strong> Khi layout bị sai → check <code>flexDirection</code> trước. Nhớ default là <code>column</code>!</p>
+</div>
+
+<h3>5. Images</h3>
+<pre><code>// Local (bundled) - require
+&lt;Image source={require('./assets/logo.png')} /&gt;
+
+// Remote - uri object
+&lt;Image
+  source={{ uri: 'https://example.com/photo.jpg' }}
+  style={{ width: 200, height: 200 }}
+/&gt;</code></pre>
+
+<div class="card card-warning">
+<p><strong>Lưu ý quan trọng:</strong> Remote images BẮT BUỘC phải set width + height (không tự động như web). Local images RN biết dimensions từ metadata.</p>
+</div>
+
+<table>
+<tr><th>resizeMode</th><th>Mô tả</th></tr>
+<tr><td>cover</td><td>Scale để fill, crop nếu cần (phổ biến nhất)</td></tr>
+<tr><td>contain</td><td>Scale vừa khung, không crop, có thể có space</td></tr>
+<tr><td>stretch</td><td>Kéo giãn vừa khung, có thể méo</td></tr>
+<tr><td>center</td><td>Không scale, center align</td></tr>
+</table>
+
+<h3>6. TextInput</h3>
+<pre><code>const [email, setEmail] = useState('');
+
+&lt;TextInput
+  value={email}
+  onChangeText={setEmail}
+  placeholder="Email"
+  keyboardType="email-address"
+  autoCapitalize="none"
+  autoCorrect={false}
+  returnKeyType="next"
+  style={styles.input}
+/&gt;</code></pre>
+
+<p><strong>Keyboard types:</strong> <code>default</code>, <code>email-address</code>, <code>numeric</code>, <code>phone-pad</code>, <code>decimal-pad</code></p>
+
+<h3>7. Responsive Design</h3>
+<pre><code>import { useWindowDimensions, PixelRatio } from 'react-native';
+
+const MyComponent = () =&gt; {
+  const { width, height } = useWindowDimensions();
+  const isTablet = width &gt;= 768;
+
+  return (
+    &lt;View style={{ padding: isTablet ? 32 : 16 }}&gt;
+      {/* responsive content */}
+    &lt;/View&gt;
+  );
+};</code></pre>
+
+<div class="card card-info">
+<p><strong>useWindowDimensions vs Dimensions.get():</strong> <code>useWindowDimensions</code> tự update khi xoay màn hình (reactive). <code>Dimensions.get()</code> là static — cần event listener.</p>
+</div>
+
+<h3>8. Platform-Specific Code</h3>
+<pre><code>import { Platform } from 'react-native';
+
+const styles = StyleSheet.create({
+  shadow: Platform.select({
+    ios: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    android: {
+      elevation: 5,
+    },
+  }),
+});</code></pre>
+
+<p><strong>File extensions:</strong> <code>Component.ios.tsx</code> / <code>Component.android.tsx</code> — RN tự chọn file đúng platform.</p>
+
+<h3>9. KeyboardAvoidingView</h3>
+<div class="card card-warning">
+<table>
+<tr><th>Platform</th><th>behavior prop</th></tr>
+<tr><td>iOS</td><td><code>"padding"</code> (recommended)</td></tr>
+<tr><td>Android</td><td><code>"height"</code> hoặc không cần (android:windowSoftInputMode="adjustResize")</td></tr>
+</table>
+<p>Tip: Dùng <code>react-native-keyboard-aware-scroll-view</code> cho forms phức tạp — tự scroll tới focused input.</p>
+</div>
+
+<h3>10. Ví dụ thực tế: Safe form screen</h3>
+<pre><code>import { KeyboardAvoidingView, Platform, ScrollView, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+function RegisterScreen() {
+  return (
+    &lt;SafeAreaView style={{ flex: 1 }}&gt;
+      &lt;KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      &gt;
+        &lt;ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ padding: 16, gap: 12 }}
+        &gt;
+          &lt;TextInput placeholder="Email" keyboardType="email-address" /&gt;
+          &lt;TextInput placeholder="Password" secureTextEntry /&gt;
+        &lt;/ScrollView&gt;
+      &lt;/KeyboardAvoidingView&gt;
+    &lt;/SafeAreaView&gt;
+  );
+}</code></pre>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<div class="qa">
+<div class="q">Q1: RN render native views hay WebView?</div>
+<div class="a"><p>Native views. RN map JSX components sang platform-native views: <code>View</code> → <code>UIView</code> (iOS) / <code>android.view.View</code> (Android). Không dùng WebView — đây là điểm khác biệt chính so với Cordova/Ionic. Kết quả: performance gần native, nhưng phải bridge giữa JS thread và native thread.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Tại sao phải wrap text trong &lt;Text&gt;?</div>
+<div class="a"><p>RN không có DOM text nodes. Mỗi text phải là <code>Text</code> component → được render thành <code>UILabel</code> (iOS) / <code>TextView</code> (Android). Viết text trực tiếp trong <code>View</code> sẽ crash vì View không biết render text.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: ScrollView vs FlatList — khi nào dùng cái nào?</div>
+<div class="a">
+<p><strong>ScrollView:</strong> render TẤT CẢ children cùng lúc. Dùng cho: forms, content ngắn (&lt;50 items), mixed content.</p>
+<p><strong>FlatList:</strong> virtualized — chỉ render items trong viewport + buffer. Dùng cho: long lists, homogeneous data, dynamic content.</p>
+<p><strong>Rule:</strong> Nếu list có thể &gt;50 items hoặc dynamic → FlatList. Nếu static content → ScrollView.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: FlatList bị lag — optimize thế nào?</div>
+<div class="a">
+<ul>
+  <li><code>getItemLayout</code> — skip layout measurement (nếu items cùng height)</li>
+  <li><code>keyExtractor</code> — unique stable key (không dùng index)</li>
+  <li><code>removeClippedSubviews={true}</code> — unmount off-screen items (Android)</li>
+  <li><code>maxToRenderPerBatch</code> — giảm items render mỗi batch</li>
+  <li><code>windowSize</code> — giảm viewport buffer</li>
+  <li><code>React.memo</code> cho renderItem component</li>
+  <li>Dùng <code>@shopify/flash-list</code> thay thế — nhanh hơn đáng kể</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: StyleSheet.create() có lợi gì so với inline object?</div>
+<div class="a"><p>1) Validation tại build time. 2) Performance: style ID gửi qua Bridge 1 lần. 3) Code organization. Tuy nhiên với New Architecture (JSI), performance gap nhỏ hơn vì không còn serialization overhead.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: flexDirection default trong RN là gì? Tại sao khác web?</div>
+<div class="a"><p>Default: <code>column</code> (web default: <code>row</code>). Lý do: mobile screens dọc (portrait) → content tự nhiên flow từ trên xuống. Design decision của Facebook khi tạo Yoga layout engine.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q7: Xử lý keyboard đè form trên iOS vs Android?</div>
+<div class="a">
+<p><strong>iOS:</strong> <code>KeyboardAvoidingView</code> với <code>behavior="padding"</code>.</p>
+<p><strong>Android:</strong> Set <code>android:windowSoftInputMode="adjustResize"</code> trong AndroidManifest.xml — system tự handle. Hoặc dùng <code>behavior="height"</code>.</p>
+<p><strong>Cả 2:</strong> <code>react-native-keyboard-aware-scroll-view</code> — auto scroll tới focused input.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q8: Platform-specific code — các cách implement?</div>
+<div class="a">
+<ol>
+  <li><code>Platform.OS === 'ios'</code> — simple conditional</li>
+  <li><code>Platform.select({ ios: ..., android: ... })</code> — object mapping</li>
+  <li>File extensions: <code>.ios.tsx</code> / <code>.android.tsx</code> — khi logic khác nhau nhiều</li>
+  <li><code>Platform.Version</code> — check OS version number</li>
+</ol>
+</div>
+</div>
+
+<h2>🏋️ Bài tập</h2>
+
+<div class="exercise">
+<strong>Bài 1: Clone Instagram Profile Screen</strong><br>
+Tạo layout: Header (avatar + stats row: posts/followers/following) + Bio + Grid photos (3 columns).<br>
+Yêu cầu: FlatList với numColumns={3}, Image aspect ratio 1:1, responsive cho mọi screen size.<br>
+Acceptance: chạy được trên cả iOS và Android, scroll mượt với 50+ photos.
+</div>
+
+<div class="exercise">
+<strong>Bài 2: Form Screen với Validation</strong><br>
+Tạo Login/Register form: email, password, confirm password, phone.<br>
+Yêu cầu: Controlled inputs, validation (email format, password length), keyboard handling, error messages, submit button disabled khi invalid.<br>
+Acceptance: keyboard không đè form, validation real-time.
+</div>
+
+<div class="exercise">
+<strong>Bài 3: Responsive Grid Layout</strong><br>
+Build grid cards hiển thị 2 columns (phone) / 3 columns (tablet).<br>
+Yêu cầu: useWindowDimensions, gap giữa cards, responsive padding, platform-specific shadows.
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Đặt text trực tiếp trong <code>View</code> làm app crash.</li>
+  <li>Dùng ScrollView cho list dài, khiến render quá nhiều item và lag.</li>
+  <li>Remote Image không có width/height nên không hiển thị.</li>
+  <li>Chỉ test keyboard trên iOS, lên Android bị che input do cấu hình <code>windowSoftInputMode</code>.</li>
+  <li>Dùng shadow iOS cho Android mà quên <code>elevation</code>.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> Form đăng ký nhìn ổn trên iPhone, nhưng trên Android keyboard che nút Submit. User không biết cách hoàn tất form.</p>
+<p><strong>Cách xử lý:</strong> Dùng ScrollView với <code>keyboardShouldPersistTaps</code>, cấu hình Android <code>adjustResize</code>, test cả màn hình nhỏ và input cuối form.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>Nền tảng RN tốt là biết các khác biệt nhỏ giữa web, iOS và Android. Mọi màn hình cơ bản nên được test với keyboard, safe area, màn hình nhỏ, ảnh remote và list đủ dài.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Khi nào ScrollView trở thành vấn đề performance?</div>
+  <div class="q">2. Vì sao remote Image cần kích thước rõ ràng?</div>
+  <div class="q">3. SafeAreaView nên đặt ở đâu trong screen?</div>
+  <div class="q">4. Một layout lệch giữa iOS/Android, bạn kiểm tra những prop nào trước?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi hiểu RN render native views, không phải WebView</label>
+  <label><input type="checkbox"> Tôi biết khi nào dùng View, ScrollView, FlatList, SectionList</label>
+  <label><input type="checkbox"> Tôi có thể layout bằng Flexbox (biết default column)</label>
+  <label><input type="checkbox"> Tôi biết StyleSheet.create() tại sao cần</label>
+  <label><input type="checkbox"> Tôi xử lý được Images (local vs remote, resizeMode)</label>
+  <label><input type="checkbox"> Tôi tạo được controlled TextInput với proper keyboard type</label>
+  <label><input type="checkbox"> Tôi biết ScrollView vs FlatList trade-offs</label>
+  <label><input type="checkbox"> Tôi xử lý được KeyboardAvoidingView (iOS vs Android)</label>
+  <label><input type="checkbox"> Tôi biết responsive design (useWindowDimensions)</label>
+  <label><input type="checkbox"> Tôi viết được platform-specific code (Platform.select, file extensions)</label>
+  <label><input type="checkbox"> Tôi đã clone xong Instagram Profile layout</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/getting-started" target="_blank">React Native Official Docs</a></div>
+<div class="resource">📺 <a href="https://www.youtube.com/playlist?list=PL4cUxeGkcC9ixPU-QkScoRBVxtPPzVjrQ" target="_blank">Net Ninja — React Native Tutorial</a> (YouTube)</div>
+<div class="resource">📘 <a href="https://yogalayout.dev/" target="_blank">Yoga Layout Playground</a> — Interactive flexbox testing</div>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/flexbox" target="_blank">RN Flexbox Docs</a></div>
+<div class="resource">📘 <a href="https://github.com/react-native-safe-area/react-native-safe-area-context" target="_blank">react-native-safe-area-context</a></div>
+
+<div class="nav-links">
+  <a href="04-Hooks-Deep-Dive.html">← Module 04: Hooks</a>
+  <a href="05-Navigation.html">Module 05: Navigation →</a>
+</div>
+</div>
+</body>
+</html>

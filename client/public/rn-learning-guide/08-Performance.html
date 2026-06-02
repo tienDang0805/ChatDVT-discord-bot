@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 08 — Performance Optimization</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 08 &mdash; Performance Optimization</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">&9201; 8-10 giờ</span>
+  <span class="meta-item">&128203; Prerequisites: Module 01, 02, 03, 04</span>
+</div>
+
+<h2>&127919; MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu mô hình threading trong React Native: JS Thread, Main/UI Thread, Shadow Thread</li>
+  <li>Biết cách ngăn re-render không cần thiết bằng <code>React.memo</code>, <code>useCallback</code>, <code>useMemo</code></li>
+  <li>Tối ưu hóa <code>FlatList</code> với các prop quan trọng và biết khi nào dùng <code>FlashList</code></li>
+  <li>Hiểu Hermes engine: AOT vs JIT, tại sao cải thiện startup time</li>
+  <li>Tối ưu hóa image loading với FastImage, resize, caching strategies</li>
+  <li>Sử dụng <code>InteractionManager.runAfterInteractions</code> để defer heavy tasks</li>
+  <li>Nhận diện và fix 6 loại memory leak phổ biến</li>
+  <li>Phân tích bundle size và áp dụng tree shaking</li>
+  <li>Phân biệt cold start vs warm start, tối ưu app startup</li>
+  <li>Sử dụng profiling tools: Flipper, React DevTools Profiler, Systrace</li>
+</ul>
+
+<h2>&128214; HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc tài liệu chính thức</strong><br>
+    Đọc kỹ <a href="https://reactnative.dev/docs/performance" target="_blank">reactnative.dev/docs/performance</a> &mdash; đây là nền tảng để hiểu các bottleneck phổ biến trong RN. Đọc thêm các trang liên quan: Optimizing Flatlist Configuration, RAM Bundles và Inline Requires.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Xem video deep-dive</strong><br>
+    Xem series "React Native Performance" trên kênh <a href="https://www.youtube.com/@nickholdback" target="_blank">Callstack YouTube</a>. Tập trung vào các video về JS thread blocking, bridge overhead, và rendering pipeline.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Setup công cụ profiling</strong><br>
+    Cài đặt <a href="https://fbflipper.com/" target="_blank">Flipper</a> và tích hợp React DevTools Profiler. Làm quen với giao diện: Performance monitor, Network inspector, Layout inspector. Thử chạy profiler trên 1 app demo.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Profile 1 app thật</strong><br>
+    Lấy 1 app bạn đã build (hoặc clone app mẫu), chạy profiler để tìm re-render thừa, JS thread drops, memory leak. Ghi chú lại các bottleneck tìm được và cách fix.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">5</span>
+    <strong>Tìm hiểu FlashList</strong><br>
+    Đọc docs của <a href="https://shopify.github.io/flash-list/" target="_blank">FlashList by Shopify</a>. So sánh performance với FlatList trên list 10,000+ items. Hiểu cơ chế cell recycling mà FlashList áp dụng.
+  </div>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> performance là quản lý work trên JS/UI/native thread và memory.</li>
+  <li><strong>Thấy bug thật:</strong> list re-render quá nhiều, ảnh quá lớn, startup làm quá nhiều việc.</li>
+  <li><strong>Debug:</strong> đo render count, FPS, memory, startup time; không sửa theo cảm giác.</li>
+  <li><strong>Fix:</strong> stable props, FlatList/FlashList đúng, resize/cache image, defer non-critical task.</li>
+  <li><strong>Áp dụng playground:</strong> đo ProductList before/after và ghi note kết quả.</li>
+</ul>
+</div>
+
+<h2>&128218; LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. Threading Model trong React Native</h3>
+
+<div class="concept">
+  <strong>React Native chạy trên 3 thread chính:</strong>
+  <ul>
+    <li><strong>JS Thread:</strong> Chạy toàn bộ JavaScript/TypeScript code. Xử lý business logic, state management, event handlers. Đây là single-threaded &mdash; nếu block JS thread, toàn bộ app sẽ bị freeze.</li>
+    <li><strong>Main/UI Thread (Native Thread):</strong> Chạy native UI rendering. Xử lý touch events, animations, layout trên screen. Trên iOS đây là Main Thread, Android là UI Thread.</li>
+    <li><strong>Shadow Thread:</strong> Chạy Yoga layout engine. Tính toán layout (flexbox) từ style properties rồi gửi kết quả sang UI Thread để render.</li>
+  </ul>
+</div>
+
+<div class="card card-warning">
+  <strong>Bridge Communication (Old Architecture):</strong>
+  <p>3 thread giao tiếp qua Bridge bằng cách serialize data thành JSON. Đây chính là bottleneck lớn nhất của RN cũ &mdash; mỗi lần gửi message qua Bridge đều phải JSON.stringify &rarr; truyền &rarr; JSON.parse.</p>
+  <p><strong>New Architecture (Fabric + TurboModules):</strong> Sử dụng JSI (JavaScript Interface) cho phép JS gọi trực tiếp C++ functions &mdash; không cần serialize/deserialize. Giảm latency đáng kể.</p>
+</div>
+
+<table>
+  <tr><th>Thread</th><th>Vai trò</th><th>Nếu bị block</th></tr>
+  <tr><td>JS Thread</td><td>Business logic, state, event handlers</td><td>UI không respond, animations giật</td></tr>
+  <tr><td>UI Thread</td><td>Native rendering, touch, animations</td><td>App freeze, ANR trên Android</td></tr>
+  <tr><td>Shadow Thread</td><td>Yoga layout calculation</td><td>Layout chậm, render delay</td></tr>
+</table>
+
+<p>Ví dụ flow khi user nhấn button:</p>
+<pre><code>User tap (UI Thread)
+  &rarr; Event serialize to JSON (Bridge)
+    &rarr; JS Thread nhận event, xử lý handler
+      &rarr; setState() &rarr; tính Virtual DOM diff
+        &rarr; Gửi layout instructions qua Bridge
+          &rarr; Shadow Thread tính Yoga layout
+            &rarr; UI Thread render native views</code></pre>
+
+<h3>2. Re-render Optimization</h3>
+
+<div class="concept">
+  <strong>Tại sao component re-render?</strong>
+  <ul>
+    <li>Parent component re-render &rarr; tất cả children re-render (dù props không đổi)</li>
+    <li>State thay đổi trong component đó</li>
+    <li>Context value thay đổi</li>
+    <li>Custom hook trả về reference mới</li>
+  </ul>
+</div>
+
+<h4>React.memo</h4>
+<p>Wrap component bằng <code>React.memo</code> để skip re-render khi props không đổi (shallow comparison).</p>
+
+<pre><code>const UserCard = React.memo(function UserCard({ name, avatar }: Props) {
+  return (
+    &lt;View&gt;
+      &lt;Image source={{ uri: avatar }} /&gt;
+      &lt;Text&gt;{name}&lt;/Text&gt;
+    &lt;/View&gt;
+  );
+});</code></pre>
+
+<p>Component <code>UserCard</code> chỉ re-render khi <code>name</code> hoặc <code>avatar</code> thật sự thay đổi. Nếu parent re-render nhưng truyền cùng props, <code>UserCard</code> sẽ skip.</p>
+
+<div class="card card-danger">
+  <strong>Cẩn thận:</strong> <code>React.memo</code> chỉ shallow compare. Nếu bạn truyền object/array mới mỗi render (dù nội dung giống), memo sẽ vô hiệu. Ví dụ <code>style={{ padding: 10 }}</code> tạo object mới mỗi render &rarr; memo không có tác dụng.
+</div>
+
+<h4>useCallback</h4>
+<p>Memoize function reference để tránh tạo function mới mỗi render. Kết hợp với <code>React.memo</code> mới có ý nghĩa.</p>
+
+<pre><code>const Parent = () =&gt; {
+  const [count, setCount] = useState(0);
+
+  const handlePress = useCallback(() =&gt; {
+    setCount(prev =&gt; prev + 1);
+  }, []);
+
+  return &lt;Child onPress={handlePress} /&gt;;
+};
+
+const Child = React.memo(({ onPress }: { onPress: () =&gt; void }) =&gt; {
+  return &lt;Button onPress={onPress} title="Increment" /&gt;;
+});</code></pre>
+
+<p>Nếu không dùng <code>useCallback</code>, mỗi lần <code>Parent</code> render sẽ tạo <code>handlePress</code> mới &rarr; <code>Child</code> luôn re-render dù đã memo.</p>
+
+<h4>useMemo</h4>
+<p>Memoize kết quả tính toán nặng. Chỉ tính lại khi dependencies thay đổi.</p>
+
+<pre><code>const filteredData = useMemo(() =&gt; {
+  return largeDataset.filter(item =&gt;
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+}, [largeDataset, searchTerm]);</code></pre>
+
+<p>Nếu <code>largeDataset</code> có 50,000 items, filter mỗi render sẽ rất tốn CPU. <code>useMemo</code> cache kết quả cho đến khi <code>searchTerm</code> hoặc <code>largeDataset</code> thay đổi.</p>
+
+<div class="card card-info">
+  <strong>Khi nào KHÔNG cần memoize?</strong>
+  <ul>
+    <li>Component render nhanh (đơn giản, ít children)</li>
+    <li>Props luôn thay đổi mỗi render</li>
+    <li>Computation rất nhẹ (concat 2 string, tính 1+1)</li>
+  </ul>
+  <p>Memoize cũng có cost: lưu previous value, so sánh dependencies. Đừng memoize mọi thứ mà không đo đạc.</p>
+</div>
+
+<h3>3. FlatList Optimization</h3>
+
+<div class="concept">
+  <strong>FlatList là windowed list</strong> &mdash; chỉ render các items trong viewport + buffer. Nhưng nếu không tune đúng, vẫn có thể giật lag khi scroll nhanh trên list dài.
+</div>
+
+<table>
+  <tr><th>Prop</th><th>Default</th><th>Giải thích</th></tr>
+  <tr>
+    <td><code>getItemLayout</code></td>
+    <td>undefined</td>
+    <td>Cung cấp height/offset của mỗi item khi biết trước size. Skip layout measurement &rarr; scroll cực mượt, hỗ trợ <code>scrollToIndex</code> instant.</td>
+  </tr>
+  <tr>
+    <td><code>initialNumToRender</code></td>
+    <td>10</td>
+    <td>Số items render ban đầu. Giảm xuống đủ fill 1 screen để giảm initial render time. Quá ít &rarr; user thấy blank.</td>
+  </tr>
+  <tr>
+    <td><code>maxToRenderPerBatch</code></td>
+    <td>10</td>
+    <td>Số items render mỗi batch khi scroll. Tăng &rarr; ít blank areas nhưng JS thread busy hơn. Giảm &rarr; responsive hơn nhưng có thể thấy blank.</td>
+  </tr>
+  <tr>
+    <td><code>windowSize</code></td>
+    <td>21</td>
+    <td>Đơn vị: số viewport heights. windowSize=21 nghĩa là render 10 viewport trên + 1 hiện tại + 10 viewport dưới. Giảm &rarr; ít memory nhưng dễ thấy blank khi scroll nhanh.</td>
+  </tr>
+  <tr>
+    <td><code>removeClippedSubviews</code></td>
+    <td>false</td>
+    <td>Detach views ngoài viewport khỏi native view hierarchy. Giảm memory trên list dài. Cẩn thận: có thể gây bugs với absolute positioning.</td>
+  </tr>
+  <tr>
+    <td><code>keyExtractor</code></td>
+    <td>item.key / index</td>
+    <td>Phải trả về unique stable key. Dùng index làm key &rarr; re-render sai khi data thay đổi thứ tự.</td>
+  </tr>
+</table>
+
+<p>Ví dụ FlatList tối ưu cho list cố định chiều cao:</p>
+<pre><code>const ITEM_HEIGHT = 72;
+
+const getItemLayout = (_: any, index: number) =&gt; ({
+  length: ITEM_HEIGHT,
+  offset: ITEM_HEIGHT * index,
+  index,
+});
+
+&lt;FlatList
+  data={data}
+  renderItem={renderItem}
+  keyExtractor={item =&gt; item.id}
+  getItemLayout={getItemLayout}
+  initialNumToRender={8}
+  maxToRenderPerBatch={5}
+  windowSize={11}
+  removeClippedSubviews={true}
+/&gt;</code></pre>
+
+<h4>FlashList &mdash; Drop-in replacement</h4>
+
+<div class="card card-success">
+  <strong>FlashList</strong> của Shopify sử dụng <strong>cell recycling</strong> (giống RecyclerView trên Android). Thay vì mount/unmount components khi scroll, FlashList tái sử dụng cell đã render với data mới. Kết quả: render nhanh hơn 5-10x so với FlatList trên list lớn.
+</div>
+
+<pre><code>import { FlashList } from "@shopify/flash-list";
+
+&lt;FlashList
+  data={data}
+  renderItem={({ item }) =&gt; &lt;UserCard user={item} /&gt;}
+  estimatedItemSize={72}
+  keyExtractor={item =&gt; item.id}
+/&gt;</code></pre>
+
+<p><code>estimatedItemSize</code> là prop bắt buộc &mdash; FlashList dùng giá trị này để ước lượng scroll position. Không cần <code>getItemLayout</code> vì FlashList tự đo dynamic heights.</p>
+
+<h3>4. Hermes Engine</h3>
+
+<div class="concept">
+  <strong>Hermes</strong> là JS engine do Meta phát triển, tối ưu riêng cho React Native. Từ RN 0.70+ Hermes là default engine.
+</div>
+
+<h4>AOT (Ahead-of-Time) vs JIT (Just-in-Time)</h4>
+
+<table>
+  <tr><th>Đặc điểm</th><th>JIT (JavaScriptCore)</th><th>AOT (Hermes)</th></tr>
+  <tr><td>Compile</td><td>Runtime &mdash; parse + compile khi app chạy</td><td>Build time &mdash; compile thành bytecode lúc build</td></tr>
+  <tr><td>Startup time</td><td>Chậm (phải parse toàn bộ JS bundle)</td><td>Nhanh (load bytecode trực tiếp)</td></tr>
+  <tr><td>Memory</td><td>Cao (lưu AST + compiled code)</td><td>Thấp (chỉ cần bytecode)</td></tr>
+  <tr><td>Peak performance</td><td>Có thể nhanh hơn (JIT optimize hot paths)</td><td>Hơi chậm hơn peak (không có JIT optimization)</td></tr>
+  <tr><td>Bundle size</td><td>Plain JS text</td><td>Bytecode nhỏ hơn text</td></tr>
+</table>
+
+<div class="card card-accent">
+  <strong>Tại sao Hermes cải thiện startup?</strong>
+  <ol>
+    <li><strong>Không cần parse JS source:</strong> JSC phải đọc JS text &rarr; parse thành AST &rarr; compile. Hermes skip bước này vì bytecode đã compile sẵn.</li>
+    <li><strong>Memory-mapped bytecode:</strong> Hermes load bytecode bằng mmap, chỉ load pages cần thiết vào RAM (lazy loading).</li>
+    <li><strong>Garbage collector tối ưu:</strong> Hermes dùng generational GC, allocations nhỏ được collect nhanh hơn.</li>
+  </ol>
+  <p>Kết quả thực tế: giảm 30-50% startup time, giảm 20-30% memory usage.</p>
+</div>
+
+<p>Kiểm tra Hermes đang bật chưa:</p>
+<pre><code>const isHermes = () =&gt; !!global.HermesInternal;
+
+console.log("Using Hermes:", isHermes());</code></pre>
+
+<h3>5. Image Optimization</h3>
+
+<div class="concept">
+  <strong>Image là một trong những nguyên nhân phổ biến nhất gây lag và crash (OOM).</strong> Một ảnh 4000x3000 pixels chiếm ~48MB RAM khi decode (4000 &times; 3000 &times; 4 bytes/pixel).
+</div>
+
+<h4>react-native-fast-image</h4>
+<p>Dựa trên SDWebImage (iOS) và Glide (Android) &mdash; 2 thư viện native image loading tốt nhất. So với <code>&lt;Image&gt;</code> mặc định:</p>
+<ul>
+  <li><strong>Aggressive caching:</strong> Disk cache + memory cache, configurable priority</li>
+  <li><strong>Preloading:</strong> Download trước khi hiển thị</li>
+  <li><strong>Priority levels:</strong> low, normal, high</li>
+  <li><strong>Auth headers:</strong> Hỗ trợ auth cho private images</li>
+</ul>
+
+<pre><code>import FastImage from "react-native-fast-image";
+
+&lt;FastImage
+  style={{ width: 200, height: 200 }}
+  source={{
+    uri: "https://example.com/photo.jpg",
+    priority: FastImage.priority.high,
+    cache: FastImage.cacheControl.immutable,
+  }}
+  resizeMode={FastImage.resizeMode.cover}
+/&gt;</code></pre>
+
+<h4>Best Practices cho Image</h4>
+<ul>
+  <li><strong>Resize server-side:</strong> Yêu cầu backend trả ảnh đúng kích thước cần hiển thị. Đừng load ảnh 4K rồi resize bằng CSS.</li>
+  <li><strong>Dùng WebP format:</strong> Nhỏ hơn JPEG 25-35% ở cùng chất lượng.</li>
+  <li><strong>Progressive loading:</strong> Hiển thị thumbnail/blur trước, load full-res sau.</li>
+  <li><strong>Limit concurrent downloads:</strong> Tránh load 50 ảnh cùng lúc, gây network congestion.</li>
+</ul>
+
+<h3>6. InteractionManager.runAfterInteractions</h3>
+
+<div class="concept">
+  <strong>Vấn đề:</strong> Khi navigate sang screen mới, animation transition đang chạy. Nếu screen mới ngay lập tức chạy heavy computation (API call, parse data, render list lớn), animation sẽ bị giật.<br><br>
+  <strong>Giải pháp:</strong> <code>InteractionManager.runAfterInteractions</code> defer task cho đến khi tất cả animations/interactions hoàn thành.
+</div>
+
+<pre><code>import { InteractionManager } from "react-native";
+
+useEffect(() =&gt; {
+  const task = InteractionManager.runAfterInteractions(() =&gt; {
+    fetchHeavyData();
+    processExpensiveComputation();
+  });
+
+  return () =&gt; task.cancel();
+}, []);</code></pre>
+
+<p>Flow: Navigate &rarr; Animation chạy mượt &rarr; Animation xong &rarr; <code>runAfterInteractions</code> callback được gọi &rarr; Heavy task chạy. User thấy transition mượt, sau đó data mới load.</p>
+
+<div class="card card-info">
+  <strong>Pattern phổ biến:</strong> Hiển thị skeleton/placeholder ngay khi vào screen, defer API call và rendering sau interactions. Kết hợp với <code>ActivityIndicator</code> hoặc skeleton UI.
+</div>
+
+<h3>7. Memory Leaks &mdash; 6 Loại Phổ Biến</h3>
+
+<div class="card card-danger">
+  <strong>Memory leak = app chiếm RAM ngày càng nhiều, cuối cùng crash (đặc biệt trên thiết bị low-end).</strong>
+</div>
+
+<table>
+  <tr><th>#</th><th>Loại Leak</th><th>Nguyên nhân</th><th>Cách Fix</th></tr>
+  <tr>
+    <td>1</td>
+    <td>Uncleared timers</td>
+    <td><code>setInterval</code>/<code>setTimeout</code> không clear khi unmount</td>
+    <td>Clear trong <code>useEffect</code> cleanup</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Event listeners</td>
+    <td>addEventListener không remove khi unmount</td>
+    <td>Remove trong cleanup function</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Async operations</td>
+    <td>setState sau khi component đã unmount (API callback)</td>
+    <td>AbortController hoặc isMounted flag</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>Closures giữ reference</td>
+    <td>Closure capture biến lớn, không release</td>
+    <td>Nullify references, dùng WeakRef</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Global state bloat</td>
+    <td>Tích lũy data trong global store không bao giờ cleanup</td>
+    <td>Pagination, eviction policy cho cache</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>Image cache không giới hạn</td>
+    <td>Cache hàng trăm ảnh full-size trong memory</td>
+    <td>Giới hạn cache size, dùng disk cache</td>
+  </tr>
+</table>
+
+<p>Ví dụ fix leak #1 và #3:</p>
+
+<pre><code>useEffect(() =&gt; {
+  const controller = new AbortController();
+
+  const intervalId = setInterval(() =&gt; {
+    fetch("/api/status", { signal: controller.signal })
+      .then(res =&gt; res.json())
+      .then(data =&gt; setStatus(data))
+      .catch(() =&gt; {});
+  }, 5000);
+
+  return () =&gt; {
+    clearInterval(intervalId);
+    controller.abort();
+  };
+}, []);</code></pre>
+
+<p>Cleanup function trong <code>useEffect</code> chạy khi component unmount. <code>AbortController</code> cancel pending fetch, <code>clearInterval</code> dừng timer.</p>
+
+<h3>8. Bundle Size Optimization</h3>
+
+<div class="concept">
+  <strong>Bundle lớn = startup chậm</strong> vì JS engine phải load + parse toàn bộ bundle trước khi render. Trên Hermes, bytecode size ảnh hưởng trực tiếp đến thời gian mmap.
+</div>
+
+<h4>react-native-bundle-visualizer</h4>
+<p>Công cụ visualize bundle &mdash; cho thấy mỗi dependency chiếm bao nhiêu % trong bundle.</p>
+
+<pre><code>npx react-native-bundle-visualizer</code></pre>
+
+<p>Output: treemap interactives hiển thị size của từng module. Từ đó xác định thư viện nào quá nặng cần thay thế hoặc lazy load.</p>
+
+<h4>Các kỹ thuật giảm bundle size</h4>
+<ul>
+  <li><strong>Tree shaking:</strong> Import chính xác function cần dùng thay vì import cả thư viện.</li>
+</ul>
+
+<pre><code>import { format } from "date-fns/format";
+
+import { debounce } from "lodash/debounce";</code></pre>
+
+<p>Thay vì <code>import { format } from "date-fns"</code> hoặc <code>import _ from "lodash"</code> sẽ kéo toàn bộ thư viện vào bundle.</p>
+
+<ul>
+  <li><strong>Lazy loading với React.lazy + Suspense:</strong> Load screen/component chỉ khi cần.</li>
+  <li><strong>Thay thư viện nặng:</strong> moment.js (300KB) &rarr; date-fns (tree-shakeable) hoặc dayjs (2KB).</li>
+  <li><strong>RAM Bundles (Inline Requires):</strong> Chỉ load module khi thật sự cần, giảm startup cost.</li>
+  <li><strong>ProGuard/R8 (Android):</strong> Minify + shrink native code.</li>
+</ul>
+
+<h3>9. App Startup Optimization</h3>
+
+<div class="concept">
+  <strong>Cold Start vs Warm Start:</strong>
+  <ul>
+    <li><strong>Cold Start:</strong> App chưa có trong memory. OS phải load process, initialize runtime, load JS bundle, render first frame. Thời gian: 1-5 giây tùy app size.</li>
+    <li><strong>Warm Start:</strong> App đã trong memory (user quay lại từ background). Chỉ cần resume &mdash; nhanh hơn nhiều.</li>
+  </ul>
+</div>
+
+<h4>Tối ưu Cold Start</h4>
+<ol>
+  <li><strong>Enable Hermes:</strong> Giảm 30-50% parse time nhờ bytecode precompile.</li>
+  <li><strong>Splash Screen:</strong> Dùng <code>react-native-bootsplash</code> hoặc <code>expo-splash-screen</code> để hiển thị splash ngay lập tức (native level), ẩn khi JS bundle ready.</li>
+  <li><strong>Inline Requires:</strong> Lazy load modules &mdash; chỉ require khi function đầu tiên gọi đến.</li>
+  <li><strong>Reduce initial screen complexity:</strong> Screen đầu tiên render càng ít component càng tốt.</li>
+  <li><strong>Defer non-critical initialization:</strong> Analytics, crash reporting, push notifications &mdash; init sau khi first frame render.</li>
+</ol>
+
+<pre><code>import { BootSplash } from "react-native-bootsplash";
+
+const App = () =&gt; {
+  useEffect(() =&gt; {
+    const init = async () =&gt; {
+      await loadEssentialData();
+      await BootSplash.hide({ fade: true });
+
+      InteractionManager.runAfterInteractions(() =&gt; {
+        initAnalytics();
+        initCrashReporting();
+        registerPushNotifications();
+      });
+    };
+
+    init();
+  }, []);
+
+  return &lt;Navigation /&gt;;
+};</code></pre>
+
+<p>Flow: Native splash hiện ngay &rarr; JS bundle load &rarr; essential data ready &rarr; hide splash với fade &rarr; defer analytics/crash/push sau khi animation xong.</p>
+
+<h3>10. Profiling Tools</h3>
+
+<table>
+  <tr><th>Tool</th><th>Mục đích</th><th>Platform</th></tr>
+  <tr><td>Flipper</td><td>All-in-one debugger: network, layout, performance, logs</td><td>iOS + Android</td></tr>
+  <tr><td>React DevTools Profiler</td><td>Measure component render time, tìm re-render thừa</td><td>Cross-platform</td></tr>
+  <tr><td>Systrace</td><td>Low-level tracing cho JS + native threads</td><td>Android</td></tr>
+  <tr><td>Xcode Instruments</td><td>CPU, Memory, GPU profiling chi tiết</td><td>iOS</td></tr>
+  <tr><td>Android Studio Profiler</td><td>CPU, Memory, Network, Energy profiling</td><td>Android</td></tr>
+  <tr><td>Performance Monitor</td><td>In-app overlay hiển thị FPS, RAM, JS thread</td><td>iOS + Android</td></tr>
+  <tr><td>Why Did You Render</td><td>Tự động log re-render không cần thiết</td><td>Cross-platform</td></tr>
+</table>
+
+<div class="card card-accent">
+  <strong>Quy trình profiling chuẩn:</strong>
+  <ol>
+    <li>Bật Performance Monitor (shake &rarr; Show Perf Monitor) để xem FPS realtime</li>
+    <li>Nếu JS FPS drop &lt; 60: dùng React DevTools Profiler tìm component render lâu</li>
+    <li>Nếu UI FPS drop: dùng Systrace/Instruments kiểm tra native thread</li>
+    <li>Kiểm tra memory: Flipper Memory plugin hoặc Instruments Allocations</li>
+    <li>Fix &rarr; đo lại &rarr; so sánh trước/sau</li>
+  </ol>
+</div>
+
+<h2>&10067; CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<h2>🛠️ Debug playbook: performance bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>FlatList scroll giật</td><td>Render count, item height, image size, key, JS thread</td><td>Memo item, stable props, getItemLayout/FlashList, resize image</td></tr>
+<tr><td>Input search lag</td><td>Filter/sort chạy mỗi keypress, list size, deferred work</td><td>Debounce/deferred value, memo filtered data, move heavy work</td></tr>
+<tr><td>Startup chậm</td><td>Task chạy trước first screen, sync storage, native init</td><td>Defer non-critical task, lazy init, reduce bundle/startup work</td></tr>
+<tr><td>Memory tăng sau khi vào ra screen</td><td>Timer/listener/request/image cache cleanup</td><td>Cleanup effect, abort request, remove listener, limit cache</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Performance phải nói theo vòng đo: triệu chứng, metric, bottleneck, fix nhỏ, đo lại. Tránh trả lời kiểu liệt kê memo/useCallback khi chưa biết bottleneck.</p>
+</div>
+
+<div class="qa">
+  <div class="q">Q1: React Native có mấy thread chính? Mô tả vai trò của từng thread.</div>
+  <div class="a">
+    <p><strong>3 thread chính:</strong></p>
+    <ul>
+      <li><strong>JS Thread:</strong> Chạy toàn bộ JavaScript code &mdash; business logic, state management, event handlers, React reconciliation. Single-threaded nên nếu block thì UI sẽ không respond.</li>
+      <li><strong>Main/UI Thread:</strong> Render native UI components, xử lý touch events, chạy native animations. Đây là thread mà user "nhìn thấy" trực tiếp.</li>
+      <li><strong>Shadow Thread:</strong> Chạy Yoga layout engine để tính toán flexbox layout từ style props. Kết quả layout được gửi sang UI Thread để render.</li>
+    </ul>
+    <p>Trong New Architecture (Fabric), Shadow Thread được tích hợp chặt hơn với UI Thread, và JSI thay thế Bridge cho phép synchronous calls giữa JS và native.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q2: Sự khác biệt giữa React.memo, useCallback, và useMemo? Khi nào dùng cái nào?</div>
+  <div class="a">
+    <ul>
+      <li><strong>React.memo:</strong> HOC wrap component &mdash; skip re-render khi props không đổi (shallow compare). Dùng cho component có render cost cao mà nhận props ổn định.</li>
+      <li><strong>useCallback:</strong> Memoize function reference. Dùng khi truyền callback xuống child component đã memo &mdash; đảm bảo function reference không đổi giữa các render.</li>
+      <li><strong>useMemo:</strong> Memoize giá trị tính toán. Dùng khi có expensive computation (filter/sort/transform large data) mà không cần chạy lại mỗi render.</li>
+    </ul>
+    <p><strong>Nguyên tắc:</strong> React.memo cho components, useCallback cho functions, useMemo cho values. Luôn đo đạc trước khi memoize &mdash; premature optimization có thể tăng complexity mà không cải thiện performance.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q3: FlatList có những props nào để tối ưu performance? Giải thích getItemLayout.</div>
+  <div class="a">
+    <p>Các props quan trọng:</p>
+    <ul>
+      <li><strong>getItemLayout:</strong> Trả về <code>{ length, offset, index }</code> cho mỗi item. Khi biết trước chiều cao cố định, FlatList skip bước đo lường layout &rarr; scroll mượt hơn và <code>scrollToIndex</code> hoạt động tức thì.</li>
+      <li><strong>initialNumToRender:</strong> Số items render ban đầu, nên đặt vừa đủ fill 1 screen.</li>
+      <li><strong>maxToRenderPerBatch:</strong> Số items render mỗi batch khi scroll. Tradeoff giữa fill rate và responsiveness.</li>
+      <li><strong>windowSize:</strong> Số viewport heights giữ trong memory. Mặc định 21 (10 trên + 1 hiện tại + 10 dưới).</li>
+      <li><strong>removeClippedSubviews:</strong> Detach views ngoài viewport khỏi native hierarchy, giảm memory.</li>
+    </ul>
+    <p>Ngoài ra: luôn dùng <code>keyExtractor</code> với unique stable key, tách <code>renderItem</code> thành memo component riêng, tránh anonymous function trong <code>renderItem</code>.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q4: Hermes engine khác gì JavaScriptCore? Tại sao cải thiện startup time?</div>
+  <div class="a">
+    <p><strong>JavaScriptCore (JSC)</strong> dùng JIT compilation: parse JS text &rarr; compile thành machine code tại runtime. Mỗi lần app start đều phải lặp lại quá trình này.</p>
+    <p><strong>Hermes</strong> dùng AOT compilation: compile JS thành bytecode tại build time. Khi app start, chỉ cần load bytecode &mdash; không cần parse/compile.</p>
+    <p><strong>3 lý do startup nhanh hơn:</strong></p>
+    <ol>
+      <li>Skip parse + compile phase (bước tốn thời gian nhất)</li>
+      <li>Bytecode được memory-mapped (mmap) &rarr; lazy loading, chỉ load pages cần thiết</li>
+      <li>Bytecode nhỏ hơn JS text &rarr; load nhanh hơn từ disk</li>
+    </ol>
+    <p><strong>Tradeoff:</strong> Hermes không có JIT optimization nên peak performance có thể hơi thấp hơn JSC cho CPU-intensive tasks. Nhưng cho mobile app, startup time và memory quan trọng hơn peak throughput.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q5: Kể tên các loại memory leak phổ biến trong React Native và cách fix.</div>
+  <div class="a">
+    <ol>
+      <li><strong>Timers:</strong> <code>setInterval</code>/<code>setTimeout</code> không clear &rarr; fix bằng <code>clearInterval</code> trong useEffect cleanup.</li>
+      <li><strong>Event listeners:</strong> Không remove khi unmount &rarr; return cleanup function từ useEffect.</li>
+      <li><strong>Async operations:</strong> setState sau unmount &rarr; dùng <code>AbortController</code> để cancel fetch, hoặc guard với isMounted check.</li>
+      <li><strong>Closures:</strong> Giữ reference đến large objects &rarr; nullify references khi không cần, dùng WeakRef nếu phù hợp.</li>
+      <li><strong>Global store bloat:</strong> Cache data không bao giờ cleanup &rarr; implement eviction policy, pagination, clear old data.</li>
+      <li><strong>Image cache:</strong> Cache unlimited images &rarr; set max cache size, ưu tiên disk cache over memory cache.</li>
+    </ol>
+    <p><strong>Detect:</strong> Dùng Flipper Memory plugin hoặc Xcode Instruments Allocations để track memory growth over time.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q6: InteractionManager.runAfterInteractions dùng để làm gì?</div>
+  <div class="a">
+    <p>Defer expensive tasks cho đến khi tất cả animations và interactions hiện tại hoàn thành. Use case chính: khi navigate sang screen mới, animation transition đang chạy trên UI thread. Nếu JS thread cũng bận xử lý heavy task (API call, data processing), animation sẽ giật.</p>
+    <p><code>runAfterInteractions</code> đặt task vào queue, chờ animation xong mới execute. Kết hợp với skeleton UI: hiển thị placeholder ngay, load data sau khi transition mượt.</p>
+    <p>Trả về object có method <code>cancel()</code> &mdash; luôn cancel trong useEffect cleanup để tránh memory leak.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q7: Cold start và warm start khác nhau thế nào? Làm sao tối ưu cold start?</div>
+  <div class="a">
+    <p><strong>Cold start:</strong> App process chưa tồn tại trong memory. OS phải: fork process &rarr; load native libraries &rarr; initialize JS runtime &rarr; load JS bundle &rarr; execute JS &rarr; render first frame. Thường mất 1-5 giây.</p>
+    <p><strong>Warm start:</strong> App đã trong memory (user quay lại từ background). Process vẫn sống, chỉ cần resume activity &mdash; gần như instant.</p>
+    <p><strong>Tối ưu cold start:</strong></p>
+    <ol>
+      <li>Enable Hermes (giảm 30-50% startup)</li>
+      <li>Native splash screen (hiện trước khi JS ready)</li>
+      <li>Inline Requires / lazy loading modules</li>
+      <li>Giảm bundle size (loại bỏ dependencies không cần)</li>
+      <li>Defer non-critical init (analytics, push) sau first render</li>
+      <li>Simplify initial screen (ít components, ít computation)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q8: FlashList khác FlatList như thế nào? Khi nào nên dùng FlashList?</div>
+  <div class="a">
+    <p><strong>Cơ chế khác biệt cốt lõi:</strong> FlatList mount/unmount components khi scroll. FlashList tái sử dụng cells đã mount (cell recycling) &mdash; tương tự RecyclerView (Android) hoặc UICollectionView (iOS).</p>
+    <p><strong>Ưu điểm FlashList:</strong></p>
+    <ul>
+      <li>Render nhanh hơn 5-10x trên list lớn (10,000+ items)</li>
+      <li>Ít blank areas khi scroll nhanh</li>
+      <li>Memory usage ổn định (không tăng theo số items đã scroll qua)</li>
+      <li>Drop-in replacement: API tương tự FlatList</li>
+    </ul>
+    <p><strong>Khi nào dùng:</strong> List &gt; 100 items, complex render items, user scroll nhanh, thiết bị low-end. Với list &lt; 50 items đơn giản, FlatList đủ tốt.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q9: Làm sao giảm bundle size trong React Native?</div>
+  <div class="a">
+    <ol>
+      <li><strong>Analyze trước:</strong> <code>npx react-native-bundle-visualizer</code> để biết dependency nào chiếm nhiều nhất.</li>
+      <li><strong>Tree shaking:</strong> Import cụ thể: <code>import debounce from "lodash/debounce"</code> thay vì <code>import _ from "lodash"</code>.</li>
+      <li><strong>Thay thư viện nặng:</strong> moment.js &rarr; dayjs, lodash &rarr; native methods hoặc lodash-es.</li>
+      <li><strong>RAM Bundles:</strong> Enable inline requires để lazy load modules.</li>
+      <li><strong>Remove unused imports:</strong> Dùng ESLint rule <code>no-unused-vars</code>.</li>
+      <li><strong>Code splitting:</strong> React.lazy cho screens ít dùng.</li>
+      <li><strong>Assets:</strong> Compress images, dùng vector icons thay PNG, fonts subset.</li>
+      <li><strong>ProGuard/R8:</strong> Minify native code trên Android.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q10: Bạn sẽ debug performance issue trong React Native như thế nào? Mô tả quy trình.</div>
+  <div class="a">
+    <p><strong>Quy trình 5 bước:</strong></p>
+    <ol>
+      <li><strong>Reproduce &amp; Identify:</strong> Bật Performance Monitor (shake menu). Quan sát JS FPS và UI FPS. Target: cả hai phải &ge; 60fps.</li>
+      <li><strong>Classify:</strong> JS FPS drop &rarr; vấn đề ở JS thread (re-render, heavy computation). UI FPS drop &rarr; vấn đề ở native (overdraw, complex layout, large images).</li>
+      <li><strong>Profile JS:</strong> React DevTools Profiler để tìm component render lâu, render thừa. "Why Did You Render" library để auto-detect unnecessary re-renders.</li>
+      <li><strong>Profile Native:</strong> Android: Systrace hoặc Android Studio Profiler. iOS: Xcode Instruments (Time Profiler, Allocations).</li>
+      <li><strong>Fix &amp; Measure:</strong> Apply fix cụ thể &rarr; đo lại FPS/memory &rarr; compare before/after. Lặp lại cho đến khi đạt target.</li>
+    </ol>
+    <p><strong>Common findings:</strong> Unnecessary re-renders (70% cases), unoptimized images (15%), heavy computation on JS thread (10%), memory leaks (5%).</p>
+  </div>
+</div>
+
+<h2>&127947; BÀI TẬP</h2>
+
+<div class="exercise">
+  <strong>Bài 1: Optimize Re-renders</strong>
+  <p>Cho component tree: <code>App &rarr; UserList &rarr; UserCard (x100)</code>. Mỗi lần search text thay đổi, tất cả 100 <code>UserCard</code> đều re-render dù chỉ filtered list thay đổi.</p>
+  <p><strong>Yêu cầu:</strong></p>
+  <ul>
+    <li>Dùng <code>React.memo</code> cho <code>UserCard</code></li>
+    <li>Dùng <code>useMemo</code> cho filtered results</li>
+    <li>Dùng <code>useCallback</code> cho callback truyền xuống</li>
+    <li>Đo trước/sau bằng React DevTools Profiler</li>
+  </ul>
+  <p><strong>Acceptance:</strong> Khi gõ search, chỉ cards matching mới re-render. Profiler cho thấy giảm &ge; 50% render time.</p>
+</div>
+
+<div class="exercise">
+  <strong>Bài 2: FlatList vs FlashList Benchmark</strong>
+  <p><strong>Yêu cầu:</strong></p>
+  <ul>
+    <li>Tạo dataset 10,000 items (name, avatar, description)</li>
+    <li>Render bằng FlatList với tối ưu đầy đủ (getItemLayout, windowSize, etc.)</li>
+    <li>Render bằng FlashList với estimatedItemSize</li>
+    <li>Đo: thời gian initial render, FPS khi scroll nhanh, memory usage</li>
+  </ul>
+  <p><strong>Acceptance:</strong> Có bảng so sánh số liệu cụ thể giữa 2 approaches. FlashList phải cho FPS cao hơn khi fast scroll.</p>
+</div>
+
+<div class="exercise">
+  <strong>Bài 3: Memory Leak Hunt</strong>
+  <p>Tạo app có intentional memory leaks (timer không clear, event listener không remove, setState sau unmount). Sau đó dùng Flipper/Instruments để detect và fix từng leak.</p>
+  <p><strong>Yêu cầu:</strong></p>
+  <ul>
+    <li>Tạo ít nhất 3 loại leak khác nhau</li>
+    <li>Screenshot memory graph trước fix (memory tăng dần)</li>
+    <li>Fix tất cả leaks</li>
+    <li>Screenshot memory graph sau fix (memory ổn định)</li>
+  </ul>
+  <p><strong>Acceptance:</strong> Memory graph sau fix phải flat (không tăng liên tục khi navigate back-and-forth).</p>
+</div>
+
+<div class="exercise">
+  <strong>Bài 4: App Startup Optimization</strong>
+  <p><strong>Yêu cầu:</strong></p>
+  <ul>
+    <li>Đo cold start time hiện tại (console.log timestamp trong App component)</li>
+    <li>Implement: native splash screen, defer non-critical init, inline requires</li>
+    <li>Analyze bundle với react-native-bundle-visualizer, tìm và loại bỏ/replace 1 dependency nặng</li>
+    <li>Đo lại cold start time sau optimization</li>
+  </ul>
+  <p><strong>Acceptance:</strong> Cold start time giảm &ge; 20%. Bundle size giảm &ge; 10%.</p>
+</div>
+
+<div class="exercise">
+  <strong>Bài 5: Image Optimization Pipeline</strong>
+  <p><strong>Yêu cầu:</strong></p>
+  <ul>
+    <li>Tạo gallery screen hiển thị 50+ ảnh từ API (Unsplash/Picsum)</li>
+    <li>Version 1: dùng <code>&lt;Image&gt;</code> mặc định, load full-size</li>
+    <li>Version 2: dùng FastImage với caching, resize thumbnails, progressive loading</li>
+    <li>So sánh: thời gian load, memory usage, scroll smoothness</li>
+  </ul>
+  <p><strong>Acceptance:</strong> Version 2 phải load nhanh hơn &ge; 2x, memory thấp hơn &ge; 30%.</p>
+</div>
+
+<h2>&128187; MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <strong>Exercise 1: Profiling before/after</strong><br>
+  Chọn một list lag. Đo render count/FPS trước khi sửa, áp dụng memo/getItemLayout/FlashList, rồi ghi lại số liệu sau khi sửa.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 2: Image memory drill</strong><br>
+  Tạo grid ảnh remote. So sánh full-size Image vs thumbnail + cache. Ghi lại load time, memory, scroll smoothness.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 3: Startup budget</strong><br>
+  Liệt kê task chạy lúc app start, chuyển task không cần thiết sang sau interaction, và đo cold start lại.
+</div>
+
+<h2>&9888; LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Tối ưu bằng memo trước khi đo, làm code phức tạp mà không cải thiện.</li>
+    <li>Truyền object/function inline vào item đã memoized, memo không có tác dụng.</li>
+    <li>Load ảnh full-size cho thumbnail nhỏ, gây tốn memory và scroll giật.</li>
+    <li>Render list bằng ScrollView vì ban đầu ít item, sau này data tăng thì lag.</li>
+    <li>Không cleanup timer/listener/request, memory tăng dần sau nhiều lần vào ra screen.</li>
+  </ul>
+</div>
+
+<h2>&127970; CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Feed 200 item giật khi gõ search. Team thêm <code>React.memo</code> nhưng không cải thiện vì <code>renderItem</code> và style object đều tạo mới mỗi render.</p>
+  <p><strong>Cách xử lý:</strong> Đo render count, tách item component, ổn định props/callback/style, memoize filtered data, và kiểm tra lại bằng Profiler thay vì cảm giác.</p>
+</div>
+
+<h2>&129504; GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>Performance work phải có vòng lặp: đo triệu chứng, tìm bottleneck, sửa nhỏ, đo lại. Không có số liệu thì rất dễ tối ưu sai chỗ.</p>
+</div>
+
+<h2>&10067; CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. FlatList lag: bạn đo và kiểm tra gì trước?</div>
+  <div class="q">2. Khi nào <code>React.memo</code> vô tác dụng?</div>
+  <div class="q">3. Cold start chậm thường đến từ những nhóm task nào?</div>
+  <div class="q">4. Memory leak trong RN thường đến từ những nguồn nào?</div>
+</div>
+
+<h2>&10003; CHECKLIST TỰ ĐÁNH GIÁ</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích 3 thread chính trong React Native và vai trò của Bridge</label>
+  <label><input type="checkbox"> Tôi hiểu khi nào dùng React.memo, useCallback, useMemo và khi nào KHÔNG cần</label>
+  <label><input type="checkbox"> Tôi có thể configure FlatList với getItemLayout, windowSize, và các props tối ưu khác</label>
+  <label><input type="checkbox"> Tôi hiểu sự khác biệt giữa FlatList và FlashList, biết khi nào dùng FlashList</label>
+  <label><input type="checkbox"> Tôi có thể giải thích Hermes AOT vs JSC JIT và tại sao startup nhanh hơn</label>
+  <label><input type="checkbox"> Tôi biết cách dùng FastImage với proper caching strategy</label>
+  <label><input type="checkbox"> Tôi có thể sử dụng InteractionManager.runAfterInteractions đúng cách</label>
+  <label><input type="checkbox"> Tôi nhận diện được 6 loại memory leak và biết cách fix</label>
+  <label><input type="checkbox"> Tôi đã dùng react-native-bundle-visualizer để analyze bundle</label>
+  <label><input type="checkbox"> Tôi phân biệt được cold start vs warm start và biết ít nhất 5 cách tối ưu startup</label>
+  <label><input type="checkbox"> Tôi có thể sử dụng Flipper và React DevTools Profiler để profile app</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 3/5 bài tập thực hành</label>
+  <label><input type="checkbox"> Tôi đã đo before/after ít nhất một performance fix</label>
+  <label><input type="checkbox"> Tôi có thể mô tả quy trình debug performance issue từ đầu đến cuối</label>
+</div>
+
+<h2>&128206; TÀI NGUYÊN</h2>
+
+<div class="resource">
+  <strong>&128214; Tài liệu chính thức</strong><br>
+  <a href="https://reactnative.dev/docs/performance" target="_blank">React Native Performance Overview</a><br>
+  <a href="https://reactnative.dev/docs/optimizing-flatlist-configuration" target="_blank">Optimizing FlatList Configuration</a><br>
+  <a href="https://reactnative.dev/docs/ram-bundles-inline-requires" target="_blank">RAM Bundles and Inline Requires</a><br>
+  <a href="https://hermesengine.dev/" target="_blank">Hermes Engine Documentation</a>
+</div>
+
+<div class="resource">
+  <strong>&127909; Video</strong><br>
+  <a href="https://www.youtube.com/@nickholdback" target="_blank">Callstack YouTube &mdash; React Native Performance Series</a><br>
+  <a href="https://www.youtube.com/results?search_query=react+native+performance+optimization" target="_blank">React Native Performance Optimization (YouTube)</a>
+</div>
+
+<div class="resource">
+  <strong>&128230; Thư viện &amp; Công cụ</strong><br>
+  <a href="https://shopify.github.io/flash-list/" target="_blank">FlashList by Shopify</a><br>
+  <a href="https://github.com/DylanVann/react-native-fast-image" target="_blank">react-native-fast-image</a><br>
+  <a href="https://fbflipper.com/" target="_blank">Flipper</a><br>
+  <a href="https://github.com/nickholdback/react-native-bundle-visualizer" target="_blank">react-native-bundle-visualizer</a><br>
+  <a href="https://github.com/welldone-software/why-did-you-render" target="_blank">Why Did You Render</a><br>
+  <a href="https://github.com/zoontek/react-native-bootsplash" target="_blank">react-native-bootsplash</a>
+</div>
+
+<div class="resource">
+  <strong>&128220; Bài viết chuyên sâu</strong><br>
+  <a href="https://blog.callstack.com/" target="_blank">Callstack Blog &mdash; Performance Articles</a><br>
+  <a href="https://engineering.shopify.com/blogs/engineering/react-native-performance" target="_blank">Shopify Engineering &mdash; React Native at Scale</a><br>
+  <a href="https://reactnative.dev/docs/new-architecture-intro" target="_blank">React Native New Architecture</a>
+</div>
+
+<div class="nav-links">
+  <a href="12-Testing.html">&larr; Module 12: Testing</a>
+  <a href="09-Animation.html">Module 09: Animation &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

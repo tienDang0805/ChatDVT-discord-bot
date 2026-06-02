@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 14 — Kotlin & Android Basics</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 14 — Kotlin & Android Basics</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Nên có</span>
+  <span class="meta-item">⏱ 10-12 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Nắm Kotlin fundamentals: null safety, data class, sealed class, scope functions</li>
+  <li>Hiểu Android components: Activity lifecycle, Intents, XML layouts</li>
+  <li>Biết ViewModel, Coroutines, Flow — so sánh với React patterns</li>
+  <li>Đọc/debug được phần Android native side trong dự án React Native</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Kotlin Basics</strong> — <a href="https://kotlinlang.org/docs/getting-started.html" target="_blank">kotlinlang.org/docs</a><br>
+    Focus: Basic syntax, Null safety, Classes, Collections, Scope functions. Thời gian: ~3h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Android Fundamentals</strong> — <a href="https://developer.android.com/courses" target="_blank">developer.android.com/courses</a><br>
+    Focus: Activity lifecycle, Intents, XML Layouts, RecyclerView. Thời gian: ~4h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Build mini Todo app</strong> trong Android Studio<br>
+    RecyclerView + ViewModel + Room hoặc in-memory. Thời gian: ~3h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Debug Android side của React Native</strong><br>
+    Mở Android Studio, đọc Logcat, kiểm tra Gradle files, Manifest, permissions, build variants. Thời gian: ~2h
+  </div>
+</div>
+
+<h2>⚡ Ôn nhanh cho React Native dev</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Kotlin:</strong> đọc được null safety, data class, sealed class, coroutine là đủ để bắt đầu.</li>
+  <li><strong>AndroidManifest:</strong> nơi khai báo permission, activity, intent-filter, deep link.</li>
+  <li><strong>Gradle:</strong> nơi cấu hình dependency, build variant, min/target SDK, signing.</li>
+  <li><strong>Logcat:</strong> nguồn debug chính khi app crash native hoặc build chạy nhưng runtime lỗi Android.</li>
+  <li><strong>Native module:</strong> cần hiểu Activity/context/lifecycle để không leak hoặc crash.</li>
+</ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> RN dev cần đọc được Android boundary: Manifest, Gradle, Activity, Logcat.</li>
+  <li><strong>Thấy bug thật:</strong> permission thiếu, deep link intent-filter sai, native crash không thấy trong Metro.</li>
+  <li><strong>Debug:</strong> đọc Logcat, chạy adb deep link, kiểm Manifest/build.gradle/build variant.</li>
+  <li><strong>Fix:</strong> khai báo permission đúng lớp, intent-filter đúng, clean/rebuild khi đổi native config.</li>
+  <li><strong>Áp dụng playground:</strong> deep link Android, camera permission drill, staging/release config note.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. Kotlin Fundamentals</h3>
+
+<h4>val / var / const</h4>
+<pre><code>val name = "Linh"       // immutable (như JS const cho primitives)
+var age = 25            // mutable (như JS let)
+const val API_URL = "https://api.example.com"  // compile-time constant</code></pre>
+
+<h4>Null Safety</h4>
+<div class="concept">
+<p>Kotlin's killer feature — NullPointerException prevention tại compile time.</p>
+</div>
+<pre><code>var name: String = "Linh"    // non-null — KHÔNG thể assign null
+var email: String? = null    // nullable — CÓ thể null
+
+// Safe call operator
+val length = email?.length        // null nếu email null
+
+// Elvis operator
+val len = email?.length ?: 0      // default value nếu null
+
+// Non-null assertion (TRÁNH dùng)
+val len2 = email!!.length         // crash nếu null
+
+// Smart cast
+if (email != null) {
+  println(email.length)           // auto smart-cast thành non-null
+}
+
+// let scope function
+email?.let { validEmail -&gt;
+  sendEmail(validEmail)           // chỉ chạy nếu non-null
+}</code></pre>
+
+<h4>Data Class</h4>
+<pre><code>data class User(
+  val id: String,
+  val name: String,
+  val email: String,
+  val age: Int = 0
+)
+
+val user = User("1", "Linh", "linh@test.com")
+val copy = user.copy(age = 25)
+val (id, name) = user  // destructuring</code></pre>
+<p>Auto-generates: <code>equals()</code>, <code>hashCode()</code>, <code>toString()</code>, <code>copy()</code>, <code>componentN()</code> functions.</p>
+
+<h4>Sealed Class vs Enum</h4>
+<pre><code>sealed class Result&lt;out T&gt; {
+  data class Success&lt;T&gt;(val data: T) : Result&lt;T&gt;()
+  data class Error(val message: String) : Result&lt;Nothing&gt;()
+  data object Loading : Result&lt;Nothing&gt;()
+}
+
+fun handleResult(result: Result&lt;User&gt;) {
+  when (result) {
+    is Result.Success -&gt; showUser(result.data)
+    is Result.Error -&gt; showError(result.message)
+    is Result.Loading -&gt; showLoading()
+  }
+}</code></pre>
+
+<div class="card card-accent">
+<table>
+<tr><th></th><th>Enum</th><th>Sealed Class</th></tr>
+<tr><td>State</td><td>Fixed set, no data per instance</td><td>Fixed set, EACH can hold different data</td></tr>
+<tr><td>Instances</td><td>Singleton per value</td><td>Multiple instances per subclass</td></tr>
+<tr><td>Use case</td><td>Simple constants (Status, Color)</td><td>Result types, UI states, Navigation events</td></tr>
+</table>
+</div>
+
+<h4>Scope Functions</h4>
+<table>
+<tr><th>Function</th><th>Object ref</th><th>Return</th><th>Use case</th></tr>
+<tr><td><code>let</code></td><td><code>it</code></td><td>Lambda result</td><td>Null check + transform</td></tr>
+<tr><td><code>run</code></td><td><code>this</code></td><td>Lambda result</td><td>Object config + compute result</td></tr>
+<tr><td><code>apply</code></td><td><code>this</code></td><td>Object itself</td><td>Object initialization (builder pattern)</td></tr>
+<tr><td><code>also</code></td><td><code>it</code></td><td>Object itself</td><td>Side effects (logging, validation)</td></tr>
+<tr><td><code>with</code></td><td><code>this</code></td><td>Lambda result</td><td>Grouping calls on object</td></tr>
+</table>
+
+<pre><code>val user = User("1", "Linh", "linh@test.com").apply {
+  // this = user, return user
+}
+
+user.also {
+  Log.d("TAG", "Created user: $it")  // side effect
+}
+
+val displayName = user.let {
+  "${it.name} (${it.email})"  // transform, return result
+}</code></pre>
+
+<h4>Extension Functions & Collections</h4>
+<pre><code>fun String.isValidEmail(): Boolean =
+  this.matches(Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"))
+
+val emails = listOf("a@b.com", "invalid", "c@d.org")
+val validEmails = emails.filter { it.isValidEmail() }
+
+val users = listOf(user1, user2, user3)
+val namesByAge = users
+  .filter { it.age &gt; 18 }
+  .sortedBy { it.age }
+  .map { it.name }
+  .joinToString(", ")</code></pre>
+
+<h3>2. Android Components</h3>
+<div class="concept">
+<table>
+<tr><th>Component</th><th>Vai trò</th><th>Ví dụ</th></tr>
+<tr><td><strong>Activity</strong></td><td>1 screen/UI entry point</td><td>MainActivity, LoginActivity</td></tr>
+<tr><td><strong>Service</strong></td><td>Background work (no UI)</td><td>Music player, sync service</td></tr>
+<tr><td><strong>BroadcastReceiver</strong></td><td>Respond to system events</td><td>Battery low, network change</td></tr>
+<tr><td><strong>ContentProvider</strong></td><td>Share data giữa apps</td><td>Contacts, MediaStore</td></tr>
+</table>
+</div>
+
+<h3>3. Activity Lifecycle</h3>
+<pre><code>onCreate()     → Activity created (init UI, bind data)
+  ↓
+onStart()      → Visible (nhưng chưa interactive)
+  ↓
+onResume()     → Foreground + interactive (user can interact)
+  ↓
+onPause()      → Partially visible (dialog, multi-window)
+  ↓
+onStop()       → Not visible (user navigated away)
+  ↓
+onDestroy()    → Activity destroyed (cleanup)
+
+Configuration Change (rotate screen):
+onPause() → onStop() → onDestroy() → onCreate() → onStart() → onResume()</code></pre>
+
+<div class="card card-warning">
+<p><strong>Configuration change problem:</strong> Khi xoay màn hình → Activity bị destroy + recreate → mất state. Giải pháp: <code>ViewModel</code> (survive config changes), <code>savedInstanceState</code> (survive process death).</p>
+</div>
+
+<h3>4. XML Layouts</h3>
+<table>
+<tr><th>Layout</th><th>Mô tả</th><th>Khi nào</th></tr>
+<tr><td><code>ConstraintLayout</code></td><td>Flat hierarchy, constraint-based</td><td>Complex layouts (recommended)</td></tr>
+<tr><td><code>LinearLayout</code></td><td>Horizontal/Vertical stack</td><td>Simple lists, rows</td></tr>
+<tr><td><code>FrameLayout</code></td><td>Stack children on top</td><td>Overlays, fragments container</td></tr>
+</table>
+
+<p><strong>View Binding</strong> — type-safe access to views (replace findViewById):</p>
+<pre><code>class MainActivity : AppCompatActivity() {
+  private lateinit var binding: ActivityMainBinding
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    binding.btnSubmit.setOnClickListener { submit() }
+  }
+}</code></pre>
+
+<h3>5. RecyclerView</h3>
+<pre><code>class UserAdapter(private val users: List&lt;User&gt;) :
+  RecyclerView.Adapter&lt;UserAdapter.ViewHolder&gt;() {
+
+  class ViewHolder(val binding: ItemUserBinding) :
+    RecyclerView.ViewHolder(binding.root)
+
+  override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    val binding = ItemUserBinding.inflate(
+      LayoutInflater.from(parent.context), parent, false
+    )
+    return ViewHolder(binding)
+  }
+
+  override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    val user = users[position]
+    holder.binding.tvName.text = user.name
+    holder.binding.tvEmail.text = user.email
+  }
+
+  override fun getItemCount() = users.size
+}</code></pre>
+<p><strong>DiffUtil:</strong> Efficient list updates — calculate diff, animate changes. Tương tự React reconciliation.</p>
+
+<h3>6. ViewModel + StateFlow</h3>
+<pre><code>class UserViewModel : ViewModel() {
+  private val _uiState = MutableStateFlow&lt;Result&lt;List&lt;User&gt;&gt;&gt;(Result.Loading)
+  val uiState: StateFlow&lt;Result&lt;List&lt;User&gt;&gt;&gt; = _uiState.asStateFlow()
+
+  fun loadUsers() {
+    viewModelScope.launch {
+      _uiState.value = Result.Loading
+      try {
+        val users = repository.getUsers()
+        _uiState.value = Result.Success(users)
+      } catch (e: Exception) {
+        _uiState.value = Result.Error(e.message ?: "Unknown error")
+      }
+    }
+  }
+}</code></pre>
+<p><strong>Tại sao ViewModel:</strong> Survive configuration changes (rotate screen). Activity destroy + recreate nhưng ViewModel vẫn sống. Tương tự concept store trong Zustand/Redux.</p>
+
+<h3>7. Coroutines</h3>
+<div class="concept">
+<p>Kotlin coroutines = async/await của Kotlin. Lightweight threads cho concurrent operations.</p>
+</div>
+
+<table>
+<tr><th></th><th><code>launch</code></th><th><code>async</code></th></tr>
+<tr><td>Return</td><td><code>Job</code> (fire and forget)</td><td><code>Deferred&lt;T&gt;</code> (có result)</td></tr>
+<tr><td>Use case</td><td>Side effects (update UI, save DB)</td><td>Parallel computation (cần return value)</td></tr>
+<tr><td>Get result</td><td>Không</td><td><code>.await()</code></td></tr>
+</table>
+
+<pre><code>viewModelScope.launch {
+  val user = withContext(Dispatchers.IO) {
+    api.getUser(userId)
+  }
+  _uiState.value = Result.Success(user)
+}
+
+// Parallel
+viewModelScope.launch {
+  val userDeferred = async(Dispatchers.IO) { api.getUser(id) }
+  val postsDeferred = async(Dispatchers.IO) { api.getPosts(id) }
+  val user = userDeferred.await()
+  val posts = postsDeferred.await()
+}</code></pre>
+
+<h4>Dispatchers</h4>
+<table>
+<tr><th>Dispatcher</th><th>Thread</th><th>Use case</th></tr>
+<tr><td><code>Main</code></td><td>UI thread</td><td>Update UI, LiveData</td></tr>
+<tr><td><code>IO</code></td><td>Background (shared pool)</td><td>Network, DB, file I/O</td></tr>
+<tr><td><code>Default</code></td><td>CPU-intensive (shared pool)</td><td>Sorting, parsing, heavy computation</td></tr>
+</table>
+
+<h3>8. Flow</h3>
+<div class="card card-accent">
+<table>
+<tr><th></th><th>StateFlow</th><th>SharedFlow</th><th>LiveData</th></tr>
+<tr><td>Initial value</td><td>Required</td><td>Optional</td><td>Optional</td></tr>
+<tr><td>Replay</td><td>Always 1 (latest)</td><td>Configurable</td><td>Always 1</td></tr>
+<tr><td>Lifecycle-aware</td><td>No (need collectAsStateWithLifecycle)</td><td>No</td><td>Yes</td></tr>
+<tr><td>Use case</td><td>UI state (Replace LiveData)</td><td>Events (snackbar, navigation)</td><td>Simple UI state (legacy)</td></tr>
+</table>
+</div>
+
+<h3>9. Hilt DI (Basics)</h3>
+<pre><code>@HiltAndroidApp
+class MyApp : Application()
+
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+  @Provides
+  @Singleton
+  fun provideApiService(): ApiService =
+    Retrofit.Builder()
+      .baseUrl(BASE_URL)
+      .build()
+      .create(ApiService::class.java)
+}
+
+@HiltViewModel
+class UserViewModel @Inject constructor(
+  private val repository: UserRepository
+) : ViewModel()</code></pre>
+
+<h3>10. Android files hay đụng trong React Native</h3>
+<table>
+<tr><th>File</th><th>Dùng khi</th><th>Lưu ý</th></tr>
+<tr><td><code>android/app/build.gradle</code></td><td>Dependency, signing, buildTypes, versionCode</td><td>Đổi native dependency thường cần clean/rebuild</td></tr>
+<tr><td><code>AndroidManifest.xml</code></td><td>Permissions, activity, deep link intent-filter</td><td>Sai intent-filter làm deep link không vào app</td></tr>
+<tr><td><code>MainActivity.kt</code></td><td>Activity entry point, splash, new architecture config</td><td>Tránh làm heavy work trong onCreate</td></tr>
+<tr><td><code>MainApplication.kt</code></td><td>Package/native module registration</td><td>Kiểm tra khi autolinking không hoạt động</td></tr>
+</table>
+
+<pre><code>&lt;uses-permission android:name="android.permission.CAMERA" /&gt;
+
+&lt;activity
+  android:name=".MainActivity"
+  android:exported="true"
+  android:windowSoftInputMode="adjustResize"&gt;
+  &lt;intent-filter&gt;
+    &lt;action android:name="android.intent.action.VIEW" /&gt;
+    &lt;category android:name="android.intent.category.DEFAULT" /&gt;
+    &lt;category android:name="android.intent.category.BROWSABLE" /&gt;
+    &lt;data android:scheme="myapp" android:host="product" /&gt;
+  &lt;/intent-filter&gt;
+&lt;/activity&gt;</code></pre>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<div class="qa">
+<div class="q">Q1: Kotlin null safety — ?. !! ?: let khác nhau thế nào?</div>
+<div class="a">
+<ul>
+  <li><code>?.</code> (safe call): return null nếu receiver null, không crash</li>
+  <li><code>!!</code> (non-null assertion): crash NullPointerException nếu null — TRÁNH dùng</li>
+  <li><code>?:</code> (Elvis): provide default value khi null</li>
+  <li><code>let</code>: execute block chỉ khi non-null, biến scope function <code>it</code></li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: data class tự generate gì?</div>
+<div class="a"><p><code>equals()</code>/<code>hashCode()</code> (compare by properties), <code>toString()</code> (readable output), <code>copy()</code> (shallow copy với optional property override), <code>componentN()</code> (destructuring). Chỉ dùng properties trong primary constructor.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: sealed class vs enum — khi nào dùng cái nào?</div>
+<div class="a"><p><strong>Enum:</strong> fixed set of constants, mỗi value là singleton, không hold different data. Ví dụ: Status(ACTIVE, INACTIVE).</p>
+<p><strong>Sealed class:</strong> restricted hierarchy, mỗi subclass CÓ THỂ hold different data, multiple instances. Ví dụ: Result(Success(data), Error(message), Loading). Dùng sealed khi cần khác nhau data per variant.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: launch vs async trong coroutines?</div>
+<div class="a"><p><code>launch</code>: fire-and-forget, return Job, dùng cho side effects (update UI, save DB). <code>async</code>: return Deferred&lt;T&gt;, dùng khi cần result — gọi <code>.await()</code> để lấy. Parallel execution: dùng multiple <code>async</code> + <code>await</code>.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: ViewModel tại sao survive configuration change?</div>
+<div class="a"><p>ViewModel stored trong ViewModelStore — owned bởi ViewModelStoreOwner (Activity/Fragment). Khi config change: Activity destroy + recreate nhưng ViewModelStore giữ lại. Chỉ clear khi Activity truly finished (finish() hoặc user back). Internal mechanism: retained fragment hoặc NonConfigurationInstances.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: StateFlow vs LiveData — nên dùng cái nào?</div>
+<div class="a"><p>StateFlow: Kotlin-native, testable, combine/transform operators, works everywhere. LiveData: lifecycle-aware tự động, no leak. <strong>Trend:</strong> StateFlow + collectAsStateWithLifecycle() thay thế LiveData. Dùng StateFlow cho new code.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q7: Scope functions (let/run/apply/also/with) — chọn cái nào?</div>
+<div class="a">
+<p>Dùng <code>let</code>: null check + transform. <code>apply</code>: object init/config (return object). <code>also</code>: side effects/logging (return object). <code>run</code>: compute result từ object. <code>with</code>: grouping calls (non-extension).</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q8: Activity lifecycle khi xoay màn hình?</div>
+<div class="a"><p>onPause → onStop → onDestroy → onCreate → onStart → onResume. Activity hoàn toàn destroy rồi recreate. State mất nếu không save. Solutions: ViewModel (survive config change), savedInstanceState (survive process death), android:configChanges (prevent recreate — không recommended).</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q9: RecyclerView DiffUtil là gì?</div>
+<div class="a"><p>DiffUtil tính diff giữa old list và new list → chỉ update items changed (insert, remove, move). Tương tự React reconciliation algorithm. Dùng AsyncListDiffer/ListAdapter cho async diff computation — không block UI thread.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q10: Dispatchers.IO vs Dispatchers.Default?</div>
+<div class="a"><p><code>IO</code>: optimized cho I/O-bound work (network, DB, file) — thread pool size = max(64, number of cores). <code>Default</code>: optimized cho CPU-bound work (sort, parse) — thread pool = number of cores. Dùng sai dispatcher → block threads → app lag.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q11: Coroutine error handling — structured concurrency?</div>
+<div class="a"><p>Structured concurrency: child coroutine failure → cancel parent + siblings. Dùng <code>supervisorScope</code> để isolate failures. Error handling: try/catch trong coroutine, hoặc CoroutineExceptionHandler cho uncaught exceptions. <code>viewModelScope</code> auto-cancel khi ViewModel cleared.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q12: Hilt @Inject vs @Provides — khác nhau?</div>
+<div class="a"><p><code>@Inject</code>: constructor injection — Hilt tự tạo instance (bạn own class). <code>@Provides</code>: factory method trong @Module — bạn tự tạo instance (third-party classes: Retrofit, Room, OkHttp mà bạn không own constructor).</p></div>
+</div>
+
+<h2>🧩 Mini exercise thực tế React Native Android</h2>
+
+<div class="exercise">
+  <strong>Exercise 1: Debug permission camera</strong><br>
+  Thêm permission vào Manifest, request permission từ JS, kiểm tra Logcat khi permission bị deny.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 2: Deep link Android</strong><br>
+  Thêm intent-filter cho <code>myapp://product/123</code>, mở bằng adb, xác nhận React Navigation nhận đúng URL.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 3: Build variant</strong><br>
+  Tạo debug/staging/release base URL khác nhau bằng Gradle config hoặc env file, verify app đọc đúng variant.
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Dùng <code>!!</code> trong native module rồi crash khi value null từ JS truyền sang.</li>
+  <li>Thêm permission trong JS library nhưng quên AndroidManifest.</li>
+  <li>Sai <code>android:exported</code> khi target SDK mới, build/release fail.</li>
+  <li>Không đọc Logcat, chỉ nhìn Metro log nên bỏ sót crash native.</li>
+  <li>Đổi Gradle/Manifest nhưng không clean build, tưởng code không hoạt động.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> Deep link chạy trên iOS nhưng Android không mở app. JS navigation không nhận được URL vì intent-filter thiếu <code>BROWSABLE</code> hoặc host/scheme không khớp.</p>
+<p><strong>Cách xử lý:</strong> Kiểm tra Manifest, chạy <code>adb shell am start -W -a android.intent.action.VIEW -d "myapp://product/123"</code>, đọc Logcat và verify Linking listener ở JS.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>RN dev không cần thành Android engineer ngay, nhưng phải đọc được Gradle, Manifest, Logcat và Kotlin cơ bản để không bị kẹt ở native boundary.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Khi app crash native trên Android, bạn mở log ở đâu?</div>
+  <div class="q">2. Permission cần khai báo ở những lớp nào?</div>
+  <div class="q">3. <code>launch</code> khác <code>async</code> thế nào?</div>
+  <div class="q">4. Intent-filter deep link cần những category nào?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi hiểu Kotlin null safety (?. !! ?: let)</label>
+  <label><input type="checkbox"> Tôi biết data class, sealed class, enum — khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi phân biệt 5 scope functions (let/run/apply/also/with)</label>
+  <label><input type="checkbox"> Tôi hiểu Activity lifecycle, đặc biệt configuration change</label>
+  <label><input type="checkbox"> Tôi biết 4 Android components cơ bản</label>
+  <label><input type="checkbox"> Tôi tạo được XML layout với ConstraintLayout + View Binding</label>
+  <label><input type="checkbox"> Tôi implement được RecyclerView với Adapter + DiffUtil</label>
+  <label><input type="checkbox"> Tôi hiểu ViewModel tại sao survive config change</label>
+  <label><input type="checkbox"> Tôi viết được coroutines (launch vs async, Dispatchers)</label>
+  <label><input type="checkbox"> Tôi phân biệt StateFlow vs SharedFlow vs LiveData</label>
+  <label><input type="checkbox"> Tôi hiểu Hilt DI basics (@Inject, @Provides, @Module)</label>
+  <label><input type="checkbox"> Tôi đọc/debug được Gradle, Manifest và Logcat cơ bản trong dự án RN</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://kotlinlang.org/docs/home.html" target="_blank">Kotlin Official Docs</a></div>
+<div class="resource">📘 <a href="https://developer.android.com/courses" target="_blank">Android Developer Courses</a> (Google)</div>
+<div class="resource">📘 <a href="https://developer.android.com/topic/libraries/architecture/viewmodel" target="_blank">ViewModel Guide</a></div>
+<div class="resource">📘 <a href="https://kotlinlang.org/docs/coroutines-overview.html" target="_blank">Kotlin Coroutines Guide</a></div>
+<div class="resource">📺 <a href="https://www.youtube.com/@PhilippLackner" target="_blank">Philipp Lackner</a> — YouTube, best Android/Kotlin tutorials</div>
+<div class="resource">📺 <a href="https://www.youtube.com/@CodingWithMitch" target="_blank">Coding With Mitch</a> — YouTube, Android architecture</div>
+
+<div class="nav-links">
+  <a href="09-Animation.html">← Module 09: Animation</a>
+  <a href="10-Native-Architecture.html">Module 10: Native Architecture →</a>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 05 — Navigation | RN Learning Guide</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 05 — Navigation</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">&quest; 6-8 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01, 02, 03, 04</span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu kiến trúc React Navigation: NavigationContainer, navigation state, navigator hierarchy</li>
+  <li>Phân biệt và sử dụng đúng các loại navigator: Stack, Tab, Drawer</li>
+  <li>Thiết kế nested navigation phức tạp cho ứng dụng thực tế</li>
+  <li>Implement type-safe navigation với TypeScript ParamList</li>
+  <li>Cấu hình Deep Linking với URL scheme, Universal Links, App Links</li>
+  <li>Xây dựng Auth flow pattern chuẩn với conditional stack</li>
+  <li>Tối ưu performance navigation với react-native-screens và lazy loading</li>
+  <li>Điều hướng từ bên ngoài component bằng navigationRef</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <h4>Đọc tài liệu chính thức</h4>
+    <p>Bắt đầu tại <a href="https://reactnavigation.org/docs/getting-started" target="_blank">reactnavigation.org/docs/getting-started</a>. Đọc qua các phần: Getting Started, Hello React Navigation, Moving between screens, Passing parameters. Mục tiêu: hiểu flow cơ bản của navigation.</p>
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <h4>Setup project với nested navigators</h4>
+    <p>Tạo project mới, cài đặt React Navigation. Xây dựng cấu trúc: Bottom Tab Navigator chứa các Stack Navigator bên trong. Thực hành tạo ít nhất 3 tab, mỗi tab có 2-3 screen trong stack riêng.</p>
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <h4>Implement type-safe navigation</h4>
+    <p>Đọc <a href="https://reactnavigation.org/docs/typescript" target="_blank">Type checking with TypeScript</a>. Tạo RootStackParamList, khai báo params cho mỗi screen. Thử navigate với params đúng/sai type để thấy TypeScript bắt lỗi.</p>
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <h4>Implement Deep Linking</h4>
+    <p>Đọc <a href="https://reactnavigation.org/docs/deep-linking" target="_blank">Deep Linking docs</a>. Cấu hình linking config cho app. Test bằng <code>npx uri-scheme open</code> hoặc <code>adb shell am start</code>. Sau đó thử Universal Links / App Links.</p>
+  </div>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> navigation là state machine của stack/tab/modal, không chỉ là chuyển màn hình.</li>
+  <li><strong>Thấy bug thật:</strong> back về Login sau auth, deep link cold start mất params, push notification mở sai screen.</li>
+  <li><strong>Debug:</strong> inspect navigation state, log linking event, test hardware back và app killed state.</li>
+  <li><strong>Fix:</strong> reset stack đúng lúc, pending deep link sau login, params nhỏ và serializable.</li>
+  <li><strong>Áp dụng playground:</strong> Auth stack, Main tabs, ProductDetail deep link, unsaved changes guard.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. React Navigation Architecture</h3>
+
+<div class="concept">
+  <strong>NavigationContainer</strong> là root component bao bọc toàn bộ navigation tree. Nó quản lý navigation state, linking, và cung cấp context cho tất cả navigator/screen bên trong.
+</div>
+
+<p>Navigation state trong React Navigation là một <strong>plain JavaScript object</strong> có cấu trúc cây. Mỗi navigator quản lý một phần state, các navigator lồng nhau tạo thành cây state phân cấp.</p>
+
+<p>Cấu trúc cơ bản của navigation state:</p>
+
+<pre><code>{
+  routes: [
+    {
+      name: "Home",
+      key: "home-xxx",
+      params: undefined
+    },
+    {
+      name: "Profile",
+      key: "profile-xxx",
+      params: { userId: "42" }
+    }
+  ],
+  index: 1,
+  type: "stack"
+}</code></pre>
+
+<p>Trong đó <code>index</code> trỏ tới route đang active trong mảng <code>routes</code>. Mỗi navigator type (stack, tab, drawer) có thể thêm các field riêng vào state.</p>
+
+<p>Setup cơ bản của NavigationContainer:</p>
+
+<pre><code>import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+  return (
+    &lt;NavigationContainer&gt;
+      &lt;Stack.Navigator initialRouteName="Home"&gt;
+        &lt;Stack.Screen name="Home" component={HomeScreen} /&gt;
+        &lt;Stack.Screen name="Details" component={DetailsScreen} /&gt;
+      &lt;/Stack.Navigator&gt;
+    &lt;/NavigationContainer&gt;
+  );
+}</code></pre>
+
+<h3>2. Navigator Types — Khi nào dùng cái nào</h3>
+
+<table>
+  <tr>
+    <th>Navigator</th>
+    <th>Package</th>
+    <th>Khi nào dùng</th>
+    <th>Đặc điểm</th>
+  </tr>
+  <tr>
+    <td><strong>Native Stack</strong></td>
+    <td>@react-navigation/native-stack</td>
+    <td>Navigation chính giữa các screen, auth flow, detail screen</td>
+    <td>Dùng native API (UINavigationController, Fragment), performance tốt nhất, animation native</td>
+  </tr>
+  <tr>
+    <td><strong>JS Stack</strong></td>
+    <td>@react-navigation/stack</td>
+    <td>Cần custom animation phức tạp, shared element transition</td>
+    <td>Render bằng JS/Animated, flexible hơn nhưng chậm hơn Native Stack</td>
+  </tr>
+  <tr>
+    <td><strong>Bottom Tab</strong></td>
+    <td>@react-navigation/bottom-tabs</td>
+    <td>Main navigation giữa các section chính (Home, Search, Profile)</td>
+    <td>Tab bar cố định ở dưới, giữ state mỗi tab, UX quen thuộc</td>
+  </tr>
+  <tr>
+    <td><strong>Material Top Tab</strong></td>
+    <td>@react-navigation/material-top-tabs</td>
+    <td>Tab ngang ở trên, swipe giữa các tab (như tab Categories)</td>
+    <td>Swipeable, scrollable tab bar, dùng react-native-tab-view</td>
+  </tr>
+  <tr>
+    <td><strong>Drawer</strong></td>
+    <td>@react-navigation/drawer</td>
+    <td>Side menu cho settings, profile, secondary navigation</td>
+    <td>Slide-in menu từ cạnh, thường dùng cho app có nhiều section</td>
+  </tr>
+</table>
+
+<div class="card card-warning">
+  <strong>⚠️ Native Stack vs JS Stack:</strong> Luôn ưu tiên Native Stack (<code>@react-navigation/native-stack</code>) cho performance. Chỉ dùng JS Stack khi cần custom transition animation mà Native Stack không hỗ trợ, hoặc cần shared element transition.
+</div>
+
+<h3>3. Nested Navigation</h3>
+
+<p>Pattern phổ biến nhất trong ứng dụng thực tế: <strong>Tab chứa Stack</strong>. Mỗi tab có stack navigator riêng, cho phép navigate sâu vào detail mà vẫn giữ tab bar.</p>
+
+<pre><code>import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
+const ProfileStack = createNativeStackNavigator();
+
+function HomeStackScreen() {
+  return (
+    &lt;HomeStack.Navigator&gt;
+      &lt;HomeStack.Screen name="HomeMain" component={HomeScreen} /&gt;
+      &lt;HomeStack.Screen name="ProductDetail" component={ProductDetailScreen} /&gt;
+    &lt;/HomeStack.Navigator&gt;
+  );
+}
+
+function ProfileStackScreen() {
+  return (
+    &lt;ProfileStack.Navigator&gt;
+      &lt;ProfileStack.Screen name="ProfileMain" component={ProfileScreen} /&gt;
+      &lt;ProfileStack.Screen name="EditProfile" component={EditProfileScreen} /&gt;
+      &lt;ProfileStack.Screen name="Settings" component={SettingsScreen} /&gt;
+    &lt;/ProfileStack.Navigator&gt;
+  );
+}
+
+function MainTabs() {
+  return (
+    &lt;Tab.Navigator&gt;
+      &lt;Tab.Screen
+        name="Home"
+        component={HomeStackScreen}
+        options={{ headerShown: false }}
+      /&gt;
+      &lt;Tab.Screen
+        name="Profile"
+        component={ProfileStackScreen}
+        options={{ headerShown: false }}
+      /&gt;
+    &lt;/Tab.Navigator&gt;
+  );
+}</code></pre>
+
+<p>Khi nest Tab trong Stack, nhớ set <code>headerShown: false</code> cho tab screen để tránh double header (header của Stack + header của Tab).</p>
+
+<h4>Stack chứa Modal</h4>
+
+<p>Pattern cho modal full-screen: đặt modal screen trong group riêng với <code>presentation: "modal"</code>.</p>
+
+<pre><code>function RootStack() {
+  return (
+    &lt;Stack.Navigator&gt;
+      &lt;Stack.Group&gt;
+        &lt;Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} /&gt;
+      &lt;/Stack.Group&gt;
+      &lt;Stack.Group screenOptions={{ presentation: "modal" }}&gt;
+        &lt;Stack.Screen name="CreatePost" component={CreatePostScreen} /&gt;
+        &lt;Stack.Screen name="ImagePicker" component={ImagePickerScreen} /&gt;
+      &lt;/Stack.Group&gt;
+    &lt;/Stack.Navigator&gt;
+  );
+}</code></pre>
+
+<p>Modal screen sẽ slide lên từ dưới (iOS) hoặc fade in (Android), và có thể dismiss bằng swipe down.</p>
+
+<h3>4. Screen Options</h3>
+
+<p>Screen options cho phép cấu hình header, animation, gesture cho từng screen hoặc toàn bộ navigator.</p>
+
+<pre><code>&lt;Stack.Screen
+  name="Profile"
+  component={ProfileScreen}
+  options={{
+    title: "Hồ sơ",
+    headerShown: true,
+    headerStyle: { backgroundColor: "#1a1d27" },
+    headerTintColor: "#fff",
+    headerTitleStyle: { fontWeight: "bold" },
+    headerRight: () =&gt; (
+      &lt;TouchableOpacity onPress={handleSettings}&gt;
+        &lt;Icon name="settings" size={24} color="#fff" /&gt;
+      &lt;/TouchableOpacity&gt;
+    ),
+  }}
+/&gt;</code></pre>
+
+<p>Có thể set options động từ bên trong screen bằng <code>navigation.setOptions()</code>:</p>
+
+<pre><code>function ProfileScreen({ navigation, route }) {
+  React.useLayoutEffect(() =&gt; {
+    navigation.setOptions({
+      title: route.params?.userName ?? "Profile",
+    });
+  }, [navigation, route.params?.userName]);
+
+  return &lt;View&gt;...&lt;/View&gt;;
+}</code></pre>
+
+<h4>Custom Header</h4>
+
+<pre><code>&lt;Stack.Navigator
+  screenOptions={{
+    header: ({ navigation, route, options }) =&gt; (
+      &lt;SafeAreaView style={{ backgroundColor: "#1a1d27" }}&gt;
+        &lt;View style={{ flexDirection: "row", alignItems: "center", height: 56, paddingHorizontal: 16 }}&gt;
+          {navigation.canGoBack() &amp;&amp; (
+            &lt;TouchableOpacity onPress={navigation.goBack}&gt;
+              &lt;Icon name="arrow-back" size={24} color="#fff" /&gt;
+            &lt;/TouchableOpacity&gt;
+          )}
+          &lt;Text style={{ color: "#fff", fontSize: 18, fontWeight: "bold", marginLeft: 12 }}&gt;
+            {options.title ?? route.name}
+          &lt;/Text&gt;
+        &lt;/View&gt;
+      &lt;/SafeAreaView&gt;
+    ),
+  }}
+&gt;</code></pre>
+
+<h3>5. Navigation Actions — Navigate vs Push vs Replace vs Reset</h3>
+
+<table>
+  <tr>
+    <th>Action</th>
+    <th>Hành vi</th>
+    <th>Use Case</th>
+  </tr>
+  <tr>
+    <td><code>navigate("Screen")</code></td>
+    <td>Nếu screen đã có trong stack → quay về đó (không tạo mới). Nếu chưa → push mới.</td>
+    <td>Hầu hết mọi trường hợp điều hướng thông thường</td>
+  </tr>
+  <tr>
+    <td><code>push("Screen")</code></td>
+    <td>Luôn tạo instance mới trên stack, kể cả khi screen đã tồn tại</td>
+    <td>Chat detail: mở nhiều conversation cùng lúc, product → related product</td>
+  </tr>
+  <tr>
+    <td><code>replace("Screen")</code></td>
+    <td>Thay thế screen hiện tại bằng screen mới, không thêm vào stack</td>
+    <td>Login → Home (không cho quay lại Login)</td>
+  </tr>
+  <tr>
+    <td><code>reset({ routes: [...] })</code></td>
+    <td>Xóa toàn bộ stack cũ, thay bằng state mới</td>
+    <td>Logout: xóa toàn bộ history, đưa về Login screen</td>
+  </tr>
+  <tr>
+    <td><code>goBack()</code></td>
+    <td>Quay lại screen trước đó trong stack</td>
+    <td>Back button, dismiss modal</td>
+  </tr>
+  <tr>
+    <td><code>popToTop()</code></td>
+    <td>Quay về screen đầu tiên trong stack, pop hết tất cả screen khác</td>
+    <td>Nút "Home" trong nested stack sâu</td>
+  </tr>
+</table>
+
+<div class="card card-info">
+  <strong>💡 navigate vs push:</strong> Giả sử stack là [A, B, C] và bạn đang ở C. Gọi <code>navigate("B")</code> → stack thành [A, B] (quay về B cũ). Gọi <code>push("B")</code> → stack thành [A, B, C, B] (tạo B mới). Đây là khác biệt quan trọng nhất cần nhớ.
+</div>
+
+<h3>6. Passing Params &amp; Type-Safe Navigation</h3>
+
+<p>Để truyền dữ liệu giữa các screen, dùng params:</p>
+
+<pre><code>navigation.navigate("ProductDetail", { productId: "abc123", title: "iPhone 15" });</code></pre>
+
+<p>Nhận params trong screen đích:</p>
+
+<pre><code>function ProductDetailScreen({ route }) {
+  const { productId, title } = route.params;
+  return &lt;Text&gt;{title} - {productId}&lt;/Text&gt;;
+}</code></pre>
+
+<h4>Type-Safe với TypeScript</h4>
+
+<p>Khai báo <code>ParamList</code> — một type map giữa tên screen và params tương ứng:</p>
+
+<pre><code>type RootStackParamList = {
+  Home: undefined;
+  ProductDetail: { productId: string; title: string };
+  Cart: { couponCode?: string };
+  Search: { query: string; category?: string };
+};</code></pre>
+
+<p>Tạo typed navigator:</p>
+
+<pre><code>import { NativeStackScreenProps } from "@react-navigation/native-stack";
+
+const Stack = createNativeStackNavigator&lt;RootStackParamList&gt;();</code></pre>
+
+<p>Typed screen props:</p>
+
+<pre><code>type ProductDetailProps = NativeStackScreenProps&lt;RootStackParamList, "ProductDetail"&gt;;
+
+function ProductDetailScreen({ route, navigation }: ProductDetailProps) {
+  const { productId, title } = route.params;
+
+  const goToCart = () =&gt; {
+    navigation.navigate("Cart", { couponCode: "SAVE10" });
+  };
+
+  return (
+    &lt;View&gt;
+      &lt;Text&gt;{title}&lt;/Text&gt;
+      &lt;Button title="Go to Cart" onPress={goToCart} /&gt;
+    &lt;/View&gt;
+  );
+}</code></pre>
+
+<p>Khi dùng <code>useNavigation</code> hook bên ngoài screen component:</p>
+
+<pre><code>import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+
+type NavigationProp = NativeStackNavigationProp&lt;RootStackParamList&gt;;
+
+function ProductCard({ product }: { product: Product }) {
+  const navigation = useNavigation&lt;NavigationProp&gt;();
+
+  return (
+    &lt;TouchableOpacity
+      onPress={() =&gt;
+        navigation.navigate("ProductDetail", {
+          productId: product.id,
+          title: product.title,
+        })
+      }
+    &gt;
+      &lt;Text&gt;{product.title}&lt;/Text&gt;
+    &lt;/TouchableOpacity&gt;
+  );
+}</code></pre>
+
+<div class="card card-accent">
+  <strong>🔑 Global type declaration:</strong> Để không phải truyền type mỗi lần dùng <code>useNavigation</code>, khai báo global type.
+</div>
+
+<pre><code>declare global {
+  namespace ReactNavigation {
+    interface RootParamList extends RootStackParamList {}
+  }
+}</code></pre>
+
+<p>Sau khai báo này, <code>useNavigation()</code> sẽ tự có type-safe mà không cần generic.</p>
+
+<h3>7. Navigation State Persistence</h3>
+
+<p>Lưu navigation state qua app restart (hữu ích cho development hoặc user experience):</p>
+
+<pre><code>import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const PERSISTENCE_KEY = "NAVIGATION_STATE_V1";
+
+function App() {
+  const [isReady, setIsReady] = React.useState(false);
+  const [initialState, setInitialState] = React.useState();
+
+  React.useEffect(() =&gt; {
+    const restoreState = async () =&gt; {
+      try {
+        const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+        const state = savedStateString
+          ? JSON.parse(savedStateString)
+          : undefined;
+        setInitialState(state);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    if (!isReady) {
+      restoreState();
+    }
+  }, [isReady]);
+
+  if (!isReady) return null;
+
+  return (
+    &lt;NavigationContainer
+      initialState={initialState}
+      onStateChange={(state) =&gt;
+        AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify(state))
+      }
+    &gt;
+      &lt;RootStack /&gt;
+    &lt;/NavigationContainer&gt;
+  );
+}</code></pre>
+
+<div class="card card-warning">
+  <strong>⚠️ Chú ý:</strong> State persistence nên chỉ enable trong development hoặc có version check. Nếu navigation structure thay đổi giữa các bản update, state cũ có thể crash app. Luôn wrap trong try-catch.
+</div>
+
+<h3>8. Navigate từ bên ngoài Component — navigationRef</h3>
+
+<p>Khi cần navigate từ nơi không có access đến <code>navigation</code> prop (service, saga, interceptor), dùng <code>navigationRef</code>:</p>
+
+<pre><code>import { createNavigationContainerRef } from "@react-navigation/native";
+
+export const navigationRef = createNavigationContainerRef&lt;RootStackParamList&gt;();
+
+export function navigateOutside(name: string, params?: object) {
+  if (navigationRef.isReady()) {
+    navigationRef.navigate(name as any, params as any);
+  }
+}</code></pre>
+
+<p>Gắn ref vào NavigationContainer:</p>
+
+<pre><code>&lt;NavigationContainer ref={navigationRef}&gt;
+  &lt;RootStack /&gt;
+&lt;/NavigationContainer&gt;</code></pre>
+
+<p>Sử dụng trong axios interceptor:</p>
+
+<pre><code>axiosInstance.interceptors.response.use(
+  (response) =&gt; response,
+  (error) =&gt; {
+    if (error.response?.status === 401) {
+      navigateOutside("Login");
+    }
+    return Promise.reject(error);
+  }
+);</code></pre>
+
+<h3>9. Deep Linking</h3>
+
+<div class="concept">
+  <strong>Deep Linking</strong> cho phép mở một screen cụ thể trong app từ URL bên ngoài (notification, email, browser). Có 3 cách:
+  <ul>
+    <li><strong>URL Scheme:</strong> <code>myapp://product/123</code> — đơn giản, chỉ hoạt động khi app đã cài</li>
+    <li><strong>Universal Links (iOS):</strong> <code>https://myapp.com/product/123</code> — link thật, fallback ra web nếu chưa cài app</li>
+    <li><strong>App Links (Android):</strong> Tương tự Universal Links cho Android</li>
+  </ul>
+</div>
+
+<p>Cấu hình linking trong React Navigation:</p>
+
+<pre><code>const linking = {
+  prefixes: ["myapp://", "https://myapp.com"],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Home: {
+            screens: {
+              HomeMain: "home",
+              ProductDetail: "product/:productId",
+            },
+          },
+          Profile: "profile",
+        },
+      },
+      Cart: "cart",
+      NotFound: "*",
+    },
+  },
+};
+
+function App() {
+  return (
+    &lt;NavigationContainer linking={linking} fallback={&lt;LoadingScreen /&gt;}&gt;
+      &lt;RootStack /&gt;
+    &lt;/NavigationContainer&gt;
+  );
+}</code></pre>
+
+<p>Với config trên, URL <code>myapp://product/123</code> sẽ navigate đến ProductDetail screen với <code>route.params.productId = "123"</code>.</p>
+
+<p>Test deep linking trong development:</p>
+
+<pre><code>npx uri-scheme open "myapp://product/123" --ios
+
+adb shell am start -W -a android.intent.action.VIEW -d "myapp://product/123" com.myapp</code></pre>
+
+<h3>10. Prevent Going Back — beforeRemove</h3>
+
+<p>Dùng <code>beforeRemove</code> event để cảnh báo user trước khi rời khỏi screen có unsaved changes:</p>
+
+<pre><code>function EditProfileScreen({ navigation }) {
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
+
+  React.useEffect(() =&gt; {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) =&gt; {
+      if (!hasUnsavedChanges) return;
+
+      e.preventDefault();
+
+      Alert.alert(
+        "Bỏ thay đổi?",
+        "Bạn có thay đổi chưa lưu. Bạn chắc chắn muốn rời đi?",
+        [
+          { text: "Ở lại", style: "cancel" },
+          {
+            text: "Rời đi",
+            style: "destructive",
+            onPress: () =&gt; navigation.dispatch(e.data.action),
+          },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges]);
+
+  return &lt;View&gt;...&lt;/View&gt;;
+}</code></pre>
+
+<h3>11. Auth Flow Pattern</h3>
+
+<p>Pattern chuẩn: dùng conditional rendering để switch giữa Auth stack và Main stack dựa trên authentication state. <strong>Không dùng navigate/reset để chuyển</strong> — React Navigation sẽ tự handle transition animation.</p>
+
+<pre><code>function RootNavigator() {
+  const { isSignedIn, isLoading } = useAuth();
+
+  if (isLoading) {
+    return &lt;SplashScreen /&gt;;
+  }
+
+  return (
+    &lt;Stack.Navigator screenOptions={{ headerShown: false }}&gt;
+      {isSignedIn ? (
+        &lt;Stack.Screen name="Main" component={MainTabs} /&gt;
+      ) : (
+        &lt;Stack.Screen
+          name="Auth"
+          component={AuthStack}
+          options={{ animationTypeForReplace: "pop" }}
+        /&gt;
+      )}
+    &lt;/Stack.Navigator&gt;
+  );
+}</code></pre>
+
+<div class="card card-success">
+  <strong>✅ Lợi ích pattern này:</strong>
+  <ul>
+    <li>User không thể back về Auth screen sau khi đăng nhập (vì Auth screen không còn trong stack)</li>
+    <li>Không cần manually reset navigation state khi logout</li>
+    <li>React Navigation xử lý animation tự động</li>
+    <li>Deep linking hoạt động đúng — nếu chưa login, tự vào Auth; nếu đã login, vào screen đúng</li>
+  </ul>
+</div>
+
+<h3>12. Performance Optimization</h3>
+
+<h4>react-native-screens</h4>
+
+<p><code>react-native-screens</code> sử dụng native view (UIViewController trên iOS, Fragment trên Android) thay vì giữ tất cả screen trong cùng một React Native view hierarchy. Screen không hiển thị sẽ bị detach khỏi view hierarchy → tiết kiệm memory.</p>
+
+<pre><code>import { enableScreens } from "react-native-screens";
+
+enableScreens();</code></pre>
+
+<p>Từ React Navigation v6+, <code>react-native-screens</code> được enable tự động khi dùng <code>@react-navigation/native-stack</code>.</p>
+
+<h4>Lazy Loading Screens</h4>
+
+<p>Mặc định, tất cả tab screen render ngay khi Tab Navigator mount. Dùng <code>lazy</code> để chỉ render khi user navigate đến tab đó:</p>
+
+<pre><code>&lt;Tab.Navigator screenOptions={{ lazy: true }}&gt;
+  &lt;Tab.Screen name="Home" component={HomeStack} /&gt;
+  &lt;Tab.Screen name="Search" component={SearchStack} /&gt;
+  &lt;Tab.Screen name="Profile" component={ProfileStack} /&gt;
+&lt;/Tab.Navigator&gt;</code></pre>
+
+<h4>Detach Inactive Screens (Stack)</h4>
+
+<pre><code>&lt;Stack.Navigator screenOptions={{ detachPreviousScreen: true }}&gt;
+  ...
+&lt;/Stack.Navigator&gt;</code></pre>
+
+<p>Khi <code>detachPreviousScreen: true</code>, screen phía dưới sẽ bị unmount khi không nhìn thấy, giảm memory usage cho stack sâu.</p>
+
+<h3>13. Custom Tab Bar</h3>
+
+<p>Khi design yêu cầu tab bar khác mặc định (custom icon, animation, floating tab bar):</p>
+
+<pre><code>function CustomTabBar({ state, descriptors, navigation }) {
+  return (
+    &lt;View style={{
+      flexDirection: "row",
+      backgroundColor: "#1a1d27",
+      paddingBottom: 20,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: "#2e3347",
+    }}&gt;
+      {state.routes.map((route, index) =&gt; {
+        const { options } = descriptors[route.key];
+        const label = options.tabBarLabel ?? options.title ?? route.name;
+        const isFocused = state.index === index;
+
+        const onPress = () =&gt; {
+          const event = navigation.emit({
+            type: "tabPress",
+            target: route.key,
+            canPreventDefault: true,
+          });
+
+          if (!isFocused &amp;&amp; !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          &lt;TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            style={{ flex: 1, alignItems: "center" }}
+          &gt;
+            &lt;Icon
+              name={getIconName(route.name)}
+              size={24}
+              color={isFocused ? "#6c63ff" : "#8b8fa8"}
+            /&gt;
+            &lt;Text style={{
+              color: isFocused ? "#6c63ff" : "#8b8fa8",
+              fontSize: 11,
+              marginTop: 4,
+            }}&gt;
+              {label}
+            &lt;/Text&gt;
+          &lt;/TouchableOpacity&gt;
+        );
+      })}
+    &lt;/View&gt;
+  );
+}
+
+&lt;Tab.Navigator tabBar={(props) =&gt; &lt;CustomTabBar {...props} /&gt;}&gt;
+  ...
+&lt;/Tab.Navigator&gt;</code></pre>
+
+<div class="card card-info">
+  <strong>💡 Quan trọng:</strong> Khi tạo custom tab bar, phải emit <code>tabPress</code> event thông qua <code>navigation.emit()</code> để các listener (như <code>beforeRemove</code>) hoạt động đúng. Không chỉ đơn giản gọi <code>navigation.navigate()</code>.
+</div>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<h2>🛠️ Debug playbook: navigation bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>Back về Login sau khi login</td><td>Navigation state sau auth, action đang dùng navigate hay reset</td><td>Dùng reset/conditional auth tree, clear stack cũ</td></tr>
+<tr><td>Deep link mở sai screen</td><td>Linking config, nested path, app cold start, auth ready chưa</td><td>Chuẩn hóa URL, pending link sau login, test killed state</td></tr>
+<tr><td>Screen cùng route bị reuse sai params</td><td>Dùng navigate hay push, route key, params thay đổi</td><td>Dùng push cho instance mới hoặc key riêng</td></tr>
+<tr><td>Notification không mở đúng detail</td><td>Payload, navigationRef ready, auth state, linking fallback</td><td>Map notification thành deep link và queue khi app chưa ready</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Navigation là state của màn hình. Khi trả lời, luôn nói về stack/tab state, action dùng để mutate state, edge cases như auth reset, hardware back, deep link cold start và notification open.</p>
+</div>
+
+<div class="qa">
+  <div class="q">Q1: navigate() và push() khác nhau như thế nào? Cho ví dụ khi nào dùng push thay vì navigate.</div>
+  <div class="a">
+    <p><strong>navigate()</strong> kiểm tra xem screen đã tồn tại trong stack chưa. Nếu có → quay về screen đó (pop các screen phía trên). Nếu chưa → push screen mới lên stack.</p>
+    <p><strong>push()</strong> luôn tạo instance mới trên stack, bất kể screen đó đã tồn tại hay chưa.</p>
+    <p><strong>Ví dụ cần push:</strong> Trong app chat, user đang xem chat của A, tap vào profile link đến chat của B. Nếu dùng <code>navigate("Chat", { userId: B })</code>, stack sẽ navigate về Chat screen cũ (của A) và update params. Dùng <code>push("Chat", { userId: B })</code> sẽ tạo Chat screen mới cho B, giữ nguyên A phía dưới. User có thể back lần lượt: B → A → danh sách.</p>
+    <p>Tương tự với e-commerce: Product A → Related Product B → Related Product C — mỗi product cần instance riêng.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q2: Mô tả cách triển khai Auth flow chuẩn trong React Navigation. Tại sao không nên dùng navigate/reset?</div>
+  <div class="a">
+    <p><strong>Cách chuẩn:</strong> Dùng conditional rendering trong navigator. Dựa trên auth state (từ Context/Redux), render Auth stack hoặc Main stack.</p>
+    <p><strong>Tại sao không dùng navigate/reset:</strong></p>
+    <ul>
+      <li><strong>Security:</strong> Với navigate/reset, Auth screen vẫn tồn tại trong memory (chỉ bị ẩn), có thể bị access bằng gesture hoặc hardware back button</li>
+      <li><strong>Deep linking:</strong> Nếu user chưa login, deep link vào <code>/product/123</code> sẽ crash vì Main stack chưa mount. Với conditional rendering, NavigationContainer sẽ tự giữ pending link và navigate sau khi login</li>
+      <li><strong>State management:</strong> Khi logout, nếu dùng reset, phải manually clear toàn bộ navigation state. Với conditional, React tự unmount Main stack → clean up tất cả</li>
+      <li><strong>Animation:</strong> React Navigation cung cấp <code>animationTypeForReplace</code> để transition mượt giữa Auth ↔ Main</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q3: Deep Linking hoạt động như thế nào trong React Navigation? Phân biệt URL Scheme, Universal Links, App Links.</div>
+  <div class="a">
+    <p><strong>Cơ chế:</strong> NavigationContainer nhận <code>linking</code> prop chứa prefixes và config. Khi app nhận URL (từ intent/scheme), React Navigation parse URL, match với config, và navigate đến screen tương ứng.</p>
+    <table>
+      <tr><th>Loại</th><th>Format</th><th>Ưu điểm</th><th>Nhược điểm</th></tr>
+      <tr>
+        <td><strong>URL Scheme</strong></td>
+        <td><code>myapp://path</code></td>
+        <td>Setup đơn giản, không cần server</td>
+        <td>Không fallback web, có thể conflict với app khác, không verified</td>
+      </tr>
+      <tr>
+        <td><strong>Universal Links (iOS)</strong></td>
+        <td><code>https://domain.com/path</code></td>
+        <td>Verified bởi Apple (AASA file), fallback web, an toàn</td>
+        <td>Cần domain + SSL + apple-app-site-association file trên server</td>
+      </tr>
+      <tr>
+        <td><strong>App Links (Android)</strong></td>
+        <td><code>https://domain.com/path</code></td>
+        <td>Verified bởi Google (assetlinks.json), auto-open không cần chooser</td>
+        <td>Cần domain + SSL + assetlinks.json trên server</td>
+      </tr>
+    </table>
+    <p><strong>Best practice:</strong> Production nên dùng Universal Links + App Links (cùng domain), đồng thời giữ URL Scheme cho development và testing.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q4: Navigation state trong React Navigation được tổ chức như thế nào? Tại sao nó là plain object?</div>
+  <div class="a">
+    <p>Navigation state là một <strong>serializable plain JS object</strong> với cấu trúc: <code>{ routes: [...], index: number, type: string }</code>. Mỗi route có <code>{ key, name, params, state? }</code> — trong đó <code>state</code> lồng thêm cho nested navigator.</p>
+    <p><strong>Lý do dùng plain object:</strong></p>
+    <ul>
+      <li><strong>Serialization:</strong> Có thể <code>JSON.stringify/parse</code> để persist state qua AsyncStorage, gửi qua deep link, hoặc log cho debugging</li>
+      <li><strong>Predictable:</strong> Có thể inspect, test, và reproduce bất kỳ navigation state nào</li>
+      <li><strong>Time-travel debugging:</strong> Lưu lại chuỗi state changes, replay lại navigation history</li>
+      <li><strong>State restoration:</strong> Khi app restart, restore lại đúng screen + params mà user đang xem</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q5: Khi nào dùng Native Stack vs JS Stack? Trade-off là gì?</div>
+  <div class="a">
+    <p><strong>Native Stack</strong> (<code>@react-navigation/native-stack</code>):</p>
+    <ul>
+      <li>Dùng UINavigationController (iOS) và Fragment (Android) native</li>
+      <li>Performance tốt nhất: animation chạy trên native thread, không bị ảnh hưởng bởi JS thread busy</li>
+      <li>Hạn chế: ít customizable hơn, một số animation/transition không thể override</li>
+    </ul>
+    <p><strong>JS Stack</strong> (<code>@react-navigation/stack</code>):</p>
+    <ul>
+      <li>Render hoàn toàn bằng React Native + Animated/Reanimated</li>
+      <li>Full control: custom transition animation, shared element transition, card style override</li>
+      <li>Hạn chế: animation chạy trên JS thread, có thể jank khi JS thread busy</li>
+    </ul>
+    <p><strong>Rule of thumb:</strong> Bắt đầu với Native Stack. Chỉ chuyển sang JS Stack cho screen cụ thể khi cần animation mà Native Stack không hỗ trợ.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q6: Làm sao navigate từ bên ngoài React component (ví dụ: API interceptor, push notification handler)?</div>
+  <div class="a">
+    <p>Dùng <code>createNavigationContainerRef()</code> để tạo ref, gắn vào NavigationContainer, rồi export hàm navigate sử dụng ref đó.</p>
+    <p><strong>Lưu ý quan trọng:</strong></p>
+    <ul>
+      <li>Phải check <code>navigationRef.isReady()</code> trước khi gọi navigate, vì ref chưa sẵn sàng ngay khi app start</li>
+      <li>Nếu cần navigate ngay khi app start (từ notification), dùng <code>onReady</code> callback của NavigationContainer để queue lại action</li>
+      <li>Ref cũng hỗ trợ <code>dispatch()</code>, <code>reset()</code>, <code>getCurrentRoute()</code> — đầy đủ navigation API</li>
+    </ul>
+    <p><strong>Use case phổ biến:</strong> 401 interceptor redirect về Login, push notification handler mở specific screen, analytics tracking current screen.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q7: Nested navigation có vấn đề gì cần lưu ý? Làm sao navigate đến screen trong nested navigator?</div>
+  <div class="a">
+    <p><strong>Vấn đề thường gặp:</strong></p>
+    <ul>
+      <li><strong>Double header:</strong> Khi Stack chứa Tab hoặc Tab chứa Stack, cả hai đều render header → phải set <code>headerShown: false</code> cho parent hoặc child</li>
+      <li><strong>Navigation action scope:</strong> Mỗi navigator chỉ handle action cho screen trực tiếp của nó. Navigate đến screen trong nested navigator cần specify đường dẫn đầy đủ</li>
+      <li><strong>Params not forwarded:</strong> Params chỉ được gửi đến target screen, không tự forward xuống nested screen</li>
+    </ul>
+    <p><strong>Navigate đến nested screen:</strong></p>
+    <pre><code>navigation.navigate("Main", {
+  screen: "Home",
+  params: {
+    screen: "ProductDetail",
+    params: { productId: "123" },
+  },
+});</code></pre>
+    <p>Hoặc dùng deep linking config — URL <code>myapp://product/123</code> sẽ tự resolve đến đúng nested screen.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">Q8: Làm sao ngăn user quay lại screen trước? Cho ví dụ thực tế.</div>
+  <div class="a">
+    <p><strong>Cách 1 — beforeRemove event:</strong> Intercept back action, hiện confirmation dialog. Phù hợp khi có unsaved changes (form, editor).</p>
+    <p><strong>Cách 2 — gestureEnabled: false:</strong> Tắt swipe back gesture (iOS). Kết hợp với <code>headerBackVisible: false</code> để ẩn nút back.</p>
+    <p><strong>Cách 3 — replace/reset:</strong> Thay thế screen hiện tại hoặc reset toàn bộ stack. User không có screen nào phía trước để quay lại.</p>
+    <p><strong>Ví dụ thực tế:</strong></p>
+    <ul>
+      <li><strong>Payment Success:</strong> Sau khi thanh toán thành công, dùng <code>reset</code> để đưa về OrderDetail, không cho quay lại Payment screen (tránh double charge)</li>
+      <li><strong>Onboarding:</strong> Dùng <code>replace</code> cho mỗi step, user không back được về step trước</li>
+      <li><strong>Edit Profile:</strong> Dùng <code>beforeRemove</code> để hỏi "Bạn có muốn lưu thay đổi?" khi user back</li>
+    </ul>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h3>Bài tập: E-Commerce Navigation System</h3>
+  <p>Xây dựng hệ thống navigation hoàn chỉnh cho ứng dụng e-commerce.</p>
+
+  <h4>Yêu cầu cấu trúc navigation:</h4>
+  <ul>
+    <li><strong>Auth Stack:</strong> Login, Register, ForgotPassword</li>
+    <li><strong>Main Tabs (4 tabs):</strong> Home, Categories, Cart, Profile</li>
+    <li><strong>Home Stack:</strong> HomeMain → ProductDetail → Reviews</li>
+    <li><strong>Categories Stack:</strong> CategoriesList → CategoryProducts → ProductDetail</li>
+    <li><strong>Cart Stack:</strong> CartMain → Checkout → PaymentSuccess</li>
+    <li><strong>Profile Stack:</strong> ProfileMain → EditProfile → OrderHistory → OrderDetail</li>
+    <li><strong>Modal (trên Root Stack):</strong> Search, ImageViewer</li>
+  </ul>
+
+  <h4>Yêu cầu kỹ thuật:</h4>
+  <ol>
+    <li>Type-safe navigation với TypeScript ParamList cho tất cả screen</li>
+    <li>Auth flow pattern: conditional Auth/Main stack dựa trên auth state</li>
+    <li>Deep linking config: <code>myshop://product/:id</code>, <code>myshop://category/:slug</code>, <code>myshop://order/:orderId</code></li>
+    <li>Custom tab bar với badge count cho Cart tab</li>
+    <li>beforeRemove trên EditProfile (unsaved changes warning)</li>
+    <li>reset navigation sau PaymentSuccess (không cho back về Checkout)</li>
+    <li>navigationRef: navigate đến OrderDetail từ push notification handler</li>
+    <li>Lazy loading cho tất cả tab</li>
+  </ol>
+
+  <h4>Acceptance Criteria:</h4>
+  <ul>
+    <li>✅ Tất cả navigation action đều type-safe, TypeScript không báo lỗi</li>
+    <li>✅ Login → Home transition mượt, không back được về Login</li>
+    <li>✅ Deep link <code>myshop://product/123</code> mở đúng ProductDetail khi đã login, redirect về Login khi chưa</li>
+    <li>✅ Cart badge update real-time khi thêm/xóa sản phẩm</li>
+    <li>✅ EditProfile hiện dialog khi back với unsaved changes</li>
+    <li>✅ Sau PaymentSuccess, back đưa về HomeMain</li>
+    <li>✅ Push notification mở đúng OrderDetail screen</li>
+  </ul>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h4>Exercise 1: Auth reset stack</h4>
+  <p>Sau login, reset stack để Android back không quay về Login. Sau logout, clear sensitive state và reset về Auth stack.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 2: Deep link cold start</h4>
+  <p>Mở app từ <code>myshop://product/123</code> khi app chưa chạy. Nếu chưa login, lưu pending link, login xong navigate tới ProductDetail.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 3: Unsaved changes guard</h4>
+  <p>Dùng <code>beforeRemove</code> cho EditProfile. Back hardware Android, gesture iOS và header back đều phải hiện confirm.</p>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Dùng <code>navigate</code> thay vì <code>push</code> cho screen cùng route nhưng params khác.</li>
+    <li>Login xong chỉ <code>navigate("Home")</code>, Android back quay lại Login.</li>
+    <li>Deep link chỉ test khi app đang mở, bỏ sót cold start/killed state.</li>
+    <li>Navigation params chứa object lớn/non-serializable, persistence và debug khó.</li>
+    <li>Gọi navigation từ service mà không kiểm tra navigationRef đã ready.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Push notification mở OrderDetail đúng khi app đang foreground, nhưng khi app bị kill thì chỉ mở Home.</p>
+  <p><strong>Cách xử lý:</strong> Chuẩn hóa notification payload thành deep link, cấu hình linking cho cold start, và lưu pending navigation cho trường hợp auth chưa sẵn sàng.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>Navigation tốt là quản lý state stack, không chỉ chuyển màn hình. Luôn test: login/logout, hardware back, deep link cold start, notification open, và unsaved changes.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Khi nào dùng <code>push</code> thay vì <code>navigate</code>?</div>
+  <div class="q">2. Login/logout nên dùng action gì để tránh back sai?</div>
+  <div class="q">3. Deep link cần xử lý khác nhau thế nào giữa warm start và cold start?</div>
+  <div class="q">4. Params nào không nên đưa vào navigation state?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> Tôi hiểu NavigationContainer là root component và navigation state là plain object</label>
+  <label><input type="checkbox"> Tôi phân biệt được Native Stack vs JS Stack và biết khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi biết setup nested navigation: Tab chứa Stack, Stack chứa Modal</label>
+  <label><input type="checkbox"> Tôi phân biệt được navigate, push, replace, reset, goBack, popToTop và use case của mỗi cái</label>
+  <label><input type="checkbox"> Tôi có thể implement type-safe navigation với TypeScript ParamList</label>
+  <label><input type="checkbox"> Tôi biết cách khai báo global ReactNavigation type để useNavigation tự có type</label>
+  <label><input type="checkbox"> Tôi hiểu Deep Linking: URL Scheme vs Universal Links vs App Links</label>
+  <label><input type="checkbox"> Tôi có thể cấu hình linking config cho nested navigation</label>
+  <label><input type="checkbox"> Tôi biết cách navigate từ bên ngoài component bằng navigationRef</label>
+  <label><input type="checkbox"> Tôi hiểu Auth flow pattern với conditional rendering</label>
+  <label><input type="checkbox"> Tôi biết dùng beforeRemove để ngăn user rời screen khi có unsaved changes</label>
+  <label><input type="checkbox"> Tôi hiểu react-native-screens và lazy loading giúp tối ưu performance thế nào</label>
+  <label><input type="checkbox"> Tôi có thể tạo custom tab bar với đầy đủ event handling</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành bài tập E-Commerce Navigation System</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/getting-started" target="_blank">React Navigation — Getting Started (Official Docs)</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/typescript" target="_blank">React Navigation — Type Checking with TypeScript</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/deep-linking" target="_blank">React Navigation — Deep Linking</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/auth-flow" target="_blank">React Navigation — Authentication Flow</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/nesting-navigators" target="_blank">React Navigation — Nesting Navigators</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/screen-options" target="_blank">React Navigation — Screen Options</a>
+</div>
+<div class="resource">
+  📘 <a href="https://reactnavigation.org/docs/custom-navigators" target="_blank">React Navigation — Custom Navigators</a>
+</div>
+<div class="resource">
+  📹 <a href="https://www.youtube.com/watch?v=nQVCkqvU1uE" target="_blank">React Navigation 6 Full Tutorial — Academind (YouTube)</a>
+</div>
+<div class="resource">
+  🛠 <a href="https://github.com/react-navigation/react-navigation" target="_blank">React Navigation GitHub Repository</a>
+</div>
+<div class="resource">
+  📘 <a href="https://github.com/software-mansion/react-native-screens" target="_blank">react-native-screens — GitHub</a>
+</div>
+
+<div class="nav-links">
+  <a href="03-RN-Basics.html">&larr; Module 03: RN Basics</a>
+  <a href="07-Networking.html">Module 07: Networking &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 04 — Hooks Deep Dive</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 04 — Hooks Deep Dive</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">&nbsp;⏱ 8-10 giờ</span>
+  <span class="meta-item">&nbsp;📋 Prerequisites: Module 01 (JS/TS Core), Module 02 (React Fundamentals)</span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu <strong>Rules of Hooks</strong> và lý do kỹ thuật đằng sau (linked list, call order)</li>
+  <li>Nắm vững cơ chế <strong>useState</strong>: batching, functional updates, lazy initializer, stale closure trap</li>
+  <li>Thành thạo <strong>useEffect</strong>: dependency comparison (Object.is), cleanup timing, xử lý race condition với AbortController</li>
+  <li>Biết khi nào dùng <strong>useCallback</strong> và <strong>useMemo</strong> — và quan trọng hơn: khi nào KHÔNG dùng</li>
+  <li>Sử dụng <strong>useRef</strong> cho mutable container, DOM reference, lưu interval ID, previous value</li>
+  <li>So sánh <strong>useReducer</strong> vs useState cho complex state logic</li>
+  <li>Hiểu vấn đề re-render của <strong>useContext</strong> và cách tối ưu bằng context splitting</li>
+  <li>Phân biệt <strong>useLayoutEffect</strong> vs useEffect về timing</li>
+  <li>Sử dụng <strong>useImperativeHandle</strong> + forwardRef để expose custom API</li>
+  <li>Tự viết được ít nhất 5 <strong>custom hooks</strong> từ scratch</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <h3>Step 1: Đọc tài liệu chính thức React</h3>
+  <p>Truy cập <a href="https://react.dev/reference/react/hooks" target="_blank">react.dev — Hooks Reference</a>. Đọc lần lượt từng hook: useState, useEffect, useContext, useRef, useMemo, useCallback, useReducer. Mỗi hook đọc cả phần "Pitfalls" và "Troubleshooting".</p>
+
+  <h3>Step 2: Đọc bài viết kinh điển về useEffect</h3>
+  <p>Đọc <a href="https://overreacted.io/a-complete-guide-to-useeffect/" target="_blank">"A Complete Guide to useEffect"</a> của Dan Abramov trên overreacted.io. Đây là bài viết dài nhưng cực kỳ quan trọng — giải thích mental model đúng về useEffect, closures, và synchronization.</p>
+
+  <h3>Step 3: Hiểu useLayoutEffect</h3>
+  <p>Đọc bài <a href="https://kentcdodds.com/blog/useeffect-vs-uselayouteffect" target="_blank">"useEffect vs useLayoutEffect"</a> của Kent C. Dodds. Nắm rõ timing: useLayoutEffect chạy synchronous sau DOM mutation, trước khi browser paint.</p>
+
+  <h3>Step 4: Viết 5 custom hooks từ scratch</h3>
+  <p>Tự implement: useDebounce, useToggle, usePrevious, useFetch, useKeyboardVisible hoặc useAppState. Không copy — tự suy nghĩ logic trước, rồi so sánh với implementation trong bài học.</p>
+
+  <h3>Step 5: Đọc source code usehooks-ts</h3>
+  <p>Truy cập <a href="https://usehooks-ts.com/" target="_blank">usehooks-ts.com</a>, đọc source code của các hooks. Chú ý cách xử lý edge cases, TypeScript typing, và cleanup logic.</p>
+</div>
+
+<h2>⚡ ÔN NHANH</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>useState:</strong> dùng functional update khi state mới phụ thuộc state cũ.</li>
+    <li><strong>useEffect:</strong> không phải lifecycle clone; dùng để đồng bộ component với hệ thống bên ngoài như API, timer, subscription.</li>
+    <li><strong>useRef:</strong> giữ mutable value không làm re-render; rất hữu ích cho timer ID, latest callback, previous value.</li>
+    <li><strong>useMemo/useCallback:</strong> chỉ dùng khi có chi phí thật hoặc cần stable reference cho memoized child/dependency.</li>
+    <li><strong>Custom hook tốt:</strong> gom logic, cleanup đầy đủ, API nhỏ, tên bắt đầu bằng <code>use</code>, không giấu side effect khó đoán.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> hooks là cách component đồng bộ state/render với external systems.</li>
+  <li><strong>Thấy bug thật:</strong> stale closure, effect loop vô hạn, subscription không cleanup, request cũ ghi đè request mới.</li>
+  <li><strong>Debug:</strong> log dependency, cleanup timing, requestId, mount/unmount, callback identity.</li>
+  <li><strong>Fix:</strong> dependency đúng, AbortController, ref latest callback, custom hook API nhỏ.</li>
+  <li><strong>Áp dụng playground:</strong> useDebounce, useKeyboardVisible, useAppStateRefresh, useAbortableRequest.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. Rules of Hooks — TẠI SAO phải tuân thủ?</h3>
+
+<div class="concept">
+  <h4>Hai quy tắc bắt buộc</h4>
+  <p><strong>Quy tắc 1:</strong> Chỉ gọi hooks ở top level — không gọi trong conditions, loops, hay nested functions.</p>
+  <p><strong>Quy tắc 2:</strong> Chỉ gọi hooks trong React function components hoặc custom hooks.</p>
+</div>
+
+<div class="deep-dive">
+  <h4>Lý do kỹ thuật: Linked List &amp; Call Order</h4>
+  <p>React lưu trữ state của các hooks dưới dạng <strong>linked list</strong> gắn với mỗi fiber node. Mỗi lần render, React duyệt qua list này theo thứ tự. Hook thứ nhất được gọi → lấy node thứ nhất trong list; hook thứ hai → node thứ hai; v.v.</p>
+  <p>Nếu bạn đặt hook trong <code>if</code>, lần render đầu tiên có thể gọi 3 hooks (tạo 3 nodes), nhưng lần render sau chỉ gọi 2 hooks (vì condition thay đổi). React sẽ map sai hook với sai state node → bug nghiêm trọng.</p>
+
+  <p>Ví dụ SAI — hook trong condition:</p>
+<pre><code>function BadComponent({ showName }) {
+  const [age, setAge] = useState(0);
+
+  if (showName) {
+    const [name, setName] = useState("React");
+  }
+
+  const [color, setColor] = useState("blue");
+  return null;
+}</code></pre>
+  <p>Khi <code>showName</code> là <code>true</code>: React thấy 3 hooks → tạo list [age, name, color]. Khi <code>showName</code> là <code>false</code>: React chỉ thấy 2 hooks → map: hook 1 = age (đúng), hook 2 = color nhưng React nghĩ nó là name (SAI). Kết quả: state bị lẫn lộn hoàn toàn.</p>
+
+  <p>Cách sửa đúng:</p>
+<pre><code>function GoodComponent({ showName }) {
+  const [age, setAge] = useState(0);
+  const [name, setName] = useState("React");
+  const [color, setColor] = useState("blue");
+
+  return null;
+}</code></pre>
+  <p>Luôn gọi tất cả hooks, dùng condition bên trong logic xử lý, không phải bao quanh hook call.</p>
+</div>
+
+<h3>2. useState — Chi tiết cơ chế hoạt động</h3>
+
+<h4>2.1 Batching</h4>
+<div class="concept">
+  <p>Từ React 18, tất cả state updates đều được <strong>batch</strong> (gom nhóm) — kể cả trong setTimeout, Promise, hay event handler. React sẽ đợi tất cả setState trong cùng một "execution context" hoàn tất, rồi mới re-render MỘT LẦN.</p>
+</div>
+
+<pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+  const [flag, setFlag] = useState(false);
+
+  function handleClick() {
+    setCount(c =&gt; c + 1);
+    setFlag(f =&gt; !f);
+  }
+
+  return (
+    &lt;button onClick={handleClick}&gt;
+      {count} - {String(flag)}
+    &lt;/button&gt;
+  );
+}</code></pre>
+<p>Dù gọi 2 setState, React chỉ re-render 1 lần. Trước React 18, batching chỉ hoạt động trong event handlers.</p>
+
+<h4>2.2 Functional Updates</h4>
+<div class="concept">
+  <p>Khi state mới phụ thuộc vào state cũ, <strong>luôn dùng functional update</strong> để tránh stale closure.</p>
+</div>
+
+<pre><code>setCount(count + 1);
+setCount(count + 1);
+setCount(count + 1);</code></pre>
+<p>Ba dòng trên chỉ tăng count lên 1 (không phải 3) vì cả 3 đều đọc cùng giá trị <code>count</code> từ closure hiện tại.</p>
+
+<pre><code>setCount(prev =&gt; prev + 1);
+setCount(prev =&gt; prev + 1);
+setCount(prev =&gt; prev + 1);</code></pre>
+<p>Functional update nhận <code>prev</code> là giá trị mới nhất trong queue → kết quả đúng: count tăng 3.</p>
+
+<h4>2.3 Lazy Initializer</h4>
+<div class="concept">
+  <p>Nếu initial state cần tính toán phức tạp (ví dụ: parse JSON, đọc localStorage), truyền một <strong>function</strong> thay vì giá trị. Function này chỉ được gọi ở lần render đầu tiên.</p>
+</div>
+
+<pre><code>const [data, setData] = useState(() =&gt; {
+  const saved = localStorage.getItem("form-data");
+  return saved ? JSON.parse(saved) : { name: "", email: "" };
+});</code></pre>
+<p>Nếu viết <code>useState(JSON.parse(localStorage.getItem("form-data")))</code> thì mỗi lần render đều gọi parse — lãng phí performance. Lazy initializer giải quyết vấn đề này.</p>
+
+<h4>2.4 Stale Closure Trap</h4>
+<div class="card card-danger">
+  <h4>⚠️ Stale Closure — Bẫy phổ biến nhất với hooks</h4>
+  <p>Closure "đóng gói" giá trị tại thời điểm nó được tạo. Nếu bạn dùng giá trị state cũ trong một callback được tạo từ render trước, bạn sẽ đọc được giá trị cũ (stale).</p>
+</div>
+
+<pre><code>function StaleClosureDemo() {
+  const [count, setCount] = useState(0);
+
+  function handleAlertClick() {
+    setTimeout(() =&gt; {
+      alert("Count: " + count);
+    }, 3000);
+  }
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;{count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
+      &lt;button onClick={handleAlertClick}&gt;Alert&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+<p>Nếu click "+1" ba lần rồi click "Alert", sau 3 giây alert sẽ hiện "Count: 3" (giá trị tại thời điểm click Alert). Nếu click "Alert" trước, rồi click "+1" ba lần, alert sẽ hiện "Count: 0" — vì setTimeout capture giá trị <code>count</code> tại thời điểm callback được tạo.</p>
+
+<h3>3. useEffect — Cơ chế Dependency &amp; Cleanup</h3>
+
+<h4>3.1 Dependency Comparison: Object.is</h4>
+<div class="concept">
+  <p>React dùng <code>Object.is()</code> để so sánh từng phần tử trong dependency array giữa render trước và render sau. Nếu tất cả đều bằng nhau, effect KHÔNG chạy lại.</p>
+</div>
+
+<pre><code>Object.is(3, 3);
+Object.is("abc", "abc");
+Object.is(NaN, NaN);
+Object.is({}, {});</code></pre>
+<p>Ba dòng đầu trả về <code>true</code>. Dòng cuối trả về <code>false</code> vì hai object khác reference. Đây là lý do phổ biến khiến useEffect chạy vô hạn khi bạn truyền object/array vào deps.</p>
+
+<pre><code>function BadExample({ userId }) {
+  const options = { userId, type: "active" };
+
+  useEffect(() =&gt; {
+    fetchUser(options);
+  }, [options]);
+}</code></pre>
+<p>Mỗi render tạo object <code>options</code> mới → reference mới → <code>Object.is</code> trả về <code>false</code> → effect chạy mỗi render. Fix: di chuyển object vào trong effect, hoặc dùng primitive deps.</p>
+
+<pre><code>function GoodExample({ userId }) {
+  useEffect(() =&gt; {
+    const options = { userId, type: "active" };
+    fetchUser(options);
+  }, [userId]);
+}</code></pre>
+
+<h4>3.2 Cleanup Timing</h4>
+<div class="deep-dive">
+  <h4>Thứ tự thực thi của useEffect</h4>
+  <p>1. Component render → tạo virtual DOM → commit DOM changes → browser paint → chạy effect.</p>
+  <p>2. Khi deps thay đổi: React chạy <strong>cleanup của effect cũ</strong> trước, rồi mới chạy <strong>effect mới</strong>.</p>
+  <p>3. Khi component unmount: React chạy cleanup của effect cuối cùng.</p>
+</div>
+
+<pre><code>useEffect(() =&gt; {
+  const id = setInterval(() =&gt; {
+    console.log("tick");
+  }, 1000);
+
+  return () =&gt; {
+    clearInterval(id);
+  };
+}, []);</code></pre>
+<p>Cleanup function (return) được gọi khi component unmount HOẶC trước khi effect chạy lại. Nếu không cleanup interval, mỗi lần effect chạy lại sẽ tạo thêm interval mới mà không xoá cái cũ → memory leak.</p>
+
+<h4>3.3 Race Condition &amp; AbortController</h4>
+<div class="card card-warning">
+  <h4>Race Condition trong data fetching</h4>
+  <p>Khi user thay đổi input nhanh, nhiều request được gửi đi. Response của request cũ có thể về SAU response mới → hiển thị data sai. Có 2 cách fix: boolean flag hoặc AbortController.</p>
+</div>
+
+<p>Cách 1: Boolean flag (đơn giản nhưng không cancel request thật sự)</p>
+<pre><code>useEffect(() =&gt; {
+  let cancelled = false;
+
+  async function fetchData() {
+    const response = await fetch(`/api/search?q=${query}`);
+    const data = await response.json();
+    if (!cancelled) {
+      setResults(data);
+    }
+  }
+
+  fetchData();
+
+  return () =&gt; {
+    cancelled = true;
+  };
+}, [query]);</code></pre>
+
+<p>Cách 2: AbortController (tốt hơn — thật sự cancel network request)</p>
+<pre><code>useEffect(() =&gt; {
+  const controller = new AbortController();
+
+  async function fetchData() {
+    try {
+      const response = await fetch(`/api/search?q=${query}`, {
+        signal: controller.signal,
+      });
+      const data = await response.json();
+      setResults(data);
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        setError(error);
+      }
+    }
+  }
+
+  fetchData();
+
+  return () =&gt; {
+    controller.abort();
+  };
+}, [query]);</code></pre>
+<p>AbortController thực sự huỷ HTTP request ở tầng network, tiết kiệm bandwidth. Luôn check <code>error.name !== "AbortError"</code> để không xử lý abort như error thật.</p>
+
+<h4>3.4 Stale Closure trong useEffect — 3 cách fix</h4>
+
+<pre><code>function Timer() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() =&gt; {
+    const id = setInterval(() =&gt; {
+      setCount(count + 1);
+    }, 1000);
+    return () =&gt; clearInterval(id);
+  }, []);
+
+  return &lt;p&gt;{count}&lt;/p&gt;;
+}</code></pre>
+<p>Bug: <code>count</code> luôn là 0 trong closure (deps là <code>[]</code> nên effect không bao giờ chạy lại). Kết quả: count luôn hiện 1.</p>
+
+<p><strong>Fix 1: Functional update</strong></p>
+<pre><code>useEffect(() =&gt; {
+  const id = setInterval(() =&gt; {
+    setCount(prev =&gt; prev + 1);
+  }, 1000);
+  return () =&gt; clearInterval(id);
+}, []);</code></pre>
+<p>Không cần đọc <code>count</code> từ closure — functional update luôn nhận giá trị mới nhất.</p>
+
+<p><strong>Fix 2: Thêm dependency</strong></p>
+<pre><code>useEffect(() =&gt; {
+  const id = setInterval(() =&gt; {
+    setCount(count + 1);
+  }, 1000);
+  return () =&gt; clearInterval(id);
+}, [count]);</code></pre>
+<p>Mỗi lần count thay đổi, interval cũ bị clear và interval mới được tạo. Hoạt động đúng nhưng không tối ưu (tạo/xoá interval liên tục).</p>
+
+<p><strong>Fix 3: useRef để lưu latest value</strong></p>
+<pre><code>function Timer() {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(count);
+  countRef.current = count;
+
+  useEffect(() =&gt; {
+    const id = setInterval(() =&gt; {
+      setCount(countRef.current + 1);
+    }, 1000);
+    return () =&gt; clearInterval(id);
+  }, []);
+
+  return &lt;p&gt;{count}&lt;/p&gt;;
+}</code></pre>
+<p>Ref luôn giữ giá trị mới nhất vì nó mutable và không bị closure "đóng băng".</p>
+
+<h3>4. useCallback — Khi nào CẦN, khi nào KHÔNG</h3>
+
+<div class="concept">
+  <p><code>useCallback(fn, deps)</code> trả về phiên bản memoized của <code>fn</code>. Function chỉ được tạo lại khi deps thay đổi.</p>
+</div>
+
+<h4>Khi nào CẦN useCallback</h4>
+<div class="card card-success">
+  <h4>✅ Dùng useCallback khi:</h4>
+  <ul>
+    <li><strong>Truyền callback xuống React.memo child:</strong> Nếu child component được wrap bằng <code>React.memo</code>, callback mới mỗi render sẽ phá vỡ memoization → child re-render vô ích.</li>
+    <li><strong>Callback là dependency của useEffect/useMemo:</strong> Nếu function thay đổi reference mỗi render, effect sẽ chạy lại liên tục.</li>
+  </ul>
+</div>
+
+<pre><code>const MemoChild = React.memo(function Child({ onClick }) {
+  console.log("Child rendered");
+  return &lt;button onClick={onClick}&gt;Click&lt;/button&gt;;
+});
+
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = useCallback(() =&gt; {
+    console.log("clicked");
+  }, []);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;{count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(c =&gt; c + 1)}&gt;+1&lt;/button&gt;
+      &lt;MemoChild onClick={handleClick} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+<p>Không có <code>useCallback</code>, mỗi lần Parent re-render tạo <code>handleClick</code> mới → <code>React.memo</code> thấy prop khác → Child re-render. Có <code>useCallback</code>, <code>handleClick</code> giữ reference cũ → Child skip re-render.</p>
+
+<h4>Khi nào KHÔNG cần useCallback</h4>
+<div class="card card-danger">
+  <h4>❌ Không cần useCallback khi:</h4>
+  <ul>
+    <li><strong>Child không dùng React.memo:</strong> Child sẽ re-render theo Parent dù callback có giữ reference hay không. useCallback chỉ thêm overhead.</li>
+    <li><strong>Callback truyền vào native element:</strong> <code>&lt;button onClick={fn}&gt;</code> — native element không có memoization.</li>
+    <li><strong>Premature optimization:</strong> useCallback có cost (lưu function + deps vào memory, so sánh deps mỗi render). Chỉ dùng khi đo được performance issue thật sự.</li>
+  </ul>
+</div>
+
+<h3>5. useMemo — Expensive Computation &amp; Stable Reference</h3>
+
+<div class="concept">
+  <p><code>useMemo(() =&gt; compute(a, b), [a, b])</code> cache kết quả tính toán. Chỉ tính lại khi deps thay đổi.</p>
+</div>
+
+<h4>Use case 1: Expensive computation</h4>
+<pre><code>function FilteredList({ items, filter }) {
+  const filtered = useMemo(() =&gt; {
+    return items.filter(item =&gt;
+      item.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [items, filter]);
+
+  return (
+    &lt;ul&gt;
+      {filtered.map(item =&gt; (
+        &lt;li key={item.id}&gt;{item.name}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+<p>Nếu <code>items</code> có 10.000 phần tử, filter mỗi render rất tốn. useMemo đảm bảo chỉ filter lại khi <code>items</code> hoặc <code>filter</code> thay đổi.</p>
+
+<h4>Use case 2: Stable reference cho dependency</h4>
+<pre><code>function Chart({ data, config }) {
+  const chartOptions = useMemo(() =&gt; ({
+    labels: data.map(d =&gt; d.label),
+    datasets: [{ values: data.map(d =&gt; d.value), color: config.color }],
+  }), [data, config]);
+
+  useEffect(() =&gt; {
+    renderChart(chartOptions);
+  }, [chartOptions]);
+}</code></pre>
+<p>Không có useMemo, <code>chartOptions</code> mới mỗi render → useEffect chạy lại liên tục → chart re-render vô hạn.</p>
+
+<h3>6. useRef — Mutable Container</h3>
+
+<div class="concept">
+  <p><code>useRef</code> tạo một object <code>{ current: initialValue }</code> tồn tại xuyên suốt lifecycle. Thay đổi <code>.current</code> KHÔNG gây re-render. Đây là điểm khác biệt cốt lõi với useState.</p>
+</div>
+
+<h4>Use case 1: DOM Reference</h4>
+<pre><code>function TextInput() {
+  const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+
+  function focusInput() {
+    inputRef.current?.focus();
+  }
+
+  return (
+    &lt;div&gt;
+      &lt;input ref={inputRef} type="text" /&gt;
+      &lt;button onClick={focusInput}&gt;Focus&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h4>Use case 2: Lưu Interval ID</h4>
+<pre><code>function Stopwatch() {
+  const [seconds, setSeconds] = useState(0);
+  const intervalRef = useRef&lt;number | null&gt;(null);
+
+  function start() {
+    if (intervalRef.current !== null) return;
+    intervalRef.current = window.setInterval(() =&gt; {
+      setSeconds(s =&gt; s + 1);
+    }, 1000);
+  }
+
+  function stop() {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }
+
+  useEffect(() =&gt; {
+    return () =&gt; stop();
+  }, []);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;{seconds}s&lt;/p&gt;
+      &lt;button onClick={start}&gt;Start&lt;/button&gt;
+      &lt;button onClick={stop}&gt;Stop&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+<p>Dùng ref để lưu interval ID vì: (1) không cần re-render khi ID thay đổi, (2) cần persist giá trị giữa các render.</p>
+
+<h4>Use case 3: Previous Value</h4>
+<pre><code>function usePrevious&lt;T&gt;(value: T): T | undefined {
+  const ref = useRef&lt;T | undefined&gt;(undefined);
+
+  useEffect(() =&gt; {
+    ref.current = value;
+  });
+
+  return ref.current;
+}
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  const prevCount = usePrevious(count);
+
+  return (
+    &lt;p&gt;
+      Now: {count}, Before: {prevCount}
+    &lt;/p&gt;
+  );
+}</code></pre>
+<p>Trick: useEffect chạy SAU render. Trong render hiện tại, <code>ref.current</code> vẫn là giá trị cũ. Sau render, effect cập nhật ref thành giá trị mới → sẵn sàng cho render tiếp theo.</p>
+
+<h4>Use case 4: Latest Value (tránh stale closure)</h4>
+<pre><code>function useLatest&lt;T&gt;(value: T) {
+  const ref = useRef(value);
+  ref.current = value;
+  return ref;
+}</code></pre>
+<p>Pattern này dùng khi bạn cần đọc giá trị mới nhất trong callback/timeout mà không muốn thêm dependency. Gán trực tiếp (không qua useEffect) để đảm bảo ref luôn cập nhật trước khi bất kỳ effect nào chạy.</p>
+
+<h3>7. useReducer — Complex State Logic</h3>
+
+<div class="concept">
+  <p><code>useReducer</code> là phiên bản nâng cao của useState. Thay vì update state trực tiếp, bạn dispatch một action, reducer function quyết định state mới dựa trên action đó.</p>
+</div>
+
+<pre><code>interface State {
+  count: number;
+  step: number;
+}
+
+type Action =
+  | { type: "increment" }
+  | { type: "decrement" }
+  | { type: "setStep"; payload: number }
+  | { type: "reset" };
+
+const initialState: State = { count: 0, step: 1 };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "increment":
+      return { ...state, count: state.count + state.step };
+    case "decrement":
+      return { ...state, count: state.count - state.step };
+    case "setStep":
+      return { ...state, step: action.payload };
+    case "reset":
+      return initialState;
+    default:
+      return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Count: {state.count} (step: {state.step})&lt;/p&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: "increment" })}&gt;+&lt;/button&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: "decrement" })}&gt;-&lt;/button&gt;
+      &lt;input
+        type="number"
+        value={state.step}
+        onChange={e =&gt; dispatch({ type: "setStep", payload: Number(e.target.value) })}
+      /&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: "reset" })}&gt;Reset&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<div class="card card-info">
+  <h4>useReducer vs useState — Khi nào chọn gì?</h4>
+  <table>
+    <thead>
+      <tr><th>Tiêu chí</th><th>useState</th><th>useReducer</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>State đơn giản (1-2 field)</td><td>✅ Phù hợp</td><td>Overkill</td></tr>
+      <tr><td>State phức tạp (nhiều field liên quan)</td><td>Khó quản lý</td><td>✅ Phù hợp</td></tr>
+      <tr><td>State transitions có logic phức tạp</td><td>Logic rải rác</td><td>✅ Tập trung trong reducer</td></tr>
+      <tr><td>Test state logic</td><td>Khó test riêng</td><td>✅ Reducer là pure function, dễ test</td></tr>
+      <tr><td>Performance (truyền dispatch xuống child)</td><td>Callback thay đổi mỗi render</td><td>✅ dispatch stable, không bao giờ thay đổi</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>8. useContext — Re-render Problem &amp; Context Splitting</h3>
+
+<div class="concept">
+  <p><code>useContext(MyContext)</code> đọc giá trị context gần nhất. Khi Provider value thay đổi, <strong>TẤT CẢ consumers</strong> sẽ re-render — bất kể chúng có dùng phần thay đổi hay không.</p>
+</div>
+
+<pre><code>const AppContext = React.createContext&lt;{
+  theme: string;
+  locale: string;
+  user: { name: string };
+}&gt;({
+  theme: "light",
+  locale: "vi",
+  user: { name: "" },
+});
+
+function App() {
+  const [theme, setTheme] = useState("light");
+  const [locale, setLocale] = useState("vi");
+  const [user, setUser] = useState({ name: "Linh" });
+
+  const value = { theme, locale, user };
+
+  return (
+    &lt;AppContext.Provider value={value}&gt;
+      &lt;Header /&gt;
+      &lt;Content /&gt;
+    &lt;/AppContext.Provider&gt;
+  );
+}</code></pre>
+<p>Vấn đề: Khi chỉ <code>theme</code> thay đổi, <code>value</code> object mới được tạo → TẤT CẢ component dùng <code>useContext(AppContext)</code> re-render, kể cả những component chỉ dùng <code>locale</code> hay <code>user</code>.</p>
+
+<h4>Giải pháp: Split Contexts</h4>
+<pre><code>const ThemeContext = React.createContext("light");
+const LocaleContext = React.createContext("vi");
+const UserContext = React.createContext({ name: "" });
+
+function App() {
+  const [theme, setTheme] = useState("light");
+  const [locale, setLocale] = useState("vi");
+  const [user, setUser] = useState({ name: "Linh" });
+
+  return (
+    &lt;ThemeContext.Provider value={theme}&gt;
+      &lt;LocaleContext.Provider value={locale}&gt;
+        &lt;UserContext.Provider value={user}&gt;
+          &lt;Header /&gt;
+          &lt;Content /&gt;
+        &lt;/UserContext.Provider&gt;
+      &lt;/LocaleContext.Provider&gt;
+    &lt;/ThemeContext.Provider&gt;
+  );
+}</code></pre>
+<p>Giờ khi <code>theme</code> thay đổi, chỉ component dùng <code>useContext(ThemeContext)</code> re-render. Component dùng <code>UserContext</code> không bị ảnh hưởng.</p>
+
+<div class="card card-accent">
+  <h4>Tip: Tách state và dispatch</h4>
+  <p>Khi dùng useReducer + Context, tách state và dispatch thành 2 contexts riêng. <code>dispatch</code> không bao giờ thay đổi reference → component chỉ cần dispatch sẽ không re-render khi state thay đổi.</p>
+</div>
+
+<h3>9. useLayoutEffect — Synchronous after DOM, before Paint</h3>
+
+<div class="deep-dive">
+  <h4>Timing so sánh</h4>
+  <p><strong>useEffect:</strong> Render → DOM update → Browser paint → Effect chạy (asynchronous)</p>
+  <p><strong>useLayoutEffect:</strong> Render → DOM update → Effect chạy → Browser paint (synchronous, blocking)</p>
+</div>
+
+<pre><code>function Tooltip({ targetRef, content }) {
+  const tooltipRef = useRef&lt;HTMLDivElement&gt;(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  useLayoutEffect(() =&gt; {
+    if (!targetRef.current || !tooltipRef.current) return;
+
+    const targetRect = targetRef.current.getBoundingClientRect();
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+
+    setPosition({
+      top: targetRect.top - tooltipRect.height - 8,
+      left: targetRect.left + (targetRect.width - tooltipRect.width) / 2,
+    });
+  }, [targetRef, content]);
+
+  return (
+    &lt;div
+      ref={tooltipRef}
+      style={{ position: "fixed", top: position.top, left: position.left }}
+    &gt;
+      {content}
+    &lt;/div&gt;
+  );
+}</code></pre>
+<p>Dùng <code>useLayoutEffect</code> ở đây vì cần đo DOM rồi set position TRƯỚC khi user thấy tooltip. Nếu dùng useEffect, tooltip sẽ flash ở vị trí (0,0) trước khi nhảy đến đúng vị trí → nhấp nháy (flicker).</p>
+
+<div class="card card-warning">
+  <h4>⚠️ Cẩn thận với useLayoutEffect</h4>
+  <p>useLayoutEffect chạy synchronous → block paint. Nếu logic nặng, sẽ khiến UI đứng. Chỉ dùng khi cần đọc/thay đổi DOM trước paint. Mọi trường hợp khác dùng useEffect.</p>
+</div>
+
+<h3>10. useImperativeHandle + forwardRef</h3>
+
+<div class="concept">
+  <p><code>forwardRef</code> cho phép parent truyền ref vào child component. <code>useImperativeHandle</code> cho phép child tuỳ chỉnh ref value — expose API giới hạn thay vì expose toàn bộ DOM node.</p>
+</div>
+
+<pre><code>interface VideoPlayerHandle {
+  play: () =&gt; void;
+  pause: () =&gt; void;
+  seekTo: (time: number) =&gt; void;
+}
+
+const VideoPlayer = React.forwardRef&lt;VideoPlayerHandle, { src: string }&gt;(
+  function VideoPlayer({ src }, ref) {
+    const videoRef = useRef&lt;HTMLVideoElement&gt;(null);
+
+    useImperativeHandle(ref, () =&gt; ({
+      play() {
+        videoRef.current?.play();
+      },
+      pause() {
+        videoRef.current?.pause();
+      },
+      seekTo(time: number) {
+        if (videoRef.current) {
+          videoRef.current.currentTime = time;
+        }
+      },
+    }), []);
+
+    return &lt;video ref={videoRef} src={src} /&gt;;
+  }
+);
+
+function App() {
+  const playerRef = useRef&lt;VideoPlayerHandle&gt;(null);
+
+  return (
+    &lt;div&gt;
+      &lt;VideoPlayer ref={playerRef} src="/video.mp4" /&gt;
+      &lt;button onClick={() =&gt; playerRef.current?.play()}&gt;Play&lt;/button&gt;
+      &lt;button onClick={() =&gt; playerRef.current?.pause()}&gt;Pause&lt;/button&gt;
+      &lt;button onClick={() =&gt; playerRef.current?.seekTo(30)}&gt;Go to 0:30&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+<p>Lợi ích: Parent chỉ có thể gọi <code>play</code>, <code>pause</code>, <code>seekTo</code> — không thể truy cập trực tiếp DOM element. Encapsulation tốt hơn.</p>
+
+<h3>11. Custom Hooks — 5 Hooks mẫu</h3>
+
+<div class="concept">
+  <p>Custom hook là function bắt đầu bằng "use", chứa logic dùng các hooks khác. Mục đích: <strong>tái sử dụng stateful logic</strong> giữa các components.</p>
+</div>
+
+<h4>11.1 useDebounce</h4>
+<pre><code>function useDebounce&lt;T&gt;(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() =&gt; {
+    const timer = setTimeout(() =&gt; {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () =&gt; {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}</code></pre>
+<p>Cách dùng: truyền giá trị thay đổi liên tục (search input), nhận lại giá trị chỉ cập nhật sau khi user ngừng gõ <code>delay</code> ms.</p>
+
+<pre><code>function SearchPage() {
+  const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query, 300);
+
+  useEffect(() =&gt; {
+    if (debouncedQuery) {
+      fetchResults(debouncedQuery);
+    }
+  }, [debouncedQuery]);
+
+  return &lt;input value={query} onChange={e =&gt; setQuery(e.target.value)} /&gt;;
+}</code></pre>
+
+<h4>11.2 useToggle</h4>
+<pre><code>function useToggle(initialValue: boolean = false): [boolean, () =&gt; void] {
+  const [value, setValue] = useState(initialValue);
+
+  const toggle = useCallback(() =&gt; {
+    setValue(v =&gt; !v);
+  }, []);
+
+  return [value, toggle];
+}</code></pre>
+<p>Cách dùng:</p>
+<pre><code>function Modal() {
+  const [isOpen, toggleOpen] = useToggle(false);
+
+  return (
+    &lt;div&gt;
+      &lt;button onClick={toggleOpen}&gt;Toggle Modal&lt;/button&gt;
+      {isOpen &amp;&amp; &lt;div className="modal"&gt;Content&lt;/div&gt;}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+<h4>11.3 usePrevious</h4>
+<pre><code>function usePrevious&lt;T&gt;(value: T): T | undefined {
+  const ref = useRef&lt;T | undefined&gt;(undefined);
+
+  useEffect(() =&gt; {
+    ref.current = value;
+  });
+
+  return ref.current;
+}</code></pre>
+<p>Trả về giá trị của <code>value</code> từ render trước. Hữu ích khi cần so sánh old vs new (ví dụ: animate khi số tăng/giảm).</p>
+
+<h4>11.4 useFetch</h4>
+<pre><code>interface FetchState&lt;T&gt; {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+function useFetch&lt;T&gt;(url: string): FetchState&lt;T&gt; {
+  const [state, setState] = useState&lt;FetchState&lt;T&gt;&gt;({
+    data: null,
+    loading: true,
+    error: null,
+  });
+
+  useEffect(() =&gt; {
+    const controller = new AbortController();
+
+    setState({ data: null, loading: true, error: null });
+
+    fetch(url, { signal: controller.signal })
+      .then(res =&gt; {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data =&gt; {
+        setState({ data, loading: false, error: null });
+      })
+      .catch(error =&gt; {
+        if (error.name !== "AbortError") {
+          setState({ data: null, loading: false, error });
+        }
+      });
+
+    return () =&gt; {
+      controller.abort();
+    };
+  }, [url]);
+
+  return state;
+}</code></pre>
+<p>Cách dùng:</p>
+<pre><code>function UserProfile({ userId }: { userId: string }) {
+  const { data, loading, error } = useFetch&lt;User&gt;(`/api/users/${userId}`);
+
+  if (loading) return &lt;p&gt;Loading...&lt;/p&gt;;
+  if (error) return &lt;p&gt;Error: {error.message}&lt;/p&gt;;
+  return &lt;p&gt;{data?.name}&lt;/p&gt;;
+}</code></pre>
+
+<h4>11.5 useLocalStorage</h4>
+<pre><code>function useLocalStorage&lt;T&gt;(
+  key: string,
+  initialValue: T
+): [T, (value: T | ((prev: T) =&gt; T)) =&gt; void] {
+  const [storedValue, setStoredValue] = useState&lt;T&gt;(() =&gt; {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setValue = useCallback(
+    (value: T | ((prev: T) =&gt; T)) =&gt; {
+      setStoredValue(prev =&gt; {
+        const nextValue = value instanceof Function ? value(prev) : value;
+        localStorage.setItem(key, JSON.stringify(nextValue));
+        return nextValue;
+      });
+    },
+    [key]
+  );
+
+  return [storedValue, setValue];
+}</code></pre>
+<p>Cách dùng:</p>
+<pre><code>function Settings() {
+  const [theme, setTheme] = useLocalStorage("theme", "light");
+
+  return (
+    &lt;button onClick={() =&gt; setTheme(t =&gt; t === "light" ? "dark" : "light")}&gt;
+      Current: {theme}
+    &lt;/button&gt;
+  );
+}</code></pre>
+<p>State tự động sync với localStorage. Refresh trang vẫn giữ giá trị.</p>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<div class="qa">
+  <div class="q">1. Giải thích Rules of Hooks. Tại sao không được gọi hooks trong conditions?</div>
+  <div class="a">
+    <p>React lưu state của hooks dưới dạng linked list theo thứ tự gọi. Mỗi render, React duyệt list theo đúng thứ tự: hook call thứ nhất → node thứ nhất, hook call thứ hai → node thứ hai...</p>
+    <p>Nếu đặt hook trong <code>if</code>, số lượng hook calls có thể thay đổi giữa các render. React sẽ map sai hook với sai state node → bug nghiêm trọng (state bị lẫn, crash).</p>
+    <p>Hai rules: (1) Chỉ gọi hooks ở top level. (2) Chỉ gọi trong React function component hoặc custom hook. ESLint plugin <code>eslint-plugin-react-hooks</code> sẽ enforce rules này tại build time.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">2. useState functional update dùng khi nào? Giải thích stale closure.</div>
+  <div class="a">
+    <p>Functional update (<code>setState(prev =&gt; prev + 1)</code>) dùng khi state mới phụ thuộc vào state cũ. Nó đảm bảo luôn đọc giá trị mới nhất từ React internal queue, không phụ thuộc closure.</p>
+    <p>Stale closure xảy ra khi callback (setTimeout, event handler, effect) "đóng gói" giá trị state tại thời điểm tạo. Nếu state thay đổi sau đó, callback vẫn thấy giá trị cũ.</p>
+    <p>Ví dụ: <code>setCount(count + 1)</code> gọi 3 lần → count chỉ tăng 1 (cả 3 đều đọc cùng giá trị <code>count</code>). <code>setCount(prev =&gt; prev + 1)</code> gọi 3 lần → count tăng 3 (mỗi lần nhận prev mới nhất).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">3. useEffect dependency array hoạt động như thế nào? Tại sao object trong deps gây vô hạn loop?</div>
+  <div class="a">
+    <p>React dùng <code>Object.is()</code> so sánh từng phần tử trong deps giữa render trước và render sau. Nếu tất cả bằng nhau → effect skip. Nếu bất kỳ phần tử nào khác → effect chạy lại.</p>
+    <p><code>Object.is({}, {})</code> trả về <code>false</code> vì so sánh bằng reference. Mỗi render tạo object mới → reference mới → deps luôn khác → effect chạy mỗi render → nếu effect gây re-render → vòng lặp vô hạn.</p>
+    <p>Fix: dùng primitive values trong deps, hoặc useMemo để stable reference, hoặc di chuyển object creation vào trong effect.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">4. Giải thích cleanup function trong useEffect. Khi nào nó được gọi?</div>
+  <div class="a">
+    <p>Cleanup function là function được return từ effect callback. Nó được gọi trong 2 trường hợp:</p>
+    <p><strong>1. Trước khi effect chạy lại</strong> (khi deps thay đổi): cleanup effect cũ trước, rồi chạy effect mới.</p>
+    <p><strong>2. Khi component unmount:</strong> cleanup effect cuối cùng.</p>
+    <p>Dùng cho: clearInterval, clearTimeout, removeEventListener, abort fetch request, unsubscribe websocket, cancel animation frame.</p>
+    <p>Không cleanup sẽ gây memory leak — event listeners, intervals, subscriptions tiếp tục chạy dù component đã bị gỡ khỏi DOM.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">5. Làm sao xử lý race condition khi fetch data trong useEffect?</div>
+  <div class="a">
+    <p><strong>Cách 1 — Boolean flag:</strong> Tạo biến <code>let cancelled = false</code> trong effect. Cleanup set <code>cancelled = true</code>. Trước khi setState, check <code>if (!cancelled)</code>. Nhược điểm: request vẫn chạy ở background.</p>
+    <p><strong>Cách 2 — AbortController:</strong> Tạo <code>new AbortController()</code>, truyền <code>signal</code> vào fetch options. Cleanup gọi <code>controller.abort()</code>. Catch block kiểm tra <code>error.name !== "AbortError"</code> để ignore abort errors. Ưu điểm: thực sự cancel request ở tầng network.</p>
+    <p>Cách 2 luôn được ưu tiên trong production vì tiết kiệm bandwidth và tài nguyên server.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">6. useCallback có cải thiện performance không? Khi nào nên/không nên dùng?</div>
+  <div class="a">
+    <p><strong>Nên dùng khi:</strong> (1) Truyền callback xuống child được wrap bằng <code>React.memo</code> — nếu không memoize, callback mới mỗi render sẽ break memoization. (2) Callback là dependency của useEffect/useMemo.</p>
+    <p><strong>Không nên dùng khi:</strong> (1) Child không dùng React.memo. (2) Truyền vào native element. (3) Không đo được performance issue thực tế.</p>
+    <p>useCallback có cost: lưu function + deps vào memory, so sánh deps mỗi render. Premature optimization với useCallback có thể khiến code phức tạp hơn mà không cải thiện performance đáng kể.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">7. Sự khác biệt giữa useEffect và useLayoutEffect?</div>
+  <div class="a">
+    <p><strong>useEffect:</strong> Chạy asynchronous SAU khi browser đã paint. Không block visual update.</p>
+    <p><strong>useLayoutEffect:</strong> Chạy synchronous SAU DOM mutation nhưng TRƯỚC khi browser paint. Block paint cho đến khi hoàn tất.</p>
+    <p>Dùng useLayoutEffect khi: cần đo DOM (getBoundingClientRect), cần thay đổi DOM trước khi user thấy (tránh flicker), animate position/size.</p>
+    <p>Dùng useEffect cho mọi trường hợp khác: fetch data, subscriptions, timers, logging.</p>
+    <p>Lưu ý: useLayoutEffect chạy synchronous nên logic nặng sẽ block UI, gây jank.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">8. useRef khác gì useState? Khi nào dùng ref thay vì state?</div>
+  <div class="a">
+    <p><strong>useState:</strong> Thay đổi value → trigger re-render. Value được "đóng gói" trong closure của mỗi render.</p>
+    <p><strong>useRef:</strong> Thay đổi <code>.current</code> → KHÔNG trigger re-render. Object ref persist giữa các render, <code>.current</code> luôn là giá trị mới nhất (mutable).</p>
+    <p>Dùng ref khi: (1) Lưu DOM reference. (2) Lưu interval/timeout ID. (3) Lưu giá trị cần đọc trong callback mà không muốn thêm dependency (latest value pattern). (4) Lưu previous value. (5) Đếm render count (debug). (6) Bất kỳ giá trị mutable nào không ảnh hưởng UI.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">9. Tại sao useContext gây re-render tất cả consumers? Cách optimize?</div>
+  <div class="a">
+    <p>Khi Provider value thay đổi (reference khác theo Object.is), React re-render TẤT CẢ component gọi <code>useContext</code> cho context đó — bất kể component có dùng phần data thay đổi hay không. React không tự "select" một phần context.</p>
+    <p><strong>Cách optimize:</strong></p>
+    <p>1. <strong>Split contexts:</strong> Tách một context lớn thành nhiều contexts nhỏ (ThemeContext, UserContext, LocaleContext). Component chỉ subscribe context cần.</p>
+    <p>2. <strong>Tách state/dispatch:</strong> Khi dùng useReducer, tạo StateContext và DispatchContext riêng. dispatch stable → component chỉ dispatch không re-render khi state đổi.</p>
+    <p>3. <strong>useMemo Provider value:</strong> Wrap object value trong useMemo để tránh tạo reference mới mỗi render (nếu không split được).</p>
+    <p>4. <strong>React.memo + separate component:</strong> Tách phần dùng context ra child component riêng, memo ở level giữa.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">10. useReducer vs useState — Khi nào chọn cái nào?</div>
+  <div class="a">
+    <p><strong>useState</strong> phù hợp khi: state đơn giản (boolean, string, number), transitions đơn giản (set trực tiếp), state không liên quan đến nhau.</p>
+    <p><strong>useReducer</strong> phù hợp khi: state phức tạp (object với nhiều field liên quan), nhiều kiểu update khác nhau, state transition có logic business (ví dụ: form validation, wizard steps), cần test state logic riêng (reducer là pure function).</p>
+    <p>Bonus: <code>dispatch</code> từ useReducer có stable identity (không thay đổi reference giữa các render) → an toàn truyền xuống child qua context mà không cần useCallback.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">11. Custom hook là gì? Nó share state giữa các components không?</div>
+  <div class="a">
+    <p>Custom hook là function bắt đầu bằng "use", bên trong dùng các React hooks khác. Mục đích: <strong>tái sử dụng stateful logic</strong>, không phải share state.</p>
+    <p><strong>KHÔNG share state:</strong> Mỗi component gọi custom hook sẽ có instance state riêng. <code>useToggle()</code> trong Component A và Component B là hai state hoàn toàn độc lập.</p>
+    <p>Custom hook share <strong>logic</strong> (cách khởi tạo, cập nhật, cleanup state) — tương tự HOC hoặc render props nhưng elegant hơn, không tạo wrapper hell.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">12. Giải thích useImperativeHandle. Khi nào cần dùng?</div>
+  <div class="a">
+    <p><code>useImperativeHandle</code> dùng cùng <code>forwardRef</code> để tuỳ chỉnh ref value mà parent nhận được. Thay vì expose toàn bộ DOM node, child chỉ expose một API giới hạn.</p>
+    <p><strong>Khi nào dùng:</strong> (1) Tạo component thư viện (video player, editor, drawer) cần expose imperative API (play, pause, open, close). (2) Muốn encapsulate implementation — parent không cần biết internal DOM structure. (3) Component phức tạp cần expose nhiều methods.</p>
+    <p><strong>Lưu ý:</strong> Đây là escape hatch. Ưu tiên declarative approach (props) trước. Chỉ dùng imperative khi declarative không phù hợp (ví dụ: focus input, scroll to position, play video).</p>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h4>Bài 1: useDebounce Hook</h4>
+  <p>Viết custom hook <code>useDebounce(value, delay)</code> trả về debounced value. Tạo SearchInput component demo: user gõ liên tục, API chỉ được gọi sau khi user ngừng gõ 500ms.</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Gõ "react" nhanh → chỉ 1 API call sau 500ms với query "react"</li>
+    <li>Gõ "rea" → đợi 200ms → gõ thêm "ct" → chỉ 1 API call với "react" (timer reset)</li>
+    <li>Cleanup timer khi component unmount</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Bài 2: useThrottle Hook</h4>
+  <p>Viết custom hook <code>useThrottle(value, interval)</code>. Khác debounce: throttle đảm bảo value cập nhật TỐI ĐA 1 lần mỗi interval.</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Scroll liên tục, throttle 200ms → callback gọi tối đa 5 lần/giây</li>
+    <li>Giá trị cuối cùng luôn được cập nhật (trailing edge)</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Bài 3: usePrevious Hook</h4>
+  <p>Viết <code>usePrevious(value)</code> trả về giá trị render trước. Dùng để hiển thị "Count changed from X to Y".</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Render đầu tiên: previous là <code>undefined</code></li>
+    <li>Sau mỗi lần state thay đổi, hiện đúng giá trị cũ</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Bài 4: useInterval Hook</h4>
+  <p>Viết <code>useInterval(callback, delay)</code>. Khi <code>delay</code> là <code>null</code> thì pause interval. Callback luôn dùng giá trị mới nhất (không stale closure).</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Counter tăng đều đặn mỗi 1 giây</li>
+    <li>Có thể pause/resume bằng cách set delay = null / 1000</li>
+    <li>Thay đổi delay dynamically (ví dụ: tăng tốc) hoạt động đúng</li>
+    <li>Không bị stale closure — callback luôn đọc state mới nhất</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Bài 5: useEventListener Hook</h4>
+  <p>Viết <code>useEventListener(eventName, handler, element?)</code>. Tự động add/remove event listener, xử lý cleanup, handler luôn latest (không stale).</p>
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Hỗ trợ window events (resize, scroll, keydown)</li>
+    <li>Hỗ trợ element ref events</li>
+    <li>Tự cleanup khi unmount</li>
+    <li>Handler thay đổi không cần remove/add lại listener (dùng ref)</li>
+    <li>TypeScript types đúng cho event names</li>
+  </ul>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h4>Exercise 1: useKeyboardVisible</h4>
+  <p>Viết hook trả về <code>{ isVisible, height }</code> dựa trên <code>Keyboard.addListener</code>.</p>
+  <ul>
+    <li>Cleanup listener khi unmount</li>
+    <li>Không setState nếu event đã bị cleanup</li>
+    <li>Dùng được để ẩn CTA button khi keyboard mở</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 2: useAppStateRefresh</h4>
+  <p>Khi app từ background quay lại active, gọi callback refresh data nhưng throttle tối thiểu 30 giây/lần.</p>
+  <ul>
+    <li>Dùng <code>AppState</code> và <code>useRef</code> để lưu timestamp cuối</li>
+    <li>Không tạo subscription mới mỗi render</li>
+    <li>Callback luôn là bản mới nhất, không stale closure</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 3: useAbortableRequest</h4>
+  <p>Đóng gói pattern fetch có <code>AbortController</code>, expose <code>run</code>, <code>cancel</code>, <code>loading</code>, <code>error</code>.</p>
+  <ul>
+    <li>Cancel request cũ khi gọi request mới</li>
+    <li>Không update state sau unmount</li>
+    <li>Phân biệt abort chủ động và lỗi API thật</li>
+  </ul>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Đưa object/function inline vào dependency array rồi bị effect chạy vô hạn.</li>
+    <li>Quên cleanup timer, subscription, request nên screen rời rồi vẫn setState.</li>
+    <li>Dùng <code>useCallback</code> mọi nơi làm code khó đọc nhưng không giảm render thật.</li>
+    <li>Custom hook giấu quá nhiều side effect, người dùng hook không biết khi nào API bị gọi.</li>
+    <li>Viết hook dùng API web như localStorage trong app React Native mà không thay bằng AsyncStorage/MMKV/SecureStore phù hợp.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Screen search gọi API theo keyword. User gõ nhanh, request cũ trả về sau request mới và ghi đè kết quả mới hơn.</p>
+  <p><strong>Cách xử lý:</strong> Debounce keyword, cancel request cũ bằng AbortController, hoặc gắn requestId trong ref và chỉ accept response mới nhất. Test bằng cách giả lập network chậm/nhanh xen kẽ.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>Hook không làm code tự nhiên đúng hơn; hook chỉ gom logic. Muốn dùng được trong app thật, luôn kiểm tra 3 thứ: dependency có ổn không, cleanup có đủ không, và callback có bị stale không.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Nếu effect fetch data phụ thuộc <code>userId</code>, bạn cleanup gì khi <code>userId</code> đổi?</div>
+  <div class="q">2. Khi nào dùng <code>useRef</code> thay vì <code>useState</code>?</div>
+  <div class="q">3. Một callback truyền xuống child đã memoized vẫn làm child re-render. Bạn kiểm tra những gì?</div>
+  <div class="q">4. Custom hook của bạn nên return raw state, command function, hay cả hai? Vì sao?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích Rules of Hooks và lý do kỹ thuật (linked list, call order)</label>
+  <label><input type="checkbox"> Tôi hiểu useState batching, functional updates, và lazy initializer</label>
+  <label><input type="checkbox"> Tôi có thể giải thích stale closure và 3 cách fix</label>
+  <label><input type="checkbox"> Tôi hiểu useEffect dependency comparison (Object.is) và tại sao object gây infinite loop</label>
+  <label><input type="checkbox"> Tôi biết cleanup timing của useEffect và đã thực hành cleanup interval, fetch</label>
+  <label><input type="checkbox"> Tôi có thể xử lý race condition trong useEffect bằng AbortController</label>
+  <label><input type="checkbox"> Tôi biết khi nào CẦN và KHÔNG cần useCallback/useMemo</label>
+  <label><input type="checkbox"> Tôi sử dụng useRef thành thạo cho: DOM ref, interval ID, previous value, latest value</label>
+  <label><input type="checkbox"> Tôi phân biệt được useReducer vs useState và biết khi nào chọn cái nào</label>
+  <label><input type="checkbox"> Tôi hiểu vấn đề re-render của useContext và biết cách split context</label>
+  <label><input type="checkbox"> Tôi phân biệt useLayoutEffect vs useEffect về timing và use case</label>
+  <label><input type="checkbox"> Tôi đã tự viết thành công ít nhất 5 custom hooks từ scratch</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 2 mini exercise hooks trong React Native</label>
+  <label><input type="checkbox"> Tôi đã đọc source code của ít nhất 3 hooks từ usehooks-ts</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+
+<div class="resource">
+  <h4>📘 Tài liệu chính thức</h4>
+  <ul>
+    <li><a href="https://react.dev/reference/react/hooks" target="_blank">React Hooks Reference — react.dev</a></li>
+    <li><a href="https://react.dev/learn/you-might-not-need-an-effect" target="_blank">You Might Not Need an Effect — react.dev</a></li>
+    <li><a href="https://react.dev/learn/removing-effect-dependencies" target="_blank">Removing Effect Dependencies — react.dev</a></li>
+    <li><a href="https://react.dev/learn/reusing-logic-with-custom-hooks" target="_blank">Reusing Logic with Custom Hooks — react.dev</a></li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>📝 Bài viết chuyên sâu</h4>
+  <ul>
+    <li><a href="https://overreacted.io/a-complete-guide-to-useeffect/" target="_blank">A Complete Guide to useEffect — Dan Abramov</a></li>
+    <li><a href="https://overreacted.io/making-setinterval-declarative-with-react-hooks/" target="_blank">Making setInterval Declarative with React Hooks — Dan Abramov</a></li>
+    <li><a href="https://kentcdodds.com/blog/useeffect-vs-uselayouteffect" target="_blank">useEffect vs useLayoutEffect — Kent C. Dodds</a></li>
+    <li><a href="https://kentcdodds.com/blog/usememo-and-usecallback" target="_blank">When to useMemo and useCallback — Kent C. Dodds</a></li>
+    <li><a href="https://tkdodo.eu/blog/avoiding-use-effect-with-callback-refs" target="_blank">Avoiding useEffect with callback refs — TkDodo</a></li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>🔧 Thư viện &amp; Tools</h4>
+  <ul>
+    <li><a href="https://usehooks-ts.com/" target="_blank">usehooks-ts — TypeScript hooks collection (đọc source code)</a></li>
+    <li><a href="https://github.com/streamich/react-use" target="_blank">react-use — Comprehensive hooks library</a></li>
+    <li><a href="https://www.npmjs.com/package/eslint-plugin-react-hooks" target="_blank">eslint-plugin-react-hooks — Enforce Rules of Hooks</a></li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>🎥 Video</h4>
+  <ul>
+    <li><a href="https://www.youtube.com/watch?v=dpw9EHDh2bM" target="_blank">React Hooks Explained — Fireship (10 min)</a></li>
+    <li><a href="https://www.youtube.com/watch?v=TNhaISOUy6Q" target="_blank">10 React Hooks Explained — Fireship</a></li>
+    <li><a href="https://www.youtube.com/watch?v=lStfMBiWROQ" target="_blank">useEffect Drama — Theo Browne</a></li>
+  </ul>
+</div>
+
+<div class="nav-links">
+  <a href="02-React-Core.html">&larr; Module 02: React Core</a>
+  <a href="03-RN-Basics.html">Module 03: RN Basics &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

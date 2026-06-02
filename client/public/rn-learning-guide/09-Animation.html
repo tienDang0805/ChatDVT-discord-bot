@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 09 — Animation</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 09 — Animation</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Nên có</span>
+  <span class="meta-item">⏱ 8-10 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01-04, 08</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Hiểu Animated API cơ bản: timing, spring, interpolation</li>
+  <li>Phân biệt Animated API vs Reanimated — khi nào dùng cái nào</li>
+  <li>Hiểu useNativeDriver tại sao mượt và limitations</li>
+  <li>Build được gesture-driven animations (swipe, drag)</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc RN Animated API docs</strong> — <a href="https://reactnative.dev/docs/animated" target="_blank">reactnative.dev/docs/animated</a><br>
+    Focus: Animated.Value, timing, spring, interpolate, useNativeDriver. Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Build 3 animations cơ bản</strong><br>
+    Fade in, Slide up, Scale on press. Dùng Animated API thuần. Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Đọc Reanimated docs</strong> — <a href="https://docs.swmansion.com/react-native-reanimated/" target="_blank">docs.swmansion.com/react-native-reanimated</a><br>
+    Focus: SharedValue, useAnimatedStyle, worklets concept. Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Build swipe card</strong> với Gesture Handler + Reanimated<br>
+    Tinder-style swipe left/right. Thời gian: ~2-3h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">5</span>
+    <strong>Tìm hiểu Lottie</strong> — <a href="https://airbnb.io/lottie/" target="_blank">airbnb.io/lottie</a><br>
+    Import After Effects animations. Thời gian: ~30min
+  </div>
+</div>
+
+<h2>⚡ Ôn nhanh</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Animated API:</strong> đủ cho fade/slide/scale đơn giản.</li>
+  <li><strong>useNativeDriver:</strong> chỉ chạy tốt với opacity/transform.</li>
+  <li><strong>Reanimated:</strong> chọn khi cần gesture, layout property, hoặc logic chạy trên UI thread.</li>
+  <li><strong>Gesture Handler:</strong> dùng cho pan/swipe/drag thay vì tự xử lý touch phức tạp.</li>
+  <li><strong>Animation tốt:</strong> phải mượt và có fallback khi user scroll/keyboard/navigation cùng lúc.</li>
+</ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> animation tốt là feedback cho user, không phải trang trí.</li>
+  <li><strong>Thấy bug thật:</strong> gesture ngang conflict scroll dọc, animate layout property sai driver, JS thread bận làm giật.</li>
+  <li><strong>Debug:</strong> kiểm dropped frames, gesture thresholds, UI/JS thread behavior.</li>
+  <li><strong>Fix:</strong> chọn Animated/Reanimated đúng, active/fail offset, giảm work trong interaction.</li>
+  <li><strong>Áp dụng playground:</strong> add-to-cart micro-interaction hoặc swipe row không phá FlatList.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. Animated API (Built-in)</h3>
+<div class="concept">
+<p>Animated API là built-in animation system của RN. Hoạt động bằng cách tạo <code>Animated.Value</code> → drive property changes qua <code>Animated.timing</code>/<code>spring</code>/<code>decay</code>.</p>
+</div>
+
+<h4>Animated.Value & Basic Animation</h4>
+<pre><code>const fadeAnim = useRef(new Animated.Value(0)).current;
+
+const fadeIn = () =&gt; {
+  Animated.timing(fadeAnim, {
+    toValue: 1,
+    duration: 500,
+    useNativeDriver: true,
+  }).start();
+};
+
+&lt;Animated.View style={{ opacity: fadeAnim }}&gt;
+  &lt;Text&gt;Hello&lt;/Text&gt;
+&lt;/Animated.View&gt;</code></pre>
+
+<h4>Animation Types</h4>
+<table>
+<tr><th>Type</th><th>Mô tả</th><th>Use case</th></tr>
+<tr><td><code>timing</code></td><td>Duration-based, easing curves</td><td>Fade, slide, controlled transitions</td></tr>
+<tr><td><code>spring</code></td><td>Physics-based, bouncy</td><td>Button press, card flip, natural motion</td></tr>
+<tr><td><code>decay</code></td><td>Deceleration từ initial velocity</td><td>Fling gesture, scroll momentum</td></tr>
+</table>
+
+<h4>Composed Animations</h4>
+<pre><code>Animated.parallel([
+  Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+  Animated.timing(slideAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+]).start();
+
+Animated.sequence([
+  Animated.timing(a, { toValue: 1, duration: 200, useNativeDriver: true }),
+  Animated.timing(b, { toValue: 1, duration: 200, useNativeDriver: true }),
+]).start();
+
+Animated.stagger(100, [
+  Animated.timing(item1, { toValue: 1, duration: 300, useNativeDriver: true }),
+  Animated.timing(item2, { toValue: 1, duration: 300, useNativeDriver: true }),
+  Animated.timing(item3, { toValue: 1, duration: 300, useNativeDriver: true }),
+]).start();</code></pre>
+
+<h3>2. useNativeDriver</h3>
+<div class="deep-dive">
+<p><strong>Tại sao mượt:</strong> Khi <code>useNativeDriver: true</code>, animation chạy hoàn toàn trên <strong>UI thread</strong> — không cần giao tiếp qua Bridge mỗi frame. JS thread có thể bận mà animation vẫn 60fps.</p>
+<p><strong>Limitations:</strong> Chỉ support non-layout properties:</p>
+<ul>
+  <li>✅ <code>opacity</code>, <code>transform</code> (translateX/Y, scale, rotate)</li>
+  <li>❌ <code>width</code>, <code>height</code>, <code>marginTop</code>, <code>backgroundColor</code>, <code>borderRadius</code></li>
+</ul>
+<p><strong>Workaround:</strong> Dùng <code>transform: [{ scaleX }]</code> thay vì animate width. Hoặc dùng Reanimated.</p>
+</div>
+
+<h3>3. Interpolation</h3>
+<pre><code>const rotation = scrollY.interpolate({
+  inputRange: [0, 100],
+  outputRange: ['0deg', '360deg'],
+  extrapolate: 'clamp',
+});
+
+&lt;Animated.View style={{ transform: [{ rotate: rotation }] }} /&gt;</code></pre>
+
+<p><strong>Extrapolation:</strong></p>
+<table>
+<tr><th>Value</th><th>Behavior khi vượt inputRange</th></tr>
+<tr><td><code>extend</code></td><td>Tiếp tục theo tỷ lệ (default)</td></tr>
+<tr><td><code>clamp</code></td><td>Dừng tại outputRange boundary</td></tr>
+<tr><td><code>identity</code></td><td>Trả về input value trực tiếp</td></tr>
+</table>
+
+<h3>4. Reanimated 2/3</h3>
+<div class="concept">
+<p><strong>Tại sao cần Reanimated?</strong></p>
+<ul>
+  <li>Animated API: chỉ async, limited useNativeDriver, cần Bridge mỗi frame cho complex animations</li>
+  <li>Reanimated: <strong>Worklets</strong> — compiled JS functions chạy trực tiếp trên UI thread. Synchronous, 60fps, mọi property</li>
+</ul>
+</div>
+
+<h4>Core Concepts</h4>
+<pre><code>import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+} from 'react-native-reanimated';
+
+const offset = useSharedValue(0);
+
+const animatedStyle = useAnimatedStyle(() =&gt; ({
+  transform: [{ translateX: offset.value }],
+  backgroundColor: interpolateColor(
+    offset.value,
+    [0, 200],
+    ['#6c63ff', '#00d4aa']
+  ),
+}));
+
+const moveRight = () =&gt; {
+  offset.value = withSpring(200, { damping: 15 });
+};
+
+&lt;Animated.View style={[styles.box, animatedStyle]} /&gt;</code></pre>
+
+<div class="card card-accent">
+<p><strong>SharedValue vs Animated.Value:</strong></p>
+<table>
+<tr><th></th><th>Animated.Value</th><th>SharedValue</th></tr>
+<tr><td>Thread</td><td>JS thread (hoặc UI với useNativeDriver)</td><td>UI thread (worklet)</td></tr>
+<tr><td>Properties</td><td>Limited (useNativeDriver)</td><td>Tất cả properties</td></tr>
+<tr><td>Sync</td><td>Async</td><td>Synchronous trên UI thread</td></tr>
+<tr><td>Gesture</td><td>Hạn chế</td><td>Tích hợp tốt với Gesture Handler</td></tr>
+</table>
+</div>
+
+<h3>5. Gesture Handler</h3>
+<pre><code>import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+
+const pan = Gesture.Pan()
+  .onStart(() =&gt; {
+    context.value = { x: offsetX.value, y: offsetY.value };
+  })
+  .onUpdate((event) =&gt; {
+    offsetX.value = context.value.x + event.translationX;
+    offsetY.value = context.value.y + event.translationY;
+  })
+  .onEnd(() =&gt; {
+    offsetX.value = withSpring(0);
+    offsetY.value = withSpring(0);
+  });
+
+&lt;GestureDetector gesture={pan}&gt;
+  &lt;Animated.View style={animatedStyle} /&gt;
+&lt;/GestureDetector&gt;</code></pre>
+
+<h3>6. LayoutAnimation</h3>
+<div class="concept">
+<p>Simple API cho layout transitions — animate changes khi state update gây layout change.</p>
+</div>
+<pre><code>import { LayoutAnimation, UIManager, Platform } from 'react-native';
+
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
+
+const toggleExpand = () =&gt; {
+  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  setExpanded(!expanded);
+};</code></pre>
+<p><strong>Khi nào dùng:</strong> Simple expand/collapse, add/remove items. Không dùng cho complex gesture animations.</p>
+
+<h3>7. Lottie</h3>
+<pre><code>import LottieView from 'lottie-react-native';
+
+&lt;LottieView
+  source={require('./animations/loading.json')}
+  autoPlay
+  loop
+  style={{ width: 200, height: 200 }}
+/&gt;</code></pre>
+<p><strong>Use cases:</strong> Loading indicators, success checkmarks, onboarding illustrations, empty states. Tìm animations tại <a href="https://lottiefiles.com" target="_blank">lottiefiles.com</a>.</p>
+
+<h3>8. Common Patterns</h3>
+
+<h4>Bottom Sheet</h4>
+<p>Dùng <a href="https://github.com/gorhom/react-native-bottom-sheet" target="_blank">@gorhom/bottom-sheet</a> — dựa trên Reanimated + Gesture Handler. Snap points, backdrop, keyboard handling built-in.</p>
+
+<h4>Skeleton/Shimmer Loading</h4>
+<p>Animated gradient placeholder khi data loading. Libraries: <code>react-native-skeleton-placeholder</code>, <code>rn-placeholder</code>. Hoặc tự build với Reanimated + LinearGradient.</p>
+
+<h4>Shared Element Transitions</h4>
+<p>Smooth transition giữa screens sharing cùng element (ảnh, card). Dùng <code>react-native-shared-element</code> hoặc Reanimated 3 shared transitions.</p>
+
+<h3>9. Ví dụ thực tế: Swipe row action</h3>
+<pre><code>const translateX = useSharedValue(0);
+
+const pan = Gesture.Pan()
+  .activeOffsetX([-10, 10])
+  .failOffsetY([-8, 8])
+  .onUpdate((event) =&gt; {
+    translateX.value = Math.max(-96, Math.min(0, event.translationX));
+  })
+  .onEnd(() =&gt; {
+    translateX.value = withSpring(translateX.value &lt; -48 ? -96 : 0);
+  });
+
+const rowStyle = useAnimatedStyle(() =&gt; ({
+  transform: [{ translateX: translateX.value }],
+}));</code></pre>
+<p><strong>Điểm cần nhớ:</strong> <code>activeOffsetX</code> và <code>failOffsetY</code> giúp swipe ngang không tranh gesture với scroll dọc của FlatList.</p>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<div class="qa">
+<div class="q">Q1: useNativeDriver là gì? Limitations?</div>
+<div class="a">
+<p><code>useNativeDriver: true</code> gửi animation config sang native (UI thread) 1 lần → native code drive animation mỗi frame mà không cần Bridge communication. Kết quả: 60fps ngay cả khi JS thread bận.</p>
+<p><strong>Limitations:</strong> Chỉ animate non-layout properties (opacity, transform). Không animate width/height/padding/margin/backgroundColor vì cần layout recalculation — phải dùng Reanimated thay thế.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Animated API vs Reanimated — khi nào dùng cái nào?</div>
+<div class="a">
+<p><strong>Animated API:</strong> Simple animations (fade, slide), built-in (không cần extra dependency), đủ cho hầu hết UI transitions.</p>
+<p><strong>Reanimated:</strong> Complex gesture-driven animations, animate mọi property, cần synchronous response (swipe cards, drag-drop, parallax scroll), cần integrate với Gesture Handler.</p>
+<p><strong>Rule:</strong> Bắt đầu với Animated API. Chuyển sang Reanimated khi cần animate layout properties hoặc gesture-driven logic phức tạp.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: Worklet trong Reanimated là gì?</div>
+<div class="a"><p>Worklet = JS function được compile sang code chạy được trên UI thread. Đánh dấu bằng <code>'worklet';</code> directive. Cho phép animation logic chạy synchronous trên UI thread mà không cần Bridge → 60fps. Tương tự Web Workers nhưng cho animations.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: Animated.spring vs Animated.timing?</div>
+<div class="a">
+<p><strong>timing:</strong> Duration-based, predictable. Bạn control chính xác bao lâu animation chạy + easing curve. Dùng cho: fade, slide, controlled transitions.</p>
+<p><strong>spring:</strong> Physics-based, "bouncy". Config bằng damping/stiffness/mass. Không có fixed duration — chạy cho tới khi đạt equilibrium. Dùng cho: interactive animations, button press, tự nhiên hơn.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: Interpolation dùng khi nào?</div>
+<div class="a"><p>Map 1 Animated.Value range sang output range khác. Ví dụ: scroll position (0-300) → opacity (1-0), hoặc scroll → rotation (0deg-360deg). Rất hữu ích cho scroll-based animations, parallax effects, progress indicators.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: LayoutAnimation vs Animated API?</div>
+<div class="a">
+<p><strong>LayoutAnimation:</strong> Declarative, simple API. Animate layout changes (add/remove/resize) tự động. Nhưng: ít control, không gesture-driven, Android cần enable experimental.</p>
+<p><strong>Animated API:</strong> Imperative, fine-grained control. Manual setup nhưng linh hoạt hơn nhiều.</p>
+</div>
+</div>
+
+<h2>🏋️ Bài tập</h2>
+
+<div class="exercise">
+<strong>Bài 1: Tinder Swipe Card</strong><br>
+Build card stack + swipe left (reject) / right (like) gesture.<br>
+Yêu cầu: Pan gesture, rotation theo drag direction, opacity feedback, snap back hoặc fly off, next card scale up.<br>
+Stack: Reanimated + Gesture Handler.
+</div>
+
+<div class="exercise">
+<strong>Bài 2: Skeleton Loading</strong><br>
+Build shimmer/skeleton loading placeholder cho list item (avatar circle + 3 text lines).<br>
+Yêu cầu: Animated gradient sweep effect, loop smooth, dùng Animated API hoặc Reanimated.
+</div>
+
+<div class="exercise">
+<strong>Bài 3: Scale on Press (Micro-interaction)</strong><br>
+Button scale down 0.95 on press, scale back 1.0 on release, spring physics.<br>
+Yêu cầu: Pressable + Animated.spring, useNativeDriver.
+</div>
+
+<div class="exercise">
+<strong>Bài 4: Parallax Scroll Header</strong><br>
+Header image shrinks/fades khi scroll down, title moves up. Scroll-based animation.<br>
+Yêu cầu: Animated.event + onScroll, interpolation cho opacity + translateY + scale.
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Animate width/height bằng Animated API với <code>useNativeDriver: true</code> rồi không chạy.</li>
+  <li>Quên cleanup/stop animation khi component unmount trong flow navigation phức tạp.</li>
+  <li>Gesture ngang trong FlatList chặn scroll dọc vì thiếu active/fail offset.</li>
+  <li>Lạm dụng animation cho mọi interaction làm app chậm và khó dùng.</li>
+  <li>Không test animation khi JS thread bận, nên demo mượt nhưng production giật.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> Swipe-to-delete trong notification list hoạt động tốt khi test riêng, nhưng trong FlatList thật thì kéo dọc bị nhầm thành swipe ngang.</p>
+<p><strong>Cách xử lý:</strong> Dùng Gesture Handler với ngưỡng <code>activeOffsetX</code>/<code>failOffsetY</code>, chỉ mở action khi vượt threshold, và đóng row đang mở khi row khác được swipe.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>Chọn API theo độ phức tạp: Animated cho transition đơn giản, Reanimated + Gesture Handler cho tương tác theo gesture, thư viện có sẵn cho bottom sheet/shared element nếu requirement phổ biến.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Vì sao <code>useNativeDriver</code> không animate layout property?</div>
+  <div class="q">2. Khi nào bạn chọn thư viện bottom sheet thay vì tự viết?</div>
+  <div class="q">3. Làm sao tránh gesture ngang conflict với scroll dọc?</div>
+  <div class="q">4. Bạn đo animation có bị drop frame bằng cách nào?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi build được fade/slide/scale animation với Animated API</label>
+  <label><input type="checkbox"> Tôi hiểu useNativeDriver hoạt động thế nào và limitations</label>
+  <label><input type="checkbox"> Tôi biết dùng interpolation cho scroll-based animations</label>
+  <label><input type="checkbox"> Tôi hiểu Reanimated worklets concept</label>
+  <label><input type="checkbox"> Tôi build được gesture-driven animation (pan/swipe)</label>
+  <label><input type="checkbox"> Tôi phân biệt được timing vs spring vs decay</label>
+  <label><input type="checkbox"> Tôi biết khi nào dùng LayoutAnimation vs Animated</label>
+  <label><input type="checkbox"> Tôi biết integrate Lottie animations</label>
+  <label><input type="checkbox"> Tôi đã build xong ít nhất 2/4 bài tập</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/animated" target="_blank">RN Animated API Docs</a></div>
+<div class="resource">📘 <a href="https://docs.swmansion.com/react-native-reanimated/" target="_blank">Reanimated Documentation</a></div>
+<div class="resource">📘 <a href="https://docs.swmansion.com/react-native-gesture-handler/" target="_blank">Gesture Handler Documentation</a></div>
+<div class="resource">📺 <a href="https://www.youtube.com/@wcandillon" target="_blank">William Candillon</a> — YouTube, best RN animation tutorials</div>
+<div class="resource">📘 <a href="https://lottiefiles.com" target="_blank">LottieFiles</a> — Free Lottie animations</div>
+<div class="resource">📘 <a href="https://github.com/gorhom/react-native-bottom-sheet" target="_blank">@gorhom/bottom-sheet</a></div>
+
+<div class="nav-links">
+  <a href="08-Performance.html">← Module 08: Performance</a>
+  <a href="14-Kotlin-Android.html">Module 14: Kotlin/Android →</a>
+</div>
+</div>
+</body>
+</html>

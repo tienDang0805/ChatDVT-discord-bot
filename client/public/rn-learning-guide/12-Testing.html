@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 12 — Testing</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 12 — Testing</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">⏱ 8-10 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01-04</span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu triết lý testing: test behavior chứ không test implementation details</li>
+  <li>Nắm vững Testing Pyramid và phân bổ tỷ lệ unit / integration / E2E hợp lý</li>
+  <li>Sử dụng thành thạo Jest: describe, it, expect, mock, spy, lifecycle hooks</li>
+  <li>Viết component tests với React Native Testing Library (RNTL): render, fireEvent, waitFor, screen queries</li>
+  <li>Test custom hooks bằng renderHook và act</li>
+  <li>Mock native modules, mock API bằng MSW (Mock Service Worker)</li>
+  <li>Hiểu ưu nhược điểm của Snapshot testing và khi nào nên dùng</li>
+  <li>Setup và viết E2E tests với Detox hoặc Maestro</li>
+  <li>Thiết lập coverage targets hợp lý cho dự án thực tế</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <h3>Step 1: Đọc Jest Documentation</h3>
+  <p>Bắt đầu từ <a href="https://jestjs.io/docs/getting-started" target="_blank">Jest Getting Started</a>. Tập trung vào các phần: Matchers, Mock Functions, Setup and Teardown. Đọc kỹ phần <a href="https://jestjs.io/docs/mock-functions" target="_blank">Mock Functions</a> vì đây là nền tảng cho mọi loại test trong React Native.</p>
+
+  <h3>Step 2: Đọc React Native Testing Library Documentation</h3>
+  <p>Đọc toàn bộ docs tại <a href="https://callstack.github.io/react-native-testing-library/" target="_blank">callstack.github.io/react-native-testing-library</a>. Ưu tiên các phần: API Overview, Queries (getByText, getByRole, getByTestId), fireEvent, waitFor. Đọc thêm bài <a href="https://kentcdodds.com/blog/testing-implementation-details" target="_blank">Testing Implementation Details</a> của Kent C. Dodds.</p>
+
+  <h3>Step 3: Viết 5 unit tests cho custom hooks</h3>
+  <p>Chọn 5 custom hooks đã viết từ Module trước (useDebounce, useToggle, useFetch, useForm, useLocalStorage). Viết tests bao gồm: initial state, state updates, edge cases, cleanup. Sử dụng renderHook và act.</p>
+
+  <h3>Step 4: Viết 5 component tests cho form/list</h3>
+  <p>Viết tests cho các component thực tế: LoginForm (validation, submit), SearchBar (input, debounce), FlatList rendering, Modal (open/close), ErrorBoundary. Tập trung test user interaction chứ không test internal state.</p>
+
+  <h3>Step 5: Setup Detox, viết 1 E2E test</h3>
+  <p>Cài đặt Detox theo <a href="https://wix.github.io/Detox/docs/introduction/getting-started" target="_blank">official docs</a>. Viết 1 E2E test hoàn chỉnh cho flow Login &rarr; Home Screen. Nếu gặp khó khăn với Detox, thử Maestro như alternative đơn giản hơn.</p>
+</div>
+
+<h2>⚡ ÔN NHANH</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>Unit test:</strong> logic nhỏ, hook, util, reducer.</li>
+    <li><strong>Component test:</strong> user nhập, bấm, nhìn thấy lỗi/loading/result.</li>
+    <li><strong>Integration test:</strong> nhiều component + provider/navigation/query client chạy cùng nhau.</li>
+    <li><strong>E2E:</strong> kiểm tra flow quan trọng nhất như login, checkout, create order.</li>
+    <li><strong>Coverage:</strong> dùng để tìm vùng chưa test, không dùng để chứng minh app không có bug.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> test là mô tả behavior quan trọng, không phải khóa chặt implementation.</li>
+  <li><strong>Thấy bug thật:</strong> test flaky, snapshot vô nghĩa, mock API quá sâu, query cache leak giữa tests.</li>
+  <li><strong>Debug:</strong> đọc failure message, reset mocks/cache, thay sleep bằng waitFor/findBy.</li>
+  <li><strong>Fix:</strong> test user-visible behavior, MSW/mock boundary hợp lý, E2E smoke ngắn.</li>
+  <li><strong>Áp dụng playground:</strong> test LoginForm, API error matrix, cart store, navigation login flow.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. Testing Philosophy: Test Behavior, Not Implementation</h3>
+<div class="concept">
+  <p>Nguyên tắc quan trọng nhất trong testing: <strong>test phải mô phỏng cách user sử dụng ứng dụng</strong>, không phải cách code được implement bên trong.</p>
+
+  <p>Tại sao? Vì khi refactor code (thay đổi implementation nhưng giữ nguyên behavior), tests không nên bị fail. Nếu tests fail khi refactor, nghĩa là tests đang coupled quá chặt với implementation details.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>❌ Test Implementation</th>
+        <th>✅ Test Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Kiểm tra state internal có đúng value không</td>
+        <td>Kiểm tra UI hiển thị đúng text/element không</td>
+      </tr>
+      <tr>
+        <td>Kiểm tra function nào được gọi bên trong</td>
+        <td>Kiểm tra kết quả cuối cùng user nhìn thấy</td>
+      </tr>
+      <tr>
+        <td>Spy vào lifecycle methods</td>
+        <td>Kiểm tra component render đúng sau action</td>
+      </tr>
+      <tr>
+        <td>Kiểm tra instance.state.count === 5</td>
+        <td>Kiểm tra screen.getByText("5") tồn tại</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>2. Testing Pyramid</h3>
+<div class="concept">
+  <p>Testing Pyramid là mô hình phân bổ số lượng test theo từng level. Mỗi level có chi phí (thời gian chạy, độ phức tạp setup) và giá trị (confidence) khác nhau.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Level</th>
+        <th>Tỷ lệ</th>
+        <th>Tốc độ</th>
+        <th>Confidence</th>
+        <th>Ví dụ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Unit Tests</strong></td>
+        <td>~70%</td>
+        <td>Rất nhanh (ms)</td>
+        <td>Thấp-Trung bình</td>
+        <td>Test pure functions, utils, hooks</td>
+      </tr>
+      <tr>
+        <td><strong>Integration Tests</strong></td>
+        <td>~20%</td>
+        <td>Nhanh (s)</td>
+        <td>Trung bình-Cao</td>
+        <td>Test component + context + API mock</td>
+      </tr>
+      <tr>
+        <td><strong>E2E Tests</strong></td>
+        <td>~10%</td>
+        <td>Chậm (min)</td>
+        <td>Rất cao</td>
+        <td>Test full user flow trên device/emulator</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card card-info">
+    <h4>💡 Lưu ý thực tế</h4>
+    <p>Tỷ lệ 70/20/10 là guideline, không phải rule cứng. Nhiều team hiện đại nghiêng về "Testing Trophy" (Kent C. Dodds) — ưu tiên integration tests hơn vì chúng mang lại confidence cao nhất so với chi phí bỏ ra.</p>
+  </div>
+</div>
+
+<h3>3. Jest Fundamentals</h3>
+<div class="concept">
+  <p>Jest là test runner mặc định trong React Native. Dưới đây là các API core cần nắm vững.</p>
+
+  <h4>3.1 Test Structure: describe, it, expect</h4>
+  <p><code>describe</code> nhóm các test liên quan. <code>it</code> (hoặc <code>test</code>) định nghĩa một test case. <code>expect</code> tạo assertion.</p>
+
+<pre><code>describe("Calculator", () =&gt; {
+  it("should add two numbers correctly", () =&gt; {
+    expect(add(2, 3)).toBe(5);
+  });
+
+  it("should handle negative numbers", () =&gt; {
+    expect(add(-1, -2)).toBe(-3);
+  });
+
+  it("should return 0 when adding opposites", () =&gt; {
+    expect(add(5, -5)).toBe(0);
+  });
+});</code></pre>
+
+  <h4>3.2 Common Matchers</h4>
+  <p>Jest cung cấp nhiều matchers khác nhau cho từng kiểu dữ liệu.</p>
+
+<pre><code>expect(value).toBe(42);
+expect(value).toEqual({ name: "Linh" });
+expect(value).toBeTruthy();
+expect(value).toBeFalsy();
+expect(value).toBeNull();
+expect(value).toBeUndefined();
+expect(value).toBeDefined();
+expect(value).toContain("hello");
+expect(value).toHaveLength(3);
+expect(value).toBeGreaterThan(10);
+expect(fn).toThrow();
+expect(fn).toThrow("specific error message");</code></pre>
+
+  <h4>3.3 Setup &amp; Teardown: beforeEach, afterEach</h4>
+  <p><code>beforeEach</code> chạy trước mỗi test, dùng để reset state. <code>afterEach</code> chạy sau mỗi test, dùng để cleanup resources. Còn có <code>beforeAll</code> và <code>afterAll</code> chạy một lần cho cả describe block.</p>
+
+<pre><code>describe("UserService", () =&gt; {
+  let db;
+
+  beforeEach(() =&gt; {
+    db = createTestDatabase();
+  });
+
+  afterEach(() =&gt; {
+    db.cleanup();
+  });
+
+  it("should create a user", () =&gt; {
+    const user = db.createUser({ name: "Linh" });
+    expect(user.id).toBeDefined();
+    expect(user.name).toBe("Linh");
+  });
+
+  it("should find user by id", () =&gt; {
+    const created = db.createUser({ name: "Minh" });
+    const found = db.findById(created.id);
+    expect(found.name).toBe("Minh");
+  });
+});</code></pre>
+
+  <h4>3.4 Mock Functions &amp; Spies</h4>
+  <p><code>jest.fn()</code> tạo mock function để theo dõi calls và control return value. <code>jest.spyOn()</code> wrap một method thật để theo dõi mà không thay đổi behavior.</p>
+
+<pre><code>const mockCallback = jest.fn();
+mockCallback.mockReturnValue(42);
+mockCallback.mockResolvedValue({ data: "test" });
+
+expect(mockCallback).toHaveBeenCalled();
+expect(mockCallback).toHaveBeenCalledTimes(2);
+expect(mockCallback).toHaveBeenCalledWith("arg1", "arg2");
+
+const spy = jest.spyOn(console, "warn");
+doSomething();
+expect(spy).toHaveBeenCalledWith("warning message");
+spy.mockRestore();</code></pre>
+
+  <h4>3.5 jest.mock — Module Mocking</h4>
+  <p>Mock toàn bộ module, rất hữu ích khi cần thay thế native modules hoặc external dependencies.</p>
+
+<pre><code>jest.mock("@react-native-async-storage/async-storage", () =&gt; ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
+jest.mock("react-native/Libraries/Animated/NativeAnimatedHelper");
+
+jest.mock("../api/userApi", () =&gt; ({
+  fetchUser: jest.fn().mockResolvedValue({
+    id: 1,
+    name: "Test User",
+  }),
+}));</code></pre>
+</div>
+
+<h3>4. React Native Testing Library (RNTL)</h3>
+<div class="concept">
+  <p>RNTL là thư viện testing cho React Native, xây dựng trên triết lý "test behavior, not implementation". Nó cung cấp API giống cách user tương tác với app.</p>
+
+  <h4>4.1 render &amp; screen queries</h4>
+  <p><code>render()</code> mount component vào test environment. <code>screen</code> cung cấp các queries để tìm elements.</p>
+
+<pre><code>import { render, screen } from "@testing-library/react-native";
+
+render(&lt;LoginForm /&gt;);
+
+const emailInput = screen.getByPlaceholderText("Email");
+const submitBtn = screen.getByRole("button", { name: "Đăng nhập" });
+const title = screen.getByText("Chào mừng");
+const avatar = screen.getByTestId("user-avatar");</code></pre>
+
+  <p>Thứ tự ưu tiên khi chọn query (theo accessibility):</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Priority</th>
+        <th>Query</th>
+        <th>Khi nào dùng</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>getByRole</td>
+        <td>Luôn ưu tiên — accessible với screen readers</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>getByText</td>
+        <td>Text user nhìn thấy trên screen</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>getByPlaceholderText</td>
+        <td>Input fields</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>getByDisplayValue</td>
+        <td>Input với giá trị hiện tại</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>getByTestId</td>
+        <td>Chỉ khi không có cách nào khác</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card card-warning">
+    <h4>⚠️ Query Variants</h4>
+    <p><code>getBy*</code> — throw error nếu không tìm thấy (dùng cho elements chắc chắn tồn tại).<br>
+    <code>queryBy*</code> — trả về null nếu không tìm thấy (dùng để assert element KHÔNG tồn tại).<br>
+    <code>findBy*</code> — trả về Promise, tự động retry (dùng cho async elements).</p>
+  </div>
+
+  <h4>4.2 fireEvent &amp; userEvent</h4>
+  <p><code>fireEvent</code> trigger events trên elements. Dùng để simulate user interactions.</p>
+
+<pre><code>import { render, screen, fireEvent } from "@testing-library/react-native";
+
+render(&lt;LoginForm onSubmit={mockSubmit} /&gt;);
+
+fireEvent.changeText(
+  screen.getByPlaceholderText("Email"),
+  "test@example.com"
+);
+
+fireEvent.changeText(
+  screen.getByPlaceholderText("Mật khẩu"),
+  "password123"
+);
+
+fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+expect(mockSubmit).toHaveBeenCalledWith({
+  email: "test@example.com",
+  password: "password123",
+});</code></pre>
+
+  <h4>4.3 waitFor — Async Testing</h4>
+  <p><code>waitFor</code> retry assertion cho đến khi pass hoặc timeout. Dùng khi test async operations (API calls, animations, timers).</p>
+
+<pre><code>import { render, screen, waitFor } from "@testing-library/react-native";
+
+render(&lt;UserProfile userId={1} /&gt;);
+
+expect(screen.getByText("Đang tải...")).toBeTruthy();
+
+await waitFor(() =&gt; {
+  expect(screen.getByText("Linh Phan")).toBeTruthy();
+});
+
+expect(screen.queryByText("Đang tải...")).toBeNull();</code></pre>
+</div>
+
+<h3>5. Testing Custom Hooks</h3>
+<div class="concept">
+  <p>Custom hooks không thể gọi trực tiếp ngoài component. RNTL cung cấp <code>renderHook</code> để test hooks trong isolation.</p>
+
+<pre><code>import { renderHook, act } from "@testing-library/react-native";
+import { useCounter } from "../hooks/useCounter";
+
+describe("useCounter", () =&gt; {
+  it("should initialize with default value", () =&gt; {
+    const { result } = renderHook(() =&gt; useCounter(0));
+    expect(result.current.count).toBe(0);
+  });
+
+  it("should increment counter", () =&gt; {
+    const { result } = renderHook(() =&gt; useCounter(0));
+
+    act(() =&gt; {
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(1);
+  });
+
+  it("should reset counter", () =&gt; {
+    const { result } = renderHook(() =&gt; useCounter(10));
+
+    act(() =&gt; {
+      result.current.increment();
+      result.current.increment();
+    });
+
+    expect(result.current.count).toBe(12);
+
+    act(() =&gt; {
+      result.current.reset();
+    });
+
+    expect(result.current.count).toBe(10);
+  });
+});</code></pre>
+
+  <p><code>act()</code> đảm bảo tất cả state updates và effects được flush trước khi assertion chạy. Mọi thao tác gây state change trong hook đều phải wrap trong <code>act()</code>.</p>
+
+  <h4>Test async hook</h4>
+<pre><code>import { renderHook, waitFor } from "@testing-library/react-native";
+import { useFetch } from "../hooks/useFetch";
+
+jest.mock("../api/client", () =&gt; ({
+  get: jest.fn().mockResolvedValue({ data: { name: "Linh" } }),
+}));
+
+describe("useFetch", () =&gt; {
+  it("should fetch data and update state", async () =&gt; {
+    const { result } = renderHook(() =&gt; useFetch("/users/1"));
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBeNull();
+
+    await waitFor(() =&gt; {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.data).toEqual({ name: "Linh" });
+    });
+  });
+});</code></pre>
+</div>
+
+<h3>6. Mocking Native Modules</h3>
+<div class="concept">
+  <p>React Native có nhiều native modules (Camera, Geolocation, AsyncStorage...) không chạy được trong Jest environment. Cần mock chúng.</p>
+
+  <h4>6.1 File jest.setup.js</h4>
+  <p>Tạo file setup chung để mock các native modules thường dùng. Config trong <code>jest.config.js</code> hoặc <code>package.json</code>.</p>
+
+<pre><code>jest.mock("react-native/Libraries/Animated/NativeAnimatedHelper");
+
+jest.mock("@react-native-async-storage/async-storage", () =&gt;
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock")
+);
+
+jest.mock("react-native-safe-area-context", () =&gt; {
+  const inset = { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    SafeAreaProvider: ({ children }) =&gt; children,
+    SafeAreaView: ({ children }) =&gt; children,
+    useSafeAreaInsets: () =&gt; inset,
+  };
+});
+
+jest.mock("@react-navigation/native", () =&gt; ({
+  useNavigation: () =&gt; ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+  }),
+  useRoute: () =&gt; ({
+    params: {},
+  }),
+}));</code></pre>
+
+  <h4>6.2 Manual Mocks (__mocks__ directory)</h4>
+  <p>Tạo thư mục <code>__mocks__</code> cùng cấp với module cần mock. Jest tự động sử dụng file mock thay cho module thật.</p>
+
+<pre><code>project/
+├── __mocks__/
+│   └── react-native-camera.js
+├── src/
+│   └── components/
+│       └── Scanner.tsx
+└── jest.config.js</code></pre>
+</div>
+
+<h3>7. Mocking API với MSW (Mock Service Worker)</h3>
+<div class="concept">
+  <p>MSW intercept network requests ở tầng network, không cần mock fetch/axios. Tests chạy gần giống production code hơn so với jest.mock.</p>
+
+  <h4>7.1 Setup MSW</h4>
+<pre><code>import { setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
+
+const handlers = [
+  http.get("https://api.example.com/users/:id", ({ params }) =&gt; {
+    return HttpResponse.json({
+      id: params.id,
+      name: "Test User",
+      email: "test@example.com",
+    });
+  }),
+
+  http.post("https://api.example.com/login", async ({ request }) =&gt; {
+    const body = await request.json();
+    if (body.email === "valid@test.com") {
+      return HttpResponse.json({ token: "fake-jwt-token" });
+    }
+    return HttpResponse.json(
+      { error: "Invalid credentials" },
+      { status: 401 }
+    );
+  }),
+];
+
+const server = setupServer(...handlers);
+
+beforeAll(() =&gt; server.listen());
+afterEach(() =&gt; server.resetHandlers());
+afterAll(() =&gt; server.close());</code></pre>
+
+  <h4>7.2 Override handler cho test cụ thể</h4>
+<pre><code>it("should show error when API fails", async () =&gt; {
+  server.use(
+    http.get("https://api.example.com/users/:id", () =&gt; {
+      return HttpResponse.json(
+        { error: "Server Error" },
+        { status: 500 }
+      );
+    })
+  );
+
+  render(&lt;UserProfile userId={1} /&gt;);
+
+  await waitFor(() =&gt; {
+    expect(screen.getByText("Đã xảy ra lỗi")).toBeTruthy();
+  });
+});</code></pre>
+
+  <div class="card card-accent">
+    <h4>🔑 Tại sao MSW tốt hơn jest.mock(fetch)?</h4>
+    <ul>
+      <li><strong>Test gần production hơn:</strong> code thật vẫn gọi fetch/axios, chỉ network bị intercept</li>
+      <li><strong>Không couple với implementation:</strong> đổi từ fetch sang axios không cần sửa test</li>
+      <li><strong>Reuse handlers:</strong> dùng chung handlers giữa tests, Storybook, dev environment</li>
+      <li><strong>Request matching mạnh:</strong> match theo URL pattern, method, headers, body</li>
+    </ul>
+  </div>
+</div>
+
+<h3>8. Snapshot Testing</h3>
+<div class="concept">
+  <p>Snapshot testing lưu output render của component thành file. Lần chạy sau so sánh với snapshot cũ để phát hiện thay đổi.</p>
+
+<pre><code>import { render } from "@testing-library/react-native";
+
+it("should match snapshot", () =&gt; {
+  const tree = render(&lt;ProfileCard name="Linh" role="Developer" /&gt;);
+  expect(tree.toJSON()).toMatchSnapshot();
+});</code></pre>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Pros ✅</th>
+        <th>Cons ❌</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Phát hiện thay đổi UI ngoài ý muốn (regression detection)</td>
+        <td>Dễ bị brittle — thay đổi nhỏ cũng fail</td>
+      </tr>
+      <tr>
+        <td>Setup nhanh, viết ít code</td>
+        <td>Developer thường "update all" mà không review kỹ</td>
+      </tr>
+      <tr>
+        <td>Document UI output tại thời điểm test</td>
+        <td>Snapshot files lớn gây noise trong code review</td>
+      </tr>
+      <tr>
+        <td>Tốt cho components ít thay đổi (icons, badges)</td>
+        <td>Không test behavior, chỉ test output structure</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="card card-warning">
+    <h4>⚠️ Best Practices cho Snapshot Testing</h4>
+    <ul>
+      <li>Dùng <code>toMatchInlineSnapshot()</code> cho small components để dễ review</li>
+      <li>Giữ snapshot nhỏ — render chỉ component cần test, không render cả page</li>
+      <li>Review snapshot changes cẩn thận trong PR, đừng blindly update</li>
+      <li>Kết hợp snapshot với behavioral tests, không dùng snapshot đơn lẻ</li>
+    </ul>
+  </div>
+</div>
+
+<h3>9. E2E Testing với Detox</h3>
+<div class="concept">
+  <p>Detox (by Wix) là framework E2E testing cho React Native. Chạy tests trên emulator/simulator thật, simulate user actions thực tế.</p>
+
+  <h4>9.1 Setup Detox</h4>
+<pre><code>npm install detox --save-dev
+npx detox init</code></pre>
+
+  <p>File <code>.detoxrc.js</code> config devices và build configurations.</p>
+
+<pre><code>module.exports = {
+  testRunner: {
+    args: {
+      $0: "jest",
+      config: "e2e/jest.config.js",
+    },
+    jest: {
+      setupTimeout: 120000,
+    },
+  },
+  apps: {
+    "ios.debug": {
+      type: "ios.app",
+      binaryPath:
+        "ios/build/Build/Products/Debug-iphonesimulator/MyApp.app",
+      build:
+        "xcodebuild -workspace ios/MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -derivedDataPath ios/build",
+    },
+  },
+  devices: {
+    simulator: {
+      type: "ios.simulator",
+      device: {
+        type: "iPhone 15",
+      },
+    },
+  },
+  configurations: {
+    "ios.sim.debug": {
+      device: "simulator",
+      app: "ios.debug",
+    },
+  },
+};</code></pre>
+
+  <h4>9.2 Viết E2E Test</h4>
+  <p>Detox cung cấp API: <code>element()</code> tìm element, <code>by.id()</code> / <code>by.text()</code> làm matcher, <code>.tap()</code> / <code>.typeText()</code> là actions.</p>
+
+<pre><code>describe("Login Flow", () =&gt; {
+  beforeAll(async () =&gt; {
+    await device.launchApp();
+  });
+
+  beforeEach(async () =&gt; {
+    await device.reloadReactNative();
+  });
+
+  it("should login successfully with valid credentials", async () =&gt; {
+    await element(by.id("email-input")).typeText("user@test.com");
+    await element(by.id("password-input")).typeText("password123");
+    await element(by.id("login-button")).tap();
+
+    await expect(element(by.text("Welcome"))).toBeVisible();
+  });
+
+  it("should show error with invalid credentials", async () =&gt; {
+    await element(by.id("email-input")).typeText("wrong@test.com");
+    await element(by.id("password-input")).typeText("wrong");
+    await element(by.id("login-button")).tap();
+
+    await expect(
+      element(by.text("Email hoặc mật khẩu không đúng"))
+    ).toBeVisible();
+  });
+});</code></pre>
+
+  <h4>9.3 Common Detox Actions &amp; Assertions</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Action</th>
+        <th>Mô tả</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>.tap()</code></td><td>Nhấn vào element</td></tr>
+      <tr><td><code>.longPress()</code></td><td>Nhấn giữ</td></tr>
+      <tr><td><code>.typeText("...")</code></td><td>Nhập text vào input</td></tr>
+      <tr><td><code>.clearText()</code></td><td>Xóa text trong input</td></tr>
+      <tr><td><code>.scroll(200, "down")</code></td><td>Scroll xuống 200px</td></tr>
+      <tr><td><code>.swipe("left")</code></td><td>Swipe sang trái</td></tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Assertion</th>
+        <th>Mô tả</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>.toBeVisible()</code></td><td>Element hiện trên màn hình</td></tr>
+      <tr><td><code>.toExist()</code></td><td>Element tồn tại trong tree</td></tr>
+      <tr><td><code>.toHaveText("...")</code></td><td>Element có text cụ thể</td></tr>
+      <tr><td><code>.not.toBeVisible()</code></td><td>Element không hiện</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>10. Maestro — Alternative E2E đơn giản hơn</h3>
+<div class="concept">
+  <p>Maestro là E2E testing tool sử dụng YAML thay vì JavaScript. Không cần build step phức tạp, dễ setup hơn Detox nhiều.</p>
+
+<pre><code>appId: com.myapp
+---
+- launchApp
+- tapOn: "Email"
+- inputText: "user@test.com"
+- tapOn: "Mật khẩu"
+- inputText: "password123"
+- tapOn: "Đăng nhập"
+- assertVisible: "Welcome"</code></pre>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Detox</th>
+        <th>Maestro</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Ngôn ngữ</td><td>JavaScript</td><td>YAML</td></tr>
+      <tr><td>Setup complexity</td><td>Cao</td><td>Thấp</td></tr>
+      <tr><td>CI/CD integration</td><td>Tốt</td><td>Tốt (Maestro Cloud)</td></tr>
+      <tr><td>Flakiness</td><td>Thấp (grey-box)</td><td>Trung bình (black-box)</td></tr>
+      <tr><td>Community</td><td>Lớn, mature</td><td>Đang phát triển</td></tr>
+      <tr><td>Cross-platform</td><td>iOS + Android</td><td>iOS + Android + Web</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>11. Coverage Targets</h3>
+<div class="concept">
+  <p>Code coverage đo lường bao nhiêu phần code được chạy qua bởi tests. Targets hợp lý cho RN project:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Metric</th>
+        <th>Target</th>
+        <th>Giải thích</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Statements</td><td>&ge; 80%</td><td>Tỷ lệ statements được execute</td></tr>
+      <tr><td>Branches</td><td>&ge; 70%</td><td>Tỷ lệ if/else/switch branches được cover</td></tr>
+      <tr><td>Functions</td><td>&ge; 80%</td><td>Tỷ lệ functions được gọi</td></tr>
+      <tr><td>Lines</td><td>&ge; 80%</td><td>Tỷ lệ lines được execute</td></tr>
+    </tbody>
+  </table>
+
+  <p>Config coverage trong <code>jest.config.js</code>:</p>
+
+<pre><code>module.exports = {
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "lcov", "clover"],
+  collectCoverageFrom: [
+    "src/**/*.{ts,tsx}",
+    "!src/**/*.d.ts",
+    "!src/**/*.stories.{ts,tsx}",
+    "!src/**/index.{ts,tsx}",
+  ],
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      branches: 70,
+      functions: 80,
+      lines: 80,
+    },
+  },
+};</code></pre>
+
+  <div class="card card-danger">
+    <h4>🚫 Coverage Pitfalls</h4>
+    <ul>
+      <li><strong>100% coverage ≠ bug-free:</strong> coverage chỉ đo code được chạy, không đo logic đúng sai</li>
+      <li><strong>Chasing numbers:</strong> viết test vô nghĩa chỉ để tăng coverage % là anti-pattern</li>
+      <li><strong>Branch coverage quan trọng hơn line coverage:</strong> vì nó cover edge cases và error paths</li>
+    </ul>
+  </div>
+</div>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<h2>🛠️ Debug playbook: test bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>Test pass local fail CI</td><td>Timing, network mock, emulator speed, fixed sleep</td><td>Dùng findBy/waitFor, deterministic mock, bỏ sleep cố định</td></tr>
+<tr><td>Test sau bị ảnh hưởng test trước</td><td>Mock reset, QueryClient cache, persisted storage</td><td>New wrapper mỗi test, clear mocks/cache/storage</td></tr>
+<tr><td>Snapshot fail liên tục</td><td>Snapshot đang assert gì có giá trị không</td><td>Thay bằng behavior assertions</td></tr>
+<tr><td>Mock native module không chạy</td><td>jest.setup, module name, manual mock path</td><td>Mock boundary rõ, assert behavior thay vì native detail</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Nói testing pyramid trước, sau đó ví dụ cụ thể: unit cho logic, component test cho user behavior, integration cho provider/navigation/API state, E2E cho smoke flow quan trọng.</p>
+</div>
+
+<div class="qa">
+  <div class="q">1. Tại sao nên "test behavior, not implementation"? Cho ví dụ cụ thể.</div>
+  <div class="a">
+    <p>Testing behavior nghĩa là test từ góc nhìn user — input gì, output gì, UI hiển thị gì. Không quan tâm code bên trong viết thế nào.</p>
+    <p><strong>Ví dụ:</strong> Component Counter có nút "+" và hiển thị số. Test implementation sẽ kiểm tra <code>component.state.count === 1</code> sau khi nhấn. Test behavior sẽ kiểm tra <code>screen.getByText("1")</code> tồn tại sau khi <code>fireEvent.press(plusButton)</code>.</p>
+    <p>Khi refactor từ useState sang useReducer, test behavior vẫn pass vì UI không đổi, nhưng test implementation sẽ fail vì state structure thay đổi. Tests fragile = developer mất trust vào test suite = bỏ qua test failures = test suite vô giá trị.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">2. Giải thích Testing Pyramid và tỷ lệ phân bổ tests.</div>
+  <div class="a">
+    <p>Testing Pyramid gồm 3 tầng:</p>
+    <ul>
+      <li><strong>Unit Tests (~70%):</strong> Test isolated functions, utils, hooks. Chạy rất nhanh (ms). Dễ viết, dễ maintain. Nhưng confidence thấp vì không test integration giữa các parts.</li>
+      <li><strong>Integration Tests (~20%):</strong> Test component + dependencies (context, API calls, navigation). Chạy nhanh (seconds). Confidence cao vì test cách các phần kết hợp.</li>
+      <li><strong>E2E Tests (~10%):</strong> Test full user flow trên device thật/emulator. Chạy chậm (minutes). Confidence rất cao nhưng expensive, flaky, khó maintain.</li>
+    </ul>
+    <p>Tỷ lệ này đảm bảo: nhiều tests nhanh ở base, ít tests chậm ở top. Nếu lật ngược (nhiều E2E, ít unit) sẽ có test suite chậm, flaky, và expensive — gọi là "Ice Cream Cone" anti-pattern.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">3. Sự khác nhau giữa jest.fn(), jest.mock(), và jest.spyOn()?</div>
+  <div class="a">
+    <ul>
+      <li><strong>jest.fn():</strong> Tạo một mock function mới hoàn toàn. Không implementation, chỉ record calls. Dùng khi cần truyền callback/handler giả vào component.</li>
+      <li><strong>jest.mock("module"):</strong> Mock toàn bộ module. Thay thế tất cả exports bằng jest.fn(). Dùng khi cần thay thế native modules, API clients, hoặc external libraries.</li>
+      <li><strong>jest.spyOn(object, "method"):</strong> Wrap method thật, vẫn giữ implementation gốc (trừ khi gọi .mockImplementation()). Record calls để assert. Dùng khi cần theo dõi method call mà vẫn muốn giữ behavior gốc.</li>
+    </ul>
+    <p>Nhớ gọi <code>spy.mockRestore()</code> trong afterEach để restore method gốc, tránh ảnh hưởng tests khác.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">4. getByText vs queryByText vs findByText — khi nào dùng cái nào?</div>
+  <div class="a">
+    <ul>
+      <li><strong>getByText:</strong> Throw error nếu không tìm thấy. Dùng khi chắc chắn element tồn tại. Nếu có 2+ matches cũng throw error.</li>
+      <li><strong>queryByText:</strong> Trả về null nếu không tìm thấy. Dùng để assert element KHÔNG tồn tại: <code>expect(screen.queryByText("Error")).toBeNull()</code>.</li>
+      <li><strong>findByText:</strong> Trả về Promise, retry tự động (default timeout 1000ms). Dùng cho elements xuất hiện sau async operation: <code>const el = await screen.findByText("Data loaded")</code>.</li>
+    </ul>
+    <p>Rule: dùng <code>getBy*</code> by default, <code>queryBy*</code> cho negative assertions, <code>findBy*</code> cho async.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">5. Làm sao test một component có API call?</div>
+  <div class="a">
+    <p>Có 3 approaches, sắp xếp từ tốt nhất đến kém nhất:</p>
+    <p><strong>1. MSW (Mock Service Worker):</strong> Intercept ở network layer. Code thật vẫn gọi fetch/axios bình thường. Test sát production nhất. Không couple với HTTP library.</p>
+    <p><strong>2. jest.mock API module:</strong> Mock toàn bộ API module (e.g., <code>jest.mock("../api/userApi")</code>). Nhanh, đơn giản, nhưng couple với module structure.</p>
+    <p><strong>3. jest.mock("axios"):</strong> Mock HTTP library trực tiếp. Nhanh nhất nhưng couple mạnh nhất — đổi sang fetch phải sửa hết tests.</p>
+    <p>Dù dùng approach nào, luôn test cả happy path (API trả data) và error path (API trả lỗi, network timeout).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">6. Snapshot testing có giá trị gì? Khi nào KHÔNG nên dùng?</div>
+  <div class="a">
+    <p><strong>Giá trị:</strong> Phát hiện thay đổi UI ngoài ý muốn (regression). Viết nhanh, ít code. Tốt cho components ổn định, ít thay đổi (icon sets, static pages).</p>
+    <p><strong>KHÔNG nên dùng khi:</strong></p>
+    <ul>
+      <li>Component thay đổi thường xuyên — snapshot liên tục outdated, developers blindly update</li>
+      <li>Component có dynamic data (dates, random IDs) — snapshots flaky</li>
+      <li>Large components — snapshot files hàng trăm dòng, code review nightmare</li>
+      <li>Thay thế cho behavioral tests — snapshot không test interaction, chỉ test output structure</li>
+    </ul>
+    <p>Best practice: dùng snapshot như supplement, không phải replacement cho behavioral tests. Ưu tiên <code>toMatchInlineSnapshot()</code> cho small components.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">7. act() dùng để làm gì? Khi nào cần wrap code trong act()?</div>
+  <div class="a">
+    <p><code>act()</code> đảm bảo tất cả state updates, effects (useEffect), và scheduled callbacks được xử lý xong trước khi assertion chạy. Nó mô phỏng cách React batch updates trong browser.</p>
+    <p><strong>Cần act() khi:</strong></p>
+    <ul>
+      <li>Gọi function từ renderHook result: <code>act(() =&gt; result.current.increment())</code></li>
+      <li>Trigger state update outside render: <code>act(() =&gt; callback())</code></li>
+      <li>Advance timers: <code>act(() =&gt; jest.advanceTimersByTime(1000))</code></li>
+    </ul>
+    <p><strong>KHÔNG cần act() khi:</strong> dùng fireEvent hoặc waitFor của RNTL — chúng đã wrap act() bên trong.</p>
+    <p>Warning "An update was not wrapped in act(...)" nghĩa là có state update xảy ra sau khi test đã kết thúc — thường do async operation không được await hoặc cleanup.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">8. So sánh Detox và Maestro cho E2E testing.</div>
+  <div class="a">
+    <p><strong>Detox:</strong></p>
+    <ul>
+      <li>Grey-box testing — biết app state, tự đợi animations/network kết thúc</li>
+      <li>Ít flaky hơn nhờ synchronization mechanism</li>
+      <li>Viết bằng JavaScript — flexible, programmatic</li>
+      <li>Setup phức tạp, cần build app trước khi test</li>
+      <li>Community lớn, mature, by Wix</li>
+    </ul>
+    <p><strong>Maestro:</strong></p>
+    <ul>
+      <li>Black-box testing — không biết app internals</li>
+      <li>YAML-based — rất dễ viết, non-developers cũng viết được</li>
+      <li>Setup đơn giản, dùng app đã build sẵn</li>
+      <li>Maestro Cloud cho CI/CD</li>
+      <li>Hỗ trợ cả iOS, Android, và Web</li>
+    </ul>
+    <p><strong>Recommendation:</strong> Team lớn, project mature → Detox. Team nhỏ, cần nhanh → Maestro. Có thể dùng cả hai cho different purposes.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">9. Làm sao mock React Navigation trong tests?</div>
+  <div class="a">
+    <p>Có 2 approaches:</p>
+    <p><strong>Approach 1: Mock hooks trực tiếp</strong></p>
+<pre><code>jest.mock("@react-navigation/native", () =&gt; ({
+  useNavigation: () =&gt; ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+    setOptions: jest.fn(),
+  }),
+  useRoute: () =&gt; ({
+    params: { userId: 1 },
+  }),
+  useFocusEffect: jest.fn(),
+}));</code></pre>
+    <p><strong>Approach 2: Render với NavigationContainer thật</strong></p>
+<pre><code>import { NavigationContainer } from "@react-navigation/native";
+
+render(
+  &lt;NavigationContainer&gt;
+    &lt;Stack.Navigator&gt;
+      &lt;Stack.Screen name="Profile" component={ProfileScreen} /&gt;
+    &lt;/Stack.Navigator&gt;
+  &lt;/NavigationContainer&gt;
+);</code></pre>
+    <p>Approach 1 đơn giản hơn cho unit tests. Approach 2 sát thực tế hơn cho integration tests — test navigation flow thật.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">10. Code coverage 100% có đảm bảo app không có bug không? Tại sao?</div>
+  <div class="a">
+    <p><strong>Không.</strong> Coverage 100% chỉ nghĩa là mọi dòng code đều được execute ít nhất 1 lần. Nó KHÔNG đảm bảo:</p>
+    <ul>
+      <li><strong>Logic correctness:</strong> Test có thể execute code mà không assert gì cả</li>
+      <li><strong>Edge cases:</strong> Function add(a, b) có coverage 100% chỉ với 1 test case, nhưng có thể fail với negative numbers, overflow, NaN</li>
+      <li><strong>Integration bugs:</strong> Mỗi unit pass riêng lẻ nhưng fail khi kết hợp</li>
+      <li><strong>Race conditions:</strong> Async bugs không thể detect bằng synchronous tests</li>
+      <li><strong>UI/UX bugs:</strong> Layout sai, animation lag, accessibility issues</li>
+    </ul>
+    <p>Coverage là metric hữu ích để tìm code CHƯA được test, nhưng không phải indicator của test quality. Statements 80% + branches 70% là target hợp lý — focus vào test quality hơn quantity.</p>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h3>Bài tập: Write tests cho LoginForm</h3>
+
+  <h4>Yêu cầu</h4>
+  <p>Cho component LoginForm nhận props <code>onSubmit</code> và <code>onForgotPassword</code>. Viết test suite đầy đủ.</p>
+
+  <h4>LoginForm Component (để test)</h4>
+<pre><code>interface LoginFormProps {
+  onSubmit: (data: { email: string; password: string }) =&gt; Promise&lt;void&gt;;
+  onForgotPassword: () =&gt; void;
+}
+
+function LoginForm({ onSubmit, onForgotPassword }: LoginFormProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState&lt;string | null&gt;(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () =&gt; {
+    setError(null);
+
+    if (!email.includes("@")) {
+      setError("Email không hợp lệ");
+      return;
+    }
+
+    if (password.length &lt; 6) {
+      setError("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmit({ email, password });
+    } catch (err) {
+      setError("Đăng nhập thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    &lt;View&gt;
+      &lt;Text&gt;Đăng nhập&lt;/Text&gt;
+      {error &amp;&amp; &lt;Text testID="error-message"&gt;{error}&lt;/Text&gt;}
+      &lt;TextInput
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      /&gt;
+      &lt;TextInput
+        placeholder="Mật khẩu"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      /&gt;
+      &lt;Pressable
+        onPress={handleSubmit}
+        disabled={loading}
+        accessibilityRole="button"
+      &gt;
+        &lt;Text&gt;{loading ? "Đang xử lý..." : "Đăng nhập"}&lt;/Text&gt;
+      &lt;/Pressable&gt;
+      &lt;Pressable onPress={onForgotPassword} accessibilityRole="button"&gt;
+        &lt;Text&gt;Quên mật khẩu?&lt;/Text&gt;
+      &lt;/Pressable&gt;
+    &lt;/View&gt;
+  );
+}</code></pre>
+
+  <h4>Test Cases cần viết</h4>
+  <ol>
+    <li>Render đúng initial state (có title, 2 inputs, 2 buttons, không có error)</li>
+    <li>Hiển thị lỗi "Email không hợp lệ" khi email thiếu @</li>
+    <li>Hiển thị lỗi "Mật khẩu phải có ít nhất 6 ký tự" khi password ngắn</li>
+    <li>Gọi onSubmit với email và password đúng format</li>
+    <li>Hiển thị "Đang xử lý..." khi đang loading</li>
+    <li>Hiển thị lỗi "Đăng nhập thất bại" khi onSubmit reject</li>
+    <li>Disable button khi đang loading</li>
+    <li>Gọi onForgotPassword khi nhấn "Quên mật khẩu?"</li>
+  </ol>
+
+  <div class="solution">
+    <h4>Lời giải</h4>
+<pre><code>import { render, screen, fireEvent, waitFor } from "@testing-library/react-native";
+import { LoginForm } from "../LoginForm";
+
+describe("LoginForm", () =&gt; {
+  const mockSubmit = jest.fn();
+  const mockForgotPassword = jest.fn();
+
+  beforeEach(() =&gt; {
+    jest.clearAllMocks();
+    mockSubmit.mockResolvedValue(undefined);
+  });
+
+  const renderForm = () =&gt;
+    render(
+      &lt;LoginForm
+        onSubmit={mockSubmit}
+        onForgotPassword={mockForgotPassword}
+      /&gt;
+    );
+
+  it("renders initial state correctly", () =&gt; {
+    renderForm();
+
+    expect(screen.getByText("Đăng nhập")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Email")).toBeTruthy();
+    expect(screen.getByPlaceholderText("Mật khẩu")).toBeTruthy();
+    expect(screen.getByText("Quên mật khẩu?")).toBeTruthy();
+    expect(screen.queryByTestId("error-message")).toBeNull();
+  });
+
+  it("shows email validation error", () =&gt; {
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "invalid");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "password123");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    expect(screen.getByText("Email không hợp lệ")).toBeTruthy();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows password validation error", () =&gt; {
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "user@test.com");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "12345");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    expect(screen.getByText("Mật khẩu phải có ít nhất 6 ký tự")).toBeTruthy();
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it("calls onSubmit with valid data", async () =&gt; {
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "user@test.com");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "password123");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    await waitFor(() =&gt; {
+      expect(mockSubmit).toHaveBeenCalledWith({
+        email: "user@test.com",
+        password: "password123",
+      });
+    });
+  });
+
+  it("shows loading state during submit", async () =&gt; {
+    mockSubmit.mockImplementation(
+      () =&gt; new Promise((resolve) =&gt; setTimeout(resolve, 1000))
+    );
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "user@test.com");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "password123");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    expect(screen.getByText("Đang xử lý...")).toBeTruthy();
+  });
+
+  it("shows error when submit fails", async () =&gt; {
+    mockSubmit.mockRejectedValue(new Error("Network error"));
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "user@test.com");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "password123");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    await waitFor(() =&gt; {
+      expect(screen.getByText("Đăng nhập thất bại")).toBeTruthy();
+    });
+  });
+
+  it("disables submit button during loading", async () =&gt; {
+    mockSubmit.mockImplementation(
+      () =&gt; new Promise((resolve) =&gt; setTimeout(resolve, 1000))
+    );
+    renderForm();
+
+    fireEvent.changeText(screen.getByPlaceholderText("Email"), "user@test.com");
+    fireEvent.changeText(screen.getByPlaceholderText("Mật khẩu"), "password123");
+    fireEvent.press(screen.getByRole("button", { name: "Đăng nhập" }));
+
+    const button = screen.getByRole("button", { name: "Đang xử lý..." });
+    expect(button.props.accessibilityState?.disabled).toBe(true);
+  });
+
+  it("calls onForgotPassword when tapped", () =&gt; {
+    renderForm();
+
+    fireEvent.press(screen.getByText("Quên mật khẩu?"));
+
+    expect(mockForgotPassword).toHaveBeenCalledTimes(1);
+  });
+});</code></pre>
+  </div>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h3>Exercise 1: Test navigation flow</h3>
+  <p>Render app với <code>NavigationContainer</code>. Từ Login nhập credential hợp lệ, mock API success, assert Home screen xuất hiện và Login không còn visible.</p>
+</div>
+
+<div class="exercise">
+  <h3>Exercise 2: Test API error matrix</h3>
+  <p>Dùng MSW/mock handler cho 401, 422, 500 và network error. Assert UI hiển thị đúng message/action cho từng loại lỗi.</p>
+</div>
+
+<div class="exercise">
+  <h3>Exercise 3: Mock native module</h3>
+  <p>Mock <code>react-native-keychain</code> hoặc <code>expo-secure-store</code>. Test login lưu token đúng và logout xóa token.</p>
+</div>
+
+<div class="exercise">
+  <h3>Exercise 4: E2E smoke test</h3>
+  <p>Dùng Maestro hoặc Detox cho flow mở app, login, thấy Home, logout. Giữ test ngắn, ổn định, chạy được trên CI.</p>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Test implementation detail như state internal, khiến refactor nhỏ cũng fail.</li>
+    <li>Dùng snapshot quá nhiều, snapshot đổi liên tục nhưng không bắt bug thật.</li>
+    <li>Mock API quá sâu bằng <code>jest.mock(fetch)</code>, bỏ sót behavior thật của request/response.</li>
+    <li>E2E test phụ thuộc timeout cố định nên flaky trên CI.</li>
+    <li>Không reset mock/cache/query client giữa test, test sau bị ảnh hưởng bởi test trước.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Login test pass local nhưng fail ngẫu nhiên trên CI vì assert Home quá sớm, trước khi token storage và navigation reset hoàn tất.</p>
+  <p><strong>Cách xử lý:</strong> Assert theo behavior bằng <code>findByText</code>/<code>waitFor</code>, reset QueryClient/mock storage mỗi test, tránh sleep cố định. Với E2E, chờ element bằng id/text thay vì hard-coded delay.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>Test tốt phải fail khi behavior hỏng, không fail khi refactor implementation. Với RN, ưu tiên test form, navigation, API state, native module boundary và smoke flow quan trọng.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Khi nào dùng <code>getBy*</code>, <code>queryBy*</code>, <code>findBy*</code>?</div>
+  <div class="q">2. Vì sao E2E không nên cover mọi edge case?</div>
+  <div class="q">3. Một test flaky trên CI nhưng pass local. Bạn kiểm tra gì trước?</div>
+  <div class="q">4. Native module nào trong app cần mock thủ công và vì sao?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi hiểu triết lý "test behavior, not implementation" và có thể cho ví dụ cụ thể</label>
+  <label><input type="checkbox"> Tôi hiểu Testing Pyramid và biết phân bổ tỷ lệ tests hợp lý</label>
+  <label><input type="checkbox"> Tôi sử dụng thành thạo Jest: describe, it, expect, mock, spy, beforeEach/afterEach</label>
+  <label><input type="checkbox"> Tôi biết dùng RNTL: render, fireEvent, waitFor, và các screen queries</label>
+  <label><input type="checkbox"> Tôi biết thứ tự ưu tiên queries: getByRole &gt; getByText &gt; getByTestId</label>
+  <label><input type="checkbox"> Tôi phân biệt được getBy* vs queryBy* vs findBy* và biết khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi đã viết tests cho custom hooks bằng renderHook và act</label>
+  <label><input type="checkbox"> Tôi biết mock native modules bằng jest.mock và __mocks__ directory</label>
+  <label><input type="checkbox"> Tôi hiểu MSW và tại sao nó tốt hơn jest.mock(fetch)</label>
+  <label><input type="checkbox"> Tôi hiểu ưu nhược điểm của snapshot testing</label>
+  <label><input type="checkbox"> Tôi đã setup và viết ít nhất 1 E2E test với Detox hoặc Maestro</label>
+  <label><input type="checkbox"> Tôi biết config coverage targets trong jest.config.js</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành bài tập LoginForm tests</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 2 mini exercise test thực tế React Native</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+<div class="resource">
+  <h3>Documentation</h3>
+  <ul>
+    <li><a href="https://jestjs.io/docs/getting-started" target="_blank">Jest Official Docs</a> — API reference đầy đủ</li>
+    <li><a href="https://callstack.github.io/react-native-testing-library/" target="_blank">React Native Testing Library</a> — API, guides, best practices</li>
+    <li><a href="https://wix.github.io/Detox/" target="_blank">Detox Documentation</a> — Setup, API, troubleshooting</li>
+    <li><a href="https://maestro.mobile.dev/" target="_blank">Maestro Documentation</a> — YAML-based E2E testing</li>
+    <li><a href="https://mswjs.io/docs/" target="_blank">MSW Documentation</a> — Mock Service Worker guides</li>
+  </ul>
+
+  <h3>Articles &amp; Blogs</h3>
+  <ul>
+    <li><a href="https://kentcdodds.com/blog/testing-implementation-details" target="_blank">Testing Implementation Details</a> — Kent C. Dodds</li>
+    <li><a href="https://kentcdodds.com/blog/write-tests" target="_blank">Write Tests. Not Too Many. Mostly Integration.</a> — Kent C. Dodds</li>
+    <li><a href="https://kentcdodds.com/blog/the-testing-trophy-and-testing-classifications" target="_blank">The Testing Trophy</a> — Alternative to Testing Pyramid</li>
+    <li><a href="https://kentcdodds.com/blog/common-mistakes-with-react-testing-library" target="_blank">Common Mistakes with React Testing Library</a></li>
+  </ul>
+
+  <h3>Videos</h3>
+  <ul>
+    <li><a href="https://www.youtube.com/results?search_query=react+native+testing+library+tutorial" target="_blank">React Native Testing Library Tutorial</a> — YouTube search</li>
+    <li><a href="https://www.youtube.com/results?search_query=detox+react+native+e2e+testing" target="_blank">Detox E2E Testing React Native</a> — YouTube search</li>
+    <li><a href="https://www.youtube.com/results?search_query=maestro+mobile+testing" target="_blank">Maestro Mobile Testing</a> — YouTube search</li>
+  </ul>
+
+  <h3>Tools</h3>
+  <ul>
+    <li><a href="https://github.com/callstack/react-native-testing-library" target="_blank">RNTL GitHub</a> — Source code, issues, examples</li>
+    <li><a href="https://github.com/wix/Detox" target="_blank">Detox GitHub</a> — Source code, example projects</li>
+    <li><a href="https://github.com/mswjs/msw" target="_blank">MSW GitHub</a> — Mock Service Worker source</li>
+    <li><a href="https://istanbul.js.org/" target="_blank">Istanbul (nyc)</a> — Code coverage tool used by Jest</li>
+  </ul>
+</div>
+
+<div class="nav-links">
+  <a href="11-Security-Storage.html">&larr; Module 11: Security &amp; Storage</a>
+  <a href="08-Performance.html">Module 08: Performance &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

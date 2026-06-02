@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 02 — React Core Concepts</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 02 — React Core Concepts</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">&nbsp;⏱ 6-8 giờ</span>
+  <span class="meta-item">&nbsp;📋 Prerequisites: <a href="01-JS-TS-Fundamentals.html">Module 01 — JS/TS Fundamentals</a></span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu bản chất JSX và cách React biến đổi nó thành <code>React.createElement()</code></li>
+  <li>Nắm vững luồng dữ liệu một chiều: props down, events up</li>
+  <li>Hiểu cơ chế hoạt động của Virtual DOM, thuật toán Reconciliation và vai trò của key prop</li>
+  <li>Giải thích được Fiber Architecture: tại sao ra đời, hoạt động thế nào, priority lanes</li>
+  <li>Sử dụng thành thạo React 18 Concurrent Features: <code>useTransition</code>, <code>useDeferredValue</code>, <code>Suspense</code></li>
+  <li>Hiểu Error Boundaries: khả năng và giới hạn</li>
+  <li>Phân biệt rõ HOC vs Render Props vs Custom Hooks và lý do tiến hóa</li>
+  <li>Áp dụng <code>React.memo</code> đúng cách để tối ưu rendering</li>
+  <li>Trả lời tự tin các câu hỏi phỏng vấn về React core</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <h4>Bước 1: Đọc tài liệu chính thức từ đầu đến cuối</h4>
+    <p>Vào <a href="https://react.dev/learn" target="_blank">react.dev/learn</a> và đọc toàn bộ phần "Learn React" từ đầu đến hết. Đây là tài liệu chuẩn nhất, được viết lại hoàn toàn cho React 18+. Đọc kỹ từng mục, đặc biệt phần "Thinking in React", "Describing the UI", "Adding Interactivity", và "Managing State". Thực hành mọi interactive example trên trang.</p>
+  </div>
+  <div class="learn-step">
+    <h4>Bước 2: Đọc "A Complete Guide to useEffect" — Dan Abramov</h4>
+    <p>Bài viết kinh điển tại <a href="https://overreacted.io/a-complete-guide-to-useeffect/" target="_blank">overreacted.io/a-complete-guide-to-useeffect</a>. Bài này thay đổi cách bạn hiểu về useEffect — không phải lifecycle method, mà là synchronization mechanism. Đọc chậm, đọc lại nhiều lần, vì đây là nền tảng tư duy quan trọng nhất khi làm việc với React hooks.</p>
+  </div>
+  <div class="learn-step">
+    <h4>Bước 3: Tìm hiểu React Fiber Architecture</h4>
+    <p>Đọc repo <a href="https://github.com/acdlite/react-fiber-architecture" target="_blank">github.com/acdlite/react-fiber-architecture</a> để hiểu tại sao React team phải viết lại hoàn toàn reconciler. Tập trung vào khái niệm "unit of work", incremental rendering, và cách Fiber cho phép React pause/resume rendering.</p>
+  </div>
+  <div class="learn-step">
+    <h4>Bước 4: Build mini app từ scratch</h4>
+    <p>Tạo một ứng dụng gồm Counter component và Todo List component. Yêu cầu: sử dụng functional components, quản lý state bằng <code>useState</code>, truyền dữ liệu qua props, xử lý events, áp dụng conditional rendering và list rendering với key prop đúng cách. Không dùng bất kỳ thư viện state management nào.</p>
+  </div>
+</div>
+
+<h2>⚡ ÔN NHANH</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>Props down, events up:</strong> component con nhận data, báo intent lên parent bằng callback.</li>
+    <li><strong>State update:</strong> dùng functional update khi state mới phụ thuộc state cũ.</li>
+    <li><strong>Key:</strong> key ổn định giúp React giữ đúng identity của item; tránh index cho list có insert/delete/reorder.</li>
+    <li><strong>Memo:</strong> chỉ tối ưu khi props ổn định và render đủ tốn chi phí.</li>
+    <li><strong>Error Boundary:</strong> bắt lỗi render/lifecycle, không bắt async/event handler.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> React là state + render + reconciliation; UI là kết quả của state hiện tại.</li>
+  <li><strong>Thấy bug thật:</strong> key sai làm state nhảy item, memo vô tác dụng, ErrorBoundary không bắt async error.</li>
+  <li><strong>Debug:</strong> dùng React DevTools/console render count, kiểm props identity, kiểm key list.</li>
+  <li><strong>Fix:</strong> key ổn định, component boundary rõ, memo sau khi đo, functional state update.</li>
+  <li><strong>Áp dụng playground:</strong> build ProductCard, QuantityStepper, ErrorBoundary và test reorder list.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<div class="concept">
+  <h3>Components: Functional vs Class</h3>
+  <p>React component là đơn vị cơ bản nhất — một hàm (hoặc class) nhận props và trả về React elements mô tả UI.</p>
+
+  <h4>Class Component</h4>
+  <p>Cách viết truyền thống, kế thừa từ <code>React.Component</code>. Có lifecycle methods như <code>componentDidMount</code>, <code>componentDidUpdate</code>, <code>componentWillUnmount</code>.</p>
+<pre><code>class Welcome extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+  }
+
+  componentDidMount() {
+    document.title = `Count: ${this.state.count}`;
+  }
+
+  componentDidUpdate() {
+    document.title = `Count: ${this.state.count}`;
+  }
+
+  render() {
+    return (
+      &lt;div&gt;
+        &lt;p&gt;{this.state.count}&lt;/p&gt;
+        &lt;button onClick={() =&gt; this.setState({ count: this.state.count + 1 })}&gt;
+          Increment
+        &lt;/button&gt;
+      &lt;/div&gt;
+    );
+  }
+}</code></pre>
+
+  <h4>Functional Component</h4>
+  <p>Cùng logic, viết bằng function + hooks. Ngắn gọn hơn, dễ đọc hơn, dễ compose hơn.</p>
+<pre><code>function Welcome() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() =&gt; {
+    document.title = `Count: ${count}`;
+  }, [count]);
+
+  return (
+    &lt;div&gt;
+      &lt;p&gt;{count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+        Increment
+      &lt;/button&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+  <p><strong>Tại sao Functional Components thắng?</strong></p>
+  <ul>
+    <li><strong>Đơn giản hơn:</strong> Không cần <code>this</code>, không cần bind methods, không cần constructor</li>
+    <li><strong>Composable:</strong> Custom hooks cho phép tái sử dụng logic stateful mà không thay đổi component hierarchy</li>
+    <li><strong>Closures thay vì lifecycle:</strong> Mỗi render capture đúng giá trị props/state tại thời điểm đó (stale closure là trade-off nhưng đúng về mặt conceptual)</li>
+    <li><strong>Dễ test:</strong> Là pure function, dễ unit test hơn class với nhiều method</li>
+    <li><strong>Tree-shaking tốt hơn:</strong> Bundler tối ưu functions tốt hơn classes</li>
+    <li><strong>React team all-in:</strong> Mọi feature mới (Concurrent, Server Components) đều thiết kế cho functions</li>
+  </ul>
+
+  <h4>Pure Components</h4>
+  <p>Một component "pure" là component luôn trả về cùng output cho cùng input (props + state). React yêu cầu render function phải pure — không side effects trong render phase. Side effects thuộc về <code>useEffect</code>, event handlers, hoặc external systems.</p>
+
+  <h4>Composition Pattern</h4>
+  <p>React khuyến khích composition thay vì inheritance. Thay vì tạo <code>SpecialButton extends Button</code>, hãy tạo <code>SpecialButton</code> render <code>Button</code> bên trong và truyền props.</p>
+<pre><code>function Dialog({ title, children }) {
+  return (
+    &lt;div className="dialog"&gt;
+      &lt;h2&gt;{title}&lt;/h2&gt;
+      &lt;div className="dialog-body"&gt;{children}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+
+function WelcomeDialog() {
+  return (
+    &lt;Dialog title="Chào mừng"&gt;
+      &lt;p&gt;Cảm ơn bạn đã ghé thăm!&lt;/p&gt;
+    &lt;/Dialog&gt;
+  );
+}</code></pre>
+</div>
+
+<div class="concept">
+  <h3>JSX: Bản chất là React.createElement()</h3>
+  <p>JSX <strong>không phải HTML</strong>. JSX là syntax extension cho JavaScript, được Babel/SWC biên dịch thành lời gọi hàm <code>React.createElement()</code>.</p>
+
+  <p>Khi bạn viết JSX như thế này:</p>
+<pre><code>&lt;div className="container"&gt;
+  &lt;h1&gt;Hello&lt;/h1&gt;
+  &lt;p&gt;World&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+
+  <p>Babel sẽ biên dịch thành:</p>
+<pre><code>React.createElement(
+  "div",
+  { className: "container" },
+  React.createElement("h1", null, "Hello"),
+  React.createElement("p", null, "World")
+);</code></pre>
+
+  <p>Kết quả trả về là một plain JavaScript object (React Element):</p>
+<pre><code>{
+  type: "div",
+  props: {
+    className: "container",
+    children: [
+      { type: "h1", props: { children: "Hello" } },
+      { type: "p", props: { children: "World" } }
+    ]
+  }
+}</code></pre>
+
+  <div class="deep-dive">
+    <h4>Tại sao hiểu điều này quan trọng?</h4>
+    <p>Khi bạn hiểu JSX chỉ là object, bạn sẽ hiểu:</p>
+    <ul>
+      <li><strong>Components là functions trả về objects</strong> — không phải templates</li>
+      <li><strong>Conditional rendering</strong> hoạt động vì bạn đang chọn trả về object nào</li>
+      <li><strong>Children</strong> cũng chỉ là prop — <code>props.children</code></li>
+      <li><strong>JSX expressions</strong> (<code>{}</code>) chấp nhận bất kỳ JavaScript expression nào vì nó chỉ là argument cho function call</li>
+    </ul>
+    <p>Từ React 17+, JSX transform mới không cần <code>import React</code> nữa. Babel tự thêm import <code>jsx</code> runtime function.</p>
+  </div>
+</div>
+
+<div class="concept">
+  <h3>Props: Luồng dữ liệu một chiều</h3>
+
+  <p>Props là cách component cha truyền dữ liệu xuống component con. Props là <strong>immutable</strong> — component con không bao giờ được modify props nhận được.</p>
+
+  <h4>Children Prop</h4>
+  <p>Mọi thứ nằm giữa opening và closing tag trở thành <code>props.children</code>.</p>
+<pre><code>function Card({ children, title }) {
+  return (
+    &lt;div className="card"&gt;
+      &lt;h3&gt;{title}&lt;/h3&gt;
+      {children}
+    &lt;/div&gt;
+  );
+}
+
+function App() {
+  return (
+    &lt;Card title="Profile"&gt;
+      &lt;img src="avatar.png" /&gt;
+      &lt;p&gt;User info here&lt;/p&gt;
+    &lt;/Card&gt;
+  );
+}</code></pre>
+
+  <h4>Render Props Pattern</h4>
+  <p>Truyền function làm prop để component con gọi lại và nhận data.</p>
+<pre><code>function MouseTracker({ render }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+
+  const handleMove = (e) =&gt; {
+    setPos({ x: e.clientX, y: e.clientY });
+  };
+
+  return &lt;div onMouseMove={handleMove}&gt;{render(pos)}&lt;/div&gt;;
+}
+
+function App() {
+  return (
+    &lt;MouseTracker
+      render={({ x, y }) =&gt; &lt;p&gt;Mouse: {x}, {y}&lt;/p&gt;}
+    /&gt;
+  );
+}</code></pre>
+
+  <h4>Prop Drilling Problem</h4>
+  <p>Khi dữ liệu phải "xuyên qua" nhiều tầng component trung gian không cần dùng nó, đó là prop drilling. Giải pháp: Context API, state management libraries, hoặc component composition (đưa component cần data lên gần data source hơn).</p>
+<pre><code>function App() {
+  const [user, setUser] = useState(null);
+  return &lt;Layout user={user} /&gt;;
+}
+function Layout({ user }) {
+  return &lt;Sidebar user={user} /&gt;;
+}
+function Sidebar({ user }) {
+  return &lt;UserProfile user={user} /&gt;;
+}</code></pre>
+  <p>Ở ví dụ trên, <code>Layout</code> và <code>Sidebar</code> không cần <code>user</code> nhưng buộc phải nhận và truyền tiếp. Đây là dấu hiệu cần Context hoặc composition.</p>
+</div>
+
+<div class="concept">
+  <h3>State: Batching, Functional Updates, Lazy Init</h3>
+
+  <h4>Batching trong React 18 (Automatic Batching)</h4>
+  <p>Trước React 18, batching chỉ xảy ra trong React event handlers. Từ React 18, <strong>mọi state updates đều được batch</strong> — kể cả trong setTimeout, Promises, native event handlers.</p>
+<pre><code>function handleClick() {
+  setCount(c =&gt; c + 1);
+  setFlag(f =&gt; !f);
+  setName("React");
+}
+</code></pre>
+  <p>Cả 3 setState chỉ trigger <strong>1 lần re-render</strong> duy nhất. React gom tất cả updates lại, tính toán state mới, rồi render một lần.</p>
+
+  <p>Nếu bạn cần force flush (hiếm khi cần):</p>
+<pre><code>import { flushSync } from "react-dom";
+
+function handleClick() {
+  flushSync(() =&gt; {
+    setCount(c =&gt; c + 1);
+  });
+  flushSync(() =&gt; {
+    setFlag(f =&gt; !f);
+  });
+}</code></pre>
+
+  <h4>Functional Updates</h4>
+  <p>Khi state mới phụ thuộc vào state cũ, luôn dùng functional form để tránh stale closure.</p>
+<pre><code>setCount(prevCount =&gt; prevCount + 1);
+
+setItems(prevItems =&gt; [...prevItems, newItem]);
+
+setUser(prevUser =&gt; ({ ...prevUser, name: "New Name" }));</code></pre>
+
+  <h4>Lazy Initialization</h4>
+  <p>Khi initial state tốn tính toán (đọc localStorage, parse JSON...), truyền function thay vì giá trị để chỉ chạy một lần khi mount.</p>
+<pre><code>const [data, setData] = useState(() =&gt; {
+  const saved = localStorage.getItem("data");
+  return saved ? JSON.parse(saved) : defaultValue;
+});</code></pre>
+  <p>Nếu viết <code>useState(expensiveComputation())</code>, hàm sẽ chạy mỗi lần render dù giá trị chỉ dùng lần đầu.</p>
+</div>
+
+<div class="concept">
+  <h3>Virtual DOM &amp; Reconciliation</h3>
+
+  <p><strong>Virtual DOM</strong> là một lightweight copy của Real DOM dưới dạng JavaScript objects (React Elements tree). Mỗi khi state/props thay đổi, React tạo Virtual DOM mới, so sánh (diff) với cây cũ, rồi chỉ cập nhật những phần thay đổi lên Real DOM.</p>
+
+  <h4>Thuật toán Diffing — O(n)</h4>
+  <p>So sánh 2 cây tùy ý có complexity O(n³). React giảm xuống O(n) bằng 2 giả định:</p>
+  <ul>
+    <li><strong>Hai elements khác type</strong> → tạo cây mới hoàn toàn (unmount cây cũ, mount cây mới)</li>
+    <li><strong>Developer hint qua key prop</strong> → React biết element nào ổn định qua các lần render</li>
+  </ul>
+
+  <p>Quy trình cụ thể:</p>
+  <ol>
+    <li>So sánh root elements: nếu khác type (<code>&lt;div&gt;</code> → <code>&lt;span&gt;</code>), destroy toàn bộ subtree cũ</li>
+    <li>Cùng type DOM element: giữ node, chỉ update attributes thay đổi</li>
+    <li>Cùng type Component: giữ instance, update props, trigger re-render</li>
+    <li>Recurse vào children: dùng key để match</li>
+  </ol>
+
+  <h4>Key Prop Mechanism</h4>
+  <p>Khi render list, React cần biết element nào là "cùng một thứ" giữa 2 lần render.</p>
+<pre><code>const items = ["A", "B", "C"];
+
+&lt;ul&gt;
+  {items.map(item =&gt; (
+    &lt;li key={item}&gt;{item}&lt;/li&gt;
+  ))}
+&lt;/ul&gt;</code></pre>
+
+  <div class="deep-dive">
+    <h4>Tại sao KHÔNG dùng index làm key?</h4>
+    <p>Giả sử danh sách <code>[A, B, C]</code> thêm item đầu thành <code>[X, A, B, C]</code>:</p>
+    <ul>
+      <li><strong>Dùng index:</strong> key=0 trước là A, giờ là X → React nghĩ A biến thành X → update nội dung tất cả items → chậm và sai state</li>
+      <li><strong>Dùng unique id:</strong> React biết X là mới, A/B/C giữ nguyên → chỉ insert X → nhanh và đúng</li>
+    </ul>
+    <p>Index chỉ an toàn khi: list tĩnh, không reorder, không thêm/xóa đầu/giữa.</p>
+  </div>
+</div>
+
+<div class="concept">
+  <h3>Fiber Architecture</h3>
+
+  <h4>Vấn đề với Stack Reconciler (React &lt; 16)</h4>
+  <p>Stack Reconciler cũ hoạt động đồng bộ, đệ quy. Khi cây component lớn, quá trình reconciliation block main thread → UI đơ, animation giật, input không phản hồi. Không có cách nào để pause, abort, hoặc ưu tiên công việc.</p>
+
+  <h4>Fiber là gì?</h4>
+  <p>Fiber là kiến trúc mới của React (từ v16), trong đó mỗi component/element được biểu diễn bằng một <strong>Fiber node</strong> — một JavaScript object chứa thông tin về component, state, props, và các pointer đến parent/child/sibling.</p>
+
+<pre><code>{
+  type: Function | String | Symbol,
+  key: null | String,
+  stateNode: DOM node | Component instance,
+  child: Fiber | null,
+  sibling: Fiber | null,
+  return: Fiber | null,
+  pendingProps: Object,
+  memoizedState: Object,
+  effectTag: Number,
+  lanes: Number
+}</code></pre>
+
+  <h4>Unit of Work &amp; Incremental Rendering</h4>
+  <p>Thay vì xử lý toàn bộ cây một lượt (stack), Fiber chia công việc thành <strong>units of work</strong>. React xử lý từng fiber node một, sau mỗi unit có thể:</p>
+  <ul>
+    <li><strong>Pause:</strong> nhường main thread cho browser (paint, input handling)</li>
+    <li><strong>Resume:</strong> tiếp tục từ nơi dừng</li>
+    <li><strong>Abort:</strong> bỏ work đang làm nếu có update mới quan trọng hơn</li>
+    <li><strong>Reuse:</strong> tái sử dụng kết quả đã tính</li>
+  </ul>
+
+  <h4>Two Phases</h4>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>Render (Reconciliation)</th><th>Commit</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Có thể bị interrupt?</td><td>Có</td><td>Không</td></tr>
+      <tr><td>Làm gì?</td><td>Tính toán changes (diff)</td><td>Apply changes vào DOM</td></tr>
+      <tr><td>Side effects?</td><td>Không</td><td>Có (DOM mutations, lifecycle)</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Priority Lanes</h4>
+  <p>React 18 dùng hệ thống "Lanes" để phân loại priority của updates:</p>
+  <ul>
+    <li><strong>SyncLane:</strong> Cao nhất — discrete user events (click, keypress)</li>
+    <li><strong>InputContinuousLane:</strong> Continuous events (drag, scroll)</li>
+    <li><strong>DefaultLane:</strong> Normal priority (network responses)</li>
+    <li><strong>TransitionLane:</strong> Low priority — transitions (<code>useTransition</code>)</li>
+    <li><strong>IdleLane:</strong> Thấp nhất — offscreen, deferred work</li>
+  </ul>
+  <p>Lanes cho phép React xử lý high-priority updates trước mà không bị block bởi low-priority work đang chạy.</p>
+</div>
+
+<div class="concept">
+  <h3>React 18 Concurrent Features</h3>
+
+  <h4>useTransition</h4>
+  <p>Đánh dấu state update là "non-urgent" — React sẽ giữ UI cũ hiển thị trong khi tính toán UI mới ở background. Nếu có user input mới, React abort transition đang chạy và xử lý input trước.</p>
+<pre><code>function SearchResults() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  function handleChange(e) {
+    setQuery(e.target.value);
+
+    startTransition(() =&gt; {
+      setResults(filterHugeList(e.target.value));
+    });
+  }
+
+  return (
+    &lt;div&gt;
+      &lt;input value={query} onChange={handleChange} /&gt;
+      {isPending &amp;&amp; &lt;span&gt;Đang tải...&lt;/span&gt;}
+      &lt;ResultList data={results} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+  <p><code>isPending</code> là boolean cho biết transition đang chạy, dùng để hiện loading indicator.</p>
+
+  <h4>useDeferredValue</h4>
+  <p>Tương tự useTransition nhưng dùng cho giá trị thay vì hành động. React sẽ trì hoãn việc re-render với giá trị mới và hiển thị giá trị cũ trước.</p>
+<pre><code>function SearchPage({ query }) {
+  const deferredQuery = useDeferredValue(query);
+  const isStale = query !== deferredQuery;
+
+  return (
+    &lt;div style={{ opacity: isStale ? 0.5 : 1 }}&gt;
+      &lt;HeavyResultList query={deferredQuery} /&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+  <div class="deep-dive">
+    <h4>useTransition vs useDeferredValue — Khi nào dùng gì?</h4>
+    <table>
+      <thead>
+        <tr><th>Tiêu chí</th><th>useTransition</th><th>useDeferredValue</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Control</td><td>Wrap setState call</td><td>Wrap giá trị nhận được</td></tr>
+        <tr><td>Use case chính</td><td>Bạn sở hữu state update</td><td>Bạn nhận value từ props/parent</td></tr>
+        <tr><td>Loading state</td><td>Có isPending</td><td>So sánh value vs deferredValue</td></tr>
+        <tr><td>Ví dụ</td><td>Tab switching, filter</td><td>Search results từ parent query</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Suspense</h4>
+  <p>Suspense cho phép component "chờ" một thứ gì đó (data fetching, lazy loading) và hiển thị fallback trong lúc chờ.</p>
+<pre><code>const LazyComponent = React.lazy(() =&gt; import("./HeavyComponent"));
+
+function App() {
+  return (
+    &lt;Suspense fallback={&lt;div&gt;Đang tải...&lt;/div&gt;}&gt;
+      &lt;LazyComponent /&gt;
+    &lt;/Suspense&gt;
+  );
+}</code></pre>
+</div>
+
+<div class="concept">
+  <h3>Error Boundaries</h3>
+
+  <p>Error Boundaries là React components bắt JavaScript errors trong child component tree, log lỗi, và hiển thị fallback UI thay vì crash toàn bộ app.</p>
+
+  <p><strong>Chỉ viết được bằng Class Component</strong> — React chưa cung cấp hook equivalent.</p>
+
+<pre><code>class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    logErrorToService(error, errorInfo.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || &lt;h2&gt;Đã xảy ra lỗi.&lt;/h2&gt;;
+    }
+    return this.props.children;
+  }
+}</code></pre>
+
+  <p>Sử dụng:</p>
+<pre><code>&lt;ErrorBoundary fallback={&lt;p&gt;Lỗi rồi!&lt;/p&gt;}&gt;
+  &lt;UserProfile /&gt;
+&lt;/ErrorBoundary&gt;</code></pre>
+
+  <div class="card card-warning">
+    <h4>Error Boundary KHÔNG catch được</h4>
+    <ul>
+      <li>Event handlers (dùng try/catch thông thường)</li>
+      <li>Asynchronous code (setTimeout, requestAnimationFrame, async/await)</li>
+      <li>Server-side rendering</li>
+      <li>Errors trong chính Error Boundary (chỉ catch con, không catch bản thân)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="concept">
+  <h3>HOC → Render Props → Custom Hooks: Quá trình tiến hóa</h3>
+
+  <h4>Higher-Order Components (HOC)</h4>
+  <p>Function nhận component, trả về component mới với logic bổ sung. Pattern phổ biến thời class components.</p>
+<pre><code>function withAuth(WrappedComponent) {
+  return function AuthenticatedComponent(props) {
+    const isLoggedIn = useAuth();
+    if (!isLoggedIn) return &lt;LoginScreen /&gt;;
+    return &lt;WrappedComponent {...props} /&gt;;
+  };
+}
+
+const ProtectedDashboard = withAuth(Dashboard);</code></pre>
+
+  <p><strong>Vấn đề:</strong> Wrapper hell (nhiều HOC lồng nhau), khó trace props origin, naming collisions, static methods bị mất.</p>
+
+  <h4>Render Props</h4>
+  <p>Truyền function làm prop (hoặc children) để share logic. Giải quyết vấn đề transparency của HOC.</p>
+<pre><code>function AuthGuard({ children }) {
+  const isLoggedIn = useAuth();
+  if (!isLoggedIn) return &lt;LoginScreen /&gt;;
+  return children;
+}</code></pre>
+
+  <p><strong>Vấn đề:</strong> Vẫn tạo nesting sâu (callback hell trong JSX), khó đọc với nhiều render props.</p>
+
+  <h4>Custom Hooks (Giải pháp hiện đại)</h4>
+  <p>Extract logic stateful thành function bắt đầu bằng <code>use</code>. Không thay đổi component tree, không wrapper, hoàn toàn composable.</p>
+<pre><code>function useAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    checkAuthStatus().then(u =&gt; {
+      setUser(u);
+      setLoading(false);
+    });
+  }, []);
+
+  return { user, loading, isLoggedIn: !!user };
+}
+
+function Dashboard() {
+  const { user, loading, isLoggedIn } = useAuth();
+
+  if (loading) return &lt;Spinner /&gt;;
+  if (!isLoggedIn) return &lt;LoginScreen /&gt;;
+  return &lt;DashboardContent user={user} /&gt;;
+}</code></pre>
+
+  <p><strong>Tại sao hooks thắng:</strong> Flat code (không nesting), explicit data flow, composable (gọi nhiều hooks tuần tự), dễ test từng hook riêng biệt.</p>
+</div>
+
+<div class="concept">
+  <h3>React.memo: Tối ưu re-rendering</h3>
+  <p><code>React.memo</code> là Higher-Order Component wrap functional component. Nó thực hiện <strong>shallow comparison</strong> trên props — nếu props không đổi, skip re-render.</p>
+
+<pre><code>const ExpensiveList = React.memo(function ExpensiveList({ items, onSelect }) {
+  return (
+    &lt;ul&gt;
+      {items.map(item =&gt; (
+        &lt;li key={item.id} onClick={() =&gt; onSelect(item.id)}&gt;
+          {item.name}
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+});</code></pre>
+
+  <h4>Custom Comparator</h4>
+  <p>Tham số thứ 2 là function so sánh tùy chỉnh. Return <code>true</code> = props giống nhau (skip render), <code>false</code> = props khác (re-render).</p>
+<pre><code>const MemoizedItem = React.memo(
+  function Item({ data, config }) {
+    return &lt;div&gt;{data.name} - {config.theme}&lt;/div&gt;;
+  },
+  function arePropsEqual(prevProps, nextProps) {
+    return (
+      prevProps.data.id === nextProps.data.id &amp;&amp;
+      prevProps.config.theme === nextProps.config.theme
+    );
+  }
+);</code></pre>
+
+  <div class="card card-accent">
+    <h4>React.memo vs useMemo vs useCallback</h4>
+    <table>
+      <thead>
+        <tr><th>API</th><th>Memoize cái gì</th><th>Dùng khi nào</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>React.memo</code></td><td>Component (skip re-render)</td><td>Component nhận cùng props thường xuyên</td></tr>
+        <tr><td><code>useMemo</code></td><td>Giá trị tính toán</td><td>Expensive computation trong render</td></tr>
+        <tr><td><code>useCallback</code></td><td>Function reference</td><td>Truyền callback cho memo-ized child</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Quan trọng:</strong> <code>React.memo</code> chỉ hiệu quả khi kết hợp với <code>useCallback</code>/<code>useMemo</code> ở parent. Nếu parent tạo object/function mới mỗi render, shallow comparison luôn thấy "khác" → memo vô dụng.</p>
+  </div>
+</div>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<div class="qa">
+  <div class="q">1. Virtual DOM là gì? Tại sao nó nhanh hơn Real DOM?</div>
+  <div class="a">
+    <p>Virtual DOM là một lightweight JavaScript object representation của Real DOM tree. Mỗi khi state thay đổi, React tạo Virtual DOM mới, diff với cây cũ (thuật toán O(n) với 2 heuristics: khác type = rebuild, key hint cho list), rồi batch apply chỉ những thay đổi cần thiết lên Real DOM.</p>
+    <p><strong>Tại sao nhanh hơn:</strong> Thao tác trên JS objects nhanh hơn nhiều so với DOM APIs. Real DOM manipulation trigger layout/paint/composite — rất expensive. Virtual DOM cho phép React gom nhiều changes lại thành một batch, minimize actual DOM operations. Tuy nhiên, nói "Virtual DOM nhanh hơn" là không chính xác — nó nhanh hơn naive approach (update DOM trực tiếp mỗi khi có thay đổi), nhưng không nhanh hơn hand-optimized DOM manipulation. Giá trị thực sự là <strong>declarative API</strong> với hiệu năng đủ tốt.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">2. Fiber Architecture giải quyết vấn đề gì?</div>
+  <div class="a">
+    <p>Stack Reconciler cũ xử lý đồng bộ — khi cây component lớn, reconciliation block main thread hàng trăm ms, UI freeze, animation giật, input lag. Không thể pause hay prioritize.</p>
+    <p>Fiber giải quyết bằng cách biến reconciliation thành <strong>incremental</strong>, chia thành các unit of work nhỏ. React có thể pause giữa chừng, nhường main thread cho browser (16ms frame budget), rồi resume. Fiber cũng mang đến priority system (Lanes) — user interactions được ưu tiên hơn background data fetching. Đây là nền tảng cho tất cả Concurrent Features trong React 18.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">3. Controlled vs Uncontrolled Components — khác nhau thế nào?</div>
+  <div class="a">
+    <p><strong>Controlled:</strong> React state là "single source of truth". Giá trị input luôn phản ánh state, mỗi thay đổi đi qua event handler → setState → re-render.</p>
+<pre><code>function ControlledInput() {
+  const [value, setValue] = useState("");
+  return &lt;input value={value} onChange={e =&gt; setValue(e.target.value)} /&gt;;
+}</code></pre>
+    <p><strong>Uncontrolled:</strong> DOM tự quản lý state. Dùng <code>ref</code> để đọc giá trị khi cần (submit form chẳng hạn).</p>
+<pre><code>function UncontrolledInput() {
+  const inputRef = useRef(null);
+  const handleSubmit = () =&gt; console.log(inputRef.current.value);
+  return &lt;input ref={inputRef} defaultValue="" /&gt;;
+}</code></pre>
+    <p><strong>Khi nào dùng Uncontrolled:</strong> Form đơn giản, file input, tích hợp thư viện non-React. Còn lại, luôn ưu tiên Controlled vì dễ validate, transform, và đồng bộ dữ liệu.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">4. Tại sao key prop quan trọng? Tại sao không nên dùng index?</div>
+  <div class="a">
+    <p><code>key</code> giúp React identify element nào giữa các lần render. Không có key, React diff children theo thứ tự → thêm/xóa đầu list sẽ re-render tất cả.</p>
+    <p><strong>Tại sao không dùng index:</strong> Khi list thay đổi (thêm/xóa/reorder), index không ổn định — item tại index 0 có thể là item khác hoàn toàn so với render trước. React sẽ map sai state/DOM vào sai item → bug về state, animation sai, hiệu năng kém. Dùng unique, stable identifier (database id, UUID).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">5. React.memo vs useMemo vs useCallback — phân biệt?</div>
+  <div class="a">
+    <p><strong>React.memo(Component):</strong> HOC wrap component, shallow compare props, skip re-render nếu props không đổi. Tác dụng ở component level.</p>
+    <p><strong>useMemo(() =&gt; value, deps):</strong> Cache kết quả tính toán expensive bên trong component. Re-compute chỉ khi deps thay đổi.</p>
+    <p><strong>useCallback(fn, deps):</strong> Cache function reference. Tương đương <code>useMemo(() =&gt; fn, deps)</code>. Dùng khi truyền callback cho child component đã memo.</p>
+    <p><strong>Mối liên hệ:</strong> <code>React.memo</code> chỉ hiệu quả khi parent stabilize props bằng <code>useMemo</code> (cho objects) và <code>useCallback</code> (cho functions). Nếu không, mỗi render tạo reference mới → shallow comparison luôn fail → memo vô dụng.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">6. Batch updates trong React 18 khác gì với trước?</div>
+  <div class="a">
+    <p><strong>Trước React 18:</strong> Chỉ batch trong React synthetic event handlers. Trong setTimeout, Promises, native event handlers → mỗi setState trigger 1 re-render riêng.</p>
+    <p><strong>React 18 (Automatic Batching):</strong> Batch trong MỌI context — setTimeout, Promises, native events, thậm chí trong cả event listeners bên ngoài React. Giảm số lần re-render đáng kể.</p>
+    <p>Nếu cần opt-out: dùng <code>flushSync()</code> từ <code>react-dom</code> để force immediate render sau mỗi setState.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">7. Error Boundary catch được gì, không catch được gì?</div>
+  <div class="a">
+    <p><strong>Catch được:</strong> Errors trong rendering, lifecycle methods, và constructors của cả component tree bên dưới.</p>
+    <p><strong>KHÔNG catch được:</strong></p>
+    <ul>
+      <li>Event handlers → dùng try/catch</li>
+      <li>Asynchronous code (setTimeout, requestAnimationFrame, async/await)</li>
+      <li>Server-side rendering</li>
+      <li>Error trong chính Error Boundary</li>
+    </ul>
+    <p>Lý do: Error Boundary dựa trên React rendering lifecycle. Event handlers và async code chạy ngoài render flow nên React không thể catch.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">8. forwardRef dùng khi nào?</div>
+  <div class="a">
+    <p><code>forwardRef</code> cho phép component truyền <code>ref</code> nhận được xuống cho child DOM element hoặc child component bên trong. Mặc định, <code>ref</code> không phải prop thông thường — React xử lý đặc biệt và không truyền qua props.</p>
+    <p><strong>Use cases:</strong></p>
+    <ul>
+      <li>Reusable UI component (Button, Input) cần expose DOM node cho parent (focus, measure, animate)</li>
+      <li>HOC cần forward ref qua wrapped component</li>
+      <li>Library components cần cho consumer access DOM</li>
+    </ul>
+<pre><code>const FancyInput = React.forwardRef(function FancyInput(props, ref) {
+  return &lt;input ref={ref} className="fancy" {...props} /&gt;;
+});
+
+function Parent() {
+  const inputRef = useRef(null);
+  const handleClick = () =&gt; inputRef.current.focus();
+  return &lt;FancyInput ref={inputRef} /&gt;;
+}</code></pre>
+    <p><strong>Lưu ý React 19+:</strong> <code>ref</code> sẽ trở thành prop thông thường, không cần <code>forwardRef</code> nữa.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">9. Composition vs Inheritance trong React — tại sao React chọn Composition?</div>
+  <div class="a">
+    <p>React team khuyến cáo <strong>luôn dùng composition thay vì inheritance</strong>. Tại Facebook (hàng nghìn components), họ chưa tìm thấy use case nào mà inheritance tốt hơn.</p>
+    <p><strong>Composition</strong> đạt được mọi thứ inheritance làm:</p>
+    <ul>
+      <li>"Specialization": <code>&lt;Dialog&gt;</code> → <code>&lt;WelcomeDialog&gt;</code> bằng cách render Dialog với props cụ thể</li>
+      <li>"Containment": <code>children</code> prop cho phép component chứa nội dung bất kỳ</li>
+      <li>"Code reuse": Custom hooks thay vì extends base class</li>
+    </ul>
+    <p><strong>Vấn đề của Inheritance:</strong> Tight coupling, brittle hierarchy (thay đổi base class ảnh hưởng tất cả), diamond problem, khó refactor.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">10. useTransition vs useDeferredValue — khác nhau thế nào và khi nào dùng?</div>
+  <div class="a">
+    <p><strong>useTransition:</strong> Wrap một state update để đánh dấu non-urgent. Bạn kiểm soát action (setState). Trả về <code>[isPending, startTransition]</code>.</p>
+    <p><strong>useDeferredValue:</strong> Nhận một value và trả về deferred version. Bạn KHÔNG kiểm soát state update — chỉ trì hoãn value mà bạn nhận được (thường từ props).</p>
+    <p><strong>Quy tắc:</strong></p>
+    <ul>
+      <li>Bạn sở hữu setState → <code>useTransition</code></li>
+      <li>Bạn nhận value từ parent/props/context → <code>useDeferredValue</code></li>
+    </ul>
+    <p>Cả hai đều cho phép React ưu tiên urgent updates (input typing) và trì hoãn expensive re-renders (filtering large list).</p>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h3>Bài 1: Counter App với nhiều features</h3>
+  <p>Xây dựng Counter component với các yêu cầu:</p>
+  <ul>
+    <li>Nút tăng, giảm, reset</li>
+    <li>Hiển thị số lần click tổng cộng (tất cả actions)</li>
+    <li>Lưu giá trị vào localStorage, khôi phục khi reload (dùng lazy init)</li>
+    <li>Thêm "undo" feature: quay về giá trị trước đó</li>
+    <li>Dùng functional updates cho tất cả setState</li>
+  </ul>
+  <p><strong>Acceptance criteria:</strong> Counter hoạt động đúng, giá trị persist qua page reload, undo hoạt động chính xác.</p>
+</div>
+
+<div class="exercise">
+  <h3>Bài 2: Todo List với full CRUD</h3>
+  <p>Xây dựng Todo application:</p>
+  <ul>
+    <li>Thêm, xóa, toggle complete, edit text</li>
+    <li>Filter: All / Active / Completed</li>
+    <li>Hiển thị count items remaining</li>
+    <li>"Clear completed" button</li>
+    <li>Mỗi todo có unique id (dùng <code>crypto.randomUUID()</code>)</li>
+    <li>Key prop phải dùng id, KHÔNG dùng index</li>
+  </ul>
+  <p><strong>Acceptance criteria:</strong> Tất cả CRUD hoạt động, filter hoạt động đúng, không lỗi key warning trong console.</p>
+</div>
+
+<div class="exercise">
+  <h3>Bài 3: Error Boundary wrapper</h3>
+  <p>Tạo một reusable ErrorBoundary component:</p>
+  <ul>
+    <li>Nhận <code>fallback</code> prop (ReactNode hoặc render function nhận error)</li>
+    <li>Nhận <code>onError</code> callback prop</li>
+    <li>Có "Try again" button gọi <code>resetErrorBoundary()</code></li>
+    <li>Tạo component <code>BuggyComponent</code> cố tình throw error để test</li>
+  </ul>
+  <p><strong>Acceptance criteria:</strong> Error được catch, fallback hiển thị, retry hoạt động, onError callback được gọi.</p>
+</div>
+
+<div class="exercise">
+  <h3>Bài 4: useTransition Demo</h3>
+  <p>Tạo app có input search filter 10,000 items:</p>
+  <ul>
+    <li>Tạo array 10,000 items</li>
+    <li>Input search filter realtime</li>
+    <li>Implement 2 version: không có useTransition (bị lag) và có useTransition (mượt)</li>
+    <li>Hiển thị isPending state</li>
+  </ul>
+  <p><strong>Acceptance criteria:</strong> Version không có useTransition bị lag input rõ rệt, version có useTransition input mượt.</p>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h4>Exercise 1: Product card list</h4>
+  <p>Build list 100 product cards. Tách <code>ProductCard</code>, dùng key ổn định, đo re-render khi search text thay đổi. Chỉ dùng <code>React.memo</code> sau khi chứng minh có render thừa.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 2: Controlled form section</h4>
+  <p>Build form profile có 3 field. Parent giữ state, child field nhận value/onChange. Refactor để tránh prop drilling quá sâu bằng composition hoặc custom hook.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 3: Error boundary wrapper</h4>
+  <p>Bọc từng vùng màn hình bằng ErrorBoundary. Khi một card render lỗi, fallback chỉ thay card đó, không làm crash toàn bộ screen.</p>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Dùng index làm key trong list có thể reorder, dẫn đến state/input nhảy sang item khác.</li>
+    <li>Copy props vào state rồi quên sync khi props đổi.</li>
+    <li>Dùng <code>React.memo</code> nhưng vẫn truyền object/function inline mới mỗi render.</li>
+    <li>Nhầm ErrorBoundary có thể bắt lỗi trong event handler hoặc promise async.</li>
+    <li>Đọc quá sâu Fiber nhưng chưa áp dụng được vào render/key/memo thực tế.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Danh sách address cho checkout dùng index làm key. User xóa address đầu tiên, input đang sửa ở address thứ hai nhảy sang address khác.</p>
+  <p><strong>Cách xử lý:</strong> Dùng id ổn định từ backend/local uuid làm key. Nếu item chưa có id server, tạo clientId ngay khi add và giữ nguyên đến khi sync xong.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>React core dùng được trong RN khi bạn kiểm soát identity của component, luồng data, và render cost. Đừng tối ưu trước khi đo, nhưng đừng bỏ qua key và functional update.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Vì sao index key làm bug khó thấy trong form/list?</div>
+  <div class="q">2. Khi nào bạn không cần <code>React.memo</code>?</div>
+  <div class="q">3. ErrorBoundary không bắt được những lỗi nào?</div>
+  <div class="q">4. State nào nên để parent giữ, state nào nên để local?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích JSX compile thành gì và tại sao nó không phải HTML</label>
+  <label><input type="checkbox"> Tôi hiểu tại sao Functional Components được ưu tiên hơn Class Components</label>
+  <label><input type="checkbox"> Tôi có thể giải thích luồng dữ liệu một chiều: props down, events up</label>
+  <label><input type="checkbox"> Tôi hiểu prop drilling và biết ít nhất 2 cách giải quyết</label>
+  <label><input type="checkbox"> Tôi có thể giải thích Automatic Batching trong React 18</label>
+  <label><input type="checkbox"> Tôi biết khi nào dùng functional updates cho setState</label>
+  <label><input type="checkbox"> Tôi có thể vẽ/mô tả thuật toán Reconciliation của Virtual DOM</label>
+  <label><input type="checkbox"> Tôi hiểu tại sao không nên dùng index làm key prop</label>
+  <label><input type="checkbox"> Tôi có thể giải thích Fiber Architecture: vấn đề nó giải quyết, unit of work, 2 phases</label>
+  <label><input type="checkbox"> Tôi hiểu Priority Lanes và cách React ưu tiên updates</label>
+  <label><input type="checkbox"> Tôi phân biệt được useTransition vs useDeferredValue và biết khi nào dùng gì</label>
+  <label><input type="checkbox"> Tôi biết Error Boundary catch được gì và KHÔNG catch được gì</label>
+  <label><input type="checkbox"> Tôi hiểu quá trình tiến hóa HOC → Render Props → Custom Hooks</label>
+  <label><input type="checkbox"> Tôi phân biệt được React.memo vs useMemo vs useCallback</label>
+  <label><input type="checkbox"> Tôi đã build Counter app và Todo app từ scratch</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 2 mini exercise React Native</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+
+<div class="resource">
+  <h4>Tài liệu chính thức</h4>
+  <ul>
+    <li><a href="https://react.dev/learn" target="_blank">react.dev/learn</a> — Official React documentation (React 18+)</li>
+    <li><a href="https://react.dev/reference/react" target="_blank">react.dev/reference</a> — API Reference đầy đủ</li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>Blog &amp; Articles</h4>
+  <ul>
+    <li><a href="https://overreacted.io" target="_blank">overreacted.io</a> — Blog của Dan Abramov (React core team)</li>
+    <li><a href="https://overreacted.io/a-complete-guide-to-useeffect/" target="_blank">A Complete Guide to useEffect</a> — Bài viết kinh điển</li>
+    <li><a href="https://overreacted.io/react-as-a-ui-runtime/" target="_blank">React as a UI Runtime</a> — Deep dive vào React internals</li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>Architecture &amp; Internals</h4>
+  <ul>
+    <li><a href="https://github.com/acdlite/react-fiber-architecture" target="_blank">React Fiber Architecture</a> — Giải thích chi tiết Fiber</li>
+    <li><a href="https://github.com/facebook/react" target="_blank">React Source Code</a> — Đọc source code khi cần hiểu sâu</li>
+  </ul>
+</div>
+
+<div class="resource">
+  <h4>Practice Platforms</h4>
+  <ul>
+    <li><a href="https://www.greatfrontend.com" target="_blank">GreatFrontEnd</a> — React UI challenges</li>
+    <li><a href="https://bigfrontend.dev" target="_blank">BigFrontEnd</a> — Frontend coding challenges</li>
+  </ul>
+</div>
+
+<div class="nav-links">
+  <a href="01-JS-TS-Fundamentals.html">&larr; Module 01: JS/TS Fundamentals</a>
+  <a href="04-Hooks-Deep-Dive.html">Module 04: Hooks Deep Dive &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

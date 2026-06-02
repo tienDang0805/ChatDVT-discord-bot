@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 01 — JavaScript & TypeScript Nền tảng</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 01 — JavaScript & TypeScript Nền tảng</h1>
+<div class="module-meta">
+  <span class="badge badge-must">Phải có</span>
+  <span class="meta-item">⏱ 8-10 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Không</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Hiểu sâu Closure, Prototype chain, Event Loop — giải thích được cho người khác</li>
+  <li>Thành thạo Async/Await, Promise patterns, error handling</li>
+  <li>Nắm vững TypeScript: Generics, Utility Types, Type Guards</li>
+  <li>Áp dụng JS/TS vào API typing, async flow, retry và data transform trong React Native</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc JavaScript.info</strong> — <a href="https://javascript.info" target="_blank">javascript.info</a><br>
+    Focus chapters: Closures, Prototypes, Promises, Async/Await, Event Loop.<br>
+    Thời gian: ~3 giờ. Đọc kỹ, chạy code examples trong console.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Xem video bổ trợ</strong><br>
+    - "JavaScript: Understanding the Weird Parts" (Udemy — Tony Alicea) — giải thích execution context, scope chain<br>
+    - "What the heck is the event loop?" (JSConf — Philip Roberts) — YouTube, miễn phí<br>
+    Thời gian: ~2 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Đọc TypeScript Handbook</strong> — <a href="https://www.typescriptlang.org/docs/handbook/" target="_blank">typescriptlang.org/docs/handbook</a><br>
+    Focus: Everyday Types, Narrowing, Functions, Object Types, Generics, Utility Types.<br>
+    Thời gian: ~2 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Làm mini exercise TypeScript cho React Native</strong><br>
+    Mục đích: luyện API response types, retry, upload queue, normalize data.<br>
+    Thời gian: ~2-3 giờ
+  </div>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> JS runtime xử lý closure, event loop, promise và reference như thế nào.</li>
+  <li><strong>Thấy bug thật:</strong> stale closure, mutate object trực tiếp, batch async fail, API response thiếu type.</li>
+  <li><strong>Debug:</strong> log thứ tự event loop, inspect object reference, dùng TypeScript narrowing để ép xử lý đủ nhánh.</li>
+  <li><strong>Fix:</strong> functional update, immutable update, discriminated union, retry/upload queue có kiểm soát.</li>
+  <li><strong>Áp dụng playground:</strong> tạo typed models và API result types cho user/product/cart.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. Closures</h3>
+<div class="concept">
+<p><strong>Bản chất:</strong> Closure = function + lexical environment (biến ở scope cha tại thời điểm function được tạo). Khi 1 function được tạo bên trong function khác, nó "nhớ" được các biến của function cha — ngay cả khi function cha đã return.</p>
+<p><strong>Tại sao quan trọng cho RN dev:</strong></p>
+<ul>
+  <li><strong>React Hooks dựa hoàn toàn trên closures.</strong> Mỗi lần render, component function chạy lại → hooks "close over" state/props tại thời điểm đó → đây là nguồn gốc của "stale closure" bug.</li>
+  <li>Data privacy: tạo private variables trong module pattern</li>
+  <li>Factory functions: tạo functions với pre-configured behavior</li>
+</ul>
+</div>
+
+Ví dụ counter closure:
+<pre><code>function createCounter(initialValue: number) {
+  let count = initialValue;
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    getCount: () => count,
+  };
+}
+
+const counter = createCounter(0);
+counter.increment();
+counter.increment();
+console.log(counter.getCount());</code></pre>
+<p>Biến <code>count</code> không accessible từ bên ngoài — chỉ các methods returned mới access được. Đây là data privacy qua closure.</p>
+
+<h3>2. Prototype Chain</h3>
+<div class="concept">
+<p><strong>Bản chất:</strong> JavaScript không có class thật (trước ES6). Mỗi object có 1 internal link (<code>[[Prototype]]</code>) trỏ tới object khác. Khi truy cập property không có trên object → JS đi lên prototype chain tìm.</p>
+<p><code>class</code> syntax (ES6) chỉ là syntactic sugar — bên dưới vẫn là prototype-based.</p>
+</div>
+
+<pre><code>const animal = { speak() { return "..." } };
+const dog = Object.create(animal);
+dog.bark = () => "Woof!";
+
+dog.bark();
+dog.speak();</code></pre>
+
+<p><code>dog.speak()</code> hoạt động vì JS tìm lên prototype chain → thấy <code>speak</code> ở <code>animal</code>.</p>
+
+<h3>3. Event Loop</h3>
+<div class="deep-dive">
+<p><strong>Thứ tự thực thi:</strong></p>
+<ol>
+  <li><strong>Call Stack</strong> — chạy synchronous code</li>
+  <li><strong>Microtask Queue</strong> — Promise callbacks (.then, .catch), queueMicrotask, MutationObserver</li>
+  <li><strong>Macrotask Queue</strong> — setTimeout, setInterval, I/O</li>
+</ol>
+<p><strong>Rule:</strong> Sau khi call stack trống → xử lý HẾT microtask queue → rồi mới lấy 1 macrotask.</p>
+</div>
+
+Câu đố kinh điển:
+<pre><code>console.log("1");
+setTimeout(() => console.log("2"), 0);
+Promise.resolve().then(() => console.log("3"));
+console.log("4");</code></pre>
+<p>Output: <code>1 → 4 → 3 → 2</code>. Vì: sync (1,4) → microtask (Promise: 3) → macrotask (setTimeout: 2).</p>
+
+<h3>4. Async/Await</h3>
+<div class="concept">
+<p><strong>async/await</strong> là syntactic sugar cho Promise. <code>async function</code> luôn return Promise. <code>await</code> pause execution cho tới khi Promise resolve.</p>
+</div>
+
+<p><strong>Sequential vs Parallel:</strong></p>
+<pre><code>const fetchUserAndPosts = async (userId: string) =&gt; {
+  const user = await fetchUser(userId);
+  const posts = await fetchPosts(userId);
+  return { user, posts };
+};
+
+const fetchBothParallel = async (userId: string) =&gt; {
+  const [user, posts] = await Promise.all([
+    fetchUser(userId),
+    fetchPosts(userId),
+  ]);
+  return { user, posts };
+};</code></pre>
+<p>Version 1: sequential — chậm (fetch user xong mới fetch posts). Version 2: parallel — nhanh hơn (2 requests chạy cùng lúc).</p>
+
+<h3>5. ES6+ Features quan trọng</h3>
+
+<table>
+<tr><th>Feature</th><th>Dùng khi</th><th>Ví dụ</th></tr>
+<tr><td>Destructuring</td><td>Extract values từ object/array</td><td><code>const { name, age } = user;</code></td></tr>
+<tr><td>Spread/Rest</td><td>Clone, merge, collect args</td><td><code>{...obj, key: val}</code></td></tr>
+<tr><td>Optional Chaining</td><td>Safe property access</td><td><code>user?.address?.city</code></td></tr>
+<tr><td>Nullish Coalescing</td><td>Default value (chỉ null/undefined)</td><td><code>value ?? 'default'</code></td></tr>
+<tr><td>Template Literals</td><td>String interpolation</td><td><code>`Hello ${name}`</code></td></tr>
+<tr><td>Map/Set</td><td>Unique values, key-value pairs</td><td><code>new Set([1,2,2,3])</code></td></tr>
+</table>
+
+<h3>6. TypeScript Core</h3>
+
+<h4>Interface vs Type</h4>
+<div class="concept">
+<ul>
+  <li><code>interface</code>: extends được, declaration merging, dùng cho object shapes</li>
+  <li><code>type</code>: union/intersection types, mapped types, dùng cho mọi loại type</li>
+  <li><strong>Rule of thumb:</strong> Dùng <code>interface</code> cho object shapes, <code>type</code> cho unions/intersections/aliases</li>
+</ul>
+</div>
+
+<h4>Generics</h4>
+<pre><code>function getFirstElement&lt;T&gt;(arr: T[]): T | undefined {
+  return arr[0];
+}
+
+const num = getFirstElement([1, 2, 3]);
+const str = getFirstElement(["a", "b"]);</code></pre>
+
+<h4>Utility Types</h4>
+<table>
+<tr><th>Type</th><th>Mô tả</th><th>Use case</th></tr>
+<tr><td><code>Partial&lt;T&gt;</code></td><td>Tất cả props optional</td><td>Update functions</td></tr>
+<tr><td><code>Required&lt;T&gt;</code></td><td>Tất cả props required</td><td>Validation</td></tr>
+<tr><td><code>Pick&lt;T, K&gt;</code></td><td>Chọn subset props</td><td>API responses</td></tr>
+<tr><td><code>Omit&lt;T, K&gt;</code></td><td>Loại bỏ props</td><td>Form data (bỏ id)</td></tr>
+<tr><td><code>Record&lt;K, V&gt;</code></td><td>Key-value mapping</td><td>Lookup objects</td></tr>
+<tr><td><code>Exclude&lt;T, U&gt;</code></td><td>Loại type khỏi union</td><td>Filter types</td></tr>
+</table>
+
+<h4>Discriminated Unions</h4>
+<pre><code>type Result&lt;T&gt; =
+  | { status: "success"; data: T }
+  | { status: "error"; error: string }
+  | { status: "loading" };
+
+function handleResult(result: Result&lt;User&gt;) {
+  switch (result.status) {
+    case "success":
+      return result.data;
+    case "error":
+      throw new Error(result.error);
+    case "loading":
+      return null;
+  }
+}</code></pre>
+<p>TypeScript tự narrow type dựa trên <code>status</code> field — rất hữu ích cho API response handling trong RN.</p>
+
+<h3>7. Array Methods</h3>
+<table>
+<tr><th>Method</th><th>Return</th><th>Dùng khi</th></tr>
+<tr><td><code>map()</code></td><td>New array (same length)</td><td>Transform mỗi element</td></tr>
+<tr><td><code>filter()</code></td><td>New array (subset)</td><td>Lọc theo điều kiện</td></tr>
+<tr><td><code>reduce()</code></td><td>Single value</td><td>Tổng hợp, group, flatten</td></tr>
+<tr><td><code>find()</code></td><td>First match | undefined</td><td>Tìm 1 element</td></tr>
+<tr><td><code>some()</code></td><td>boolean</td><td>Có ít nhất 1 match?</td></tr>
+<tr><td><code>every()</code></td><td>boolean</td><td>Tất cả đều match?</td></tr>
+<tr><td><code>flatMap()</code></td><td>New array (flattened 1 level)</td><td>Map + flatten</td></tr>
+</table>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<div class="qa">
+<div class="q">Q1: Closure là gì? Cho ví dụ thực tế trong React Native.</div>
+<div class="a">
+<p>Closure là khi 1 function "nhớ" được các biến ở lexical scope cha, ngay cả khi function cha đã return. Về mặt kỹ thuật: closure = function + reference tới lexical environment.</p>
+<p><strong>Ví dụ thực tế:</strong> React hooks chính là closures. Mỗi lần component render, function component chạy lại, tạo ra 1 closure mới "close over" state values tại render đó. Đây là lý do tại sao state trong useEffect callback có thể "stale" — nó nhớ giá trị lúc closure được tạo.</p>
+<p><strong>Ví dụ khác:</strong> useDebounce hook — closure giữ reference tới timeout ID giữa các lần gọi.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Output của đoạn code sau? Giải thích.</div>
+<div class="a">
+<pre><code>console.log("A");
+setTimeout(() => console.log("B"), 0);
+Promise.resolve().then(() => console.log("C"));
+Promise.resolve().then(() => setTimeout(() => console.log("D"), 0));
+console.log("E");</code></pre>
+<p><strong>Output:</strong> A → E → C → B → D</p>
+<p><strong>Giải thích:</strong></p>
+<ul>
+  <li>A, E: synchronous — chạy ngay trên call stack</li>
+  <li>C: microtask (Promise) — chạy sau sync, trước macrotask</li>
+  <li>B: macrotask (setTimeout) — chạy sau tất cả microtasks</li>
+  <li>D: macrotask được schedule bởi microtask — chạy cuối cùng</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: <code>this</code> trong arrow function vs regular function?</div>
+<div class="a">
+<p><strong>Arrow function:</strong> không có <code>this</code> riêng — kế thừa <code>this</code> từ lexical scope (enclosing function/context). Không thể bind/call/apply để thay đổi.</p>
+<p><strong>Regular function:</strong> <code>this</code> phụ thuộc vào cách gọi (dynamic binding). Gọi qua object → this = object. Gọi standalone → this = undefined (strict) hoặc window.</p>
+<p><strong>Trong React Native:</strong> Hầu hết dùng arrow functions vì không cần dynamic <code>this</code>. Class components dùng arrow methods để auto-bind.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: Promise.all vs Promise.allSettled vs Promise.race?</div>
+<div class="a">
+<table>
+<tr><th>Method</th><th>Resolve khi</th><th>Reject khi</th><th>Use case</th></tr>
+<tr><td><code>Promise.all</code></td><td>Tất cả resolve</td><td>Bất kỳ 1 cái reject</td><td>Parallel requests, tất cả cần thành công</td></tr>
+<tr><td><code>Promise.allSettled</code></td><td>Tất cả settled (resolve hoặc reject)</td><td>Không bao giờ reject</td><td>Parallel requests, muốn biết kết quả từng cái</td></tr>
+<tr><td><code>Promise.race</code></td><td>Cái đầu tiên settle</td><td>Cái đầu tiên reject</td><td>Timeout pattern, fastest response</td></tr>
+</table>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: Deep copy vs Shallow copy — implement deep clone?</div>
+<div class="a">
+<p><strong>Shallow copy:</strong> copy 1 level — nested objects vẫn share reference (<code>Object.assign</code>, spread <code>{...obj}</code>).</p>
+<p><strong>Deep copy:</strong> copy tất cả nested levels — hoàn toàn independent.</p>
+<p><strong>Cách implement:</strong></p>
+<ul>
+  <li><code>structuredClone(obj)</code> — native, modern (recommended)</li>
+  <li><code>JSON.parse(JSON.stringify(obj))</code> — hack, mất functions/undefined/Date/RegExp</li>
+  <li>Recursive function — handle edge cases</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: var vs let vs const — hoisting behavior?</div>
+<div class="a">
+<table>
+<tr><th></th><th>Scope</th><th>Hoisting</th><th>Re-assign</th><th>TDZ</th></tr>
+<tr><td><code>var</code></td><td>Function</td><td>Có (initialized = undefined)</td><td>Có</td><td>Không</td></tr>
+<tr><td><code>let</code></td><td>Block</td><td>Có (nhưng TDZ)</td><td>Có</td><td>Có</td></tr>
+<tr><td><code>const</code></td><td>Block</td><td>Có (nhưng TDZ)</td><td>Không</td><td>Có</td></tr>
+</table>
+<p><strong>TDZ (Temporal Dead Zone):</strong> biến đã được hoisted nhưng chưa initialized → access sẽ throw ReferenceError.</p>
+<p><strong>Best practice:</strong> Luôn dùng <code>const</code> by default, <code>let</code> khi cần re-assign. Tránh <code>var</code>.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q7: interface vs type trong TypeScript — khi nào dùng cái nào?</div>
+<div class="a">
+<p><strong>interface:</strong> extends, declaration merging, IDE experience tốt hơn cho objects. Dùng cho: component props, API response shapes, class contracts.</p>
+<p><strong>type:</strong> union types, intersection types, mapped types, conditional types. Dùng cho: union types, utility types, complex type transformations.</p>
+<p><strong>Trong thực tế RN:</strong> Dùng <code>interface</code> cho Props types và API models. Dùng <code>type</code> cho unions (navigation params, action types).</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q8: Viết 1 generic function type-safe — ví dụ?</div>
+<div class="a">
+<pre><code>function groupBy&lt;T, K extends string&gt;(
+  items: T[],
+  keyGetter: (item: T) =&gt; K
+): Record&lt;K, T[]&gt; {
+  const result = {} as Record&lt;K, T[]&gt;;
+  for (const item of items) {
+    const key = keyGetter(item);
+    if (!result[key]) result[key] = [];
+    result[key].push(item);
+  }
+  return result;
+}
+
+const grouped = groupBy(users, (u) =&gt; u.role);</code></pre>
+<p>TypeScript tự infer types từ usage — <code>grouped</code> sẽ có type <code>Record&lt;string, User[]&gt;</code>.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q9: WeakMap/WeakSet dùng khi nào?</div>
+<div class="a">
+<p><strong>WeakMap:</strong> keys phải là objects, keys được held weakly (GC có thể collect nếu không có reference khác). Dùng cho: cache metadata cho DOM nodes/objects mà không prevent garbage collection. Private data pattern.</p>
+<p><strong>WeakSet:</strong> values phải là objects, held weakly. Dùng cho: tracking đã process object nào chưa.</p>
+<p><strong>Khác Map/Set:</strong> Không iterable, không có .size — vì contents phụ thuộc vào GC timing.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q10: 'use strict' là gì? Tại sao quan trọng?</div>
+<div class="a">
+<p>Strict mode bật các quy tắc nghiêm ngặt hơn: không cho phép undeclared variables, không cho delete variables, <code>this</code> = undefined trong standalone functions (thay vì window), cấm duplicate params, etc.</p>
+<p><strong>Trong RN:</strong> ES modules (<code>import/export</code>) luôn ở strict mode. Class bodies cũng strict mode. Nên không cần khai báo thủ công <code>'use strict'</code>.</p>
+</div>
+</div>
+
+<h2>🧩 Mini exercise JS/TS thực tế cho React Native</h2>
+
+<div class="exercise">
+<strong>Exercise 1: Typed API response</strong><br>
+Tạo <code>ApiResult&lt;T&gt;</code> dạng discriminated union cho success/error. Viết function nhận response này và render đúng loading/success/error state mà không dùng <code>any</code>.
+</div>
+
+<div class="exercise">
+<strong>Exercise 2: Retry với backoff</strong><br>
+Implement <code>retry(fn, { retries, delayMs })</code>. Chỉ retry lỗi network/5xx, không retry 400/401/422.
+</div>
+
+<div class="exercise">
+<strong>Exercise 3: Upload queue</strong><br>
+Implement queue chạy tối đa 3 upload cùng lúc, giữ thứ tự result, có cancel flag. Đây là pattern gặp khi upload nhiều ảnh từ mobile.
+</div>
+
+<div class="exercise">
+<strong>Exercise 4: Normalize nested response</strong><br>
+Từ response posts có author/comment lồng nhau, transform thành <code>{ postsById, usersById, commentsById }</code> để dùng trong state/cache.
+</div>
+
+<h2>🏋️ Bài tập thực hành</h2>
+
+<div class="exercise">
+<strong>Bài 1: Closure Counter Module</strong><br>
+Viết 1 module <code>createStore</code> dùng closure — có methods: <code>getState()</code>, <code>setState(newState)</code>, <code>subscribe(listener)</code>. Listener được gọi mỗi khi state thay đổi. Đây chính là mini Redux.
+</div>
+
+<div class="exercise">
+<strong>Bài 2: Promise Utility Functions</strong><br>
+Implement 3 functions:<br>
+- <code>promiseAll&lt;T&gt;(promises: Promise&lt;T&gt;[]): Promise&lt;T[]&gt;</code><br>
+- <code>promiseRace&lt;T&gt;(promises: Promise&lt;T&gt;[]): Promise&lt;T&gt;</code><br>
+- <code>retry&lt;T&gt;(fn: () =&gt; Promise&lt;T&gt;, maxRetries: number): Promise&lt;T&gt;</code>
+</div>
+
+<div class="exercise">
+<strong>Bài 3: TypeScript API Types</strong><br>
+Định nghĩa type system cho 1 REST API:<br>
+- <code>ApiResponse&lt;T&gt;</code> (success/error discriminated union)<br>
+- <code>PaginatedResponse&lt;T&gt;</code> (data + pagination metadata)<br>
+- <code>User</code> model với Partial cho update, Omit cho create (bỏ id)
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Dùng <code>any</code> cho API response, mất type narrowing ở UI.</li>
+  <li>Không phân biệt <code>null</code> và <code>undefined</code>, validation/form bị sai case.</li>
+  <li>Dùng <code>Promise.all</code> cho batch upload, một item fail làm hỏng toàn bộ flow dù có thể retry từng item.</li>
+  <li>Mutate object/array trực tiếp rồi thắc mắc vì sao React không render như mong muốn.</li>
+  <li>Không hiểu closure nên gặp stale state trong hook/event handler.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> API trả <code>{ data, error }</code> không rõ success hay fail. UI vừa đọc <code>data.name</code> vừa show error, thỉnh thoảng crash khi data null.</p>
+<p><strong>Cách xử lý:</strong> Dùng discriminated union: <code>{ status: 'success', data }</code> hoặc <code>{ status: 'error', error }</code>. TypeScript sẽ buộc UI xử lý đủ nhánh.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>JS/TS nền tảng có ích cho RN khi nó giúp bạn xử lý async, type API, closure và immutable data đúng trong app thật.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Khi nào dùng <code>Promise.allSettled</code> thay vì <code>Promise.all</code>?</div>
+  <div class="q">2. Discriminated union giúp UI state an toàn hơn thế nào?</div>
+  <div class="q">3. Stale closure thường xuất hiện ở đâu trong RN?</div>
+  <div class="q">4. Vì sao update object/array nên tạo reference mới?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích closure là gì và tại sao React hooks dựa trên closures</label>
+  <label><input type="checkbox"> Tôi có thể predict output của code Event Loop (Promise + setTimeout)</label>
+  <label><input type="checkbox"> Tôi hiểu prototype chain và tại sao class là syntactic sugar</label>
+  <label><input type="checkbox"> Tôi có thể viết async/await code với proper error handling</label>
+  <label><input type="checkbox"> Tôi biết khi nào dùng Promise.all vs Promise.allSettled vs Promise.race</label>
+  <label><input type="checkbox"> Tôi hiểu var/let/const differences và hoisting/TDZ</label>
+  <label><input type="checkbox"> Tôi có thể viết TypeScript generics và sử dụng utility types</label>
+  <label><input type="checkbox"> Tôi biết khi nào dùng interface vs type</label>
+  <label><input type="checkbox"> Tôi có thể implement discriminated unions cho API responses</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 3 mini exercise JS/TS thực tế cho RN</label>
+  <label><input type="checkbox"> Tôi có thể giải thích this trong arrow vs regular function</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://javascript.info" target="_blank">JavaScript.info</a> — Tài liệu JS toàn diện nhất, miễn phí</div>
+<div class="resource">📘 <a href="https://www.typescriptlang.org/docs/handbook/" target="_blank">TypeScript Handbook</a> — Official docs</div>
+<div class="resource">📺 <a href="https://www.youtube.com/watch?v=8aGhZQkoFbQ" target="_blank">"What the heck is the event loop?"</a> — Philip Roberts, JSConf (YouTube)</div>
+<div class="resource">📝 <a href="https://overreacted.io" target="_blank">overreacted.io</a> — Dan Abramov's blog (closures trong React)</div>
+<div class="resource">📺 <a href="https://www.youtube.com/@firaborat" target="_blank">Fireship</a> — YouTube channel, short concise videos</div>
+<div class="resource">📺 <a href="https://www.youtube.com/@WebDevSimplified" target="_blank">Web Dev Simplified</a> — YouTube, JS/TS deep dives</div>
+<div class="resource">📘 <a href="https://kentcdodds.com/blog" target="_blank">Kent C. Dodds Blog</a> — Testing, React patterns</div>
+
+<div class="nav-links">
+  <a href="00-ROADMAP.html">← Roadmap</a>
+  <a href="02-React-Core.html">Module 02: React Core →</a>
+</div>
+</div>
+</body>
+</html>

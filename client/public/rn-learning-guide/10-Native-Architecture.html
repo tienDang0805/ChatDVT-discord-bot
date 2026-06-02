@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 10 — Native Modules & New Architecture</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 10 — Native Modules & New Architecture</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Nên có</span>
+  <span class="meta-item">⏱ 6-8 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01-04, 08</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Hiểu Bridge architecture và tại sao nó là bottleneck</li>
+  <li>Hiểu New Architecture: JSI, Fabric, TurboModules, Codegen</li>
+  <li>Biết khi nào cần viết Native Module và cách viết cơ bản</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc RN New Architecture docs</strong> — <a href="https://reactnative.dev/docs/new-architecture-intro" target="_blank">reactnative.dev/docs/new-architecture-intro</a><br>
+    Focus: Why, What changes, Migration path. Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Xem "React Native New Architecture" talk</strong> — App.js Conf (YouTube)<br>
+    Thời gian: ~1h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Đọc JSI blog posts</strong> — <a href="https://www.callstack.com/blog" target="_blank">callstack.com/blog</a> (search "JSI")<br>
+    Thời gian: ~1h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Enable New Architecture</strong> trong 1 project thật<br>
+    Theo guide: android/gradle.properties → newArchEnabled=true, iOS Podfile → ENV['RCT_NEW_ARCH_ENABLED'] = '1'<br>
+    Thời gian: ~2h (bao gồm fix issues)
+  </div>
+</div>
+
+<h2>⚡ Ôn nhanh</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Old Bridge:</strong> async queue + serialization, dễ nghẽn khi gọi nhiều/lớn.</li>
+  <li><strong>JSI:</strong> JS gọi native/C++ host object trực tiếp hơn, mở đường cho sync API hiệu năng cao.</li>
+  <li><strong>TurboModules:</strong> native modules lazy-load, có type contract qua Codegen.</li>
+  <li><strong>Fabric:</strong> rendering system mới, hỗ trợ tốt hơn cho concurrent rendering và sync layout.</li>
+  <li><strong>Thực tế:</strong> chỉ viết native module khi library sẵn không đủ hoặc cần SDK/hardware/performance.</li>
+</ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> native boundary là nơi JS gọi vào platform API, SDK hoặc code hiệu năng cao.</li>
+  <li><strong>Thấy bug thật:</strong> error mỗi platform một kiểu, event listener leak, bật New Architecture khi library chưa tương thích.</li>
+  <li><strong>Debug:</strong> đọc Logcat/Xcode logs, kiểm JS contract, kiểm lifecycle/listener cleanup.</li>
+  <li><strong>Fix:</strong> chuẩn hóa API/error contract, cleanup event, test mock native boundary.</li>
+  <li><strong>Áp dụng playground:</strong> viết native module contract hoặc deep link/native config note.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. Old Bridge Architecture</h3>
+<div class="concept">
+<p><strong>Cách hoạt động:</strong> JS thread và Native thread giao tiếp qua <strong>Bridge</strong> — 1 async message queue. Mọi data phải <strong>JSON serialize/deserialize</strong> khi qua Bridge.</p>
+</div>
+
+<p><strong>Data flow:</strong></p>
+<pre><code>JS Thread                    Bridge                    Native Thread
+   |                           |                           |
+   |-- JSON.stringify(msg) --&gt; |                           |
+   |                           |-- JSON.parse(msg) ------&gt;|
+   |                           |                           |
+   |                           |&lt;-- JSON.stringify(res) --|
+   |&lt;-- JSON.parse(res) ----- |                           |</code></pre>
+
+<div class="card card-danger">
+<p><strong>Bottlenecks:</strong></p>
+<ul>
+  <li><strong>Serialization overhead:</strong> Mỗi lần qua Bridge → serialize + deserialize JSON. Với large data/frequent calls → lag</li>
+  <li><strong>Async only:</strong> JS không thể synchronously gọi native function → animation frame drops</li>
+  <li><strong>Single-threaded queue:</strong> Tất cả messages đi qua 1 queue → congestion khi nhiều modules giao tiếp cùng lúc</li>
+  <li><strong>Eager initialization:</strong> TẤT CẢ native modules loaded khi app start → slow startup</li>
+</ul>
+</div>
+
+<h3>2. JSI (JavaScript Interface)</h3>
+<div class="deep-dive">
+<p><strong>Thay thế Bridge bằng gì?</strong> JSI tạo <strong>C++ host objects</strong> mà JS có thể gọi <strong>trực tiếp, synchronously</strong>. Không serialization. Không async queue.</p>
+<p><strong>Cơ chế:</strong> JSI expose C++ objects vào JS runtime (Hermes). JS gọi method trên object đó → thực thi C++ code trực tiếp, không qua Bridge.</p>
+</div>
+
+<pre><code>// Old Bridge: async, serialized
+NativeModules.BatteryModule.getBatteryLevel()
+  .then(level =&gt; console.log(level));
+
+// New JSI: synchronous, direct
+const level = global.__turboModuleProxy.BatteryModule.getBatteryLevel();</code></pre>
+
+<div class="card card-success">
+<p><strong>Tại sao game-changer:</strong></p>
+<ul>
+  <li>Synchronous calls → animation frames không bị drop</li>
+  <li>No serialization → data transfer gần như zero-cost</li>
+  <li>Direct memory sharing → JS và native share cùng data structures</li>
+  <li>Enables Reanimated worklets, MMKV (synchronous storage), Skia</li>
+</ul>
+</div>
+
+<h3>3. TurboModules</h3>
+<div class="concept">
+<p><strong>Thay thế NativeModules cũ.</strong></p>
+<table>
+<tr><th></th><th>Old NativeModules</th><th>TurboModules</th></tr>
+<tr><td>Loading</td><td>Eager (tất cả load khi app start)</td><td>Lazy (load khi lần đầu sử dụng)</td></tr>
+<tr><td>Communication</td><td>Bridge (async, serialized)</td><td>JSI (sync, direct)</td></tr>
+<tr><td>Type safety</td><td>Không (runtime errors)</td><td>Có (Codegen từ JS/TS specs)</td></tr>
+<tr><td>Startup impact</td><td>Cao (load tất cả)</td><td>Thấp (lazy)</td></tr>
+</table>
+</div>
+
+<h3>4. Fabric (New Rendering System)</h3>
+<div class="concept">
+<p><strong>Thay thế old UI Manager.</strong> Fabric = new rendering system dựa trên JSI.</p>
+<ul>
+  <li><strong>Synchronous layout:</strong> JS có thể synchronously đọc layout measurements (trước đây phải async callback)</li>
+  <li><strong>Concurrent rendering:</strong> Support React 18 Suspense, useTransition</li>
+  <li><strong>Shared C++ core:</strong> Layout engine (Yoga) shared giữa JS và native → consistent rendering</li>
+  <li><strong>Priority rendering:</strong> High-priority updates (user input) xử lý trước low-priority (data fetch)</li>
+</ul>
+</div>
+
+<h3>5. Codegen</h3>
+<p>Auto-generate native interfaces (Java/ObjC/C++) từ JavaScript/TypeScript type specifications. Đảm bảo type safety giữa JS và native code tại build time.</p>
+
+<pre><code>// JS Spec file: NativeBatteryModule.ts
+import type { TurboModule } from 'react-native';
+import { TurboModuleRegistry } from 'react-native';
+
+export interface Spec extends TurboModule {
+  getBatteryLevel(): number;
+  isCharging(): boolean;
+}
+
+export default TurboModuleRegistry.getEnforcing&lt;Spec&gt;('BatteryModule');</code></pre>
+<p>Codegen sẽ generate native interface code từ spec này → compile-time errors nếu native implementation không match.</p>
+
+<h3>6. Native Module Authoring</h3>
+
+<h4>Khi nào cần viết Native Module?</h4>
+<ul>
+  <li>Platform-specific SDK integration (payment, analytics)</li>
+  <li>Bluetooth, NFC, biometrics</li>
+  <li>Performance-critical computation (image processing, crypto)</li>
+  <li>Access hardware APIs không có JS wrapper</li>
+</ul>
+
+<h4>Android (Kotlin) — Basic Pattern</h4>
+<pre><code>class BatteryModule(reactContext: ReactApplicationContext) :
+  ReactContextBaseJavaModule(reactContext) {
+
+  override fun getName() = "BatteryModule"
+
+  @ReactMethod
+  fun getBatteryLevel(promise: Promise) {
+    val batteryManager = reactApplicationContext
+      .getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+    val level = batteryManager
+      .getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    promise.resolve(level)
+  }
+}</code></pre>
+
+<h4>iOS (Swift) — Basic Pattern</h4>
+<pre><code>@objc(BatteryModule)
+class BatteryModule: NSObject {
+  @objc func getBatteryLevel(
+    _ resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    UIDevice.current.isBatteryMonitoringEnabled = true
+    let level = UIDevice.current.batteryLevel
+    resolve(Int(level * 100))
+  }
+
+  @objc static func requiresMainQueueSetup() -&gt; Bool {
+    return false
+  }
+}</code></pre>
+
+<h3>7. NativeEventEmitter</h3>
+<p>Send events từ native → JS (push-based, không phải request-response).</p>
+<pre><code>import { NativeEventEmitter, NativeModules } from 'react-native';
+
+const emitter = new NativeEventEmitter(NativeModules.BatteryModule);
+
+useEffect(() =&gt; {
+  const subscription = emitter.addListener('BatteryChanged', (event) =&gt; {
+    setBatteryLevel(event.level);
+  });
+  return () =&gt; subscription.remove();
+}, []);</code></pre>
+
+<h3>8. Ví dụ thực tế: JS contract trước khi viết native</h3>
+<pre><code>// BatteryModule.ts
+export type BatteryStatus = {
+  level: number;
+  isCharging: boolean;
+};
+
+export interface BatteryModuleApi {
+  getStatus(): Promise&lt;BatteryStatus&gt;;
+  startObserving(): void;
+  stopObserving(): void;
+}
+
+// Component chỉ phụ thuộc contract này, không phụ thuộc Android/iOS detail.</code></pre>
+<p><strong>Tip:</strong> Trước khi viết Kotlin/Swift, chốt API JS/TS trước: method nào async, event nào push lên JS, lỗi trả về format gì, permission được xử lý ở đâu.</p>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<div class="qa">
+<div class="q">Q1: Bridge bottleneck là gì? New Architecture giải quyết thế nào?</div>
+<div class="a">
+<p><strong>Bridge problems:</strong> Async-only communication, JSON serialization/deserialization overhead, single-threaded queue, eager module loading.</p>
+<p><strong>New Architecture fixes:</strong> JSI cho synchronous calls không serialization. TurboModules cho lazy loading. Fabric cho concurrent rendering + sync layout. Codegen cho type safety.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: JSI là gì? Khác Bridge thế nào?</div>
+<div class="a"><p>JSI = C++ interface cho phép JS gọi native functions trực tiếp, synchronously, không serialization. Bridge = async message queue với JSON serialization. JSI nhanh hơn orders of magnitude vì không có serialization overhead và direct memory access.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: TurboModules vs old NativeModules?</div>
+<div class="a"><p>TurboModules: lazy loading (load khi dùng), JSI-based (sync), type-safe (Codegen). Old NativeModules: eager loading (tất cả load khi start), Bridge-based (async), no type safety. TurboModules cải thiện startup time + runtime performance đáng kể.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: Fabric giải quyết vấn đề gì?</div>
+<div class="a"><p>Fabric cho phép synchronous layout measurement (trước đây phải async → layout flicker), concurrent rendering (React 18 features), priority-based rendering (user input trước data fetch), shared C++ Yoga engine giữa JS và native.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: Codegen làm gì?</div>
+<div class="a"><p>Auto-generate native interface code (Java/ObjC/C++) từ TypeScript specs. Đảm bảo JS ↔ Native contract type-safe tại build time thay vì runtime crashes. Developer viết TS spec → Codegen generate native boilerplate.</p></div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: Khi nào cần viết Native Module?</div>
+<div class="a"><p>Khi cần: platform-specific SDK (payment gateways), hardware APIs (Bluetooth, NFC, biometrics), CPU-intensive tasks (image processing), hoặc khi không có community library phù hợp. Luôn check xem có library sẵn trước khi viết native module.</p></div>
+</div>
+
+<h2>🏋️ Bài tập</h2>
+
+<div class="exercise">
+<strong>Bài 1: Write Battery Level Native Module</strong><br>
+Viết native module đọc battery level cho cả Android (Kotlin) và iOS (Swift).<br>
+Yêu cầu: Promise-based API, NativeEventEmitter cho battery change events, proper error handling.<br>
+Bonus: Migrate sang TurboModule spec.
+</div>
+
+<div class="exercise">
+<strong>Bài 2: Enable New Architecture</strong><br>
+Tạo 1 RN project mới → enable New Architecture → verify build thành công trên cả iOS và Android.<br>
+Document: những issues gặp phải và cách fix.
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Viết native module ngay dù đã có community library ổn định.</li>
+  <li>Không định nghĩa error contract, JS nhận lỗi native mỗi platform một kiểu.</li>
+  <li>Quên remove listener NativeEventEmitter, dẫn đến duplicate event sau khi quay lại screen.</li>
+  <li>Gọi native sync/heavy work trên UI thread làm app giật.</li>
+  <li>Bật New Architecture nhưng chưa kiểm tra library third-party có tương thích không.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> App tích hợp SDK thanh toán native. Android trả lỗi dạng code/message, iOS throw string. JS layer phải xử lý nhiều nhánh và bug khó test.</p>
+<p><strong>Cách xử lý:</strong> Chuẩn hóa error ở native boundary thành <code>{ code, message, recoverable }</code>. Viết adapter JS và test mock module trước khi nối SDK thật.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>Native module tốt bắt đầu từ contract JS rõ ràng. Kotlin/Swift chỉ là implementation detail phía sau contract đó.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Khi nào native module nên trả Promise, khi nào nên emit event?</div>
+  <div class="q">2. Bridge cũ nghẽn ở đâu?</div>
+  <div class="q">3. Trước khi bật New Architecture cho app cũ, bạn kiểm tra gì?</div>
+  <div class="q">4. Native module cần test ở những boundary nào?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi giải thích được Bridge architecture và bottlenecks</label>
+  <label><input type="checkbox"> Tôi hiểu JSI hoạt động thế nào (C++ host objects, sync calls)</label>
+  <label><input type="checkbox"> Tôi phân biệt được TurboModules vs old NativeModules</label>
+  <label><input type="checkbox"> Tôi hiểu Fabric là gì và tại sao cần</label>
+  <label><input type="checkbox"> Tôi biết Codegen làm gì và tại sao quan trọng</label>
+  <label><input type="checkbox"> Tôi biết khi nào cần viết Native Module</label>
+  <label><input type="checkbox"> Tôi hiểu NativeEventEmitter pattern</label>
+  <label><input type="checkbox"> Tôi đã thử enable New Architecture trong 1 project</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/new-architecture-intro" target="_blank">RN New Architecture Docs</a></div>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/turbo-native-modules-introduction" target="_blank">TurboModules Guide</a></div>
+<div class="resource">📝 <a href="https://www.callstack.com/blog/react-native-jsi-explained" target="_blank">JSI Explained — Callstack Blog</a></div>
+<div class="resource">📺 Search "React Native New Architecture" trên YouTube — App.js Conf talks</div>
+<div class="resource">📘 <a href="https://github.com/nicehash/react-native-interview-questions" target="_blank">RN Interview Questions — Architecture section</a></div>
+
+<div class="nav-links">
+  <a href="14-Kotlin-Android.html">← Module 14: Kotlin/Android</a>
+  <a href="13-CICD.html">Module 13: CI/CD →</a>
+</div>
+</div>
+</body>
+</html>

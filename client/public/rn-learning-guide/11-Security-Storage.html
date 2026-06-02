@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 11 — Security &amp; Storage</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 11 &mdash; Security &amp; Storage</h1>
+<div class="module-meta">
+  <span class="badge badge-must">Phải có</span>
+  <span class="meta-item">⏱ 6-8 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01-04, 07</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Hiểu tại sao AsyncStorage không an toàn cho sensitive data và biết cách dùng Keychain/Keystore</li>
+  <li>So sánh và lựa chọn đúng giữa MMKV, AsyncStorage, SQLite, WatermelonDB</li>
+  <li>Implement offline-first patterns với React Query persist</li>
+  <li>Hiểu và áp dụng Certificate Pinning để chống man-in-the-middle attacks</li>
+  <li>Nắm vững OWASP Mobile Top 10 — giải thích và phòng chống từng mục</li>
+  <li>Implement biometric authentication, root/jailbreak detection</li>
+  <li>Áp dụng encryption cho data at rest và data in transit</li>
+  <li>Cấu hình ProGuard/R8 obfuscation cho production builds</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc OWASP Mobile Top 10</strong> &mdash; <a href="https://owasp.org/www-project-mobile-top-10/" target="_blank">owasp.org/www-project-mobile-top-10</a><br>
+    Đọc kỹ từng mục, ghi chú lại cách từng mục áp dụng vào React Native app.<br>
+    Thời gian: ~1.5 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Implement react-native-keychain</strong> &mdash; <a href="https://github.com/oblador/react-native-keychain" target="_blank">GitHub: react-native-keychain</a><br>
+    Setup project, lưu/đọc tokens qua Keychain (iOS) và Keystore (Android). So sánh với AsyncStorage bằng cách inspect storage.<br>
+    Thời gian: ~1.5 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Setup MMKV</strong> &mdash; <a href="https://github.com/mrousavy/react-native-mmkv" target="_blank">GitHub: react-native-mmkv</a><br>
+    Thay thế AsyncStorage bằng MMKV. Benchmark performance difference. Tích hợp với Zustand/Redux persist.<br>
+    Thời gian: ~1.5 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Implement offline-first với React Query persist</strong><br>
+    Đọc <a href="https://tanstack.com/query/latest/docs/framework/react/plugins/persistQueryClient" target="_blank">TanStack Query Persist docs</a>. Setup persistQueryClient với MMKV storage adapter. Test bằng cách tắt network.<br>
+    Thời gian: ~1.5 giờ
+  </div>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> mobile device không phải môi trường tin cậy; local data có thể bị đọc nếu lưu sai.</li>
+  <li><strong>Thấy bug thật:</strong> token trong AsyncStorage, cache user cũ sau logout, env secret bị decompile.</li>
+  <li><strong>Debug:</strong> audit storage, kiểm logout side effects, inspect persisted cache, threat model dữ liệu nhạy cảm.</li>
+  <li><strong>Fix:</strong> secure storage cho token, logout sạch, không nhúng secret, cache có owner rõ.</li>
+  <li><strong>Áp dụng playground:</strong> token storage, clear QueryClient/logout, threat model mini.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết</h2>
+
+<h3>1. Secure Token Storage: Keychain/Keystore vs AsyncStorage</h3>
+<div class="card card-danger">
+<p><strong>KHÔNG BAO GIỜ lưu tokens, passwords, API keys vào AsyncStorage.</strong></p>
+<p>AsyncStorage lưu data dưới dạng plaintext trong SQLite database (Android) hoặc plist file (iOS). Bất kỳ ai có physical access hoặc root access đều đọc được. Trên Android, file nằm ở <code>/data/data/com.yourapp/databases/RKStorage</code> &mdash; dùng <code>adb shell</code> là đọc thẳng.</p>
+</div>
+
+<div class="concept">
+<p><strong>Keychain (iOS) / Keystore (Android)</strong> là hardware-backed secure storage do OS cung cấp:</p>
+<ul>
+  <li><strong>iOS Keychain:</strong> encrypted bởi Secure Enclave hardware, data được mã hóa bằng device passcode + hardware key. App không thể đọc keychain của app khác (sandboxing)</li>
+  <li><strong>Android Keystore:</strong> sử dụng TEE (Trusted Execution Environment) hoặc StrongBox. Key material không bao giờ rời khỏi secure hardware</li>
+  <li><strong>Biometric-gated access:</strong> có thể yêu cầu FaceID/fingerprint trước khi trả data</li>
+</ul>
+</div>
+
+<p>Cài đặt và sử dụng <code>react-native-keychain</code>:</p>
+<pre><code>import * as Keychain from 'react-native-keychain';
+
+const saveToken = async (token: string): Promise&lt;boolean&gt; =&gt; {
+  const result = await Keychain.setGenericPassword('auth_token', token, {
+    accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+    securityLevel: Keychain.SECURITY_LEVEL.SECURE_HARDWARE,
+  });
+  return result !== false;
+};
+
+const getToken = async (): Promise&lt;string | null&gt; =&gt; {
+  const credentials = await Keychain.getGenericPassword();
+  if (credentials) {
+    return credentials.password;
+  }
+  return null;
+};
+
+const removeToken = async (): Promise&lt;void&gt; =&gt; {
+  await Keychain.resetGenericPassword();
+};</code></pre>
+
+<p>Option <code>WHEN_UNLOCKED_THIS_DEVICE_ONLY</code> đảm bảo token chỉ accessible khi device unlocked và không được sync qua iCloud backup. <code>SECURE_HARDWARE</code> yêu cầu hardware-backed encryption trên Android.</p>
+
+<h3>2. MMKV vs AsyncStorage</h3>
+
+<table>
+<tr><th>Tiêu chí</th><th>AsyncStorage</th><th>MMKV</th></tr>
+<tr><td>Performance</td><td>Chậm (async, serialization overhead)</td><td>Nhanh ~30x (memory-mapped, synchronous)</td></tr>
+<tr><td>API</td><td>Async only (<code>await</code>)</td><td>Sync + Async</td></tr>
+<tr><td>Data types</td><td>String only (phải JSON.stringify)</td><td>String, number, boolean, Buffer</td></tr>
+<tr><td>Encryption</td><td>Không</td><td>Có (AES-CFB)</td></tr>
+<tr><td>Size limit</td><td>6MB default (Android)</td><td>Không giới hạn</td></tr>
+<tr><td>Multi-process</td><td>Không</td><td>Có</td></tr>
+<tr><td>Storage engine</td><td>SQLite (Android) / file (iOS)</td><td>Memory-mapped file (mmap)</td></tr>
+<tr><td>Use case</td><td>Legacy apps, simple needs</td><td>Production apps, settings, cache</td></tr>
+</table>
+
+<div class="card card-warning">
+<p><strong>Lưu ý:</strong> MMKV nhanh nhưng vẫn KHÔNG phải nơi lưu tokens/secrets. MMKV encrypted mode dùng app-level key &mdash; không phải hardware-backed như Keychain/Keystore. Dùng MMKV cho user preferences, cache, feature flags. Dùng Keychain cho tokens, passwords, biometric data.</p>
+</div>
+
+<p>Setup MMKV:</p>
+<pre><code>import { MMKV } from 'react-native-mmkv';
+
+const storage = new MMKV({
+  id: 'app-storage',
+  encryptionKey: 'your-encryption-key',
+});
+
+storage.set('user.theme', 'dark');
+storage.set('user.onboarded', true);
+storage.set('cache.lastFetch', Date.now());
+
+const theme = storage.getString('user.theme');
+const onboarded = storage.getBoolean('user.onboarded');
+
+storage.delete('cache.lastFetch');
+
+const allKeys = storage.getAllKeys();</code></pre>
+
+<p>Tích hợp MMKV với Zustand persist:</p>
+<pre><code>import { create } from 'zustand';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
+import { MMKV } from 'react-native-mmkv';
+
+const mmkv = new MMKV({ id: 'zustand-storage' });
+
+const zustandStorage: StateStorage = {
+  setItem: (name: string, value: string) =&gt; {
+    mmkv.set(name, value);
+  },
+  getItem: (name: string) =&gt; {
+    return mmkv.getString(name) ?? null;
+  },
+  removeItem: (name: string) =&gt; {
+    mmkv.delete(name);
+  },
+};
+
+interface SettingsState {
+  theme: 'light' | 'dark';
+  language: string;
+  setTheme: (theme: 'light' | 'dark') =&gt; void;
+  setLanguage: (lang: string) =&gt; void;
+}
+
+const useSettingsStore = create&lt;SettingsState&gt;()(
+  persist(
+    (set) =&gt; ({
+      theme: 'light',
+      language: 'vi',
+      setTheme: (theme) =&gt; set({ theme }),
+      setLanguage: (language) =&gt; set({ language }),
+    }),
+    {
+      name: 'settings',
+      storage: createJSONStorage(() =&gt; zustandStorage),
+    }
+  )
+);</code></pre>
+
+<h3>3. Offline-first Patterns</h3>
+
+<div class="concept">
+<p><strong>Offline-first</strong> là kiến trúc ưu tiên dữ liệu local trước, sync với server khi có network. User experience không bị gián đoạn dù mất mạng.</p>
+<p><strong>3 cấp độ offline support:</strong></p>
+<ul>
+  <li><strong>Cache-first:</strong> dùng cache nếu có, fetch mới ở background (React Query default staleTime)</li>
+  <li><strong>Persist cache:</strong> cache survive app restart (React Query + persistQueryClient)</li>
+  <li><strong>Full offline:</strong> local database + sync engine (WatermelonDB, PowerSync)</li>
+</ul>
+</div>
+
+<h4>React Query Persist với MMKV</h4>
+<pre><code>import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister';
+import { MMKV } from 'react-native-mmkv';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24,
+      staleTime: 1000 * 60 * 5,
+    },
+  },
+});
+
+const mmkv = new MMKV({ id: 'query-cache' });
+
+const persister = createSyncStoragePersister({
+  storage: {
+    getItem: (key: string) =&gt; mmkv.getString(key) ?? null,
+    setItem: (key: string, value: string) =&gt; mmkv.set(key, value),
+    removeItem: (key: string) =&gt; mmkv.delete(key),
+  },
+});
+
+function App() {
+  return (
+    &lt;PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: 1000 * 60 * 60 * 24 }}
+    &gt;
+      &lt;MainApp /&gt;
+    &lt;/PersistQueryClientProvider&gt;
+  );
+}</code></pre>
+
+<h4>Offline Mutations Queue</h4>
+<pre><code>import { useMutation, useQueryClient, onlineManager } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
+
+onlineManager.setEventListener((setOnline) =&gt; {
+  return NetInfo.addEventListener((state) =&gt; {
+    setOnline(!!state.isConnected);
+  });
+});
+
+const useCreatePost = () =&gt; {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (newPost: CreatePostInput) =&gt; api.createPost(newPost),
+    onMutate: async (newPost) =&gt; {
+      await queryClient.cancelQueries({ queryKey: ['posts'] });
+      const previousPosts = queryClient.getQueryData&lt;Post[]&gt;(['posts']);
+      queryClient.setQueryData&lt;Post[]&gt;(['posts'], (old) =&gt; [
+        ...(old ?? []),
+        { ...newPost, id: `temp-${Date.now()}`, pending: true },
+      ]);
+      return { previousPosts };
+    },
+    onError: (_err, _newPost, context) =&gt; {
+      queryClient.setQueryData(['posts'], context?.previousPosts);
+    },
+    onSettled: () =&gt; {
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    },
+  });
+};</code></pre>
+
+<p>Pattern trên sử dụng optimistic update: UI cập nhật ngay lập tức, nếu mutation fail thì rollback. Kết hợp với <code>onlineManager</code>, mutations sẽ được queue khi offline và tự retry khi online.</p>
+
+<h4>Local Database Options</h4>
+
+<table>
+<tr><th>Library</th><th>Type</th><th>Sync</th><th>Performance</th><th>Use case</th></tr>
+<tr><td>SQLite (expo-sqlite)</td><td>Relational</td><td>Manual</td><td>Tốt</td><td>Complex queries, existing SQL skills</td></tr>
+<tr><td>WatermelonDB</td><td>Relational (lazy)</td><td>Built-in sync</td><td>Rất tốt (lazy loading)</td><td>Large datasets, offline-first apps</td></tr>
+<tr><td>Realm</td><td>Object DB</td><td>Atlas Sync</td><td>Rất tốt</td><td>MongoDB ecosystem</td></tr>
+<tr><td>MMKV</td><td>Key-Value</td><td>Không</td><td>Cực nhanh</td><td>Settings, simple cache</td></tr>
+</table>
+
+<h3>4. Certificate Pinning</h3>
+
+<div class="concept">
+<p><strong>Certificate Pinning</strong> đảm bảo app chỉ trust certificate cụ thể của server, không phải bất kỳ CA nào trong trust store. Chống man-in-the-middle (MITM) attacks ngay cả khi attacker install malicious CA certificate trên device.</p>
+<p><strong>Tại sao cần:</strong></p>
+<ul>
+  <li>Corporate proxies (Burp Suite, Charles) có thể intercept HTTPS traffic nếu user install proxy CA</li>
+  <li>Malware có thể install rogue CA certificates</li>
+  <li>Government-level surveillance có thể compromise CA</li>
+</ul>
+</div>
+
+<p>Implement certificate pinning với <code>react-native-ssl-pinning</code>:</p>
+<pre><code>import { fetch as sslFetch } from 'react-native-ssl-pinning';
+
+const fetchWithPinning = async (url: string) =&gt; {
+  const response = await sslFetch(url, {
+    method: 'GET',
+    timeoutInterval: 10000,
+    sslPinning: {
+      certs: ['server_cert'],
+    },
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  return response.json();
+};</code></pre>
+
+<p>Cách khác: dùng <code>TrustKit</code> (iOS) hoặc cấu hình <code>network_security_config.xml</code> (Android):</p>
+<pre><code>&lt;network-security-config&gt;
+  &lt;domain-config&gt;
+    &lt;domain includeSubdomains="true"&gt;api.yourapp.com&lt;/domain&gt;
+    &lt;pin-set expiration="2025-12-31"&gt;
+      &lt;pin digest="SHA-256"&gt;AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=&lt;/pin&gt;
+      &lt;pin digest="SHA-256"&gt;BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=&lt;/pin&gt;
+    &lt;/pin-set&gt;
+  &lt;/domain-config&gt;
+&lt;/network-security-config&gt;</code></pre>
+
+<div class="card card-warning">
+<p><strong>Rủi ro của Certificate Pinning:</strong> Nếu certificate rotate mà app chưa update pin &rarr; app sẽ không connect được. Luôn pin backup certificate và có mechanism để update pins remotely (hoặc dùng public key pinning thay vì certificate pinning).</p>
+</div>
+
+<h3>5. Biometric Authentication</h3>
+
+<pre><code>import ReactNativeBiometrics, { BiometryTypes } from 'react-native-biometrics';
+
+const biometrics = new ReactNativeBiometrics();
+
+const checkBiometricAvailability = async () =&gt; {
+  const { available, biometryType } = await biometrics.isSensorAvailable();
+
+  if (!available) {
+    return { supported: false, type: null };
+  }
+
+  return {
+    supported: true,
+    type: biometryType,
+    isFaceID: biometryType === BiometryTypes.FaceID,
+    isFingerprint: biometryType === BiometryTypes.Biometrics,
+  };
+};
+
+const authenticateWithBiometrics = async (): Promise&lt;boolean&gt; =&gt; {
+  const { success } = await biometrics.simplePrompt({
+    promptMessage: 'Xác nhận danh tính',
+    cancelButtonText: 'Hủy',
+  });
+  return success;
+};
+
+const createBiometricKey = async () =&gt; {
+  const { publicKey } = await biometrics.createKeys();
+  await sendPublicKeyToServer(publicKey);
+};
+
+const signWithBiometrics = async (payload: string) =&gt; {
+  const { signature } = await biometrics.createSignature({
+    promptMessage: 'Xác nhận giao dịch',
+    payload,
+  });
+  return signature;
+};</code></pre>
+
+<p><code>createKeys()</code> tạo RSA key pair trong Secure Enclave (iOS) / Keystore (Android). Private key không bao giờ rời khỏi device. <code>createSignature()</code> ký data bằng private key sau khi user xác thực biometrics &mdash; server verify bằng public key.</p>
+
+<h3>6. Root/Jailbreak Detection</h3>
+
+<div class="concept">
+<p>Rooted (Android) / Jailbroken (iOS) devices có nguy cơ bảo mật cao hơn: app sandbox bị phá, attacker có thể đọc Keychain, hook vào app process (Frida, Xposed).</p>
+<p><strong>Phương pháp detect:</strong></p>
+<ul>
+  <li>Check sự tồn tại của Cydia, Magisk, SuperSU</li>
+  <li>Check file system writable ở root paths</li>
+  <li>Check nếu app chạy trong emulator</li>
+  <li>Check binary integrity (code tampering)</li>
+</ul>
+</div>
+
+<pre><code>import JailMonkey from 'jail-monkey';
+
+const performSecurityChecks = () =&gt; {
+  const isRooted = JailMonkey.isJailBroken();
+  const canMockLocation = JailMonkey.canMockLocation();
+  const isDebugMode = JailMonkey.isDebuggedMode();
+  const isOnExternalStorage = JailMonkey.isOnExternalStorage();
+
+  const threats: string[] = [];
+
+  if (isRooted) threats.push('ROOTED_DEVICE');
+  if (canMockLocation) threats.push('MOCK_LOCATION');
+  if (isDebugMode) threats.push('DEBUG_MODE');
+  if (isOnExternalStorage) threats.push('EXTERNAL_STORAGE');
+
+  return {
+    isSecure: threats.length === 0,
+    threats,
+  };
+};
+
+const enforceSecurityPolicy = (threats: string[]) =&gt; {
+  if (threats.includes('ROOTED_DEVICE')) {
+    return 'block';
+  }
+  if (threats.includes('DEBUG_MODE')) {
+    return 'warn';
+  }
+  return 'allow';
+};</code></pre>
+
+<div class="card card-info">
+<p><strong>Cân nhắc:</strong> Root detection không phải giải pháp tuyệt đối &mdash; Magisk Hide, Frida scripts có thể bypass. Nên kết hợp nhiều checks (defense in depth) và không chỉ dựa vào client-side validation. Banking apps thường block rooted devices; e-commerce apps có thể chỉ warn.</p>
+</div>
+
+<h3>7. OWASP Mobile Top 10</h3>
+
+<div class="deep-dive">
+<h4>M1 — Improper Credential Usage</h4>
+<p>Hardcode API keys, credentials trong source code. Dùng <code>react-native-config</code> cho environment variables, lưu secrets ở server-side.</p>
+
+<h4>M2 — Inadequate Supply Chain Security</h4>
+<p>Third-party libraries có thể chứa malicious code. Luôn audit dependencies (<code>npm audit</code>), pin versions, dùng lockfile.</p>
+
+<h4>M3 — Insecure Authentication/Authorization</h4>
+<p>Weak password policies, thiếu MFA, không validate JWT expiry ở client. Implement token refresh flow đúng cách, check token expiry trước mỗi request.</p>
+
+<h4>M4 — Insufficient Input/Output Validation</h4>
+<p>SQL injection, XSS qua WebView. Validate mọi user input ở cả client và server. Dùng parameterized queries cho SQLite.</p>
+
+<h4>M5 — Insecure Communication</h4>
+<p>HTTP thay vì HTTPS, thiếu certificate pinning. Enforce TLS 1.2+, implement certificate pinning cho critical APIs.</p>
+
+<h4>M6 — Inadequate Privacy Controls</h4>
+<p>Collect data không cần thiết, không anonymize PII. Chỉ collect data cần thiết, encrypt PII, comply với GDPR/CCPA.</p>
+
+<h4>M7 — Insufficient Binary Protections</h4>
+<p>Reverse engineering, code tampering. Dùng ProGuard/R8 obfuscation, Hermes bytecode (RN), integrity checks.</p>
+
+<h4>M8 — Security Misconfiguration</h4>
+<p>Debug mode trong production, backup enabled, cleartext traffic allowed. Disable debug flags, configure <code>android:allowBackup="false"</code>.</p>
+
+<h4>M9 — Insecure Data Storage</h4>
+<p>Sensitive data trong AsyncStorage, logs, screenshots. Dùng Keychain/Keystore, disable screenshots cho sensitive screens.</p>
+
+<h4>M10 — Insufficient Cryptography</h4>
+<p>Weak algorithms (MD5, SHA1 cho passwords), hardcoded encryption keys. Dùng AES-256, bcrypt/scrypt cho passwords, key management qua Keystore.</p>
+</div>
+
+<h3>8. Encryption</h3>
+
+<h4>Data at Rest</h4>
+<div class="concept">
+<p>Data lưu trên device phải được encrypt:</p>
+<ul>
+  <li><strong>Keychain/Keystore:</strong> auto-encrypted bởi OS</li>
+  <li><strong>MMKV:</strong> hỗ trợ AES encryption mode</li>
+  <li><strong>SQLite:</strong> dùng SQLCipher cho encrypted database</li>
+  <li><strong>Files:</strong> dùng <code>react-native-fs</code> + encryption library</li>
+</ul>
+</div>
+
+<pre><code>import { MMKV } from 'react-native-mmkv';
+
+const encryptedStorage = new MMKV({
+  id: 'encrypted-store',
+  encryptionKey: 'your-256-bit-key-here',
+});
+
+encryptedStorage.set('sensitiveData', JSON.stringify({
+  cardLastFour: '4242',
+  expiryMonth: 12,
+}));</code></pre>
+
+<h4>Data in Transit</h4>
+<div class="concept">
+<p>Mọi network communication phải qua HTTPS (TLS 1.2+):</p>
+<ul>
+  <li>React Native default chỉ cho phép HTTPS trên iOS (App Transport Security)</li>
+  <li>Android cần cấu hình <code>network_security_config.xml</code> để block cleartext</li>
+  <li>Certificate pinning cho APIs quan trọng (banking, healthcare)</li>
+  <li>End-to-end encryption cho messaging apps (signal protocol)</li>
+</ul>
+</div>
+
+<p>Block cleartext traffic trên Android:</p>
+<pre><code>&lt;network-security-config&gt;
+  &lt;base-config cleartextTrafficPermitted="false"&gt;
+    &lt;trust-anchors&gt;
+      &lt;certificates src="system" /&gt;
+    &lt;/trust-anchors&gt;
+  &lt;/base-config&gt;
+&lt;/network-security-config&gt;</code></pre>
+
+<h3>9. Environment Variables</h3>
+
+<pre><code>import Config from 'react-native-config';
+
+const API_BASE_URL = Config.API_BASE_URL;
+const ANALYTICS_KEY = Config.ANALYTICS_KEY;
+const ENVIRONMENT = Config.ENVIRONMENT;</code></pre>
+
+<p>File <code>.env</code>:</p>
+<pre><code>API_BASE_URL=https://api.yourapp.com
+ANALYTICS_KEY=UA-XXXXXXXXX
+ENVIRONMENT=production</code></pre>
+
+<div class="card card-danger">
+<p><strong>QUAN TRỌNG:</strong> <code>react-native-config</code> inject biến vào app bundle &mdash; chúng KHÔNG an toàn, có thể decompile ra. KHÔNG lưu secrets (API secret keys, database passwords) trong <code>.env</code>. Chỉ dùng cho public configuration (API URLs, feature flags, analytics IDs). Secrets phải lưu ở server và truy cập qua authenticated API.</p>
+</div>
+
+<h3>10. Screen Capture Prevention</h3>
+
+<p>Ngăn screenshot/screen recording cho sensitive screens (banking, passwords):</p>
+
+<pre><code>import { Platform } from 'react-native';
+import { useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import ScreenCapture from 'react-native-screen-capture';
+
+const usePreventScreenCapture = () =&gt; {
+  useFocusEffect(
+    useCallback(() =&gt; {
+      ScreenCapture.enableSecureView();
+      return () =&gt; {
+        ScreenCapture.disableSecureView();
+      };
+    }, [])
+  );
+};</code></pre>
+
+<p>Trên Android, cơ chế này set <code>FLAG_SECURE</code> trên Window. Trên iOS, overlay hidden text field để trigger DRM protection. Expo users có thể dùng <code>expo-screen-capture</code>.</p>
+
+<h3>11. ProGuard/R8 Obfuscation</h3>
+
+<div class="concept">
+<p><strong>Obfuscation</strong> làm cho code khó đọc hơn sau khi decompile. R8 (replacement cho ProGuard) là default trong Android Gradle Plugin:</p>
+<ul>
+  <li><strong>Minification:</strong> remove unused code (tree shaking)</li>
+  <li><strong>Obfuscation:</strong> rename classes, methods, fields thành a, b, c</li>
+  <li><strong>Optimization:</strong> inline methods, remove dead branches</li>
+</ul>
+</div>
+
+<p>Enable trong <code>android/app/build.gradle</code>:</p>
+<pre><code>android {
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}</code></pre>
+
+<p>ProGuard rules cho React Native (<code>proguard-rules.pro</code>):</p>
+<pre><code>-keep class com.facebook.react.** { *; }
+-keep class com.facebook.hermes.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+-dontwarn com.facebook.react.**
+
+-keepclassmembers class * {
+    @com.facebook.react.uimanager.annotations.ReactProp *;
+}
+
+-keep,allowobfuscation @interface com.facebook.proguard.annotations.DoNotStrip
+-keep,allowobfuscation @interface com.facebook.proguard.annotations.KeepGettersAndSetters
+
+-keep @com.facebook.proguard.annotations.DoNotStrip class *
+-keepclassmembers class * {
+    @com.facebook.proguard.annotations.DoNotStrip *;
+}</code></pre>
+
+<div class="card card-info">
+<p><strong>Hermes bytecode:</strong> React Native với Hermes compiler đã convert JS thành bytecode &mdash; khó đọc hơn plain JS nhưng không phải true obfuscation. Kết hợp với R8 cho native code và Hermes cho JS code để có protection tốt nhất.</p>
+</div>
+
+<h2>❓ Câu hỏi phỏng vấn + Đáp án</h2>
+
+<h2>🛠️ Debug playbook: security/storage bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>User mới thấy data user cũ</td><td>Query cache, persisted store, secure storage, navigation reset</td><td>Logout clear token/cache/store/offline queue và reset nav</td></tr>
+<tr><td>Token vẫn tồn tại sau logout</td><td>Keychain/SecureStore remove có await chưa, error bị nuốt không</td><td>Await clear, handle failure, verify storage empty</td></tr>
+<tr><td>Secret bị lộ trong APK/IPA</td><td>.env, BuildConfig, bundle strings</td><td>Không nhúng secret client-side; chuyển secret về server</td></tr>
+<tr><td>Pinning làm app mất kết nối</td><td>Cert rotate, pin backup, domain config</td><td>Có kế hoạch rotate và backup pin</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Mobile security không có một lớp bảo vệ tuyệt đối. Trả lời theo data sensitivity, storage choice, transport security, logout cleanup, device compromise và operational risk.</p>
+</div>
+
+<div class="qa">
+<div class="q">Q1: Tại sao không được dùng AsyncStorage để lưu access tokens? Giải pháp thay thế?</div>
+<div class="a">
+<p><strong>AsyncStorage lưu data dưới dạng plaintext</strong> trong SQLite (Android) hoặc plist file (iOS). Bất kỳ ai có physical access, root access, hoặc adb debug access đều đọc được. Trên Android, file nằm ở <code>/data/data/&lt;package&gt;/databases/RKStorage</code>.</p>
+<p><strong>Giải pháp:</strong> Dùng <code>react-native-keychain</code> để lưu vào iOS Keychain / Android Keystore. Đây là hardware-backed storage, encrypted bởi OS, sandboxed per-app. Có thể thêm biometric gating (yêu cầu FaceID/fingerprint trước khi trả token).</p>
+<p><strong>Phân loại storage:</strong></p>
+<ul>
+  <li><strong>Keychain/Keystore:</strong> tokens, passwords, encryption keys</li>
+  <li><strong>MMKV (encrypted):</strong> user preferences, feature flags, non-sensitive cache</li>
+  <li><strong>AsyncStorage:</strong> chỉ dùng cho legacy code hoặc data hoàn toàn non-sensitive</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Certificate Pinning là gì? Tại sao cần và có những rủi ro gì?</div>
+<div class="a">
+<p><strong>Certificate Pinning</strong> là kỹ thuật đảm bảo app chỉ chấp nhận certificate cụ thể khi kết nối HTTPS, thay vì trust bất kỳ CA nào trong system trust store.</p>
+<p><strong>Tại sao cần:</strong> Ngăn MITM attacks &mdash; attacker install rogue CA certificate trên device (qua corporate proxy, malware) có thể intercept HTTPS traffic. Với pinning, app sẽ reject connections dù certificate valid theo CA nhưng không match pin.</p>
+<p><strong>Rủi ro:</strong></p>
+<ul>
+  <li><strong>Certificate rotation:</strong> Nếu server rotate certificate mà app chưa update pin &rarr; app bị block hoàn toàn. Cần pin backup certificate</li>
+  <li><strong>Debugging khó:</strong> Không thể dùng proxy tools (Charles, Flipper) để debug network &rarr; cần disable pinning trong debug builds</li>
+  <li><strong>Public key pinning</strong> tốt hơn certificate pinning vì public key ít thay đổi hơn certificate</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: So sánh MMKV với AsyncStorage. Khi nào dùng cái nào?</div>
+<div class="a">
+<p><strong>Performance:</strong> MMKV nhanh hơn ~30x nhờ memory-mapped file (mmap) thay vì SQLite queries. MMKV hỗ trợ synchronous API &mdash; không cần await, không block JS thread vì read từ memory.</p>
+<p><strong>AsyncStorage</strong> dùng khi: legacy project không thể migrate, hoặc cần cross-platform web compatibility (AsyncStorage có web adapter). Hầu hết mọi trường hợp khác nên dùng MMKV.</p>
+<p><strong>MMKV</strong> dùng cho: user settings, theme, language, onboarding state, cache, feature flags. Tích hợp tốt với Zustand persist, Redux persist.</p>
+<p><strong>Không dùng cả hai</strong> cho: tokens, passwords, secrets &rarr; dùng Keychain/Keystore.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: Giải thích offline-first architecture. Implement thế nào với React Query?</div>
+<div class="a">
+<p><strong>Offline-first</strong> ưu tiên data local, sync với server khi có mạng. User không thấy loading states khi mở app (data từ cache).</p>
+<p><strong>React Query implement:</strong></p>
+<ul>
+  <li><strong>persistQueryClient:</strong> serialize query cache vào MMKV, restore khi app restart</li>
+  <li><strong>staleTime:</strong> set thời gian data considered fresh (e.g., 5 phút)</li>
+  <li><strong>gcTime:</strong> set thời gian cache giữ data (e.g., 24 giờ)</li>
+  <li><strong>onlineManager:</strong> integrate NetInfo để detect network state, auto-pause/resume queries</li>
+  <li><strong>Optimistic updates:</strong> update cache ngay khi mutate, rollback nếu server reject</li>
+  <li><strong>Mutation queue:</strong> mutations khi offline được queue, auto-retry khi online</li>
+</ul>
+<p>Cho complex apps cần full offline (e.g., field service app), dùng WatermelonDB hoặc PowerSync thay vì chỉ React Query persist.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: OWASP Mobile Top 10 — liệt kê và giải thích 3 mục quan trọng nhất cho RN app?</div>
+<div class="a">
+<p><strong>M9 — Insecure Data Storage:</strong> Lưu tokens/passwords vào AsyncStorage, logs chứa sensitive data, clipboard exposure. Giải pháp: Keychain/Keystore cho secrets, MMKV encrypted cho preferences, không log sensitive data.</p>
+<p><strong>M5 — Insecure Communication:</strong> HTTP requests, thiếu certificate pinning, trust bất kỳ CA. Giải pháp: enforce HTTPS only, certificate pinning cho critical APIs, disable cleartext traffic.</p>
+<p><strong>M3 — Insecure Authentication/Authorization:</strong> Token không expire, thiếu refresh flow, không validate server-side. Giải pháp: short-lived access tokens + refresh tokens, validate JWT expiry client-side, implement proper token refresh interceptor.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: Làm thế nào để detect root/jailbreak? Có đáng tin không?</div>
+<div class="a">
+<p><strong>Phương pháp:</strong> Dùng <code>jail-monkey</code> hoặc <code>react-native-device-info</code> để check:</p>
+<ul>
+  <li>Sự tồn tại của Cydia (iOS), Magisk/SuperSU (Android)</li>
+  <li>File system writability ở root paths (<code>/system</code>, <code>/private</code>)</li>
+  <li>SU binary existence</li>
+  <li>App đang chạy trong emulator</li>
+  <li>Debugger attached</li>
+</ul>
+<p><strong>Độ tin cậy:</strong> Thấp. Magisk Hide, Frida scripts có thể bypass hầu hết client-side checks. Root detection chỉ là 1 layer trong defense-in-depth strategy. Không nên dùng root detection như primary security measure &mdash; phải combine với server-side validation, certificate pinning, code obfuscation.</p>
+<p><strong>Policy:</strong> Banking apps block rooted devices. E-commerce apps warn. Internal tools có thể ignore.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q7: Environment variables trong React Native hoạt động thế nào? Có an toàn không?</div>
+<div class="a">
+<p><code>react-native-config</code> đọc file <code>.env</code> và inject vào app bundle tại build time. Trên Android, values được inject vào <code>BuildConfig</code> và <code>res/values</code>. Trên iOS, inject vào <code>Info.plist</code>.</p>
+<p><strong>KHÔNG AN TOÀN cho secrets.</strong> Bất kỳ giá trị nào trong <code>.env</code> đều có thể extract từ app bundle sau khi decompile. APK/IPA chỉ là ZIP file &mdash; ai cũng có thể giải nén và tìm strings.</p>
+<p><strong>Chỉ dùng cho:</strong> API base URLs, analytics IDs, feature flags, environment identifiers (staging/production).</p>
+<p><strong>Secrets phải:</strong> Lưu ở server, truy cập qua authenticated API. Hoặc dùng build-time CI/CD secrets injection + native code embedding (vẫn có thể extract nhưng khó hơn).</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q8: Giải thích data encryption at rest vs in transit. Implement thế nào trong RN?</div>
+<div class="a">
+<p><strong>At rest (dữ liệu lưu trữ):</strong></p>
+<ul>
+  <li>Keychain/Keystore: auto-encrypted bởi OS hardware</li>
+  <li>MMKV: AES encryption mode (app-level key)</li>
+  <li>SQLite: dùng SQLCipher cho encrypted DB</li>
+  <li>Files: encrypt trước khi write bằng <code>react-native-aes-crypto</code></li>
+</ul>
+<p><strong>In transit (dữ liệu truyền tải):</strong></p>
+<ul>
+  <li>HTTPS/TLS 1.2+ cho mọi API calls</li>
+  <li>Certificate pinning cho APIs critical</li>
+  <li>iOS App Transport Security enforce HTTPS by default</li>
+  <li>Android <code>network_security_config.xml</code> block cleartext</li>
+  <li>End-to-end encryption cho messaging (Signal Protocol)</li>
+</ul>
+<p><strong>Nguyên tắc:</strong> Sensitive data phải encrypted cả khi lưu trữ và khi truyền tải. Dùng strong algorithms (AES-256, RSA-2048+). Không implement crypto algorithms tự &mdash; dùng OS/library cung cấp.</p>
+</div>
+</div>
+
+<h2>🏋️ Bài tập thực hành</h2>
+
+<div class="exercise">
+<strong>Bài tập: Implement Secure Auth Flow</strong><br>
+<p>Xây dựng complete authentication flow với security best practices:</p>
+<p><strong>Yêu cầu:</strong></p>
+<ul>
+  <li><strong>Login screen:</strong> nhập email/password, gọi login API, nhận access token + refresh token</li>
+  <li><strong>Token storage:</strong> lưu tokens vào Keychain/Keystore bằng <code>react-native-keychain</code></li>
+  <li><strong>API interceptor:</strong> tự động attach token vào mọi request, handle 401 bằng refresh token flow</li>
+  <li><strong>Token refresh:</strong> khi access token expired, dùng refresh token lấy token mới. Queue các requests đang pending trong lúc refresh</li>
+  <li><strong>Biometric unlock:</strong> sau login lần đầu, cho phép mở app bằng FaceID/fingerprint</li>
+  <li><strong>Auto logout:</strong> khi refresh token expired hoặc bị revoke, clear tokens và redirect về login</li>
+  <li><strong>Security checks:</strong> detect root/jailbreak và warn user</li>
+</ul>
+<p><strong>Acceptance Criteria:</strong></p>
+<ul>
+  <li>Tokens KHÔNG được lưu trong AsyncStorage hoặc state management</li>
+  <li>Token refresh flow handle concurrent requests đúng cách (không gọi refresh nhiều lần)</li>
+  <li>Biometric authentication hoạt động trên cả iOS và Android</li>
+  <li>App hoạt động offline (hiển thị cached data từ React Query persist)</li>
+</ul>
+</div>
+
+<div class="solution">
+<strong>Hướng dẫn giải — Token Refresh Interceptor:</strong>
+<pre><code>import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import * as Keychain from 'react-native-keychain';
+
+let isRefreshing = false;
+let failedQueue: Array&lt;{
+  resolve: (token: string) =&gt; void;
+  reject: (error: Error) =&gt; void;
+}&gt; = [];
+
+const processQueue = (error: Error | null, token: string | null) =&gt; {
+  failedQueue.forEach((promise) =&gt; {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
+const apiClient = axios.create({
+  baseURL: 'https://api.yourapp.com',
+});
+
+apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) =&gt; {
+  const credentials = await Keychain.getGenericPassword({ service: 'accessToken' });
+  if (credentials) {
+    config.headers.Authorization = `Bearer ${credentials.password}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) =&gt; response,
+  async (error: AxiosError) =&gt; {
+    const originalRequest = error.config as InternalAxiosRequestConfig &amp; { _retry?: boolean };
+
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise&lt;string&gt;((resolve, reject) =&gt; {
+        failedQueue.push({ resolve, reject });
+      }).then((token) =&gt; {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return apiClient(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    const refreshCreds = await Keychain.getGenericPassword({ service: 'refreshToken' });
+    if (!refreshCreds) {
+      processQueue(new Error('No refresh token'), null);
+      isRefreshing = false;
+      navigateToLogin();
+      return Promise.reject(error);
+    }
+
+    const response = await axios.post('https://api.yourapp.com/auth/refresh', {
+      refreshToken: refreshCreds.password,
+    });
+
+    const { accessToken, refreshToken } = response.data;
+    await Keychain.setGenericPassword('token', accessToken, { service: 'accessToken' });
+    await Keychain.setGenericPassword('token', refreshToken, { service: 'refreshToken' });
+
+    processQueue(null, accessToken);
+    isRefreshing = false;
+
+    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+    return apiClient(originalRequest);
+  }
+);</code></pre>
+<p>Pattern trên sử dụng queue để handle concurrent 401 responses. Khi request đầu tiên nhận 401, nó trigger refresh. Các requests tiếp theo thấy <code>isRefreshing = true</code> sẽ được đẩy vào queue, đợi refresh hoàn thành rồi retry với token mới.</p>
+</div>
+
+<h2>🧩 Mini exercise bảo mật thực tế</h2>
+
+<div class="exercise">
+  <strong>Exercise 1: Token storage audit</strong><br>
+  Kiểm tra app sample: access token, refresh token, user profile, feature flags đang lưu ở đâu. Phân loại cái nào được lưu AsyncStorage/MMKV/Keychain.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 2: Logout sạch</strong><br>
+  Implement logout: revoke token server-side, clear secure storage, clear query cache, reset navigation, clear offline queue nhạy cảm.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 3: Threat model mini</strong><br>
+  Với app banking/health/e-commerce, liệt kê 5 dữ liệu nhạy cảm, nơi lưu, rủi ro, và mitigation tối thiểu.
+</div>
+
+<h2>⚠️ Lỗi thường gặp</h2>
+<div class="card card-warning">
+<ul>
+  <li>Lưu refresh token trong AsyncStorage/MMKV không mã hóa.</li>
+  <li>Nghĩ biến trong <code>.env</code> là secret, trong khi app bundle có thể bị decompile.</li>
+  <li>Logout chỉ đổi UI state, nhưng token/cache/offline queue vẫn còn trên máy.</li>
+  <li>Pin certificate nhưng không có kế hoạch rotate, đến ngày cert đổi thì app mất kết nối.</li>
+  <li>Dùng root/jailbreak detection như lớp bảo vệ duy nhất, trong khi nó có thể bị bypass.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> User logout khỏi app, nhưng React Query cache vẫn còn profile và order cũ. Người dùng khác đăng nhập trên cùng máy thấy dữ liệu cũ trong vài giây.</p>
+<p><strong>Cách xử lý:</strong> Khi logout, clear secure token, reset auth store, clear query cache/persisted cache, reset navigation và hủy offline mutations chứa dữ liệu user cũ.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>Bảo mật mobile là giảm thiểu rủi ro ở nhiều lớp: lưu trữ đúng, truyền tải đúng, logout sạch, không nhúng secret, và có kế hoạch khi device/app bị compromise.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Dữ liệu nào tuyệt đối không nên lưu AsyncStorage?</div>
+  <div class="q">2. Logout sạch cần clear những lớp nào?</div>
+  <div class="q">3. Vì sao certificate pinning có rủi ro vận hành?</div>
+  <div class="q">4. Environment variable trong mobile app có phải secret không?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích tại sao AsyncStorage không an toàn cho tokens</label>
+  <label><input type="checkbox"> Tôi đã implement lưu/đọc tokens bằng react-native-keychain</label>
+  <label><input type="checkbox"> Tôi biết sự khác nhau giữa MMKV và AsyncStorage và khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi đã setup MMKV và tích hợp với Zustand/Redux persist</label>
+  <label><input type="checkbox"> Tôi hiểu offline-first architecture và đã setup React Query persist</label>
+  <label><input type="checkbox"> Tôi có thể giải thích Certificate Pinning và rủi ro của nó</label>
+  <label><input type="checkbox"> Tôi đã implement biometric authentication</label>
+  <label><input type="checkbox"> Tôi có thể liệt kê và giải thích OWASP Mobile Top 10</label>
+  <label><input type="checkbox"> Tôi hiểu data encryption at rest vs in transit</label>
+  <label><input type="checkbox"> Tôi biết cách dùng react-native-config và giới hạn bảo mật của nó</label>
+  <label><input type="checkbox"> Tôi đã implement token refresh interceptor với concurrent request handling</label>
+  <label><input type="checkbox"> Tôi biết cách enable ProGuard/R8 và viết rules cho React Native</label>
+  <label><input type="checkbox"> Tôi đã implement root/jailbreak detection</label>
+  <label><input type="checkbox"> Tôi có thể giải thích screen capture prevention mechanism</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://owasp.org/www-project-mobile-top-10/" target="_blank">OWASP Mobile Top 10</a> &mdash; Danh sách 10 rủi ro bảo mật mobile phổ biến nhất</div>
+<div class="resource">📘 <a href="https://github.com/oblador/react-native-keychain" target="_blank">react-native-keychain</a> &mdash; iOS Keychain / Android Keystore wrapper</div>
+<div class="resource">📘 <a href="https://github.com/mrousavy/react-native-mmkv" target="_blank">react-native-mmkv</a> &mdash; Fastest key-value storage cho React Native</div>
+<div class="resource">📘 <a href="https://tanstack.com/query/latest/docs/framework/react/plugins/persistQueryClient" target="_blank">React Query Persist</a> &mdash; Official persist plugin documentation</div>
+<div class="resource">📘 <a href="https://github.com/nicklockwood/iVersion/blob/master/RELEASE_NOTES.md" target="_blank">react-native-ssl-pinning</a> &mdash; Certificate pinning library</div>
+<div class="resource">📘 <a href="https://github.com/SelfLender/react-native-biometrics" target="_blank">react-native-biometrics</a> &mdash; Biometric authentication (FaceID, fingerprint)</div>
+<div class="resource">📘 <a href="https://github.com/GantMan/jail-monkey" target="_blank">jail-monkey</a> &mdash; Root/jailbreak detection</div>
+<div class="resource">📺 <a href="https://www.youtube.com/watch?v=AoAIcIiOeAE" target="_blank">"Mobile App Security Best Practices"</a> &mdash; React Native security overview (YouTube)</div>
+<div class="resource">📘 <a href="https://reactnative.dev/docs/security" target="_blank">React Native Security Docs</a> &mdash; Official security guidelines</div>
+<div class="resource">📘 <a href="https://developer.android.com/training/articles/security-config" target="_blank">Android Network Security Config</a> &mdash; Certificate pinning, cleartext traffic</div>
+
+<div class="nav-links">
+  <a href="06-State-Management.html">&larr; Module 06: State Management</a>
+  <a href="12-Testing.html">Module 12: Testing &rarr;</a>
+</div>
+</div>
+</body>
+</html>

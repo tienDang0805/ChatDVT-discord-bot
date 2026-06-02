@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RN Learning Playground — App thực hành xuyên suốt</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>RN Learning Playground</h1>
+<h1>App thực hành xuyên suốt để học thật, debug thật, ôn phỏng vấn thật</h1>
+
+<div class="module-meta">
+  <span class="badge badge-must">Thực hành xuyên suốt</span>
+  <span class="meta-item">⏱ Làm song song với 15 module</span>
+  <span class="meta-item">📋 Mục tiêu: biến kiến thức thành app chạy được</span>
+</div>
+
+<h2>🎯 Mục tiêu</h2>
+<p>Project này gom các kiến thức trong tài liệu vào một app nhỏ nhưng đủ giống app đi làm: có auth, navigation, API, cache, form, cart, storage, test, performance và release checklist.</p>
+
+<div class="card card-accent">
+<p><strong>Nguyên tắc:</strong> Mỗi module không chỉ đọc xong là tick. Phải áp dụng ít nhất một phần vào playground, gặp lỗi, debug, fix, rồi tự trả lời được câu hỏi phỏng vấn liên quan.</p>
+</div>
+
+<h2>🧭 Vòng lặp học thật</h2>
+<ol>
+  <li><strong>Hiểu bản chất:</strong> Concept này giải quyết vấn đề gì trong mobile app?</li>
+  <li><strong>Thấy bug thật:</strong> Nếu dùng sai, app sẽ hỏng ở đâu?</li>
+  <li><strong>Biết debug:</strong> Dùng log/tool/test nào để tìm nguyên nhân?</li>
+  <li><strong>Biết fix:</strong> Sửa tối thiểu, có trade-off rõ.</li>
+  <li><strong>Trả lời phỏng vấn:</strong> Nói được short answer, deep answer, real case, pitfall.</li>
+  <li><strong>Áp dụng vào playground:</strong> Commit nhỏ, có acceptance criteria.</li>
+</ol>
+
+<h2>📱 App spec</h2>
+<table>
+<tr><th>Feature</th><th>Mục tiêu học</th><th>Module liên quan</th></tr>
+<tr><td>Auth flow</td><td>Login/logout, token refresh, reset navigation</td><td>05, 07, 11</td></tr>
+<tr><td>Product list/detail</td><td>API layer, React Query, FlatList, cache</td><td>03, 07, 08</td></tr>
+<tr><td>Cart</td><td>Client state, persist, derived total</td><td>06, 11</td></tr>
+<tr><td>Profile form</td><td>Controlled inputs, validation, keyboard</td><td>02, 03, 04, 12</td></tr>
+<tr><td>Deep link</td><td>Open product/order from URL or notification</td><td>05, 14</td></tr>
+<tr><td>Offline draft</td><td>Queue mutation, retry, conflict note</td><td>07, 11, 15</td></tr>
+<tr><td>Testing</td><td>Login, API error, cart store, smoke E2E</td><td>12</td></tr>
+<tr><td>Performance</td><td>Measure list render, image load, startup tasks</td><td>08, 09</td></tr>
+<tr><td>Release</td><td>CI checklist, sourcemap, OTA decision</td><td>13</td></tr>
+</table>
+
+<h2>📦 Milestone theo module</h2>
+
+<div class="exercise">
+<strong>M01 — JS/TS:</strong> Define typed API models: <code>User</code>, <code>Product</code>, <code>CartItem</code>, <code>ApiResult&lt;T&gt;</code>, <code>PaginatedResponse&lt;T&gt;</code>. Không dùng <code>any</code>.
+</div>
+
+<div class="exercise">
+<strong>M02 — React Core:</strong> Build <code>ProductCard</code>, <code>QuantityStepper</code>, <code>ErrorBoundary</code>. Test key ổn định khi add/remove/reorder list.
+</div>
+
+<div class="exercise">
+<strong>M04 — Hooks:</strong> Viết <code>useDebounce</code>, <code>useKeyboardVisible</code>, <code>useAppStateRefresh</code>. Có cleanup và tránh stale closure.
+</div>
+
+<div class="exercise">
+<strong>M03 — RN Basics:</strong> Build Login/Profile screen xử lý Safe Area, keyboard, image remote, responsive grid.
+</div>
+
+<div class="exercise">
+<strong>M05 — Navigation:</strong> Tạo Auth stack, Main tabs, Product detail, Cart, Profile. Login/logout dùng reset stack. Deep link product hoạt động khi app cold start.
+</div>
+
+<div class="exercise">
+<strong>M07 — Networking:</strong> Tạo Axios client, typed error, token refresh queue, React Query hooks, infinite product list.
+</div>
+
+<div class="exercise">
+<strong>M06 — State:</strong> Cart dùng Zustand hoặc Redux Toolkit. Persist cart, không persist loading/error. Derived total không tính lại thừa.
+</div>
+
+<div class="exercise">
+<strong>M11 — Security/Storage:</strong> Refresh token lưu Keychain/SecureStore. Logout clear token, query cache, cart nhạy cảm, navigation state.
+</div>
+
+<div class="exercise">
+<strong>M12 — Testing:</strong> Test LoginForm, cart store, API 401/422/500, navigation login -> home, smoke E2E.
+</div>
+
+<div class="exercise">
+<strong>M08 — Performance:</strong> Đo render count của ProductCard, optimize FlatList/FlashList, đo before/after. Không tối ưu nếu không có số liệu.
+</div>
+
+<div class="exercise">
+<strong>M09 — Animation:</strong> Thêm micro-interaction cho add-to-cart hoặc swipe action. Kiểm tra không conflict với FlatList scroll.
+</div>
+
+<div class="exercise">
+<strong>M14/M10 — Android & Native:</strong> Thêm deep link Android intent-filter, đọc Logcat, mô phỏng native module contract nếu cần.
+</div>
+
+<div class="exercise">
+<strong>M13 — CI/CD:</strong> Viết release checklist, OTA decision table, CI quality job, sourcemap note.
+</div>
+
+<div class="exercise">
+<strong>M15 — System Design:</strong> Viết design note cho app: auth, product cache, cart persist, offline draft, monitoring, failure modes.
+</div>
+
+<h2>🐞 Bug lab bắt buộc</h2>
+<p>Chủ động tạo bug rồi debug. Đây là phần biến kiến thức thành kinh nghiệm.</p>
+
+<table>
+<tr><th>Bug</th><th>Cách tạo</th><th>Điều phải học được</th></tr>
+<tr><td>Stale closure</td><td>Search debounce đọc keyword cũ</td><td>Dependency, ref latest callback, cleanup</td></tr>
+<tr><td>Concurrent 401</td><td>Cho 5 request cùng hết token</td><td>Refresh queue, reject queue, logout một lần</td></tr>
+<tr><td>Back về Login</td><td>Login bằng navigate thay vì reset</td><td>Navigation stack là state machine</td></tr>
+<tr><td>List re-render quá nhiều</td><td>Inline callback/style truyền vào memo item</td><td>Stable props, profiler, đo before/after</td></tr>
+<tr><td>Keyboard che form</td><td>Form dài trên Android màn nhỏ</td><td>KeyboardAvoidingView, ScrollView, adjustResize</td></tr>
+<tr><td>Cache leak sau logout</td><td>Không clear QueryClient</td><td>Security boundary khi đổi user</td></tr>
+<tr><td>E2E flaky</td><td>Dùng sleep cố định</td><td>Wait for element, deterministic test data</td></tr>
+</table>
+
+<h2>🎤 Cách ôn phỏng vấn từ playground</h2>
+<div class="qa">
+  <div class="q">Format trả lời mỗi feature</div>
+  <div class="a">
+    <ol>
+      <li><strong>Short answer:</strong> nói trong 30 giây.</li>
+      <li><strong>Deep answer:</strong> giải thích mental model và trade-off.</li>
+      <li><strong>Real case:</strong> lấy bug trong Bug lab làm ví dụ.</li>
+      <li><strong>Debug path:</strong> nêu bước tìm nguyên nhân.</li>
+      <li><strong>Follow-up:</strong> chuẩn bị câu hỏi nếu interviewer đào sâu.</li>
+    </ol>
+  </div>
+</div>
+
+<h2>✅ Definition of done</h2>
+<div class="checklist">
+  <label><input type="checkbox"> App chạy được trên iOS/Android hoặc Expo/dev build phù hợp</label>
+  <label><input type="checkbox"> Có typed API layer, không dùng any cho response chính</label>
+  <label><input type="checkbox"> Auth flow xử lý token refresh và logout sạch</label>
+  <label><input type="checkbox"> Product list có cache, loading, empty, error, retry</label>
+  <label><input type="checkbox"> Cart persist đúng và không leak qua user khác</label>
+  <label><input type="checkbox"> Có ít nhất 8 tests quan trọng</label>
+  <label><input type="checkbox"> Có ít nhất 3 bug lab đã tạo, debug, fix, ghi note</label>
+  <label><input type="checkbox"> Có release checklist và OTA decision table</label>
+  <label><input type="checkbox"> Có system design note 1-2 trang cho app</label>
+</div>
+
+<h2>📎 Ghi chú</h2>
+<div class="card card-info">
+<p>Không cần app lớn. App nhỏ nhưng có bug thật, debug thật, test thật, release thinking thật sẽ giúp phỏng vấn tốt hơn nhiều so với đọc thêm 20 topic rời rạc.</p>
+</div>
+
+<div class="nav-links">
+  <a href="00-ROADMAP.html">← Roadmap</a>
+  <a href="01-JS-TS-Fundamentals.html">Bắt đầu Module 01 →</a>
+</div>
+
+</div>
+</body>
+</html>

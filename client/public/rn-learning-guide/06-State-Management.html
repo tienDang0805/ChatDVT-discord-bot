@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 06 — State Management</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 06 &mdash; State Management</h1>
+<div class="module-meta">
+  <span class="badge badge-must">Phải có</span>
+  <span class="meta-item">&9201; 10-12 giờ</span>
+  <span class="meta-item">&128203; Prerequisites: Module 01-04</span>
+</div>
+
+<h2>&127919; Mục tiêu học tập</h2>
+<ul>
+  <li>Phân biệt rõ Client State vs Server State &mdash; biết chọn đúng tool cho đúng loại state</li>
+  <li>Hiểu vấn đề re-render của Context API và cách khắc phục bằng split contexts</li>
+  <li>Thành thạo Redux Toolkit: store, slice, createAsyncThunk, selectors, middleware</li>
+  <li>Sử dụng Zustand như lightweight alternative &mdash; hiểu tại sao nó nhanh hơn Redux trong nhiều case</li>
+  <li>Nắm vững TanStack Query (React Query): caching, staleTime, gcTime, mutations, optimistic updates</li>
+  <li>Biết khi nào dùng local state, khi nào lift up, khi nào global</li>
+  <li>Normalize state cho các entity relationships phức tạp</li>
+</ul>
+
+<h2>&128214; Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc Redux Toolkit docs</strong> &mdash; <a href="https://redux-toolkit.js.org/tutorials/quick-start" target="_blank">redux-toolkit.js.org/tutorials/quick-start</a><br>
+    Focus: Quick Start, createSlice, configureStore, createAsyncThunk.<br>
+    Thời gian: ~2 giờ. Chạy từng example, đọc kỹ phần Immer integration.
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Build Todo App với Redux Toolkit</strong><br>
+    Tạo full CRUD todo app: add, toggle, delete, filter (all/active/completed).<br>
+    Thêm async: fetch todos từ JSONPlaceholder API với createAsyncThunk.<br>
+    Thời gian: ~2-3 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Đọc Zustand docs</strong> &mdash; <a href="https://docs.pmnd.rs/zustand/getting-started/introduction" target="_blank">docs.pmnd.rs/zustand</a><br>
+    Focus: basic usage, selectors, persist middleware, devtools middleware.<br>
+    Thời gian: ~1 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Refactor Todo App sang Zustand</strong><br>
+    Convert cùng Todo app từ Redux sang Zustand. So sánh boilerplate, DX, performance.<br>
+    Thời gian: ~1-2 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">5</span>
+    <strong>Đọc TanStack Query docs</strong> &mdash; <a href="https://tanstack.com/query/latest/docs/react/overview" target="_blank">tanstack.com/query</a><br>
+    Focus: useQuery, useMutation, useInfiniteQuery, caching, staleTime vs gcTime.<br>
+    Thời gian: ~2 giờ
+  </div>
+  <div class="learn-step">
+    <span class="step-num">6</span>
+    <strong>So sánh Developer Experience</strong><br>
+    Viết 1 bài blog ngắn hoặc notes so sánh Redux vs Zustand vs React Query.<br>
+    Focus: boilerplate, learning curve, performance, use cases.<br>
+    Thời gian: ~1 giờ
+  </div>
+</div>
+
+<h2>&9889; Ôn nhanh</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>Local state:</strong> state chỉ dùng trong 1 component/screen, ví dụ input, modal, selected tab.</li>
+    <li><strong>Lift up:</strong> nhiều sibling cần cùng state, nhưng chưa cần persist/global.</li>
+    <li><strong>Global client state:</strong> auth status, theme, cart, feature flags, draft dùng nhiều nơi.</li>
+    <li><strong>Server state:</strong> data backend sở hữu; dùng TanStack Query/RTK Query thay vì tự cache bằng Redux.</li>
+    <li><strong>Persist state:</strong> chỉ persist thứ cần sống qua app restart; tránh persist toàn bộ store.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> state phải được phân loại theo owner, lifetime, scope và cách sync.</li>
+  <li><strong>Thấy bug thật:</strong> global store quá rộng, server state cache bằng Redux, persist cả loading/error.</li>
+  <li><strong>Debug:</strong> đo re-render, inspect selector, kiểm persisted payload, phân biệt client/server state.</li>
+  <li><strong>Fix:</strong> localize state, dùng React Query cho server state, selector ổn định, persist có chọn lọc.</li>
+  <li><strong>Áp dụng playground:</strong> cart store persist, product data bằng React Query, derived total rõ ràng.</li>
+</ul>
+</div>
+
+<h2>&128204; Decision tree chọn state tool</h2>
+<div class="card card-info">
+  <ol>
+    <li>State chỉ dùng trong 1 component? Dùng <code>useState</code> hoặc <code>useReducer</code>.</li>
+    <li>State là data từ API? Dùng TanStack Query trước, chỉ đưa vào store nếu có lý do rõ.</li>
+    <li>State cần đọc/ghi ở nhiều screen nhưng logic đơn giản? Dùng Zustand hoặc Context split nhỏ.</li>
+    <li>State nhiều action, audit/debug quan trọng, team quen Redux? Dùng Redux Toolkit.</li>
+    <li>Cần undo/redo, workflow phức tạp, nhiều derived data? Cân nhắc reducer/state machine + selector memoized.</li>
+  </ol>
+</div>
+
+<h2>&128218; Lý thuyết chi tiết</h2>
+
+<h3>1. Client State vs Server State &mdash; Mental Model</h3>
+<div class="concept">
+<p><strong>Tại sao phân biệt này quan trọng?</strong> Đây là sai lầm phổ biến nhất của React developer: dùng Redux để cache API data. Hai loại state này có bản chất hoàn toàn khác nhau, cần tools khác nhau.</p>
+</div>
+
+<table>
+<tr><th>Tiêu chí</th><th>Client State</th><th>Server State</th></tr>
+<tr><td>Sở hữu</td><td>Frontend owns</td><td>Backend owns, frontend chỉ cache</td></tr>
+<tr><td>Tính chất</td><td>Synchronous, predictable</td><td>Asynchronous, out-of-date bất kỳ lúc nào</td></tr>
+<tr><td>Ví dụ</td><td>UI state (modal open, theme, form input)</td><td>User profile, posts, products</td></tr>
+<tr><td>Tool phù hợp</td><td>useState, Zustand, Redux</td><td>React Query, SWR, RTK Query</td></tr>
+<tr><td>Invalidation</td><td>Không cần</td><td>Cần refetch, cache invalidation</td></tr>
+<tr><td>Loading/Error</td><td>Không có</td><td>Luôn cần xử lý</td></tr>
+</table>
+
+<div class="card card-warning">
+<strong>&9888; Anti-pattern phổ biến:</strong> Dùng Redux để fetch API &rarr; store vào global state &rarr; tự quản lý loading/error/caching/refetch. Đây là reinvent the wheel. React Query giải quyết tất cả những vấn đề này out-of-the-box.
+</div>
+
+<h3>2. Context API</h3>
+<div class="concept">
+<p><strong>Context API</strong> là built-in solution của React để pass data qua component tree mà không cần prop drilling. Tuy nhiên, nó KHÔNG phải state management tool &mdash; nó là dependency injection mechanism.</p>
+</div>
+
+<h4>Khi nào dùng Context?</h4>
+<ul>
+  <li>Theme (dark/light)</li>
+  <li>Locale / i18n</li>
+  <li>Auth user (current user object)</li>
+  <li>Feature flags</li>
+  <li>Data ít thay đổi, cần ở nhiều nơi</li>
+</ul>
+
+<h4>Re-render Problem</h4>
+<div class="card card-danger">
+<p><strong>Vấn đề cốt lõi:</strong> Khi Context value thay đổi, TẤT CẢ consumers re-render &mdash; bất kể component đó có dùng phần data thay đổi hay không. Không có built-in selector mechanism.</p>
+</div>
+
+<p>Ví dụ gây re-render không cần thiết:</p>
+<pre><code>const AppContext = React.createContext({
+  user: null,
+  theme: "light",
+  notifications: [],
+});
+
+function Header() {
+  const { theme } = useContext(AppContext);
+  return &lt;View style={{ backgroundColor: theme === "dark" ? "#000" : "#fff" }} /&gt;;
+}</code></pre>
+<p>Component <code>Header</code> chỉ dùng <code>theme</code>, nhưng khi <code>notifications</code> thay đổi, <code>Header</code> vẫn re-render vì cùng context.</p>
+
+<h4>Giải pháp: Split Contexts</h4>
+<pre><code>const ThemeContext = React.createContext("light");
+const UserContext = React.createContext(null);
+const NotificationContext = React.createContext([]);
+
+function AppProviders({ children }) {
+  const [theme, setTheme] = useState("light");
+  const [user, setUser] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+
+  return (
+    &lt;ThemeContext.Provider value={theme}&gt;
+      &lt;UserContext.Provider value={user}&gt;
+        &lt;NotificationContext.Provider value={notifications}&gt;
+          {children}
+        &lt;/NotificationContext.Provider&gt;
+      &lt;/UserContext.Provider&gt;
+    &lt;/ThemeContext.Provider&gt;
+  );
+}</code></pre>
+<p>Giờ <code>Header</code> chỉ subscribe <code>ThemeContext</code> &rarr; không re-render khi notifications thay đổi.</p>
+
+<div class="deep-dive">
+<p><strong>Tách state và dispatch:</strong> Một kỹ thuật nâng cao là tách value context (read) và dispatch context (write) để components chỉ dispatch actions không bị re-render khi state thay đổi.</p>
+<pre><code>const StateContext = React.createContext(null);
+const DispatchContext = React.createContext(null);
+
+function Provider({ children }) {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  return (
+    &lt;DispatchContext.Provider value={dispatch}&gt;
+      &lt;StateContext.Provider value={state}&gt;
+        {children}
+      &lt;/StateContext.Provider&gt;
+    &lt;/DispatchContext.Provider&gt;
+  );
+}</code></pre>
+<p><code>dispatch</code> là stable reference (không thay đổi giữa các renders), nên <code>DispatchContext</code> consumers không bao giờ re-render do context change.</p>
+</div>
+
+<h3>3. Redux Toolkit (RTK)</h3>
+<div class="concept">
+<p><strong>Redux Toolkit</strong> là official, opinionated toolset cho Redux. Nó giải quyết 3 vấn đề chính của Redux gốc: quá nhiều boilerplate, cần nhiều packages bổ trợ, cấu hình phức tạp.</p>
+</div>
+
+<h4>Store &amp; Slice</h4>
+<pre><code>import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+interface TodoState {
+  items: Todo[];
+  filter: "all" | "active" | "completed";
+}
+
+const initialState: TodoState = {
+  items: [],
+  filter: "all",
+};
+
+const todoSlice = createSlice({
+  name: "todos",
+  initialState,
+  reducers: {
+    addTodo(state, action: PayloadAction&lt;{ id: string; title: string }&gt;) {
+      state.items.push({
+        id: action.payload.id,
+        title: action.payload.title,
+        completed: false,
+      });
+    },
+    toggleTodo(state, action: PayloadAction&lt;string&gt;) {
+      const todo = state.items.find((t) =&gt; t.id === action.payload);
+      if (todo) {
+        todo.completed = !todo.completed;
+      }
+    },
+    removeTodo(state, action: PayloadAction&lt;string&gt;) {
+      state.items = state.items.filter((t) =&gt; t.id !== action.payload);
+    },
+    setFilter(state, action: PayloadAction&lt;TodoState["filter"]&gt;) {
+      state.filter = action.payload;
+    },
+  },
+});
+
+export const { addTodo, toggleTodo, removeTodo, setFilter } = todoSlice.actions;
+
+const store = configureStore({
+  reducer: {
+    todos: todoSlice.reducer,
+  },
+});</code></pre>
+
+<div class="card card-info">
+<p><strong>Immer tích hợp sẵn:</strong> Bên trong <code>createSlice</code>, bạn viết code "mutate" trực tiếp (<code>state.items.push(...)</code>) nhưng Immer sẽ tự tạo immutable update. Đây KHÔNG phải mutation thật &mdash; Immer tạo 1 draft proxy, track tất cả changes, rồi produce 1 new state object.</p>
+</div>
+
+<h4>createAsyncThunk</h4>
+<pre><code>import { createAsyncThunk } from "@reduxjs/toolkit";
+
+const fetchTodos = createAsyncThunk(
+  "todos/fetchTodos",
+  async (_, { rejectWithValue }) =&gt; {
+    try {
+      const response = await fetch("https://jsonplaceholder.typicode.com/todos");
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return await response.json();
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);</code></pre>
+
+<p>Xử lý trong slice với <code>extraReducers</code>:</p>
+<pre><code>const todoSlice = createSlice({
+  name: "todos",
+  initialState: {
+    items: [],
+    status: "idle",
+    error: null,
+  },
+  reducers: {},
+  extraReducers: (builder) =&gt; {
+    builder
+      .addCase(fetchTodos.pending, (state) =&gt; {
+        state.status = "loading";
+      })
+      .addCase(fetchTodos.fulfilled, (state, action) =&gt; {
+        state.status = "succeeded";
+        state.items = action.payload;
+      })
+      .addCase(fetchTodos.rejected, (state, action) =&gt; {
+        state.status = "failed";
+        state.error = action.payload;
+      });
+  },
+});</code></pre>
+
+<h4>createSelector (Memoized Selectors)</h4>
+<pre><code>import { createSelector } from "@reduxjs/toolkit";
+
+const selectTodos = (state) =&gt; state.todos.items;
+const selectFilter = (state) =&gt; state.todos.filter;
+
+const selectFilteredTodos = createSelector(
+  [selectTodos, selectFilter],
+  (todos, filter) =&gt; {
+    switch (filter) {
+      case "active":
+        return todos.filter((t) =&gt; !t.completed);
+      case "completed":
+        return todos.filter((t) =&gt; t.completed);
+      default:
+        return todos;
+    }
+  }
+);</code></pre>
+<p><code>createSelector</code> (từ Reselect) chỉ tính toán lại khi inputs thay đổi. Quan trọng cho derived data &mdash; tránh re-compute mỗi render.</p>
+
+<h4>Middleware: Thunk vs Saga</h4>
+<table>
+<tr><th>Tiêu chí</th><th>Redux Thunk</th><th>Redux Saga</th></tr>
+<tr><td>Complexity</td><td>Thấp &mdash; chỉ là function return function</td><td>Cao &mdash; cần học generator functions</td></tr>
+<tr><td>Syntax</td><td>async/await bình thường</td><td>Generator yield (call, put, take)</td></tr>
+<tr><td>Testing</td><td>Mock async calls</td><td>Declarative effects &rarr; dễ test hơn</td></tr>
+<tr><td>Cancel</td><td>Tự implement (AbortController)</td><td>Built-in (takeLatest, race)</td></tr>
+<tr><td>Complex flows</td><td>Nesting callbacks/thunks</td><td>Elegant (channels, fork, spawn)</td></tr>
+<tr><td>Bundle size</td><td>~2KB</td><td>~25KB</td></tr>
+<tr><td>Khi nào dùng</td><td>Hầu hết các trường hợp</td><td>Complex async flows: retry, polling, WebSocket, race conditions</td></tr>
+</table>
+
+<div class="card card-accent">
+<p><strong>Recommendation:</strong> RTK đã include Thunk middleware by default. Chỉ cần Saga khi có yêu cầu complex async orchestration. Trong 90% dự án RN, Thunk + React Query đủ dùng.</p>
+</div>
+
+<h4>Redux Persist</h4>
+<pre><code>import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persistStore, persistReducer } from "redux-persist";
+
+const persistConfig = {
+  key: "root",
+  storage: AsyncStorage,
+  whitelist: ["auth", "settings"],
+  blacklist: ["ui"],
+};
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =&gt;
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ["persist/PERSIST", "persist/REHYDRATE"],
+      },
+    }),
+});
+
+const persistor = persistStore(store);</code></pre>
+<p><code>whitelist</code> chỉ persist các slices cần thiết (auth token, user settings). <code>blacklist</code> loại bỏ UI state không cần lưu. Luôn dùng <code>AsyncStorage</code> cho React Native thay vì localStorage.</p>
+
+<h3>4. Zustand</h3>
+<div class="concept">
+<p><strong>Tại sao Zustand lightweight?</strong></p>
+<ul>
+  <li>Không cần Provider wrapper &mdash; store tồn tại ngoài React tree</li>
+  <li>Bundle size ~1.2KB (vs Redux Toolkit ~11KB)</li>
+  <li>Selector-based subscription &mdash; component chỉ re-render khi data nó subscribe thay đổi</li>
+  <li>Không cần actions, reducers, action types &mdash; mutate trực tiếp trong set()</li>
+  <li>TypeScript inference tốt, ít boilerplate</li>
+</ul>
+</div>
+
+<h4>Basic Zustand Store</h4>
+<pre><code>import { create } from "zustand";
+
+interface TodoStore {
+  items: Todo[];
+  filter: "all" | "active" | "completed";
+  addTodo: (title: string) =&gt; void;
+  toggleTodo: (id: string) =&gt; void;
+  removeTodo: (id: string) =&gt; void;
+  setFilter: (filter: TodoStore["filter"]) =&gt; void;
+}
+
+const useTodoStore = create&lt;TodoStore&gt;((set) =&gt; ({
+  items: [],
+  filter: "all",
+
+  addTodo: (title) =&gt;
+    set((state) =&gt; ({
+      items: [
+        ...state.items,
+        { id: Date.now().toString(), title, completed: false },
+      ],
+    })),
+
+  toggleTodo: (id) =&gt;
+    set((state) =&gt; ({
+      items: state.items.map((t) =&gt;
+        t.id === id ? { ...t, completed: !t.completed } : t
+      ),
+    })),
+
+  removeTodo: (id) =&gt;
+    set((state) =&gt; ({
+      items: state.items.filter((t) =&gt; t.id !== id),
+    })),
+
+  setFilter: (filter) =&gt; set({ filter }),
+}));</code></pre>
+
+<h4>Sử dụng trong Component</h4>
+<pre><code>function TodoList() {
+  const items = useTodoStore((state) =&gt; state.items);
+  const toggleTodo = useTodoStore((state) =&gt; state.toggleTodo);
+
+  return (
+    &lt;FlatList
+      data={items}
+      renderItem={({ item }) =&gt; (
+        &lt;Pressable onPress={() =&gt; toggleTodo(item.id)}&gt;
+          &lt;Text&gt;{item.title}&lt;/Text&gt;
+        &lt;/Pressable&gt;
+      )}
+    /&gt;
+  );
+}</code></pre>
+<p>Mỗi <code>useTodoStore</code> call với selector riêng &rarr; component chỉ re-render khi phần data nó subscribe thực sự thay đổi. Đây là lợi thế lớn so với Context API.</p>
+
+<h4>Persist &amp; Devtools Middleware</h4>
+<pre><code>import { create } from "zustand";
+import { persist, devtools } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const useTodoStore = create&lt;TodoStore&gt;()(
+  devtools(
+    persist(
+      (set) =&gt; ({
+        items: [],
+        filter: "all",
+        addTodo: (title) =&gt;
+          set((state) =&gt; ({
+            items: [
+              ...state.items,
+              { id: Date.now().toString(), title, completed: false },
+            ],
+          })),
+      }),
+      {
+        name: "todo-storage",
+        storage: {
+          getItem: async (name) =&gt; {
+            const value = await AsyncStorage.getItem(name);
+            return value ? JSON.parse(value) : null;
+          },
+          setItem: async (name, value) =&gt; {
+            await AsyncStorage.setItem(name, JSON.stringify(value));
+          },
+          removeItem: async (name) =&gt; {
+            await AsyncStorage.removeItem(name);
+          },
+        },
+      }
+    )
+  )
+);</code></pre>
+
+<h4>Shopping Cart Example</h4>
+<pre><code>interface CartItem {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface CartStore {
+  items: CartItem[];
+  addItem: (product: Omit&lt;CartItem, "quantity"&gt;) =&gt; void;
+  removeItem: (id: string) =&gt; void;
+  updateQuantity: (id: string, quantity: number) =&gt; void;
+  clearCart: () =&gt; void;
+  totalPrice: () =&gt; number;
+  totalItems: () =&gt; number;
+}
+
+const useCartStore = create&lt;CartStore&gt;((set, get) =&gt; ({
+  items: [],
+
+  addItem: (product) =&gt;
+    set((state) =&gt; {
+      const existing = state.items.find((i) =&gt; i.id === product.id);
+      if (existing) {
+        return {
+          items: state.items.map((i) =&gt;
+            i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          ),
+        };
+      }
+      return { items: [...state.items, { ...product, quantity: 1 }] };
+    }),
+
+  removeItem: (id) =&gt;
+    set((state) =&gt; ({
+      items: state.items.filter((i) =&gt; i.id !== id),
+    })),
+
+  updateQuantity: (id, quantity) =&gt;
+    set((state) =&gt; ({
+      items:
+        quantity &lt;= 0
+          ? state.items.filter((i) =&gt; i.id !== id)
+          : state.items.map((i) =&gt;
+              i.id === id ? { ...i, quantity } : i
+            ),
+    })),
+
+  clearCart: () =&gt; set({ items: [] }),
+
+  totalPrice: () =&gt;
+    get().items.reduce((sum, item) =&gt; sum + item.price * item.quantity, 0),
+
+  totalItems: () =&gt;
+    get().items.reduce((sum, item) =&gt; sum + item.quantity, 0),
+}));</code></pre>
+
+<h4>Code Comparison: Redux Toolkit vs Zustand</h4>
+<table>
+<tr><th>Aspect</th><th>Redux Toolkit</th><th>Zustand</th></tr>
+<tr><td>Setup files</td><td>store.ts + slice.ts + Provider wrapper</td><td>1 file, không cần Provider</td></tr>
+<tr><td>Boilerplate</td><td>~50-80 lines cho basic CRUD</td><td>~20-30 lines</td></tr>
+<tr><td>Async</td><td>createAsyncThunk + extraReducers</td><td>Gọi async trực tiếp trong action</td></tr>
+<tr><td>Selectors</td><td>createSelector (Reselect)</td><td>Inline selector function</td></tr>
+<tr><td>DevTools</td><td>Built-in (Redux DevTools)</td><td>Middleware (cũng dùng Redux DevTools)</td></tr>
+<tr><td>Middleware</td><td>Hệ sinh thái lớn (Saga, Persist, Logger)</td><td>Ít hơn nhưng đủ dùng</td></tr>
+<tr><td>Learning curve</td><td>Cao &mdash; concepts nhiều (actions, reducers, thunks)</td><td>Thấp &mdash; giống useState on steroids</td></tr>
+<tr><td>Team scale</td><td>Tốt cho large team (strict patterns)</td><td>Tốt cho small-medium team</td></tr>
+</table>
+
+<h3>5. TanStack Query (React Query)</h3>
+<div class="concept">
+<p><strong>React Query</strong> KHÔNG phải state management &mdash; nó là <strong>async state manager</strong> chuyên cho server state. Nó handle: fetching, caching, synchronizing, background updates, pagination, optimistic updates &mdash; tất cả những gì bạn tự implement bằng Redux + 200 lines boilerplate.</p>
+</div>
+
+<h4>staleTime vs gcTime</h4>
+<table>
+<tr><th>Config</th><th>Mô tả</th><th>Default</th><th>Ý nghĩa thực tế</th></tr>
+<tr><td><code>staleTime</code></td><td>Thời gian data được coi là fresh</td><td>0 (luôn stale)</td><td>Trong khoảng này, React Query trả data từ cache mà KHÔNG refetch</td></tr>
+<tr><td><code>gcTime</code></td><td>Thời gian data ở trong cache sau khi không còn observer nào</td><td>5 phút</td><td>Sau thời gian này, data bị garbage collect khỏi cache</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Mental model:</strong> <code>staleTime = 30000</code> nghĩa là trong 30 giây đầu, navigate đi rồi quay lại sẽ thấy data ngay (từ cache) mà không có loading spinner. Sau 30s, data được đánh dấu stale &rarr; lần mount tiếp theo sẽ refetch ở background (nhưng vẫn show cache trước).</p>
+</div>
+
+<h4>useQuery</h4>
+<pre><code>import { useQuery } from "@tanstack/react-query";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+function useUser(userId: string) {
+  return useQuery&lt;User&gt;({
+    queryKey: ["user", userId],
+    queryFn: async () =&gt; {
+      const res = await fetch(`https://api.example.com/users/${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch user");
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+}
+
+function UserProfile({ userId }: { userId: string }) {
+  const { data, isLoading, isError, error } = useUser(userId);
+
+  if (isLoading) return &lt;ActivityIndicator /&gt;;
+  if (isError) return &lt;Text&gt;Error: {error.message}&lt;/Text&gt;;
+
+  return &lt;Text&gt;{data.name}&lt;/Text&gt;;
+}</code></pre>
+
+<h4>useMutation</h4>
+<pre><code>import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+function useUpdateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userData: Partial&lt;User&gt; &amp; { id: string }) =&gt; {
+      const res = await fetch(`https://api.example.com/users/${userData.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      if (!res.ok) throw new Error("Failed to update");
+      return res.json();
+    },
+    onSuccess: (data, variables) =&gt; {
+      queryClient.invalidateQueries({ queryKey: ["user", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}</code></pre>
+
+<h4>useInfiniteQuery</h4>
+<pre><code>import { useInfiniteQuery } from "@tanstack/react-query";
+
+function useInfinitePosts() {
+  return useInfiniteQuery({
+    queryKey: ["posts"],
+    queryFn: async ({ pageParam = 1 }) =&gt; {
+      const res = await fetch(
+        `https://api.example.com/posts?page=${pageParam}&amp;limit=20`
+      );
+      return res.json();
+    },
+    getNextPageParam: (lastPage, allPages) =&gt; {
+      return lastPage.hasMore ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+  });
+}
+
+function PostFeed() {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfinitePosts();
+
+  const allPosts = data?.pages.flatMap((page) =&gt; page.items) ?? [];
+
+  return (
+    &lt;FlatList
+      data={allPosts}
+      onEndReached={() =&gt; hasNextPage &amp;&amp; fetchNextPage()}
+      onEndReachedThreshold={0.5}
+      ListFooterComponent={
+        isFetchingNextPage ? &lt;ActivityIndicator /&gt; : null
+      }
+      renderItem={({ item }) =&gt; &lt;PostCard post={item} /&gt;}
+    /&gt;
+  );
+}</code></pre>
+
+<h4>Optimistic Updates</h4>
+<pre><code>function useLikePost() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (postId: string) =&gt;
+      fetch(`/api/posts/${postId}/like`, { method: "POST" }),
+
+    onMutate: async (postId) =&gt; {
+      await queryClient.cancelQueries({ queryKey: ["posts", postId] });
+
+      const previousPost = queryClient.getQueryData(["posts", postId]);
+
+      queryClient.setQueryData(["posts", postId], (old: Post) =&gt; ({
+        ...old,
+        likes: old.likes + 1,
+        isLiked: true,
+      }));
+
+      return { previousPost };
+    },
+
+    onError: (_error, postId, context) =&gt; {
+      queryClient.setQueryData(["posts", postId], context?.previousPost);
+    },
+
+    onSettled: (_data, _error, postId) =&gt; {
+      queryClient.invalidateQueries({ queryKey: ["posts", postId] });
+    },
+  });
+}</code></pre>
+<p><strong>Flow:</strong> User tap like &rarr; UI update ngay lập tức (optimistic) &rarr; gửi API request &rarr; nếu fail, rollback về state cũ &rarr; cuối cùng luôn invalidate để đồng bộ với server.</p>
+
+<h4>Offline Support</h4>
+<div class="card card-accent">
+<p><strong>React Query + Offline:</strong></p>
+<ul>
+  <li><code>networkMode: "offlineFirst"</code> &rarr; trả cache data ngay cả khi offline</li>
+  <li><code>onlineManager</code> &rarr; detect online/offline status</li>
+  <li>Mutations được queue khi offline, auto-retry khi online</li>
+  <li>Kết hợp với <code>persistQueryClient</code> để lưu cache vào AsyncStorage &rarr; app hoạt động được hoàn toàn offline (với data đã cache)</li>
+</ul>
+</div>
+
+<h3>6. State Normalization</h3>
+<div class="concept">
+<p><strong>Vấn đề:</strong> Khi API trả nested data (post chứa author, author chứa avatar, comments chứa users...), nếu lưu nguyên &rarr; data trùng lặp, update 1 chỗ phải tìm update nhiều chỗ.</p>
+<p><strong>Giải pháp:</strong> Normalize thành flat structure, dùng IDs để reference.</p>
+</div>
+
+<pre><code>interface NormalizedState {
+  users: Record&lt;string, User&gt;;
+  posts: Record&lt;string, Post&gt;;
+  comments: Record&lt;string, Comment&gt;;
+}
+
+const normalizedState: NormalizedState = {
+  users: {
+    u1: { id: "u1", name: "Alice" },
+    u2: { id: "u2", name: "Bob" },
+  },
+  posts: {
+    p1: { id: "p1", authorId: "u1", commentIds: ["c1", "c2"] },
+  },
+  comments: {
+    c1: { id: "c1", authorId: "u2", text: "Great post!" },
+    c2: { id: "c2", authorId: "u1", text: "Thanks!" },
+  },
+};</code></pre>
+<p>Khi update user <code>u1</code> name, chỉ cần update 1 chỗ &rarr; tất cả nơi reference <code>u1</code> tự động nhận data mới.</p>
+
+<div class="card card-info">
+<p><strong>RTK EntityAdapter:</strong> Redux Toolkit cung cấp <code>createEntityAdapter</code> để tự động normalize entities với các CRUD operations đã built-in (addOne, updateOne, removeOne, upsertMany...).</p>
+</div>
+
+<h3>7. Bảng so sánh tổng hợp</h3>
+<table>
+<tr><th>Tiêu chí</th><th>useState</th><th>Context</th><th>Redux (RTK)</th><th>Zustand</th><th>React Query</th></tr>
+<tr><td>Loại state</td><td>Local</td><td>Shared (tĩnh)</td><td>Client global</td><td>Client global</td><td>Server state</td></tr>
+<tr><td>Scope</td><td>1 component</td><td>Subtree</td><td>Toàn app</td><td>Toàn app</td><td>Toàn app</td></tr>
+<tr><td>Re-render</td><td>Component đó</td><td>Tất cả consumers</td><td>Connected components</td><td>Chỉ subscribed</td><td>Chỉ observer queries</td></tr>
+<tr><td>Boilerplate</td><td>Cực thấp</td><td>Thấp</td><td>Trung bình</td><td>Thấp</td><td>Thấp</td></tr>
+<tr><td>DevTools</td><td>React DevTools</td><td>React DevTools</td><td>Redux DevTools</td><td>Redux DevTools</td><td>RQ DevTools</td></tr>
+<tr><td>Persist</td><td>Không</td><td>Không</td><td>redux-persist</td><td>Middleware</td><td>persistQueryClient</td></tr>
+<tr><td>Async</td><td>Tự handle</td><td>Tự handle</td><td>createAsyncThunk</td><td>Trực tiếp</td><td>Built-in</td></tr>
+<tr><td>Cache</td><td>Không</td><td>Không</td><td>Tự implement</td><td>Tự implement</td><td>Tự động</td></tr>
+<tr><td>Best for</td><td>Form, toggle, UI</td><td>Theme, locale</td><td>Complex client logic</td><td>Shared client state</td><td>API data</td></tr>
+</table>
+
+<h3>8. Khi nào Local vs Lift Up vs Global?</h3>
+<div class="card card-success">
+<p><strong>Decision tree:</strong></p>
+<ul>
+  <li><strong>Local (useState):</strong> State chỉ component đó cần &rarr; form input value, modal visibility, accordion open/close</li>
+  <li><strong>Lift Up:</strong> 2-3 siblings cần share &rarr; đưa state lên parent gần nhất. Dùng khi prop drilling &le; 2 levels</li>
+  <li><strong>Context:</strong> Data cần ở nhiều nơi trong tree, ít thay đổi &rarr; theme, auth, locale</li>
+  <li><strong>Zustand/Redux:</strong> Complex client state cần ở nhiều nơi, thay đổi thường xuyên &rarr; shopping cart, chat messages, complex forms</li>
+  <li><strong>React Query:</strong> Bất kỳ data nào từ API &rarr; user profiles, products, comments</li>
+</ul>
+</div>
+
+<div class="card card-warning">
+<p><strong>Rule of thumb:</strong> Bắt đầu với local state (useState). Chỉ escalate lên level tiếp theo khi thật sự cần. Premature globalization là anti-pattern phổ biến nhất.</p>
+</div>
+
+<h2>&10067; Câu hỏi phỏng vấn + Đáp án</h2>
+
+<h2>🛠️ Debug playbook: state bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>Screen re-render khi state không liên quan đổi</td><td>Selector trả gì, component subscribe store nào, object reference mới không</td><td>Selector nhỏ hơn, shallow compare, split store/context</td></tr>
+<tr><td>Data API cũ hiển thị sau refetch</td><td>Server state đang ở store nào, query key đúng không, staleTime/gcTime</td><td>Đưa server data về React Query, thiết kế query key rõ</td></tr>
+<tr><td>App mở lại ở trạng thái lỗi/loading</td><td>Persist payload có loading/error không</td><td>Persist whitelist, bỏ transient state</td></tr>
+<tr><td>Optimistic update sai sau API fail</td><td>Có snapshot rollback không, invalidate sau mutation chưa</td><td>Snapshot trong onMutate, rollback onError, refetch onSettled</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Đừng bắt đầu bằng tên tool. Bắt đầu bằng phân loại state: owner, lifetime, scope, sync. Sau đó mới nói vì sao chọn local state, Context, Zustand, Redux Toolkit hoặc React Query.</p>
+</div>
+
+<div class="qa">
+<div class="q">Q1: Client State vs Server State &mdash; khác nhau thế nào? Tại sao phân biệt quan trọng?</div>
+<div class="a">
+<p><strong>Client State</strong> là state mà frontend sở hữu hoàn toàn: UI toggles, form inputs, selected tab, theme. Nó synchronous, predictable, không bao giờ out-of-date.</p>
+<p><strong>Server State</strong> là data sống trên backend: user profiles, posts, products. Frontend chỉ cache 1 snapshot &mdash; data có thể thay đổi bất kỳ lúc nào bởi user khác.</p>
+<p><strong>Tại sao quan trọng:</strong> Mỗi loại cần strategy khác nhau. Server state cần: caching, background refetch, stale detection, error/retry, optimistic updates. Dùng Redux thuần cho server state nghĩa là tự implement tất cả những thứ đó &mdash; React Query giải quyết hết trong &lt;10 lines.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q2: Context API có thể thay thế Redux không? Khi nào không nên dùng Context?</div>
+<div class="a">
+<p><strong>Context KHÔNG phải state management.</strong> Nó là dependency injection &mdash; một cách để truyền data qua tree mà không prop drilling.</p>
+<p><strong>Không nên dùng khi:</strong></p>
+<ul>
+  <li>State thay đổi thường xuyên (mỗi keystroke, animation frame) &rarr; all consumers re-render</li>
+  <li>Nhiều consumers chỉ cần 1 phần nhỏ data &rarr; không có selector mechanism</li>
+  <li>Cần time-travel debugging, middleware, action logging</li>
+</ul>
+<p><strong>Nên dùng khi:</strong> Data thay đổi ít (theme toggle, locale switch, auth status). Trong trường hợp này, Context đơn giản và đủ tốt.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q3: Giải thích cách Immer hoạt động trong Redux Toolkit. Tại sao có thể "mutate" state?</div>
+<div class="a">
+<p>Immer sử dụng <strong>Proxy</strong> (ES6) để tạo 1 draft object. Khi bạn viết <code>state.items.push(newItem)</code>, bạn thực ra đang mutate draft &mdash; không phải state thật. Immer track tất cả changes trên draft, rồi produce 1 new immutable state object bằng cách structural sharing (chỉ copy các phần thay đổi, phần không đổi reuse reference cũ).</p>
+<p><strong>Lưu ý quan trọng:</strong> Trong <code>createSlice</code> reducer, bạn hoặc mutate draft (Immer handle) HOẶC return new state &mdash; KHÔNG LÀM CẢ HAI. Nếu return value, Immer bỏ qua mutations.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q4: createSelector dùng để làm gì? Khi nào cần memoized selectors?</div>
+<div class="a">
+<p><code>createSelector</code> tạo memoized selector &mdash; chỉ recalculate khi input selectors trả về giá trị khác (so sánh bằng ===).</p>
+<p><strong>Cần khi:</strong> Derived data computation tốn kém. Ví dụ: filter + sort 1000 items, compute totals, transform data shape. Nếu không memoize, mỗi lần bất kỳ state nào thay đổi &rarr; re-compute &rarr; re-render tất cả connected components.</p>
+<p><strong>Không cần khi:</strong> Selector chỉ đọc trực tiếp 1 field (<code>state.user.name</code>) &mdash; không có computation nào cần cache.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q5: Zustand khác Redux ở điểm nào? Khi nào chọn cái nào?</div>
+<div class="a">
+<p><strong>Khác biệt chính:</strong></p>
+<ul>
+  <li><strong>Architecture:</strong> Redux theo flux pattern (action &rarr; reducer &rarr; store). Zustand là mutable store bên ngoài React tree</li>
+  <li><strong>Provider:</strong> Redux cần Provider wrapper. Zustand không cần</li>
+  <li><strong>Subscription:</strong> Zustand dùng selector-based subscription natively &mdash; chỉ re-render khi selected data thay đổi</li>
+  <li><strong>Boilerplate:</strong> Zustand ít hơn 60-70%</li>
+</ul>
+<p><strong>Chọn Redux khi:</strong> Team lớn, cần strict patterns, đã có Redux ecosystem (Saga, Persist), cần time-travel debugging mạnh</p>
+<p><strong>Chọn Zustand khi:</strong> Team nhỏ-vừa, cần setup nhanh, ít boilerplate, app không quá phức tạp</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q6: staleTime vs gcTime (cacheTime) trong React Query?</div>
+<div class="a">
+<p><strong>staleTime</strong> (default: 0): Thời gian data được coi là "fresh". Trong khoảng này, React Query trả data từ cache mà KHÔNG trigger background refetch. Sau khoảng này, data đánh dấu "stale" &rarr; lần sử dụng tiếp theo sẽ refetch ở background.</p>
+<p><strong>gcTime</strong> (default: 5 phút): Thời gian data tồn tại trong cache SAU KHI không còn component nào observe query đó. Hết thời gian này &rarr; data bị xóa khỏi cache hoàn toàn.</p>
+<p><strong>Ví dụ:</strong> <code>staleTime: 60000, gcTime: 300000</code> &rarr; Data fresh 1 phút (không refetch), cache sống 5 phút sau khi component unmount.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q7: Optimistic Update là gì? Implement như thế nào với React Query?</div>
+<div class="a">
+<p><strong>Optimistic Update:</strong> Update UI ngay lập tức trước khi server confirm &rarr; UX mượt hơn, cảm giác instant.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+  <li><code>onMutate</code>: Cancel outgoing queries, save current data (snapshot), update cache optimistically</li>
+  <li><code>onError</code>: Rollback về snapshot nếu API fail</li>
+  <li><code>onSettled</code>: Invalidate queries để sync với server (bất kể success/error)</li>
+</ol>
+<p><strong>Use cases:</strong> Like/unlike, follow/unfollow, add to cart, toggle bookmark &mdash; actions mà user expect instant feedback.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q8: Redux middleware hoạt động như thế nào?</div>
+<div class="a">
+<p>Middleware trong Redux là <strong>higher-order function</strong> nằm giữa dispatch và reducer. Mỗi action đi qua chain of middleware trước khi tới reducer.</p>
+<p><strong>Signature:</strong> <code>store =&gt; next =&gt; action =&gt; { ... }</code></p>
+<p><strong>Ứng dụng:</strong></p>
+<ul>
+  <li><strong>Thunk:</strong> Cho phép dispatch functions (thay vì chỉ plain objects) &rarr; async logic</li>
+  <li><strong>Logger:</strong> Log mỗi action + state before/after</li>
+  <li><strong>Saga:</strong> Listen actions, trigger complex async flows via generators</li>
+  <li><strong>Persist:</strong> Serialize state vào storage khi state thay đổi</li>
+</ul>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q9: Tại sao cần State Normalization? Dùng khi nào?</div>
+<div class="a">
+<p><strong>Vấn đề không normalize:</strong> Data trùng lặp (cùng user xuất hiện trong posts, comments, followers). Update tên user &rarr; phải tìm và update TẤT CẢ nơi chứa user đó. Dễ bỏ sót &rarr; inconsistent UI.</p>
+<p><strong>Normalize:</strong> Lưu mỗi entity type trong flat Record (id &rarr; entity). Relationships dùng ID references. Update 1 entity &rarr; chỉ 1 chỗ &rarr; tất cả nơi reference tự nhận giá trị mới.</p>
+<p><strong>Dùng khi:</strong> Entities có relationships (users, posts, comments), cùng entity xuất hiện nhiều nơi, cần update real-time. <strong>Không cần khi:</strong> Data đơn giản, flat, không relationships.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q10: useInfiniteQuery hoạt động thế nào? So với tự implement pagination?</div>
+<div class="a">
+<p><code>useInfiniteQuery</code> quản lý paginated data dưới dạng mảng các pages. Mỗi page là 1 query result riêng.</p>
+<p><strong>So với tự implement:</strong></p>
+<ul>
+  <li>Tự implement: useEffect + useState cho page number, loading, error, concatenate data &rarr; ~30-50 lines, dễ bug (race conditions, duplicate fetch)</li>
+  <li>useInfiniteQuery: handle pagination, caching, deduplication, refetching per-page, bi-directional scrolling &rarr; ~10 lines</li>
+</ul>
+<p><strong>Key config:</strong> <code>getNextPageParam</code> return page param tiếp theo (hoặc undefined nếu hết data). Kết hợp với FlatList <code>onEndReached</code> trong RN.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q11: Redux Persist hoạt động thế nào? Whitelist vs Blacklist?</div>
+<div class="a">
+<p>Redux Persist serialize Redux state vào storage (AsyncStorage cho RN) và rehydrate khi app khởi động.</p>
+<p><strong>Whitelist:</strong> Chỉ định rõ slices nào CẦN persist (ví dụ: auth, settings). An toàn hơn &mdash; thêm slice mới mặc định không persist.</p>
+<p><strong>Blacklist:</strong> Chỉ định slices KHÔNG persist (ví dụ: ui, temp). Rủi ro hơn &mdash; thêm slice mới mặc định persist.</p>
+<p><strong>Best practice:</strong> Dùng whitelist. Chỉ persist auth tokens, user preferences, offline data. KHÔNG persist loading states, error messages, ephemeral UI state.</p>
+</div>
+</div>
+
+<div class="qa">
+<div class="q">Q12: Khi nào dùng local state (useState), khi nào global state?</div>
+<div class="a">
+<p><strong>Local state (useState):</strong></p>
+<ul>
+  <li>Chỉ 1 component cần (form input, toggle, animation value)</li>
+  <li>State không cần survive navigation</li>
+  <li>State reset khi component unmount là OK</li>
+</ul>
+<p><strong>Lift up:</strong> 2-3 sibling components cần share &rarr; đưa lên common parent. Stop khi prop drilling &gt; 2 levels.</p>
+<p><strong>Global (Zustand/Redux):</strong></p>
+<ul>
+  <li>Nhiều unrelated components cần access (shopping cart badge + cart screen + checkout)</li>
+  <li>State cần persist across navigation</li>
+  <li>Complex state transitions (multi-step form, game state)</li>
+</ul>
+<p><strong>Nguyên tắc:</strong> Bắt đầu local. Chỉ escalate khi pain point thật sự xuất hiện. Premature globalization &rarr; unnecessary complexity + re-renders.</p>
+</div>
+</div>
+
+<h2>&127947; Bài tập</h2>
+
+<div class="exercise">
+<strong>Bài 1: Mini Redux (createStore)</strong><br>
+Implement function <code>createStore</code> từ đầu bằng TypeScript:
+<ul>
+  <li><code>getState()</code>: trả current state</li>
+  <li><code>dispatch(action)</code>: gọi reducer với current state + action, update state</li>
+  <li><code>subscribe(listener)</code>: register listener, trả về unsubscribe function</li>
+</ul>
+<strong>Acceptance criteria:</strong>
+<pre><code>function counterReducer(state = { count: 0 }, action) {
+  switch (action.type) {
+    case "INCREMENT":
+      return { count: state.count + 1 };
+    case "DECREMENT":
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(counterReducer);
+const unsubscribe = store.subscribe(() =&gt;
+  console.log(store.getState())
+);
+
+store.dispatch({ type: "INCREMENT" });
+store.dispatch({ type: "INCREMENT" });
+store.dispatch({ type: "DECREMENT" });
+unsubscribe();
+store.dispatch({ type: "INCREMENT" });</code></pre>
+<p>Expected output: <code>{ count: 1 }</code> &rarr; <code>{ count: 2 }</code> &rarr; <code>{ count: 1 }</code>. Lần dispatch cuối không log vì đã unsubscribe.</p>
+</div>
+
+<div class="solution">
+<strong>Giải Bài 1:</strong>
+<pre><code>type Reducer&lt;S, A&gt; = (state: S, action: A) =&gt; S;
+type Listener = () =&gt; void;
+
+function createStore&lt;S, A&gt;(reducer: Reducer&lt;S, A&gt;, initialState?: S) {
+  let state = initialState ?? reducer(undefined as S, { type: "@@INIT" } as A);
+  let listeners: Listener[] = [];
+
+  function getState(): S {
+    return state;
+  }
+
+  function dispatch(action: A): void {
+    state = reducer(state, action);
+    listeners.forEach((listener) =&gt; listener());
+  }
+
+  function subscribe(listener: Listener): () =&gt; void {
+    listeners.push(listener);
+    return () =&gt; {
+      listeners = listeners.filter((l) =&gt; l !== listener);
+    };
+  }
+
+  return { getState, dispatch, subscribe };
+}</code></pre>
+</div>
+
+<div class="exercise">
+<strong>Bài 2: Pub/Sub Event System</strong><br>
+Implement <code>EventEmitter</code> class:
+<ul>
+  <li><code>on(event, callback)</code>: subscribe</li>
+  <li><code>off(event, callback)</code>: unsubscribe</li>
+  <li><code>emit(event, ...args)</code>: trigger all callbacks cho event đó</li>
+  <li><code>once(event, callback)</code>: subscribe nhưng tự unsubscribe sau lần trigger đầu tiên</li>
+</ul>
+<strong>Acceptance criteria:</strong>
+<pre><code>const emitter = new EventEmitter();
+
+emitter.on("data", (x) =&gt; console.log("A:", x));
+emitter.once("data", (x) =&gt; console.log("B:", x));
+
+emitter.emit("data", 42);
+emitter.emit("data", 99);</code></pre>
+<p>Expected: Lần emit đầu: "A: 42" + "B: 42". Lần emit thứ 2: chỉ "A: 99" (B đã unsubscribe).</p>
+</div>
+
+<div class="solution">
+<strong>Giải Bài 2:</strong>
+<pre><code>type Callback = (...args: unknown[]) =&gt; void;
+
+class EventEmitter {
+  private events: Map&lt;string, Callback[]&gt; = new Map();
+
+  on(event: string, callback: Callback): void {
+    const callbacks = this.events.get(event) ?? [];
+    callbacks.push(callback);
+    this.events.set(event, callbacks);
+  }
+
+  off(event: string, callback: Callback): void {
+    const callbacks = this.events.get(event);
+    if (!callbacks) return;
+    this.events.set(
+      event,
+      callbacks.filter((cb) =&gt; cb !== callback)
+    );
+  }
+
+  emit(event: string, ...args: unknown[]): void {
+    const callbacks = this.events.get(event);
+    if (!callbacks) return;
+    callbacks.forEach((cb) =&gt; cb(...args));
+  }
+
+  once(event: string, callback: Callback): void {
+    const wrapper: Callback = (...args) =&gt; {
+      callback(...args);
+      this.off(event, wrapper);
+    };
+    this.on(event, wrapper);
+  }
+}</code></pre>
+</div>
+
+<div class="exercise">
+<strong>Bài 3: Shopping Cart với Zustand</strong><br>
+Build shopping cart store với Zustand:
+<ul>
+  <li>Add/remove items, update quantity</li>
+  <li>Computed: total price, total items count</li>
+  <li>Persist vào AsyncStorage</li>
+  <li>Apply discount code (flat hoặc percentage)</li>
+</ul>
+<strong>Acceptance criteria:</strong>
+<ul>
+  <li>Add cùng product 2 lần &rarr; quantity = 2, không duplicate item</li>
+  <li>Set quantity = 0 &rarr; auto remove item</li>
+  <li>Discount "SAVE10" giảm 10%, "FLAT50" giảm 50k</li>
+  <li>Total price luôn &ge; 0</li>
+  <li>Reload app &rarr; cart data vẫn còn (persist)</li>
+</ul>
+</div>
+
+<h2>&128187; Mini exercise thực tế React Native</h2>
+
+<div class="exercise">
+  <strong>Exercise 1: Cart store có persist</strong><br>
+  Dùng Zustand hoặc Redux Toolkit để build cart: add/remove/update quantity/apply coupon. Persist cart, nhưng không persist loading/error tạm thời.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 2: Product list dùng server state</strong><br>
+  Dùng TanStack Query cho list/detail/infinite scroll. Khi update product yêu thích, optimistic update detail và list, rollback nếu API fail.
+</div>
+
+<div class="exercise">
+  <strong>Exercise 3: Refactor sai lầm phổ biến</strong><br>
+  Bắt đầu từ một app nhét API data vào Redux. Refactor: server data sang TanStack Query, UI state giữ local/Zustand. Viết notes giải thích state nào đi đâu.
+</div>
+
+<h2>&9888; Lỗi thường gặp</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Dùng global store cho form input tạm thời, làm mọi screen phụ thuộc state không cần thiết.</li>
+    <li>Cache API data trong Redux rồi tự xử lý loading/error/refetch/stale, trong khi TanStack Query đã giải quyết tốt hơn.</li>
+    <li>Persist toàn bộ store, bao gồm token cũ, loading flag, error message, dẫn đến app mở lại ở trạng thái sai.</li>
+    <li>Selector trả object/array mới mỗi lần khiến component re-render dù data không đổi.</li>
+    <li>Không phân biệt state do user chỉnh locally với state backend trả về sau sync.</li>
+  </ul>
+</div>
+
+<h2>&127970; Case đi làm thật</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> App thương mại điện tử lưu cart trong global store và product detail cũng trong cùng store. Sau khi user đổi coupon, product detail screen re-render hàng loạt dù không liên quan.</p>
+  <p><strong>Cách xử lý:</strong> Tách cart store riêng, product data dùng TanStack Query, selector chỉ trả primitive hoặc memoized object. Đo bằng React DevTools Profiler trước/sau khi tách.</p>
+</div>
+
+<h2>&129504; Ghi nhớ nhanh</h2>
+<div class="card card-success">
+  <p>Đừng hỏi “dùng Redux hay Zustand?”. Hỏi trước: state này ai sở hữu, sống bao lâu, bao nhiêu screen cần, có cần refetch/persist/debug không.</p>
+</div>
+
+<h2>&10067; Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Vì sao server state không nên mặc định đưa vào Redux/Zustand?</div>
+  <div class="q">2. Khi persist store, bạn sẽ loại bỏ những field nào?</div>
+  <div class="q">3. Một screen re-render khi cart thay đổi dù không dùng cart. Bạn debug theo thứ tự nào?</div>
+  <div class="q">4. Optimistic update cần snapshot gì để rollback an toàn?</div>
+</div>
+
+<h2>&9989; Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích sự khác nhau giữa Client State và Server State</label>
+  <label><input type="checkbox"> Tôi hiểu re-render problem của Context API và cách khắc phục bằng split contexts</label>
+  <label><input type="checkbox"> Tôi có thể setup Redux Toolkit store với createSlice, configureStore</label>
+  <label><input type="checkbox"> Tôi hiểu cách Immer hoạt động và tại sao có thể "mutate" state trong RTK</label>
+  <label><input type="checkbox"> Tôi có thể sử dụng createAsyncThunk cho async operations</label>
+  <label><input type="checkbox"> Tôi biết khi nào cần createSelector (memoized selectors)</label>
+  <label><input type="checkbox"> Tôi hiểu sự khác nhau giữa Thunk và Saga, biết khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi có thể setup Redux Persist với AsyncStorage</label>
+  <label><input type="checkbox"> Tôi đã build được app với Zustand và hiểu lợi thế so với Redux</label>
+  <label><input type="checkbox"> Tôi hiểu staleTime vs gcTime trong React Query</label>
+  <label><input type="checkbox"> Tôi có thể implement optimistic updates với useMutation</label>
+  <label><input type="checkbox"> Tôi đã sử dụng useInfiniteQuery cho infinite scroll</label>
+  <label><input type="checkbox"> Tôi hiểu state normalization và khi nào cần normalize</label>
+  <label><input type="checkbox"> Tôi có thể giải thích decision tree: local vs lift up vs global state</label>
+  <label><input type="checkbox"> Tôi đã refactor API data ra khỏi global client store</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành ít nhất 2 mini exercise state thực tế</label>
+</div>
+
+<h2>&128206; Tài nguyên</h2>
+<div class="resource">&128216; <a href="https://redux-toolkit.js.org/" target="_blank">Redux Toolkit Official Docs</a> &mdash; Quick Start, API Reference, Tutorials</div>
+<div class="resource">&128216; <a href="https://docs.pmnd.rs/zustand/getting-started/introduction" target="_blank">Zustand Documentation</a> &mdash; Official docs, recipes, middleware</div>
+<div class="resource">&128216; <a href="https://tanstack.com/query/latest/docs/react/overview" target="_blank">TanStack Query (React Query)</a> &mdash; Guides, API Reference</div>
+<div class="resource">&128250; <a href="https://www.youtube.com/watch?v=5-1LM2NySR0" target="_blank">"Zustand: Bear necessities for state management"</a> &mdash; Jack Herrington (YouTube)</div>
+<div class="resource">&128250; <a href="https://www.youtube.com/watch?v=VenLRGHx3D4" target="_blank">"React Query in 100 Seconds"</a> &mdash; Fireship (YouTube)</div>
+<div class="resource">&128221; <a href="https://tkdodo.eu/blog/practical-react-query" target="_blank">Practical React Query</a> &mdash; TkDodo blog series, best practices cho React Query</div>
+<div class="resource">&128221; <a href="https://redux.js.org/style-guide/" target="_blank">Redux Style Guide</a> &mdash; Official best practices và patterns</div>
+<div class="resource">&128221; <a href="https://kentcdodds.com/blog/application-state-management-with-react" target="_blank">"Application State Management with React"</a> &mdash; Kent C. Dodds</div>
+<div class="resource">&128216; <a href="https://react.dev/learn/managing-state" target="_blank">React.dev &mdash; Managing State</a> &mdash; Official React docs về state management</div>
+
+<div class="nav-links">
+  <a href="07-Networking.html">&larr; Module 07: Networking &amp; API</a>
+  <a href="11-Security-Storage.html">Module 11: Security &amp; Storage &rarr;</a>
+</div>
+</div>
+</body>
+</html>

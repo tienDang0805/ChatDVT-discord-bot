@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 07 — Networking &amp; API</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 07 — Networking &amp; API</h1>
+<div class="module-meta">
+  <span class="badge badge-must">PHẢI CÓ</span>
+  <span class="meta-item">⏱ 8-10 giờ</span>
+  <span class="meta-item">📋 Prerequisites: Module 01 (JavaScript Core), Module 04 (State Management), Module 06 (TypeScript)</span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu sự khác biệt giữa Fetch API và Axios, biết khi nào dùng cái nào</li>
+  <li>Tạo Axios instance với interceptors cho request/response</li>
+  <li>Implement token refresh flow hoàn chỉnh, xử lý concurrent 401 đúng cách</li>
+  <li>Sử dụng TanStack Query (React Query) cho data fetching, caching, invalidation</li>
+  <li>Implement infinite scroll với useInfiniteQuery + FlatList</li>
+  <li>Nắm vững REST conventions: HTTP methods, status codes, pagination</li>
+  <li>Hiểu cơ bản GraphQL và so sánh Apollo vs urql</li>
+  <li>Phân biệt WebSocket, SSE, Long Polling và biết khi nào dùng</li>
+  <li>Xử lý error handling patterns chuyên nghiệp trong production</li>
+  <li>Handle rate limiting (429) và retry strategies</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <h3>Step 1: Đọc Axios documentation (1h)</h3>
+  <p>Truy cập <a href="https://axios-http.com/docs/intro" target="_blank">axios-http.com/docs</a>. Tập trung vào: creating instances, interceptors, request config, response schema, error handling. Không cần đọc hết — focus vào phần Instance, Interceptors, và Cancellation.</p>
+
+  <h3>Step 2: Build Axios instance với interceptors (2h)</h3>
+  <p>Tạo một file <code>api/client.ts</code> trong project React Native. Config base URL, timeout, default headers. Thêm request interceptor để attach token, response interceptor để handle errors. Test với một API thực (dùng JSONPlaceholder hoặc ReqRes).</p>
+
+  <h3>Step 3: Implement token refresh flow (2h)</h3>
+  <p>Đây là phần quan trọng nhất. Implement logic: khi nhận 401, tự động refresh token và retry request. Phải handle concurrent requests bị 401 cùng lúc (queue mechanism). Đọc kỹ phần lý thuyết bên dưới trước khi code.</p>
+
+  <h3>Step 4: Đọc TanStack Query docs (1.5h)</h3>
+  <p>Truy cập <a href="https://tanstack.com/query/latest/docs/framework/react/overview" target="_blank">TanStack Query docs</a>. Đọc theo thứ tự: Overview → Quick Start → useQuery → useMutation → Query Invalidation → Infinite Queries. Chạy thử từng example.</p>
+
+  <h3>Step 5: Build data-fetching layer hoàn chỉnh (2-3h)</h3>
+  <p>Kết hợp Axios instance với React Query. Tạo custom hooks cho CRUD operations. Implement infinite scroll cho một list screen. Test cache invalidation khi create/update/delete.</p>
+</div>
+
+<h2>⚡ ÔN NHANH</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>API client:</strong> gom baseURL, timeout, auth header, error transform vào một nơi.</li>
+    <li><strong>Token refresh:</strong> concurrent 401 phải đi qua một refresh request duy nhất, request còn lại chờ queue.</li>
+    <li><strong>React Query:</strong> dùng cho server state; component không tự giữ loading/error/cache thủ công nếu không cần.</li>
+    <li><strong>Pagination:</strong> mobile feed nên ưu tiên cursor-based để tránh duplicate/missing item.</li>
+    <li><strong>Error UX:</strong> network error, validation error, unauthorized, server error cần UI khác nhau.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> API layer là boundary giữa app và backend, phải chuẩn hóa auth/error/cache/retry.</li>
+  <li><strong>Thấy bug thật:</strong> concurrent 401 race, retry sai lỗi 422, request cũ update screen đã unmount.</li>
+  <li><strong>Debug:</strong> log requestId, status code, refresh queue, query cache, cancellation.</li>
+  <li><strong>Fix:</strong> typed error, token refresh queue, retry có điều kiện, cancel khi unmount.</li>
+  <li><strong>Áp dụng playground:</strong> Axios client, React Query hooks, infinite product list, error matrix.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. Fetch API — Gotchas quan trọng</h3>
+
+<div class="card card-warning">
+  <h4>⚠️ Fetch KHÔNG throw error cho HTTP 4xx/5xx</h4>
+  <p>Đây là gotcha lớn nhất. Fetch chỉ reject Promise khi có network error (mất mạng, DNS fail). Với response 404 hay 500, Fetch vẫn resolve bình thường — bạn phải tự check <code>response.ok</code>.</p>
+</div>
+
+<p>Ví dụ sai — code này KHÔNG catch được lỗi 404:</p>
+<pre><code>try {
+  const response = await fetch('https://api.example.com/users/999');
+  const data = await response.json();
+  console.log(data);
+} catch (error) {
+  console.log('Lỗi này KHÔNG BAO GIỜ chạy cho 404');
+}</code></pre>
+
+<p>Ví dụ đúng — luôn check <code>response.ok</code>:</p>
+<pre><code>const response = await fetch('https://api.example.com/users/999');
+
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+
+const data = await response.json();</code></pre>
+
+<div class="card card-info">
+  <h4>Các gotchas khác của Fetch API</h4>
+  <ul>
+    <li><strong>Không có request timeout built-in</strong> — phải dùng AbortController</li>
+    <li><strong>Không tự transform JSON</strong> — phải gọi <code>response.json()</code> manually</li>
+    <li><strong>Không có interceptors</strong> — phải wrap function</li>
+    <li><strong>Không có progress tracking</strong> cho upload</li>
+    <li><strong>Cookies không tự gửi</strong> — phải set <code>credentials: 'include'</code></li>
+  </ul>
+</div>
+
+<p>Abort request với timeout sử dụng AbortController:</p>
+<pre><code>const controller = new AbortController();
+const timeoutId = setTimeout(() =&gt; controller.abort(), 10000);
+
+try {
+  const response = await fetch('https://api.example.com/data', {
+    signal: controller.signal,
+  });
+  clearTimeout(timeoutId);
+  const data = await response.json();
+  return data;
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Request timed out');
+  }
+  throw error;
+}</code></pre>
+
+<h3>2. Axios — Instance, Interceptors, Cancel Tokens</h3>
+
+<h4>2.1 Tạo Axios Instance</h4>
+<p>Thay vì dùng <code>axios.get()</code> trực tiếp, luôn tạo instance riêng. Điều này cho phép config base URL, headers, timeout một lần duy nhất và reuse khắp app.</p>
+
+<pre><code>import axios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+
+const API_BASE_URL = 'https://api.example.com/v1';
+
+const apiClient: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});</code></pre>
+
+<h4>2.2 Request Interceptor</h4>
+<p>Request interceptor chạy TRƯỚC mỗi request được gửi đi. Dùng để attach token, add tracking headers, log requests.</p>
+
+<pre><code>apiClient.interceptors.request.use(
+  async (config) =&gt; {
+    const token = await getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    config.headers['X-Request-ID'] = generateUUID();
+    return config;
+  },
+  (error) =&gt; {
+    return Promise.reject(error);
+  }
+);</code></pre>
+
+<h4>2.3 Response Interceptor</h4>
+<p>Response interceptor xử lý response TRƯỚC khi trả về cho caller. Dùng để transform data, handle errors globally, refresh token.</p>
+
+<pre><code>apiClient.interceptors.response.use(
+  (response) =&gt; {
+    return response.data;
+  },
+  async (error) =&gt; {
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          break;
+        case 403:
+          break;
+        case 429:
+          break;
+        case 500:
+          break;
+      }
+    }
+    return Promise.reject(error);
+  }
+);</code></pre>
+
+<h4>2.4 Cancel Requests</h4>
+<p>Trong React Native, cancel request khi user rời screen để tránh memory leak và state update trên unmounted component. Từ Axios v0.22+, dùng AbortController thay cho CancelToken (đã deprecated).</p>
+
+<pre><code>const controller = new AbortController();
+
+apiClient.get('/users', {
+  signal: controller.signal,
+});
+
+controller.abort();</code></pre>
+
+<p>Trong React component, cleanup khi unmount:</p>
+<pre><code>useEffect(() =&gt; {
+  const controller = new AbortController();
+
+  const fetchData = async () =&gt; {
+    try {
+      const data = await apiClient.get('/users', {
+        signal: controller.signal,
+      });
+      setUsers(data);
+    } catch (error) {
+      if (!axios.isCancel(error)) {
+        setError(error);
+      }
+    }
+  };
+
+  fetchData();
+
+  return () =&gt; controller.abort();
+}, []);</code></pre>
+
+<h3>3. Token Refresh Flow — Chi tiết step by step</h3>
+
+<div class="card card-accent">
+  <h4>Tại sao cần Token Refresh?</h4>
+  <p>Access token có thời hạn ngắn (thường 15-30 phút) vì lý do bảo mật. Khi hết hạn, thay vì bắt user đăng nhập lại, ta dùng refresh token (thời hạn dài hơn, 7-30 ngày) để xin access token mới một cách im lặng (silent refresh).</p>
+</div>
+
+<h4>3.1 Flow cơ bản</h4>
+<ol>
+  <li>Client gửi request với access token trong header Authorization</li>
+  <li>Server trả về 401 Unauthorized (token hết hạn)</li>
+  <li>Client gửi refresh token lên endpoint <code>/auth/refresh</code></li>
+  <li>Server trả về access token mới + refresh token mới</li>
+  <li>Client lưu tokens mới vào storage</li>
+  <li>Client retry request ban đầu với access token mới</li>
+</ol>
+
+<h4>3.2 Vấn đề: Concurrent 401s</h4>
+
+<div class="card card-danger">
+  <h4>🚨 Race Condition với Multiple 401s</h4>
+  <p>Khi access token hết hạn, có thể 3-5 requests đang chạy đồng thời và tất cả đều nhận 401. Nếu mỗi request đều gọi refresh token riêng, sẽ gây ra:</p>
+  <ul>
+    <li>Multiple refresh calls không cần thiết</li>
+    <li>Refresh token bị invalidate sau lần dùng đầu (nếu server dùng rotation), các lần sau sẽ fail</li>
+    <li>User bị logout không mong muốn</li>
+  </ul>
+</div>
+
+<h4>3.3 Giải pháp: Queue Mechanism</h4>
+<p>Dùng một biến flag <code>isRefreshing</code> và một queue chứa các requests đang chờ. Chỉ request đầu tiên nhận 401 mới thực sự gọi refresh. Các requests sau sẽ chờ trong queue và được retry sau khi refresh thành công.</p>
+
+<p>Implementation đầy đủ:</p>
+
+<pre><code>import axios from 'axios';
+import type {
+  AxiosInstance,
+  AxiosError,
+  InternalAxiosRequestConfig,
+} from 'axios';
+
+const apiClient: AxiosInstance = axios.create({
+  baseURL: 'https://api.example.com/v1',
+  timeout: 15000,
+});
+
+let isRefreshing = false;
+let failedQueue: Array&lt;{
+  resolve: (token: string) =&gt; void;
+  reject: (error: AxiosError) =&gt; void;
+}&gt; = [];
+
+const processQueue = (
+  error: AxiosError | null,
+  token: string | null
+): void =&gt; {
+  failedQueue.forEach(({ resolve, reject }) =&gt; {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token!);
+    }
+  });
+  failedQueue = [];
+};
+
+apiClient.interceptors.request.use(async (config) =&gt; {
+  const token = await TokenStorage.getAccessToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+apiClient.interceptors.response.use(
+  (response) =&gt; response,
+  async (error: AxiosError) =&gt; {
+    const originalRequest = error.config as InternalAxiosRequestConfig &amp; {
+      _retry?: boolean;
+    };
+
+    if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise&lt;string&gt;((resolve, reject) =&gt; {
+        failedQueue.push({ resolve, reject });
+      }).then((token) =&gt; {
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return apiClient(originalRequest);
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshToken = await TokenStorage.getRefreshToken();
+
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const { data } = await axios.post(
+        'https://api.example.com/v1/auth/refresh',
+        { refreshToken }
+      );
+
+      const { accessToken, refreshToken: newRefreshToken } = data;
+
+      await TokenStorage.setTokens(accessToken, newRefreshToken);
+
+      processQueue(null, accessToken);
+
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return apiClient(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError as AxiosError, null);
+
+      await TokenStorage.clearTokens();
+      navigateToLogin();
+
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  }
+);</code></pre>
+
+<div class="card card-info">
+  <h4>Giải thích flow xử lý concurrent 401s</h4>
+  <ol>
+    <li><strong>Request A</strong> nhận 401 → <code>isRefreshing = false</code> → set thành <code>true</code>, bắt đầu refresh</li>
+    <li><strong>Request B</strong> nhận 401 → <code>isRefreshing = true</code> → được push vào <code>failedQueue</code>, trả về Promise đang pending</li>
+    <li><strong>Request C</strong> nhận 401 → tương tự B, push vào queue</li>
+    <li>Refresh thành công → <code>processQueue</code> resolve tất cả Promise trong queue với token mới</li>
+    <li>B và C tự động retry với token mới</li>
+    <li>Nếu refresh fail → <code>processQueue</code> reject tất cả → redirect về Login</li>
+  </ol>
+</div>
+
+<h4>3.4 TokenStorage helper</h4>
+<p>Sử dụng <code>react-native-keychain</code> hoặc <code>expo-secure-store</code> cho production. KHÔNG dùng AsyncStorage cho tokens vì không được encrypt.</p>
+
+<pre><code>import * as SecureStore from 'expo-secure-store';
+
+const TokenStorage = {
+  async getAccessToken(): Promise&lt;string | null&gt; {
+    return SecureStore.getItemAsync('access_token');
+  },
+
+  async getRefreshToken(): Promise&lt;string | null&gt; {
+    return SecureStore.getItemAsync('refresh_token');
+  },
+
+  async setTokens(
+    accessToken: string,
+    refreshToken: string
+  ): Promise&lt;void&gt; {
+    await Promise.all([
+      SecureStore.setItemAsync('access_token', accessToken),
+      SecureStore.setItemAsync('refresh_token', refreshToken),
+    ]);
+  },
+
+  async clearTokens(): Promise&lt;void&gt; {
+    await Promise.all([
+      SecureStore.deleteItemAsync('access_token'),
+      SecureStore.deleteItemAsync('refresh_token'),
+    ]);
+  },
+};</code></pre>
+
+<h3>4. React Query (TanStack Query)</h3>
+
+<h4>4.1 Setup</h4>
+<pre><code>import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 3,
+      retryDelay: (attemptIndex) =&gt; Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function App() {
+  return (
+    &lt;QueryClientProvider client={queryClient}&gt;
+      &lt;Navigation /&gt;
+    &lt;/QueryClientProvider&gt;
+  );
+}</code></pre>
+
+<div class="card card-info">
+  <h4>staleTime vs gcTime (cacheTime cũ)</h4>
+  <ul>
+    <li><strong>staleTime</strong>: Thời gian data được coi là "fresh". Trong khoảng này, React Query KHÔNG refetch khi component remount. Default = 0 (luôn stale).</li>
+    <li><strong>gcTime</strong> (trước đây là cacheTime): Thời gian data được giữ trong cache SAU KHI không còn observer nào. Khi hết, data bị garbage collected. Default = 5 phút.</li>
+  </ul>
+</div>
+
+<h4>4.2 useQuery</h4>
+<p><code>useQuery</code> dùng cho GET requests — đọc data. Nó tự động handle loading, error, caching, refetching.</p>
+
+<pre><code>import { useQuery } from '@tanstack/react-query';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const useUser = (userId: number) =&gt; {
+  return useQuery&lt;User&gt;({
+    queryKey: ['users', userId],
+    queryFn: () =&gt; apiClient.get(`/users/${userId}`),
+    enabled: userId &gt; 0,
+    staleTime: 30 * 1000,
+  });
+};
+
+function UserProfile({ userId }: { userId: number }) {
+  const { data, isLoading, isError, error, refetch } = useUser(userId);
+
+  if (isLoading) return &lt;ActivityIndicator /&gt;;
+  if (isError) return &lt;ErrorView error={error} onRetry={refetch} /&gt;;
+
+  return &lt;Text&gt;{data.name}&lt;/Text&gt;;
+}</code></pre>
+
+<h4>4.3 Query Keys — Thiết kế đúng</h4>
+<p>Query key là identity của cache entry. React Query dùng nó để determine khi nào refetch và cache data ở đâu. Thiết kế key tốt rất quan trọng cho cache invalidation.</p>
+
+<pre><code>const queryKeys = {
+  users: {
+    all: ['users'] as const,
+    lists: () =&gt; [...queryKeys.users.all, 'list'] as const,
+    list: (filters: UserFilters) =&gt;
+      [...queryKeys.users.lists(), filters] as const,
+    details: () =&gt; [...queryKeys.users.all, 'detail'] as const,
+    detail: (id: number) =&gt;
+      [...queryKeys.users.details(), id] as const,
+  },
+
+  posts: {
+    all: ['posts'] as const,
+    byUser: (userId: number) =&gt;
+      [...queryKeys.posts.all, 'user', userId] as const,
+  },
+};</code></pre>
+
+<h4>4.4 useMutation</h4>
+<p><code>useMutation</code> dùng cho POST/PUT/PATCH/DELETE — thay đổi data. Sau khi mutation thành công, dùng <code>invalidateQueries</code> hoặc <code>setQueryData</code> để update cache.</p>
+
+<pre><code>import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface CreateUserInput {
+  name: string;
+  email: string;
+}
+
+const useCreateUser = () =&gt; {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateUserInput) =&gt;
+      apiClient.post('/users', input),
+
+    onSuccess: (newUser) =&gt; {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.lists(),
+      });
+
+      queryClient.setQueryData(
+        queryKeys.users.detail(newUser.id),
+        newUser
+      );
+    },
+
+    onError: (error) =&gt; {
+      showToast('Tạo user thất bại');
+    },
+  });
+};</code></pre>
+
+<div class="card card-accent">
+  <h4>invalidateQueries vs setQueryData</h4>
+  <ul>
+    <li><strong>invalidateQueries</strong>: Mark queries là stale → trigger refetch. Dùng khi không chắc chắn shape của cached data (ví dụ: invalidate list sau khi create).</li>
+    <li><strong>setQueryData</strong>: Update cache trực tiếp, KHÔNG refetch. Dùng khi biết chính xác data mới (ví dụ: update detail sau khi API trả về).</li>
+  </ul>
+</div>
+
+<h4>4.5 Optimistic Updates</h4>
+<p>Update UI ngay lập tức trước khi server confirm, rollback nếu fail. Tạo UX mượt mà hơn.</p>
+
+<pre><code>const useUpdateUser = () =&gt; {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ...data }: UpdateUserInput) =&gt;
+      apiClient.patch(`/users/${id}`, data),
+
+    onMutate: async (updatedUser) =&gt; {
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.users.detail(updatedUser.id),
+      });
+
+      const previousUser = queryClient.getQueryData&lt;User&gt;(
+        queryKeys.users.detail(updatedUser.id)
+      );
+
+      queryClient.setQueryData(
+        queryKeys.users.detail(updatedUser.id),
+        (old: User | undefined) =&gt; (old ? { ...old, ...updatedUser } : old)
+      );
+
+      return { previousUser };
+    },
+
+    onError: (_error, updatedUser, context) =&gt; {
+      if (context?.previousUser) {
+        queryClient.setQueryData(
+          queryKeys.users.detail(updatedUser.id),
+          context.previousUser
+        );
+      }
+    },
+
+    onSettled: (_data, _error, updatedUser) =&gt; {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(updatedUser.id),
+      });
+    },
+  });
+};</code></pre>
+
+<h3>5. Infinite Scroll — useInfiniteQuery + FlatList</h3>
+
+<p>Pattern phổ biến trong mobile: load thêm data khi user scroll tới cuối list.</p>
+
+<pre><code>import { useInfiniteQuery } from '@tanstack/react-query';
+import { FlatList, ActivityIndicator } from 'react-native';
+
+interface PaginatedResponse&lt;T&gt; {
+  data: T[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
+const useInfiniteUsers = () =&gt; {
+  return useInfiniteQuery&lt;PaginatedResponse&lt;User&gt;&gt;({
+    queryKey: ['users', 'infinite'],
+    queryFn: ({ pageParam }) =&gt;
+      apiClient.get('/users', {
+        params: { cursor: pageParam, limit: 20 },
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) =&gt;
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
+  });
+};
+
+function UserList() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+  } = useInfiniteUsers();
+
+  const allUsers = data?.pages.flatMap((page) =&gt; page.data) ?? [];
+
+  const handleEndReached = () =&gt; {
+    if (hasNextPage &amp;&amp; !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  if (isLoading) return &lt;ActivityIndicator size="large" /&gt;;
+
+  return (
+    &lt;FlatList
+      data={allUsers}
+      keyExtractor={(item) =&gt; item.id.toString()}
+      renderItem={({ item }) =&gt; &lt;UserCard user={item} /&gt;}
+      onEndReached={handleEndReached}
+      onEndReachedThreshold={0.5}
+      refreshing={isLoading}
+      onRefresh={refetch}
+      ListFooterComponent={
+        isFetchingNextPage ? &lt;ActivityIndicator /&gt; : null
+      }
+    /&gt;
+  );
+}</code></pre>
+
+<div class="card card-warning">
+  <h4>⚠️ Lưu ý với onEndReached</h4>
+  <ul>
+    <li><code>onEndReachedThreshold={0.5}</code> nghĩa là trigger khi còn 50% chiều cao viewport trước khi chạm đáy. Giá trị quá nhỏ → user thấy loading. Giá trị quá lớn → fetch quá sớm.</li>
+    <li>Luôn guard với <code>hasNextPage &amp;&amp; !isFetchingNextPage</code> để tránh duplicate calls.</li>
+    <li>FlatList có thể fire <code>onEndReached</code> nhiều lần — React Query tự debounce nếu query đã running.</li>
+  </ul>
+</div>
+
+<h3>6. Error Handling Patterns</h3>
+
+<h4>6.1 Typed Error Response</h4>
+<pre><code>interface ApiError {
+  status: number;
+  code: string;
+  message: string;
+  details?: Record&lt;string, string[]&gt;;
+}
+
+class ApiException extends Error {
+  status: number;
+  code: string;
+  details?: Record&lt;string, string[]&gt;;
+
+  constructor(error: ApiError) {
+    super(error.message);
+    this.name = 'ApiException';
+    this.status = error.status;
+    this.code = error.code;
+    this.details = error.details;
+  }
+
+  get isUnauthorized(): boolean {
+    return this.status === 401;
+  }
+
+  get isValidationError(): boolean {
+    return this.status === 422;
+  }
+
+  get isServerError(): boolean {
+    return this.status &gt;= 500;
+  }
+
+  get isNetworkError(): boolean {
+    return this.status === 0;
+  }
+}</code></pre>
+
+<h4>6.2 Response Interceptor với Error Transform</h4>
+<pre><code>apiClient.interceptors.response.use(
+  (response) =&gt; response.data,
+  (error: AxiosError&lt;ApiError&gt;) =&gt; {
+    if (!error.response) {
+      return Promise.reject(
+        new ApiException({
+          status: 0,
+          code: 'NETWORK_ERROR',
+          message: 'Không có kết nối mạng',
+        })
+      );
+    }
+
+    return Promise.reject(
+      new ApiException({
+        status: error.response.status,
+        code: error.response.data?.code ?? 'UNKNOWN',
+        message:
+          error.response.data?.message ?? 'Đã có lỗi xảy ra',
+        details: error.response.data?.details,
+      })
+    );
+  }
+);</code></pre>
+
+<h4>6.3 Retry Strategy với Exponential Backoff</h4>
+<pre><code>const retryableStatusCodes = new Set([408, 429, 500, 502, 503, 504]);
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) =&gt; {
+        if (failureCount &gt;= 3) return false;
+        if (error instanceof ApiException) {
+          return retryableStatusCodes.has(error.status);
+        }
+        return false;
+      },
+      retryDelay: (attemptIndex) =&gt;
+        Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+});</code></pre>
+
+<h3>7. REST — HTTP Methods, Status Codes, Pagination</h3>
+
+<h4>7.1 HTTP Methods</h4>
+<table>
+  <thead>
+    <tr><th>Method</th><th>Mục đích</th><th>Idempotent?</th><th>Request Body?</th><th>Ví dụ</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>GET</td><td>Đọc resource</td><td>✅</td><td>❌</td><td>GET /users/123</td></tr>
+    <tr><td>POST</td><td>Tạo resource</td><td>❌</td><td>✅</td><td>POST /users</td></tr>
+    <tr><td>PUT</td><td>Replace toàn bộ resource</td><td>✅</td><td>✅</td><td>PUT /users/123</td></tr>
+    <tr><td>PATCH</td><td>Update một phần resource</td><td>❌*</td><td>✅</td><td>PATCH /users/123</td></tr>
+    <tr><td>DELETE</td><td>Xóa resource</td><td>✅</td><td>❌</td><td>DELETE /users/123</td></tr>
+  </tbody>
+</table>
+<p>*PATCH có thể idempotent hoặc không, tùy implementation. Ví dụ <code>{"name": "John"}</code> là idempotent, nhưng <code>{"$inc": {"views": 1}}</code> thì không.</p>
+
+<h4>7.2 HTTP Status Codes</h4>
+<table>
+  <thead>
+    <tr><th>Code</th><th>Tên</th><th>Khi nào dùng</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>200</td><td>OK</td><td>GET/PUT/PATCH thành công</td></tr>
+    <tr><td>201</td><td>Created</td><td>POST tạo resource thành công</td></tr>
+    <tr><td>204</td><td>No Content</td><td>DELETE thành công, không có body</td></tr>
+    <tr><td>400</td><td>Bad Request</td><td>Request sai format, thiếu field</td></tr>
+    <tr><td>401</td><td>Unauthorized</td><td>Chưa authenticate (token missing/invalid/expired)</td></tr>
+    <tr><td>403</td><td>Forbidden</td><td>Đã authenticate nhưng không có quyền</td></tr>
+    <tr><td>404</td><td>Not Found</td><td>Resource không tồn tại</td></tr>
+    <tr><td>409</td><td>Conflict</td><td>Duplicate resource (email đã tồn tại)</td></tr>
+    <tr><td>422</td><td>Unprocessable Entity</td><td>Validation errors</td></tr>
+    <tr><td>429</td><td>Too Many Requests</td><td>Rate limited</td></tr>
+    <tr><td>500</td><td>Internal Server Error</td><td>Server gặp lỗi không xác định</td></tr>
+    <tr><td>502</td><td>Bad Gateway</td><td>Server trung gian nhận response lỗi</td></tr>
+    <tr><td>503</td><td>Service Unavailable</td><td>Server tạm thời không available</td></tr>
+  </tbody>
+</table>
+
+<h4>7.3 Pagination — Cursor vs Offset</h4>
+<table>
+  <thead>
+    <tr><th>Tiêu chí</th><th>Offset-based</th><th>Cursor-based</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Cách dùng</td><td><code>?page=2&amp;limit=20</code></td><td><code>?cursor=abc123&amp;limit=20</code></td></tr>
+    <tr><td>Jump to page</td><td>✅ Được</td><td>❌ Không được</td></tr>
+    <tr><td>Performance lớn</td><td>❌ Chậm (OFFSET SQL)</td><td>✅ Nhanh (WHERE id &gt; cursor)</td></tr>
+    <tr><td>Data thay đổi</td><td>❌ Bị trùng/thiếu items</td><td>✅ Ổn định</td></tr>
+    <tr><td>Phù hợp cho</td><td>Admin panels, search results</td><td>Social feeds, infinite scroll</td></tr>
+  </tbody>
+</table>
+
+<div class="card card-accent">
+  <h4>Tại sao Cursor pagination tốt hơn cho mobile?</h4>
+  <p>Mobile app chủ yếu dùng infinite scroll, không cần jump to page. Cursor-based pagination không bị ảnh hưởng khi có data mới được insert (offset sẽ bị lệch, gây duplicate items). Với dataset lớn, cursor cũng nhanh hơn nhiều vì database dùng index thay vì scan + skip.</p>
+</div>
+
+<h2>📖 ĐỌC SÂU KHI DỰ ÁN CẦN</h2>
+<div class="card card-info">
+  <p>GraphQL, WebSocket và rate limiting quan trọng nhưng không phải app nào cũng dùng. Nếu mục tiêu là build CRUD/mobile commerce thông thường, hãy học chắc Axios, token refresh, React Query, pagination và error handling trước.</p>
+</div>
+
+<h3>8. GraphQL Basics</h3>
+
+<h4>8.1 Query và Mutation</h4>
+<p>GraphQL cho phép client request chính xác data cần thiết, giảm over-fetching và under-fetching.</p>
+
+<pre><code>query GetUser($id: ID!) {
+  user(id: $id) {
+    id
+    name
+    email
+    posts(first: 5) {
+      title
+      createdAt
+    }
+  }
+}
+
+mutation CreatePost($input: CreatePostInput!) {
+  createPost(input: $input) {
+    id
+    title
+    author {
+      name
+    }
+  }
+}</code></pre>
+
+<h4>8.2 Apollo Client vs urql</h4>
+<table>
+  <thead>
+    <tr><th>Tiêu chí</th><th>Apollo Client</th><th>urql</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Bundle size</td><td>~40KB</td><td>~12KB</td></tr>
+    <tr><td>Cache</td><td>Normalized (mạnh, phức tạp)</td><td>Document cache (đơn giản)</td></tr>
+    <tr><td>DevTools</td><td>Rất tốt</td><td>Tốt</td></tr>
+    <tr><td>Learning curve</td><td>Cao</td><td>Thấp</td></tr>
+    <tr><td>Ecosystem</td><td>Lớn nhất</td><td>Đang phát triển</td></tr>
+    <tr><td>Khi nào dùng</td><td>App lớn, cần normalized cache</td><td>App nhỏ-trung, muốn lightweight</td></tr>
+  </tbody>
+</table>
+
+<h4>8.3 Apollo Client Setup trong React Native</h4>
+<pre><code>import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloProvider,
+  createHttpLink,
+} from '@apollo/client';
+import { setContext } from '@apollo/client/link/context';
+
+const httpLink = createHttpLink({
+  uri: 'https://api.example.com/graphql',
+});
+
+const authLink = setContext(async (_, { headers }) =&gt; {
+  const token = await TokenStorage.getAccessToken();
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
+    },
+  };
+});
+
+const client = new ApolloClient({
+  link: authLink.concat(httpLink),
+  cache: new InMemoryCache(),
+});
+
+function App() {
+  return (
+    &lt;ApolloProvider client={client}&gt;
+      &lt;Navigation /&gt;
+    &lt;/ApolloProvider&gt;
+  );
+}</code></pre>
+
+<h3>9. WebSocket vs SSE vs Long Polling</h3>
+
+<table>
+  <thead>
+    <tr><th>Tiêu chí</th><th>WebSocket</th><th>SSE (Server-Sent Events)</th><th>Long Polling</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Direction</td><td>Bidirectional (full-duplex)</td><td>Server → Client only</td><td>Simulated bidirectional</td></tr>
+    <tr><td>Protocol</td><td>ws:// hoặc wss://</td><td>HTTP</td><td>HTTP</td></tr>
+    <tr><td>Connection</td><td>Persistent</td><td>Persistent</td><td>Repeated requests</td></tr>
+    <tr><td>Binary data</td><td>✅</td><td>❌ (text only)</td><td>✅</td></tr>
+    <tr><td>Auto reconnect</td><td>❌ (tự implement)</td><td>✅ (built-in)</td><td>✅ (tự implement)</td></tr>
+    <tr><td>Overhead</td><td>Thấp sau handshake</td><td>Thấp</td><td>Cao (mỗi lần new request)</td></tr>
+    <tr><td>Use cases</td><td>Chat, gaming, real-time collab</td><td>Notifications, feeds, stock prices</td><td>Legacy systems, fallback</td></tr>
+    <tr><td>RN support</td><td>Tốt (built-in WebSocket API)</td><td>Hạn chế (cần polyfill)</td><td>Tốt (dùng fetch/axios)</td></tr>
+  </tbody>
+</table>
+
+<p>WebSocket cơ bản trong React Native:</p>
+<pre><code>const useWebSocket = (url: string) =&gt; {
+  const wsRef = useRef&lt;WebSocket | null&gt;(null);
+  const [messages, setMessages] = useState&lt;string[]&gt;([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
+
+  const connect = useCallback(() =&gt; {
+    const ws = new WebSocket(url);
+
+    ws.onopen = () =&gt; {
+      setIsConnected(true);
+      reconnectAttempts.current = 0;
+    };
+
+    ws.onmessage = (event) =&gt; {
+      setMessages((prev) =&gt; [...prev, event.data]);
+    };
+
+    ws.onclose = () =&gt; {
+      setIsConnected(false);
+      if (reconnectAttempts.current &lt; maxReconnectAttempts) {
+        const delay = Math.min(
+          1000 * 2 ** reconnectAttempts.current,
+          30000
+        );
+        reconnectAttempts.current += 1;
+        setTimeout(connect, delay);
+      }
+    };
+
+    ws.onerror = () =&gt; {
+      ws.close();
+    };
+
+    wsRef.current = ws;
+  }, [url]);
+
+  const send = useCallback((data: string) =&gt; {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(data);
+    }
+  }, []);
+
+  useEffect(() =&gt; {
+    connect();
+    return () =&gt; wsRef.current?.close();
+  }, [connect]);
+
+  return { messages, send, isConnected };
+};</code></pre>
+
+<h3>10. Rate Limiting (429)</h3>
+
+<div class="card card-warning">
+  <h4>⚠️ Xử lý 429 Too Many Requests</h4>
+  <p>Khi server trả 429, response thường có header <code>Retry-After</code> cho biết bao lâu phải chờ (tính bằng giây). Client phải respect giá trị này.</p>
+</div>
+
+<pre><code>apiClient.interceptors.response.use(
+  (response) =&gt; response,
+  async (error: AxiosError) =&gt; {
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'];
+      const delayMs = retryAfter
+        ? parseInt(retryAfter, 10) * 1000
+        : 5000;
+
+      await new Promise((resolve) =&gt; setTimeout(resolve, delayMs));
+
+      return apiClient(error.config!);
+    }
+    return Promise.reject(error);
+  }
+);</code></pre>
+
+<div class="card card-info">
+  <h4>Best Practices cho Rate Limiting</h4>
+  <ul>
+    <li>Implement client-side throttling để giảm số requests gửi đi</li>
+    <li>Batch requests khi có thể (ví dụ: gửi array IDs thay vì N requests riêng)</li>
+    <li>Dùng exponential backoff khi retry</li>
+    <li>Hiển thị UI feedback cho user khi bị rate limited (ví dụ: "Vui lòng thử lại sau X giây")</li>
+    <li>Cache responses để tránh duplicate requests</li>
+  </ul>
+</div>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<h2>🛠️ Debug playbook: API bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>Nhiều refresh token request cùng lúc</td><td>Log 401 time, isRefreshing flag, failedQueue length</td><td>Một refresh request duy nhất, request còn lại chờ queue</td></tr>
+<tr><td>Loading không bao giờ tắt</td><td>Timeout, abort, finally, query error state</td><td>Config timeout, handle error/finally, cancel khi unmount</td></tr>
+<tr><td>List duplicate item khi load more</td><td>onEndReached fire nhiều lần, cursor, hasNextPage</td><td>Guard isFetchingNextPage, cursor pagination, stable key</td></tr>
+<tr><td>Retry spam backend</td><td>Status code nào đang retry, retryDelay, jitter</td><td>Chỉ retry network/5xx/429 phù hợp, không retry 400/401/422</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> API layer chuyên nghiệp gồm auth header, token refresh, typed error, timeout/cancel, retry có điều kiện, cache/invalidation và UI error matrix. Nói rõ lỗi nào retry được, lỗi nào phải để user xử lý.</p>
+</div>
+
+<div class="qa">
+  <div class="q">1. Fetch API và Axios khác nhau như thế nào? Khi nào nên dùng cái nào?</div>
+  <div class="a">
+    <p><strong>Fetch API</strong> là web standard, built-in trong React Native, không cần install thêm. Tuy nhiên, Fetch không throw error cho HTTP 4xx/5xx (chỉ reject khi network error), không có interceptors, không tự transform JSON, và không có request timeout built-in (phải dùng AbortController).</p>
+    <p><strong>Axios</strong> là third-party library. Ưu điểm: tự throw error cho non-2xx status, có interceptors (request/response), tự transform JSON, hỗ trợ timeout config, cancel requests, progress tracking cho upload.</p>
+    <p><strong>Khi nào dùng:</strong> Fetch phù hợp cho small projects không cần interceptors. Axios phù hợp cho production apps cần token management, error handling tập trung, và response transformation. Trong thực tế, đa số production React Native apps dùng Axios kết hợp với React Query.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">2. Giải thích token refresh flow. Làm sao handle khi nhiều requests đồng thời nhận 401?</div>
+  <div class="a">
+    <p><strong>Flow cơ bản:</strong> Access token hết hạn → server trả 401 → client dùng refresh token xin access token mới → retry request ban đầu.</p>
+    <p><strong>Vấn đề concurrent 401s:</strong> Nếu 5 requests cùng nhận 401, không thể gọi refresh 5 lần vì: (1) lãng phí, (2) nếu server dùng refresh token rotation, lần refresh thứ 2 sẽ fail vì token cũ đã bị invalidate.</p>
+    <p><strong>Giải pháp — Queue mechanism:</strong></p>
+    <ul>
+      <li>Dùng biến <code>isRefreshing</code> flag</li>
+      <li>Request đầu tiên nhận 401 → set <code>isRefreshing = true</code>, gọi refresh</li>
+      <li>Các requests sau nhận 401 → thấy <code>isRefreshing = true</code> → push vào <code>failedQueue</code> (mảng chứa Promise resolve/reject)</li>
+      <li>Refresh thành công → <code>processQueue</code> resolve tất cả Promises trong queue với token mới → mỗi request tự retry</li>
+      <li>Refresh fail → <code>processQueue</code> reject tất cả → redirect về login</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">3. staleTime và gcTime (cacheTime) trong React Query khác nhau thế nào?</div>
+  <div class="a">
+    <p><strong>staleTime</strong> (default: 0): Thời gian data được coi là "fresh". Khi data còn fresh, React Query sẽ KHÔNG refetch khi component mount lại hoặc window focus. Ví dụ <code>staleTime: 5 * 60 * 1000</code> — data fresh trong 5 phút.</p>
+    <p><strong>gcTime</strong> (default: 5 phút): Thời gian data được giữ trong cache SAU KHI không còn component nào subscribe. Khi hết gcTime, data bị xóa khỏi cache (garbage collected). Ví dụ user rời screen A, data của screen A vẫn trong cache 5 phút, quay lại sẽ hiển thị ngay.</p>
+    <p><strong>Mối quan hệ:</strong> staleTime kiểm soát khi nào refetch, gcTime kiểm soát khi nào xóa cache. Thường <code>gcTime &gt;= staleTime</code>.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">4. So sánh cursor-based pagination và offset-based pagination. Cái nào phù hợp cho mobile?</div>
+  <div class="a">
+    <p><strong>Offset-based</strong> (<code>?page=2&amp;limit=20</code>): Dễ implement, cho phép nhảy đến page bất kỳ. Nhưng có vấn đề: khi data thay đổi (insert/delete), offset bị lệch → user thấy item trùng hoặc bỏ sót. Performance kém với dataset lớn vì database phải OFFSET (scan + skip).</p>
+    <p><strong>Cursor-based</strong> (<code>?cursor=abc&amp;limit=20</code>): Data ổn định dù có insert/delete. Performance tốt vì database dùng index (<code>WHERE id &gt; cursor</code>). Nhưng không thể nhảy đến page bất kỳ.</p>
+    <p><strong>Cho mobile:</strong> Cursor-based phù hợp hơn vì mobile chủ yếu dùng infinite scroll (không cần page numbers). Social feeds, chat histories, notification lists đều nên dùng cursor.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">5. Optimistic update là gì? Khi nào nên và không nên dùng?</div>
+  <div class="a">
+    <p><strong>Optimistic update</strong>: Update UI ngay lập tức trước khi server confirm, rollback nếu server trả error. Tạo UX mượt mà, user không phải chờ loading.</p>
+    <p><strong>Nên dùng:</strong> Các action có xác suất thành công cao và kết quả dự đoán được — like/unlike, toggle bookmark, update profile name, reorder list.</p>
+    <p><strong>Không nên dùng:</strong> Các action có side effects phức tạp hoặc xác suất fail cao — payment, gửi email, delete account, actions cần server validation phức tạp.</p>
+    <p><strong>Implementation:</strong> Trong React Query, dùng <code>onMutate</code> để snapshot data cũ + update cache, <code>onError</code> để rollback từ snapshot, <code>onSettled</code> để invalidate queries (refetch data thật từ server).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">6. WebSocket, SSE, và Long Polling khác nhau thế nào? Khi nào dùng cái nào?</div>
+  <div class="a">
+    <p><strong>WebSocket:</strong> Full-duplex, bidirectional qua persistent connection. Client và server đều có thể gửi data bất kỳ lúc nào. Dùng cho: chat, gaming, real-time collaboration. Cần tự implement reconnection logic.</p>
+    <p><strong>SSE (Server-Sent Events):</strong> Unidirectional (server → client), dùng HTTP standard. Có auto-reconnect built-in. Dùng cho: notifications, live feeds, stock prices. Hạn chế trong React Native (cần polyfill).</p>
+    <p><strong>Long Polling:</strong> Client gửi request, server giữ connection open đến khi có data mới hoặc timeout. Client nhận response → gửi request mới ngay. Overhead cao nhất vì mỗi lần tạo HTTP connection mới. Dùng cho: legacy systems, fallback khi WebSocket/SSE không khả dụng.</p>
+    <p><strong>Cho React Native:</strong> WebSocket là lựa chọn phổ biến nhất vì React Native có built-in WebSocket API và hỗ trợ tốt. Hoặc dùng Socket.IO cho tiện — nó tự fallback giữa WebSocket và polling.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">7. Làm sao handle error một cách tập trung trong React Native app?</div>
+  <div class="a">
+    <p>Sử dụng <strong>layered error handling strategy</strong>:</p>
+    <p><strong>Layer 1 — Axios Interceptor:</strong> Transform raw errors thành typed <code>ApiException</code> class. Tất cả API errors đều có structure thống nhất: status, code, message, details.</p>
+    <p><strong>Layer 2 — React Query Global Error Handler:</strong> Config <code>onError</code> callback trong QueryClient để xử lý errors chung (ví dụ: show toast cho network error, redirect login cho 401).</p>
+    <p><strong>Layer 3 — Component Level:</strong> Handle errors cụ thể cho từng screen. Ví dụ: validation error (422) hiển thị inline error messages, not found (404) hiển thị empty state.</p>
+    <p><strong>Layer 4 — Error Boundary:</strong> Bắt unexpected errors, hiển thị fallback UI, log error lên crash reporting service (Sentry, Crashlytics).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">8. invalidateQueries và setQueryData khác nhau thế nào? Khi nào dùng cái nào?</div>
+  <div class="a">
+    <p><strong>invalidateQueries:</strong> Mark queries matching key pattern là stale. Nếu có component đang subscribe → refetch ngay. Nếu không → refetch khi component mount lại. Dùng khi bạn KHÔNG biết chính xác data mới look like gì (ví dụ: create user xong, invalidate user list — không biết server sort/filter thế nào).</p>
+    <p><strong>setQueryData:</strong> Update cache trực tiếp, KHÔNG trigger refetch. Dùng khi biết chính xác data mới (ví dụ: API trả về updated user object → set vào cache). Nhanh hơn vì không cần network request.</p>
+    <p><strong>Kết hợp:</strong> Thường dùng cả hai — <code>setQueryData</code> cho detail queries (response API trả về đầy đủ), <code>invalidateQueries</code> cho list queries (cần server re-sort, re-paginate).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">9. PUT và PATCH khác nhau thế nào? Khi nào dùng cái nào?</div>
+  <div class="a">
+    <p><strong>PUT</strong> replace toàn bộ resource. Client phải gửi full object. Nếu thiếu field, field đó sẽ bị xóa hoặc set default. PUT luôn idempotent — gọi 10 lần kết quả giống gọi 1 lần.</p>
+    <p><strong>PATCH</strong> update một phần resource. Client chỉ gửi fields muốn thay đổi. Fields không gửi không bị ảnh hưởng. PATCH có thể idempotent hoặc không, tùy implementation.</p>
+    <p><strong>Ví dụ:</strong> User có fields {name, email, avatar}.</p>
+    <ul>
+      <li><code>PUT /users/1</code> body <code>{name: "John"}</code> → email và avatar bị mất</li>
+      <li><code>PATCH /users/1</code> body <code>{name: "John"}</code> → chỉ name thay đổi, email và avatar giữ nguyên</li>
+    </ul>
+    <p><strong>Thực tế:</strong> Đa số REST APIs dùng PATCH cho updates vì hiếm khi muốn replace toàn bộ resource. Mobile apps gần như luôn dùng PATCH.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">10. Làm sao implement retry logic đúng cách? Exponential backoff là gì?</div>
+  <div class="a">
+    <p><strong>Exponential backoff</strong>: Tăng thời gian chờ giữa các lần retry theo cấp số nhân. Retry 1: 1s, Retry 2: 2s, Retry 3: 4s, Retry 4: 8s... Có cap tối đa (thường 30s). Tránh làm quá tải server khi server đang gặp vấn đề.</p>
+    <p><strong>Jitter</strong>: Thêm random vào delay để tránh thundering herd — nhiều clients retry cùng lúc. Ví dụ: <code>delay = baseDelay * 2^attempt + random(0, 1000)</code>.</p>
+    <p><strong>Retry chỉ cho idempotent operations hoặc specific error codes:</strong></p>
+    <ul>
+      <li>✅ Retry: 408 (Timeout), 429 (Rate Limited), 500, 502, 503, 504</li>
+      <li>❌ Không retry: 400, 401, 403, 404, 409, 422</li>
+    </ul>
+    <p><strong>Trong React Query:</strong> Config <code>retry</code> (số lần) và <code>retryDelay</code> (hàm tính delay). Có thể dùng function cho <code>retry</code> để chỉ retry với certain error codes.</p>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h3>Bài tập: Build API Layer hoàn chỉnh cho User Management App</h3>
+
+  <h4>Yêu cầu</h4>
+  <p>Xây dựng một data-fetching layer hoàn chỉnh cho app quản lý users. Sử dụng Axios + React Query. API backend: <a href="https://reqres.in/" target="_blank">reqres.in</a> (free fake API).</p>
+
+  <h4>Part 1: Axios Setup (api/client.ts)</h4>
+  <ul>
+    <li>Tạo Axios instance với baseURL, timeout, default headers</li>
+    <li>Request interceptor: attach fake token vào Authorization header</li>
+    <li>Response interceptor: transform response (return <code>response.data</code>), handle errors</li>
+    <li>Implement token refresh logic với queue mechanism (dùng fake refresh endpoint)</li>
+  </ul>
+
+  <h4>Part 2: Type Definitions (types/api.ts)</h4>
+  <ul>
+    <li>Define <code>User</code>, <code>PaginatedResponse&lt;T&gt;</code>, <code>ApiError</code>, <code>CreateUserInput</code>, <code>UpdateUserInput</code></li>
+    <li>Define <code>ApiException</code> class với computed properties (<code>isUnauthorized</code>, <code>isServerError</code>...)</li>
+  </ul>
+
+  <h4>Part 3: React Query Hooks (hooks/useUsers.ts)</h4>
+  <ul>
+    <li><code>useUsers(page: number)</code> — GET /users?page=X</li>
+    <li><code>useUser(id: number)</code> — GET /users/:id</li>
+    <li><code>useCreateUser()</code> — POST /users, invalidate list sau khi tạo</li>
+    <li><code>useUpdateUser()</code> — PATCH /users/:id, optimistic update</li>
+    <li><code>useDeleteUser()</code> — DELETE /users/:id, invalidate list</li>
+    <li><code>useInfiniteUsers()</code> — Infinite scroll</li>
+  </ul>
+
+  <h4>Part 4: Screens</h4>
+  <ul>
+    <li>UserListScreen — FlatList với infinite scroll, pull-to-refresh</li>
+    <li>UserDetailScreen — Hiển thị user info, có edit button</li>
+    <li>CreateUserScreen — Form tạo user, show loading/error states</li>
+  </ul>
+
+  <h4>Acceptance Criteria</h4>
+  <ul>
+    <li>✅ Axios instance có interceptors hoạt động đúng</li>
+    <li>✅ Token refresh flow handle concurrent 401s</li>
+    <li>✅ React Query caching: quay lại screen không refetch nếu data còn fresh</li>
+    <li>✅ Optimistic update cho edit user: UI update ngay, rollback nếu fail</li>
+    <li>✅ Infinite scroll smooth, không duplicate calls</li>
+    <li>✅ Error states: network error, server error, validation error đều có UI phù hợp</li>
+    <li>✅ TypeScript strict mode, không có any</li>
+    <li>✅ Requests được cancel khi unmount component</li>
+  </ul>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h4>Exercise 1: Debug concurrent 401</h4>
+  <p>Giả lập 5 request cùng nhận 401. Chứng minh chỉ có 1 request refresh token chạy, 5 request ban đầu được retry đúng token mới.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 2: Error UX matrix</h4>
+  <p>Tạo màn hình list users với 4 trạng thái lỗi: mất mạng, 401, 422 validation, 500. Mỗi lỗi phải hiển thị UI/action khác nhau.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 3: Infinite list không duplicate</h4>
+  <p>Dùng cursor pagination + FlatList. Test trường hợp user scroll nhanh, <code>onEndReached</code> fire nhiều lần, và API trả page rỗng.</p>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Không timeout request, app treo loading vô hạn khi mạng yếu.</li>
+    <li>Mỗi request 401 tự gọi refresh token, làm backend nhận nhiều refresh request và token bị race.</li>
+    <li>Không cancel request khi unmount, screen rời rồi vẫn update state/toast.</li>
+    <li>Retry cả lỗi 400/401/422, khiến user bị spam request không thể thành công.</li>
+    <li>Dùng offset pagination cho feed realtime, dẫn đến item trùng hoặc bị bỏ qua.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Sau khi access token hết hạn, Home, Notification và Profile cùng gọi API. Cả ba request nhận 401, cùng refresh token, request cuối ghi token mới nhưng request đầu retry bằng token đã bị revoke.</p>
+  <p><strong>Cách xử lý:</strong> Dùng <code>isRefreshing</code> + queue. Refresh fail thì reject toàn bộ queue và điều hướng về Login một lần duy nhất. Thêm test giả lập concurrent 401 để tránh regression.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>API layer tốt không chỉ “gọi được API”. Nó phải xử lý timeout, cancel, token refresh, typed error, retry có điều kiện, cache và UI state nhất quán.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Khi refresh token fail, bạn clear state và navigate thế nào để không gọi logout nhiều lần?</div>
+  <div class="q">2. Lỗi nào nên retry, lỗi nào không nên retry?</div>
+  <div class="q">3. Khi update item trong list, khi nào dùng <code>setQueryData</code>, khi nào dùng <code>invalidateQueries</code>?</div>
+  <div class="q">4. Cursor pagination cần backend trả về những field nào để client xử lý đúng?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+
+<div class="checklist">
+  <h3>Kiến thức</h3>
+  <label><input type="checkbox"> Tôi có thể giải thích tại sao Fetch API không throw error cho 4xx/5xx và cách xử lý</label>
+  <label><input type="checkbox"> Tôi hiểu sự khác biệt giữa Fetch và Axios, biết khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi có thể tạo Axios instance với request/response interceptors</label>
+  <label><input type="checkbox"> Tôi có thể giải thích token refresh flow chi tiết, bao gồm queue mechanism cho concurrent 401s</label>
+  <label><input type="checkbox"> Tôi hiểu staleTime vs gcTime trong React Query</label>
+  <label><input type="checkbox"> Tôi có thể giải thích invalidateQueries vs setQueryData và khi nào dùng</label>
+  <label><input type="checkbox"> Tôi hiểu cursor-based vs offset-based pagination</label>
+  <label><input type="checkbox"> Tôi có thể so sánh WebSocket, SSE, Long Polling</label>
+  <label><input type="checkbox"> Tôi hiểu REST conventions: HTTP methods, status codes, idempotency</label>
+  <label><input type="checkbox"> Tôi hiểu cơ bản GraphQL và sự khác biệt với REST</label>
+
+  <h3>Thực hành</h3>
+  <label><input type="checkbox"> Tôi đã build Axios instance với interceptors hoạt động đúng</label>
+  <label><input type="checkbox"> Tôi đã implement token refresh flow với concurrent 401 handling</label>
+  <label><input type="checkbox"> Tôi đã dùng useQuery để fetch và cache data</label>
+  <label><input type="checkbox"> Tôi đã dùng useMutation với cache invalidation</label>
+  <label><input type="checkbox"> Tôi đã implement optimistic update với rollback</label>
+  <label><input type="checkbox"> Tôi đã build infinite scroll với useInfiniteQuery + FlatList</label>
+  <label><input type="checkbox"> Tôi đã implement error handling với typed errors</label>
+  <label><input type="checkbox"> Tôi đã handle rate limiting (429) với retry logic</label>
+  <label><input type="checkbox"> Tôi đã hoàn thành bài tập Build API Layer</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+
+<div class="resource">
+  <h3>Documentation</h3>
+  <ul>
+    <li><a href="https://axios-http.com/docs/intro" target="_blank">Axios Documentation</a> — Official docs</li>
+    <li><a href="https://tanstack.com/query/latest/docs/framework/react/overview" target="_blank">TanStack Query (React Query) Docs</a> — Official docs</li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">MDN Fetch API</a> — Web standard reference</li>
+    <li><a href="https://www.apollographql.com/docs/react/" target="_blank">Apollo Client React Docs</a> — GraphQL client</li>
+    <li><a href="https://reactnative.dev/docs/network" target="_blank">React Native Networking</a> — Official RN networking guide</li>
+  </ul>
+
+  <h3>Articles</h3>
+  <ul>
+    <li><a href="https://tkdodo.eu/blog/practical-react-query" target="_blank">Practical React Query</a> — TkDodo's blog series (MUST READ)</li>
+    <li><a href="https://tkdodo.eu/blog/react-query-and-type-script" target="_blank">React Query and TypeScript</a> — Type-safe patterns</li>
+    <li><a href="https://blog.logrocket.com/axios-vs-fetch-best-http-requests/" target="_blank">Axios vs Fetch</a> — Detailed comparison</li>
+  </ul>
+
+  <h3>Videos</h3>
+  <ul>
+    <li><a href="https://www.youtube.com/results?search_query=react+query+crash+course" target="_blank">React Query Crash Course</a> — Search YouTube</li>
+    <li><a href="https://www.youtube.com/results?search_query=axios+interceptors+refresh+token" target="_blank">Axios Interceptors + Refresh Token</a> — Search YouTube</li>
+  </ul>
+
+  <h3>Tools</h3>
+  <ul>
+    <li><a href="https://reqres.in/" target="_blank">ReqRes</a> — Free fake REST API for testing</li>
+    <li><a href="https://jsonplaceholder.typicode.com/" target="_blank">JSONPlaceholder</a> — Fake API for prototyping</li>
+    <li><a href="https://httpstat.us/" target="_blank">httpstat.us</a> — Test specific HTTP status codes</li>
+    <li><a href="https://mockapi.io/" target="_blank">MockAPI</a> — Custom fake API builder</li>
+  </ul>
+</div>
+
+<div class="nav-links">
+  <a href="05-Navigation.html">&larr; Module 05: Navigation</a>
+  <a href="06-State-Management.html">Module 06: State Management &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>

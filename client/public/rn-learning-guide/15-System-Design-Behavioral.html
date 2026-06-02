@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 15 — System Design & Behavioral</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">← Về Roadmap</a></nav>
+
+<h1>Module 15 — System Design & Behavioral</h1>
+<div class="module-meta">
+  <span class="badge badge-should">Nên có</span>
+  <span class="meta-item">⏱ 6-8 giờ</span>
+  <span class="meta-item">📋 Prerequisites: All previous modules</span>
+</div>
+
+<h2>🎯 Mục tiêu học tập</h2>
+<ul>
+  <li>Trả lời được Mobile System Design questions (offline-first, chat, auth)</li>
+  <li>Thành thạo STAR method cho behavioral questions</li>
+  <li>Hiểu Architecture patterns cho React Native apps</li>
+  <li>Tự tin mock interview</li>
+</ul>
+
+<h2>📖 Hướng dẫn học</h2>
+<div class="learn-guide">
+  <div class="learn-step">
+    <span class="step-num">1</span>
+    <strong>Đọc Mobile System Design resources</strong><br>
+    - <a href="https://github.com/nicehash/react-native-interview-questions" target="_blank">github.com/nicehash/react-native-interview-questions</a><br>
+    - Search "Mobile System Design" trên Medium/Dev.to<br>
+    Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">2</span>
+    <strong>Practice 3 system design questions</strong><br>
+    Viết ra giấy hoặc doc, vẽ diagram. Thời gian: ~2h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">3</span>
+    <strong>Prepare 5 STAR stories</strong><br>
+    Viết ra 5 tình huống thực tế từ kinh nghiệm. Thời gian: ~1h
+  </div>
+  <div class="learn-step">
+    <span class="step-num">4</span>
+    <strong>Mock interview với bạn</strong><br>
+    Tập trả lời thành tiếng. Record lại nếu có thể. Thời gian: ~1-2h
+  </div>
+</div>
+
+<h2>⚡ Khung trả lời nhanh</h2>
+<div class="card card-accent">
+<ol>
+  <li><strong>Clarify:</strong> user là ai, scale, offline cần không, security/compliance có gì đặc biệt?</li>
+  <li><strong>Scope:</strong> chốt MVP trước, nói rõ phần chưa design sâu.</li>
+  <li><strong>Architecture:</strong> screen/state/API/storage/sync/monitoring.</li>
+  <li><strong>Trade-off:</strong> vì sao chọn giải pháp này, đổi lại mất gì.</li>
+  <li><strong>Failure modes:</strong> mạng yếu, token hết hạn, conflict, crash, retry, rollout.</li>
+</ol>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> system design mobile là trade-off giữa UX, network, storage, security, release và failure modes.</li>
+  <li><strong>Thấy bug thật:</strong> design chỉ có tool name nhưng thiếu offline, retry, conflict, monitoring, rollout.</li>
+  <li><strong>Debug:</strong> hỏi requirement, bóc scope, tìm bottleneck/failure mode trước khi chọn tool.</li>
+  <li><strong>Fix:</strong> trình bày MVP, architecture, trade-off, failure handling và future work.</li>
+  <li><strong>Áp dụng playground:</strong> viết design note 1-2 trang cho auth/product/cart/offline/release.</li>
+</ul>
+</div>
+
+<h2>📚 Lý thuyết chi tiết & System Design Questions</h2>
+
+<h3>1. Design Offline-First Note-Taking App</h3>
+<div class="card card-accent">
+<h4>Yêu cầu</h4>
+<p>Users tạo/sửa/xóa notes, sync across devices, hoạt động offline.</p>
+
+<h4>Key Decisions</h4>
+<p><strong>Local Storage:</strong> WatermelonDB hoặc SQLite cho structured data, MMKV cho settings/metadata.</p>
+
+<p><strong>Sync Strategy:</strong></p>
+<ul>
+  <li><strong>Optimistic local-first:</strong> Write local immediately → queue sync operations → sync khi có network</li>
+  <li><strong>Sync queue:</strong> Mỗi mutation (create/update/delete) → push vào queue → retry với exponential backoff</li>
+  <li><strong>Last-write-wins:</strong> Simple conflict resolution — latest timestamp wins. Hoặc field-level merging cho complex cases</li>
+</ul>
+
+<p><strong>Conflict Resolution:</strong></p>
+<ul>
+  <li>Version vector hoặc timestamp-based</li>
+  <li>Field-level merge: nếu user A edit title, user B edit body → merge both changes</li>
+  <li>Conflict UI: hiện diff cho user resolve manually (nếu cần)</li>
+</ul>
+
+<p><strong>Architecture:</strong></p>
+<pre><code>UI Layer → Repository → Local DB (source of truth)
+                      → Sync Engine → Remote API
+                      
+Sync Engine:
+  - NetworkMonitor → trigger sync khi reconnect
+  - OperationQueue → ordered mutations
+  - ConflictResolver → merge/overwrite strategy</code></pre>
+</div>
+
+<h3>2. Design Push Notification System</h3>
+<div class="card card-accent">
+<h4>End-to-end Flow</h4>
+<pre><code>Backend                    Push Service              Device
+   |                           |                        |
+   |-- Send notification ---→ |                        |
+   |   (FCM/APNs payload)     |                        |
+   |                           |-- Deliver to device -→|
+   |                           |                        |-- Display notification
+   |                           |                        |-- User taps
+   |                           |                        |-- Deep link → open screen</code></pre>
+
+<h4>Key Components</h4>
+<ul>
+  <li><strong>Token management:</strong> Register device token → store in backend → refresh on app update</li>
+  <li><strong>FCM (Android) + APNs (iOS):</strong> Platform push services</li>
+  <li><strong>Notification types:</strong> Data-only (app handles display) vs Notification (system displays)</li>
+  <li><strong>Foreground handling:</strong> react-native-push-notification, custom in-app banner</li>
+  <li><strong>Deep linking:</strong> notification.data.url → navigate to specific screen</li>
+  <li><strong>Notification preferences:</strong> per-channel opt-in/out, quiet hours</li>
+  <li><strong>Analytics:</strong> delivered → opened → action rate</li>
+</ul>
+</div>
+
+<h3>3. Design Real-Time Chat App</h3>
+<div class="card card-accent">
+<h4>Architecture</h4>
+<pre><code>UI (FlatList inverted)
+  ↕
+Chat Store (Zustand/Redux)
+  ↕
+Message Service
+  ├── WebSocket Client (real-time)
+  ├── REST API (history, media upload)
+  └── Offline Queue (pending messages)
+  
+Local DB: SQLite/WatermelonDB (message history cache)</code></pre>
+
+<h4>Key Decisions</h4>
+<ul>
+  <li><strong>Real-time:</strong> WebSocket (bidirectional, persistent connection). Fallback: Long Polling</li>
+  <li><strong>Message ordering:</strong> Server-assigned timestamps + sequence numbers</li>
+  <li><strong>Offline:</strong> Queue outgoing messages → send khi reconnect → optimistic UI (hiện message ngay)</li>
+  <li><strong>Delivery status:</strong> Sent → Delivered → Read (3 checkmarks pattern)</li>
+  <li><strong>Pagination:</strong> Load older messages on scroll up — cursor-based pagination</li>
+  <li><strong>Media:</strong> Upload to S3/CloudStorage → send URL in message</li>
+  <li><strong>Typing indicator:</strong> Throttled WebSocket events</li>
+</ul>
+</div>
+
+<h3>4. Design Authentication System</h3>
+<div class="card card-accent">
+<h4>Token Flow</h4>
+<pre><code>Login → Server returns {accessToken, refreshToken}
+  ↓
+accessToken: short-lived (15min), stored in memory
+refreshToken: long-lived (30 days), stored in Keychain/Keystore
+  ↓
+API call → attach accessToken in Authorization header
+  ↓
+401 Unauthorized → use refreshToken to get new accessToken
+  ↓
+refreshToken expired → force logout</code></pre>
+
+<h4>Key Decisions</h4>
+<ul>
+  <li><strong>Token storage:</strong> accessToken → memory (React state/context). refreshToken → Keychain (iOS) / Keystore (Android). TUYỆT ĐỐI KHÔNG AsyncStorage</li>
+  <li><strong>Token refresh:</strong> Axios interceptor + request queue (xem Module 07)</li>
+  <li><strong>Biometrics:</strong> Face ID/Touch ID/Fingerprint để unlock stored credentials</li>
+  <li><strong>Multi-device:</strong> Server track device sessions, allow revoke per device</li>
+  <li><strong>Social login:</strong> OAuth2 flow → exchange auth code cho tokens</li>
+</ul>
+</div>
+
+<h3>5. Design Caching Strategy cho Media-Heavy App</h3>
+<div class="card card-accent">
+<h4>Multi-layer Cache</h4>
+<pre><code>Memory Cache (LRU, ~50 items)
+  ↓ miss
+Disk Cache (react-native-fast-image, ~500MB)
+  ↓ miss
+CDN / Remote Server</code></pre>
+
+<h4>Key Decisions</h4>
+<ul>
+  <li><strong>Images:</strong> react-native-fast-image (tự động memory + disk cache)</li>
+  <li><strong>API data:</strong> React Query (staleTime, gcTime, persist to MMKV)</li>
+  <li><strong>Cache invalidation:</strong> Time-based (staleTime) + event-based (invalidateQueries)</li>
+  <li><strong>Prefetch:</strong> Prefetch next page images khi user scroll gần cuối</li>
+  <li><strong>Cache size limit:</strong> LRU eviction policy, disk quota</li>
+</ul>
+</div>
+
+<h3>6. Design State Management cho 20+ Screen App</h3>
+<div class="card card-accent">
+<h4>Phân loại State</h4>
+<table>
+<tr><th>Loại</th><th>Tool</th><th>Ví dụ</th></tr>
+<tr><td>Local UI state</td><td>useState, useReducer</td><td>Modal open, form input, tab active</td></tr>
+<tr><td>Shared UI state</td><td>Zustand store</td><td>Theme, user preferences, cart</td></tr>
+<tr><td>Server state</td><td>React Query</td><td>User data, products, posts</td></tr>
+<tr><td>Navigation state</td><td>React Navigation</td><td>Screen stack, deep link state</td></tr>
+<tr><td>Auth state</td><td>Context + Zustand</td><td>Login status, tokens</td></tr>
+</table>
+
+<h4>Project Structure (Feature-based)</h4>
+<pre><code>src/
+├── features/
+│   ├── auth/
+│   │   ├── screens/
+│   │   ├── hooks/
+│   │   ├── api/
+│   │   └── store/
+│   ├── products/
+│   ├── cart/
+│   └── profile/
+├── shared/
+│   ├── components/
+│   ├── hooks/
+│   ├── utils/
+│   └── api/
+├── navigation/
+└── app/</code></pre>
+</div>
+
+<h2>📚 Architecture Patterns</h2>
+
+<h3>Feature-based vs Layer-based</h3>
+<div class="card card-info">
+<table>
+<tr><th></th><th>Layer-based</th><th>Feature-based</th></tr>
+<tr><td>Structure</td><td>components/, screens/, hooks/, api/</td><td>features/auth/, features/products/</td></tr>
+<tr><td>Scalability</td><td>Folders phình to, khó tìm file</td><td>Mỗi feature isolated, dễ navigate</td></tr>
+<tr><td>Team work</td><td>Conflicts nhiều (edit cùng folder)</td><td>Teams work on different features</td></tr>
+<tr><td>Recommendation</td><td>Small apps (&lt;10 screens)</td><td>Medium-Large apps (10+ screens)</td></tr>
+</table>
+</div>
+
+<h3>Clean Architecture (Simplified cho Mobile)</h3>
+<pre><code>Presentation Layer (Screens, Components, ViewModels/Hooks)
+        ↓
+Domain Layer (Use Cases, Business Logic, Interfaces)
+        ↓
+Data Layer (Repositories, API clients, Local DB, DTOs)</code></pre>
+
+<p><strong>Repository Pattern:</strong> Abstraction layer giữa data sources và business logic. Repository decide lấy data từ cache hay network, transform DTOs thành domain models.</p>
+
+<h2>📚 Behavioral Questions (STAR Method)</h2>
+
+<div class="concept">
+<p><strong>STAR = Situation → Task → Action → Result</strong></p>
+<p>Luôn trả lời theo format này. Cụ thể, có metrics nếu có.</p>
+</div>
+
+<h3>Q1: Bug chỉ xảy ra trên production — approach?</h3>
+<div class="card card-success">
+<p><strong>Situation:</strong> Users report crash nhưng team không reproduce được trên dev.</p>
+<p><strong>Task:</strong> Tìm và fix bug, minimize user impact.</p>
+<p><strong>Action:</strong></p>
+<ol>
+  <li>Check Sentry/Crashlytics crash reports — stack trace, device info, OS version</li>
+  <li>Check affected user segments (specific device? OS version? network?)</li>
+  <li>Reproduce với production build (Hermes + release mode)</li>
+  <li>Add remote logging nếu cần (không thể reproduce locally)</li>
+  <li>Hotfix → CodePush/EAS Update nếu JS-only fix</li>
+  <li>Post-mortem: add regression test, improve monitoring</li>
+</ol>
+<p><strong>Result:</strong> Fix deployed trong X giờ, crash rate giảm từ Y% xuống Z%.</p>
+</div>
+
+<h3>Q2: App bị 1-star reviews vì crash — action plan?</h3>
+<div class="card card-success">
+<p><strong>Action plan:</strong></p>
+<ol>
+  <li><strong>Triage:</strong> Sort crashes by frequency × severity. Top 3 crashes = priority</li>
+  <li><strong>Stability sprint:</strong> Dành 1 sprint focus 100% vào stability (no new features)</li>
+  <li><strong>Error boundaries:</strong> Wrap critical screens → graceful fallback thay vì crash</li>
+  <li><strong>Global error handler:</strong> Catch unhandled Promise rejections + JS exceptions</li>
+  <li><strong>Monitoring:</strong> Set alerts cho crash rate threshold</li>
+  <li><strong>Reply reviews:</strong> Acknowledge issue, promise fix timeline</li>
+  <li><strong>Regression tests:</strong> Add tests cho mỗi crash fix</li>
+</ol>
+</div>
+
+<h3>Q3: Code review checklist?</h3>
+<div class="card card-success">
+<ol>
+  <li><strong>Correctness:</strong> Logic đúng? Edge cases handled?</li>
+  <li><strong>Performance:</strong> Re-renders unnecessary? Memory leaks? FlatList optimized?</li>
+  <li><strong>Security:</strong> Sensitive data exposed? Input validated?</li>
+  <li><strong>Types:</strong> TypeScript strict? No any? Proper null handling?</li>
+  <li><strong>Tests:</strong> New code có tests? Edge cases covered?</li>
+  <li><strong>Readability:</strong> Naming clear? Functions small? No magic numbers?</li>
+  <li><strong>Accessibility:</strong> Labels? Touch targets? Screen reader?</li>
+  <li><strong>Platform:</strong> Works on both iOS + Android?</li>
+</ol>
+</div>
+
+<h3>Q4: Join team mới, codebase 50K+ LOC — onboarding?</h3>
+<div class="card card-success">
+<p><strong>Week 1:</strong> Đọc README, architecture docs. Setup project, run locally. Đọc PR history (understand conventions).</p>
+<p><strong>Week 2:</strong> Pick small bugs/tasks. Đọc code theo feature (follow 1 request end-to-end). Review PRs của teammates.</p>
+<p><strong>Week 3-4:</strong> Take on medium features. Pair program với senior. Document kiến thức mới (ADRs, wiki).</p>
+<p><strong>Key:</strong> Ask questions early. Không giả vờ hiểu. Document gaps cho future joiners.</p>
+</div>
+
+<h3>Q5: Deadline tight, feature chưa xong — prioritize?</h3>
+<div class="card card-success">
+<p><strong>Approach:</strong></p>
+<ol>
+  <li>Communicate sớm với PM/stakeholders — không hide</li>
+  <li>Break feature thành Must-have / Nice-to-have</li>
+  <li>Negotiate scope: ship MVP first, iterate later</li>
+  <li>Cut: animations, edge cases, advanced settings → tech debt ticket</li>
+  <li>Increase: pair program, ask help, reduce meetings</li>
+  <li>KHÔNG cut: tests cho critical flows, security, data integrity</li>
+</ol>
+</div>
+
+<h2>❓ Câu hỏi phỏng vấn & Interview Tips</h2>
+<div class="card card-warning">
+<h4>Ngày phỏng vấn</h4>
+<ul>
+  <li><strong>System Design:</strong> Hỏi clarifying questions TRƯỚC khi design. Ai dùng? Scale bao nhiêu? Offline cần không?</li>
+  <li><strong>Coding:</strong> Nói ra thought process. Viết brute force trước → optimize sau.</li>
+  <li><strong>Behavioral:</strong> Luôn dùng STAR. Specific, có metrics. "Giảm crash rate 40%" thay vì "fix nhiều bugs".</li>
+  <li><strong>Hỏi ngược:</strong> Tech stack? Team size? Code review process? Release cycle? Testing practices?</li>
+  <li><strong>Thái độ:</strong> Không biết thì nói không biết. Đừng fake. Interviewers respect honesty.</li>
+</ul>
+</div>
+
+<h2>⚠️ Lỗi thường gặp khi trả lời</h2>
+<div class="card card-warning">
+<ul>
+  <li>Nhảy vào tool quá sớm: “dùng Redux/SQLite/WebSocket” trước khi hỏi requirement.</li>
+  <li>Không nói trade-off, làm câu trả lời giống danh sách keyword.</li>
+  <li>Bỏ qua failure mode mobile: offline, app background, token expired, low storage, push permission denied.</li>
+  <li>Không phân biệt MVP và future improvement, khiến scope quá rộng.</li>
+  <li>Behavioral trả lời chung chung, không có tình huống, hành động, kết quả cụ thể.</li>
+</ul>
+</div>
+
+<h2>🏢 Case đi làm thật</h2>
+<div class="card card-info">
+<p><strong>Case:</strong> Interviewer hỏi design chat app. Câu trả lời chỉ nói WebSocket + FlatList + Redux nên bị thiếu chiều sâu.</p>
+<p><strong>Cách nâng cấp:</strong> Thêm message ordering, pending/offline queue, retry, local DB, pagination older messages, media upload, reconnect/backoff, push notification khi app background, delivery/read status và monitoring crash/log.</p>
+</div>
+
+<h2>🧠 Ghi nhớ nhanh</h2>
+<div class="card card-success">
+<p>System design mobile tốt không phải chọn nhiều tool. Điểm mạnh nằm ở requirement rõ, boundary rõ, trade-off rõ và biết app sẽ hỏng ở đâu khi vào production.</p>
+</div>
+
+<h2>❔ Câu hỏi tự kiểm tra</h2>
+<div class="qa">
+  <div class="q">1. Offline-first app cần lưu operation queue như thế nào để retry an toàn?</div>
+  <div class="q">2. Chat app xử lý message pending, failed và duplicated ra sao?</div>
+  <div class="q">3. Auth system cần làm gì khi refresh token bị revoke ở một thiết bị?</div>
+  <div class="q">4. Behavioral story của bạn có Situation, Task, Action, Result rõ chưa?</div>
+</div>
+
+<h2>✅ Checklist tự đánh giá</h2>
+<div class="checklist">
+  <label><input type="checkbox"> Tôi design được offline-first app (sync strategy, conflict resolution)</label>
+  <label><input type="checkbox"> Tôi giải thích được push notification flow end-to-end</label>
+  <label><input type="checkbox"> Tôi design được real-time chat architecture</label>
+  <label><input type="checkbox"> Tôi hiểu token-based auth flow + secure storage</label>
+  <label><input type="checkbox"> Tôi biết caching strategy multi-layer</label>
+  <label><input type="checkbox"> Tôi tổ chức được state management cho large app</label>
+  <label><input type="checkbox"> Tôi phân biệt Feature-based vs Layer-based structure</label>
+  <label><input type="checkbox"> Tôi đã chuẩn bị 5 STAR stories</label>
+  <label><input type="checkbox"> Tôi đã mock interview ít nhất 1 lần</label>
+  <label><input type="checkbox"> Tôi có code review checklist riêng</label>
+</div>
+
+<h2>📎 Tài nguyên</h2>
+<div class="resource">📘 <a href="https://github.com/nicehash/react-native-interview-questions" target="_blank">RN Interview Questions (GitHub)</a></div>
+<div class="resource">📘 <a href="https://www.techinterviewhandbook.org/behavioral-interview/" target="_blank">Tech Interview Handbook — Behavioral</a></div>
+<div class="resource">📘 <a href="https://davescommutebloghome.wpcomstaging.com/mobile-system-design/" target="_blank">Mobile System Design Blog</a></div>
+<div class="resource">📺 Search "Mobile System Design Interview" trên YouTube</div>
+<div class="resource">📘 <a href="https://github.com/donnemartin/system-design-primer" target="_blank">System Design Primer (GitHub)</a></div>
+
+<div class="nav-links">
+  <a href="13-CICD.html">← Module 13: CI/CD</a>
+  <a href="00-ROADMAP.html">🏠 Về Roadmap</a>
+</div>
+</div>
+</body>
+</html>

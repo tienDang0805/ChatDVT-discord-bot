@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 13 — CI/CD &amp; Deployment</title>
+<link rel="stylesheet" href="docs-style.css">
+</head>
+<body>
+<div class="container">
+<nav class="breadcrumb"><a href="00-ROADMAP.html">&larr; Về Roadmap</a></nav>
+
+<h1>Module 13 — CI/CD &amp; Deployment</h1>
+<div class="module-meta">
+  <span class="badge badge-should">NÊN CÓ</span>
+  <span class="meta-item">⏱ 6-8 giờ</span>
+  <span class="meta-item">📋 Prerequisites: <a href="12-Testing.html">Module 12 — Testing</a></span>
+</div>
+
+<h2>🎯 MỤC TIÊU HỌC TẬP</h2>
+<ul>
+  <li>Hiểu toàn bộ CI/CD pipeline cho React Native: từ lint, test, build đến deploy và monitor</li>
+  <li>Thiết lập GitHub Actions workflow hoàn chỉnh cho dự án RN</li>
+  <li>Sử dụng Fastlane để tự động hóa build, signing và upload lên store</li>
+  <li>Phân biệt CodePush và EAS Update, hiểu OTA update limitations</li>
+  <li>Nắm được quy trình submit app lên App Store và Google Play, các lý do bị reject phổ biến</li>
+  <li>Triển khai error monitoring với Sentry, so sánh với Crashlytics</li>
+  <li>Áp dụng semantic versioning và feature flags cho mobile</li>
+</ul>
+
+<h2>📖 HƯỚNG DẪN HỌC</h2>
+<div class="learn-guide">
+  <h4>Step 1: Đọc Fastlane Docs (1.5h)</h4>
+  <ul>
+    <li>Đọc <a href="https://docs.fastlane.tools/" target="_blank">Fastlane Getting Started</a> — hiểu match, gym, deliver</li>
+    <li>Đọc phần <a href="https://docs.fastlane.tools/codesigning/getting-started/" target="_blank">Code Signing Guide</a> — hiểu tại sao certificate management quan trọng</li>
+    <li>Thực hành: cài đặt Fastlane trong một dự án RN, tạo Fastfile cơ bản</li>
+  </ul>
+
+  <h4>Step 2: Setup GitHub Actions Workflow (2h)</h4>
+  <ul>
+    <li>Đọc <a href="https://docs.github.com/en/actions" target="_blank">GitHub Actions Documentation</a></li>
+    <li>Tạo workflow YAML cho lint + test + build Android/iOS</li>
+    <li>Thêm caching cho node_modules, Pods, Gradle</li>
+    <li>Tích hợp Fastlane vào GitHub Actions</li>
+  </ul>
+
+  <h4>Step 3: Đọc CodePush / EAS Docs (1.5h)</h4>
+  <ul>
+    <li>Đọc <a href="https://learn.microsoft.com/en-us/appcenter/distribution/codepush/" target="_blank">CodePush Documentation</a></li>
+    <li>Đọc <a href="https://docs.expo.dev/eas-update/introduction/" target="_blank">EAS Update Introduction</a></li>
+    <li>So sánh hai giải pháp, hiểu khi nào cần OTA vs full build</li>
+  </ul>
+
+  <h4>Step 4: Setup Sentry (1h)</h4>
+  <ul>
+    <li>Đọc <a href="https://docs.sentry.io/platforms/react-native/" target="_blank">Sentry React Native SDK</a></li>
+    <li>Tích hợp Sentry vào dự án, upload source maps</li>
+    <li>Thiết lập Error Boundary kết hợp với Sentry reporting</li>
+  </ul>
+</div>
+
+<h2>⚡ ÔN NHANH</h2>
+<div class="card card-accent">
+  <ul>
+    <li><strong>PR pipeline:</strong> lint, typecheck, unit tests, basic build smoke.</li>
+    <li><strong>Release pipeline:</strong> build signed binary, upload store/internal track, publish sourcemap, notify team.</li>
+    <li><strong>Mobile versioning:</strong> version name cho user, build number/version code phải tăng mỗi upload.</li>
+    <li><strong>OTA:</strong> chỉ đổi JS/assets tương thích binary hiện tại; native dependency/change permission phải full build.</li>
+    <li><strong>Monitoring:</strong> release không xong khi upload store; phải theo dõi crash-free rate và rollback path.</li>
+  </ul>
+</div>
+
+<h2>🧭 Vòng lặp học module này</h2>
+<div class="card card-accent">
+<ul>
+  <li><strong>Hiểu bản chất:</strong> mobile release là quản lý binary, signing, store, OTA và monitoring.</li>
+  <li><strong>Thấy bug thật:</strong> build number không tăng, sourcemap thiếu, OTA chứa native change, signing hết hạn.</li>
+  <li><strong>Debug:</strong> đọc CI logs theo stage, kiểm artifact, version, certificate, upload sourcemap.</li>
+  <li><strong>Fix:</strong> release checklist, OTA decision table, CI failure playbook, rollback plan.</li>
+  <li><strong>Áp dụng playground:</strong> viết release checklist và CI quality job giả lập.</li>
+</ul>
+</div>
+
+<h2>📚 LÝ THUYẾT CHI TIẾT</h2>
+
+<h3>1. CI/CD Pipeline cho React Native</h3>
+
+<div class="concept">
+  <h4>Pipeline tổng quan</h4>
+  <p>CI/CD pipeline cho RN phức tạp hơn web vì phải build native binary cho cả 2 platform. Pipeline điển hình gồm 5 giai đoạn chính:</p>
+
+  <p><strong>Lint → Test → Build → Deploy → Monitor</strong></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Giai đoạn</th>
+        <th>Tool</th>
+        <th>Mục đích</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Lint</td>
+        <td>ESLint, Prettier, TypeScript</td>
+        <td>Đảm bảo code quality, format đồng nhất</td>
+      </tr>
+      <tr>
+        <td>Test</td>
+        <td>Jest, Detox, Maestro</td>
+        <td>Unit test, integration test, E2E test</td>
+      </tr>
+      <tr>
+        <td>Build</td>
+        <td>Fastlane, EAS Build, Xcode, Gradle</td>
+        <td>Tạo .apk/.aab (Android) và .ipa (iOS)</td>
+      </tr>
+      <tr>
+        <td>Deploy</td>
+        <td>Fastlane deliver, EAS Submit</td>
+        <td>Upload lên TestFlight, Play Console, store</td>
+      </tr>
+      <tr>
+        <td>Monitor</td>
+        <td>Sentry, Crashlytics</td>
+        <td>Theo dõi crashes, performance, errors</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="deep-dive">
+  <h4>Tại sao CI/CD cho mobile khó hơn web?</h4>
+  <ul>
+    <li><strong>Code signing:</strong> iOS yêu cầu provisioning profiles và certificates, quản lý chúng trên CI là thách thức lớn nhất</li>
+    <li><strong>Build time:</strong> Native build mất 10-30 phút, cần caching hiệu quả</li>
+    <li><strong>Platform-specific runners:</strong> iOS build yêu cầu macOS runner (đắt tiền hơn Linux runner)</li>
+    <li><strong>Store review:</strong> Không thể deploy tức thì, phải chờ Apple/Google review (1-3 ngày)</li>
+  </ul>
+</div>
+
+<h3>2. GitHub Actions cho React Native</h3>
+
+<div class="concept">
+  <h4>Workflow YAML hoàn chỉnh</h4>
+  <p>Dưới đây là workflow mẫu cho dự án RN với 3 jobs: lint/test, build Android, build iOS. Workflow được trigger khi push vào <code>main</code> hoặc tạo pull request.</p>
+</div>
+
+<pre><code>name: React Native CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '18'
+  JAVA_VERSION: '17'
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Type check
+        run: yarn tsc --noEmit
+
+      - name: Unit tests
+        run: yarn test --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  build-android:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' &amp;&amp; github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d &gt; android/app/release.keystore
+
+      - name: Build Android Release
+        working-directory: android
+        run: ./gradlew assembleRelease
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: android/app/build/outputs/apk/release/*.apk
+
+  build-ios:
+    needs: lint-and-test
+    runs-on: macos-latest
+    if: github.event_name == 'push' &amp;&amp; github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: pods-${{ hashFiles('ios/Podfile.lock') }}
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Setup Ruby and Fastlane
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+
+      - name: Build iOS with Fastlane
+        run: bundle exec fastlane ios build
+        env:
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          APP_STORE_CONNECT_API_KEY: ${{ secrets.ASC_API_KEY }}
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: "*.ipa"</code></pre>
+
+<p>Giải thích các phần quan trọng:</p>
+<ul>
+  <li><code>needs: lint-and-test</code> — đảm bảo build chỉ chạy khi lint và test pass</li>
+  <li><code>--frozen-lockfile</code> — đảm bảo CI dùng đúng phiên bản dependencies như local</li>
+  <li>Keystore được encode base64 và lưu trong GitHub Secrets, decode tại runtime</li>
+  <li>iOS build phải dùng <code>macos-latest</code> runner vì cần Xcode</li>
+  <li>CocoaPods cache giúp giảm đáng kể thời gian build iOS</li>
+</ul>
+
+<h3>3. Fastlane</h3>
+
+<div class="concept">
+  <h4>Fastlane là gì?</h4>
+  <p>Fastlane là bộ tool tự động hóa build và release cho iOS và Android. Ba thành phần quan trọng nhất:</p>
+  <ul>
+    <li><strong>match:</strong> Quản lý certificates và provisioning profiles qua Git repo, giải quyết vấn đề code signing trên CI</li>
+    <li><strong>gym:</strong> Build .ipa cho iOS với cấu hình đơn giản</li>
+    <li><strong>deliver:</strong> Upload binary lên App Store Connect, bao gồm screenshots và metadata</li>
+  </ul>
+</div>
+
+<p>Cấu trúc Fastfile cho iOS:</p>
+
+<pre><code>default_platform(:ios)
+
+platform :ios do
+  before_all do
+    setup_ci
+  end
+
+  lane :certificates do
+    match(
+      type: "appstore",
+      app_identifier: "com.company.myapp",
+      git_url: ENV["MATCH_GIT_URL"],
+      readonly: is_ci
+    )
+  end
+
+  lane :build do
+    certificates
+    increment_build_number(
+      build_number: ENV["GITHUB_RUN_NUMBER"]
+    )
+    gym(
+      scheme: "MyApp",
+      workspace: "ios/MyApp.xcworkspace",
+      export_method: "app-store",
+      output_directory: "./build",
+      clean: true
+    )
+  end
+
+  lane :deploy do
+    build
+    deliver(
+      submit_for_review: false,
+      automatic_release: false,
+      skip_metadata: true,
+      skip_screenshots: true
+    )
+  end
+
+  lane :beta do
+    build
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+end</code></pre>
+
+<p>Cấu trúc Fastfile cho Android:</p>
+
+<pre><code>default_platform(:android)
+
+platform :android do
+  lane :build do
+    gradle(
+      project_dir: "./android",
+      task: "bundle",
+      build_type: "Release"
+    )
+  end
+
+  lane :deploy do
+    build
+    supply(
+      track: "internal",
+      aab: "android/app/build/outputs/bundle/release/app-release.aab",
+      json_key: "android/play-store-key.json",
+      skip_upload_metadata: true,
+      skip_upload_images: true
+    )
+  end
+
+  lane :promote do
+    supply(
+      track: "internal",
+      track_promote_to: "production",
+      json_key: "android/play-store-key.json",
+      skip_upload_aab: true
+    )
+  end
+end</code></pre>
+
+<div class="card card-warning">
+  <h4>⚠️ match — Code Signing Management</h4>
+  <p><strong>match</strong> lưu certificates và profiles trong một private Git repo, được encrypt bằng password. Đây là cách duy nhất đáng tin cậy để quản lý code signing trên CI. Quy tắc quan trọng:</p>
+  <ul>
+    <li>Dùng <code>readonly: is_ci</code> trên CI để tránh tạo certificate mới vô tình</li>
+    <li>Chỉ tạo/renew certificates trên máy local bằng <code>match --type appstore</code></li>
+    <li>KHÔNG bao giờ commit certificate hay profile vào repo chính</li>
+  </ul>
+</div>
+
+<h3>4. CodePush vs EAS Update</h3>
+
+<div class="concept">
+  <h4>Over-The-Air (OTA) Update</h4>
+  <p>OTA cho phép update JavaScript bundle mà không cần qua store review. Điều này cực kỳ hữu ích để hotfix bugs hoặc update UI nhanh. Tuy nhiên, OTA có giới hạn: không thể update native code, native modules, hoặc thay đổi permissions.</p>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tiêu chí</th>
+      <th>CodePush (App Center)</th>
+      <th>EAS Update</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Nhà phát triển</td>
+      <td>Microsoft (đã deprecated)</td>
+      <td>Expo</td>
+    </tr>
+    <tr>
+      <td>Tương thích</td>
+      <td>Bare RN, Expo (phức tạp)</td>
+      <td>Expo managed &amp; bare</td>
+    </tr>
+    <tr>
+      <td>Rollback</td>
+      <td>Tự động rollback khi crash</td>
+      <td>Manual rollback qua CLI</td>
+    </tr>
+    <tr>
+      <td>Branching</td>
+      <td>Deployment keys (Staging/Production)</td>
+      <td>Channels &amp; branches</td>
+    </tr>
+    <tr>
+      <td>Tương lai</td>
+      <td>Deprecated (tháng 3/2025)</td>
+      <td>Được maintain tích cực</td>
+    </tr>
+    <tr>
+      <td>Giá</td>
+      <td>Miễn phí</td>
+      <td>Free tier, paid cho team</td>
+    </tr>
+    <tr>
+      <td>Tích hợp CI</td>
+      <td>CLI-based</td>
+      <td>EAS CLI, tích hợp sâu với Expo</td>
+    </tr>
+    <tr>
+      <td>Phân phối dần</td>
+      <td>Percentage rollout</td>
+      <td>Channels-based targeting</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="card card-danger">
+  <h4>🚫 Giới hạn của OTA Updates</h4>
+  <ul>
+    <li>Không thể thay đổi native code (Java/Kotlin, Objective-C/Swift)</li>
+    <li>Không thể thêm/xóa native modules hoặc permissions</li>
+    <li>Không thể thay đổi app icon, splash screen</li>
+    <li>Không thể update native dependencies (react-native version, native SDKs)</li>
+    <li>Apple và Google cấm thay đổi "primary purpose" của app qua OTA</li>
+    <li>Bundle size lớn &gt; 50MB sẽ ảnh hưởng UX khi download update</li>
+  </ul>
+</div>
+
+<p>Ví dụ cấu hình EAS Update:</p>
+
+<pre><code>{
+  "cli": {
+    "version": "&gt;=5.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "1234567890"
+      },
+      "android": {
+        "track": "internal"
+      }
+    }
+  }
+}</code></pre>
+
+<p>Publish OTA update qua EAS CLI:</p>
+
+<pre><code>eas update --branch production --message "Fix login button crash"
+
+eas update --branch preview --message "New onboarding flow"
+
+eas update:rollback --branch production</code></pre>
+
+<h3>5. App Distribution</h3>
+
+<div class="concept">
+  <h4>Kênh phân phối trước khi lên store</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Kênh</th>
+        <th>Platform</th>
+        <th>Giới hạn testers</th>
+        <th>Yêu cầu</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TestFlight</td>
+        <td>iOS</td>
+        <td>10,000 (external), 100 (internal)</td>
+        <td>Apple Developer Account, signed .ipa</td>
+      </tr>
+      <tr>
+        <td>Firebase App Distribution</td>
+        <td>iOS + Android</td>
+        <td>Không giới hạn</td>
+        <td>Firebase project, signed binary</td>
+      </tr>
+      <tr>
+        <td>Google Play Internal Testing</td>
+        <td>Android</td>
+        <td>100</td>
+        <td>Google Play Console, signed .aab</td>
+      </tr>
+      <tr>
+        <td>Ad Hoc Distribution</td>
+        <td>iOS</td>
+        <td>100 devices/year</td>
+        <td>Device UDIDs registered</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Firebase App Distribution với Fastlane:</p>
+
+<pre><code>lane :distribute do
+  build
+  firebase_app_distribution(
+    app: "1:123456789:android:abcdef",
+    groups: "internal-testers",
+    release_notes: "Build #{lane_context[SharedValues::BUILD_NUMBER]} - Bug fixes"
+  )
+end</code></pre>
+
+<h3>6. Store Submission — Rejection Reasons</h3>
+
+<div class="card card-accent">
+  <h4>Top lý do bị Apple Reject</h4>
+  <ol>
+    <li><strong>Guideline 2.1 — Performance: App Completeness:</strong> App crash, có placeholder content, hoặc tính năng chưa hoàn thiện</li>
+    <li><strong>Guideline 4.0 — Design:</strong> UI không tuân theo Human Interface Guidelines, dùng custom UI thay cho native patterns</li>
+    <li><strong>Guideline 2.3 — Accurate Metadata:</strong> Screenshots không khớp với app thực tế, description gây hiểu lầm</li>
+    <li><strong>Guideline 5.1.1 — Data Collection and Storage:</strong> Không có Privacy Policy, thu thập data không cần thiết</li>
+    <li><strong>Guideline 3.1.1 — In-App Purchase:</strong> Dùng payment gateway bên ngoài cho digital goods, bypass Apple IAP</li>
+    <li><strong>Guideline 2.5.1 — Software Requirements:</strong> Dùng private APIs, hoặc API deprecated</li>
+  </ol>
+</div>
+
+<div class="card card-info">
+  <h4>Google Play Rejection Reasons phổ biến</h4>
+  <ul>
+    <li><strong>Policy: Deceptive behavior:</strong> App không làm đúng như mô tả</li>
+    <li><strong>Policy: Permissions:</strong> Yêu cầu permissions không liên quan đến chức năng app</li>
+    <li><strong>Policy: User data:</strong> Thiếu data safety section, thiếu disclosure cho background data collection</li>
+    <li><strong>Target API level:</strong> Không đạt minimum target SDK requirement</li>
+    <li><strong>64-bit compliance:</strong> Chưa cung cấp 64-bit native libraries</li>
+  </ul>
+</div>
+
+<h3>7. Semantic Versioning cho Mobile</h3>
+
+<div class="concept">
+  <h4>Versioning scheme: MAJOR.MINOR.PATCH</h4>
+  <p>Mobile apps có 2 loại version cần quản lý:</p>
+  <ul>
+    <li><strong>Version Name (Marketing):</strong> <code>2.5.1</code> — hiển thị cho user trên store</li>
+    <li><strong>Version Code / Build Number:</strong> <code>142</code> — integer tăng dần, store dùng để xác định update</li>
+  </ul>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Thay đổi</th>
+      <th>Version bump</th>
+      <th>Yêu cầu</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Breaking changes, redesign lớn</td>
+      <td>MAJOR (1.x → 2.0)</td>
+      <td>Full store build + review</td>
+    </tr>
+    <tr>
+      <td>Tính năng mới</td>
+      <td>MINOR (2.1 → 2.2)</td>
+      <td>Full store build + review</td>
+    </tr>
+    <tr>
+      <td>Bug fix, hotfix</td>
+      <td>PATCH (2.2.0 → 2.2.1)</td>
+      <td>OTA update hoặc store build</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Script tự động bump version:</p>
+
+<pre><code>{
+  "scripts": {
+    "version:patch": "npm version patch &amp;&amp; npx react-native-version --never-amend",
+    "version:minor": "npm version minor &amp;&amp; npx react-native-version --never-amend",
+    "version:major": "npm version major &amp;&amp; npx react-native-version --never-amend"
+  }
+}</code></pre>
+
+<p>Package <code>react-native-version</code> tự động sync version từ <code>package.json</code> sang <code>build.gradle</code> và <code>Info.plist</code>, giúp tránh sai lệch version giữa các platform.</p>
+
+<h3>8. Feature Flags</h3>
+
+<div class="concept">
+  <h4>Tại sao cần Feature Flags cho Mobile?</h4>
+  <p>Khác với web, mobile không thể rollback deploy. Khi app đã lên store, user có thể không update ngay. Feature flags cho phép:</p>
+  <ul>
+    <li>Toggle tính năng on/off mà không cần deploy</li>
+    <li>A/B testing</li>
+    <li>Gradual rollout (10% → 50% → 100%)</li>
+    <li>Kill switch cho tính năng có bug</li>
+  </ul>
+</div>
+
+<p>Custom feature flag implementation đơn giản:</p>
+
+<pre><code>type FeatureFlags = {
+  newOnboarding: boolean;
+  darkMode: boolean;
+  betaPayment: boolean;
+};
+
+const DEFAULT_FLAGS: FeatureFlags = {
+  newOnboarding: false,
+  darkMode: false,
+  betaPayment: false,
+};
+
+class FeatureFlagService {
+  private flags: FeatureFlags = DEFAULT_FLAGS;
+
+  async initialize(): Promise&lt;void&gt; {
+    try {
+      const response = await fetch(
+        'https://api.myapp.com/feature-flags'
+      );
+      const remoteFlags = await response.json();
+      this.flags = { ...DEFAULT_FLAGS, ...remoteFlags };
+    } catch {
+      this.flags = DEFAULT_FLAGS;
+    }
+  }
+
+  isEnabled(flag: keyof FeatureFlags): boolean {
+    return this.flags[flag] ?? false;
+  }
+}
+
+export const featureFlags = new FeatureFlagService();</code></pre>
+
+<p>Sử dụng feature flag trong component:</p>
+
+<pre><code>function PaymentScreen() {
+  const isBetaPayment = featureFlags.isEnabled('betaPayment');
+
+  if (isBetaPayment) {
+    return &lt;NewPaymentFlow /&gt;;
+  }
+
+  return &lt;LegacyPaymentFlow /&gt;;
+}</code></pre>
+
+<div class="card card-info">
+  <h4>LaunchDarkly vs Custom Implementation</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>LaunchDarkly</th>
+        <th>Custom</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Setup time</td>
+        <td>Nhanh (SDK có sẵn)</td>
+        <td>Cần tự build backend + client</td>
+      </tr>
+      <tr>
+        <td>Targeting</td>
+        <td>User segments, percentage rollout</td>
+        <td>Tự implement</td>
+      </tr>
+      <tr>
+        <td>Dashboard</td>
+        <td>UI đẹp, real-time</td>
+        <td>Tự build hoặc dùng DB trực tiếp</td>
+      </tr>
+      <tr>
+        <td>Giá</td>
+        <td>Đắt ($10/seat/month+)</td>
+        <td>Chỉ tốn infra cost</td>
+      </tr>
+      <tr>
+        <td>Khi nào dùng</td>
+        <td>Team lớn, cần A/B testing phức tạp</td>
+        <td>Team nhỏ, chỉ cần toggle đơn giản</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>9. Error Monitoring</h3>
+
+<div class="concept">
+  <h4>Sentry vs Firebase Crashlytics</h4>
+  <table>
+    <thead>
+      <tr>
+        <th>Tiêu chí</th>
+        <th>Sentry</th>
+        <th>Firebase Crashlytics</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Platform</td>
+        <td>Cross-platform (RN, Web, Backend)</td>
+        <td>Mobile only (iOS, Android, Flutter)</td>
+      </tr>
+      <tr>
+        <td>Error types</td>
+        <td>JS errors + Native crashes + Performance</td>
+        <td>Native crashes + ANRs</td>
+      </tr>
+      <tr>
+        <td>Source maps</td>
+        <td>Tự động upload qua CLI/plugin</td>
+        <td>Hỗ trợ hạn chế cho RN</td>
+      </tr>
+      <tr>
+        <td>Breadcrumbs</td>
+        <td>Chi tiết (network, navigation, console)</td>
+        <td>Cơ bản</td>
+      </tr>
+      <tr>
+        <td>Performance monitoring</td>
+        <td>Có (transactions, spans)</td>
+        <td>Riêng biệt (Firebase Performance)</td>
+      </tr>
+      <tr>
+        <td>Release tracking</td>
+        <td>Có (issues per release)</td>
+        <td>Có (crash-free users)</td>
+      </tr>
+      <tr>
+        <td>Giá</td>
+        <td>Free tier 5K events/month</td>
+        <td>Miễn phí hoàn toàn</td>
+      </tr>
+      <tr>
+        <td>Self-hosted</td>
+        <td>Có thể</td>
+        <td>Không</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>Setup Sentry trong React Native:</p>
+
+<pre><code>import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://examplePublicKey@o0.ingest.sentry.io/0',
+  tracesSampleRate: 0.2,
+  environment: __DEV__ ? 'development' : 'production',
+  enableAutoSessionTracking: true,
+  sessionTrackingIntervalMillis: 30000,
+  attachStacktrace: true,
+  beforeSend(event) {
+    if (__DEV__) {
+      return null;
+    }
+    return event;
+  },
+});</code></pre>
+
+<p>Giải thích: <code>tracesSampleRate: 0.2</code> nghĩa là chỉ trace 20% transactions để tránh overhead. <code>beforeSend</code> filter bỏ events trong development. <code>enableAutoSessionTracking</code> cho phép Sentry tính crash-free rate.</p>
+
+<p>Upload source maps trong CI:</p>
+
+<pre><code>npx sentry-cli releases new "com.myapp@2.5.1+142"
+
+npx sentry-cli releases files "com.myapp@2.5.1+142" \
+  upload-sourcemaps \
+  --dist 142 \
+  ./build/sourcemaps
+
+npx sentry-cli releases finalize "com.myapp@2.5.1+142"</code></pre>
+
+<h3>10. Error Boundary Patterns</h3>
+
+<div class="concept">
+  <h4>Error Boundary trong React Native</h4>
+  <p>Error Boundary bắt JavaScript errors trong render tree, ngăn crash toàn bộ app. Kết hợp với Sentry để tự động report errors.</p>
+</div>
+
+<pre><code>import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import * as Sentry from '@sentry/react-native';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) =&gt; void;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component&lt;Props, State&gt; {
+  state: State = {
+    hasError: false,
+    error: null,
+  };
+
+  static getDerivedStateFromError(error: Error): Partial&lt;State&gt; {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    Sentry.withScope((scope) =&gt; {
+      scope.setExtra('componentStack', errorInfo.componentStack);
+      scope.setLevel('fatal');
+      Sentry.captureException(error);
+    });
+
+    this.props.onError?.(error, errorInfo);
+  }
+
+  handleRetry = (): void =&gt; {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render(): ReactNode {
+    if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        &lt;View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}&gt;
+          &lt;Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}&gt;
+            Đã xảy ra lỗi
+          &lt;/Text&gt;
+          &lt;Text style={{ fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 16 }}&gt;
+            {this.state.error?.message}
+          &lt;/Text&gt;
+          &lt;TouchableOpacity
+            onPress={this.handleRetry}
+            style={{ backgroundColor: '#007AFF', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 }}
+          &gt;
+            &lt;Text style={{ color: '#fff', fontSize: 16 }}&gt;Thử lại&lt;/Text&gt;
+          &lt;/TouchableOpacity&gt;
+        &lt;/View&gt;
+      );
+    }
+
+    return this.props.children;
+  }
+}</code></pre>
+
+<p>Sử dụng nhiều tầng Error Boundary cho granular error handling:</p>
+
+<pre><code>function App() {
+  return (
+    &lt;ErrorBoundary fallback={&lt;AppCrashScreen /&gt;}&gt;
+      &lt;NavigationContainer&gt;
+        &lt;ErrorBoundary fallback={&lt;ScreenErrorFallback /&gt;}&gt;
+          &lt;MainNavigator /&gt;
+        &lt;/ErrorBoundary&gt;
+      &lt;/NavigationContainer&gt;
+    &lt;/ErrorBoundary&gt;
+  );
+}</code></pre>
+
+<p>Tầng ngoài cùng bắt lỗi toàn app (navigation crash). Tầng trong bắt lỗi từng screen, cho phép user quay lại screen khác mà không crash toàn bộ app.</p>
+
+<h2>❓ CÂU HỎI PHỎNG VẤN + ĐÁP ÁN</h2>
+
+<h2>🛠️ Debug playbook: release bug</h2>
+<table>
+<tr><th>Triệu chứng</th><th>Kiểm tra</th><th>Fix thường gặp</th></tr>
+<tr><td>Store từ chối upload</td><td>Version code/build number, bundle id/package name, signing</td><td>Tăng build number, kiểm signing/profile đúng app</td></tr>
+<tr><td>Crash report không đọc được stack</td><td>Sourcemap upload, release name, dist/build number</td><td>Upload sourcemap cùng release id và verify trên Sentry</td></tr>
+<tr><td>OTA làm app crash</td><td>Change có native dependency/permission/config không</td><td>Rollback OTA, full build cho native change</td></tr>
+<tr><td>CI build chậm/flaky</td><td>Cache hit, runner, tests flaky, Pods/Gradle mismatch</td><td>Cache đúng key, split jobs, fix flaky test, pin tooling</td></tr>
+</table>
+
+<div class="card card-info">
+<p><strong>Khung trả lời phỏng vấn:</strong> Mobile CI/CD khác web vì có binary, signing, store review, staged rollout, OTA boundary và crash monitoring. Một release tốt phải có rollback và quan sát sau phát hành.</p>
+</div>
+
+<div class="qa">
+  <div class="q">1. Giải thích CI/CD pipeline cho một dự án React Native. Những challenges chính là gì?</div>
+  <div class="a">
+    <p>CI/CD pipeline cho RN gồm: <strong>Lint</strong> (ESLint, TypeScript) → <strong>Test</strong> (Jest unit, Detox E2E) → <strong>Build</strong> (Android .aab + iOS .ipa) → <strong>Deploy</strong> (store upload) → <strong>Monitor</strong> (Sentry).</p>
+    <p>Challenges chính:</p>
+    <ul>
+      <li><strong>Code signing iOS:</strong> Quản lý certificates và provisioning profiles trên CI — giải quyết bằng Fastlane match</li>
+      <li><strong>Build time dài:</strong> Native build mất 15-30 phút — cần caching node_modules, Pods, Gradle, build cache</li>
+      <li><strong>macOS runner cho iOS:</strong> GitHub Actions macOS runner đắt gấp 10x Linux — tối ưu bằng cách chỉ build iOS khi merge vào main</li>
+      <li><strong>Hai platform:</strong> Phải maintain pipeline cho cả Android và iOS, mỗi platform có tooling riêng</li>
+      <li><strong>Store review:</strong> Không thể auto-deploy như web, phải chờ review 1-3 ngày</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">2. CodePush/OTA update hoạt động như thế nào? Khi nào nên dùng và khi nào không?</div>
+  <div class="a">
+    <p>OTA update hoạt động bằng cách download JavaScript bundle mới từ server và thay thế bundle cũ trong app. Khi app khởi động, SDK kiểm tra server có update mới không, nếu có thì download và áp dụng.</p>
+    <p><strong>Nên dùng khi:</strong></p>
+    <ul>
+      <li>Fix bug JavaScript cần push gấp (hotfix)</li>
+      <li>Thay đổi UI/styling, text, logic nghiệp vụ</li>
+      <li>A/B testing tính năng mới</li>
+    </ul>
+    <p><strong>Không dùng được khi:</strong></p>
+    <ul>
+      <li>Thêm/xóa native modules (camera, Bluetooth...)</li>
+      <li>Update React Native version</li>
+      <li>Thay đổi native code (Java/Kotlin, ObjC/Swift)</li>
+      <li>Thay đổi permissions, app icon, splash screen</li>
+    </ul>
+    <p>Cần lưu ý: Apple cấm thay đổi "primary purpose" của app qua OTA. Luôn có rollback plan vì OTA có thể gây crash nếu JS code không tương thích với native code version hiện tại.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">3. Fastlane match giải quyết vấn đề gì? Tại sao code signing trên CI lại phức tạp?</div>
+  <div class="a">
+    <p>iOS code signing yêu cầu:</p>
+    <ul>
+      <li><strong>Certificate (.p12):</strong> Chứng minh danh tính developer/organization</li>
+      <li><strong>Provisioning Profile:</strong> Liên kết certificate với app ID và device list</li>
+    </ul>
+    <p>Trên máy local, Xcode quản lý tự động. Trên CI, không có Keychain hay Xcode UI → phải import certificate vào Keychain và cài profile thủ công. Nếu nhiều dev trong team, certificate dễ bị conflict (mỗi người tạo cert riêng, Apple giới hạn 3 distribution certificates).</p>
+    <p><strong>match giải quyết bằng cách:</strong></p>
+    <ul>
+      <li>Lưu trữ tất cả certs/profiles trong 1 private Git repo, encrypt bằng password</li>
+      <li>Team share cùng 1 bộ cert/profile thay vì mỗi người tạo riêng</li>
+      <li>CI clone repo, decrypt và import vào Keychain tự động</li>
+      <li>Dùng <code>readonly: true</code> trên CI để tránh tạo cert mới vô tình</li>
+    </ul>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">4. Làm thế nào để giảm build time trên CI cho React Native?</div>
+  <div class="a">
+    <p>Các chiến lược giảm build time:</p>
+    <ul>
+      <li><strong>Caching dependencies:</strong> Cache node_modules (dựa vào yarn.lock hash), CocoaPods (Podfile.lock hash), Gradle wrapper + dependencies</li>
+      <li><strong>Skip unnecessary builds:</strong> Chỉ build khi merge vào main/release branch, PR chỉ chạy lint + test</li>
+      <li><strong>Parallel jobs:</strong> Chạy Android build và iOS build song song, lint/test trên job riêng</li>
+      <li><strong>Incremental builds:</strong> Bật Gradle build cache, sử dụng ccache cho Xcode</li>
+      <li><strong>Selective testing:</strong> Chỉ chạy test cho files thay đổi trên PR (<code>jest --changedSince</code>)</li>
+      <li><strong>Pre-built dependencies:</strong> Dùng binary Pods thay vì build from source</li>
+      <li><strong>Dedicated runners:</strong> Self-hosted macOS runner nhanh hơn GitHub-hosted</li>
+    </ul>
+    <p>Kết quả điển hình: từ 30-45 phút xuống 10-15 phút.</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">5. Error Boundary trong React Native khác gì so với React Web? Giới hạn là gì?</div>
+  <div class="a">
+    <p>Error Boundary trong RN hoạt động giống React Web — chỉ bắt được lỗi trong render phase và lifecycle methods. Điểm khác biệt và giới hạn:</p>
+    <ul>
+      <li><strong>Native crashes:</strong> Error Boundary KHÔNG bắt được native crash (null pointer trong Java/ObjC), cần Sentry/Crashlytics</li>
+      <li><strong>Async errors:</strong> Không bắt lỗi trong setTimeout, Promise, event handlers — cần global error handler: <code>ErrorUtils.setGlobalHandler()</code></li>
+      <li><strong>Navigation:</strong> Error Boundary phải wrap đúng level — nếu wrap quá cao, crash một screen sẽ mất toàn bộ navigation state</li>
+      <li><strong>Recovery:</strong> Trên mobile, fallback UI cần có nút "Thử lại" vì user không thể refresh page như web</li>
+    </ul>
+    <p>Best practice: dùng nhiều tầng Error Boundary — tầng app-level (last resort), tầng screen-level (cho phép navigate sang screen khác), tầng component-level (cho widgets có thể fail independently).</p>
+  </div>
+</div>
+
+<div class="qa">
+  <div class="q">6. Giải thích semantic versioning cho mobile app. Version name và version code khác nhau thế nào?</div>
+  <div class="a">
+    <p>Mobile app có 2 version numbers:</p>
+    <ul>
+      <li><strong>Version Name (versionName / CFBundleShortVersionString):</strong> Format MAJOR.MINOR.PATCH (ví dụ 2.5.1). Hiển thị cho user trên store. Tuân theo semver: MAJOR khi breaking change, MINOR khi thêm feature, PATCH khi fix bug.</li>
+      <li><strong>Version Code (versionCode / CFBundleVersion):</strong> Integer tăng dần (ví dụ 142). Store dùng để xác định binary mới hơn. PHẢI tăng mỗi lần upload, không bao giờ giảm.</li>
+    </ul>
+    <p>Quy tắc quan trọng:</p>
+    <ul>
+      <li>Có thể giữ nguyên version name và chỉ tăng version code (khi fix build issue)</li>
+      <li>Dùng CI build number làm version code (<code>GITHUB_RUN_NUMBER</code>) để đảm bảo luôn tăng</li>
+      <li>Sync version giữa package.json, build.gradle, Info.plist bằng tool (<code>react-native-version</code>)</li>
+      <li>OTA update không thay đổi version name/code — chỉ thay đổi JS bundle</li>
+    </ul>
+  </div>
+</div>
+
+<h2>🏋️ BÀI TẬP</h2>
+
+<div class="exercise">
+  <h4>Bài tập: Viết GitHub Actions Workflow cho React Native</h4>
+  <p><strong>Yêu cầu:</strong> Tạo một GitHub Actions workflow hoàn chỉnh cho dự án React Native với các yêu cầu:</p>
+  <ol>
+    <li><strong>Job 1 — Quality Check (chạy trên mọi PR):</strong>
+      <ul>
+        <li>Checkout code</li>
+        <li>Setup Node.js 18 với yarn cache</li>
+        <li>Install dependencies với frozen lockfile</li>
+        <li>Chạy ESLint</li>
+        <li>Chạy TypeScript type check</li>
+        <li>Chạy Jest tests với coverage</li>
+        <li>Upload coverage report</li>
+      </ul>
+    </li>
+    <li><strong>Job 2 — Build Android (chỉ khi push vào main):</strong>
+      <ul>
+        <li>Depends on Job 1</li>
+        <li>Setup Java 17</li>
+        <li>Decode keystore từ secrets</li>
+        <li>Build release APK</li>
+        <li>Upload APK artifact</li>
+      </ul>
+    </li>
+    <li><strong>Job 3 — Build iOS (chỉ khi push vào main):</strong>
+      <ul>
+        <li>Depends on Job 1</li>
+        <li>Chạy trên macOS runner</li>
+        <li>Cache CocoaPods</li>
+        <li>Build với Fastlane</li>
+        <li>Upload IPA artifact</li>
+      </ul>
+    </li>
+    <li><strong>Job 4 — Deploy to TestFlight/Play Store (chỉ khi tag release):</strong>
+      <ul>
+        <li>Depends on Job 2 &amp; 3</li>
+        <li>Download artifacts</li>
+        <li>Upload iOS lên TestFlight qua Fastlane</li>
+        <li>Upload Android lên Play Store internal track</li>
+        <li>Gửi Slack notification</li>
+      </ul>
+    </li>
+  </ol>
+
+  <p><strong>Acceptance criteria:</strong></p>
+  <ul>
+    <li>Workflow file hợp lệ YAML syntax</li>
+    <li>Sử dụng environment variables và secrets đúng cách</li>
+    <li>Có caching cho tất cả dependencies</li>
+    <li>Có conditional execution dựa trên branch/tag</li>
+    <li>Jobs chạy song song khi có thể</li>
+  </ul>
+</div>
+
+<div class="exercise">
+  <h4>Bài tập bổ sung: Setup Sentry Error Monitoring</h4>
+  <p><strong>Yêu cầu:</strong></p>
+  <ol>
+    <li>Tích hợp <code>@sentry/react-native</code> vào dự án</li>
+    <li>Tạo Error Boundary component với Sentry reporting</li>
+    <li>Implement 3 tầng Error Boundary (app → screen → widget)</li>
+    <li>Thêm custom breadcrumbs cho navigation events</li>
+    <li>Viết script upload source maps trong CI</li>
+  </ol>
+</div>
+
+<h2>🧩 MINI EXERCISE THỰC TẾ REACT NATIVE</h2>
+
+<div class="exercise">
+  <h4>Exercise 1: Release checklist</h4>
+  <p>Viết checklist trước khi release: version/build number, changelog, QA device matrix, signing, sourcemap, store metadata, rollback plan.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 2: OTA decision drill</h4>
+  <p>Cho 5 thay đổi: sửa text, thêm native package, đổi API URL, thêm permission camera, fix crash JS. Phân loại cái nào OTA được, cái nào phải full build, giải thích lý do.</p>
+</div>
+
+<div class="exercise">
+  <h4>Exercise 3: CI failure playbook</h4>
+  <p>Tạo bảng xử lý lỗi: iOS signing fail, Gradle cache lỗi, CocoaPods mismatch, test flaky, sourcemap upload fail. Mỗi lỗi có symptom, nguyên nhân khả dĩ, bước debug đầu tiên.</p>
+</div>
+
+<h2>⚠️ LỖI THƯỜNG GẶP</h2>
+<div class="card card-warning">
+  <ul>
+    <li>Quên tăng build number/version code nên store từ chối upload.</li>
+    <li>Dùng OTA cho thay đổi có native code hoặc permission mới, dẫn đến app crash trên binary cũ.</li>
+    <li>Không upload sourcemap, crash report production không đọc được stack trace JS.</li>
+    <li>Để certificate/provisioning profile hết hạn sát ngày release.</li>
+    <li>Pipeline pass nhưng không có artifact/notification rõ ràng, team không biết build nào để QA.</li>
+  </ul>
+</div>
+
+<h2>🏢 CASE ĐI LÀM THẬT</h2>
+<div class="card card-info">
+  <p><strong>Case:</strong> Team publish OTA để fix crash, nhưng bản fix import native package mới. User đang dùng binary cũ nhận JS mới và crash ngay khi mở app.</p>
+  <p><strong>Cách xử lý:</strong> Chỉ OTA khi thay đổi nằm trong JS/assets tương thích binary hiện tại. Với native dependency, permission, Info.plist/AndroidManifest, build.gradle/Podfile: tạo full build và rollout staged.</p>
+</div>
+
+<h2>🧠 GHI NHỚ NHANH</h2>
+<div class="card card-success">
+  <p>CI/CD mobile là quản lý rủi ro release, không chỉ chạy workflow. Một release tốt có signed build, version đúng, sourcemap đúng, rollback rõ, và monitoring sau khi phát hành.</p>
+</div>
+
+<h2>❔ CÂU HỎI TỰ KIỂM TRA</h2>
+<div class="qa">
+  <div class="q">1. Vì sao OTA không thay thế được full build?</div>
+  <div class="q">2. Build number khác version name thế nào?</div>
+  <div class="q">3. Khi iOS signing fail trên CI, bạn kiểm tra gì đầu tiên?</div>
+  <div class="q">4. Sau release, metric nào cần xem trong 1-2 giờ đầu?</div>
+</div>
+
+<h2>✅ CHECKLIST TỰ ĐÁNH GIÁ</h2>
+
+<div class="checklist">
+  <label><input type="checkbox"> Tôi có thể giải thích CI/CD pipeline cho React Native (Lint → Test → Build → Deploy → Monitor)</label>
+  <label><input type="checkbox"> Tôi đã viết được GitHub Actions workflow với caching, conditional jobs, và secrets</label>
+  <label><input type="checkbox"> Tôi hiểu Fastlane match hoạt động thế nào và tại sao cần thiết cho iOS code signing trên CI</label>
+  <label><input type="checkbox"> Tôi phân biệt được gym, deliver, supply trong Fastlane</label>
+  <label><input type="checkbox"> Tôi hiểu OTA update (CodePush/EAS Update) hoạt động thế nào và giới hạn của nó</label>
+  <label><input type="checkbox"> Tôi biết khi nào nên dùng OTA vs full store build</label>
+  <label><input type="checkbox"> Tôi nắm được top rejection reasons của Apple và Google</label>
+  <label><input type="checkbox"> Tôi hiểu semantic versioning và sự khác biệt giữa version name vs version code</label>
+  <label><input type="checkbox"> Tôi có thể implement feature flags (custom hoặc LaunchDarkly)</label>
+  <label><input type="checkbox"> Tôi đã tích hợp được Sentry vào dự án RN và upload source maps</label>
+  <label><input type="checkbox"> Tôi đã implement Error Boundary multi-level với Sentry reporting</label>
+  <label><input type="checkbox"> Tôi so sánh được Sentry vs Crashlytics và biết khi nào dùng cái nào</label>
+  <label><input type="checkbox"> Tôi hiểu Firebase App Distribution và TestFlight workflow</label>
+</div>
+
+<h2>📎 TÀI NGUYÊN</h2>
+
+<div class="resource">
+  <h4>Documentation</h4>
+  <ul>
+    <li><a href="https://docs.fastlane.tools/" target="_blank">Fastlane Documentation</a> — Official docs cho toàn bộ Fastlane tools</li>
+    <li><a href="https://docs.github.com/en/actions" target="_blank">GitHub Actions Documentation</a> — Workflow syntax, contexts, expressions</li>
+    <li><a href="https://docs.expo.dev/eas-update/introduction/" target="_blank">EAS Update</a> — OTA update cho Expo và bare RN projects</li>
+    <li><a href="https://docs.sentry.io/platforms/react-native/" target="_blank">Sentry React Native SDK</a> — Error monitoring integration guide</li>
+    <li><a href="https://developer.apple.com/app-store/review/guidelines/" target="_blank">Apple App Store Review Guidelines</a> — Đọc kỹ trước khi submit app</li>
+    <li><a href="https://play.google.com/about/developer-content-policy/" target="_blank">Google Play Developer Policy</a> — Policies cho Android apps</li>
+  </ul>
+
+  <h4>Articles</h4>
+  <ul>
+    <li><a href="https://shift.infinite.red/ci-cd-for-react-native-with-github-actions-4d87dc5bfb6a" target="_blank">CI/CD for React Native with GitHub Actions</a> — Infinite Red guide</li>
+    <li><a href="https://www.callstack.com/blog/fastlane-react-native" target="_blank">Fastlane + React Native</a> — Callstack blog</li>
+    <li><a href="https://semver.org/" target="_blank">Semantic Versioning Specification</a> — Semver official spec</li>
+  </ul>
+
+  <h4>Video</h4>
+  <ul>
+    <li><a href="https://www.youtube.com/results?search_query=react+native+github+actions+ci+cd" target="_blank">React Native CI/CD with GitHub Actions</a> — YouTube tutorials</li>
+    <li><a href="https://www.youtube.com/results?search_query=fastlane+react+native+setup" target="_blank">Fastlane Setup for React Native</a> — Step-by-step video guides</li>
+  </ul>
+
+  <h4>Tools</h4>
+  <ul>
+    <li><a href="https://github.com/stovmascern/react-native-version" target="_blank">react-native-version</a> — Auto sync version across platforms</li>
+    <li><a href="https://launchdarkly.com/" target="_blank">LaunchDarkly</a> — Feature flag management platform</li>
+    <li><a href="https://firebase.google.com/docs/app-distribution" target="_blank">Firebase App Distribution</a> — Beta testing distribution</li>
+  </ul>
+</div>
+
+<div class="nav-links">
+  <a href="10-Native-Architecture.html">&larr; Module 10: Native Architecture</a>
+  <a href="15-System-Design-Behavioral.html">Module 15: System Design &rarr;</a>
+</div>
+
+</div>
+</body>
+</html>
