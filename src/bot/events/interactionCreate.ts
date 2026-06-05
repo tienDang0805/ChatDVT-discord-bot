@@ -99,57 +99,18 @@ export async function handleInteraction(interaction: Interaction) {
           }
 
            // --- Code Challenge ---
-           if (customId === 'code_submit_btn') {
+           if (customId.startsWith('code_answer_')) {
+               await interaction.deferReply({ ephemeral: true });
+               const answerIdx = parseInt(customId.split('_')[2]);
                if (!interaction.guildId) return;
 
-               if (!codeChallengeService.isActive(interaction.guildId)) {
-                   await interaction.reply({ content: '❌ Challenge đã kết thúc.', ephemeral: true });
-                   return;
-               }
-
-               if (codeChallengeService.hasSubmitted(interaction.guildId, interaction.user.id)) {
-                   await interaction.reply({ content: '❌ Bạn đã submit rồi! Chờ kết quả khi hết giờ nhé.', ephemeral: true });
-                   return;
-               }
-
-               const active = codeChallengeService.getActive(interaction.guildId);
-               if (!active) return;
-
-               const modal = new ModalBuilder()
-                   .setCustomId('code_submit_modal')
-                   .setTitle(`Submit Code — ${active.challenge.title.substring(0, 30)}`);
-
-               const codeInput = new TextInputBuilder()
-                   .setCustomId('code_input')
-                   .setLabel('Code của bạn (ngôn ngữ tự do)')
-                   .setStyle(TextInputStyle.Paragraph)
-                   .setPlaceholder('Paste code vào đây... (JS, Python, Java, C++, PHP...)')
-                   .setRequired(true)
-                   .setMaxLength(4000);
-
-               const row = new ActionRowBuilder<TextInputBuilder>().addComponents(codeInput);
-               modal.addComponents(row);
-               await interaction.showModal(modal);
-               return;
-           }
-
-           if (customId === 'code_cancel_btn') {
-               if (!interaction.guildId) return;
-
-               const active = codeChallengeService.getActive(interaction.guildId);
-               if (!active) {
-                   await interaction.reply({ content: '❌ Challenge đã kết thúc.', ephemeral: true });
-                   return;
-               }
-
-               if (active.creatorId !== interaction.user.id) {
-                   await interaction.reply({ content: '❌ Chỉ người tạo challenge mới được kết thúc sớm.', ephemeral: true });
-                   return;
-               }
-
-               await interaction.deferReply();
-               await codeChallengeService.endChallenge(interaction.guildId);
-               await interaction.editReply('🛑 Challenge đã kết thúc sớm!');
+               const result = await codeChallengeService.submitAnswer(
+                   interaction.guildId,
+                   interaction.user.id,
+                   interaction.user.username,
+                   answerIdx
+               );
+               await interaction.editReply(result.message);
                return;
            }
 
@@ -215,24 +176,6 @@ export async function handleInteraction(interaction: Interaction) {
 
               await interaction.editReply("✅ **Lưu Thành Công!**\nBạn đã cập nhật tuỳ chỉnh Nhân Cách Bot cho riêng máy chủ này.\nBot sẽ áp dụng ngay vào tin nhắn tiếp theo.");
           }
-           if (interaction.customId === 'code_submit_modal') {
-               await interaction.deferReply();
-               const guildId = interaction.guildId;
-               if (!guildId) {
-                   await interaction.editReply('❌ Lỗi: Không thể xác định Server.');
-                   return;
-               }
-
-               const code = interaction.fields.getTextInputValue('code_input');
-               const result = await codeChallengeService.submitCode(
-                   guildId,
-                   interaction.user.id,
-                   interaction.user.username,
-                   code
-               );
-
-               await interaction.editReply(result.message || '❌ Lỗi không xác định.');
-           }
 
           if (interaction.customId === 'quiz_setup_modal') {
               await interaction.deferReply();

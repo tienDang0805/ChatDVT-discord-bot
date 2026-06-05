@@ -3,13 +3,31 @@ import { codeChallengeService } from '../services/code-challenge';
 
 export const data = new SlashCommandBuilder()
     .setName('code')
-    .setDescription('Luyện Code — Cả server cùng giải đề, AI chấm điểm, xếp hạng')
+    .setDescription('Code Challenge — Tìm bug, điền chỗ trống, đoán output!')
     .addSubcommand(sub =>
         sub.setName('start')
-            .setDescription('Tạo code challenge mới cho cả server')
+            .setDescription('Bắt đầu game mới cho cả server')
+            .addIntegerOption(opt =>
+                opt.setName('questions')
+                    .setDescription('Số câu hỏi (3-10, mặc định 5)')
+                    .setMinValue(3)
+                    .setMaxValue(10)
+                    .setRequired(false)
+            )
             .addStringOption(opt =>
                 opt.setName('topic')
-                    .setDescription('Chủ đề (Array, String, DP, OOP...)')
+                    .setDescription('Chủ đề')
+                    .addChoices(
+                        { name: '🎲 Ngẫu nhiên', value: 'random' },
+                        { name: '🟨 JavaScript', value: 'JavaScript' },
+                        { name: '🐍 Python', value: 'Python' },
+                        { name: '🔤 Xử lý chuỗi', value: 'Xử lý chuỗi' },
+                        { name: '📦 Xử lý mảng', value: 'Xử lý mảng' },
+                        { name: '🧮 Toán & Logic', value: 'Toán & Logic' },
+                        { name: '🔄 If/Else & Loop', value: 'If/Else & Loop' },
+                        { name: '🐛 Lỗi hay gặp', value: 'Lỗi hay gặp' },
+                        { name: '🎯 Tổng hợp', value: 'Tổng hợp' }
+                    )
                     .setRequired(false)
             )
             .addStringOption(opt =>
@@ -24,23 +42,23 @@ export const data = new SlashCommandBuilder()
             )
             .addIntegerOption(opt =>
                 opt.setName('time')
-                    .setDescription('Thời gian (phút, mặc định 10)')
-                    .setMinValue(3)
-                    .setMaxValue(30)
+                    .setDescription('Giây mỗi câu (10-60, mặc định 30)')
+                    .setMinValue(10)
+                    .setMaxValue(60)
                     .setRequired(false)
             )
     )
     .addSubcommand(sub =>
         sub.setName('cancel')
-            .setDescription('Kết thúc challenge sớm (chỉ người tạo)')
+            .setDescription('Hủy game hiện tại (chỉ người tạo)')
     )
     .addSubcommand(sub =>
         sub.setName('leaderboard')
-            .setDescription('Bảng xếp hạng Luyện Code')
+            .setDescription('Bảng xếp hạng Code Challenge')
     )
     .addSubcommand(sub =>
         sub.setName('stats')
-            .setDescription('Xem thống kê luyện code cá nhân')
+            .setDescription('Xem thống kê cá nhân')
     );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -53,45 +71,42 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     if (subcommand === 'start') {
+        if (codeChallengeService.isActive(guildId)) {
+            await interaction.reply({ content: '❌ Đang có game diễn ra! Dùng `/code cancel` để hủy.', ephemeral: true });
+            return;
+        }
+
         await interaction.deferReply();
 
-        const topic = interaction.options.getString('topic') || undefined;
+        const numQuestions = interaction.options.getInteger('questions') || undefined;
+        const topicRaw = interaction.options.getString('topic');
+        const topic = topicRaw === 'random' ? undefined : (topicRaw || undefined);
         const difficulty = interaction.options.getString('difficulty') || undefined;
         const time = interaction.options.getInteger('time') || undefined;
 
-        const result = await codeChallengeService.startChallenge(
+        const result = await codeChallengeService.startGame(
             guildId,
             interaction.user.id,
             interaction.channelId,
+            numQuestions,
             topic,
             difficulty,
             time
         );
 
-        if (!result.success) {
-            await interaction.editReply(result.message || '❌ Lỗi không xác định.');
-            return;
-        }
-
-        await interaction.editReply({
-            embeds: result.embed ? [result.embed] : [],
-            components: result.components || []
-        });
+        await interaction.editReply(result.message);
 
     } else if (subcommand === 'cancel') {
         if (!codeChallengeService.isActive(guildId)) {
-            await interaction.reply({ content: '❌ Không có challenge nào đang diễn ra.', ephemeral: true });
+            await interaction.reply({ content: '❌ Không có game nào đang chạy.', ephemeral: true });
             return;
         }
-
-        await interaction.deferReply();
-        const result = await codeChallengeService.cancelChallenge(guildId, interaction.user.id);
-        await interaction.editReply(result.message);
+        const result = await codeChallengeService.cancelGame(guildId, interaction.user.id);
+        await interaction.reply({ content: result.message, ephemeral: !result.success });
 
     } else if (subcommand === 'leaderboard') {
         await interaction.deferReply();
         const embed = await codeChallengeService.getLeaderboard(guildId);
-        embed.setFooter({ text: 'Dùng /code start để luyện code!' });
         await interaction.editReply({ embeds: [embed] });
 
     } else if (subcommand === 'stats') {
