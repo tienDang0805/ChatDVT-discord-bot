@@ -3,10 +3,10 @@ import { codeChallengeService } from '../services/code-challenge';
 
 export const data = new SlashCommandBuilder()
     .setName('code')
-    .setDescription('Luyện Code — Nhận đề bài lập trình, submit code, AI chấm điểm')
+    .setDescription('Luyện Code — Cả server cùng giải đề, AI chấm điểm, xếp hạng')
     .addSubcommand(sub =>
         sub.setName('start')
-            .setDescription('Nhận đề bài code challenge mới')
+            .setDescription('Tạo code challenge mới cho cả server')
             .addStringOption(opt =>
                 opt.setName('topic')
                     .setDescription('Chủ đề (Array, String, DP, OOP...)')
@@ -22,19 +22,17 @@ export const data = new SlashCommandBuilder()
                     )
                     .setRequired(false)
             )
-            .addStringOption(opt =>
-                opt.setName('language')
-                    .setDescription('Ngôn ngữ lập trình')
-                    .addChoices(
-                        { name: 'JavaScript', value: 'JavaScript' },
-                        { name: 'TypeScript', value: 'TypeScript' },
-                        { name: 'Python', value: 'Python' },
-                        { name: 'Java', value: 'Java' },
-                        { name: 'C++', value: 'C++' },
-                        { name: 'PHP', value: 'PHP' }
-                    )
+            .addIntegerOption(opt =>
+                opt.setName('time')
+                    .setDescription('Thời gian (phút, mặc định 10)')
+                    .setMinValue(3)
+                    .setMaxValue(30)
                     .setRequired(false)
             )
+    )
+    .addSubcommand(sub =>
+        sub.setName('cancel')
+            .setDescription('Kết thúc challenge sớm (chỉ người tạo)')
     )
     .addSubcommand(sub =>
         sub.setName('leaderboard')
@@ -59,7 +57,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
         const topic = interaction.options.getString('topic') || undefined;
         const difficulty = interaction.options.getString('difficulty') || undefined;
-        const language = interaction.options.getString('language') || undefined;
+        const time = interaction.options.getInteger('time') || undefined;
 
         const result = await codeChallengeService.startChallenge(
             guildId,
@@ -67,7 +65,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             interaction.channelId,
             topic,
             difficulty,
-            language
+            time
         );
 
         if (!result.success) {
@@ -79,6 +77,16 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             embeds: result.embed ? [result.embed] : [],
             components: result.components || []
         });
+
+    } else if (subcommand === 'cancel') {
+        if (!codeChallengeService.isActive(guildId)) {
+            await interaction.reply({ content: '❌ Không có challenge nào đang diễn ra.', ephemeral: true });
+            return;
+        }
+
+        await interaction.deferReply();
+        const result = await codeChallengeService.cancelChallenge(guildId, interaction.user.id);
+        await interaction.editReply(result.message);
 
     } else if (subcommand === 'leaderboard') {
         await interaction.deferReply();

@@ -20,21 +20,34 @@ interface ICodeReview {
     betterSolution: string;
 }
 
-interface IActiveChallenge {
+interface ISubmission {
+    userId: string;
+    username: string;
+    code: string;
+    review: ICodeReview;
+    submittedAt: number;
+}
+
+interface ISharedChallenge {
     challenge: ICodeChallenge;
     topic: string;
     difficulty: string;
-    language: string;
     guildId: string;
-    userId: string;
     channelId: string;
+    creatorId: string;
     createdAt: number;
+    timeLimit: number;
+    timer?: NodeJS.Timeout;
+    submissions: Map<string, ISubmission>;
+    submittedUsers: Set<string>;
+    pendingReviews: Set<string>;
 }
 
 const TOPICS = [
-    'Array', 'String', 'HashMap/Dictionary', 'Linked List', 'Stack/Queue',
-    'Sorting', 'Binary Search', 'Recursion', 'Dynamic Programming', 'Tree/Graph',
-    'Math/Logic', 'OOP Design', 'SQL Query', 'Regex', 'Two Pointers'
+    'Xử lý chuỗi', 'Xử lý mảng', 'Toán & Logic', 'Đếm & Thống kê',
+    'Chuyển đổi dữ liệu', 'Validate & Kiểm tra', 'Format & Hiển thị',
+    'Xử lý ngày tháng', 'Tính toán thực tế', 'Mini Game Logic',
+    'Object & JSON', 'Filter & Search', 'Pattern & Quy luật'
 ];
 
 const DIFFICULTY_EMOJI: Record<string, string> = {
@@ -43,63 +56,67 @@ const DIFFICULTY_EMOJI: Record<string, string> = {
     'Hard': '🔴'
 };
 
-const CHALLENGE_TIMEOUT_MS = 30 * 60 * 1000;
+const DEFAULT_TIME_LIMIT_MS = 10 * 60 * 1000;
 
 class CodeChallengeService {
-    private activeChallenges: Map<string, IActiveChallenge> = new Map();
+    private activeChallenges: Map<string, ISharedChallenge> = new Map();
 
-    private getKey(guildId: string, userId: string): string {
-        return `${guildId}_${userId}`;
+    public isActive(guildId: string): boolean {
+        return this.activeChallenges.has(guildId);
     }
 
-    public getActiveChallenge(guildId: string, userId: string): IActiveChallenge | undefined {
-        const key = this.getKey(guildId, userId);
-        const challenge = this.activeChallenges.get(key);
-        if (challenge && Date.now() - challenge.createdAt > CHALLENGE_TIMEOUT_MS) {
-            this.activeChallenges.delete(key);
-            return undefined;
-        }
-        return challenge;
+    public getActive(guildId: string): ISharedChallenge | undefined {
+        return this.activeChallenges.get(guildId);
+    }
+
+    public hasSubmitted(guildId: string, userId: string): boolean {
+        const challenge = this.activeChallenges.get(guildId);
+        if (!challenge) return false;
+        return challenge.submittedUsers.has(userId);
     }
 
     public async startChallenge(
         guildId: string,
-        userId: string,
+        creatorId: string,
         channelId: string,
         topic?: string,
         difficulty?: string,
-        language?: string
+        timeLimitMins?: number
     ): Promise<{ success: boolean; embed?: EmbedBuilder; components?: ActionRowBuilder<ButtonBuilder>[]; message?: string }> {
-        const key = this.getKey(guildId, userId);
-
-        if (this.activeChallenges.has(key)) {
-            const existing = this.activeChallenges.get(key)!;
-            if (Date.now() - existing.createdAt < CHALLENGE_TIMEOUT_MS) {
-                return {
-                    success: false,
-                    message: `❌ Bạn đang có bài challenge chưa hoàn thành: **${existing.challenge.title}**\nDùng nút "📝 Submit Code" để nộp bài, hoặc chờ hết hạn (30 phút).`
-                };
-            }
-            this.activeChallenges.delete(key);
+        if (this.activeChallenges.has(guildId)) {
+            return {
+                success: false,
+                message: '❌ Server đang có code challenge diễn ra! Dùng `/code cancel` để hủy.'
+            };
         }
 
         const selectedTopic = topic || TOPICS[Math.floor(Math.random() * TOPICS.length)];
         const selectedDifficulty = difficulty || 'Medium';
-        const selectedLanguage = language || 'JavaScript';
+        const timeLimit = timeLimitMins ? timeLimitMins * 60 * 1000 : DEFAULT_TIME_LIMIT_MS;
+        const timeMins = Math.round(timeLimit / 60000);
 
         try {
-            const challenge = await this.generateChallenge(selectedTopic, selectedDifficulty, selectedLanguage);
+            const challenge = await this.generateChallenge(selectedTopic, selectedDifficulty);
 
-            this.activeChallenges.set(key, {
+            const state: ISharedChallenge = {
                 challenge,
                 topic: selectedTopic,
                 difficulty: selectedDifficulty,
-                language: selectedLanguage,
                 guildId,
-                userId,
                 channelId,
-                createdAt: Date.now()
-            });
+                creatorId,
+                createdAt: Date.now(),
+                timeLimit,
+                submissions: new Map(),
+                submittedUsers: new Set(),
+                pendingReviews: new Set()
+            };
+
+            state.timer = setTimeout(() => {
+                this.endChallenge(guildId);
+            }, timeLimit);
+
+            this.activeChallenges.set(guildId, state);
 
             const diffEmoji = DIFFICULTY_EMOJI[selectedDifficulty] || '🟡';
 
@@ -112,26 +129,26 @@ class CodeChallengeService {
                 : 'Không có ràng buộc đặc biệt.';
 
             const embed = new EmbedBuilder()
-                .setTitle(`💻 ${challenge.title}`)
-                .setDescription(challenge.description)
+                .setTitle(`💻 Code Challenge — ${challenge.title}`)
+                .setDescription(`👥 **Multiplayer Mode** — Tất cả mọi người đều có thể tham gia!\n\n${challenge.description}`)
                 .addFields(
                     { name: '📋 Ví dụ', value: examplesText.substring(0, 1024) },
                     { name: '⚠️ Ràng buộc', value: constraintsText.substring(0, 1024) },
                     { name: '💡 Gợi ý', value: `||${challenge.hint}||`, inline: true },
-                    { name: '📊 Thông tin', value: `${diffEmoji} **${selectedDifficulty}** | 🗂️ **${selectedTopic}** | 🔤 **${selectedLanguage}**`, inline: true }
+                    { name: '📊 Thông tin', value: `${diffEmoji} **${selectedDifficulty}** | 🗂️ **${selectedTopic}** | 🌐 **Tự do ngôn ngữ**`, inline: true }
                 )
                 .setColor(selectedDifficulty === 'Easy' ? 0x22C55E : selectedDifficulty === 'Hard' ? 0xEF4444 : 0xEAB308)
-                .setFooter({ text: `⏳ Hết hạn sau 30 phút | Dùng nút bên dưới để submit` })
+                .setFooter({ text: `⏳ Thời gian: ${timeMins} phút | Ai cũng có thể submit!` })
                 .setTimestamp();
 
             const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`code_submit_btn_${userId}`)
+                    .setCustomId('code_submit_btn')
                     .setLabel('📝 Submit Code')
                     .setStyle(ButtonStyle.Success),
                 new ButtonBuilder()
-                    .setCustomId(`code_giveup_btn_${userId}`)
-                    .setLabel('🏳️ Bỏ cuộc')
+                    .setCustomId('code_cancel_btn')
+                    .setLabel('🛑 Kết thúc sớm')
                     .setStyle(ButtonStyle.Danger)
             );
 
@@ -146,80 +163,167 @@ class CodeChallengeService {
     public async submitCode(
         guildId: string,
         userId: string,
+        username: string,
         code: string
-    ): Promise<{ success: boolean; embed?: EmbedBuilder; message?: string }> {
-        const key = this.getKey(guildId, userId);
-        const active = this.activeChallenges.get(key);
+    ): Promise<{ success: boolean; message?: string }> {
+        const state = this.activeChallenges.get(guildId);
 
-        if (!active) {
-            return { success: false, message: '❌ Bạn không có challenge nào đang pending. Dùng `/code start` để nhận đề mới.' };
+        if (!state) {
+            return { success: false, message: '❌ Không có challenge nào đang diễn ra.' };
         }
 
-        if (Date.now() - active.createdAt > CHALLENGE_TIMEOUT_MS) {
-            this.activeChallenges.delete(key);
-            return { success: false, message: '❌ Challenge đã hết hạn (30 phút). Dùng `/code start` để nhận đề mới.' };
+        if (state.submittedUsers.has(userId)) {
+            return { success: false, message: '❌ Bạn đã submit rồi! Chờ kết quả khi hết giờ nhé.' };
         }
+
+        state.submittedUsers.add(userId);
+        state.pendingReviews.add(userId);
 
         try {
-            const review = await this.reviewCode(active.challenge, code, active.language);
+            const review = await this.reviewCode(state.challenge, code);
 
-            await prisma.codeSubmission.create({
-                data: {
-                    userId,
-                    guildId,
-                    topic: active.topic,
-                    difficulty: active.difficulty,
-                    language: active.language,
-                    challenge: JSON.stringify(active.challenge),
-                    code,
-                    score: review.score,
-                    feedback: JSON.stringify(review)
-                }
+            state.submissions.set(userId, {
+                userId,
+                username,
+                code,
+                review,
+                submittedAt: Date.now()
             });
+            state.pendingReviews.delete(userId);
 
-            await this.updateLeaderboard(userId, guildId, review.score, active.difficulty);
-
-            this.activeChallenges.delete(key);
-
-            const scoreEmoji = review.score >= 80 ? '🌟' : review.score >= 50 ? '👍' : '💪';
-            const correctEmoji = review.correct ? '✅' : '❌';
-            const diffEmoji = DIFFICULTY_EMOJI[active.difficulty] || '🟡';
-
-            const embed = new EmbedBuilder()
-                .setTitle(`${correctEmoji} Kết Quả — ${active.challenge.title}`)
-                .setDescription(`${scoreEmoji} **Điểm: ${review.score}/100**`)
-                .addFields(
-                    { name: '🎯 Correctness', value: review.correctnessDetail.substring(0, 1024) },
-                    { name: '✨ Code Quality', value: review.qualityDetail.substring(0, 1024) },
-                    { name: '⚡ Efficiency', value: review.efficiencyDetail.substring(0, 1024) },
-                    { name: '💡 Gợi ý cải thiện', value: review.suggestion.substring(0, 1024) }
-                )
-                .setColor(review.score >= 80 ? 0x22C55E : review.score >= 50 ? 0xEAB308 : 0xEF4444)
-                .setFooter({ text: `${diffEmoji} ${active.difficulty} | 🗂️ ${active.topic} | 🔤 ${active.language}` })
-                .setTimestamp();
-
-            if (review.betterSolution && review.betterSolution.length > 0) {
-                const solutionText = review.betterSolution.length > 1024
-                    ? review.betterSolution.substring(0, 1021) + '...'
-                    : review.betterSolution;
-                embed.addFields({ name: '📖 Lời giải tham khảo', value: `\`\`\`${active.language.toLowerCase()}\n${solutionText}\n\`\`\`` });
-            }
-
-            return { success: true, embed };
-
+            return {
+                success: true,
+                message: `✅ **${username}** đã submit thành công! AI đang chấm... Kết quả sẽ công bố khi hết giờ.\n📊 Đã submit: **${state.submissions.size}** người`
+            };
         } catch (error) {
             console.error('Code Review Error:', error);
+            state.submittedUsers.delete(userId);
+            state.pendingReviews.delete(userId);
             return { success: false, message: '❌ Lỗi khi chấm bài. Thử submit lại nhé!' };
         }
     }
 
-    public giveUp(guildId: string, userId: string): { success: boolean; message: string } {
-        const key = this.getKey(guildId, userId);
-        if (!this.activeChallenges.has(key)) {
-            return { success: false, message: '❌ Bạn không có challenge nào đang pending.' };
+    public async cancelChallenge(guildId: string, userId: string): Promise<{ success: boolean; message: string }> {
+        const state = this.activeChallenges.get(guildId);
+        if (!state) {
+            return { success: false, message: '❌ Không có challenge nào đang diễn ra.' };
         }
-        this.activeChallenges.delete(key);
-        return { success: true, message: '🏳️ Đã bỏ cuộc. Dùng `/code start` để nhận đề mới!' };
+
+        if (state.creatorId !== userId) {
+            return { success: false, message: '❌ Chỉ người tạo challenge mới được kết thúc sớm.' };
+        }
+
+        await this.endChallenge(guildId);
+        return { success: true, message: '🛑 Challenge đã kết thúc!' };
+    }
+
+    public async endChallenge(guildId: string): Promise<void> {
+        const state = this.activeChallenges.get(guildId);
+        if (!state) return;
+
+        if (state.timer) clearTimeout(state.timer);
+
+        if (state.pendingReviews.size > 0) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+
+        const channel = await this.getChannel(state.channelId);
+        if (!channel) {
+            this.activeChallenges.delete(guildId);
+            return;
+        }
+
+        const submissions = [...state.submissions.values()]
+            .sort((a, b) => {
+                if (b.review.score !== a.review.score) return b.review.score - a.review.score;
+                return a.submittedAt - b.submittedAt;
+            });
+
+        const diffEmoji = DIFFICULTY_EMOJI[state.difficulty] || '🟡';
+
+        if (submissions.length === 0) {
+            const embed = new EmbedBuilder()
+                .setTitle('🏁 Code Challenge Kết Thúc!')
+                .setDescription(`Đề bài: **${state.challenge.title}**\n\n😢 Không có ai submit bài.`)
+                .setColor(0x6B7280)
+                .setTimestamp();
+
+            await channel.send({ embeds: [embed] });
+            this.activeChallenges.delete(guildId);
+            return;
+        }
+
+        const medals = ['🥇', '🥈', '🥉'];
+        let rankingText = '';
+
+        for (let i = 0; i < submissions.length; i++) {
+            const sub = submissions[i];
+            const medal = i < 3 ? medals[i] : `**#${i + 1}**`;
+            const correctIcon = sub.review.correct ? '✅' : '❌';
+            const timeTaken = Math.round((sub.submittedAt - state.createdAt) / 1000);
+            const timeStr = timeTaken >= 60
+                ? `${Math.floor(timeTaken / 60)}m${timeTaken % 60}s`
+                : `${timeTaken}s`;
+
+            rankingText += `${medal} ${correctIcon} **${sub.username}** — **${sub.review.score}**/100 (⏱️ ${timeStr})\n`;
+        }
+
+        const resultEmbed = new EmbedBuilder()
+            .setTitle('🏆 Code Challenge — Bảng Xếp Hạng!')
+            .setDescription(`Đề bài: **${state.challenge.title}**\n${diffEmoji} ${state.difficulty} | 🗂️ ${state.topic} | 🌐 Tự do ngôn ngữ\n\n${rankingText}`)
+            .setColor(0xFFD700)
+            .setFooter({ text: `${submissions.length} người tham gia | Dùng /code start để chơi tiếp!` })
+            .setTimestamp();
+
+        await channel.send({ embeds: [resultEmbed] });
+
+        if (submissions.length > 0) {
+            const winner = submissions[0];
+            const detailEmbed = new EmbedBuilder()
+                .setTitle(`📖 Chi tiết — Top 1: ${winner.username}`)
+                .addFields(
+                    { name: '🎯 Correctness', value: winner.review.correctnessDetail.substring(0, 1024) },
+                    { name: '✨ Code Quality', value: winner.review.qualityDetail.substring(0, 1024) },
+                    { name: '⚡ Efficiency', value: winner.review.efficiencyDetail.substring(0, 1024) },
+                    { name: '💡 Gợi ý cải thiện', value: winner.review.suggestion.substring(0, 1024) }
+                )
+                .setColor(0x6366F1);
+
+            if (winner.review.betterSolution && winner.review.betterSolution.length > 0) {
+                const solutionText = winner.review.betterSolution.length > 1000
+                    ? winner.review.betterSolution.substring(0, 997) + '...'
+                    : winner.review.betterSolution;
+                detailEmbed.addFields({
+                    name: '📖 Lời giải tham khảo',
+                    value: `\`\`\`\n${solutionText}\n\`\`\``
+                });
+            }
+
+            await channel.send({ embeds: [detailEmbed] });
+        }
+
+        for (const sub of submissions) {
+            try {
+                await prisma.codeSubmission.create({
+                    data: {
+                        userId: sub.userId,
+                        guildId,
+                        topic: state.topic,
+                        difficulty: state.difficulty,
+                        language: 'any',
+                        challenge: JSON.stringify(state.challenge),
+                        code: sub.code,
+                        score: sub.review.score,
+                        feedback: JSON.stringify(sub.review)
+                    }
+                });
+                await this.updateLeaderboard(sub.userId, guildId, sub.review.score, state.difficulty);
+            } catch (e) {
+                console.error(`Failed to save submission for ${sub.userId}:`, e);
+            }
+        }
+
+        this.activeChallenges.delete(guildId);
     }
 
     public async getLeaderboard(guildId: string): Promise<EmbedBuilder> {
@@ -294,49 +398,61 @@ class CodeChallengeService {
         return embed;
     }
 
-    private async generateChallenge(topic: string, difficulty: string, language: string): Promise<ICodeChallenge> {
-        const prompt = `Bạn là chuyên gia lập trình. Tạo 1 bài code challenge bằng tiếng Việt.
+    private async getChannel(channelId: string): Promise<any> {
+        try {
+            const { bot } = await import('../client');
+            return bot.channels.cache.get(channelId) as any;
+        } catch {
+            return null;
+        }
+    }
+
+    private async generateChallenge(topic: string, difficulty: string): Promise<ICodeChallenge> {
+        const prompt = `Bạn là người ra đề lập trình dạng TƯ DUY NHANH cho nhóm bạn chơi trên Discord.
 
 Chủ đề: ${topic}
-Độ khó: ${difficulty} (Easy = 5-10 dòng code, Medium = 10-25 dòng, Hard = 25-50 dòng)
-Ngôn ngữ: ${language}
+Độ khó: ${difficulty}
 
-Yêu cầu:
-- Đề bài rõ ràng, có mô tả chi tiết
-- Ít nhất 2 ví dụ input/output cụ thể
-- Có ràng buộc (constraints) về kích thước input, time complexity mong muốn
-- Có 1 hint nhẹ (không spoil lời giải)
-- Đề bài phải giải được trong ${language}
+QUY TẮC QUAN TRỌNG:
+- Đề bài phải NGẮN GỌN, dễ hiểu, giải được trong 5-10 phút
+- KHÔNG dùng giải thuật phức tạp (không DP, không đệ quy sâu, không cấu trúc dữ liệu cao cấp)
+- Chỉ cần vòng lặp cơ bản, if/else, xử lý mảng/chuỗi đơn giản
+- Đề bài mang tính THỰC TẾ, vui vẻ, gần gũi đời thường (ví dụ: tính tiền, format tên, kiểm tra mật khẩu, đếm từ, mini game...)
+- Easy = viết 1 function đơn giản (3-8 dòng), Medium = logic phức tạp hơn chút (8-15 dòng), Hard = kết hợp nhiều bước (15-25 dòng)
+- Đề bài KHÔNG ép ngôn ngữ lập trình cụ thể — người chơi được tự do dùng bất kỳ ngôn ngữ nào
+- Mỗi ví dụ phải có input/output RÕ RÀNG, cụ thể
+- Ví dụ input/output dùng dạng tổng quát (không dùng cú pháp riêng của ngôn ngữ nào)
 
 Trả về JSON:
 {
-  "title": "Tên bài (ngắn gọn)",
-  "description": "Mô tả chi tiết bài toán",
+  "title": "Tên bài ngắn gọn, vui vẻ",
+  "description": "Mô tả bài toán (tiếng Việt, 2-4 câu, dễ hiểu)",
   "examples": [
-    { "input": "ví dụ input", "output": "ví dụ output", "explanation": "giải thích ngắn" }
+    { "input": "ví dụ input cụ thể", "output": "output mong đợi", "explanation": "giải thích ngắn" }
   ],
-  "constraints": ["ràng buộc 1", "ràng buộc 2"],
-  "hint": "gợi ý nhẹ"
+  "constraints": ["ràng buộc đơn giản"],
+  "hint": "gợi ý nhẹ nhàng"
 }`;
 
         return await geminiCore.generateJSON<ICodeChallenge>(prompt);
     }
 
-    private async reviewCode(challenge: ICodeChallenge, code: string, language: string): Promise<ICodeReview> {
+    private async reviewCode(challenge: ICodeChallenge, code: string): Promise<ICodeReview> {
         const prompt = `Bạn là senior code reviewer. Chấm bài code sau.
+User được tự do dùng BẤT KỲ ngôn ngữ lập trình nào. Hãy tự nhận diện ngôn ngữ và chấm theo LOGIC, không phạt vì chọn ngôn ngữ.
 
 ĐỀ BÀI:
 ${JSON.stringify(challenge, null, 2)}
 
-CODE CỦA USER (Ngôn ngữ: ${language}):
-\`\`\`${language.toLowerCase()}
+CODE CỦA USER:
+\`\`\`
 ${code}
 \`\`\`
 
 Chấm theo thang 100 điểm:
-- Correctness (60%): Code có giải đúng bài toán không? Có handle edge case không?
-- Code Quality (20%): Clean code, naming, readability
-- Efficiency (20%): Time/Space complexity có tối ưu không?
+- Correctness (70%): Code có giải đúng bài toán không? Logic có chính xác không?
+- Code Quality (15%): Clean code, naming, readability
+- Efficiency (15%): Cách giải có hợp lý không?
 
 Trả về JSON:
 {
@@ -344,9 +460,9 @@ Trả về JSON:
   "score": 0-100,
   "correctnessDetail": "Phân tích chi tiết tính đúng sai (tiếng Việt, 2-3 câu)",
   "qualityDetail": "Nhận xét code quality (tiếng Việt, 1-2 câu)",
-  "efficiencyDetail": "Nhận xét efficiency + complexity (tiếng Việt, 1-2 câu)",
+  "efficiencyDetail": "Nhận xét cách giải (tiếng Việt, 1-2 câu)",
   "suggestion": "Gợi ý cải thiện cụ thể (tiếng Việt, 2-3 câu)",
-  "betterSolution": "Lời giải tham khảo tối ưu (code ngắn, sạch)"
+  "betterSolution": "Lời giải tham khảo tối ưu (dùng pseudocode hoặc JavaScript)"
 }`;
 
         return await geminiCore.generateJSON<ICodeReview>(prompt);

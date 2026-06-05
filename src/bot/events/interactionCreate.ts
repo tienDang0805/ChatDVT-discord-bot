@@ -99,19 +99,21 @@ export async function handleInteraction(interaction: Interaction) {
           }
 
            // --- Code Challenge ---
-           if (customId.startsWith('code_submit_btn_')) {
-               const targetUserId = customId.replace('code_submit_btn_', '');
-               if (interaction.user.id !== targetUserId) {
-                   await interaction.reply({ content: '❌ Đây không phải challenge của bạn!', ephemeral: true });
-                   return;
-               }
+           if (customId === 'code_submit_btn') {
                if (!interaction.guildId) return;
 
-               const active = codeChallengeService.getActiveChallenge(interaction.guildId, interaction.user.id);
-               if (!active) {
-                   await interaction.reply({ content: '❌ Challenge đã hết hạn hoặc không tồn tại.', ephemeral: true });
+               if (!codeChallengeService.isActive(interaction.guildId)) {
+                   await interaction.reply({ content: '❌ Challenge đã kết thúc.', ephemeral: true });
                    return;
                }
+
+               if (codeChallengeService.hasSubmitted(interaction.guildId, interaction.user.id)) {
+                   await interaction.reply({ content: '❌ Bạn đã submit rồi! Chờ kết quả khi hết giờ nhé.', ephemeral: true });
+                   return;
+               }
+
+               const active = codeChallengeService.getActive(interaction.guildId);
+               if (!active) return;
 
                const modal = new ModalBuilder()
                    .setCustomId('code_submit_modal')
@@ -119,9 +121,9 @@ export async function handleInteraction(interaction: Interaction) {
 
                const codeInput = new TextInputBuilder()
                    .setCustomId('code_input')
-                   .setLabel(`Code của bạn (${active.language})`)
+                   .setLabel('Code của bạn (ngôn ngữ tự do)')
                    .setStyle(TextInputStyle.Paragraph)
-                   .setPlaceholder(`Paste code ${active.language} vào đây...`)
+                   .setPlaceholder('Paste code vào đây... (JS, Python, Java, C++, PHP...)')
                    .setRequired(true)
                    .setMaxLength(4000);
 
@@ -131,16 +133,23 @@ export async function handleInteraction(interaction: Interaction) {
                return;
            }
 
-           if (customId.startsWith('code_giveup_btn_')) {
-               const targetUserId = customId.replace('code_giveup_btn_', '');
-               if (interaction.user.id !== targetUserId) {
-                   await interaction.reply({ content: '❌ Đây không phải challenge của bạn!', ephemeral: true });
-                   return;
-               }
+           if (customId === 'code_cancel_btn') {
                if (!interaction.guildId) return;
 
-               const result = codeChallengeService.giveUp(interaction.guildId, interaction.user.id);
-               await interaction.reply({ content: result.message, ephemeral: true });
+               const active = codeChallengeService.getActive(interaction.guildId);
+               if (!active) {
+                   await interaction.reply({ content: '❌ Challenge đã kết thúc.', ephemeral: true });
+                   return;
+               }
+
+               if (active.creatorId !== interaction.user.id) {
+                   await interaction.reply({ content: '❌ Chỉ người tạo challenge mới được kết thúc sớm.', ephemeral: true });
+                   return;
+               }
+
+               await interaction.deferReply();
+               await codeChallengeService.endChallenge(interaction.guildId);
+               await interaction.editReply('🛑 Challenge đã kết thúc sớm!');
                return;
            }
 
@@ -215,14 +224,14 @@ export async function handleInteraction(interaction: Interaction) {
                }
 
                const code = interaction.fields.getTextInputValue('code_input');
-               const result = await codeChallengeService.submitCode(guildId, interaction.user.id, code);
+               const result = await codeChallengeService.submitCode(
+                   guildId,
+                   interaction.user.id,
+                   interaction.user.username,
+                   code
+               );
 
-               if (!result.success) {
-                   await interaction.editReply(result.message || '❌ Lỗi không xác định.');
-                   return;
-               }
-
-               await interaction.editReply({ embeds: result.embed ? [result.embed] : [] });
+               await interaction.editReply(result.message || '❌ Lỗi không xác định.');
            }
 
           if (interaction.customId === 'quiz_setup_modal') {
