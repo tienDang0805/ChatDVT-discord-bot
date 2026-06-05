@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } from 'discord.js';
 import { prisma } from '../../database/prisma';
 import { petService } from '../services/pet';
+import { codeChallengeService } from '../services/code-challenge';
 
 export const data = new SlashCommandBuilder()
   .setName('rank')
@@ -15,6 +16,7 @@ export const data = new SlashCommandBuilder()
               { name: '⚔️ Lực Chiến',    value: 'power' },
               { name: '👑 Tiến Hóa',     value: 'evolution'},
               { name: '🗺️ Viễn Chinh',   value: 'expedition'},
+              { name: '💻 Luyện Code',   value: 'code'},
           )
           .setRequired(false)
   );
@@ -111,6 +113,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   else if (type === 'power') embed = await buildPowerBoard();
   else if (type === 'evolution') embed = await buildEvoBoard();
   else if (type === 'expedition') embed = await buildExpeditionBoard();
+  else if (type === 'code') embed = await codeChallengeService.getLeaderboard(interaction.guildId!);
   else embed = await buildLevelBoard();
 
   embed.setFooter({ text: 'Dùng /rank type:... để xem BXH khác' });

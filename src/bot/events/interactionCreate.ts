@@ -4,6 +4,7 @@ import { quizService } from '../services/quiz';
 import { ctwService } from '../services/ctw';
 import { petService } from '../services/pet';
 import { expeditionService } from '../services/expedition';
+import { codeChallengeService } from '../services/code-challenge';
 import { prisma } from '../../database/prisma';
 
 export async function handleInteraction(interaction: Interaction) {
@@ -97,6 +98,52 @@ export async function handleInteraction(interaction: Interaction) {
                return;
           }
 
+           // --- Code Challenge ---
+           if (customId.startsWith('code_submit_btn_')) {
+               const targetUserId = customId.replace('code_submit_btn_', '');
+               if (interaction.user.id !== targetUserId) {
+                   await interaction.reply({ content: '❌ Đây không phải challenge của bạn!', ephemeral: true });
+                   return;
+               }
+               if (!interaction.guildId) return;
+
+               const active = codeChallengeService.getActiveChallenge(interaction.guildId, interaction.user.id);
+               if (!active) {
+                   await interaction.reply({ content: '❌ Challenge đã hết hạn hoặc không tồn tại.', ephemeral: true });
+                   return;
+               }
+
+               const modal = new ModalBuilder()
+                   .setCustomId('code_submit_modal')
+                   .setTitle(`Submit Code — ${active.challenge.title.substring(0, 30)}`);
+
+               const codeInput = new TextInputBuilder()
+                   .setCustomId('code_input')
+                   .setLabel(`Code của bạn (${active.language})`)
+                   .setStyle(TextInputStyle.Paragraph)
+                   .setPlaceholder(`Paste code ${active.language} vào đây...`)
+                   .setRequired(true)
+                   .setMaxLength(4000);
+
+               const row = new ActionRowBuilder<TextInputBuilder>().addComponents(codeInput);
+               modal.addComponents(row);
+               await interaction.showModal(modal);
+               return;
+           }
+
+           if (customId.startsWith('code_giveup_btn_')) {
+               const targetUserId = customId.replace('code_giveup_btn_', '');
+               if (interaction.user.id !== targetUserId) {
+                   await interaction.reply({ content: '❌ Đây không phải challenge của bạn!', ephemeral: true });
+                   return;
+               }
+               if (!interaction.guildId) return;
+
+               const result = codeChallengeService.giveUp(interaction.guildId, interaction.user.id);
+               await interaction.reply({ content: result.message, ephemeral: true });
+               return;
+           }
+
           // --- Quiz ---
           if (customId.startsWith('quiz_answer_')) {
                await interaction.deferReply({ ephemeral: true });
@@ -159,6 +206,25 @@ export async function handleInteraction(interaction: Interaction) {
 
               await interaction.editReply("✅ **Lưu Thành Công!**\nBạn đã cập nhật tuỳ chỉnh Nhân Cách Bot cho riêng máy chủ này.\nBot sẽ áp dụng ngay vào tin nhắn tiếp theo.");
           }
+           if (interaction.customId === 'code_submit_modal') {
+               await interaction.deferReply();
+               const guildId = interaction.guildId;
+               if (!guildId) {
+                   await interaction.editReply('❌ Lỗi: Không thể xác định Server.');
+                   return;
+               }
+
+               const code = interaction.fields.getTextInputValue('code_input');
+               const result = await codeChallengeService.submitCode(guildId, interaction.user.id, code);
+
+               if (!result.success) {
+                   await interaction.editReply(result.message || '❌ Lỗi không xác định.');
+                   return;
+               }
+
+               await interaction.editReply({ embeds: result.embed ? [result.embed] : [] });
+           }
+
           if (interaction.customId === 'quiz_setup_modal') {
               await interaction.deferReply();
               

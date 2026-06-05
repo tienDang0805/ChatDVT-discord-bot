@@ -196,3 +196,37 @@ model MusicPlaylist {
 
   @@index([secretCode])
 }
+
+model CodeSubmission {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  guildId     String
+  topic       String
+  difficulty  String
+  language    String
+  challenge   String
+  code        String
+  score       Int      @default(0)
+  feedback    String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([guildId])
+  @@index([score])
+}
+
+model CodeLeaderboard {
+  id              Int      @id @default(autoincrement())
+  userId          String
+  guildId         String
+  totalScore      Int      @default(0)
+  totalSolved     Int      @default(0)
+  easySolved      Int      @default(0)
+  mediumSolved    Int      @default(0)
+  hardSolved      Int      @default(0)
+  bestScore       Int      @default(0)
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, guildId])
+  @@index([guildId, totalScore])
+}
