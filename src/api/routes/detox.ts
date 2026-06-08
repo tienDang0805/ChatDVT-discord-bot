@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import axios from 'axios';
 import { geminiService } from '../../bot/services/gemini';
+import { prisma } from '../../database/prisma';
 
 const router = Router();
 
@@ -13,6 +14,50 @@ const PLATFORMS: Record<string, string> = {
   other: '📱 Khác',
 };
 
+router.post('/detox/sync', async (req, res) => {
+  try {
+    const { code, data } = req.body;
+    if (!code || typeof code !== 'string' || code.length < 2 || code.length > 30) {
+      return res.status(400).json({ error: 'Code phải từ 2-30 ký tự' });
+    }
+    if (!data) {
+      return res.status(400).json({ error: 'Missing data' });
+    }
+
+    const normalizedCode = code.trim().toUpperCase();
+
+    await prisma.detoxChallenge.upsert({
+      where: { code: normalizedCode },
+      update: { data: JSON.stringify(data) },
+      create: { code: normalizedCode, data: JSON.stringify(data) },
+    });
+
+    res.json({ success: true, code: normalizedCode });
+  } catch (err: any) {
+    console.error('[Detox Sync] Error:', err.message);
+    res.status(500).json({ error: 'Sync failed' });
+  }
+});
+
+router.get('/detox/load/:code', async (req, res) => {
+  try {
+    const normalizedCode = req.params.code.trim().toUpperCase();
+
+    const record = await prisma.detoxChallenge.findUnique({
+      where: { code: normalizedCode },
+    });
+
+    if (!record) {
+      return res.status(404).json({ error: 'Code không tồn tại' });
+    }
+
+    res.json({ code: normalizedCode, data: JSON.parse(record.data) });
+  } catch (err: any) {
+    console.error('[Detox Load] Error:', err.message);
+    res.status(500).json({ error: 'Load failed' });
+  }
+});
+
 router.post('/detox-summary', async (req, res) => {
   res.status(204).end();
 
@@ -20,7 +65,7 @@ router.post('/detox-summary', async (req, res) => {
   if (!webhookUrl) return;
 
   try {
-    const { day, log, mood, note, score, startDate } = req.body;
+    const { day, log, mood, note, score, startDate, code } = req.body;
     if (!day || !log) return;
 
     const slips: any[] = log.slips || [];
@@ -78,6 +123,10 @@ Trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào vấn đề. T
 
     fields.push({ name: `${mood} Tâm trạng`, value: mood, inline: true });
 
+    if (code) {
+      fields.push({ name: '🔑 Code', value: `\`${code}\``, inline: true });
+    }
+
     if (note) {
       fields.push({ name: '📝 Ghi chú', value: note.substring(0, 200), inline: false });
     }
@@ -105,7 +154,7 @@ Trả lời bằng tiếng Việt, ngắn gọn, đi thẳng vào vấn đề. T
       color,
       fields,
       timestamp: new Date().toISOString(),
-      footer: { text: `Digital Detox · Day ${day}/30 · Score ${score}/10` },
+      footer: { text: `Digital Detox${code ? ` · ${code}` : ''} · Day ${day}/30 · Score ${score}/10` },
     };
 
     await axios.post(webhookUrl, {

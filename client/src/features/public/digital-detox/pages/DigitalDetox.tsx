@@ -24,9 +24,11 @@ interface DayLog {
 interface DetoxData {
   startDate: string;
   logs: Record<number, DayLog>;
+  code?: string;
 }
 
 const STORAGE_KEY = 'digital_detox_30d';
+const CODE_KEY = 'digital_detox_code';
 const AVG_HOURS_PER_DAY = 2.5;
 const HOURLY_VALUE_VND = 50000;
 
@@ -123,6 +125,27 @@ const fmtNum = (n: number) => n.toLocaleString('vi-VN');
 
 type Modal = 'none' | 'morning' | 'slip' | 'evening' | 'reset' | 'dayDetail';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+const syncToServer = async (code: string, data: DetoxData) => {
+  try {
+    await fetch(`${API_BASE}/api/detox/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, data }),
+    });
+  } catch {}
+};
+
+const loadFromServer = async (code: string): Promise<DetoxData | null> => {
+  try {
+    const res = await fetch(`${API_BASE}/api/detox/load/${encodeURIComponent(code)}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.data || null;
+  } catch { return null; }
+};
+
 export const DigitalDetox = () => {
   const [data, setData] = useState<DetoxData>(load);
   const [isStarted, setIsStarted] = useState(!!localStorage.getItem(STORAGE_KEY));
@@ -130,6 +153,11 @@ export const DigitalDetox = () => {
   const [elapsed, setElapsed] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [showStats, setShowStats] = useState(false);
   const [detailDay, setDetailDay] = useState<number>(1);
+  const [detoxCode, setDetoxCode] = useState(localStorage.getItem(CODE_KEY) || '');
+  const [codeInput, setCodeInput] = useState('');
+  const [codeLoading, setCodeLoading] = useState(false);
+  const [codeError, setCodeError] = useState('');
+  const [showLoadCode, setShowLoadCode] = useState(false);
 
   const [slipPlatform, setSlipPlatform] = useState('');
   const [slipMinutes, setSlipMinutes] = useState('5');
@@ -153,7 +181,10 @@ export const DigitalDetox = () => {
   const currentDay = getDayNum(data.startDate);
   const todayLog = data.logs[Math.min(currentDay, 30)];
 
-  const upd = useCallback((d: DetoxData) => { setData(d); save(d); }, []);
+  const upd = useCallback((d: DetoxData) => {
+    setData(d); save(d);
+    if (detoxCode) syncToServer(detoxCode, d);
+  }, [detoxCode]);
 
   const doMorning = useCallback(() => {
     const day = Math.min(currentDay, 30);
@@ -184,14 +215,13 @@ export const DigitalDetox = () => {
 
   const sendDetoxReport = useCallback(async (dayNum: number, dayLog: DayLog, mood: string, note: string, score: number) => {
     try {
-      const apiBase = import.meta.env.VITE_API_URL || '';
-      await fetch(`${apiBase}/api/detox-summary`, {
+      await fetch(`${API_BASE}/api/detox-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day: dayNum, log: dayLog, mood, note, score, startDate: data.startDate }),
+        body: JSON.stringify({ day: dayNum, log: dayLog, mood, note, score, startDate: data.startDate, code: detoxCode }),
       });
     } catch {}
-  }, [data.startDate]);
+  }, [data.startDate, detoxCode]);
 
   const doEvening = useCallback(async () => {
     if (!evMood) return;
@@ -207,8 +237,38 @@ export const DigitalDetox = () => {
     setModal('none');
   }, [data, currentDay, evMood, evNote, evScore, upd, sendDetoxReport]);
 
-  const startChallenge = useCallback(() => { const nd = getDefault(); upd(nd); setIsStarted(true); }, [upd]);
-  const resetChallenge = useCallback(() => { localStorage.removeItem(STORAGE_KEY); setData(getDefault()); setIsStarted(false); setModal('none'); }, []);
+  const startChallenge = useCallback((code: string) => {
+    const normalized = code.trim().toUpperCase();
+    if (!normalized || normalized.length < 2) return;
+    const nd = getDefault();
+    nd.code = normalized;
+    upd(nd);
+    setDetoxCode(normalized);
+    localStorage.setItem(CODE_KEY, normalized);
+    setIsStarted(true);
+  }, [upd]);
+
+  const loadExistingCode = useCallback(async (code: string) => {
+    const normalized = code.trim().toUpperCase();
+    if (!normalized || normalized.length < 2) { setCodeError('Code phải từ 2 ký tự'); return; }
+    setCodeLoading(true); setCodeError('');
+    const serverData = await loadFromServer(normalized);
+    setCodeLoading(false);
+    if (!serverData) { setCodeError('Code không tồn tại. Hãy tạo mới.'); return; }
+    setData(serverData); save(serverData);
+    setDetoxCode(normalized);
+    localStorage.setItem(CODE_KEY, normalized);
+    setIsStarted(true); setShowLoadCode(false);
+  }, []);
+
+  const resetChallenge = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CODE_KEY);
+    setData(getDefault());
+    setDetoxCode('');
+    setIsStarted(false);
+    setModal('none');
+  }, []);
 
   const completedDays = useMemo(() => Object.values(data.logs).filter(l => l.evening).length, [data.logs]);
   const progress = Math.round((completedDays / 30) * 100);
@@ -303,9 +363,55 @@ export const DigitalDetox = () => {
               </div>
             </div>
           </div>
-          <button onClick={startChallenge} className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-violet-500/25">
-            🌱 Bắt Đầu Trồng Cây
-          </button>
+
+          {!showLoadCode ? (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Đặt mã Detox (để sync nhiều thiết bị)</label>
+                <input
+                  value={codeInput}
+                  onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                  placeholder="VD: TIENDANG"
+                  maxLength={30}
+                  className="w-full bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest text-center"
+                />
+              </div>
+              <button
+                onClick={() => codeInput.length >= 2 && startChallenge(codeInput)}
+                disabled={codeInput.length < 2}
+                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                🌱 Bắt Đầu Trồng Cây
+              </button>
+              <button onClick={() => setShowLoadCode(true)} className="w-full text-sm font-bold text-violet-500 hover:text-violet-400 py-2">
+                Đã có mã? Nhập để tiếp tục →
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Nhập mã Detox đã có</label>
+                <input
+                  value={codeInput}
+                  onChange={e => { setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '')); setCodeError(''); }}
+                  placeholder="VD: TIENDANG"
+                  maxLength={30}
+                  className="w-full bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest text-center"
+                />
+                {codeError && <div className="text-xs text-red-500 font-bold mt-1 text-center">{codeError}</div>}
+              </div>
+              <button
+                onClick={() => loadExistingCode(codeInput)}
+                disabled={codeInput.length < 2 || codeLoading}
+                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
+              >
+                {codeLoading ? '⏳ Đang tải...' : '🔗 Tải dữ liệu'}
+              </button>
+              <button onClick={() => { setShowLoadCode(false); setCodeError(''); }} className="w-full text-sm font-bold text-slate-400 hover:text-slate-300 py-2">
+                ← Quay lại tạo mới
+              </button>
+            </div>
+          )}
         </div>
       </PageShell>
     );
@@ -531,7 +637,10 @@ export const DigitalDetox = () => {
 
         <div className="flex justify-between items-center">
           <button onClick={() => setModal('reset')} className="text-xs font-bold text-red-400/60 hover:text-red-500 transition-colors py-2 px-3">🔄 Reset</button>
-          <div className="text-[10px] text-slate-400">Bắt đầu: {new Date(data.startDate).toLocaleDateString('vi-VN')}</div>
+          <div className="text-[10px] text-slate-400 text-right">
+            {detoxCode && <span className="inline-block bg-violet-500/10 border border-violet-500/20 rounded px-1.5 py-0.5 font-bold text-violet-500 mr-2">🔑 {detoxCode}</span>}
+            Bắt đầu: {new Date(data.startDate).toLocaleDateString('vi-VN')}
+          </div>
         </div>
 
         {modal === 'morning' && (

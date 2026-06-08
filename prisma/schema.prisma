@@ -230,3 +230,13 @@ model CodeLeaderboard {
   @@unique([userId, guildId])
   @@index([guildId, totalScore])
 }
+
+model DetoxChallenge {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  data      String   @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
