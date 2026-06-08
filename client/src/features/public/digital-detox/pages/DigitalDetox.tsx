@@ -148,7 +148,7 @@ const loadFromServer = async (code: string): Promise<DetoxData | null> => {
 
 export const DigitalDetox = () => {
   const [data, setData] = useState<DetoxData>(load);
-  const [isStarted, setIsStarted] = useState(!!localStorage.getItem(STORAGE_KEY));
+  const [isStarted, setIsStarted] = useState(!!localStorage.getItem(CODE_KEY));
   const [modal, setModal] = useState<Modal>('none');
   const [elapsed, setElapsed] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [showStats, setShowStats] = useState(false);
@@ -157,7 +157,6 @@ export const DigitalDetox = () => {
   const [codeInput, setCodeInput] = useState('');
   const [codeLoading, setCodeLoading] = useState(false);
   const [codeError, setCodeError] = useState('');
-  const [showLoadCode, setShowLoadCode] = useState(false);
 
   const [slipPlatform, setSlipPlatform] = useState('');
   const [slipMinutes, setSlipMinutes] = useState('5');
@@ -237,29 +236,23 @@ export const DigitalDetox = () => {
     setModal('none');
   }, [data, currentDay, evMood, evNote, evScore, upd, sendDetoxReport]);
 
-  const startChallenge = useCallback((code: string) => {
+  const enterCode = useCallback(async (code: string) => {
     const normalized = code.trim().toUpperCase();
-    if (!normalized || normalized.length < 2) return;
-    const nd = getDefault();
-    nd.code = normalized;
-    upd(nd);
+    if (!normalized || normalized.length < 2) { setCodeError('Mã phải từ 2 ký tự'); return; }
+    setCodeLoading(true); setCodeError('');
+    const serverData = await loadFromServer(normalized);
+    setCodeLoading(false);
+    if (serverData) {
+      setData(serverData); save(serverData);
+    } else {
+      const nd = getDefault();
+      nd.code = normalized;
+      upd(nd);
+    }
     setDetoxCode(normalized);
     localStorage.setItem(CODE_KEY, normalized);
     setIsStarted(true);
   }, [upd]);
-
-  const loadExistingCode = useCallback(async (code: string) => {
-    const normalized = code.trim().toUpperCase();
-    if (!normalized || normalized.length < 2) { setCodeError('Code phải từ 2 ký tự'); return; }
-    setCodeLoading(true); setCodeError('');
-    const serverData = await loadFromServer(normalized);
-    setCodeLoading(false);
-    if (!serverData) { setCodeError('Code không tồn tại. Hãy tạo mới.'); return; }
-    setData(serverData); save(serverData);
-    setDetoxCode(normalized);
-    localStorage.setItem(CODE_KEY, normalized);
-    setIsStarted(true); setShowLoadCode(false);
-  }, []);
 
   const resetChallenge = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
@@ -364,54 +357,26 @@ export const DigitalDetox = () => {
             </div>
           </div>
 
-          {!showLoadCode ? (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Đặt mã Detox (để sync nhiều thiết bị)</label>
-                <input
-                  value={codeInput}
-                  onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-                  placeholder="VD: TIENDANG"
-                  maxLength={30}
-                  className="w-full bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest text-center"
-                />
-              </div>
-              <button
-                onClick={() => codeInput.length >= 2 && startChallenge(codeInput)}
-                disabled={codeInput.length < 2}
-                className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                🌱 Bắt Đầu Trồng Cây
-              </button>
-              <button onClick={() => setShowLoadCode(true)} className="w-full text-sm font-bold text-violet-500 hover:text-violet-400 py-2">
-                Đã có mã? Nhập để tiếp tục →
-              </button>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Nhập mã của bạn (mã mới = tạo challenge, mã cũ = tiếp tục)</label>
+              <input
+                value={codeInput}
+                onChange={e => { setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '')); setCodeError(''); }}
+                placeholder="VD: TIENDANG"
+                maxLength={30}
+                className="w-full bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest text-center"
+              />
+              {codeError && <div className="text-xs text-red-500 font-bold mt-1 text-center">{codeError}</div>}
             </div>
-          ) : (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">Nhập mã Detox đã có</label>
-                <input
-                  value={codeInput}
-                  onChange={e => { setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '')); setCodeError(''); }}
-                  placeholder="VD: TIENDANG"
-                  maxLength={30}
-                  className="w-full bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-violet-500 outline-none uppercase tracking-widest text-center"
-                />
-                {codeError && <div className="text-xs text-red-500 font-bold mt-1 text-center">{codeError}</div>}
-              </div>
-              <button
-                onClick={() => loadExistingCode(codeInput)}
-                disabled={codeInput.length < 2 || codeLoading}
-                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] disabled:opacity-40"
-              >
-                {codeLoading ? '⏳ Đang tải...' : '🔗 Tải dữ liệu'}
-              </button>
-              <button onClick={() => { setShowLoadCode(false); setCodeError(''); }} className="w-full text-sm font-bold text-slate-400 hover:text-slate-300 py-2">
-                ← Quay lại tạo mới
-              </button>
-            </div>
-          )}
+            <button
+              onClick={() => enterCode(codeInput)}
+              disabled={codeInput.length < 2 || codeLoading}
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-black text-lg py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-violet-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {codeLoading ? '⏳ Đang kiểm tra...' : '🌱 Bắt Đầu'}
+            </button>
+          </div>
         </div>
       </PageShell>
     );
@@ -420,36 +385,6 @@ export const DigitalDetox = () => {
   return (
     <PageShell title="Digital Detox" subtitle={`Ngày ${Math.min(currentDay,30)}/30 · ${progress}%`} icon="📵" maxWidth="4xl">
       <div className="fade-up space-y-3 md:space-y-4">
-
-        {!detoxCode && (
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl p-3">
-            <div className="text-xs font-bold text-amber-700 dark:text-amber-300 mb-2">⚠️ Chưa có mã Detox — data chỉ lưu trên thiết bị này!</div>
-            <div className="flex gap-2">
-              <input
-                value={codeInput}
-                onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-                placeholder="VD: TIENDANG"
-                maxLength={30}
-                className="flex-1 bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 outline-none uppercase tracking-wider"
-              />
-              <button
-                onClick={() => {
-                  if (codeInput.length < 2) return;
-                  const normalized = codeInput.trim().toUpperCase();
-                  setDetoxCode(normalized);
-                  localStorage.setItem(CODE_KEY, normalized);
-                  const nd = { ...data, code: normalized };
-                  upd(nd);
-                  setCodeInput('');
-                }}
-                disabled={codeInput.length < 2}
-                className="bg-violet-600 text-white font-bold px-4 py-2 rounded-lg text-xs disabled:opacity-40 active:scale-95"
-              >
-                Lưu
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4">
           <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đã cách ly</div>
