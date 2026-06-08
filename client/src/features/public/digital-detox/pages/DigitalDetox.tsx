@@ -167,6 +167,8 @@ export const DigitalDetox = () => {
   const [evMood, setEvMood] = useState('');
   const [evNote, setEvNote] = useState('');
   const [evScore, setEvScore] = useState(7);
+  const [aiReview, setAiReview] = useState('');
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
 
   useEffect(() => {
     if (!isStarted) return;
@@ -425,11 +427,27 @@ export const DigitalDetox = () => {
               </button>
 
               <button
-                onClick={() => { if (!hasEvening) { setEvMood(''); setEvNote(''); setEvScore(7); setModal('evening'); } }}
-                className={`rounded-xl p-3 text-center transition-all border-2 ${hasEvening ? 'bg-green-50 dark:bg-green-900/20 border-green-400/50 cursor-default' : 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-400/50 hover:border-indigo-500 active:scale-95 cursor-pointer'}`}
+                onClick={async () => {
+                  if (hasEvening) return;
+                  setEvMood(''); setEvNote(''); setEvScore(7); setAiReview('');
+                  setModal('evening');
+                  setAiReviewLoading(true);
+                  try {
+                    const res = await fetch(`${API_BASE}/api/detox/ai-review`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ day: Math.min(currentDay, 30), log: todayLog || { slips: [] }, startDate: data.startDate }),
+                    });
+                    const json = await res.json();
+                    setAiReview(json.review || '');
+                  } catch { setAiReview('Không thể tải phân tích AI.'); }
+                  setAiReviewLoading(false);
+                }}
+                disabled={hasEvening || new Date().getHours() < 22}
+                className={`rounded-xl p-3 text-center transition-all border-2 ${hasEvening ? 'bg-green-50 dark:bg-green-900/20 border-green-400/50 cursor-default' : new Date().getHours() < 22 ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-300/50 cursor-not-allowed opacity-60' : 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-400/50 hover:border-indigo-500 active:scale-95 cursor-pointer'}`}
               >
-                <div className="text-xl mb-1">{hasEvening ? '✅' : '🌙'}</div>
-                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">Review tối</div>
+                <div className="text-xl mb-1">{hasEvening ? '✅' : new Date().getHours() < 22 ? '🔒' : '🌙'}</div>
+                <div className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{new Date().getHours() < 22 && !hasEvening ? `Mở lúc 22h` : 'Review tối'}</div>
                 {hasEvening && <div className="text-[9px] text-green-600 dark:text-green-400 mt-0.5">{todayLog.evening!.mood} {todayLog.evening!.selfScore}/10</div>}
               </button>
             </div>
@@ -762,8 +780,23 @@ export const DigitalDetox = () => {
                 </div>
               )}
 
+              {aiReviewLoading ? (
+                <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800 rounded-xl p-4 mb-4 text-center">
+                  <div className="text-2xl mb-2 animate-pulse">🧠</div>
+                  <div className="text-xs font-bold text-violet-600 dark:text-violet-400">AI đang phân tích ngày của bạn...</div>
+                </div>
+              ) : aiReview ? (
+                <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800 rounded-xl p-3 md:p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🤖</span>
+                    <span className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">AI Phân Tích</span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{aiReview}</div>
+                </div>
+              ) : null}
+
               <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
-                <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Đánh giá cuối ngày</div>
+                <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Bây giờ bạn tự đánh giá</div>
               </div>
 
               <div className="mb-3">
