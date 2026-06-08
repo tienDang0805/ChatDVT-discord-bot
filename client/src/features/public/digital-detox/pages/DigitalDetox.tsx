@@ -419,14 +419,44 @@ export const DigitalDetox = () => {
 
   return (
     <PageShell title="Digital Detox" subtitle={`Ngày ${Math.min(currentDay,30)}/30 · ${progress}%`} icon="📵" maxWidth="4xl">
-      <div className="fade-up space-y-4">
+      <div className="fade-up space-y-3 md:space-y-4">
 
-        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+        {!detoxCode && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-xl p-3">
+            <div className="text-xs font-bold text-amber-700 dark:text-amber-300 mb-2">⚠️ Chưa có mã Detox — data chỉ lưu trên thiết bị này!</div>
+            <div className="flex gap-2">
+              <input
+                value={codeInput}
+                onChange={e => setCodeInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                placeholder="VD: TIENDANG"
+                maxLength={30}
+                className="flex-1 bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold text-slate-800 dark:text-white placeholder-slate-400 outline-none uppercase tracking-wider"
+              />
+              <button
+                onClick={() => {
+                  if (codeInput.length < 2) return;
+                  const normalized = codeInput.trim().toUpperCase();
+                  setDetoxCode(normalized);
+                  localStorage.setItem(CODE_KEY, normalized);
+                  const nd = { ...data, code: normalized };
+                  upd(nd);
+                  setCodeInput('');
+                }}
+                disabled={codeInput.length < 2}
+                className="bg-violet-600 text-white font-bold px-4 py-2 rounded-lg text-xs disabled:opacity-40 active:scale-95"
+              >
+                Lưu
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4">
           <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Đã cách ly</div>
           <div className="flex items-center justify-center gap-3">
             {[{v:elapsed.d,u:'ngày'},{v:elapsed.h,u:'giờ'},{v:elapsed.m,u:'phút'},{v:elapsed.s,u:'giây'}].map(t => (
               <div key={t.u} className="text-center">
-                <div className="text-2xl md:text-3xl font-black text-violet-600 dark:text-violet-400 tabular-nums leading-none">{String(t.v).padStart(2,'0')}</div>
+                <div className="text-xl md:text-3xl font-black text-violet-600 dark:text-violet-400 tabular-nums leading-none">{String(t.v).padStart(2,'0')}</div>
                 <div className="text-[8px] font-bold text-slate-400 uppercase mt-1">{t.u}</div>
               </div>
             ))}
@@ -434,9 +464,9 @@ export const DigitalDetox = () => {
         </div>
 
         {currentDay <= 30 && (
-          <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-            <div className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">📋 Hôm nay — Ngày {Math.min(currentDay, 30)}</div>
-            <div className="grid grid-cols-3 gap-2">
+          <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl p-3 md:p-4">
+            <div className="text-xs font-bold text-slate-500 mb-2 md:mb-3 uppercase tracking-wider">📋 Hôm nay — Ngày {Math.min(currentDay, 30)}</div>
+            <div className="grid grid-cols-3 gap-1.5 md:gap-2">
               <button
                 onClick={() => !hasMorning && setModal('morning')}
                 className={`rounded-xl p-3 text-center transition-all border-2 ${hasMorning ? 'bg-green-50 dark:bg-green-900/20 border-green-400/50 cursor-default' : 'bg-amber-50 dark:bg-amber-900/10 border-amber-400/50 hover:border-amber-500 active:scale-95 cursor-pointer animate-pulse'}`}
@@ -471,27 +501,27 @@ export const DigitalDetox = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 gap-1.5 md:gap-3">
           <StatCard icon="🔥" label="Streak" value={`${streak}`} sub="ngày liên tiếp" accent="text-orange-500" />
           <StatCard icon="⏰" label="Tiết kiệm" value={`${Math.round(hoursSaved)}h`} sub={`≈ ${fmtNum(Math.round(moneySaved))}đ`} accent="text-emerald-500" />
-          <StatCard icon="🚨" label="Tổng slip" value={`${totalSlips}`} sub={`${totalSlipMins} phút`} accent="text-red-500" />
-          <StatCard icon="⭐" label="Tự chấm TB" value={`${avgScore}`} sub="/10 điểm" accent="text-amber-500" />
+          <StatCard icon="🚨" label="Tổng slip" value={`${totalSlips}`} sub={`${totalSlipMins}m`} accent="text-red-500" />
+          <StatCard icon="⭐" label="TB" value={`${avgScore}`} sub="/10" accent="text-amber-500" />
         </div>
 
-        <div className="flex items-center gap-4 bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-4">
-          <div className="text-4xl shrink-0" style={{filter: completedDays === 0 ? 'grayscale(1) opacity(0.3)' : 'none'}}>{treeStage.art}</div>
+        <div className="flex items-center gap-3 md:gap-4 bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-3 md:p-4">
+          <div className="text-3xl md:text-4xl shrink-0" style={{filter: completedDays === 0 ? 'grayscale(1) opacity(0.3)' : 'none'}}>{treeStage.art}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-sm text-slate-700 dark:text-slate-200">{treeStage.label}</span>
-              <span className="text-xs text-slate-400">{completedDays}/30</span>
+              <span className="font-bold text-xs md:text-sm text-slate-700 dark:text-slate-200">{treeStage.label}</span>
+              <span className="text-[10px] md:text-xs text-slate-400">{completedDays}/30</span>
             </div>
-            <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-2 md:h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
               <div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-700" style={{width:`${progress}%`}} />
             </div>
-            {nextMilestone && <div className="text-[10px] text-slate-400 mt-1">Tiếp: {nextMilestone.badge} {nextMilestone.title} (cần {nextMilestone.day - completedDays} ngày)</div>}
+            {nextMilestone && <div className="text-[9px] md:text-[10px] text-slate-400 mt-1">Tiếp: {nextMilestone.badge} {nextMilestone.title} ({nextMilestone.day - completedDays} ngày)</div>}
           </div>
           {unlockedBadges.length > 0 && (
-            <div className="flex gap-1 shrink-0">{unlockedBadges.map(b => <span key={b.day} className="text-lg" title={b.title}>{b.badge}</span>)}</div>
+            <div className="flex gap-0.5 md:gap-1 shrink-0">{unlockedBadges.map(b => <span key={b.day} className="text-base md:text-lg" title={b.title}>{b.badge}</span>)}</div>
           )}
         </div>
 
@@ -507,7 +537,7 @@ export const DigitalDetox = () => {
               {showStats ? 'Ẩn' : '📊 Thống kê'}
             </button>
           </div>
-          <div className="grid grid-cols-6 md:grid-cols-10 gap-2">
+          <div className="grid grid-cols-5 md:grid-cols-10 gap-1.5 md:gap-2">
             {Array.from({length:30},(_,i)=>i+1).map(d => {
               const log = data.logs[d];
               const isToday = d === Math.min(currentDay,30) && currentDay <= 30;
@@ -903,18 +933,18 @@ export const DigitalDetox = () => {
 
 const Overlay = ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4" onClick={onClose}>
-    <div className="bg-white dark:bg-[#1c2333] rounded-t-2xl md:rounded-2xl p-5 w-full max-w-md border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="bg-white dark:bg-[#1c2333] rounded-t-2xl md:rounded-2xl p-4 md:p-5 w-full max-w-md border border-slate-200 dark:border-slate-700 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
       {children}
     </div>
   </div>
 );
 
 const StatCard = ({ icon, label, value, sub, accent }: { icon: string; label: string; value: string; sub: string; accent: string }) => (
-  <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-center">
-    <div className="text-lg mb-0.5">{icon}</div>
-    <div className={`font-black text-xl leading-none ${accent}`}>{value}</div>
-    <div className="text-[9px] font-bold text-slate-400 mt-1">{sub}</div>
-    <div className="text-[8px] text-slate-300 dark:text-slate-600 uppercase tracking-wider mt-0.5">{label}</div>
+  <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-xl p-2 md:p-3 text-center">
+    <div className="text-sm md:text-lg mb-0.5">{icon}</div>
+    <div className={`font-black text-base md:text-xl leading-none ${accent}`}>{value}</div>
+    <div className="text-[8px] md:text-[9px] font-bold text-slate-400 mt-0.5 md:mt-1 truncate">{sub}</div>
+    <div className="text-[7px] md:text-[8px] text-slate-300 dark:text-slate-600 uppercase tracking-wider mt-0.5 truncate">{label}</div>
   </div>
 );
 
