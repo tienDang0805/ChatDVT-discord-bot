@@ -5,6 +5,7 @@ interface Slip {
   platform: string;
   minutes: number;
   reason: string;
+  note: string;
   time: string;
   ts: number;
 }
@@ -133,6 +134,8 @@ export const DigitalDetox = () => {
   const [slipPlatform, setSlipPlatform] = useState('');
   const [slipMinutes, setSlipMinutes] = useState('5');
   const [slipReason, setSlipReason] = useState('');
+  const [slipNote, setSlipNote] = useState('');
+  const [sendingReport, setSendingReport] = useState(false);
 
   const [evMood, setEvMood] = useState('');
   const [evNote, setEvNote] = useState('');
@@ -169,24 +172,40 @@ export const DigitalDetox = () => {
       platform: slipPlatform,
       minutes: parseInt(slipMinutes) || 5,
       reason: slipReason || 'Không rõ',
-      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      note: slipNote,
+      time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       ts: Date.now(),
     };
     nd.logs[day] = { ...existing, slips: [...(existing.slips || []), newSlip] };
     upd(nd);
-    setSlipPlatform(''); setSlipMinutes('5'); setSlipReason('');
+    setSlipPlatform(''); setSlipMinutes('5'); setSlipReason(''); setSlipNote('');
     setModal('none');
-  }, [data, currentDay, slipPlatform, slipMinutes, slipReason, upd]);
+  }, [data, currentDay, slipPlatform, slipMinutes, slipReason, slipNote, upd]);
 
-  const doEvening = useCallback(() => {
+  const sendDetoxReport = useCallback(async (dayNum: number, dayLog: DayLog, mood: string, note: string, score: number) => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || '';
+      await fetch(`${apiBase}/api/detox-summary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ day: dayNum, log: dayLog, mood, note, score, startDate: data.startDate }),
+      });
+    } catch {}
+  }, [data.startDate]);
+
+  const doEvening = useCallback(async () => {
     if (!evMood) return;
+    setSendingReport(true);
     const day = Math.min(currentDay, 30);
     const nd = { ...data, logs: { ...data.logs } };
-    nd.logs[day] = { ...(nd.logs[day] || { slips: [] }), evening: { mood: evMood, note: evNote, selfScore: evScore, ts: Date.now() } };
+    const updatedLog: DayLog = { ...(nd.logs[day] || { slips: [] }), evening: { mood: evMood, note: evNote, selfScore: evScore, ts: Date.now() } };
+    nd.logs[day] = updatedLog;
     upd(nd);
+    await sendDetoxReport(day, updatedLog, evMood, evNote, evScore);
+    setSendingReport(false);
     setEvMood(''); setEvNote(''); setEvScore(7);
     setModal('none');
-  }, [data, currentDay, evMood, evNote, evScore, upd]);
+  }, [data, currentDay, evMood, evNote, evScore, upd, sendDetoxReport]);
 
   const startChallenge = useCallback(() => { const nd = getDefault(); upd(nd); setIsStarted(true); }, [upd]);
   const resetChallenge = useCallback(() => { localStorage.removeItem(STORAGE_KEY); setData(getDefault()); setIsStarted(false); setModal('none'); }, []);
@@ -561,7 +580,7 @@ export const DigitalDetox = () => {
               </div>
             </div>
 
-            <div className="mb-4">
+            <div className="mb-3">
               <label className="text-xs font-bold text-slate-500 mb-1 block">Lý do?</label>
               <div className="flex flex-wrap gap-1.5">
                 {SLIP_REASONS.map(r => (
@@ -571,6 +590,13 @@ export const DigitalDetox = () => {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs font-bold text-slate-500 mb-1 block">Ghi chú tại sao vào? (chi tiết)</label>
+              <textarea value={slipNote} onChange={e => setSlipNote(e.target.value)}
+                placeholder="Đang làm gì? Cảm xúc thế nào? Tại sao không cưỡng lại được?..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 resize-none h-16 focus:ring-2 focus:ring-red-500 outline-none" />
             </div>
 
             <button onClick={doSlip} disabled={!slipPlatform}
@@ -695,9 +721,9 @@ export const DigitalDetox = () => {
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 resize-none h-16 focus:ring-2 focus:ring-violet-500 outline-none" />
               </div>
 
-              <button onClick={doEvening} disabled={!evMood}
+              <button onClick={doEvening} disabled={!evMood || sendingReport}
                 className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-40 active:scale-[0.97]">
-                🌙 Hoàn thành ngày {day}
+                {sendingReport ? '⏳ Đang gửi báo cáo...' : `🌙 Hoàn thành ngày ${day}`}
               </button>
             </Overlay>
           );
@@ -719,14 +745,17 @@ export const DigitalDetox = () => {
                   {(log.slips || []).map((s, i) => {
                     const p = PLATFORMS.find(x => x.id === s.platform);
                     return (
-                      <div key={i} className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 text-xs flex items-center gap-2">
-                        <span>{p?.icon || '📱'}</span>
-                        <span className="font-bold">{p?.name || s.platform}</span>
-                        <span className="text-slate-400">·</span>
-                        <span>{s.minutes}m</span>
-                        <span className="text-slate-400">·</span>
-                        <span className="text-slate-500">{s.reason}</span>
-                        <span className="ml-auto text-slate-400">{s.time}</span>
+                      <div key={i} className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg p-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span>{p?.icon || '📱'}</span>
+                          <span className="font-bold">{p?.name || s.platform}</span>
+                          <span className="text-slate-400">·</span>
+                          <span>{s.minutes}m</span>
+                          <span className="text-slate-400">·</span>
+                          <span className="text-slate-500">{s.reason}</span>
+                          <span className="ml-auto text-slate-400">{s.time}</span>
+                        </div>
+                        {s.note && <div className="text-[10px] text-slate-500 mt-1 pl-6 italic">"{s.note}"</div>}
                       </div>
                     );
                   })}
