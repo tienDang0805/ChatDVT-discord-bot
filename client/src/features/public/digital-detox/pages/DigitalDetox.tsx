@@ -580,46 +580,128 @@ export const DigitalDetox = () => {
           </Overlay>
         )}
 
-        {modal === 'evening' && (
-          <Overlay onClose={() => setModal('none')}>
-            <h3 className="font-black text-lg text-slate-800 dark:text-white mb-1">🌙 Review Tối</h3>
-            <p className="text-slate-500 text-xs mb-4">Tổng kết ngày hôm nay. {todaySlipCount > 0 ? `Có ${todaySlipCount} lần slip.` : 'Không có slip nào 🎉'}</p>
+        {modal === 'evening' && (() => {
+          const day = Math.min(currentDay, 30);
+          const log = todayLog || { slips: [] };
+          const slips = log.slips || [];
+          const slipMins = slips.reduce((a, s) => a + s.minutes, 0);
+          const prevLog = data.logs[day - 1];
+          const prevSlips = prevLog?.slips?.length || 0;
+          const prevMins = (prevLog?.slips || []).reduce((a: number, s: Slip) => a + s.minutes, 0);
+          const slipDiff = todaySlipCount - prevSlips;
+          const minsDiff = slipMins - prevMins;
+          const platBreakdown: Record<string, { count: number; mins: number }> = {};
+          slips.forEach(s => {
+            if (!platBreakdown[s.platform]) platBreakdown[s.platform] = { count: 0, mins: 0 };
+            platBreakdown[s.platform].count++;
+            platBreakdown[s.platform].mins += s.minutes;
+          });
+          const isPerfect = todaySlipCount === 0;
+          const isImproved = day > 1 && prevLog && slipDiff < 0;
 
-            <div className="mb-3">
-              <label className="text-xs font-bold text-slate-500 mb-2 block">Tâm trạng</label>
-              <div className="flex flex-wrap gap-2">
-                {MOODS.map(m => (
-                  <button key={m.emoji} onClick={() => setEvMood(m.emoji)}
-                    className={`flex flex-col items-center p-2 rounded-xl transition-all min-w-[44px] ${evMood === m.emoji ? 'bg-violet-100 dark:bg-violet-900/40 border-2 border-violet-500 scale-110' : 'bg-slate-100 dark:bg-slate-800 border-2 border-transparent'}`}>
-                    <span className="text-lg">{m.emoji}</span>
-                    <span className="text-[8px] font-bold text-slate-400">{m.label}</span>
-                  </button>
-                ))}
+          return (
+            <Overlay onClose={() => setModal('none')}>
+              <h3 className="font-black text-lg text-slate-800 dark:text-white mb-3">🌙 Tổng Kết Ngày {day}</h3>
+
+              <div className={`rounded-xl p-4 mb-4 text-center ${isPerfect ? 'bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-800' : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700'}`}>
+                <div className="text-3xl mb-1">{isPerfect ? '🎉' : todaySlipCount <= 2 ? '👍' : '😬'}</div>
+                <div className={`font-black text-sm ${isPerfect ? 'text-green-600 dark:text-green-400' : 'text-slate-700 dark:text-slate-200'}`}>
+                  {isPerfect ? 'PERFECT — 0 slip!' : `${todaySlipCount} lần slip · ${slipMins} phút`}
+                </div>
+                {!isPerfect && (
+                  <div className="text-[10px] text-slate-500 mt-1">
+                    ≈ {slipMins < 60 ? `${slipMins} phút` : `${(slipMins/60).toFixed(1)} giờ`} lãng phí
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div className="mb-3">
-              <label className="text-xs font-bold text-slate-500 mb-1 block">Tự chấm điểm kỷ luật: <span className="text-violet-500 text-sm">{evScore}/10</span></label>
-              <input type="range" min="1" max="10" value={evScore} onChange={e => setEvScore(Number(e.target.value))}
-                className="w-full accent-violet-500" />
-              <div className="flex justify-between text-[9px] text-slate-400 font-bold">
-                <span>1 😵</span><span>5 😐</span><span>10 🏆</span>
+              {!isPerfect && Object.keys(platBreakdown).length > 0 && (
+                <div className="bg-red-50/50 dark:bg-red-900/10 border border-red-200/50 dark:border-red-800/50 rounded-xl p-3 mb-3">
+                  <div className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-2">Chi tiết slip hôm nay</div>
+                  <div className="space-y-1">
+                    {Object.entries(platBreakdown).map(([pid, s]) => {
+                      const p = PLATFORMS.find(x => x.id === pid);
+                      return (
+                        <div key={pid} className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <span>{p?.icon || '📱'}</span>
+                            <span className="font-bold text-slate-600 dark:text-slate-300">{p?.name || pid}</span>
+                          </span>
+                          <span className="text-red-500 font-bold">{s.count}x · {s.mins}m</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {slips.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-red-200/50 dark:border-red-800/50">
+                      <div className="text-[10px] font-bold text-slate-500 mb-1">Timeline</div>
+                      <div className="flex flex-wrap gap-1">
+                        {slips.map((s, i) => {
+                          const p = PLATFORMS.find(x => x.id === s.platform);
+                          return <span key={i} className="bg-white dark:bg-slate-800 rounded px-1.5 py-0.5 text-[9px] font-bold text-slate-500">{s.time} {p?.icon} {s.minutes}m</span>;
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {day > 1 && prevLog && (
+                <div className={`rounded-xl p-3 mb-4 flex items-center gap-3 ${isImproved ? 'bg-green-50 dark:bg-green-900/10 border border-green-300/50' : slipDiff > 0 ? 'bg-red-50 dark:bg-red-900/10 border border-red-300/50' : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700'}`}>
+                  <span className="text-2xl">{isImproved ? '📈' : slipDiff > 0 ? '📉' : '➡️'}</span>
+                  <div className="text-xs">
+                    <div className="font-bold text-slate-700 dark:text-slate-200">
+                      So với hôm qua: {slipDiff === 0 ? 'Giữ nguyên' : slipDiff < 0 ? `Giảm ${Math.abs(slipDiff)} lần slip` : `Tăng ${slipDiff} lần slip`}
+                    </div>
+                    {minsDiff !== 0 && (
+                      <div className={`text-[10px] ${minsDiff < 0 ? 'text-green-600' : 'text-red-500'}`}>
+                        {minsDiff < 0 ? `Ít hơn ${Math.abs(minsDiff)} phút` : `Nhiều hơn ${minsDiff} phút`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-2">
+                <div className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">Đánh giá cuối ngày</div>
               </div>
-            </div>
 
-            <div className="mb-4">
-              <label className="text-xs font-bold text-slate-500 mb-1 block">Ghi chú</label>
-              <textarea value={evNote} onChange={e => setEvNote(e.target.value)}
-                placeholder="Hôm nay thế nào?..."
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 resize-none h-16 focus:ring-2 focus:ring-violet-500 outline-none" />
-            </div>
+              <div className="mb-3">
+                <label className="text-xs font-bold text-slate-500 mb-2 block">Tâm trạng</label>
+                <div className="flex flex-wrap gap-2">
+                  {MOODS.map(m => (
+                    <button key={m.emoji} onClick={() => setEvMood(m.emoji)}
+                      className={`flex flex-col items-center p-2 rounded-xl transition-all min-w-[44px] ${evMood === m.emoji ? 'bg-violet-100 dark:bg-violet-900/40 border-2 border-violet-500 scale-110' : 'bg-slate-100 dark:bg-slate-800 border-2 border-transparent'}`}>
+                      <span className="text-lg">{m.emoji}</span>
+                      <span className="text-[8px] font-bold text-slate-400">{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <button onClick={doEvening} disabled={!evMood}
-              className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-40 active:scale-[0.97]">
-              🌙 Hoàn thành ngày {Math.min(currentDay, 30)}
-            </button>
-          </Overlay>
-        )}
+              <div className="mb-3">
+                <label className="text-xs font-bold text-slate-500 mb-1 block">Tự chấm điểm kỷ luật: <span className="text-violet-500 text-sm">{evScore}/10</span></label>
+                <input type="range" min="1" max="10" value={evScore} onChange={e => setEvScore(Number(e.target.value))}
+                  className="w-full accent-violet-500" />
+                <div className="flex justify-between text-[9px] text-slate-400 font-bold">
+                  <span>1 😵</span><span>5 😐</span><span>10 🏆</span>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="text-xs font-bold text-slate-500 mb-1 block">Ghi chú</label>
+                <textarea value={evNote} onChange={e => setEvNote(e.target.value)}
+                  placeholder="Hôm nay thế nào? Có gì khác biệt?..."
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 resize-none h-16 focus:ring-2 focus:ring-violet-500 outline-none" />
+              </div>
+
+              <button onClick={doEvening} disabled={!evMood}
+                className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white font-bold py-3 rounded-xl text-sm disabled:opacity-40 active:scale-[0.97]">
+                🌙 Hoàn thành ngày {day}
+              </button>
+            </Overlay>
+          );
+        })()}
 
         {modal === 'dayDetail' && data.logs[detailDay] && (
           <Overlay onClose={() => setModal('none')}>
