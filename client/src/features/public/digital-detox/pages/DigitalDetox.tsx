@@ -169,6 +169,8 @@ export const DigitalDetox = () => {
   const [evScore, setEvScore] = useState(7);
   const [aiReview, setAiReview] = useState('');
   const [aiReviewLoading, setAiReviewLoading] = useState(false);
+  const [dayAiReview, setDayAiReview] = useState('');
+  const [dayAiLoading, setDayAiLoading] = useState(false);
 
   useEffect(() => {
     if (!isStarted) return;
@@ -509,7 +511,7 @@ export const DigitalDetox = () => {
               return (
                 <button
                   key={d}
-                  onClick={() => { if (!isFuture && log) { setDetailDay(d); setModal('dayDetail'); } }}
+                  onClick={() => { if (!isFuture && log) { setDetailDay(d); setDayAiReview(''); setModal('dayDetail'); } }}
                   disabled={isFuture}
                   className={`aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-bold transition-all hover:scale-110 active:scale-95 ${bg} ${isToday ? 'ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-[#161b22]' : ''}`}
                 >
@@ -875,6 +877,41 @@ export const DigitalDetox = () => {
                       {log.evening.note && <div className="text-xs text-slate-500">{log.evening.note}</div>}
                     </div>
                   ) : <div className="text-xs text-slate-400">Chưa review tối</div>}
+
+                  <button
+                    onClick={async () => {
+                      setDayAiReview(''); setDayAiLoading(true);
+                      try {
+                        const res = await fetch(`${API_BASE}/api/detox/ai-review`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            day: detailDay,
+                            log,
+                            startDate: data.startDate,
+                            evening: log.evening || null,
+                          }),
+                        });
+                        const json = await res.json();
+                        setDayAiReview(json.review || 'Không có dữ liệu.');
+                      } catch { setDayAiReview('Lỗi kết nối.'); }
+                      setDayAiLoading(false);
+                    }}
+                    disabled={dayAiLoading}
+                    className="w-full bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-bold py-2.5 rounded-xl text-xs active:scale-[0.97] disabled:opacity-50"
+                  >
+                    {dayAiLoading ? '🧠 Đang phân tích...' : '🤖 AI Chấm Điểm & Phân Tích'}
+                  </button>
+
+                  {dayAiReview && (
+                    <div className="bg-violet-50 dark:bg-violet-900/10 border border-violet-200 dark:border-violet-800 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-base">🤖</span>
+                        <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider">AI Phân Tích Ngày {detailDay}</span>
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{dayAiReview}</div>
+                    </div>
+                  )}
                 </div>
               );
             })()}

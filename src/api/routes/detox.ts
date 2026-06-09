@@ -60,15 +60,19 @@ router.get('/detox/load/:code', async (req, res) => {
 
 router.post('/detox/ai-review', async (req, res) => {
   try {
-    const { day, log, startDate } = req.body;
+    const { day, log, startDate, evening } = req.body;
     if (!day || !log) return res.status(400).json({ error: 'Missing data' });
 
     const slips: any[] = log.slips || [];
     const slipCount = slips.length;
     const totalMins = slips.reduce((a: number, s: any) => a + (s.minutes || 0), 0);
+    const ev = evening || log.evening;
 
     if (slipCount === 0) {
-      return res.json({ review: `🎉 PERFECT DAY!\n\nHôm nay bạn không vào MXH lần nào. Đây là ngày ${day}/30 trong hành trình cách ly — bạn đang chứng minh rằng mình hoàn toàn có thể kiểm soát bản thân.\n\nNão bạn đang dần thích nghi với việc không cần dopamine rẻ từ scroll. Tiếp tục giữ vững nhé! 💪` });
+      const perfectMsg = ev
+        ? `🎉 PERFECT DAY!\n\nNgày ${day}/30: 0 slip. User tự chấm ${ev.selfScore}/10, tâm trạng ${ev.mood}.\n${ev.note ? `Ghi chú: "${ev.note}"\n` : ''}\nBạn đang chứng minh rằng mình hoàn toàn có thể kiểm soát bản thân. Não đang thích nghi với việc không cần dopamine rẻ từ scroll. 💪`
+        : `🎉 PERFECT DAY!\n\nNgày ${day}/30: Không vào MXH lần nào. Tiếp tục giữ vững nhé! 💪`;
+      return res.json({ review: perfectMsg });
     }
 
     const slipDetails = slips.map((s: any) => {
@@ -76,23 +80,27 @@ router.post('/detox/ai-review', async (req, res) => {
       return `- ${s.time} | ${pName} | ${s.minutes}m | Lý do: ${s.reason}${s.note ? ` | Ghi chú: "${s.note}"` : ''}`;
     }).join('\n');
 
-    const prompt = `Bạn là chuyên gia tâm lý hành vi và digital wellness. Phân tích dữ liệu cách ly MXH ngày ${day}/30.
+    const eveningInfo = ev
+      ? `\n- Tâm trạng cuối ngày: ${ev.mood}\n- User tự chấm: ${ev.selfScore}/10\n- Ghi chú cuối ngày: "${ev.note || 'Không có'}"`
+      : '';
+
+    const prompt = `Bạn là chuyên gia tâm lý hành vi và digital wellness. Phân tích chi tiết ngày ${day}/30 cách ly MXH.
 
 DỮ LIỆU:
 - Ngày: ${day}/30 (bắt đầu ${startDate})
 - Tổng slip: ${slipCount} lần, tổng ${totalMins} phút
-- Check-in sáng: ${log.morningTs ? 'Có (' + new Date(log.morningTs).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) + ')' : 'Không'}
+- Check-in sáng: ${log.morningTs ? 'Có (' + new Date(log.morningTs).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }) + ')' : 'Không'}${eveningInfo}
 
 CHI TIẾT TỪNG LẦN SLIP:
 ${slipDetails}
 
-YÊU CẦU (viết tiếng Việt, tối đa 250 từ):
-1. **Tổng quan**: Đánh giá ngắn gọn ngày hôm nay
-2. **Pattern phát hiện**: Thời điểm nào hay slip? App nào dính nhất? Trigger chính?
-3. **Phân tích sâu**: Dựa trên ghi chú của user, nhận diện cảm xúc/hoàn cảnh dẫn đến slip
-4. **Gợi ý điểm tự chấm**: Dựa trên data, gợi ý user nên tự chấm bao nhiêu/10 (chỉ gợi ý, không ép)
-5. **Tips cho ngày mai**: 2 tips cụ thể, thực tế
-6. **Một câu động viên**: Chân thành, không sáo rỗng
+YÊU CẦU (viết tiếng Việt, tối đa 300 từ):
+1. 📊 CHẤM ĐIỂM: Cho điểm ngày này X/10, giải thích rõ tại sao cho điểm đó
+2. 🔍 PATTERN: Thời điểm hay slip, app dính nhất, trigger chính
+3. 🧠 PHÂN TÍCH SÂU: Từ ghi chú user, nhận diện cảm xúc/hoàn cảnh thực sự dẫn đến slip
+${ev ? '4. 📝 SO SÁNH: So sánh điểm AI chấm vs user tự chấm (' + ev.selfScore + '/10), user đánh giá quá cao hay thấp?' : ''}
+5. 💡 TIPS: 2-3 tips cụ thể cho ngày sau
+6. 💪 ĐỘNG VIÊN: 1 câu chân thành
 
 Format: dùng emoji, ngắn gọn, đi thẳng vào vấn đề. KHÔNG dùng markdown heading.`;
 
