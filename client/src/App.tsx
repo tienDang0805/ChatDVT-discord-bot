@@ -61,6 +61,7 @@ const MermaidEditor = lazy(() => import('./features/public/mermaid-editor/pages/
 const MermaidTutorial = lazy(() => import('./features/public/mermaid-editor/pages/MermaidTutorial').then(m => ({ default: m.MermaidTutorial })));
 const Love8dPage = lazy(() => import('./features/public/love-8d/pages/Love8dPage').then(m => ({ default: m.Love8dPage })));
 const DigitalDetox = lazy(() => import('./features/public/digital-detox/pages/DigitalDetox').then(m => ({ default: m.DigitalDetox })));
+const Poe2TradeLink = lazy(() => import('./features/public/poe2-trade-link/pages/Poe2TradeLink').then(m => ({ default: m.Poe2TradeLink })));
 
 const Layout = lazy(() => import('./shared/components/Layout').then(m => ({ default: m.Layout })));
 const Dashboard = lazy(() => import('./features/admin/dashboard/pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -174,6 +175,7 @@ function App() {
             <Route path="/mermaid-tutorial" element={<MermaidTutorial />} />
             <Route path="/love8d" element={<Love8dPage />} />
             <Route path="/digital-detox" element={<DigitalDetox />} />
+            <Route path="/poe2-trade-link/*" element={<Poe2TradeLink />} />
             <Route path="/admin/*" element={
               <RequireAuth>
                 <Layout>

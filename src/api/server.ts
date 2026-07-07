@@ -7,6 +7,7 @@ import axios from 'axios';
 import { prisma } from '../database/prisma';
 import { geminiService } from '../bot/services/gemini';
 import { authenticateToken } from './middleware/auth';
+import poe2TradeRoutes from './routes/poe2-trade';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 
@@ -150,6 +151,9 @@ CHỈ TRẢ VỀ CHÍNH XÁC MẢNG JSON, KHÔNG CÓ DẤU BACKTICK HAY BẤT C�
 
 
 // --- Auth Middleware ---
+
+// Public feature routers must be mounted before the global API auth gate.
+app.use('/api', poe2TradeRoutes);
 
 // Protect API Routes (except public routes)
 app.use((req, res, next) => {

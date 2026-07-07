@@ -28,7 +28,8 @@
     "node-fetch": "^2.7.0",
     "pdf-parse": "^2.4.5",
     "socket.io": "^4.8.3",
-    "web-streams-polyfill": "^3.3.0"
+    "web-streams-polyfill": "^3.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
