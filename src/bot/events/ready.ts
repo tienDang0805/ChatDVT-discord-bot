@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import cron from 'node-cron';
 import { NasaService } from '../services/nasa';
+import { startToxicQuotes } from '../services/toxic-quotes';
 
 let lastAnnouncedWeek = -1;
 
@@ -55,6 +56,8 @@ export async function handleReady(client: Client) {
     client.user?.setActivity('Nần ná na na anh Đặng Văn Tiến ,....', { type: ActivityType.Listening });
 
     setInterval(() => checkFridayAnnouncement(client), 60 * 1000);
+
+    startToxicQuotes(client);
 
     // Lập lịch báo thức Vũ trụ mỗi 8h sáng
     cron.schedule('0 8 * * *', async () => {
