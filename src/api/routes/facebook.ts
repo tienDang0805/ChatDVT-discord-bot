@@ -235,6 +235,8 @@ router.post('/facebook/webhook', (req: Request, res: Response) => {
 
     res.sendStatus(200);
 
+    console.log('[FB Webhook] Incoming payload:', JSON.stringify(body, null, 2));
+
     if (!FB_PAGE_ACCESS_TOKEN) {
         console.error('[FB Webhook] FB_PAGE_ACCESS_TOKEN not configured');
         return;
@@ -292,11 +294,40 @@ router.get('/facebook/debug', async (_req: Request, res: Response) => {
     try {
         const logCount = await prisma.fbChatLog.count();
         checks.totalChatLogs = logCount;
+
+        const recentLogs = await prisma.fbChatLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 5
+        });
+        checks.recentLogs = recentLogs.map(log => ({
+            senderId: log.senderId,
+            message: log.message.substring(0, 100),
+            response: log.response.substring(0, 200),
+            type: log.type,
+            createdAt: log.createdAt
+        }));
     } catch (_) {
         checks.totalChatLogs = 'DB error';
     }
 
     res.json(checks);
+});
+
+router.get('/facebook/test-send/:psid', async (req: Request, res: Response) => {
+    const { psid } = req.params;
+    try {
+        const result = await axios.post(FB_GRAPH_URL, {
+            recipient: { id: psid },
+            message: { text: 'Test từ ChatDVT debug 🔧' },
+            messaging_type: 'RESPONSE'
+        }, {
+            params: { access_token: FB_PAGE_ACCESS_TOKEN },
+            timeout: 10000
+        });
+        res.json({ success: true, data: result.data });
+    } catch (err: any) {
+        res.json({ success: false, error: err.response?.data || err.message });
+    }
 });
 
 export default router;
