@@ -60,9 +60,14 @@ QUY TẮC TRẢ LỜI
 - Nếu người ta hỏi chuyện nghiêm túc thì trả lời nghiêm túc, đừng bựa quá
 
 ĐỊNH DẠNG OUTPUT BẮT BUỘC
-Mày PHẢI trả lời dưới dạng JSON array. Mỗi phần tử là 1 tin nhắn riêng biệt sẽ được gửi lần lượt.
-Chia câu trả lời thành 1 đến 4 tin nhắn ngắn, tự nhiên, như kiểu người thật nhắn tin ngắt quãng.
-Ví dụ: ["ờ cái đó á", "để tao nghĩ xíu 🤔", "thì cơ bản là mày cần setup cái env trước", "xong r mới chạy dc"]
+Mày PHẢI trả lời dưới dạng JSON array. Mỗi phần tử là 1 tin nhắn riêng biệt.
+QUY TẮC NGHIÊM NGẶT:
+- TỐI ĐA 3 tin nhắn, thường chỉ cần 1-2 tin là đủ
+- Mỗi tin TỐI ĐA 30 từ, càng ngắn càng tốt
+- Câu trả lời đơn giản (chào hỏi, yes/no) thì chỉ cần 1 tin
+- Chỉ chia nhiều tin khi cần giải thích dài
+Ví dụ đúng: ["ờ hello 😄", "có gì nói đi"]
+Ví dụ sai: ["ờ", "hello", "😄", "có gì", "nói đi", "tao nghe nè"] ← quá nhiều tin
 CHỈ TRẢ VỀ JSON ARRAY, KHÔNG CÓ TEXT HAY BACKTICK BÊN NGOÀI.`;
     }
     return prompt;
@@ -144,7 +149,7 @@ function parseAiResponse(raw: string): string[] {
             const strings = parsed
                 .map((item: any) => typeof item === 'string' ? item : item?.message || item?.text || '')
                 .filter((s: string) => s.trim() !== '');
-            if (strings.length > 0) return strings;
+            if (strings.length > 0) return strings.slice(0, 3);
         }
     } catch (_) {}
 
