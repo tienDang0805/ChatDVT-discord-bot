@@ -268,4 +268,35 @@ router.post('/facebook/webhook', (req: Request, res: Response) => {
     }
 });
 
+router.get('/facebook/debug', async (_req: Request, res: Response) => {
+    const checks: Record<string, any> = {
+        tokenConfigured: !!FB_PAGE_ACCESS_TOKEN,
+        tokenPreview: FB_PAGE_ACCESS_TOKEN ? `${FB_PAGE_ACCESS_TOKEN.substring(0, 10)}...` : 'MISSING',
+        verifyTokenConfigured: !!FB_VERIFY_TOKEN,
+    };
+
+    if (FB_PAGE_ACCESS_TOKEN) {
+        try {
+            const meRes = await axios.get(`https://graph.facebook.com/v22.0/me`, {
+                params: { access_token: FB_PAGE_ACCESS_TOKEN, fields: 'id,name' },
+                timeout: 5000
+            });
+            checks.pageInfo = meRes.data;
+            checks.tokenValid = true;
+        } catch (err: any) {
+            checks.tokenValid = false;
+            checks.tokenError = err.response?.data?.error?.message || err.message;
+        }
+    }
+
+    try {
+        const logCount = await prisma.fbChatLog.count();
+        checks.totalChatLogs = logCount;
+    } catch (_) {
+        checks.totalChatLogs = 'DB error';
+    }
+
+    res.json(checks);
+});
+
 export default router;
