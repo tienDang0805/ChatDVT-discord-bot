@@ -30,4 +30,8 @@ export const GEMINI_LOGIC_CONFIG = {
   }
 };
 
-export const IMAGEN_MODEL = "imagen-4.0-generate-001"; // User code had "imagen-4.0-generate-001", preserving.
+export const IMAGEN_MODEL = "imagen-4.0-generate-001";
+
+export const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN || '';
+export const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || '';
+export const FB_APP_SECRET = process.env.FB_APP_SECRET || '';

@@ -240,3 +240,15 @@ model DetoxChallenge {
 
   @@index([code])
 }
+
+model FbChatLog {
+  id        Int      @id @default(autoincrement())
+  senderId  String
+  message   String
+  response  String
+  type      String   @default("text")
+  createdAt DateTime @default(now())
+
+  @@index([senderId])
+  @@index([createdAt])
+}
