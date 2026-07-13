@@ -281,7 +281,87 @@ app.post('/api/track', async (req, res) => {
 });
 
 app.get('/privacy', (_req, res) => {
-  res.send(`<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Privacy Policy | ChatDVT</title><style>body{font-family:system-ui;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#f97316}h2{color:#475569;margin-top:2em}</style></head><body><h1>Privacy Policy - ChatDVT</h1><p>Last updated: July 2026</p><h2>1. Information We Collect</h2><p>ChatDVT collects messages you send to our Facebook Page for the purpose of providing AI-powered automated responses. We do not collect personal information beyond what is necessary to respond to your messages.</p><h2>2. How We Use Your Information</h2><p>Messages are processed by our AI system to generate relevant responses. Chat history may be temporarily stored to provide context for conversations.</p><h2>3. Data Retention</h2><p>Chat logs are retained for a limited period to improve response quality and are automatically purged.</p><h2>4. Third-Party Services</h2><p>We use Google Gemini AI to process messages. No personally identifiable information is shared with third parties for marketing purposes.</p><h2>5. Contact</h2><p>For privacy concerns, contact us through our Facebook Page: <a href="https://facebook.com/ChatDVT">Chat DVT</a></p></body></html>`);
+  res.send(`<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy Policy | ChatDVT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;line-height:1.8;min-height:100vh}
+.header{background:linear-gradient(135deg,#f97316 0%,#ea580c 50%,#c2410c 100%);padding:60px 20px;text-align:center}
+.header h1{font-size:2rem;font-weight:700;color:#fff;margin-bottom:8px}
+.header p{color:rgba(255,255,255,0.85);font-size:0.95rem}
+.container{max-width:720px;margin:-40px auto 60px;padding:0 20px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:16px;padding:40px;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.section{margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid #21262d}
+.section:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.section h2{font-size:1.1rem;font-weight:600;color:#f97316;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.section h2 .num{background:#f97316;color:#fff;width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700}
+.section p,.section li{font-size:0.93rem;color:#8b949e;line-height:1.9}
+.section ul{padding-left:20px;margin-top:8px}
+.section li{margin-bottom:4px}
+.section a{color:#f97316;text-decoration:none;border-bottom:1px solid transparent;transition:border-color 0.2s}
+.section a:hover{border-color:#f97316}
+.footer{text-align:center;padding:24px;color:#484f58;font-size:0.8rem}
+.badge{display:inline-block;background:#1f2937;border:1px solid #30363d;padding:4px 12px;border-radius:20px;font-size:0.75rem;color:#8b949e;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="header">
+<h1>🔒 Privacy Policy</h1>
+<p>ChatDVT — AI Messenger Bot by devtiendang.blog</p>
+<span class="badge">Effective: July 2026</span>
+</div>
+<div class="container">
+<div class="card">
+<div class="section">
+<h2><span class="num">1</span> Information We Collect</h2>
+<p>ChatDVT collects the following information when you interact with our Facebook Page:</p>
+<ul>
+<li>Messages you send to our Page via Facebook Messenger</li>
+<li>Images or attachments shared in the conversation</li>
+<li>Your Facebook Page-Scoped User ID (PSID)</li>
+</ul>
+<p>We do <strong style="color:#c9d1d9">not</strong> collect your name, email, phone number, or any other personal information beyond what Facebook provides through the Messenger Platform.</p>
+</div>
+<div class="section">
+<h2><span class="num">2</span> How We Use Your Information</h2>
+<p>Your messages are processed by our AI system (powered by Google Gemini) to generate relevant, helpful responses. Chat history may be temporarily stored to maintain conversation context and improve response quality.</p>
+</div>
+<div class="section">
+<h2><span class="num">3</span> Data Retention & Deletion</h2>
+<p>Chat logs are retained for a limited period to provide conversation context. Data is automatically purged on a rolling basis. You may request deletion of your data at any time by contacting us through our Facebook Page.</p>
+</div>
+<div class="section">
+<h2><span class="num">4</span> Third-Party Services</h2>
+<p>We use the following third-party services:</p>
+<ul>
+<li><strong style="color:#c9d1d9">Facebook Messenger Platform</strong> — for receiving and sending messages</li>
+<li><strong style="color:#c9d1d9">Google Gemini AI</strong> — for processing and generating responses</li>
+</ul>
+<p>No personally identifiable information is sold or shared with third parties for advertising or marketing purposes.</p>
+</div>
+<div class="section">
+<h2><span class="num">5</span> Data Security</h2>
+<p>We implement appropriate technical measures to protect your information, including encrypted connections (HTTPS) and secure server infrastructure.</p>
+</div>
+<div class="section">
+<h2><span class="num">6</span> Contact Us</h2>
+<p>For any privacy-related questions or data deletion requests, please contact us:</p>
+<ul>
+<li>Facebook Page: <a href="https://www.facebook.com/profile.php?id=859132933958046" target="_blank">Chat DVT</a></li>
+<li>Website: <a href="https://devtiendang.blog" target="_blank">devtiendang.blog</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="footer">© 2026 ChatDVT. All rights reserved.</div>
+</body>
+</html>`);
 });
 
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
