@@ -280,7 +280,10 @@ app.post('/api/track', async (req, res) => {
   } catch {}
 });
 
-// Serve Static Frontend (MUST BE LAST)
+app.get('/privacy', (_req, res) => {
+  res.send(`<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Privacy Policy | ChatDVT</title><style>body{font-family:system-ui;max-width:700px;margin:40px auto;padding:0 20px;color:#333;line-height:1.7}h1{color:#f97316}h2{color:#475569;margin-top:2em}</style></head><body><h1>Privacy Policy - ChatDVT</h1><p>Last updated: July 2026</p><h2>1. Information We Collect</h2><p>ChatDVT collects messages you send to our Facebook Page for the purpose of providing AI-powered automated responses. We do not collect personal information beyond what is necessary to respond to your messages.</p><h2>2. How We Use Your Information</h2><p>Messages are processed by our AI system to generate relevant responses. Chat history may be temporarily stored to provide context for conversations.</p><h2>3. Data Retention</h2><p>Chat logs are retained for a limited period to improve response quality and are automatically purged.</p><h2>4. Third-Party Services</h2><p>We use Google Gemini AI to process messages. No personally identifiable information is shared with third parties for marketing purposes.</p><h2>5. Contact</h2><p>For privacy concerns, contact us through our Facebook Page: <a href="https://facebook.com/ChatDVT">Chat DVT</a></p></body></html>`);
+});
+
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
 app.use(express.static(CLIENT_BUILD_PATH));
 
