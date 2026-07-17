@@ -1375,26 +1375,22 @@ Khi user hỏi về khoá học, hãy giới thiệu nhiệt tình và khuyến 
             validHistory.pop();
         }
 
-        const envKey = process.env.GEMINI_API_KEY || '';
-        const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
-        const finalApiKey = geminiApiKey || globalConfig?.geminiApiKey || envKey;
+        const { geminiCore } = await import('../../shared/services/gemini-core');
 
-        const genAI = new GoogleGenerativeAI(finalApiKey);
-        const model = genAI.getGenerativeModel({
-            model: GEMINI_CHAT_CONFIG.modelName,
-            generationConfig: GEMINI_CHAT_CONFIG.generationConfig,
-        });
+        const model = await geminiCore.getModel('global', 'chat', GEMINI_CHAT_CONFIG.generationConfig, geminiApiKey || undefined);
 
         const chatSession = model.startChat({
             history: validHistory,
-            systemInstruction: { role: 'system', parts: [{ text: systemPromptText }] },
+            systemInstruction: systemPromptText,
         });
 
-        const result = await chatSession.sendMessage([{ text: message }]);
+        const { retryWithBackoff } = await import('../../shared/services/gemini-core');
+        const result = await retryWithBackoff(() => chatSession.sendMessage([{ text: message }]));
         const responseText = result.response.text();
         res.json({ response: responseText });
     } catch (err: any) {
-        console.error('[WebChat] Error:', err.message);
+        const errDetail = err.response?.data || err.message || err;
+        console.error('[WebChat] Error:', JSON.stringify(errDetail, null, 2));
         res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!' });
     }
 });
