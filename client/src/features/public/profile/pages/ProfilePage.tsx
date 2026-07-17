@@ -174,6 +174,28 @@ export const ProfilePage = () => {
             ))}
           </div>
         </div>
+
+        <div className="rounded-xl border border-teal-200 dark:border-teal-500/20 bg-teal-50/70 dark:bg-teal-500/10 p-4 mt-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">Physical Design căn bản cho người mới</h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                30 chương từ Floorplan, Powerplan, CTS, Route, Timing đến Signoff. Có biểu đồ Mermaid minh hoạ cho mỗi giai đoạn trong flow PD.
+              </p>
+            </div>
+            <a
+              href="/pd-learning-guide/"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-teal-700"
+            >
+              Mở tài liệu <ExternalLink size={13} />
+            </a>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {['Physical Design', 'VLSI', 'Timing Closure', 'Signoff'].map(tag => (
+              <span key={tag} className="text-[9px] px-2 py-0.5 rounded-full bg-white dark:bg-[#131923] text-teal-600 dark:text-teal-400 font-bold border border-teal-200 dark:border-teal-500/20">{tag}</span>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm mt-5">
