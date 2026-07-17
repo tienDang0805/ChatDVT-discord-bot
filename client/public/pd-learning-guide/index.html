@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Physical Design căn bản cho người mới bắt đầu</title>
+  <title>Physical Design từ Zero — Nền tảng &amp; Thực hành cho người mới</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -151,6 +151,16 @@
       h2 { break-after: avoid; }
       pre { white-space: pre-wrap; }
     }
+
+    .toc-section-label {
+      margin-top: 14px !important;
+      font-weight: 750 !important;
+      color: var(--accent) !important;
+      font-size: 11px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.06em !important;
+      opacity: 0.7;
+    }
   </style>
 
   <style>
@@ -228,44 +238,56 @@
   <div class="layout">
     <aside>
       <p class="toc-title">Mục lục</p>
-      <nav><a class="toc-l1" href="#physical-design-can-ban-cho-nguoi-moi-bat-dau">Physical Design căn bản cho người mới bắt đầu</a>
-<a class="toc-l2" href="#1-physical-design-la-gi">1. Physical Design là gì?</a>
-<a class="toc-l2" href="#2-vi-tri-cua-pd-trong-flow-thiet-ke-chip">2. Vị trí của PD trong flow thiết kế chip</a>
-<a class="toc-l2" href="#3-input-quan-trong-cua-pd">3. Input quan trọng của PD</a>
-<a class="toc-l2" href="#4-flow-pd-can-ban">4. Flow PD căn bản</a>
-<a class="toc-l2" href="#5-init-import-design">5. Init / Import Design</a>
-<a class="toc-l2" href="#6-floorplan">6. Floorplan</a>
-<a class="toc-l2" href="#7-powerplan">7. Powerplan</a>
-<a class="toc-l2" href="#8-placement-place-opt">8. Placement / Place Opt</a>
-<a class="toc-l2" href="#9-cts-clock-tree-synthesis">9. CTS - Clock Tree Synthesis</a>
-<a class="toc-l2" href="#10-post-cts">10. Post CTS</a>
-<a class="toc-l2" href="#11-route">11. Route</a>
-<a class="toc-l2" href="#12-route-opt">12. Route Opt</a>
-<a class="toc-l2" href="#13-chip-finish">13. Chip Finish</a>
-<a class="toc-l2" href="#14-timing-can-ban">14. Timing căn bản</a>
-<a class="toc-l2" href="#15-cach-fix-timing-o-muc-can-ban">15. Cách fix timing ở mức căn bản</a>
-<a class="toc-l2" href="#16-useful-skew">16. Useful Skew</a>
-<a class="toc-l2" href="#17-physical-only-cells">17. Physical-only cells</a>
-<a class="toc-l2" href="#18-low-power-design-can-ban">18. Low Power Design căn bản</a>
-<a class="toc-l2" href="#19-congestion">19. Congestion</a>
-<a class="toc-l2" href="#20-crosstalk">20. Crosstalk</a>
-<a class="toc-l2" href="#21-antenna">21. Antenna</a>
-<a class="toc-l2" href="#22-ir-drop">22. IR Drop</a>
-<a class="toc-l2" href="#23-electromigration">23. Electromigration</a>
-<a class="toc-l2" href="#24-ocv-crpr-va-clock-uncertainty">24. OCV, CRPR và Clock Uncertainty</a>
-<a class="toc-l2" href="#25-signoff-can-ban">25. Signoff căn bản</a>
-<a class="toc-l2" href="#26-calibre-signoff-flow-can-ban">26. Calibre signoff flow căn bản</a>
-<a class="toc-l2" href="#27-mot-so-kinh-nghiem-debug-co-ban">27. Một số kinh nghiệm debug cơ bản</a>
-<a class="toc-l2" href="#28-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">28. Người mới nên học PD theo thứ tự nào?</a>
-<a class="toc-l2" href="#29-cac-ky-nang-can-co-trong-nganh-pd">29. Các kỹ năng cần có trong ngành PD</a>
-<a class="toc-l2" href="#30-tom-tat-cuc-ngan">30. Tóm tắt cực ngắn</a></nav>
+      <nav>
+<a class="toc-l1" href="#pd-learning-guide">PD Learning Guide</a>
+
+<a class="toc-l2 toc-section-label" href="#0-tai-sao-hoc-pd">0. Tại sao học PD?</a>
+<a class="toc-l2" href="#1-semiconductor">1. Semiconductor</a>
+<a class="toc-l2" href="#2-transistor-cmos">2. Transistor &amp; CMOS</a>
+<a class="toc-l2" href="#3-logic-gate">3. Logic Gate</a>
+<a class="toc-l2" href="#4-sequential-logic">4. Sequential Logic</a>
+<a class="toc-l2" href="#5-rtl-synthesis">5. RTL &amp; Synthesis</a>
+<a class="toc-l2" href="#6-standard-cell-library">6. Standard Cell &amp; Library</a>
+<a class="toc-l2" href="#7-khai-niem-vat-ly">7. Khái niệm vật lý</a>
+
+<a class="toc-l2 toc-section-label" href="#9-physical-design-la-gi">9. Physical Design là gì?</a>
+<a class="toc-l2" href="#10-vi-tri-cua-pd-trong-flow-thiet-ke-chip">10. Vị trí của PD trong flow</a>
+<a class="toc-l2" href="#11-input-quan-trong-cua-pd">11. Input quan trọng của PD</a>
+<a class="toc-l2" href="#12-flow-pd-can-ban">12. Flow PD căn bản</a>
+<a class="toc-l2" href="#13-init-import-design">13. Init / Import Design</a>
+<a class="toc-l2" href="#14-floorplan">14. Floorplan</a>
+<a class="toc-l2" href="#15-powerplan">15. Powerplan</a>
+<a class="toc-l2" href="#16-placement-place-opt">16. Placement / Place Opt</a>
+<a class="toc-l2" href="#17-cts-clock-tree-synthesis">17. CTS</a>
+<a class="toc-l2" href="#18-post-cts">18. Post CTS</a>
+<a class="toc-l2" href="#19-route">19. Route</a>
+<a class="toc-l2" href="#20-route-opt">20. Route Opt</a>
+<a class="toc-l2" href="#21-chip-finish">21. Chip Finish</a>
+<a class="toc-l2" href="#22-timing-can-ban">22. Timing căn bản</a>
+<a class="toc-l2" href="#23-cach-fix-timing-o-muc-can-ban">23. Fix timing căn bản</a>
+<a class="toc-l2" href="#24-useful-skew">24. Useful Skew</a>
+<a class="toc-l2" href="#25-physical-only-cells">25. Physical-only cells</a>
+<a class="toc-l2" href="#26-low-power-design-can-ban">26. Low Power Design</a>
+<a class="toc-l2" href="#27-congestion">27. Congestion</a>
+<a class="toc-l2" href="#28-crosstalk">28. Crosstalk</a>
+<a class="toc-l2" href="#29-antenna">29. Antenna</a>
+<a class="toc-l2" href="#30-ir-drop">30. IR Drop</a>
+<a class="toc-l2" href="#31-electromigration">31. Electromigration</a>
+<a class="toc-l2" href="#32-ocv-crpr-va-clock-uncertainty">32. OCV, CRPR &amp; Clock Uncertainty</a>
+<a class="toc-l2" href="#33-signoff-can-ban">33. Signoff căn bản</a>
+<a class="toc-l2" href="#34-calibre-signoff-flow-can-ban">34. Calibre signoff flow</a>
+<a class="toc-l2" href="#35-mot-so-kinh-nghiem-debug-co-ban">35. Debug cơ bản</a>
+<a class="toc-l2" href="#36-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">36. Thứ tự học PD</a>
+<a class="toc-l2" href="#37-cac-ky-nang-can-co-trong-nganh-pd">37. Kỹ năng cần có</a>
+<a class="toc-l2" href="#38-tom-tat-cuc-ngan">38. Tóm tắt</a>
+</nav>
     </aside>
     <main>
       <article>
-<h1 id="physical-design-can-ban-cho-nguoi-moi-bat-dau">Physical Design căn bản cho người mới bắt đầu</h1>
+<h1 id="pd-learning-guide">Physical Design từ Zero</h1>
 
 <div class="visual-note" id="visual-overview">
-  <strong>Bản visual:</strong> tài liệu này đã được bổ sung các biểu đồ Mermaid để người mới có thể nhìn nhanh flow, input/output, timing, CTS, route và signoff.
+  <strong>Bản visual:</strong> tài liệu bao gồm <b>Phần I — Nền tảng</b> (semiconductor → standard cell) và <b>Phần II — Physical Design</b> (flow, timing, signoff). Tất cả đều có biểu đồ minh họa.
 </div>
 <div class="diagram-wide">
   <p class="diagram-title">Big Picture: từ logic đến layout sản xuất</p>
@@ -286,7 +308,489 @@ flowchart LR
   <div class="concept-box"><b>Main checks</b><span>Timing, DRC, LVS, antenna, EM/IR, power domain.</span></div>
   <div class="concept-box"><b>Output</b><span>Database sạch và GDS/OAS cho signoff/tapeout.</span></div>
 </div>
-<h2 id="1-physical-design-la-gi">1. Physical Design là gì?</h2>
+
+<h2 id="0-tai-sao-hoc-pd" style="border-top:none;padding-top:0">0. Tại sao học PD?</h2>
+
+<div class="visual-note">
+<strong>Một câu tóm tắt:</strong> Mọi thiết bị điện tử bạn dùng hàng ngày đều chứa chip. Physical Design là giai đoạn biến bản thiết kế logic thành layout vật lý để sản xuất chip đó.
+</div>
+
+<p>Chip bán dẫn (IC) có mặt ở khắp nơi:</p>
+<ul>
+<li>Điện thoại, laptop, tablet.</li>
+<li>Ô tô, xe máy (ECU, ADAS, infotainment).</li>
+<li>Thiết bị y tế, IoT, server, AI accelerator.</li>
+<li>TV, tủ lạnh, máy giặt thông minh.</li>
+</ul>
+
+<p>Để tạo ra một con chip, cần một quy trình dài:</p>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Từ ý tưởng đến chip thật</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Spec / Kiến trúc"] --> B["RTL coding"]
+  B --> C["Verification"]
+  C --> D["Synthesis"]
+  D --> E["DFT"]
+  E --> F["Physical Design"]
+  F --> G["Signoff"]
+  G --> H["Tapeout"]
+  H --> I["Fabrication"]
+  I --> J["Chip thật"]
+  style F fill:#e7f4f1,stroke:#0f766e,stroke-width:2px
+  </pre>
+</div>
+
+<div class="concept-strip">
+  <div class="concept-box"><b>Frontend</b><span>RTL coding, verification, synthesis — tập trung vào logic và chức năng.</span></div>
+  <div class="concept-box"><b>Backend (PD)</b><span>Floorplan, placement, CTS, routing — tập trung vào layout vật lý.</span></div>
+  <div class="concept-box"><b>Signoff</b><span>Kiểm tra cuối: timing, DRC, LVS, EM, IR drop.</span></div>
+  <div class="concept-box"><b>Foundry</b><span>Nhà máy sản xuất chip: TSMC, Samsung, GlobalFoundries...</span></div>
+</div>
+
+<p>Người làm PD đóng vai trò "kiến trúc sư thi công": nhận bản vẽ logic từ frontend, biến nó thành layout vật lý đảm bảo chip chạy đúng tốc độ, không lỗi, và sản xuất được.</p>
+
+<hr>
+<h2 id="1-semiconductor">1. Semiconductor — Chất bán dẫn cơ bản</h2>
+
+<p>Trước khi hiểu PD, cần hiểu chip được làm từ gì.</p>
+
+<h3>Vật liệu dẫn điện</h3>
+<div class="concept-strip">
+  <div class="concept-box"><b>Conductor</b><span>Dẫn điện tốt. Ví dụ: đồng, vàng, nhôm. Electron tự do di chuyển dễ dàng.</span></div>
+  <div class="concept-box"><b>Insulator</b><span>Không dẫn điện. Ví dụ: nhựa, thủy tinh, cao su.</span></div>
+  <div class="concept-box"><b>Semiconductor</b><span>Ở giữa. Có thể điều khiển dẫn/không dẫn. Silicon là phổ biến nhất.</span></div>
+  <div class="concept-box"><b>Tại sao Silicon?</b><span>Rẻ (từ cát), dồi dào, dễ xử lý, có oxide tự nhiên (SiO₂) rất tốt cho insulation.</span></div>
+</div>
+
+<h3>Doping — Pha tạp</h3>
+<p>Silicon nguyên chất dẫn điện rất kém. Để tạo transistor, ta thêm tạp chất (doping):</p>
+<ul>
+<li><b>N-type</b>: thêm nguyên tố nhóm V (phosphorus) → thừa electron tự do → dẫn điện bằng electron.</li>
+<li><b>P-type</b>: thêm nguyên tố nhóm III (boron) → thiếu electron, tạo "lỗ trống" (hole) → dẫn điện bằng lỗ trống.</li>
+</ul>
+<p>Tiếp giáp P-N (PN junction) là nền tảng của diode và transistor.</p>
+
+<h3>Từ cát đến chip</h3>
+<div class="diagram-wide">
+  <p class="diagram-title">Wafer → Die → Chip</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Cát (SiO₂)"] --> B["Silicon tinh khiết"]
+  B --> C["Ingot (thỏi đơn tinh thể)"]
+  C --> D["Wafer (đĩa mỏng ~300mm)"]
+  D --> E["Fabrication (in mạch)"]
+  E --> F["Die (1 chip trên wafer)"]
+  F --> G["Packaging"]
+  G --> H["IC hoàn chỉnh"]
+  </pre>
+</div>
+
+<ul>
+<li><b>Wafer</b>: đĩa silicon mỏng, đường kính 200mm hoặc 300mm. Một wafer chứa hàng trăm/ngàn die.</li>
+<li><b>Die</b>: một chip đơn lẻ trên wafer, chưa đóng gói.</li>
+<li><b>Package</b>: vỏ bọc bảo vệ die, có chân/bump để hàn lên PCB.</li>
+</ul>
+
+<hr>
+<h2 id="2-transistor-cmos">2. Transistor &amp; CMOS — Công tắc siêu nhỏ</h2>
+
+<p>Transistor là linh kiện cơ bản nhất trong chip. Chip hiện đại chứa hàng tỷ transistor.</p>
+
+<h3>MOSFET là gì?</h3>
+<p>MOSFET (Metal-Oxide-Semiconductor Field-Effect Transistor) hoạt động như một công tắc điều khiển bằng điện áp. Nó có 3 chân chính:</p>
+<ul>
+<li><b>Gate (G)</b>: chân điều khiển — quyết định transistor ON hay OFF.</li>
+<li><b>Source (S)</b>: nguồn dòng điện.</li>
+<li><b>Drain (D)</b>: đích dòng điện.</li>
+</ul>
+
+<h3>NMOS vs PMOS</h3>
+
+<div class="diagram-grid">
+  <div class="diagram-card">
+    <p class="diagram-title">NMOS — ON khi Gate = HIGH</p>
+    <pre class="mermaid">
+flowchart TB
+  G["Gate = 1 (HIGH)"] --> T["NMOS ON"]
+  T --> D["Drain kết nối Source"]
+  D --> GND["Kéo output → 0 (VSS)"]
+    </pre>
+  </div>
+  <div class="diagram-card">
+    <p class="diagram-title">PMOS — ON khi Gate = LOW</p>
+    <pre class="mermaid">
+flowchart TB
+  G["Gate = 0 (LOW)"] --> T["PMOS ON"]
+  T --> D["Drain kết nối Source"]
+  D --> VDD["Kéo output → 1 (VDD)"]
+    </pre>
+  </div>
+</div>
+
+<div class="concept-strip">
+  <div class="concept-box"><b>NMOS</b><span>ON khi Gate=1. Kéo output xuống 0. Truyền "strong 0", "weak 1".</span></div>
+  <div class="concept-box"><b>PMOS</b><span>ON khi Gate=0. Kéo output lên 1. Truyền "strong 1", "weak 0".</span></div>
+  <div class="concept-box"><b>VDD</b><span>Nguồn điện dương (supply voltage). Ví dụ: 0.8V, 1.0V.</span></div>
+  <div class="concept-box"><b>VSS</b><span>Đất (ground). Điện áp tham chiếu = 0V.</span></div>
+</div>
+
+<h3>CMOS — Complementary MOS</h3>
+<p>CMOS kết hợp cả NMOS và PMOS thành cặp bổ sung:</p>
+<ul>
+<li><b>Pull-Up Network (PUN)</b>: gồm PMOS, nối VDD → kéo output lên 1.</li>
+<li><b>Pull-Down Network (PDN)</b>: gồm NMOS, nối VSS → kéo output xuống 0.</li>
+<li>Khi PUN ON thì PDN OFF, và ngược lại → <b>không bao giờ có đường dẫn trực tiếp VDD-VSS</b> (trừ lúc chuyển mạch).</li>
+<li>Kết quả: <b>gần như không tốn static power</b> — đây là lý do CMOS thống trị công nghệ chip.</li>
+</ul>
+
+<h3>Ví dụ: CMOS Inverter (NOT gate)</h3>
+<pre><code class="language-text">         VDD
+          |
+        [PMOS]  ← Gate = Input
+          |
+ Input ──●── Output
+          |
+        [NMOS]  ← Gate = Input
+          |
+         VSS
+
+Input = 0 → PMOS ON, NMOS OFF → Output = 1
+Input = 1 → PMOS OFF, NMOS ON → Output = 0</code></pre>
+
+<p>Đây là cell đơn giản nhất. Mọi logic gate phức tạp hơn (NAND, NOR, XOR...) đều được xây từ tổ hợp NMOS + PMOS.</p>
+
+<hr>
+<h2 id="3-logic-gate">3. Logic Gate — Cổng logic cơ bản</h2>
+
+<p>Logic gate nhận input digital (0/1) và cho output theo quy tắc logic xác định.</p>
+
+<h3>Các cổng cơ bản</h3>
+
+<table>
+<thead><tr><th>Gate</th><th>Ký hiệu</th><th>Chức năng</th><th>Ghi chú</th></tr></thead>
+<tbody>
+<tr><td><b>NOT</b></td><td>Inverter</td><td>Đảo: 0→1, 1→0</td><td>1 PMOS + 1 NMOS</td></tr>
+<tr><td><b>AND</b></td><td>A · B</td><td>Cả 2 input = 1 → output = 1</td><td></td></tr>
+<tr><td><b>OR</b></td><td>A + B</td><td>Ít nhất 1 input = 1 → output = 1</td><td></td></tr>
+<tr><td><b>NAND</b></td><td>(A · B)′</td><td>NOT(AND) — output = 0 chỉ khi cả 2 = 1</td><td>Phổ biến nhất trong CMOS</td></tr>
+<tr><td><b>NOR</b></td><td>(A + B)′</td><td>NOT(OR) — output = 1 chỉ khi cả 2 = 0</td><td>Phổ biến trong CMOS</td></tr>
+<tr><td><b>XOR</b></td><td>A ⊕ B</td><td>Hai input khác nhau → output = 1</td><td>Dùng trong cộng, so sánh</td></tr>
+</tbody>
+</table>
+
+<div class="visual-note">
+<strong>Tại sao NAND/NOR phổ biến hơn AND/OR trong CMOS?</strong> Vì cấu tạo CMOS tự nhiên tạo ra NAND/NOR trước (ít transistor hơn). AND gate thực chất = NAND + Inverter (tốn thêm transistor). Vì vậy trong standard cell library, NAND và NOR là cell "native" hiệu quả nhất.
+</div>
+
+<h3>Combinational Logic</h3>
+<p>Combinational logic là mạch mà output <b>chỉ phụ thuộc input hiện tại</b>, không có bộ nhớ.</p>
+<ul>
+<li><b>Multiplexer (MUX)</b>: chọn 1 trong N input dựa trên tín hiệu select. Rất phổ biến trong design.</li>
+<li><b>Decoder</b>: chuyển N bit input thành 2^N output lines.</li>
+<li><b>Adder</b>: cộng hai số nhị phân.</li>
+</ul>
+
+<h3>Buffer và Inverter</h3>
+<ul>
+<li><b>Buffer</b>: output = input, không đổi logic. Dùng để khuếch đại tín hiệu yếu, cải thiện transition trên dây dài.</li>
+<li><b>Inverter</b>: output = NOT(input). Cũng thường dùng như buffer (2 inverter liên tiếp = buffer).</li>
+</ul>
+
+<hr>
+<h2 id="4-sequential-logic">4. Sequential Logic — Flip-Flop &amp; Latch</h2>
+
+<p>Combinational logic không đủ để xây computer — cần khả năng <b>lưu trữ trạng thái</b> (bộ nhớ). Đó là vai trò của sequential logic.</p>
+
+<h3>Latch vs Flip-Flop</h3>
+
+<div class="diagram-grid">
+  <div class="diagram-card">
+    <p class="diagram-title">Latch — Level-sensitive</p>
+    <pre class="mermaid">
+flowchart TB
+  E["Enable = 1"] --> T["Transparent: D đi qua Q"]
+  E2["Enable = 0"] --> H["Hold: Q giữ giá trị cũ"]
+    </pre>
+  </div>
+  <div class="diagram-card">
+    <p class="diagram-title">Flip-Flop — Edge-triggered</p>
+    <pre class="mermaid">
+flowchart TB
+  CLK["Clock ↑ rising edge"] --> C["Capture: lấy giá trị D → Q"]
+  CLK2["Giữa 2 edges"] --> S["Stable: Q không đổi"]
+    </pre>
+  </div>
+</div>
+
+<ul>
+<li><b>Latch</b>: transparent khi enable = 1 (data đi thẳng qua). Giữ giá trị khi enable = 0.</li>
+<li><b>Flip-Flop (FF)</b>: chỉ capture data tại <b>cạnh clock</b> (rising edge hoặc falling edge). Giữa 2 cạnh, output không đổi dù input thay đổi.</li>
+<li>Trong PD, <b>D Flip-Flop</b> (DFF) là phổ biến nhất: output Q = input D tại rising edge clock.</li>
+</ul>
+
+<h3>Clock Signal</h3>
+<p>Clock là tín hiệu tuần hoàn tạo nhịp cho toàn bộ chip. Mọi FF trong design hoạt động theo nhịp clock này.</p>
+<ul>
+<li><b>Period (T)</b>: thời gian 1 chu kỳ. Ví dụ: clock 1 GHz → T = 1 ns.</li>
+<li><b>Frequency (f)</b>: f = 1/T. Tần số cao = chip nhanh hơn nhưng khó đạt timing hơn.</li>
+<li><b>Rising edge</b>: cạnh lên (0→1) — thời điểm FF capture data.</li>
+</ul>
+
+<h3>Setup Time &amp; Hold Time</h3>
+<p>FF không thể capture data "tức thì". Nó cần data ổn định trong một khoảng thời gian xung quanh clock edge:</p>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Setup &amp; Hold — timing window</p>
+  <pre class="mermaid">
+flowchart LR
+  subgraph WINDOW["Timing window quanh clock edge"]
+    S["Setup time\n(data phải ổn định\nTRƯỚC clock edge)"]
+    EDGE["Clock\nEdge ↑"]
+    H["Hold time\n(data phải giữ\nSAU clock edge)"]
+  end
+  S --> EDGE --> H
+  </pre>
+</div>
+
+<ul>
+<li><b>Setup time (Tsetup)</b>: data phải ổn định ít nhất Tsetup <b>trước</b> clock edge. Nếu data đến muộn → setup violation → FF lấy sai giá trị.</li>
+<li><b>Hold time (Thold)</b>: data phải giữ ổn định ít nhất Thold <b>sau</b> clock edge. Nếu data đổi quá sớm → hold violation → FF lấy sai giá trị.</li>
+</ul>
+
+<div class="visual-note">
+<strong>Ví dụ thực tế:</strong> giống như chụp ảnh. Setup time = đối tượng phải đứng yên TRƯỚC khi bấm nút chụp. Hold time = đối tượng phải giữ yên SAU khi bấm nút chụp (trong lúc ảnh đang ghi). Nếu đối tượng cử động trong khoảng này → ảnh bị nhòe (= FF capture sai data).
+</div>
+
+<h3>Register</h3>
+<p>Register = nhóm nhiều FF gộp lại, lưu trữ N-bit data cùng lúc. Ví dụ: 32-bit register = 32 D Flip-Flop chia sẻ cùng clock.</p>
+
+<hr>
+<h2 id="5-rtl-synthesis">5. Từ ý tưởng đến logic — RTL &amp; Synthesis</h2>
+
+<h3>HDL — Ngôn ngữ mô tả phần cứng</h3>
+<p>Không ai thiết kế chip bằng cách vẽ từng transistor. Thay vào đó, dùng <b>Hardware Description Language</b>:</p>
+<ul>
+<li><b>Verilog / SystemVerilog</b>: phổ biến nhất trong industry.</li>
+<li><b>VHDL</b>: phổ biến ở châu Âu, quốc phòng.</li>
+</ul>
+<p>HDL mô tả phần cứng hoạt động thế nào, không phải chương trình chạy tuần tự như software.</p>
+
+<h3>RTL — Register Transfer Level</h3>
+<p>RTL mô tả data chảy giữa các register qua combinational logic:</p>
+
+<div class="diagram-wide">
+  <p class="diagram-title">RTL concept: data flow giữa registers</p>
+  <pre class="mermaid">
+flowchart LR
+  R1["Register A"] --> COMB["Combinational\nLogic\n(add, shift, mux...)"]
+  COMB --> R2["Register B"]
+  CLK["Clock"] --> R1
+  CLK --> R2
+  </pre>
+</div>
+
+<p>Ví dụ Verilog đơn giản — 8-bit counter:</p>
+<pre><code class="language-verilog">module counter (
+  input  wire       clk,
+  input  wire       rst_n,
+  output reg  [7:0] count
+);
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n)
+      count <= 8'd0;
+    else
+      count <= count + 8'd1;
+  end
+endmodule</code></pre>
+
+<h3>Synthesis — Chuyển RTL thành gate-level netlist</h3>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Synthesis flow</p>
+  <pre class="mermaid">
+flowchart LR
+  A["RTL code\n(Verilog)"] --> S["Synthesis Tool\n(Design Compiler / Genus)"]
+  B["Constraints\n(SDC: clock, delay)"] --> S
+  C["Technology Library\n(.lib)"] --> S
+  S --> D["Gate-level Netlist"]
+  </pre>
+</div>
+
+<ul>
+<li><b>Input</b>: RTL code + timing constraints (SDC) + technology library (.lib).</li>
+<li><b>Output</b>: gate-level netlist — danh sách cell (NAND, NOR, FF, MUX...) và cách chúng nối với nhau.</li>
+<li>Tool synthesis tối ưu cho PPA: Performance (tốc độ), Power (công suất), Area (diện tích).</li>
+</ul>
+
+<h3>Netlist — "Bản vẽ thi công logic"</h3>
+<p>Netlist là file text mô tả:</p>
+<ul>
+<li>Tất cả cell instances (tên, loại cell).</li>
+<li>Tất cả connections (net) giữa các cell.</li>
+<li>Chưa có thông tin vật lý (vị trí, dây) — đó là việc của PD.</li>
+</ul>
+
+<h3>Frontend vs Backend</h3>
+<table>
+<thead><tr><th></th><th>Frontend</th><th>Backend (PD)</th></tr></thead>
+<tbody>
+<tr><td><b>Focus</b></td><td>Logic, chức năng, verification</td><td>Layout vật lý, sản xuất</td></tr>
+<tr><td><b>Input</b></td><td>Spec, architecture</td><td>Gate-level netlist</td></tr>
+<tr><td><b>Output</b></td><td>Netlist đã synthesize</td><td>GDS/OAS (layout file)</td></tr>
+<tr><td><b>Công việc</b></td><td>RTL coding, simulation, synthesis, DFT</td><td>Floorplan, placement, CTS, routing, signoff</td></tr>
+</tbody>
+</table>
+
+<hr>
+<h2 id="6-standard-cell-library">6. Standard Cell &amp; Technology Library</h2>
+
+<p>Standard cell là <b>đơn vị logic nhỏ nhất</b> đã được thiết kế và verify sẵn cho một technology node.</p>
+
+<h3>Standard cell là gì?</h3>
+<ul>
+<li>Mỗi cell thực hiện một chức năng logic: inverter, NAND2, NOR3, D flip-flop, MUX, buffer...</li>
+<li>Cell có chiều cao cố định (cell height) để xếp thành hàng (row).</li>
+<li>Chiều rộng thay đổi tùy loại cell.</li>
+<li>Foundry hoặc IP vendor cung cấp library chứa hàng ngàn cell variants.</li>
+</ul>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Standard cell concept</p>
+  <pre class="mermaid">
+flowchart TB
+  subgraph LIB["Technology Library"]
+    INV["INV_X1\nInverter"]
+    ND2["NAND2_X2\n2-input NAND"]
+    NR3["NOR3_X1\n3-input NOR"]
+    DFF["DFFR_X1\nD Flip-Flop\nwith reset"]
+    BUF["BUF_X4\nBuffer"]
+    MX2["MUX2_X1\n2:1 MUX"]
+  end
+  LIB --> PLACE["Placement\n(xếp vào row trên chip)"]
+  </pre>
+</div>
+
+<h3>Drive Strength</h3>
+<p>Cùng một chức năng logic nhưng có nhiều "sức mạnh" khác nhau:</p>
+<ul>
+<li><b>X1</b>: nhỏ nhất, yếu nhất, tốn ít area.</li>
+<li><b>X2, X4, X8...</b>: lớn hơn, drive mạnh hơn, nhanh hơn, nhưng tốn area và power.</li>
+</ul>
+<p>PD engineer chọn drive strength phù hợp để đạt timing mà không lãng phí area/power.</p>
+
+<h3>Threshold Voltage (Vt) Types</h3>
+<table>
+<thead><tr><th>Loại</th><th>Tốc độ</th><th>Leakage Power</th><th>Khi nào dùng</th></tr></thead>
+<tbody>
+<tr><td><b>LVT</b> (Low Vt)</td><td>Nhanh nhất</td><td>Cao nhất</td><td>Timing critical paths</td></tr>
+<tr><td><b>SVT</b> (Standard Vt)</td><td>Trung bình</td><td>Trung bình</td><td>Mặc định</td></tr>
+<tr><td><b>HVT</b> (High Vt)</td><td>Chậm nhất</td><td>Thấp nhất</td><td>Non-critical paths, tiết kiệm power</td></tr>
+</tbody>
+</table>
+
+<h3>Technology Node</h3>
+<p>Technology node (28nm, 14nm, 7nm, 5nm, 3nm...) chỉ thế hệ công nghệ sản xuất:</p>
+<ul>
+<li>Node nhỏ hơn → transistor nhỏ hơn → nhiều transistor hơn trên cùng diện tích.</li>
+<li>Node nhỏ hơn → nhanh hơn, tiết kiệm power hơn, nhưng khó thiết kế hơn và đắt hơn.</li>
+<li>Mỗi node có standard cell library riêng (không dùng chung).</li>
+</ul>
+
+<h3>Các file quan trọng trong library</h3>
+<table>
+<thead><tr><th>File</th><th>Chứa gì</th><th>Ai dùng</th></tr></thead>
+<tbody>
+<tr><td><code>.lib</code></td><td>Timing arcs, power data, capacitance</td><td>Synthesis, STA, PD</td></tr>
+<tr><td><code>.lef</code></td><td>Kích thước cell, vị trí pin, obstruction</td><td>PD tool (placement, routing)</td></tr>
+<tr><td><code>.gds</code></td><td>Layout chi tiết của cell (polygon level)</td><td>Signoff (DRC/LVS merge)</td></tr>
+</tbody>
+</table>
+
+<hr>
+<h2 id="7-khai-niem-vat-ly">7. Các khái niệm vật lý cần biết trước khi học PD</h2>
+
+<p>PD xử lý layout vật lý, nên cần hiểu một số khái niệm điện-vật lý cơ bản.</p>
+
+<h3>Capacitance (C) — Điện dung</h3>
+<ul>
+<li>Khả năng tích trữ điện tích. Đơn vị: farad (trong chip dùng fF = 10⁻¹⁵ F).</li>
+<li>Mọi dây kim loại, mọi pin input đều có capacitance.</li>
+<li>Capacitance cao → cần nhiều năng lượng hơn để thay đổi trạng thái → <b>chậm hơn</b>.</li>
+</ul>
+
+<h3>Resistance (R) — Điện trở</h3>
+<ul>
+<li>Cản trở dòng điện chảy qua. Đơn vị: ohm (Ω).</li>
+<li>Dây kim loại mỏng/dài → resistance cao → tín hiệu yếu hơn.</li>
+</ul>
+
+<h3>RC Delay — Tại sao dây dài = chậm</h3>
+<pre><code class="language-text">delay ≈ R × C
+
+Dây dài hơn → R tăng, C tăng → delay tăng theo bình phương chiều dài.
+Đây là lý do PD cần đặt cell gần nhau và route ngắn nhất có thể.</code></pre>
+
+<h3>Transition (Slew)</h3>
+<ul>
+<li>Thời gian tín hiệu chuyển từ 0→1 (rise) hoặc 1→0 (fall).</li>
+<li>Transition nhanh = tín hiệu sắc nét, tốt cho timing.</li>
+<li>Transition chậm = tín hiệu "nhão", dễ gây timing violation.</li>
+<li>Dây dài, load lớn → transition chậm → cần insert buffer để cải thiện.</li>
+</ul>
+
+<h3>Fanout</h3>
+<ul>
+<li>Số lượng input mà 1 output phải drive.</li>
+<li>Fanout cao = tổng capacitance lớn = transition chậm = delay tăng.</li>
+<li>Giải pháp: buffer tree (chia nhỏ fanout).</li>
+</ul>
+
+<h3>Parasitic R &amp; C</h3>
+<ul>
+<li>Dây kim loại thật không phải "dây lý tưởng". Nó có R và C "ký sinh" (parasitic).</li>
+<li>Trước routing, tool <b>ước lượng</b> parasitic (dùng wireload model hoặc virtual route).</li>
+<li>Sau routing, tool <b>tính chính xác</b> parasitic từ geometry thật → timing chính xác hơn.</li>
+</ul>
+
+<h3>Metal Layer — Tầng kim loại</h3>
+<div class="diagram-wide">
+  <p class="diagram-title">Cấu trúc layer trên chip (cắt ngang)</p>
+  <pre class="mermaid">
+flowchart TB
+  M10["Metal 10+ (top) — thick, low R\nDùng cho power, clock global"]
+  M10 --> VIA9["Via"]
+  VIA9 --> M5["Metal 5-9 (middle)\nDùng cho signal routing dài"]
+  M5 --> VIA4["Via"]
+  VIA4 --> M1["Metal 1-4 (bottom) — thin, fine pitch\nDùng cho local connections"]
+  M1 --> VIA0["Contact"]
+  VIA0 --> CELL["Transistors / Standard cells"]
+  </pre>
+</div>
+
+<ul>
+<li>Chip có nhiều tầng kim loại chồng lên nhau (7-15+ layers tùy technology).</li>
+<li>Layer thấp (M1, M2): pitch nhỏ, dense → local routing.</li>
+<li>Layer cao (M8, M9...): dày hơn, R thấp hơn → power/clock/long signal.</li>
+</ul>
+
+<h3>Via</h3>
+<ul>
+<li>Via = lỗ xuyên kết nối giữa 2 metal layer liền kề.</li>
+<li>Via có resistance → dùng nhiều via sẽ tốn routing resource.</li>
+<li>Via array (nhiều via song song) giảm resistance tại connection.</li>
+</ul>
+
+<hr>
+
+<div class="visual-note" style="border-left-color:#1f3b44;background:#eef3f7">
+<strong>🎓 Hoàn thành phần Nền tảng.</strong> Bây giờ bạn đã có đủ kiến thức cơ bản (semiconductor, transistor, CMOS, logic gate, flip-flop, RTL, synthesis, standard cell, khái niệm vật lý) để bước vào phần chính: <b>Physical Design</b>. Các chương tiếp theo sẽ đi sâu vào từng bước của PD flow.
+</div>
+
+<hr>
+
+<h2 id="9-physical-design-la-gi">9. Physical Design là gì?</h2>
 <p>Physical Design, thường gọi tắt là PD, là giai đoạn biến một thiết kế logic thành layout vật lý để có thể sản xuất chip.</p>
 <p>Ở các bước trước PD, design chủ yếu tồn tại dưới dạng logic:</p>
 <ul>
@@ -307,7 +811,7 @@ flowchart LR
 <p>Nói đơn giản:</p>
 <pre><code class="language-text">Logic design -&gt; Physical layout -&gt; Manufacturing-ready chip</code></pre>
 <hr>
-<h2 id="2-vi-tri-cua-pd-trong-flow-thiet-ke-chip">2. Vị trí của PD trong flow thiết kế chip</h2>
+<h2 id="10-vi-tri-cua-pd-trong-flow-thiet-ke-chip">10. Vị trí của PD trong flow thiết kế chip</h2>
 <p>Một flow tổng quát:</p>
 <pre><code class="language-text">RTL design
 -&gt; Synthesis
@@ -327,7 +831,7 @@ flowchart LR
 <li>Tapeout: gửi dữ liệu layout cho foundry sản xuất.</li>
 </ul>
 <hr>
-<h2 id="3-input-quan-trong-cua-pd">3. Input quan trọng của PD</h2>
+<h2 id="11-input-quan-trong-cua-pd">11. Input quan trọng của PD</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Input của PD và vai trò từng file</p>
@@ -418,7 +922,7 @@ link_block</code></pre>
 <h3 id="scan-def">Scan DEF</h3>
 <p>Scan DEF chứa thông tin scan chain phục vụ DFT. PD dùng thông tin này để placement/routing scan chain tốt hơn.</p>
 <hr>
-<h2 id="4-flow-pd-can-ban">4. Flow PD căn bản</h2>
+<h2 id="12-flow-pd-can-ban">12. Flow PD căn bản</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Flow PD tổng quát</p>
@@ -448,7 +952,7 @@ flowchart LR
 -&gt; Signoff</code></pre>
 <p>Mỗi bước giải quyết một nhóm vấn đề khác nhau.</p>
 <hr>
-<h2 id="5-init-import-design">5. Init / Import Design</h2>
+<h2 id="13-init-import-design">13. Init / Import Design</h2>
 <p>Đây là bước đọc toàn bộ input vào tool để khởi tạo design.</p>
 <p>Mục tiêu:</p>
 <ul>
@@ -467,7 +971,7 @@ commit_upf
 connect_pg_net -automatic</code></pre>
 <p>Sau Init, design đã có logic và connectivity, nhưng về mặt physical thì cell thường vẫn chồng lên nhau ở gốc tọa độ. Vì vậy cần floorplan.</p>
 <hr>
-<h2 id="6-floorplan">6. Floorplan</h2>
+<h2 id="14-floorplan">14. Floorplan</h2>
 
 <div class="diagram-grid">
   <div class="diagram-card">
@@ -576,7 +1080,7 @@ flowchart TB
 <li>Physical cell đã tạo.</li>
 </ul>
 <hr>
-<h2 id="7-powerplan">7. Powerplan</h2>
+<h2 id="15-powerplan">15. Powerplan</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Power network cơ bản</p>
@@ -616,7 +1120,7 @@ flowchart TB
 <li>Giảm rủi ro EM.</li>
 </ul>
 <hr>
-<h2 id="8-placement-place-opt">8. Placement / Place Opt</h2>
+<h2 id="16-placement-place-opt">16. Placement / Place Opt</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Placement optimization loop</p>
@@ -678,7 +1182,7 @@ flowchart LR
 <li>LVT ratio không vượt spec.</li>
 </ul>
 <hr>
-<h2 id="9-cts-clock-tree-synthesis">9. CTS - Clock Tree Synthesis</h2>
+<h2 id="17-cts-clock-tree-synthesis">17. CTS - Clock Tree Synthesis</h2>
 
 <div class="diagram-grid">
   <div class="diagram-card">
@@ -745,7 +1249,7 @@ flowchart TB
 <p>Một kinh nghiệm estimate:</p>
 <pre><code class="language-text">Nếu clock path khoảng 1000 um thì latency khoảng 1 ns có thể là mức tham khảo.</code></pre>
 <hr>
-<h2 id="10-post-cts">10. Post CTS</h2>
+<h2 id="18-post-cts">18. Post CTS</h2>
 <p>Sau CTS, clock đã propagated, nghĩa là clock có latency và skew thật.</p>
 <p>Vì timing thay đổi so với ideal clock, cần Post CTS để fix timing.</p>
 <p>Mục tiêu:</p>
@@ -768,7 +1272,7 @@ flowchart TB
 <li>LVT ratio không vượt spec.</li>
 </ul>
 <hr>
-<h2 id="11-route">11. Route</h2>
+<h2 id="19-route">19. Route</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Routing stages</p>
@@ -820,7 +1324,7 @@ flowchart LR
 </ul>
 </ul>
 <hr>
-<h2 id="12-route-opt">12. Route Opt</h2>
+<h2 id="20-route-opt">20. Route Opt</h2>
 <p>Sau route, RC thật của wire được tính chính xác hơn. Timing có thể xấu đi vì:</p>
 <ul>
 <li>Wire dài hơn dự kiến.</li>
@@ -838,7 +1342,7 @@ flowchart LR
 <li>Clean các violation còn lại.</li>
 </ul>
 <hr>
-<h2 id="13-chip-finish">13. Chip Finish</h2>
+<h2 id="21-chip-finish">21. Chip Finish</h2>
 <p>Chip finish là bước hoàn thiện layout trước signoff.</p>
 <p>Các việc thường làm:</p>
 <ul>
@@ -851,7 +1355,7 @@ flowchart LR
 <li>Chuẩn bị output GDS/OAS.</li>
 </ul>
 <hr>
-<h2 id="14-timing-can-ban">14. Timing căn bản</h2>
+<h2 id="22-timing-can-ban">22. Timing căn bản</h2>
 
 <div class="diagram-grid">
   <div class="diagram-card">
@@ -920,7 +1424,7 @@ flowchart TB
 <p>Công thức đơn giản:</p>
 <pre><code class="language-text">net_delay = f(Rnet, Cnet + Cpin)</code></pre>
 <hr>
-<h2 id="15-cach-fix-timing-o-muc-can-ban">15. Cách fix timing ở mức căn bản</h2>
+<h2 id="23-cach-fix-timing-o-muc-can-ban">23. Cách fix timing ở mức căn bản</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Timing closure decision map</p>
@@ -981,7 +1485,7 @@ flowchart TB
 </ul>
 <p>Cần cẩn thận vì fix hold có thể làm setup xấu đi.</p>
 <hr>
-<h2 id="16-useful-skew">16. Useful Skew</h2>
+<h2 id="24-useful-skew">24. Useful Skew</h2>
 <p>Useful skew là cố tình tạo skew có lợi cho timing.</p>
 <p>Bình thường CTS cố cân bằng clock. Nhưng trong timing closure, đôi khi ta muốn clock lệch một chút để giúp một số path pass.</p>
 <h3 id="dung-cho-setup">Dùng cho setup</h3>
@@ -1008,7 +1512,7 @@ flowchart TB
 </ul>
 <p>Useful skew thường xử lý ở CTS bằng balance point.</p>
 <hr>
-<h2 id="17-physical-only-cells">17. Physical-only cells</h2>
+<h2 id="25-physical-only-cells">25. Physical-only cells</h2>
 <p>Physical-only cells là các cell không trực tiếp tạo logic function chính, nhưng cần cho layout và reliability.</p>
 <h3 id="end-cap">End cap</h3>
 <p>Đặt ở đầu/cuối row, cạnh block.</p>
@@ -1046,7 +1550,7 @@ flowchart TB
 <li>Giảm dynamic IR drop.</li>
 </ul>
 <hr>
-<h2 id="18-low-power-design-can-ban">18. Low Power Design căn bản</h2>
+<h2 id="26-low-power-design-can-ban">26. Low Power Design căn bản</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Low-power domain interaction</p>
@@ -1087,7 +1591,7 @@ flowchart LR
 <h3 id="retention-cell">Retention cell</h3>
 <p>Retention cell giữ lại state quan trọng khi domain bị power down, để khi bật lại không mất dữ liệu.</p>
 <hr>
-<h2 id="19-congestion">19. Congestion</h2>
+<h2 id="27-congestion">27. Congestion</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Nguồn gây congestion và hướng xử lý</p>
@@ -1123,7 +1627,7 @@ flowchart TB
 <li>Thêm keepout quanh macro/cell có pin density cao.</li>
 </ul>
 <hr>
-<h2 id="20-crosstalk">20. Crosstalk</h2>
+<h2 id="28-crosstalk">28. Crosstalk</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Signal integrity map</p>
@@ -1156,7 +1660,7 @@ flowchart LR
 <li>Tăng drive strength cho victim driver.</li>
 </ul>
 <hr>
-<h2 id="21-antenna">21. Antenna</h2>
+<h2 id="29-antenna">29. Antenna</h2>
 <p>Antenna là lỗi xảy ra trong quá trình sản xuất khi dây kim loại dài tích điện và làm hỏng gate transistor.</p>
 <p>Cách fix:</p>
 <ul>
@@ -1166,7 +1670,7 @@ flowchart LR
 <li>Route lại để giảm chiều dài metal nối gate.</li>
 </ul>
 <hr>
-<h2 id="22-ir-drop">22. IR Drop</h2>
+<h2 id="30-ir-drop">30. IR Drop</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">IR Drop intuition</p>
@@ -1203,7 +1707,7 @@ flowchart LR
 <li>Swap LVT -&gt; HVT nếu timing cho phép.</li>
 </ul>
 <hr>
-<h2 id="23-electromigration">23. Electromigration</h2>
+<h2 id="31-electromigration">31. Electromigration</h2>
 <p>Electromigration, hay EM, là hiện tượng kim loại bị dịch chuyển do mật độ dòng điện cao.</p>
 <p>Hậu quả:</p>
 <ul>
@@ -1219,7 +1723,7 @@ flowchart LR
 <li>Giảm drive strength nếu dòng quá lớn.</li>
 </ul>
 <hr>
-<h2 id="24-ocv-crpr-va-clock-uncertainty">24. OCV, CRPR và Clock Uncertainty</h2>
+<h2 id="32-ocv-crpr-va-clock-uncertainty">32. OCV, CRPR và Clock Uncertainty</h2>
 <h3 id="ocv">OCV</h3>
 <p>OCV là On-Chip Variation.</p>
 <p>Trong sản xuất, các cell và wire không thể giống nhau 100%. Vì vậy delay thật có thể nhanh/chậm khác nhau.</p>
@@ -1244,7 +1748,7 @@ flowchart LR
 <pre><code class="language-text">clock uncertainty = jitter + margin</code></pre>
 <p>Vì sau CTS skew đã được tính thật trong clock tree.</p>
 <hr>
-<h2 id="25-signoff-can-ban">25. Signoff căn bản</h2>
+<h2 id="33-signoff-can-ban">33. Signoff căn bản</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Signoff checks</p>
@@ -1308,7 +1812,7 @@ flowchart TB
 <p>Design For Manufacturability.</p>
 <p>Kiểm tra layout có dễ sản xuất, yield tốt hay không.</p>
 <hr>
-<h2 id="26-calibre-signoff-flow-can-ban">26. Calibre signoff flow căn bản</h2>
+<h2 id="34-calibre-signoff-flow-can-ban">34. Calibre signoff flow căn bản</h2>
 <p>Input thường gặp:</p>
 <ul>
 <li>GDS/OAS.</li>
@@ -1354,7 +1858,7 @@ flowchart TB
 </ul>
 </ul>
 <hr>
-<h2 id="27-mot-so-kinh-nghiem-debug-co-ban">27. Một số kinh nghiệm debug cơ bản</h2>
+<h2 id="35-mot-so-kinh-nghiem-debug-co-ban">35. Một số kinh nghiệm debug cơ bản</h2>
 <h3 id="timing-xau-sau-route-opt">Timing xấu sau Route Opt</h3>
 <p>Nguyên nhân có thể:</p>
 <ul>
@@ -1387,7 +1891,7 @@ flowchart TB
 <li>Cẩn thận kiểm tra hold/setup path liên quan.</li>
 </ul>
 <hr>
-<h2 id="28-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">28. Người mới nên học PD theo thứ tự nào?</h2>
+<h2 id="36-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">36. Người mới nên học PD theo thứ tự nào?</h2>
 
 <div class="diagram-wide">
   <p class="diagram-title">Learning path cho người mới</p>
@@ -1419,7 +1923,7 @@ flowchart LR
 <p class="numbered"><span>11.</span> Học low power: UPF, power domain, isolation, level shifter.</p>
 <p class="numbered"><span>12.</span> Học scripting Tcl/Python để automation.</p>
 <hr>
-<h2 id="29-cac-ky-nang-can-co-trong-nganh-pd">29. Các kỹ năng cần có trong ngành PD</h2>
+<h2 id="37-cac-ky-nang-can-co-trong-nganh-pd">37. Các kỹ năng cần có trong ngành PD</h2>
 <h3 id="kien-thuc-ky-thuat">Kiến thức kỹ thuật</h3>
 <ul>
 <li>Digital logic.</li>
@@ -1454,7 +1958,7 @@ flowchart LR
 <li>Automation flow.</li>
 </ul>
 <hr>
-<h2 id="30-tom-tat-cuc-ngan">30. Tóm tắt cực ngắn</h2>
+<h2 id="38-tom-tat-cuc-ngan">38. Tóm tắt cực ngắn</h2>
 <p>Physical Design là ngành biến netlist logic thành layout vật lý để sản xuất chip.</p>
 <p>Người làm PD cần biết:</p>
 <ul>
