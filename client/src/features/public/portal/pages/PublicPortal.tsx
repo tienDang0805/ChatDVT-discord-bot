@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, Cpu, NotebookPen } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, Cpu, StickyNote } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -524,7 +524,7 @@ export const PublicPortal = () => {
       number: '32',
       title: 'Note Daily',
       description: 'Ghi chú hàng ngày với calendar view, streak counter. Xây dựng thói quen viết mỗi ngày. Dữ liệu lưu local.',
-      icon: NotebookPen,
+      icon: StickyNote,
       href: '/note-daily',
       author: 'Thư Ký Tiến Đặng',
       category: 'utility',
