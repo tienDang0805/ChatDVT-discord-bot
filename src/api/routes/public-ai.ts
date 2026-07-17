@@ -1381,7 +1381,7 @@ Khi user hỏi về khoá học, hãy giới thiệu nhiệt tình và khuyến 
 
         const chatSession = model.startChat({
             history: validHistory,
-            systemInstruction: systemPromptText,
+            systemInstruction: { role: 'user' as const, parts: [{ text: systemPromptText }] },
         });
 
         const { retryWithBackoff } = await import('../../shared/services/gemini-core');
@@ -1391,7 +1391,7 @@ Khi user hỏi về khoá học, hãy giới thiệu nhiệt tình và khuyến 
     } catch (err: any) {
         console.error('[WebChat] FULL ERROR:', err);
         console.error('[WebChat] Stack:', err.stack);
-        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!', _debug: { message: err.message, name: err.name, stack: (err.stack || '').split('\n').slice(0, 5) } });
+        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!' });
     }
 });
 
