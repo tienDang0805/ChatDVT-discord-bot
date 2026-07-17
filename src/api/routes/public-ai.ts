@@ -1389,9 +1389,9 @@ Khi user hỏi về khoá học, hãy giới thiệu nhiệt tình và khuyến 
         const responseText = result.response.text();
         res.json({ response: responseText });
     } catch (err: any) {
-        const errDetail = err.response?.data || err.message || err;
-        console.error('[WebChat] Error:', JSON.stringify(errDetail, null, 2));
-        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!' });
+        console.error('[WebChat] FULL ERROR:', err);
+        console.error('[WebChat] Stack:', err.stack);
+        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!', _debug: { message: err.message, name: err.name, stack: (err.stack || '').split('\n').slice(0, 5) } });
     }
 });
 
