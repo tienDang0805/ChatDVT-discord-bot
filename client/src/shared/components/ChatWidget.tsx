@@ -129,10 +129,13 @@ export const ChatWidget = () => {
     setIsLoading(true);
 
     try {
-      const historyForApi = updatedMessages.slice(-20).map(m => ({
-        role: m.role,
-        content: m.content,
-      }));
+      const historyForApi = updatedMessages
+        .filter(m => !m.id.startsWith('e_'))
+        .slice(-20)
+        .map(m => ({
+          role: m.role,
+          content: m.content,
+        }));
 
       const res = await axios.post('/api/web-chat', {
         message: text,
