@@ -1,0 +1,1506 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Physical Design căn bản cho người mới bắt đầu</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #18202a;
+      --muted: #637083;
+      --line: #d9e0e8;
+      --accent: #0f766e;
+      --accent-soft: #e7f4f1;
+      --code-bg: #111827;
+      --code-ink: #e5edf6;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 28px 20px;
+      border-right: 1px solid var(--line);
+      background: #eef3f7;
+    }
+    .toc-title {
+      margin: 0 0 16px;
+      font-size: 15px;
+      font-weight: 750;
+      color: #223142;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    nav a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 6px;
+      color: #344255;
+      text-decoration: none;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    nav a:hover {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+    main {
+      width: min(100%, 1040px);
+      margin: 0 auto;
+      padding: 44px 28px 80px;
+    }
+    article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 42px min(6vw, 68px);
+      box-shadow: 0 18px 42px rgba(31, 42, 55, 0.08);
+    }
+    h1, h2, h3, h4, h5, h6 {
+      line-height: 1.25;
+      margin: 1.6em 0 0.6em;
+      letter-spacing: 0;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: clamp(30px, 4vw, 46px);
+      color: #0f2d35;
+    }
+    h2 {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 26px;
+      color: #12343b;
+    }
+    h3 { font-size: 20px; color: #263444; }
+    p { margin: 0.8em 0; }
+    ul { margin: 0.5em 0 1em 1.3em; padding: 0; }
+    li { margin: 0.25em 0; }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 28px 0;
+    }
+    code {
+      padding: 0.12em 0.32em;
+      border-radius: 4px;
+      background: #eef2f6;
+      color: #0f4c5c;
+      font-size: 0.92em;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    pre {
+      overflow: auto;
+      padding: 16px 18px;
+      border-radius: 8px;
+      background: var(--code-bg);
+      color: var(--code-ink);
+      line-height: 1.5;
+    }
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 14px;
+    }
+    .numbered span {
+      display: inline-block;
+      min-width: 2ch;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      aside {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      nav {
+        columns: 2;
+        column-gap: 18px;
+      }
+      nav a { break-inside: avoid; }
+      main { padding: 24px 14px 52px; }
+      article { padding: 28px 18px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .layout { display: block; }
+      aside { display: none; }
+      main { width: 100%; padding: 0; }
+      article { border: 0; box-shadow: none; padding: 0; }
+      a { color: inherit; text-decoration: none; }
+      h2 { break-after: avoid; }
+      pre { white-space: pre-wrap; }
+    }
+  </style>
+
+  <style>
+    .visual-note {
+      margin: 18px 0 28px;
+      padding: 16px 18px;
+      border: 1px solid #b9d9d3;
+      border-left: 5px solid var(--accent);
+      border-radius: 8px;
+      background: #f0faf8;
+      color: #244047;
+    }
+    .visual-note strong { color: #0f4f48; }
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 22px 0 34px;
+    }
+    .diagram-card, .diagram-wide {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      overflow: hidden;
+    }
+    .diagram-wide { margin: 22px 0 34px; }
+    .diagram-title {
+      margin: 0;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #edf4f3;
+      color: #1f3b44;
+      font-weight: 750;
+      font-size: 15px;
+    }
+    .mermaid {
+      margin: 0;
+      padding: 18px;
+      background: #ffffff;
+      text-align: center;
+      overflow-x: auto;
+    }
+    .concept-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 30px;
+    }
+    .concept-box {
+      min-height: 96px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+    .concept-box b {
+      display: block;
+      margin-bottom: 6px;
+      color: #0f4f48;
+    }
+    .concept-box span {
+      display: block;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    @media (max-width: 900px) {
+      .diagram-grid, .concept-strip { grid-template-columns: 1fr; }
+      .mermaid { padding: 12px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <p class="toc-title">Mục lục</p>
+      <nav><a class="toc-l1" href="#physical-design-can-ban-cho-nguoi-moi-bat-dau">Physical Design căn bản cho người mới bắt đầu</a>
+<a class="toc-l2" href="#1-physical-design-la-gi">1. Physical Design là gì?</a>
+<a class="toc-l2" href="#2-vi-tri-cua-pd-trong-flow-thiet-ke-chip">2. Vị trí của PD trong flow thiết kế chip</a>
+<a class="toc-l2" href="#3-input-quan-trong-cua-pd">3. Input quan trọng của PD</a>
+<a class="toc-l2" href="#4-flow-pd-can-ban">4. Flow PD căn bản</a>
+<a class="toc-l2" href="#5-init-import-design">5. Init / Import Design</a>
+<a class="toc-l2" href="#6-floorplan">6. Floorplan</a>
+<a class="toc-l2" href="#7-powerplan">7. Powerplan</a>
+<a class="toc-l2" href="#8-placement-place-opt">8. Placement / Place Opt</a>
+<a class="toc-l2" href="#9-cts-clock-tree-synthesis">9. CTS - Clock Tree Synthesis</a>
+<a class="toc-l2" href="#10-post-cts">10. Post CTS</a>
+<a class="toc-l2" href="#11-route">11. Route</a>
+<a class="toc-l2" href="#12-route-opt">12. Route Opt</a>
+<a class="toc-l2" href="#13-chip-finish">13. Chip Finish</a>
+<a class="toc-l2" href="#14-timing-can-ban">14. Timing căn bản</a>
+<a class="toc-l2" href="#15-cach-fix-timing-o-muc-can-ban">15. Cách fix timing ở mức căn bản</a>
+<a class="toc-l2" href="#16-useful-skew">16. Useful Skew</a>
+<a class="toc-l2" href="#17-physical-only-cells">17. Physical-only cells</a>
+<a class="toc-l2" href="#18-low-power-design-can-ban">18. Low Power Design căn bản</a>
+<a class="toc-l2" href="#19-congestion">19. Congestion</a>
+<a class="toc-l2" href="#20-crosstalk">20. Crosstalk</a>
+<a class="toc-l2" href="#21-antenna">21. Antenna</a>
+<a class="toc-l2" href="#22-ir-drop">22. IR Drop</a>
+<a class="toc-l2" href="#23-electromigration">23. Electromigration</a>
+<a class="toc-l2" href="#24-ocv-crpr-va-clock-uncertainty">24. OCV, CRPR và Clock Uncertainty</a>
+<a class="toc-l2" href="#25-signoff-can-ban">25. Signoff căn bản</a>
+<a class="toc-l2" href="#26-calibre-signoff-flow-can-ban">26. Calibre signoff flow căn bản</a>
+<a class="toc-l2" href="#27-mot-so-kinh-nghiem-debug-co-ban">27. Một số kinh nghiệm debug cơ bản</a>
+<a class="toc-l2" href="#28-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">28. Người mới nên học PD theo thứ tự nào?</a>
+<a class="toc-l2" href="#29-cac-ky-nang-can-co-trong-nganh-pd">29. Các kỹ năng cần có trong ngành PD</a>
+<a class="toc-l2" href="#30-tom-tat-cuc-ngan">30. Tóm tắt cực ngắn</a></nav>
+    </aside>
+    <main>
+      <article>
+<h1 id="physical-design-can-ban-cho-nguoi-moi-bat-dau">Physical Design căn bản cho người mới bắt đầu</h1>
+
+<div class="visual-note" id="visual-overview">
+  <strong>Bản visual:</strong> tài liệu này đã được bổ sung các biểu đồ Mermaid để người mới có thể nhìn nhanh flow, input/output, timing, CTS, route và signoff.
+</div>
+<div class="diagram-wide">
+  <p class="diagram-title">Big Picture: từ logic đến layout sản xuất</p>
+  <pre class="mermaid">
+flowchart LR
+  A["RTL / Verilog"] --> B["Synthesis"]
+  B --> C["Gate-level netlist"]
+  C --> D["Physical Design"]
+  D --> E["Signoff"]
+  E --> F["GDS / OAS"]
+  F --> G["Tapeout"]
+  G --> H["Fabrication"]
+  </pre>
+</div>
+<div class="concept-strip">
+  <div class="concept-box"><b>Goal</b><span>Biến netlist logic thành layout vật lý có thể sản xuất.</span></div>
+  <div class="concept-box"><b>Main jobs</b><span>Đặt cell, cấp nguồn, tạo clock tree, đi dây, fix timing.</span></div>
+  <div class="concept-box"><b>Main checks</b><span>Timing, DRC, LVS, antenna, EM/IR, power domain.</span></div>
+  <div class="concept-box"><b>Output</b><span>Database sạch và GDS/OAS cho signoff/tapeout.</span></div>
+</div>
+<h2 id="1-physical-design-la-gi">1. Physical Design là gì?</h2>
+<p>Physical Design, thường gọi tắt là PD, là giai đoạn biến một thiết kế logic thành layout vật lý để có thể sản xuất chip.</p>
+<p>Ở các bước trước PD, design chủ yếu tồn tại dưới dạng logic:</p>
+<ul>
+<li>Có các cổng logic, flip-flop, macro, RAM, IP.</li>
+<li>Có netlist mô tả cell nào nối với cell nào.</li>
+<li>Có constraint timing mô tả clock, input/output delay, timing exception...</li>
+</ul>
+<p>Nhiệm vụ của PD là:</p>
+<ul>
+<li>Đặt các cell vào vị trí thật trên chip.</li>
+<li>Tạo hệ thống cấp nguồn.</li>
+<li>Tạo clock tree.</li>
+<li>Đi dây kết nối giữa các cell.</li>
+<li>Đảm bảo timing đạt yêu cầu.</li>
+<li>Đảm bảo layout không vi phạm rule sản xuất.</li>
+<li>Xuất GDS/OAS để đưa sang signoff và tapeout.</li>
+</ul>
+<p>Nói đơn giản:</p>
+<pre><code class="language-text">Logic design -&gt; Physical layout -&gt; Manufacturing-ready chip</code></pre>
+<hr>
+<h2 id="2-vi-tri-cua-pd-trong-flow-thiet-ke-chip">2. Vị trí của PD trong flow thiết kế chip</h2>
+<p>Một flow tổng quát:</p>
+<pre><code class="language-text">RTL design
+-&gt; Synthesis
+-&gt; DFT / Scan insertion
+-&gt; Physical Design
+-&gt; Signoff
+-&gt; GDS/OAS
+-&gt; Tapeout
+-&gt; Fabrication</code></pre>
+<p>Trong đó:</p>
+<ul>
+<li>RTL: mô tả chức năng bằng Verilog/SystemVerilog.</li>
+<li>Synthesis: chuyển RTL thành gate-level netlist.</li>
+<li>DFT: thêm logic phục vụ test chip.</li>
+<li>PD: tạo layout vật lý.</li>
+<li>Signoff: kiểm tra cuối cùng về timing, power, DRC, LVS, EM/IR...</li>
+<li>Tapeout: gửi dữ liệu layout cho foundry sản xuất.</li>
+</ul>
+<hr>
+<h2 id="3-input-quan-trong-cua-pd">3. Input quan trọng của PD</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Input của PD và vai trò từng file</p>
+  <pre class="mermaid">
+flowchart TB
+  subgraph I["Input files"]
+    N["Netlist<br/>logic + connectivity"]
+    L[".lib<br/>timing + power"]
+    F["LEF / NDM<br/>physical cell data"]
+    T["Tech file<br/>layer + design rules"]
+    S["SDC<br/>timing constraints"]
+    U["UPF<br/>low power intent"]
+    R["TLU+<br/>RC parasitic"]
+    D["Scan DEF<br/>scan chain"]
+  end
+  I --> P["PD Tool<br/>ICC2 / Fusion Compiler"]
+  P --> O["Placed + routed design"]
+  </pre>
+</div>
+<p>Để bắt đầu PD, ta cần nhiều loại file.</p>
+<h3 id="netlist">Netlist</h3>
+<p>Netlist chứa danh sách cell và kết nối logic giữa chúng.</p>
+<p>Ví dụ netlist cho biết:</p>
+<ul>
+<li>FF nào nối với FF nào.</li>
+<li>Logic gate nào nằm giữa.</li>
+<li>Macro nào được instance trong design.</li>
+<li>Net nào là signal, clock, reset...</li>
+</ul>
+<p>Trong ICC2 thường đọc bằng:</p>
+<pre><code class="language-tcl">read_verilog
+link_block</code></pre>
+<h3 id="library-lib">Library <code>.lib</code></h3>
+<p>File <code>.lib</code> chứa thông tin timing và power của cell.</p>
+<p>Nó trả lời các câu hỏi như:</p>
+<ul>
+<li>Cell này delay bao nhiêu?</li>
+<li>Input capacitance bao nhiêu?</li>
+<li>Output transition thế nào?</li>
+<li>Power tiêu thụ bao nhiêu?</li>
+<li>Cell dùng được ở voltage/temperature/process nào?</li>
+</ul>
+<h3 id="lef-ndm">LEF / NDM</h3>
+<p>LEF chứa thông tin vật lý của cell:</p>
+<ul>
+<li>Kích thước cell.</li>
+<li>Vị trí pin.</li>
+<li>Layer dùng cho pin.</li>
+<li>Obstruction.</li>
+<li>Site/row information.</li>
+</ul>
+<p>Trong ICC2, <code>.lib</code> và <code>.lef</code> thường được đóng gói trong NDM.</p>
+<h3 id="tech-file">Tech file</h3>
+<p>Tech file mô tả công nghệ sản xuất:</p>
+<ul>
+<li>Các metal layer.</li>
+<li>Via.</li>
+<li>Routing pitch.</li>
+<li>Spacing rule.</li>
+<li>Width rule.</li>
+<li>Manufacturing constraint.</li>
+</ul>
+<h3 id="sdc">SDC</h3>
+<p>SDC là file constraint timing.</p>
+<p>Nó chứa:</p>
+<ul>
+<li>Clock.</li>
+<li>Generated clock.</li>
+<li>Input delay.</li>
+<li>Output delay.</li>
+<li>False path.</li>
+<li>Multicycle path.</li>
+<li>Timing scenario.</li>
+</ul>
+<h3 id="upf">UPF</h3>
+<p>UPF mô tả low power intent:</p>
+<ul>
+<li>Power domain.</li>
+<li>Power net/ground net.</li>
+<li>Power switch.</li>
+<li>Isolation cell.</li>
+<li>Retention cell.</li>
+<li>Level shifter.</li>
+</ul>
+<h3 id="tlu">TLU+</h3>
+<p>TLU+ chứa thông tin RC parasitic để tính net delay.</p>
+<p>Vì dây kim loại thật có điện trở và điện dung, nên timing không chỉ phụ thuộc vào cell delay mà còn phụ thuộc vào net delay.</p>
+<h3 id="scan-def">Scan DEF</h3>
+<p>Scan DEF chứa thông tin scan chain phục vụ DFT. PD dùng thông tin này để placement/routing scan chain tốt hơn.</p>
+<hr>
+<h2 id="4-flow-pd-can-ban">4. Flow PD căn bản</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Flow PD tổng quát</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Init"] --> B["Floorplan"]
+  B --> C["Powerplan"]
+  C --> D["Placement"]
+  D --> E["CTS"]
+  E --> F["Post CTS"]
+  F --> G["Route"]
+  G --> H["Route Opt"]
+  H --> I["Chip Finish"]
+  I --> J["Signoff"]
+  </pre>
+</div>
+<p>Flow chính:</p>
+<pre><code class="language-text">Init
+-&gt; Floorplan
+-&gt; Powerplan
+-&gt; Placement
+-&gt; CTS
+-&gt; Post CTS
+-&gt; Route
+-&gt; Route Opt
+-&gt; Chip Finish
+-&gt; Signoff</code></pre>
+<p>Mỗi bước giải quyết một nhóm vấn đề khác nhau.</p>
+<hr>
+<h2 id="5-init-import-design">5. Init / Import Design</h2>
+<p>Đây là bước đọc toàn bộ input vào tool để khởi tạo design.</p>
+<p>Mục tiêu:</p>
+<ul>
+<li>Tạo library làm việc.</li>
+<li>Đọc netlist.</li>
+<li>Link design với library.</li>
+<li>Đọc UPF.</li>
+<li>Đọc constraint.</li>
+<li>Đọc RC tech file.</li>
+<li>Chuẩn bị design cho floorplan.</li>
+</ul>
+<p>Ví dụ đọc UPF:</p>
+<pre><code class="language-tcl">reset_upf
+load_upf file_name.upf
+commit_upf
+connect_pg_net -automatic</code></pre>
+<p>Sau Init, design đã có logic và connectivity, nhưng về mặt physical thì cell thường vẫn chồng lên nhau ở gốc tọa độ. Vì vậy cần floorplan.</p>
+<hr>
+<h2 id="6-floorplan">6. Floorplan</h2>
+
+<div class="diagram-grid">
+  <div class="diagram-card">
+    <p class="diagram-title">Floorplan tạo nền vật lý</p>
+    <pre class="mermaid">
+flowchart TB
+  D["Die"] --> C["Core"]
+  C --> R["Rows / Tracks"]
+  C --> P["Ports"]
+  C --> M["Macros"]
+  C --> V["Voltage Areas"]
+  C --> B["Blockages"]
+    </pre>
+  </div>
+  <div class="diagram-card">
+    <p class="diagram-title">Macro placement checklist</p>
+    <pre class="mermaid">
+flowchart TB
+  A["Macro"] --> B["Đúng power domain"]
+  A --> C["Gần module liên quan"]
+  A --> D["Pin hướng vào std cell"]
+  A --> E["Chừa routing/buffer channel"]
+  A --> F["Tránh port congestion"]
+    </pre>
+  </div>
+</div>
+<p>Floorplan là bước tạo hình dáng vật lý ban đầu của block.</p>
+<p>Mục tiêu:</p>
+<ul>
+<li>Tạo die/core.</li>
+<li>Đặt port.</li>
+<li>Tạo voltage area.</li>
+<li>Đặt macro.</li>
+<li>Tạo blockage.</li>
+<li>Tạo physical-only cell ban đầu.</li>
+</ul>
+<h3 id="die-va-core">Die và core</h3>
+<ul>
+<li>Die: toàn bộ vùng chip/block.</li>
+<li>Core: vùng bên trong để đặt standard cell.</li>
+</ul>
+<p>Nếu chưa biết core size, có thể ước lượng bằng utilization:</p>
+<pre><code class="language-text">utilization = total_cell_area / core_area</code></pre>
+<p>Utilization quá cao sẽ dễ congestion và timing khó. Utilization quá thấp thì tốn area.</p>
+<h3 id="port-placement">Port placement</h3>
+<p>Port là điểm giao tiếp của block với bên ngoài.</p>
+<p>Khi đặt port cần chú ý:</p>
+<ul>
+<li>Port nên gần logic/macro mà nó kết nối nhiều.</li>
+<li>Tránh dồn quá nhiều port vào một vùng gây congestion.</li>
+<li>Chọn layer/width/length phù hợp.</li>
+<li>Có thể dùng blockage để chặn cạnh không muốn đặt port.</li>
+</ul>
+<h3 id="voltage-area">Voltage area</h3>
+<p>Voltage area là vùng vật lý tương ứng với power domain.</p>
+<ul>
+<li>Nếu design chỉ có một power domain, thường chỉ cần <code>DEFAULT_VA</code>.</li>
+<li>Nếu có nhiều power domain, cần tạo thêm VA cho từng domain.</li>
+</ul>
+<p>Cell của power domain nào phải được đặt trong VA tương ứng.</p>
+<h3 id="macro-placement">Macro placement</h3>
+<p>Macro là các block lớn như SRAM, ROM, IP...</p>
+<p>Nguyên tắc đặt macro:</p>
+<ul>
+<li>Đặt đúng voltage area.</li>
+<li>Macro cùng module hoặc kết nối nhiều nên đặt gần nhau.</li>
+<li>Ưu tiên đặt gần boundary để giảm chia cắt core.</li>
+<li>Pin macro nên hướng vào vùng standard cell.</li>
+<li>Tránh đặt macro quá gần port nếu gây congestion.</li>
+<li>Chừa channel giữa macro để route và insert buffer.</li>
+</ul>
+<h3 id="placement-blockage">Placement blockage</h3>
+<p>Placement blockage dùng để giới hạn nơi standard cell được đặt.</p>
+<p>Các loại thường gặp:</p>
+<ul>
+<li>Hard blockage: cấm cell đi vào.</li>
+<li>Soft blockage: hạn chế placement trong coarse placement.</li>
+<li>Partial blockage: chỉ cho phép cell density ở một mức nhất định, ví dụ 50%.</li>
+</ul>
+<p>Vị trí thường tạo blockage:</p>
+<ul>
+<li>Dọc boundary core.</li>
+<li>Xung quanh macro.</li>
+<li>Trong buffer channel.</li>
+<li>Vùng port congestion.</li>
+<li>Vùng cell density cao.</li>
+</ul>
+<h3 id="routing-blockage">Routing blockage</h3>
+<p>Routing blockage dùng để chặn route ở một vùng/layer.</p>
+<p>Mục tiêu:</p>
+<ul>
+<li>Tránh route ra vùng không mong muốn.</li>
+<li>Giảm congestion.</li>
+<li>Tránh noise.</li>
+<li>Tránh DRC.</li>
+</ul>
+<h3 id="quality-check-floorplan">Quality check floorplan</h3>
+<p>Cần kiểm tra:</p>
+<ul>
+<li>Die/core đã tạo đúng.</li>
+<li>Site row/routing track đã có.</li>
+<li>Port đã được place.</li>
+<li>Macro đã đặt và fixed.</li>
+<li>Voltage area đầy đủ.</li>
+<li>Placement/routing blockage hợp lý.</li>
+<li>Physical cell đã tạo.</li>
+</ul>
+<hr>
+<h2 id="7-powerplan">7. Powerplan</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Power network cơ bản</p>
+  <pre class="mermaid">
+flowchart TB
+  A["Power source<br/>Bump / IO"] --> B["Power ring"]
+  B --> C["Power stripes"]
+  C --> D["Standard-cell rails"]
+  D --> E["Cells"]
+  C --> F["Macro rings / pins"]
+  F --> G["Macros"]
+  E --> H["IR drop / EM checks"]
+  G --> H
+  </pre>
+</div>
+<p>Powerplan là bước tạo mạng cấp nguồn VDD/VSS cho design.</p>
+<p>Mục tiêu:</p>
+<ul>
+<li>Tạo power ring/stripe/rail.</li>
+<li>Kết nối macro và standard cell với nguồn.</li>
+<li>Đảm bảo mỗi power domain được cấp nguồn đúng.</li>
+<li>Giảm IR drop.</li>
+<li>Tránh EM.</li>
+</ul>
+<p>Các khái niệm chính:</p>
+<ul>
+<li>Power ring: vòng nguồn quanh block hoặc macro.</li>
+<li>Power stripe: dây nguồn chạy dọc/ngang qua core.</li>
+<li>Rail: dây nguồn trong standard cell row.</li>
+<li>Via: kết nối giữa các metal layer.</li>
+</ul>
+<p>Powerplan tốt giúp:</p>
+<ul>
+<li>Cell nhận đủ voltage.</li>
+<li>Dòng phân bố đều.</li>
+<li>Giảm rủi ro IR drop.</li>
+<li>Giảm rủi ro EM.</li>
+</ul>
+<hr>
+<h2 id="8-placement-place-opt">8. Placement / Place Opt</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Placement optimization loop</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Load scenarios"] --> B["Coarse placement"]
+  B --> C["Legalization"]
+  C --> D["DRV fix<br/>transition / cap / fanout"]
+  D --> E["Timing / power / area opt"]
+  E --> F{"Clean enough?"}
+  F -- "No" --> B
+  F -- "Yes" --> G["Ready for CTS"]
+  </pre>
+</div>
+<p>Placement là bước đặt standard cell vào core.</p>
+<p>Sau floorplan và powerplan, macro đã được đặt, nhưng standard cell vẫn chưa được sắp xếp hợp lý. Placement sẽ đưa cell vào row dựa trên timing, congestion và density.</p>
+<h3 id="timing-scenario">Timing scenario</h3>
+<p>Scenario là sự kết hợp giữa:</p>
+<pre><code class="language-text">scenario = mode + corner</code></pre>
+<p>Mode:</p>
+<ul>
+<li>Functional mode.</li>
+<li>Test mode.</li>
+</ul>
+<p>Corner:</p>
+<ul>
+<li>Process.</li>
+<li>Voltage.</li>
+<li>Temperature.</li>
+<li>RC extraction corner.</li>
+</ul>
+<p>Ví dụ:</p>
+<pre><code class="language-text">sspg_0p9v_CWorst125C</code></pre>
+<h3 id="coarse-placement">Coarse placement</h3>
+<p>Tool đặt thô cell vào core.</p>
+<p>Ở bước này:</p>
+<ul>
+<li>Cell có thể overlap.</li>
+<li>Chưa legal hoàn toàn.</li>
+<li>Tool tập trung giảm wirelength, timing pressure và congestion.</li>
+</ul>
+<h3 id="legalization-va-optimization">Legalization và optimization</h3>
+<p>Sau coarse placement, tool sẽ:</p>
+<ul>
+<li>Legalize cell vào site row.</li>
+<li>Fix transition/capacitance/fanout violation.</li>
+<li>Optimize timing.</li>
+<li>Optimize power.</li>
+<li>Kiểm soát area.</li>
+</ul>
+<h3 id="quality-check-placement">Quality check placement</h3>
+<p>Cần kiểm tra:</p>
+<ul>
+<li>Congestion không quá cao.</li>
+<li>Cell density không quá dày.</li>
+<li>Setup timing với ideal clock không quá tệ.</li>
+<li>Utilization không tăng bất thường.</li>
+<li>Transition violation trong ngưỡng.</li>
+<li>LVT ratio không vượt spec.</li>
+</ul>
+<hr>
+<h2 id="9-cts-clock-tree-synthesis">9. CTS - Clock Tree Synthesis</h2>
+
+<div class="diagram-grid">
+  <div class="diagram-card">
+    <p class="diagram-title">Trước CTS: ideal clock</p>
+    <pre class="mermaid">
+flowchart TB
+  C["Clock source"] -. "ideal" .-> F1["FF1"]
+  C -. "ideal" .-> F2["FF2"]
+  C -. "ideal" .-> F3["FF3"]
+    </pre>
+  </div>
+  <div class="diagram-card">
+    <p class="diagram-title">Sau CTS: clock tree thật</p>
+    <pre class="mermaid">
+flowchart TB
+  C["Clock source"] --> B1["Clock buffer"]
+  B1 --> B2["Clock buffer"]
+  B1 --> B3["Clock buffer"]
+  B2 --> F1["FF1"]
+  B2 --> F2["FF2"]
+  B3 --> F3["FF3"]
+  B3 --> F4["FF4"]
+    </pre>
+  </div>
+</div>
+<p>CTS là bước xây dựng clock tree thật.</p>
+<p>Trước CTS, clock thường là ideal:</p>
+<ul>
+<li>Clock đến mọi sink gần như cùng lúc trong timing analysis.</li>
+<li>Chưa có buffer/inverter thật trên clock path.</li>
+</ul>
+<p>Nhưng trong thực tế, clock source không thể nối trực tiếp đến hàng ngàn FF. Vì vậy cần CTS.</p>
+<p>Mục tiêu CTS:</p>
+<ul>
+<li>Thêm clock buffer/inverter.</li>
+<li>Giảm clock latency.</li>
+<li>Cân bằng skew.</li>
+<li>Route clock net với rule tốt hơn.</li>
+<li>Đảm bảo clock đến sink pin ổn định.</li>
+</ul>
+<h3 id="khai-niem">Khái niệm</h3>
+<ul>
+<li>Clock latency: thời gian clock đi từ source đến sink.</li>
+<li>Clock skew: chênh lệch thời gian clock đến launch FF và capture FF.</li>
+<li>Sink pin: clock pin của FF/latch.</li>
+<li>NDR: non-default routing rule, thường dùng cho clock để tăng width/spacing.</li>
+</ul>
+<h3 id="flow-cts">Flow CTS</h3>
+<ul>
+<li>Set clock rule.</li>
+<li>Set balance pin/ignore pin.</li>
+<li>Build clock tree.</li>
+<li>Balance skew group.</li>
+<li>Balance clock group.</li>
+<li>Route và optimize clock net.</li>
+</ul>
+<h3 id="quality-check-cts">Quality check CTS</h3>
+<ul>
+<li>Max latency hợp lý.</li>
+<li>Skew hợp lý.</li>
+<li>Clock net không short/open.</li>
+<li>NDR được apply đúng.</li>
+</ul>
+<p>Một kinh nghiệm estimate:</p>
+<pre><code class="language-text">Nếu clock path khoảng 1000 um thì latency khoảng 1 ns có thể là mức tham khảo.</code></pre>
+<hr>
+<h2 id="10-post-cts">10. Post CTS</h2>
+<p>Sau CTS, clock đã propagated, nghĩa là clock có latency và skew thật.</p>
+<p>Vì timing thay đổi so với ideal clock, cần Post CTS để fix timing.</p>
+<p>Mục tiêu:</p>
+<ul>
+<li>Fix setup.</li>
+<li>Fix hold.</li>
+<li>Optimize power/area.</li>
+<li>Giữ clock tree ổn định.</li>
+</ul>
+<p>Các việc thường làm:</p>
+<ul>
+<li>Chuyển clock sang propagated clock.</li>
+<li>Mark clock tree để hạn chế tool phá clock tree.</li>
+<li>Chạy clock optimization sau CTS.</li>
+</ul>
+<p>Quality check:</p>
+<ul>
+<li>Setup/hold không quá tệ.</li>
+<li>Utilization không vượt ngưỡng.</li>
+<li>LVT ratio không vượt spec.</li>
+</ul>
+<hr>
+<h2 id="11-route">11. Route</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Routing stages</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Route settings"] --> B["2nd PG route"]
+  B --> C["Global route<br/>topology + layer"]
+  C --> D["Track assignment<br/>map to tracks"]
+  D --> E["Detail route<br/>real wires + vias"]
+  E --> F["DRC / LVS / antenna fix"]
+  </pre>
+</div>
+<p>Route là bước tạo dây kim loại thật cho signal net.</p>
+<p>Lưu ý:</p>
+<ul>
+<li>PG net đã xử lý ở powerplan.</li>
+<li>Clock net đã xử lý ở CTS.</li>
+<li>Route chủ yếu xử lý signal net còn lại.</li>
+</ul>
+<p>Mục tiêu:</p>
+<ul>
+<li>Nối đúng connectivity.</li>
+<li>Tối ưu wirelength.</li>
+<li>Giảm số via.</li>
+<li>Tránh DRC.</li>
+<li>Tránh short/open.</li>
+<li>Tránh antenna.</li>
+</ul>
+<h3 id="flow-route">Flow route</h3>
+<ul>
+<li>Route 2nd PG nếu design có cell cần nguồn phụ.</li>
+<li>Global route:</li>
+<ul>
+<li>Tool xác định hướng đi, layer, topology.</li>
+<li>Chưa tạo shape chi tiết.</li>
+</ul>
+</ul>
+<ul>
+<li>Track assignment:</li>
+<ul>
+<li>Gán wire vào track cụ thể.</li>
+</ul>
+</ul>
+<ul>
+<li>Detail route:</li>
+<ul>
+<li>Tạo route chi tiết.</li>
+<li>Fix DRC/LVS/antenna.</li>
+</ul>
+</ul>
+<hr>
+<h2 id="12-route-opt">12. Route Opt</h2>
+<p>Sau route, RC thật của wire được tính chính xác hơn. Timing có thể xấu đi vì:</p>
+<ul>
+<li>Wire dài hơn dự kiến.</li>
+<li>Net bị route vòng.</li>
+<li>Capacitance tăng.</li>
+<li>Resistance tăng.</li>
+<li>Crosstalk xuất hiện.</li>
+</ul>
+<p>Route Opt dùng để:</p>
+<ul>
+<li>Fix setup/hold sau route.</li>
+<li>Fix DRC.</li>
+<li>Fix LVS.</li>
+<li>Fix antenna.</li>
+<li>Clean các violation còn lại.</li>
+</ul>
+<hr>
+<h2 id="13-chip-finish">13. Chip Finish</h2>
+<p>Chip finish là bước hoàn thiện layout trước signoff.</p>
+<p>Các việc thường làm:</p>
+<ul>
+<li>Insert filler.</li>
+<li>Insert decap nếu cần.</li>
+<li>Check lại physical-only cell.</li>
+<li>Check timing.</li>
+<li>Check DRC/LVS.</li>
+<li>Check antenna.</li>
+<li>Chuẩn bị output GDS/OAS.</li>
+</ul>
+<hr>
+<h2 id="14-timing-can-ban">14. Timing căn bản</h2>
+
+<div class="diagram-grid">
+  <div class="diagram-card">
+    <p class="diagram-title">Timing path cơ bản</p>
+    <pre class="mermaid">
+flowchart LR
+  L["Launch FF"] --> C1["Comb logic"]
+  C1 --> C2["Net delay"]
+  C2 --> E["Capture FF"]
+  CLK["Clock"] --> L
+  CLK --> E
+    </pre>
+  </div>
+  <div class="diagram-card">
+    <p class="diagram-title">Setup vs Hold intuition</p>
+    <pre class="mermaid">
+flowchart TB
+  A["Data at D pin"] --> B{"Arrives too late?"}
+  B -- "Yes" --> S["Setup violation"]
+  B -- "No" --> C{"Changes too early?"}
+  C -- "Yes" --> H["Hold violation"]
+  C -- "No" --> P["Timing pass"]
+    </pre>
+  </div>
+</div>
+<p>Timing là một trong những phần quan trọng nhất của PD.</p>
+<p>Một timing path cơ bản:</p>
+<pre><code class="language-text">launch FF -&gt; combinational logic -&gt; capture FF</code></pre>
+<p>Clock kích hoạt launch FF để data bắt đầu đi. Sau đó data đi qua logic và phải đến capture FF đúng thời điểm.</p>
+<h3 id="setup-time">Setup time</h3>
+<p>Setup time là thời gian tối thiểu data phải ổn định tại chân D trước cạnh clock capture.</p>
+<p>Nếu data đến quá muộn, sẽ bị setup violation.</p>
+<pre><code class="language-text">Setup slack = required time - arrival time</code></pre>
+<ul>
+<li>Slack dương: pass.</li>
+<li>Slack âm: fail.</li>
+</ul>
+<p>Fix setup thường là làm data đến nhanh hơn hoặc cho capture clock đến muộn hơn.</p>
+<h3 id="hold-time">Hold time</h3>
+<p>Hold time là thời gian tối thiểu data phải giữ ổn định sau cạnh clock capture.</p>
+<p>Nếu data đến quá sớm, sẽ bị hold violation.</p>
+<pre><code class="language-text">Hold slack = arrival time - required time</code></pre>
+<ul>
+<li>Slack dương: pass.</li>
+<li>Slack âm: fail.</li>
+</ul>
+<p>Fix hold thường là làm data path chậm hơn hoặc điều chỉnh clock skew.</p>
+<h3 id="cell-delay">Cell delay</h3>
+<p>Cell delay phụ thuộc vào:</p>
+<ul>
+<li>Input transition.</li>
+<li>Output load.</li>
+<li>Drive strength.</li>
+<li>Vt type: LVT/SVT/HVT.</li>
+<li>PVT corner.</li>
+</ul>
+<h3 id="net-delay">Net delay</h3>
+<p>Net delay phụ thuộc vào:</p>
+<ul>
+<li>Resistance của wire.</li>
+<li>Capacitance của wire.</li>
+<li>Input capacitance của cell tải.</li>
+<li>Chiều dài dây.</li>
+<li>Layer route.</li>
+</ul>
+<p>Công thức đơn giản:</p>
+<pre><code class="language-text">net_delay = f(Rnet, Cnet + Cpin)</code></pre>
+<hr>
+<h2 id="15-cach-fix-timing-o-muc-can-ban">15. Cách fix timing ở mức căn bản</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Timing closure decision map</p>
+  <pre class="mermaid">
+flowchart TB
+  A{"Timing violation?"}
+  A -- "Setup" --> S["Data đến muộn"]
+  S --> S1["Giảm data delay<br/>HVT->LVT / upsize / buffer"]
+  S --> S2["Điều chỉnh skew<br/>capture muộn hơn / launch sớm hơn"]
+  A -- "Hold" --> H["Data đến sớm"]
+  H --> H1["Tăng data delay<br/>insert buffer / LVT->HVT / downsize"]
+  H --> H2["Điều chỉnh skew<br/>capture sớm hơn / launch muộn hơn"]
+  S1 --> C["Re-check related paths"]
+  S2 --> C
+  H1 --> C
+  H2 --> C
+  </pre>
+</div>
+<h3 id="fix-setup">Fix setup</h3>
+<p>Setup fail nghĩa là data đến capture FF quá muộn.</p>
+<p>Cách fix:</p>
+<ul>
+<li>Giảm data path delay:</li>
+<ul>
+<li>Swap HVT -&gt; LVT.</li>
+<li>Upsize cell.</li>
+<li>Insert buffer để cải thiện transition trên net dài.</li>
+<li>Remove buffer/inverter không cần thiết.</li>
+<li>Restructure logic nếu cần.</li>
+</ul>
+</ul>
+<ul>
+<li>Điều chỉnh clock:</li>
+<ul>
+<li>Làm launch clock đến sớm hơn.</li>
+<li>Làm capture clock đến muộn hơn.</li>
+<li>Dùng useful skew nếu còn margin ở path liên quan.</li>
+</ul>
+</ul>
+<p>Cần cẩn thận vì fix setup có thể làm hold xấu đi.</p>
+<h3 id="fix-hold">Fix hold</h3>
+<p>Hold fail nghĩa là data đến capture FF quá sớm.</p>
+<p>Cách fix:</p>
+<ul>
+<li>Tăng data path delay:</li>
+<ul>
+<li>Insert buffer/inverter.</li>
+<li>Swap LVT -&gt; HVT.</li>
+<li>Downsize cell.</li>
+</ul>
+</ul>
+<ul>
+<li>Điều chỉnh clock skew:</li>
+<ul>
+<li>Làm launch clock đến muộn hơn.</li>
+<li>Làm capture clock đến sớm hơn.</li>
+</ul>
+</ul>
+<p>Cần cẩn thận vì fix hold có thể làm setup xấu đi.</p>
+<hr>
+<h2 id="16-useful-skew">16. Useful Skew</h2>
+<p>Useful skew là cố tình tạo skew có lợi cho timing.</p>
+<p>Bình thường CTS cố cân bằng clock. Nhưng trong timing closure, đôi khi ta muốn clock lệch một chút để giúp một số path pass.</p>
+<h3 id="dung-cho-setup">Dùng cho setup</h3>
+<p>Muốn fix setup:</p>
+<ul>
+<li>Cho capture clock đến muộn hơn, hoặc</li>
+<li>Cho launch clock đến sớm hơn.</li>
+</ul>
+<p>Nhưng cần check:</p>
+<ul>
+<li>Hold margin của path hiện tại.</li>
+<li>Setup/hold margin của path trước và path sau.</li>
+</ul>
+<h3 id="dung-cho-hold">Dùng cho hold</h3>
+<p>Muốn fix hold:</p>
+<ul>
+<li>Cho capture clock đến sớm hơn, hoặc</li>
+<li>Cho launch clock đến muộn hơn.</li>
+</ul>
+<p>Nhưng cần check:</p>
+<ul>
+<li>Setup margin của path hiện tại.</li>
+<li>Hold margin của path trước và path sau.</li>
+</ul>
+<p>Useful skew thường xử lý ở CTS bằng balance point.</p>
+<hr>
+<h2 id="17-physical-only-cells">17. Physical-only cells</h2>
+<p>Physical-only cells là các cell không trực tiếp tạo logic function chính, nhưng cần cho layout và reliability.</p>
+<h3 id="end-cap">End cap</h3>
+<p>Đặt ở đầu/cuối row, cạnh block.</p>
+<p>Mục đích:</p>
+<ul>
+<li>Bảo vệ standard cell ở biên.</li>
+<li>Đóng row đúng rule.</li>
+</ul>
+<h3 id="well-tap">Well tap</h3>
+<p>Kết nối substrate/n-well tới VSS/VDD.</p>
+<p>Mục đích:</p>
+<ul>
+<li>Ngăn latch-up.</li>
+</ul>
+<p>Latch-up là hiện tượng tạo đường dẫn trở kháng thấp giữa VDD và VSS, gây dòng lớn và có thể làm hỏng chip.</p>
+<h3 id="tie-cell">Tie cell</h3>
+<p>Tie high/tie low tạo logic 1/0 ổn định.</p>
+<p>Không nên nối trực tiếp gate transistor vào VDD/VSS ở node nhỏ vì dễ có vấn đề reliability.</p>
+<h3 id="filler">Filler</h3>
+<p>Lấp khoảng trống giữa standard cell.</p>
+<p>Mục đích:</p>
+<ul>
+<li>Giữ liên tục n-well.</li>
+<li>Đáp ứng rule spacing.</li>
+<li>Hoàn thiện row.</li>
+</ul>
+<h3 id="spare-cell">Spare cell</h3>
+<p>Cell dự phòng cho ECO.</p>
+<p>Nếu cần sửa design ở giai đoạn muộn, có thể tận dụng spare cell thay vì thay đổi layout quá nhiều.</p>
+<h3 id="decap">Decap</h3>
+<p>Decap giống tụ nhỏ giữa VDD và VSS.</p>
+<p>Mục đích:</p>
+<ul>
+<li>Cung cấp dòng tức thời.</li>
+<li>Giảm dynamic IR drop.</li>
+</ul>
+<hr>
+<h2 id="18-low-power-design-can-ban">18. Low Power Design căn bản</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Low-power domain interaction</p>
+  <pre class="mermaid">
+flowchart LR
+  subgraph PD1["Power Domain A<br/>0.8V / switchable"]
+    A1["Logic"]
+    R1["Retention"]
+  end
+  subgraph PD2["Power Domain B<br/>1.0V / always-on"]
+    B1["Logic"]
+  end
+  A1 --> ISO["Isolation"]
+  ISO --> LS["Level shifter"]
+  LS --> B1
+  AON["Always-On supply"] --> R1
+  SW["Power switch"] --> PD1
+  </pre>
+</div>
+<p>Low power design dùng để giảm power consumption của chip.</p>
+<h3 id="clock-gating">Clock gating</h3>
+<p>Clock gating tắt clock cho vùng không hoạt động.</p>
+<p>Vì clock chuyển mạch liên tục, tiết kiệm clock power thường rất hiệu quả.</p>
+<p>Cell thường gặp:</p>
+<ul>
+<li>ICG cell.</li>
+<li>AND/OR gate dùng cho clock gating tùy phase.</li>
+</ul>
+<h3 id="power-switch">Power switch</h3>
+<p>Power switch đóng/ngắt nguồn của một power domain.</p>
+<p>Khi domain không hoạt động, có thể tắt nguồn để giảm leakage.</p>
+<h3 id="isolation-cell">Isolation cell</h3>
+<p>Khi một domain bị tắt nguồn, output của nó có thể thành X/Hi-Z. Isolation cell chốt output về giá trị an toàn để không ảnh hưởng domain còn hoạt động.</p>
+<h3 id="level-shifter">Level shifter</h3>
+<p>Level shifter chuyển mức điện áp giữa hai voltage domain.</p>
+<p>Ví dụ:</p>
+<pre><code class="language-text">0.8 V domain -&gt; 1.0 V domain</code></pre>
+<h3 id="retention-cell">Retention cell</h3>
+<p>Retention cell giữ lại state quan trọng khi domain bị power down, để khi bật lại không mất dữ liệu.</p>
+<hr>
+<h2 id="19-congestion">19. Congestion</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Nguồn gây congestion và hướng xử lý</p>
+  <pre class="mermaid">
+flowchart TB
+  A["Congestion"] --> B["Macro quá sát"]
+  A --> C["Port quá dày"]
+  A --> D["Cell density cao"]
+  A --> E["Channel hẹp"]
+  B --> F["Move macro / add channel"]
+  C --> G["Spread ports / partial blockage"]
+  D --> H["Spread cells / reduce utilization"]
+  E --> I["Soft blockage / keepout"]
+  </pre>
+</div>
+<p>Congestion là tình trạng thiếu tài nguyên routing hoặc placement trong một vùng.</p>
+<p>Dấu hiệu:</p>
+<ul>
+<li>Nhiều net chen nhau qua một channel.</li>
+<li>Port quá dày.</li>
+<li>Macro đặt quá sát.</li>
+<li>Cell density cao.</li>
+<li>Timing path bị route vòng xa.</li>
+</ul>
+<p>Cách giảm:</p>
+<ul>
+<li>Chỉnh macro placement.</li>
+<li>Tăng channel giữa macro.</li>
+<li>Thêm soft/partial blockage.</li>
+<li>Giảm utilization.</li>
+<li>Spread cell.</li>
+<li>Điều chỉnh port placement.</li>
+<li>Thêm keepout quanh macro/cell có pin density cao.</li>
+</ul>
+<hr>
+<h2 id="20-crosstalk">20. Crosstalk</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Signal integrity map</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Aggressor net"] -- "coupling capacitance" --> V["Victim net"]
+  V --> G["Glitch"]
+  V --> D["Delay change"]
+  V --> T["Transition worse"]
+  F["Fix"] --> S["Shield"]
+  F --> SP["Increase spacing"]
+  F --> PL["Reduce parallel length"]
+  F --> DR["Stronger victim driver"]
+  </pre>
+</div>
+<p>Crosstalk là nhiễu giữa các wire chạy song song.</p>
+<p>Net gây nhiễu gọi là aggressor. Net bị ảnh hưởng gọi là victim.</p>
+<p>Ảnh hưởng:</p>
+<ul>
+<li>Glitch.</li>
+<li>Delay tăng hoặc giảm.</li>
+<li>Transition xấu hơn.</li>
+</ul>
+<p>Cách giảm:</p>
+<ul>
+<li>Tăng spacing.</li>
+<li>Giảm parallel length.</li>
+<li>Shield net quan trọng.</li>
+<li>Route sang layer khác.</li>
+<li>Tăng drive strength cho victim driver.</li>
+</ul>
+<hr>
+<h2 id="21-antenna">21. Antenna</h2>
+<p>Antenna là lỗi xảy ra trong quá trình sản xuất khi dây kim loại dài tích điện và làm hỏng gate transistor.</p>
+<p>Cách fix:</p>
+<ul>
+<li>Jump layer.</li>
+<li>Chèn diode.</li>
+<li>Chèn buffer để chia nhỏ wire.</li>
+<li>Route lại để giảm chiều dài metal nối gate.</li>
+</ul>
+<hr>
+<h2 id="22-ir-drop">22. IR Drop</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">IR Drop intuition</p>
+  <pre class="mermaid">
+flowchart LR
+  V["VDD source"] --> RP["Power wire resistance Rp"]
+  RP --> C["Cell"]
+  C --> RG["Ground wire resistance Rg"]
+  RG --> G["VSS"]
+  C --> X["If Vcell low:<br/>cell slower + timing risk"]
+  F["Fix"] --> W["Wider stripes"]
+  F --> VIA["More vias"]
+  F --> DE["Decap"]
+  F --> MOVE["Move cells / reduce density"]
+  </pre>
+</div>
+<p>IR drop là sụt áp trên mạng nguồn.</p>
+<p>Nếu VDD tại cell bị thấp hơn nhiều so với mong muốn:</p>
+<ul>
+<li>Cell chậm hơn.</li>
+<li>Timing xấu hơn.</li>
+<li>Có thể gây functional failure.</li>
+</ul>
+<p>Cách giảm:</p>
+<ul>
+<li>Tăng width power stripe.</li>
+<li>Thêm power stripe.</li>
+<li>Thêm via.</li>
+<li>Dùng via array lớn hơn.</li>
+<li>Thêm bump/IO power point.</li>
+<li>Giảm cell density ở vùng drop.</li>
+<li>Thêm decap.</li>
+<li>Giảm số buffer/inverter không cần thiết.</li>
+<li>Swap LVT -&gt; HVT nếu timing cho phép.</li>
+</ul>
+<hr>
+<h2 id="23-electromigration">23. Electromigration</h2>
+<p>Electromigration, hay EM, là hiện tượng kim loại bị dịch chuyển do mật độ dòng điện cao.</p>
+<p>Hậu quả:</p>
+<ul>
+<li>Kim loại bị mòn gây open.</li>
+<li>Kim loại bị dồn gây short.</li>
+</ul>
+<p>Cách giảm:</p>
+<ul>
+<li>Tăng width dây.</li>
+<li>Dùng layer cao hơn.</li>
+<li>Thêm dây song song.</li>
+<li>Làm ngắn dây.</li>
+<li>Giảm drive strength nếu dòng quá lớn.</li>
+</ul>
+<hr>
+<h2 id="24-ocv-crpr-va-clock-uncertainty">24. OCV, CRPR và Clock Uncertainty</h2>
+<h3 id="ocv">OCV</h3>
+<p>OCV là On-Chip Variation.</p>
+<p>Trong sản xuất, các cell và wire không thể giống nhau 100%. Vì vậy delay thật có thể nhanh/chậm khác nhau.</p>
+<p>Nguồn variation:</p>
+<ul>
+<li>Process.</li>
+<li>Voltage.</li>
+<li>Temperature.</li>
+<li>Độ rộng/độ dày metal.</li>
+<li>Channel length.</li>
+<li>Vth.</li>
+</ul>
+<p>Tool dùng timing derate để làm analysis pessimistic hơn.</p>
+<h3 id="crpr">CRPR</h3>
+<p>CRPR là Clock Reconvergence Pessimism Removal.</p>
+<p>Nếu launch clock và capture clock có một đoạn path chung, không nên tính pessimism quá mức trên đoạn chung đó. CRPR sẽ remove phần pessimism không cần thiết.</p>
+<h3 id="clock-uncertainty">Clock uncertainty</h3>
+<p>Clock uncertainty mô tả độ không chắc chắn của clock.</p>
+<p>Trước CTS:</p>
+<pre><code class="language-text">clock uncertainty = skew + jitter + margin</code></pre>
+<p>Sau CTS:</p>
+<pre><code class="language-text">clock uncertainty = jitter + margin</code></pre>
+<p>Vì sau CTS skew đã được tính thật trong clock tree.</p>
+<hr>
+<h2 id="25-signoff-can-ban">25. Signoff căn bản</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Signoff checks</p>
+  <pre class="mermaid">
+flowchart TB
+  A["Final layout database"] --> B["STA<br/>setup / hold"]
+  A --> C["DRC<br/>manufacturing rules"]
+  A --> D["LVS<br/>layout vs netlist"]
+  A --> E["ERC<br/>electrical rules"]
+  A --> F["EM / IR<br/>power integrity"]
+  A --> G["DFM<br/>manufacturability"]
+  B --> H["Tapeout ready? max checks clean"]
+  C --> H
+  D --> H
+  E --> H
+  F --> H
+  G --> H
+  </pre>
+</div>
+<p>Signoff là bước kiểm tra cuối cùng trước khi tapeout.</p>
+<p>Các check quan trọng:</p>
+<h3 id="sta">STA</h3>
+<p>Static Timing Analysis.</p>
+<p>Kiểm tra setup/hold ở tất cả mode/corner.</p>
+<h3 id="drc">DRC</h3>
+<p>Design Rule Check.</p>
+<p>Kiểm tra layout có vi phạm rule sản xuất không:</p>
+<ul>
+<li>Width.</li>
+<li>Spacing.</li>
+<li>Enclosure.</li>
+<li>End-of-line.</li>
+<li>Via rule.</li>
+</ul>
+<h3 id="lvs">LVS</h3>
+<p>Layout Versus Schematic.</p>
+<p>Kiểm tra layout có đúng với netlist/schematic không.</p>
+<p>Các lỗi thường gặp:</p>
+<ul>
+<li>Short.</li>
+<li>Open.</li>
+<li>Missing device.</li>
+<li>Wrong connection.</li>
+</ul>
+<h3 id="erc">ERC</h3>
+<p>Electrical Rule Check.</p>
+<p>Kiểm tra lỗi điện:</p>
+<ul>
+<li>Short power.</li>
+<li>Voltage violation.</li>
+<li>Floating net.</li>
+<li>Power domain issue.</li>
+</ul>
+<h3 id="em-ir">EM/IR</h3>
+<p>Kiểm tra:</p>
+<ul>
+<li>IR drop.</li>
+<li>Electromigration.</li>
+</ul>
+<h3 id="dfm">DFM</h3>
+<p>Design For Manufacturability.</p>
+<p>Kiểm tra layout có dễ sản xuất, yield tốt hay không.</p>
+<hr>
+<h2 id="26-calibre-signoff-flow-can-ban">26. Calibre signoff flow căn bản</h2>
+<p>Input thường gặp:</p>
+<ul>
+<li>GDS/OAS.</li>
+<li>PG netlist.</li>
+<li>Standard cell/macro GDS.</li>
+<li>Rule deck từ foundry.</li>
+</ul>
+<p>Flow cơ bản:</p>
+<ul>
+<li>Merge layout:</li>
+<ul>
+<li>Merge top layout với GDS của standard cell/macro.</li>
+</ul>
+</ul>
+<ul>
+<li>V2LVS:</li>
+<ul>
+<li>Convert netlist sang format dùng cho LVS, thường là SPICE-like netlist.</li>
+</ul>
+</ul>
+<ul>
+<li>DRC:</li>
+<ul>
+<li>Check rule sản xuất.</li>
+</ul>
+</ul>
+<ul>
+<li>LVS:</li>
+<ul>
+<li>Compare layout với schematic/netlist.</li>
+</ul>
+</ul>
+<ul>
+<li>ERC:</li>
+<ul>
+<li>Check lỗi điện.</li>
+</ul>
+</ul>
+<ul>
+<li>DFM:</li>
+<ul>
+<li>Check manufacturability.</li>
+</ul>
+</ul>
+<hr>
+<h2 id="27-mot-so-kinh-nghiem-debug-co-ban">27. Một số kinh nghiệm debug cơ bản</h2>
+<h3 id="timing-xau-sau-route-opt">Timing xấu sau Route Opt</h3>
+<p>Nguyên nhân có thể:</p>
+<ul>
+<li>RC thật lớn hơn estimate.</li>
+<li>Net bị route vòng.</li>
+<li>Cell density cao.</li>
+<li>Congestion.</li>
+<li>Margin ban đầu quá thấp.</li>
+</ul>
+<p>Cách xử lý:</p>
+<ul>
+<li>Fix data path delay.</li>
+<li>Dùng buffer để cải thiện transition.</li>
+<li>Balance skew/useful skew.</li>
+<li>Nếu không còn margin, có thể cần giảm frequency.</li>
+</ul>
+<h3 id="transition-violation-qua-macro">Transition violation qua macro</h3>
+<p>Nếu output macro drive net quá yếu hoặc net quá dài:</p>
+<ul>
+<li>Add buffer gần output pin macro.</li>
+<li>Dùng boundary buffer gần port/macro.</li>
+<li>Check lại transition và setup.</li>
+</ul>
+<h3 id="nhieu-setup-path-cung-mot-startpoint">Nhiều setup path cùng một startpoint</h3>
+<p>Cách debug:</p>
+<ul>
+<li>Tìm common startpoint.</li>
+<li>Check path trước startpoint có margin không.</li>
+<li>Nếu có thể mượn margin, dùng useful skew ở CTS.</li>
+<li>Cẩn thận kiểm tra hold/setup path liên quan.</li>
+</ul>
+<hr>
+<h2 id="28-nguoi-moi-nen-hoc-pd-theo-thu-tu-nao">28. Người mới nên học PD theo thứ tự nào?</h2>
+
+<div class="diagram-wide">
+  <p class="diagram-title">Learning path cho người mới</p>
+  <pre class="mermaid">
+flowchart LR
+  A["Digital logic"] --> B["PD inputs"]
+  B --> C["Floorplan"]
+  C --> D["Placement"]
+  D --> E["Timing setup/hold"]
+  E --> F["CTS"]
+  F --> G["Route"]
+  G --> H["Timing closure"]
+  H --> I["DRC/LVS"]
+  I --> J["IR/EM + Low Power"]
+  J --> K["Tcl/Python automation"]
+  </pre>
+</div>
+<p>Thứ tự học đề xuất:</p>
+<p class="numbered"><span>1.</span> Hiểu flow chip design tổng quát.</p>
+<p class="numbered"><span>2.</span> Học input/output của PD.</p>
+<p class="numbered"><span>3.</span> Học floorplan: die/core, macro, port, blockage.</p>
+<p class="numbered"><span>4.</span> Học placement và congestion.</p>
+<p class="numbered"><span>5.</span> Học timing căn bản: setup, hold, slack, delay.</p>
+<p class="numbered"><span>6.</span> Học CTS: latency, skew, clock tree.</p>
+<p class="numbered"><span>7.</span> Học routing: global/detail route, DRC, antenna.</p>
+<p class="numbered"><span>8.</span> Học timing closure: fix setup/hold.</p>
+<p class="numbered"><span>9.</span> Học physical verification: DRC/LVS/ERC.</p>
+<p class="numbered"><span>10.</span> Học power integrity: IR drop, EM.</p>
+<p class="numbered"><span>11.</span> Học low power: UPF, power domain, isolation, level shifter.</p>
+<p class="numbered"><span>12.</span> Học scripting Tcl/Python để automation.</p>
+<hr>
+<h2 id="29-cac-ky-nang-can-co-trong-nganh-pd">29. Các kỹ năng cần có trong ngành PD</h2>
+<h3 id="kien-thuc-ky-thuat">Kiến thức kỹ thuật</h3>
+<ul>
+<li>Digital logic.</li>
+<li>CMOS basic.</li>
+<li>Timing analysis.</li>
+<li>Physical layout.</li>
+<li>Routing/resource concept.</li>
+<li>Power integrity.</li>
+<li>Signal integrity.</li>
+<li>Low power.</li>
+<li>Signoff.</li>
+</ul>
+<h3 id="tool">Tool</h3>
+<p>Các tool thường gặp:</p>
+<ul>
+<li>Synopsys ICC2/Fusion Compiler.</li>
+<li>PrimeTime.</li>
+<li>StarRC.</li>
+<li>Calibre.</li>
+<li>RedHawk/Voltus.</li>
+<li>DFT tools như Tetramax, DFT Compiler, Mentor DFT.</li>
+</ul>
+<h3 id="scripting">Scripting</h3>
+<p>Rất quan trọng trong PD.</p>
+<p>Nên học:</p>
+<ul>
+<li>Tcl.</li>
+<li>Shell.</li>
+<li>Python.</li>
+<li>Regex.</li>
+<li>Report parsing.</li>
+<li>Automation flow.</li>
+</ul>
+<hr>
+<h2 id="30-tom-tat-cuc-ngan">30. Tóm tắt cực ngắn</h2>
+<p>Physical Design là ngành biến netlist logic thành layout vật lý để sản xuất chip.</p>
+<p>Người làm PD cần biết:</p>
+<ul>
+<li>Đọc input design.</li>
+<li>Tạo floorplan.</li>
+<li>Tạo power network.</li>
+<li>Đặt cell.</li>
+<li>Xây clock tree.</li>
+<li>Đi dây.</li>
+<li>Fix timing.</li>
+<li>Fix DRC/LVS/antenna.</li>
+<li>Kiểm tra IR drop/EM.</li>
+<li>Chuẩn bị GDS/OAS cho signoff/tapeout.</li>
+</ul>
+<p>Ba nhóm kiến thức quan trọng nhất cho người mới:</p>
+<p class="numbered"><span>1.</span> Flow PD.</p>
+<p class="numbered"><span>2.</span> Timing setup/hold.</p>
+<p class="numbered"><span>3.</span> Physical verification và power integrity.</p>
+      </article>
+    </main>
+  </div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      if (window.mermaid) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'base',
+          securityLevel: 'loose',
+          themeVariables: {
+            primaryColor: '#e7f4f1',
+            primaryTextColor: '#17212b',
+            primaryBorderColor: '#0f766e',
+            lineColor: '#46606f',
+            secondaryColor: '#f4f7fa',
+            tertiaryColor: '#ffffff',
+            fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Inter, Roboto, Arial, sans-serif'
+          },
+          flowchart: {
+            curve: 'basis',
+            padding: 12,
+            htmlLabels: true
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

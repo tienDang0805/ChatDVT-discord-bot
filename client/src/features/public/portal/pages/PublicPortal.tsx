@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, Cpu, NotebookPen } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -505,6 +505,28 @@ export const PublicPortal = () => {
       icon: Smartphone,
       href: '/digital-detox',
       author: 'Thiền Sư Cai Nghiện (Tiến Đặng)',
+      category: 'utility',
+      isNew: true
+    },
+    {
+      id: 'pd-docs',
+      number: '31',
+      title: 'Tài Liệu PD Căn Bản',
+      description: 'Physical Design căn bản cho người mới. 30 chương từ Floorplan, CTS, Route đến Signoff. Có biểu đồ Mermaid minh hoạ.',
+      icon: Cpu,
+      href: '/pd-docs',
+      author: 'PD Engineer (Tiến Đặng)',
+      category: 'learning',
+      isNew: true
+    },
+    {
+      id: 'note-daily',
+      number: '32',
+      title: 'Note Daily',
+      description: 'Ghi chú hàng ngày với calendar view, streak counter. Xây dựng thói quen viết mỗi ngày. Dữ liệu lưu local.',
+      icon: NotebookPen,
+      href: '/note-daily',
+      author: 'Thư Ký Tiến Đặng',
       category: 'utility',
       isNew: true
     }
