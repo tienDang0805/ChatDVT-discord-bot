@@ -157,25 +157,44 @@ const TOXIC_DEEP_QUOTES: string[] = [
     "Những chông gai của trần thế là bục giảng miễn phí giúp ta tu tập trí tuệ. Thế nhưng học phí để đổi lấy sự trưởng thành từ bục giảng ấy lại có khả năng vắt kiệt mọi tài nguyên của bạn. 🎓",
     "Đạt đến sự cân bằng hoàn mỹ giữa nỗ lực và thụ hưởng (work-life balance) là cảnh giới đáng mơ ước. Cân bằng của bạn rất tĩnh tại: 90% cạn kiệt sinh lực, 10% còn lại dùng để chìm vào nước mắt đêm thâu. ⚖️"
 ];
-const ACTIVE_HOUR_START = 9;
+const ACTIVE_HOUR_START = 8;
+const ACTIVE_MINUTE_START = 30;
 const ACTIVE_HOUR_END = 18;
 
-function getVietnamHour(): number {
-    const vnTime = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-    return vnTime.getHours();
+function getVietnamTime(): Date {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+}
+
+function isWeekday(): boolean {
+    const day = getVietnamTime().getDay();
+    return day >= 1 && day <= 5;
 }
 
 function getMsUntilNextActiveWindow(): number {
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
-    const next9am = new Date(now);
-    next9am.setDate(next9am.getDate() + 1);
-    next9am.setHours(ACTIVE_HOUR_START, 0, 0, 0);
-    return next9am.getTime() - now.getTime();
+    const now = getVietnamTime();
+    const next = new Date(now);
+    next.setDate(next.getDate() + 1);
+    next.setHours(ACTIVE_HOUR_START, ACTIVE_MINUTE_START, 0, 0);
+
+    while (next.getDay() === 0 || next.getDay() === 6) {
+        next.setDate(next.getDate() + 1);
+    }
+
+    return next.getTime() - now.getTime();
 }
 
 function isWithinActiveHours(): boolean {
-    const hour = getVietnamHour();
-    return hour >= ACTIVE_HOUR_START && hour < ACTIVE_HOUR_END;
+    if (!isWeekday()) return false;
+
+    const now = getVietnamTime();
+    const hour = now.getHours();
+    const minute = now.getMinutes();
+
+    if (hour < ACTIVE_HOUR_START) return false;
+    if (hour === ACTIVE_HOUR_START && minute < ACTIVE_MINUTE_START) return false;
+    if (hour >= ACTIVE_HOUR_END) return false;
+
+    return true;
 }
 
 function getRandomInterval(): number {
@@ -217,7 +236,7 @@ function scheduleNextQuote(client: Client): void {
     if (!isWithinActiveHours()) {
         const sleepMs = getMsUntilNextActiveWindow();
         const sleepHours = Math.round(sleepMs / 3600000 * 10) / 10;
-        console.log(`[ToxicQuotes] Outside active hours (9h-18h VN). Sleeping ${sleepHours}h until next window.`);
+        console.log(`[ToxicQuotes] Outside active hours (8h30-18h, Mon-Fri VN). Sleeping ${sleepHours}h until next window.`);
         setTimeout(() => scheduleNextQuote(client), sleepMs);
         return;
     }
@@ -235,6 +254,6 @@ function scheduleNextQuote(client: Client): void {
 }
 
 export function startToxicQuotes(client: Client): void {
-    console.log('[ToxicQuotes] Started — random 10-30min interval, active 9h-18h VN');
+    console.log('[ToxicQuotes] Started — random 10-30min interval, active 8h30-18h Mon-Fri VN');
     scheduleNextQuote(client);
 }
