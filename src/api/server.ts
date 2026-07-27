@@ -157,7 +157,7 @@ app.use('/api', poe2TradeRoutes);
 
 // Protect API Routes (except public routes)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/') || req.path.startsWith('/api/ping-sos')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -187,6 +187,9 @@ app.use('/api', facebookRoutes);
 
 import publicAiRoutes from './routes/public-ai';
 app.use('/api', publicAiRoutes);
+
+import pingSosRoutes from './routes/ping-sos';
+app.use('/api', pingSosRoutes);
 
 // Web Chat Prompt Config (Admin - protected)
 app.get('/api/web-chat/prompt', authenticateToken, async (req, res) => {
@@ -366,6 +369,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;l
 
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
 app.use(express.static(CLIENT_BUILD_PATH));
+
+app.get('/ping', (req, res) => {
+  res.sendFile(path.join(CLIENT_BUILD_PATH, 'ping', 'index.html'));
+});
 
 app.get('*', (req, res) => {
   res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));

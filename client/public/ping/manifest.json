@@ -1,0 +1,33 @@
+{
+  "name": "Nút Bấm Vô Tri",
+  "short_name": "Nút Vô Tri",
+  "description": "4 cái nút. Bấm đi.",
+  "start_url": "/ping/",
+  "scope": "/ping/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/chatdvt_avatar.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/chatdvt_avatar.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/chatdvt_avatar.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "lang": "vi",
+  "dir": "ltr"
+}
