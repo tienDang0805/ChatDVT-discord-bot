@@ -1,10 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { bot } from '../../bot/client';
-import { TextChannel } from 'discord.js';
 
 const router = Router();
 
-const PING_CHANNEL_ID = process.env.DISCORD_CHANNEL_ID || '';
 const ADMIN_ID = process.env.ADMIN_ID || '';
 
 interface PingButton {
@@ -79,17 +77,12 @@ router.post('/ping-sos', async (req: Request, res: Response) => {
     const button = BUTTONS.find(b => b.id === buttonId)!;
     const msg = button.messages[Math.floor(Math.random() * button.messages.length)];
 
-    if (!PING_CHANNEL_ID) {
-      return res.status(500).json({ error: 'Chưa config channel' });
+    if (!ADMIN_ID) {
+      return res.status(500).json({ error: 'Chưa config ADMIN_ID' });
     }
 
-    const channel = await bot.channels.fetch(PING_CHANNEL_ID);
-    if (!channel || !channel.isTextBased()) {
-      return res.status(500).json({ error: 'Không tìm thấy channel' });
-    }
-
-    const mention = ADMIN_ID ? ` <@${ADMIN_ID}>` : '';
-    await (channel as TextChannel).send(`${msg}${mention}`);
+    const user = await bot.users.fetch(ADMIN_ID);
+    await user.send(msg);
 
     return res.json({ ok: true });
   } catch (err: any) {
