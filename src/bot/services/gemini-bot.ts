@@ -404,21 +404,43 @@ class GeminiBotService {
       }
   }
 
-  // --- Auto Reply ---
+  private static readonly AUTO_REPLY_MOODS = [
+      { mood: 'mỉa mai châm biếm', prompt: (name: string, msg: string) => `Thằng/con "${name}" vừa nhắn: "${msg}". Hãy mỉa mai nó bằng giọng khinh khỉnh, châm biếm cay độc kiểu "ồ thật bất ngờ, lại là mày à". Ngắn gọn, cay xè.` },
+      { mood: 'cà khịa thô tục', prompt: (name: string, msg: string) => `"${name}" vừa tag chủ nhân và nhắn: "${msg}". Chửi nó bằng ngôn ngữ đường phố, tục tĩu cà khịa, kiểu "đm lại mày à, biến mẹ đi". Ngắn, sốc, bựa.` },
+      { mood: 'khinh bỉ lạnh lùng', prompt: (name: string, msg: string) => `Có kẻ tên "${name}" dám quấy rối chủ nhân bằng tin nhắn: "${msg}". Hãy khinh bỉ nó bằng giọng lạnh tanh như thể nó là con ruồi vo ve. Một câu ngắn gọn thể hiện sự ghê tởm.` },
+      { mood: 'đểu cáng giả ngây', prompt: (name: string, msg: string) => `"${name}" nhắn: "${msg}". Hãy giả vờ ngây thơ hỏi lại nhưng thực chất đang khịa rất sâu, kiểu "ơ mày nói cái gì? tao tưởng mày câm rồi". Đểu và cay.` },
+      { mood: 'giang hồ chợ búa', prompt: (name: string, msg: string) => `Thằng "${name}" vừa nhắn: "${msg}". Đáp lại bằng giọng giang hồ chợ búa, dùng tiếng lóng đường phố, chửi thề tự nhiên như thở. Ngắn gọn, bặm trợn.` },
+      { mood: 'toxic gamer', prompt: (name: string, msg: string) => `"${name}" vừa nhắn: "${msg}". Reply bằng giọng toxic gamer Việt Nam, kiểu "gg ez", "noob vl", "uninstall đi bro". Ngắn, bựa, cay.` },
+      { mood: 'triết gia bựa', prompt: (name: string, msg: string) => `"${name}" nhắn: "${msg}". Hãy reply bằng giọng triết gia nhưng nội dung thực chất là đang chửi xéo, kiểu "Khổng Tử từng nói: thằng nào tag lung tung thằng đó ngu". Hài hước và cay.` },
+      { mood: 'sếp toxic', prompt: (name: string, msg: string) => `Nhân viên tên "${name}" nhắn: "${msg}". Reply bằng giọng sếp toxic, kiểu "mày tag tao làm gì, đi làm việc đi, lương tháng này trừ". Ngắn, đểu, cay.` },
+      { mood: 'rap diss', prompt: (name: string, msg: string) => `"${name}" vừa nhắn: "${msg}". Reply bằng 1-2 câu diss rap ngắn gọn, có vần, cà khịa thô tục kiểu battle rap Việt. Ngắn thôi.` },
+      { mood: 'gen z sarcasm', prompt: (name: string, msg: string) => `"${name}" nhắn: "${msg}". Reply bằng giọng gen Z cực kỳ sarcastic, dùng từ lóng gen Z Việt Nam kiểu "real đấy", "slay quá bạn ei", "vibe check failed". Cà khịa nhẹ nhàng nhưng cay.` },
+  ];
+
   public async generateAutoReply(messageContent: string, senderName: string, guildId?: string): Promise<string> {
       try {
-          const userPrompt = `Kẻ tên "${senderName}" vừa nhắn: "${messageContent}". Hãy chửi nó và đuổi nó đi ngay.`;
-          const systemInstruction = process.env.AUTO_REPLY_PROMPT || "Mày là trợ lý thô lỗ. Luôn đuổi người khác đi.";
-          
+          const randomMood = GeminiBotService.AUTO_REPLY_MOODS[Math.floor(Math.random() * GeminiBotService.AUTO_REPLY_MOODS.length)];
+          const userPrompt = randomMood.prompt(senderName, messageContent);
+
+          const baseSystemPrompt = process.env.AUTO_REPLY_PROMPT || "Mày là trợ lý thô lỗ. Luôn đuổi người khác đi.";
+          const systemInstruction = `${baseSystemPrompt}\n\nMood hiện tại: ${randomMood.mood}.\nQuy tắc bổ sung:\n- PHẢI trả lời đa dạng, KHÔNG lặp lại pattern cũ.\n- Mỗi lần reply phải khác biệt hoàn toàn về cách diễn đạt.\n- Dùng từ ngữ tục tĩu đường phố tự nhiên (đm, vl, vcl, đéo, lol, wtf...).\n- Có thể xưng tao/mày, ông/thằng, bà/con.\n- Tối đa 1-2 câu ngắn, KHÔNG giải thích dài dòng.\n- KHÔNG lịch sự, KHÔNG xin lỗi, KHÔNG thân thiện.`;
+
           const autoReplyModel = await geminiCore.getModel(guildId, 'chat');
           const result = await retryWithBackoff(() => autoReplyModel.generateContent({
               systemInstruction,
               contents: [{ role: 'user', parts: [{ text: userPrompt }] }]
           }));
-          
+
           return result.response.text();
       } catch (error: any) {
-          return "Biến đi.";
+          const fallbacks = [
+              "Biến mẹ đi.",
+              "Đm tag cái gì tag, biến.",
+              "Mày lại à? Cút.",
+              "Ê đừng tag nữa, phiền vl.",
+              "Lại mày? Tao mệt mày lắm rồi.",
+          ];
+          return fallbacks[Math.floor(Math.random() * fallbacks.length)];
       }
   }
 
