@@ -45,6 +45,35 @@ export async function handleInteraction(interaction: Interaction) {
                return;
           }
 
+          if (customId.startsWith('egg_replace_')) {
+               const parts = customId.split('_');
+               const newPetId = parseInt(parts[2]);
+               const oldPetId = parseInt(parts[3]);
+               const ownerId = parts[4];
+               if (interaction.user.id !== ownerId) {
+                   await interaction.reply({ content: "❌ Đây không phải lựa chọn của bạn!", ephemeral: true });
+                   return;
+               }
+               await interaction.deferUpdate();
+               await prisma.pet.delete({ where: { id: oldPetId } });
+               await interaction.editReply({ content: `✅ Đã **thay thế** sinh vật cũ! Sinh vật mới đã trở thành đồng hành chính.`, components: [] });
+               return;
+          }
+
+          if (customId.startsWith('egg_keep_')) {
+               const parts = customId.split('_');
+               const newPetId = parseInt(parts[2]);
+               const ownerId = parts[3];
+               if (interaction.user.id !== ownerId) {
+                   await interaction.reply({ content: "❌ Đây không phải lựa chọn của bạn!", ephemeral: true });
+                   return;
+               }
+               await interaction.deferUpdate();
+               await prisma.pet.delete({ where: { id: newPetId } });
+               await interaction.editReply({ content: `💎 Đã **giữ nguyên** sinh vật cũ. Sinh vật mới đã được phóng sinh.`, components: [] });
+               return;
+          }
+
           // --- Expedition Next ---
           if (customId === 'expedition_next') {
                // Update the message to loading state immediately

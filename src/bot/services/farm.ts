@@ -2,6 +2,7 @@ import { prisma } from '../../database/prisma';
 import { userIdentityService } from './identity';
 import { EmbedBuilder } from 'discord.js';
 import { SHOP_ITEMS } from './shop';
+import { EGG_ITEMS, rollEggDrop } from './egg-data';
 
 class FarmService {
     private cooldowns: Map<string, number> = new Map();
@@ -26,6 +27,8 @@ class FarmService {
         if (Math.random() < 0.1) {
             droppedItem = SHOP_ITEMS[Math.floor(Math.random() * SHOP_ITEMS.length)];
         }
+
+        const eggDropped = rollEggDrop();
 
         let newExp = pet.exp + expGained;
         let newLevel = pet.level;
@@ -83,6 +86,16 @@ class FarmService {
                     });
                 }
             }
+
+            if (eggDropped) {
+                const eggMeta = EGG_ITEMS[eggDropped];
+                const existingEgg = await tx.inventoryItem.findFirst({ where: { userId, itemId: eggDropped } });
+                if (existingEgg) {
+                    await tx.inventoryItem.update({ where: { id: existingEgg.id }, data: { quantity: { increment: 1 } } });
+                } else {
+                    await tx.inventoryItem.create({ data: { userId, itemId: eggDropped, itemType: 'egg', name: eggMeta?.name || 'Trứng Bí Ẩn', quantity: 1 } });
+                }
+            }
         });
 
         userIdentityService.invalidateCache(userId);
@@ -102,6 +115,11 @@ class FarmService {
 
         if (droppedItem) {
             embed.addFields({ name: '🎁 Vật phẩm rơi rớt', value: `Nhận được **1x ${droppedItem.name}**!`, inline: false });
+        }
+
+        if (eggDropped) {
+            const eggMeta = EGG_ITEMS[eggDropped];
+            embed.addFields({ name: `${eggMeta?.emoji || '🥚'} TRỨNG RƠI!`, value: `Bất ngờ tìm được **1x ${eggMeta?.name || eggDropped}**!\nDùng \`/use ${eggDropped}\` để ấp.`, inline: false });
         }
 
         if (leveledUp) {

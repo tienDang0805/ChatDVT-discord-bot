@@ -1,6 +1,7 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { prisma } from '../../database/prisma';
 import { SHOP_ITEMS } from '../services/shop';
+import { EGG_ITEMS } from '../services/egg-data';
 import { petService } from '../services/pet';
 import { userIdentityService } from '../services/identity';
 
@@ -44,6 +45,56 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       return;
   }
 
+  const eggInfo = EGG_ITEMS[itemId];
+  if (eggInfo) {
+      if (quantity > 1) {
+          await interaction.editReply('❌ Mỗi lần chỉ có thể ấp 1 quả trứng!');
+          return;
+      }
+
+      const existingPet = await prisma.pet.findFirst({ where: { ownerId: userId } });
+
+      await interaction.editReply(`🧬 Đang ấp **${eggInfo.name}**... Vui lòng đợi Gene-Sys phân tích gen...\n*(Lưu ý: Sinh ảnh có thể mất 15-20 giây)*`);
+
+      try {
+          const { newPet, embed, files } = await petService.hatchEggToDB(userId, eggInfo.name, eggInfo.forcedRarity, interaction.guildId || undefined);
+
+          if (existingPet) {
+              const oldStats = JSON.parse(existingPet.stats as string || '{}');
+              const compareEmbed = new EmbedBuilder()
+                  .setTitle('⚖️ So Sánh Sinh Vật')
+                  .setDescription('Bạn đã có sinh vật! Chọn **Thay Thế** để đổi sang con mới hoặc **Giữ Nguyên** để huỷ.')
+                  .setColor(0xFFAA00)
+                  .addFields(
+                      { name: `🔴 Hiện tại: ${existingPet.species}`, value: `Độ hiếm: **${existingPet.rarity}** | Lv.${existingPet.level}\nHP: ${oldStats.hp || 0} | ATK: ${oldStats.atk || 0} | DEF: ${oldStats.def || 0}`, inline: true },
+                      { name: `🟢 Mới: ${newPet.species}`, value: `Độ hiếm: **${newPet.rarity}** | Lv.1\n${embed.data.fields?.find(f => f.name === 'Stats')?.value || 'N/A'}`, inline: true }
+                  );
+
+              const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                  new ButtonBuilder().setCustomId(`egg_replace_${newPet.id}_${existingPet.id}_${userId}`).setLabel('🔄 Thay Thế').setStyle(ButtonStyle.Danger),
+                  new ButtonBuilder().setCustomId(`egg_keep_${newPet.id}_${userId}`).setLabel('💎 Giữ Nguyên').setStyle(ButtonStyle.Secondary)
+              );
+
+              await prisma.$transaction(async (tx) => {
+                  if (inventoryItem.quantity === 1) await tx.inventoryItem.delete({ where: { id: inventoryItem.id } });
+                  else await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: 1 } } });
+              });
+
+              await interaction.followUp({ embeds: [compareEmbed, embed], files, components: [row] });
+          } else {
+              await prisma.$transaction(async (tx) => {
+                  if (inventoryItem.quantity === 1) await tx.inventoryItem.delete({ where: { id: inventoryItem.id } });
+                  else await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: 1 } } });
+              });
+              await interaction.followUp({ embeds: [embed], files });
+          }
+      } catch (error) {
+          console.error("Hatching Error via Item:", error);
+          await interaction.followUp({ content: "❌ Có lỗi xảy ra trong quá trình ấp trứng. Vật phẩm của bạn chưa bị mất.", ephemeral: true });
+      }
+      return;
+  }
+
   const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
   if (!shopItem) {
       await interaction.editReply('❌ Không tìm thấy thông tin vật phẩm này.');
@@ -51,44 +102,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   }
 
   const pet = await prisma.pet.findFirst({ where: { ownerId: userId } });
-
-  // --- Trứng (Hatch Egg) ---
-  if (shopItem.type === 'egg') {
-      if (pet) {
-          await interaction.editReply('❌ Bạn đã có sinh vật rồi! Không thể ấp thêm trứng.');
-          return;
-      }
-      if (quantity > 1) {
-          await interaction.editReply('❌ Mỗi lần chỉ có thể ấp 1 quả trứng!');
-          return;
-      }
-
-      await interaction.editReply(`🧬 Đang ấp **${shopItem.name}**... Vui lòng đợi Gene-Sys phân tích gen...\n*(Lưu ý: Bọt khí sinh ảnh có thể kéo dài 15-20 giây)*`);
-
-      let forcedRarity: string | undefined = undefined;
-      if (itemId === 'egg_normal') forcedRarity = 'Normal';
-      else if (itemId === 'egg_magic') forcedRarity = 'Magic';
-      else if (itemId === 'egg_rare') forcedRarity = 'Rare';
-      // 'egg_random' is undefined so it rolls naturally.
-
-      try {
-          const { newPet, embed, files } = await petService.hatchEggToDB(userId, shopItem.name, forcedRarity);
-          
-          await prisma.$transaction(async (tx) => {
-              if (inventoryItem.quantity === 1) {
-                  await tx.inventoryItem.delete({ where: { id: inventoryItem.id } });
-              } else {
-                  await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: 1 } } });
-              }
-          });
-
-          await interaction.followUp({ embeds: [embed], files });
-      } catch (error) {
-          console.error("Hatching Error via Item:", error);
-          await interaction.followUp({ content: "❌ Có lỗi xảy ra trong quá trình ấp trứng. Vật phẩm của bạn chưa bị mất.", ephemeral: true });
-      }
-      return;
-  }
 
   // --- Vật phẩm battle (HP/MP Potion) ---
   if (shopItem.type === 'battle') {

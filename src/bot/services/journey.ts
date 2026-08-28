@@ -2,6 +2,7 @@ import { prisma } from '../../database/prisma';
 import { petService } from './pet';
 import { userIdentityService } from './identity';
 import { EmbedBuilder } from 'discord.js';
+import { EGG_ITEMS, rollEggDrop } from './egg-data';
 
 const JOURNEY_COOLDOWN_HOURS = 4;
 const JOURNEY_COOLDOWN_MS = JOURNEY_COOLDOWN_HOURS * 60 * 60 * 1000;
@@ -35,29 +36,18 @@ export class JourneyService {
         const expFound = 100 + Math.floor(Math.random() * 200);
 
         // Rare Drop Roll
-        let eggDropped = null;
+        let eggDropped: string | null = null;
         let potionDropped = 0;
         let chestDropped = false;
         const roll = Math.random();
         
-        // 5% chance for Chest
         if (roll < 0.05) {
             chestDropped = true;
-        } else if (roll < 0.06) {
-            // 1% chance for Normal Egg
-            eggDropped = 'egg_normal';
-        } else if (roll < 0.063) {
-            // 0.3% chance for Magic Egg
-            eggDropped = 'egg_magic';
-        } else if (roll < 0.064) {
-            // 0.1% chance for Rare Egg
-            eggDropped = 'egg_rare';
-        } else if (roll < 0.0643) {
-            // 0.03% chance for Random/Legendary Egg
-            eggDropped = 'egg_random';
-        } else if (roll < 0.2) {
-            // 13.5% chance for a Stamina Potion drop
-            potionDropped = 1;
+        } else {
+            eggDropped = rollEggDrop();
+            if (!eggDropped && roll < 0.2) {
+                potionDropped = 1;
+            }
         }
 
         // 4. Save Rewards
@@ -89,9 +79,10 @@ export class JourneyService {
                 else await tx.inventoryItem.create({ data: { userId, itemId: 'rare_chest', itemType: 'chest', name: 'Rương Hiếm', quantity: 1 } });
             }
             if (eggDropped) {
+                const eggMeta = EGG_ITEMS[eggDropped];
                 const existItem = await tx.inventoryItem.findFirst({ where: { userId, itemId: eggDropped } });
                 if (existItem) await tx.inventoryItem.update({ where: { id: existItem.id }, data: { quantity: { increment: 1 } } });
-                else await tx.inventoryItem.create({ data: { userId, itemId: eggDropped, itemType: 'egg', name: 'Trứng Nhặt Được', quantity: 1 } });
+                else await tx.inventoryItem.create({ data: { userId, itemId: eggDropped, itemType: 'egg', name: eggMeta?.name || 'Trứng Bí Ẩn', quantity: 1 } });
             }
             if (potionDropped > 0) {
                 const existItem = await tx.inventoryItem.findFirst({ where: { userId, itemId: 'stamina_potion' } });
@@ -103,7 +94,10 @@ export class JourneyService {
         userIdentityService.invalidateCache(userId);
 
         if (chestDropped) logEntries.push(`📦 Vô tình nhặt được **1x Rương Hiếm**!`);
-        if (eggDropped) logEntries.push(`🥚 KỲ TÍCH! Tìm được **1x ${eggDropped}**!`);
+        if (eggDropped) {
+            const eggMeta = EGG_ITEMS[eggDropped];
+            logEntries.push(`${eggMeta?.emoji || '🥚'} KỲ TÍCH! Tìm được **1x ${eggMeta?.name || eggDropped}**!`);
+        }
         if (potionDropped > 0) logEntries.push(`🍖 Trên đường về nhặt được **1x Bình Thể Lực**!`);
 
         // Handle Exp Level Up

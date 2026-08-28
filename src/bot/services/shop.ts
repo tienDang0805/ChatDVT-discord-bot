@@ -14,10 +14,6 @@ export const SHOP_ITEMS = [
     { id: 'mp_potion',    name: 'Bình MP',       type: 'battle',    price: 250,  description: '💙 Hồi **+50 MP** trong PK.', emoji: '💙', expGain: 0   },
     { id: 'evo_stone',    name: 'Đá Tiến Hóa',  type: 'evolution', price: 2000, description: '🔮 Dùng để tiến hóa sinh vật lên bậc tiếp theo.', emoji: '🔮', expGain: 0 },
     { id: 'rare_chest',   name: 'Rương Hiếm',   type: 'chest',     price: 3000, description: '📦 Mở ngẫu nhiên EXP lớn hoặc vật phẩm quý.', emoji: '📦', expGain: 0 },
-    { id: 'egg_random',   name: 'Trứng Kì Bí',  type: 'egg',       price: 1500, description: '🥚 Ấp ngẫu nhiên ra mọi độ hiếm (Tỷ lệ Vàng cực thấp).', emoji: '🥚', expGain: 0 },
-    { id: 'egg_normal',   name: 'Trứng Sắt Cán', type: 'egg',       price: 500,  description: '🪨 Trứng bình dân, 100% nở ra sinh vật Normal.', emoji: '🪨', expGain: 0 },
-    { id: 'egg_magic',    name: 'Trứng Ma Thuật', type: 'egg',      price: 2000, description: '🔮 Trứng hội tụ mana, 100% nở ra sinh vật Magic.', emoji: '🔮', expGain: 0 },
-    { id: 'egg_rare',     name: 'Trứng Huyền Bí', type: 'egg',      price: 5000, description: '🌌 Trứng phát quang, 100% nở ra sinh vật Rare.', emoji: '🌌', expGain: 0 },
     { id: 'stamina_potion', name: 'Bình Thể Lực', type: 'consumable', price: 300, description: '🍖 Cấp phát **+30 Thể Lực** cho thú cưng đi farm.', emoji: '🍖', expGain: 0 },
 ];
 
@@ -40,8 +36,7 @@ class ShopService {
             elemental: '💎 Đá Thuộc Tính',
             battle: '⚔️ Vật Phẩm Chiến Đấu',
             evolution: '🧬 Tiến Hóa',
-            chest: '📦 Rương Đặc Biệt',
-            egg: '🥚 Cửa Hàng Trứng'
+            chest: '📦 Rương Đặc Biệt'
         };
 
         for (const [type, items] of Object.entries(categories)) {
@@ -113,9 +108,7 @@ class ShopService {
         if (!item) return { success: false, message: '❌ Vật phẩm không tồn tại trong hệ thống.' };
         if (quantity <= 0) return { success: false, message: '❌ Số lượng không hợp lệ.' };
 
-        if (item.type === 'egg') {
-            return { success: false, message: '❌ Không thể bán lại Trứng.' };
-        }
+
 
         const inventoryItem = await prisma.inventoryItem.findFirst({ where: { userId, itemId } });
         if (!inventoryItem || inventoryItem.quantity < quantity) {
