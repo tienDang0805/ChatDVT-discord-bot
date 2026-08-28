@@ -206,6 +206,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       
       let stats: any = {};
       try { stats = JSON.parse(pet.stats as string); } catch(e) {}
+
+      let consumed: Record<string, number> = {};
+      try { consumed = JSON.parse(pet.consumedItems || '{}'); } catch(e) {}
+      consumed[itemId] = (consumed[itemId] || 0) + quantity;
       
       if (itemId === 'fire_crystal') stats.atk = (stats.atk || 10) + (5 * quantity);
       if (itemId === 'water_crystal') stats.hp = (stats.hp || 100) + (20 * quantity);
@@ -218,7 +222,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           } else {
               await tx.inventoryItem.update({ where: { id: inventoryItem.id }, data: { quantity: { decrement: quantity } } });
           }
-          await (tx as any).pet.update({ where: { id: pet.id }, data: { stats: JSON.stringify(stats) } });
+          await (tx as any).pet.update({ where: { id: pet.id }, data: { stats: JSON.stringify(stats), consumedItems: JSON.stringify(consumed) } });
       });
       
       const embed = new EmbedBuilder()

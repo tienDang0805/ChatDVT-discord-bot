@@ -85,6 +85,8 @@ model Pet {
   level           Int      @default(1)
   exp             Int      @default(0)
   lore            String   @default("")
+  consumedItems   String   @default("{}")
+  totalExpEarned  Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

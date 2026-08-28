@@ -55,8 +55,49 @@ export async function handleInteraction(interaction: Interaction) {
                    return;
                }
                await interaction.deferUpdate();
-               await prisma.pet.delete({ where: { id: oldPetId } });
-               await interaction.editReply({ content: `✅ Đã **thay thế** sinh vật cũ! Sinh vật mới đã trở thành đồng hành chính.`, components: [] });
+
+               const oldPet = await prisma.pet.findUnique({ where: { id: oldPetId } });
+               if (!oldPet) {
+                   await interaction.editReply({ content: "❌ Không tìm thấy sinh vật cũ.", components: [] });
+                   return;
+               }
+
+               const inheritExp = oldPet.totalExpEarned || 0;
+               let consumed: Record<string, number> = {};
+               try { consumed = JSON.parse(oldPet.consumedItems || '{}'); } catch(e) {}
+
+               const refundMessages: string[] = [];
+
+               await prisma.$transaction(async (tx) => {
+                   await tx.pet.delete({ where: { id: oldPetId } });
+
+                   for (const [itemId, qty] of Object.entries(consumed)) {
+                       if (qty <= 0) continue;
+                       const existItem = await tx.inventoryItem.findFirst({ where: { userId: ownerId, itemId } });
+                       if (existItem) {
+                           await tx.inventoryItem.update({ where: { id: existItem.id }, data: { quantity: { increment: qty } } });
+                       } else {
+                           const ITEM_NAMES: Record<string, string> = {
+                               fire_crystal: 'Khoáng Hỏa', water_crystal: 'Đá Băng',
+                               earth_crystal: 'Hạt Giống Thổ', wind_crystal: 'Lông Vũ Phong'
+                           };
+                           await tx.inventoryItem.create({ data: { userId: ownerId, itemId, itemType: 'elemental', name: ITEM_NAMES[itemId] || itemId, quantity: qty } });
+                       }
+                       refundMessages.push(`📦 **${qty}x ${itemId}**`);
+                   }
+               });
+
+               if (inheritExp > 0) {
+                   await petService.addExpAndLevelUp(newPetId, inheritExp);
+               }
+
+               const newPet = await prisma.pet.findUnique({ where: { id: newPetId } });
+               let resultMsg = `✅ Đã **thay thế** sinh vật cũ!\n\n`;
+               if (inheritExp > 0) resultMsg += `📊 **Kế thừa EXP**: ${inheritExp.toLocaleString()} EXP (100%) → Pet mới Lv.**${newPet?.level || 1}**\n`;
+               if (refundMessages.length > 0) resultMsg += `🔄 **Hoàn trả vật phẩm**:\n${refundMessages.join('\n')}`;
+               if (inheritExp === 0 && refundMessages.length === 0) resultMsg += `Sinh vật mới đã trở thành đồng hành chính.`;
+
+               await interaction.editReply({ content: resultMsg, components: [] });
                return;
           }
 

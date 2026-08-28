@@ -72,7 +72,8 @@ class PetService {
           data: {
               level: currentLevel,
               exp: currentExp,
-              stats: JSON.stringify(stats)
+              stats: JSON.stringify(stats),
+              totalExpEarned: { increment: expToAdd }
           }
       });
 
@@ -439,6 +440,20 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
       if (pet.lore) {
           embed.addFields({ name: "Truyền thuyết", value: `*${pet.lore}*`, inline: false });
       }
+
+      let consumed: Record<string, number> = {};
+      try { consumed = JSON.parse(pet.consumedItems || '{}'); } catch(e) {}
+      const consumedEntries = Object.entries(consumed).filter(([_, qty]) => qty > 0);
+      if (consumedEntries.length > 0) {
+          const ITEM_LABELS: Record<string, string> = {
+              fire_crystal: '🔥 Khoáng Hỏa', water_crystal: '💧 Đá Băng',
+              earth_crystal: '🌿 Hạt Giống Thổ', wind_crystal: '🌪️ Lông Vũ Phong'
+          };
+          const itemLines = consumedEntries.map(([id, qty]) => `${ITEM_LABELS[id] || id}: **${qty}x**`).join('\n');
+          embed.addFields({ name: "📜 Vật Phẩm Đã Hấp Thụ", value: itemLines, inline: false });
+      }
+
+      embed.addFields({ name: "📊 Tổng EXP Tích Lũy", value: `**${(pet.totalExpEarned || 0).toLocaleString()}** EXP`, inline: true });
       embed.setFooter({ text: "Dùng /pet evolve để tiến hóa, /pk để chiến đấu." });
 
       const files = [];
