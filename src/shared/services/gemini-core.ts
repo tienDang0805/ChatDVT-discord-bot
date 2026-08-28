@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, GenerativeModel, HarmCategory, HarmBlockThreshold, Part } from '@google/generative-ai';
 import { GoogleGenAI } from '@google/genai';
-import { GEMINI_CHAT_CONFIG, GEMINI_LOGIC_CONFIG, IMAGEN_MODEL } from '../../config/constants';
+import { GEMINI_CHAT_CONFIG, GEMINI_LOGIC_CONFIG, GEMINI_IMAGE_MODEL } from '../../config/constants';
 import { prisma } from '../../database/prisma';
 import axios from 'axios';
 import fs from 'fs';
@@ -55,7 +55,7 @@ class GeminiCoreService {
       ];
 
       if (type === 'image') {
-          return genAI.getGenerativeModel({ model: IMAGEN_MODEL, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+          return genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
       } else if (type === 'logic') {
           return genAI.getGenerativeModel({ model: GEMINI_LOGIC_CONFIG.modelName, generationConfig: customConfig || GEMINI_LOGIC_CONFIG.generationConfig, safetySettings });
       } else if (type === 'search') {
@@ -137,32 +137,27 @@ class GeminiCoreService {
       }
   }
 
-  // --- Image Generation (Imagen) ---
+  // --- Image Generation (Gemini Native) ---
   public async generateImage(prompt: string, guildId?: string): Promise<{ success: boolean; imageBuffer?: Buffer; textResponse?: string; error?: string }> {
       try {
           const apiKey = await this.getApiKey(guildId);
           const ai = new GoogleGenAI({ apiKey });
 
-          const response = await retryWithBackoff(() => ai.models.generateImages({
-              model: 'imagen-4.0-generate-001',
-              prompt: prompt,
-              config: {
-                  numberOfImages: 1,
-                  aspectRatio: "1:1"
-              }
+          const response = await retryWithBackoff(() => ai.models.generateContent({
+              model: GEMINI_IMAGE_MODEL,
+              contents: prompt,
+              config: { responseModalities: ['IMAGE'] }
           }));
 
-          if (!response.generatedImages || response.generatedImages.length === 0) {
-              return { success: false, textResponse: "Không tạo được ảnh.", error: "No image returned" };
+          const parts = response.candidates?.[0]?.content?.parts || [];
+          for (const part of parts) {
+              if ((part as any).inlineData?.data) {
+                  const imageBuffer = Buffer.from((part as any).inlineData.data, 'base64');
+                  return { success: true, imageBuffer, textResponse: "" };
+              }
           }
 
-          const imgBytes = response.generatedImages[0].image?.imageBytes;
-          if (!imgBytes) {
-              return { success: false, textResponse: "Không tạo được ảnh.", error: "No image bytes returned" };
-          }
-          const imageBuffer = Buffer.from(imgBytes, "base64");
-
-          return { success: true, imageBuffer, textResponse: "" };
+          return { success: false, textResponse: "Không tạo được ảnh.", error: "No image in response" };
       } catch (error: any) {
           console.error("Generate Image Error:", error);
           return { success: false, error: error.message };
@@ -202,25 +197,24 @@ class GeminiCoreService {
       }
   }
 
-  // --- Image Generation (Imagen) with custom API key support ---
+  // --- Image Generation (Gemini Native) with custom API key support ---
   public async generateImageWithKey(prompt: string, customApiKey?: string, guildId?: string, aspectRatio: string = '1:1'): Promise<{ success: boolean; imageBuffer?: Buffer; error?: string }> {
       try {
           const apiKey = customApiKey || await this.getApiKey(guildId);
           const ai = new GoogleGenAI({ apiKey });
-          const response = await retryWithBackoff(() => ai.models.generateImages({
-              model: IMAGEN_MODEL,
-              prompt: prompt,
-              config: { numberOfImages: 1, aspectRatio }
+          const response = await retryWithBackoff(() => ai.models.generateContent({
+              model: GEMINI_IMAGE_MODEL,
+              contents: prompt,
+              config: { responseModalities: ['IMAGE'] }
           }));
 
-          if (!response.generatedImages || response.generatedImages.length === 0) {
-              return { success: false, error: 'No image returned' };
+          const parts = response.candidates?.[0]?.content?.parts || [];
+          for (const part of parts) {
+              if ((part as any).inlineData?.data) {
+                  return { success: true, imageBuffer: Buffer.from((part as any).inlineData.data, 'base64') };
+              }
           }
-          const imgBytes = response.generatedImages[0].image?.imageBytes;
-          if (!imgBytes) {
-              return { success: false, error: 'No image bytes returned' };
-          }
-          return { success: true, imageBuffer: Buffer.from(imgBytes, 'base64') };
+          return { success: false, error: 'No image in response' };
       } catch (error: any) {
           console.error("Generate Image With Key Error:", error);
           return { success: false, error: error.message };

@@ -30,7 +30,7 @@ export const GEMINI_LOGIC_CONFIG = {
   }
 };
 
-export const IMAGEN_MODEL = "imagen-4.0-generate-001";
+export const GEMINI_IMAGE_MODEL = "gemini-3.1-flash-image";
 
 export const FB_PAGE_ACCESS_TOKEN = process.env.FB_PAGE_ACCESS_TOKEN || '';
 export const FB_VERIFY_TOKEN = process.env.FB_VERIFY_TOKEN || '';

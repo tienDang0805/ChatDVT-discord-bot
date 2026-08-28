@@ -9,7 +9,7 @@
 - **Name**: ChatDVT - Discord Bot + Web Portal
 - **Architecture**: Hybrid Monolith (1 Node.js process = Bot + API + Static Server)
 - **Database**: SQLite via Prisma ORM (`prisma/bot.db`)
-- **AI Engine**: Google Gemini (`gemini-3-flash-preview`) + Imagen 4.0
+- **AI Engine**: Google Gemini (`gemini-3-flash-preview`) + Gemini Native Image (`gemini-3.1-flash-image`)
 - **Backend**: Express 4 + discord.js 14 + Socket.IO 4 + TypeScript (CommonJS, ES2020)
 - **Frontend**: Vite 4 + React 18 + TailwindCSS 3 + TypeScript (ESM)
 - **Auth**: JWT (24h expiry), admin credentials from ENV
