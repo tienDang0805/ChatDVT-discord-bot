@@ -193,7 +193,7 @@ class PetService {
      // 3. Generate 3 Random Eggs
      await interaction.editReply("🌟 Đang liên kết với Gene-Sys... Đang tìm kiếm 3 quả trứng tiềm năng...");
      
-     const prompt = `Bạn là Gene-Sys. Hãy tạo ra 3 cái tên Cực Kì Sáng Tạo và Ngầu cho 3 Quả Trứng Sinh Vật Huyền Bí. 
+     const prompt = `Bạn là Gene-Sys. Hãy tạo ra 3 cái tên Hán Việt Cực Kì Sáng Tạo và Oai Phong cho 3 Quả Trứng Sinh Vật Huyền Bí (ví dụ: Trứng Viêm Long, Trứng Huyền Vũ, Trứng Thiên Lôi). 
 Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khác):
 ["Trứng X", "Trứng Y", "Trứng Z"]`;
 
@@ -350,7 +350,7 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
     }
 
     const prompt = `[Bối Cảnh & Vai Trò]
-Bạn là **"Gene-Sys"**, chuyên gia sinh học giả tưởng.
+Bạn là **"Gene-Sys"**, chuyên gia sinh học giả tưởng trong thế giới tu tiên.
 Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 
 [Quy Trình Sáng Tạo]
@@ -360,16 +360,23 @@ Nhiệm vụ: Ấp trứng "${eggType}" thành sinh vật.
 4. Tạo skill (2-4 kỹ năng tính bằng MP) và trait (1-4 thuộc tính bị động).
 5. Tính năng TRAIT LUÔN tuân thủ: "type" thuộc 1 trong 5 loại: crit (bạo kích), dodge (né tránh), hp_regen (hồi máu %), atk_boost (tăng dmg %), def_boost (giảm dmg % nhận vào). "value" là số thực từ 0.05 đến 0.4 tỷ lệ thuận với Độ Hiếm.
 
+[QUY TẮC ĐẶT TÊN - CỰC KỲ QUAN TRỌNG]
+- "species": BẮT BUỘC dùng tên Hán Việt hoặc Hán Việt sáng tạo (ví dụ: Viêm Long, Huyền Vũ Quy, Lôi Hổ, Băng Phượng, Thiên Ma Ưng, Hắc Xà Vương). TUYỆT ĐỐI KHÔNG dùng tên tiếng Anh.
+- "skills[].name": BẮT BUỘC tên Hán Việt (ví dụ: Hỏa Diệm Chưởng, Băng Phong Trảm, Lôi Đình Kích, Thiên Lôi Thuật).
+- "traits[].name": BẮT BUỘC tên Hán Việt (ví dụ: Bạo Kích Chi Nhãn, Phong Ảnh Bộ, Thiết Bích Thuẫn).
+- "element": Dùng Hán Việt (Hỏa/Thủy/Thổ/Phong/Lôi/Ám/Quang).
+- "description_vi": Viết tiếng Việt, có thể pha Hán Việt cho thêm phần oai phong.
+
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON]
 {
 "rarity": "${rarity}",
-"element": "Fire/Water/Earth/Wind/Electric/Dark/Light...",
-"species": "Tên loài",
+"element": "Hỏa/Thủy/Thổ/Phong/Lôi/Ám/Quang",
+"species": "Tên loài Hán Việt",
 "description_vi": "Mô tả tiếng Việt (2-3 câu)",
 "imageprompt_pet": "Strictly english visual subject description for a chibi monster, comma separated (e.g., small cute red dragon, chibi, big eyes)",
 "base_stats": { "hp": 100, "mp": 50, "atk": 10, "def": 10, "int": 10, "spd": 10 },
-"skills": [ { "name": "", "description": "", "cost": 0, "type": "Physical", "power": 0 } ],
-"traits": [ { "name": "", "description": "", "type": "crit/dodge/hp_regen/atk_boost/def_boost", "value": 0.1 } ]
+"skills": [ { "name": "Tên skill Hán Việt", "description": "", "cost": 0, "type": "Physical", "power": 0 } ],
+"traits": [ { "name": "Tên trait Hán Việt", "description": "", "type": "crit/dodge/hp_regen/atk_boost/def_boost", "value": 0.1 } ]
 }`;
 
     return await geminiService.generateJSON(prompt);
@@ -520,22 +527,22 @@ Sinh vật hiện tại:
 ${JSON.stringify(aiInput, null, 2)}
 
 [Yêu Cầu Thay Đổi]
-1. Nâng cấp "species" thành hình dạng trưởng thành/ngầu hơn.
-2. Viết lại "description_vi" và "lore" mô tả sự vĩ đại này. Bắt buộc dài hơn 2 câu.
+1. Nâng cấp "species" thành hình dạng trưởng thành/ngầu hơn. BẮT BUỘC dùng tên Hán Việt (ví dụ: Viêm Long → Xích Viêm Thần Long, Băng Phượng → Huyền Băng Thiên Phượng).
+2. Viết lại "description_vi" và "lore" mô tả sự vĩ đại này. Bắt buộc dài hơn 2 câu. Có thể pha Hán Việt cho thêm phần oai phong.
 3. imageprompt_pet: Tạo visual representation mô tả cực chi tiết bằng TIẾNG ANH.
-4. "skills": TRẢ VỀ CHÍNH XÁC MẢNG JSON CỦA BẠN. TẠO THÊM 1 skill tấn công mới mạnh hơn và gộp vào mảng "skills" cũ. Hệ thống sẽ tự động gọt bỏ skill cũ nhất nếu vượt quá 4.
-5. "traits": Nâng cấp sức mạnh "value" của các trait cũ (cộng thêm 0.05 - 0.15) nhưng GIỮ NGUYÊN "type". Có thể đổi Tên Trait cho ngầu hơn.
+4. "skills": TRẢ VỀ CHÍNH XÁC MẢNG JSON CỦA BẠN. TẠO THÊM 1 skill tấn công mới mạnh hơn và gộp vào mảng "skills" cũ. Tên skill BẮT BUỘC Hán Việt. Hệ thống sẽ tự động gọt bỏ skill cũ nhất nếu vượt quá 4.
+5. "traits": Nâng cấp sức mạnh "value" của các trait cũ (cộng thêm 0.05 - 0.15) nhưng GIỮ NGUYÊN "type". Đổi tên Trait sang Hán Việt ngầu hơn.
 6. "stats": Tăng tất cả chỉ số lên khoảng 1.5 - 2 lần. BẮT BUỘC trả về number.
 
 [ĐỊNH DẠNG JSON - CHỈ TRẢ VỀ JSON HỢP LỆ]
 {
-"species": "Tên loài mới",
+"species": "Tên loài mới Hán Việt",
 "description_vi": "Mô tả ngắn tiếng Việt (2-3 câu)",
 "lore": "Cốt truyện/Truyền thuyết mới",
 "imageprompt_pet": "English visual description for a chibi monster...",
 "stats": { "hp": 200, "atk": 20, "def": 20, "spd": 20 },
-"skills": [ { "name": "Skill cũ", "description": "...", "type": "...", "power": 10 }, { "name": "Skill MỚI", "description": "Mô tả", "type": ".../Phép", "power": 50 } ],
-"traits": [ { "name": "Trait cũ/nâng cấp", "description": "Mô tả", "type": "crit/dodge...", "value": 0.2 } ]
+"skills": [ { "name": "Skill cũ Hán Việt", "description": "...", "type": "...", "power": 10 }, { "name": "Skill MỚI Hán Việt", "description": "Mô tả", "type": ".../Phép", "power": 50 } ],
+"traits": [ { "name": "Trait Hán Việt", "description": "Mô tả", "type": "crit/dodge...", "value": 0.2 } ]
 }`;
 
           const evolvedData: any = await geminiService.generateJSON(prompt);

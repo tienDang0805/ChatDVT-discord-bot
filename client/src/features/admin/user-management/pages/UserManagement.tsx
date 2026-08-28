@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers } from '../../../../shared/api';
-import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles } from 'lucide-react';
+import { getUsers, resetEggCooldown } from '../../../../shared/api';
+import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles, RotateCcw } from 'lucide-react';
 
 export const UserManagement = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -9,6 +9,7 @@ export const UserManagement = () => {
     
     // Modal State
     const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [actionLoading, setActionLoading] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -23,6 +24,19 @@ export const UserManagement = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResetCooldown = async (userId: string) => {
+        if (!confirm('Xác nhận reset cooldown ấp trứng cho user này?')) return;
+        try {
+            setActionLoading(true);
+            await resetEggCooldown(userId);
+            alert('✅ Đã reset cooldown thành công!');
+        } catch (error: any) {
+            alert(error?.response?.data?.error || 'Có lỗi xảy ra khi reset cooldown.');
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -174,6 +188,18 @@ export const UserManagement = () => {
                                          <Coins size={20} /> {selectedUser.money.toLocaleString()}
                                      </div>
                                  </div>
+                             </div>
+
+                             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Thao Tác Admin</h3>
+                                 <button
+                                     onClick={() => handleResetCooldown(selectedUser.userId)}
+                                     disabled={actionLoading}
+                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all text-sm font-bold disabled:opacity-50"
+                                 >
+                                     <RotateCcw size={16} className={actionLoading ? 'animate-spin' : ''} />
+                                     {actionLoading ? 'Đang xử lý...' : 'Reset Cooldown Ấp Trứng'}
+                                 </button>
                              </div>
                          </div>
 
