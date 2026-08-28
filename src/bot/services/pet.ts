@@ -246,7 +246,7 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
       await interaction.editReply({ content: `🧬 Đang ấp **${chosenEgg}**... Vui lòng đợi Gene-Sys phân tích gen...\n*(Lưu ý: Sinh ảnh có thể mất 15-20 giây)*`, components: [] });
 
       try {
-          const { newPet, embed, files } = await this.hatchEggToDB(userId, chosenEgg);
+          const { newPet, embed, files } = await this.hatchEggToDB(userId, chosenEgg, undefined, interaction.guildId);
 
           // Mark Daily Cooldown
           await prisma.userEggCooldown.update({
@@ -262,7 +262,7 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
       }
   }
 
-  public async hatchEggToDB(userId: string, eggName: string, forcedRarity?: string) {
+  public async hatchEggToDB(userId: string, eggName: string, forcedRarity?: string, guildId?: string) {
       const petData = await this.generatePetData(eggName, forcedRarity);
       
       // Check Global Feature Toggles
@@ -281,7 +281,7 @@ Vui lòng CHỈ trả về mảng chuỗi JSON hợp lệ (không kèm text khá
 
       if (!disablePetImage) {
           // STRICT CHIBI IMAGEN PROMPT
-          imageResult = await geminiService.generateImage(imagePrompt);
+          imageResult = await geminiService.generateImage(imagePrompt, guildId);
           if (imageResult.success && imageResult.imageBuffer) {
               imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
           }
@@ -553,7 +553,7 @@ ${JSON.stringify(aiInput, null, 2)}
 
           let imageBuffer = null;
           if (!disablePetImage) {
-              const imageResult = await geminiService.generateImage(`Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${evolvedData.imageprompt_pet}`);
+              const imageResult = await geminiService.generateImage(`Super cute extreme chibi pet monster, 2d game icon asset, flat background white perfectly centered, isolated graphic, ${evolvedData.imageprompt_pet}`, interaction.guildId);
               if (imageResult.success && imageResult.imageBuffer) {
                   imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
                   imageBuffer = imageResult.imageBuffer;
@@ -660,7 +660,7 @@ ${JSON.stringify(aiInput, null, 2)}
           let imageBuffer: Buffer | undefined = undefined;
 
           if (!disablePetImage) {
-              const imageResult = await geminiService.generateImage(imagePrompt);
+              const imageResult = await geminiService.generateImage(imagePrompt, interaction.guildId);
               if (imageResult.success && imageResult.imageBuffer) {
                   imageUrl = `data:image/png;base64,${imageResult.imageBuffer.toString('base64')}`;
                   imageBuffer = imageResult.imageBuffer;

@@ -214,6 +214,32 @@ export async function handleInteraction(interaction: Interaction) {
               
               await interaction.editReply(res.message);
           }
+
+          if (interaction.customId === 'setapikey_modal') {
+              await interaction.deferReply({ ephemeral: true });
+              const guildId = interaction.guildId;
+              if (!guildId) {
+                  await interaction.editReply("❌ Lệnh này chỉ dùng trong server.");
+                  return;
+              }
+
+              const { ADMIN_ID } = await import('../../config/constants');
+              if (interaction.user.id !== ADMIN_ID) {
+                  await interaction.editReply("❌ Không có quyền.");
+                  return;
+              }
+
+              const apiKey = interaction.fields.getTextInputValue('apikey_input').trim();
+
+              await prisma.guildConfig.upsert({
+                  where: { guildId },
+                  update: { geminiApiKey: apiKey },
+                  create: { guildId, systemPrompts: '{}', activeModules: '{}', geminiApiKey: apiKey }
+              });
+
+              const masked = apiKey.substring(0, 8) + '••••••••' + apiKey.substring(apiKey.length - 4);
+              await interaction.editReply(`✅ **API Key đã được cập nhật thành công!**\n\`${masked}\`\nKey này sẽ được sử dụng cho tất cả tính năng AI trên server này.`);
+          }
       }
 
   } catch (error) {
