@@ -3,6 +3,7 @@ import { petService, PetSnapshot, parsePet } from './pet';
 import { userIdentityService } from './identity';
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, ButtonInteraction, Message } from 'discord.js';
 import { SHOP_ITEMS } from './shop';
+import { EGG_ITEMS } from './egg-data';
 
 const EXPEDITION_COOLDOWN_MS = 30 * 60 * 1000;
 const STAMINA_COST = 20;
@@ -93,16 +94,16 @@ const STAGE_LORES = [
 ];
 
 const CHAPTER_DROPS: string[][] = [
-    ['exp_potion','exp_stone_sm','stamina_potion'], // Ch1
-    ['exp_stone_md','stamina_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'], // Ch2
-    ['exp_stone_lg','hp_potion','mp_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'], // Ch3
-    ['rare_chest','evo_stone','hp_potion','mp_potion','exp_stone_lg'], // Ch4
-    ['rare_chest','evo_stone','egg_magic','egg_rare','exp_stone_lg'], // Ch5
-    ['rare_chest','evo_stone','exp_stone_lg','egg_rare','fire_crystal','earth_crystal'], // Ch6
-    ['rare_chest','evo_stone','exp_stone_lg','egg_epic','water_crystal','wind_crystal'], // Ch7
-    ['rare_chest','evo_stone','exp_stone_lg','egg_epic','egg_legendary'], // Ch8
-    ['rare_chest','evo_stone','exp_stone_lg','egg_legendary','fire_crystal','wind_crystal'], // Ch9
-    ['rare_chest','evo_stone','exp_stone_lg','egg_mythic','egg_legendary'], // Ch10
+    ['exp_potion','exp_stone_sm','stamina_potion'],
+    ['exp_stone_md','stamina_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'],
+    ['exp_stone_lg','hp_potion','mp_potion','fire_crystal','water_crystal','earth_crystal','wind_crystal'],
+    ['rare_chest','evo_stone','hp_potion','mp_potion','exp_stone_lg'],
+    ['rare_chest','evo_stone','egg_magic','egg_rare','exp_stone_lg'],
+    ['rare_chest','evo_stone','exp_stone_lg','egg_rare','fire_crystal','earth_crystal'],
+    ['rare_chest','evo_stone','exp_stone_lg','egg_unique','water_crystal','wind_crystal'],
+    ['rare_chest','evo_stone','exp_stone_lg','egg_unique','egg_legend'],
+    ['rare_chest','evo_stone','exp_stone_lg','egg_legend','fire_crystal','wind_crystal'],
+    ['rare_chest','evo_stone','exp_stone_lg','egg_random','egg_legend'],
 ];
 
 function buildStages(): StageData[] {
@@ -404,10 +405,15 @@ class ExpeditionService {
                 
                 for (const itemId of droppedItems) {
                     const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+                    const eggItem = EGG_ITEMS[itemId];
                     if (shopItem) {
                         const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: itemId } });
                         if (exist) await tx.inventoryItem.update({ where: { id: exist.id }, data: { quantity: { increment: 1 } } });
                         else await tx.inventoryItem.create({ data: { userId, itemId: shopItem.id, itemType: shopItem.type, name: shopItem.name, quantity: 1 } });
+                    } else if (eggItem) {
+                        const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: itemId } });
+                        if (exist) await tx.inventoryItem.update({ where: { id: exist.id }, data: { quantity: { increment: 1 } } });
+                        else await tx.inventoryItem.create({ data: { userId, itemId, itemType: 'egg', name: eggItem.name, quantity: 1 } });
                     }
                 }
             });
@@ -453,7 +459,10 @@ class ExpeditionService {
             droppedItems.forEach(i => counts[i] = (counts[i] || 0) + 1);
             Object.entries(counts).forEach(([id, qty]) => {
                 const si = SHOP_ITEMS.find(i => i.id === id);
-                rewardLines.push(`🎁 **${qty}x ${si?.emoji || '📦'} ${si?.name || id}**`);
+                const ei = EGG_ITEMS[id];
+                const emoji = si?.emoji || ei?.emoji || '📦';
+                const name = si?.name || ei?.name || id;
+                rewardLines.push(`🎁 **${qty}x ${emoji} ${name}**`);
             });
         }
         if (levelUpMsgs.length > 0) rewardLines.push(...levelUpMsgs);

@@ -2,6 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from '
 import { prisma } from '../../database/prisma';
 import { petService } from '../services/pet';
 import { userIdentityService } from '../services/identity';
+import { EGG_ITEMS, rollEggDrop } from '../services/egg-data';
 
 const STAMINA_COST = 20;
 const POTION_RESTORE = 30;
@@ -77,16 +78,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
         if (roll < 0.05) {
             chestDropped = true;
-        } else if (roll < 0.06) {
-            eggDropped = 'egg_normal';
-        } else if (roll < 0.063) {
-            eggDropped = 'egg_magic';
-        } else if (roll < 0.064) {
-            eggDropped = 'egg_rare';
-        } else if (roll < 0.0643) {
-            eggDropped = 'egg_random';
-        } else if (roll < 0.2) {
-            potionDropped = 1;
+        } else {
+            eggDropped = rollEggDrop();
+            if (!eggDropped && roll < 0.2) {
+                potionDropped = 1;
+            }
         }
 
         await petService.consumeStamina(finalPet.id, STAMINA_COST);
@@ -112,9 +108,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 else await tx.inventoryItem.create({ data: { userId, itemId: 'rare_chest', itemType: 'chest', name: 'Rương Hiếm', quantity: 1 } });
             }
             if (eggDropped) {
+                const eggMeta = EGG_ITEMS[eggDropped];
                 const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: eggDropped } });
                 if (exist) await tx.inventoryItem.update({ where: { id: exist.id }, data: { quantity: { increment: 1 } } });
-                else await tx.inventoryItem.create({ data: { userId, itemId: eggDropped, itemType: 'egg', name: 'Trứng Nhặt Được', quantity: 1 } });
+                else await tx.inventoryItem.create({ data: { userId, itemId: eggDropped, itemType: 'egg', name: eggMeta?.name || 'Trứng Bí Ẩn', quantity: 1 } });
             }
             if (potionDropped > 0) {
                 const exist = await tx.inventoryItem.findFirst({ where: { userId, itemId: 'stamina_potion' } });
@@ -133,6 +130,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         totalJourneys++;
         if (chestDropped) chestsGained++;
         if (potionDropped > 0) potionsFound++;
+        if (eggDropped) {
+            const eggMeta = EGG_ITEMS[eggDropped];
+            levelsUp.push(`${eggMeta?.emoji || '🥚'} Tìm được **${eggMeta?.name || eggDropped}**!`);
+        }
     }
 
     const finalPetData = await prisma.pet.findUnique({ where: { id: pet.id } });
