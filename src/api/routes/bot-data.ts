@@ -121,8 +121,9 @@ router.post('/admin/reset-game/:userId', authenticateToken, async (req, res) => 
         await (prisma as any).inventoryItem.deleteMany({ where: { userId } });
         await (prisma as any).userEggCooldown.deleteMany({ where: { userId } });
         await (prisma as any).expeditionProgress.deleteMany({ where: { userId } });
+        await prisma.userIdentity.update({ where: { userId }, data: { money: 0 } });
         userIdentityService.invalidateCache(userId);
-        res.json({ success: true, message: 'Đã reset toàn bộ game data (Pet, Inventory, Cooldown, Expedition). Tài khoản và xu được giữ nguyên.' });
+        res.json({ success: true, message: 'Đã reset toàn bộ game data (Pet, Inventory, Cooldown, Expedition, Xu).' });
     } catch (error) {
         console.error("Reset game error:", error);
         res.status(500).json({ error: 'Failed to reset game data' });
