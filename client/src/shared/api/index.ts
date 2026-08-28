@@ -94,6 +94,11 @@ export const resetEggCooldown = async (userId: string) => {
     return res.data;
 };
 
+export const resetGameData = async (userId: string) => {
+    const res = await api.post(`/admin/reset-game/${userId}`);
+    return res.data;
+};
+
 export const getGuilds = async () => (await api.get('/guilds')).data;
 export const getTopUsers = async () => (await api.get('/stats/users')).data;
 export const getActivityHistory = async () => (await api.get('/stats/activity-history')).data;

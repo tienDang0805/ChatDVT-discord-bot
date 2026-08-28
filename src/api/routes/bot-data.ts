@@ -4,6 +4,7 @@ import { prisma } from '../../database/prisma';
 import { bot } from '../../bot/client';
 import { geminiService } from '../../bot/services/gemini';
 import { authenticateToken } from '../middleware/auth';
+import { userIdentityService } from '../../bot/services/identity';
 import multer from 'multer';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
@@ -105,10 +106,26 @@ router.delete('/users/:userId', authenticateToken, async (req, res) => {
         await (prisma as any).inventoryItem.deleteMany({ where: { userId } });
         await (prisma as any).userEggCooldown.deleteMany({ where: { userId } });
         await (prisma as any).userIdentity.delete({ where: { userId } });
+        userIdentityService.invalidateCache(userId);
         res.json({ success: true, message: 'User data wiped successfully.' });
     } catch (error) {
         console.error("Delete user error:", error);
         res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
+router.post('/admin/reset-game/:userId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+        await prisma.pet.deleteMany({ where: { ownerId: userId } });
+        await (prisma as any).inventoryItem.deleteMany({ where: { userId } });
+        await (prisma as any).userEggCooldown.deleteMany({ where: { userId } });
+        await (prisma as any).expeditionProgress.deleteMany({ where: { userId } });
+        userIdentityService.invalidateCache(userId);
+        res.json({ success: true, message: 'Đã reset toàn bộ game data (Pet, Inventory, Cooldown, Expedition). Tài khoản và xu được giữ nguyên.' });
+    } catch (error) {
+        console.error("Reset game error:", error);
+        res.status(500).json({ error: 'Failed to reset game data' });
     }
 });
 

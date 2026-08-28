@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getUsers, resetEggCooldown } from '../../../../shared/api';
-import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles, RotateCcw } from 'lucide-react';
+import { getUsers, resetEggCooldown, resetGameData } from '../../../../shared/api';
+import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles, RotateCcw, Trash2 } from 'lucide-react';
 
 export const UserManagement = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -35,6 +35,20 @@ export const UserManagement = () => {
             alert('✅ Đã reset cooldown thành công!');
         } catch (error: any) {
             alert(error?.response?.data?.error || 'Có lỗi xảy ra khi reset cooldown.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleResetGame = async (userId: string) => {
+        if (!confirm('⚠️ Xác nhận RESET TOÀN BỘ GAME DATA cho user này?\n(Pet, Inventory, Cooldown, Expedition sẽ bị xóa. Tài khoản và xu được giữ nguyên)')) return;
+        try {
+            setActionLoading(true);
+            const result = await resetGameData(userId);
+            alert('✅ ' + result.message);
+            fetchUsers();
+        } catch (error: any) {
+            alert(error?.response?.data?.error || 'Có lỗi xảy ra khi reset game.');
         } finally {
             setActionLoading(false);
         }
@@ -199,6 +213,14 @@ export const UserManagement = () => {
                                  >
                                      <RotateCcw size={16} className={actionLoading ? 'animate-spin' : ''} />
                                      {actionLoading ? 'Đang xử lý...' : 'Reset Cooldown Ấp Trứng'}
+                                 </button>
+                                 <button
+                                     onClick={() => handleResetGame(selectedUser.userId)}
+                                     disabled={actionLoading}
+                                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mt-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl border border-red-500/20 hover:border-red-500/40 transition-all text-sm font-bold disabled:opacity-50"
+                                 >
+                                     <Trash2 size={16} />
+                                     {actionLoading ? 'Đang xử lý...' : 'Reset Toàn Bộ Game Data'}
                                  </button>
                              </div>
                          </div>
