@@ -16,9 +16,9 @@ interface RouteMeta {
 
 const ROUTE_META: Record<string, RouteMeta> = {
   '/': {
-    title: 'ChatDVT Portal — 30+ AI Tools & Games Miễn Phí',
-    description: 'Bộ sưu tập 30+ tính năng AI, Game, Tiện ích miễn phí. Thần số học, Tarot AI, CV Review, English Hub, Tu Tiên và nhiều hơn nữa.',
-    keywords: 'chatdvt, ai tools, game, tiện ích, thần số học, tarot, cv review, english learning',
+    title: 'ChatDVT Portal — 30+ AI Tools & Games Miễn Phí | by Đặng Văn Tiến',
+    description: 'ChatDVT (Chat DVT) — Bộ sưu tập 30+ tính năng AI, Game, Tiện ích miễn phí bởi Đặng Văn Tiến (Tiến Đặng). Thần số học, Tarot AI, CV Review, English Hub, Tu Tiên, Xem Tướng AI và nhiều hơn nữa. devtiendang.blog — Mobile Developer & AI Enthusiast.',
+    keywords: 'chatdvt, chat dvt, ChatDVT, Chat DVT, Đặng Văn Tiến, Dang Van Tien, Tiến Đặng, devtiendang, tien dang, tiendang, Đặng Văn Tiến mobile dev, Đặng Văn Tiến developer, ai tools, game, tiện ích miễn phí, thần số học, tarot ai, cv review, english learning, mobile developer vietnam',
     priority: 1.0,
     changefreq: 'daily',
   },
@@ -456,7 +456,7 @@ export function injectSeoMeta(html: string, pathname: string): string {
 
   const canonicalLink = `<link rel="canonical" href="${canonicalUrl}">`;
 
-  const jsonLd = JSON.stringify({
+  const jsonLdApp = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
     name: meta.title,
@@ -467,14 +467,38 @@ export function injectSeoMeta(html: string, pathname: string): string {
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
     author: {
       '@type': 'Person',
-      name: 'Tiến Đặng',
+      name: 'Đặng Văn Tiến',
+      alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang', 'ChatDVT'],
       url: 'https://devtiendang.blog',
+      jobTitle: 'Mobile Developer & AI Enthusiast',
     },
   });
 
-  const injectedTags = `${canonicalLink}\n    ${keywordsMeta}\n    <script type="application/ld+json">${jsonLd}</script>`;
+  const jsonLdWebsite = pathname === '/'
+    ? '\n    <script type="application/ld+json">' + JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'ChatDVT',
+        alternateName: ['Chat DVT', 'ChatDVT Portal', 'devtiendang'],
+        url: SITE_URL,
+        description: 'Bộ sưu tập 30+ tính năng AI, Game, Tiện ích miễn phí bởi Đặng Văn Tiến (Tiến Đặng).',
+        author: {
+          '@type': 'Person',
+          name: 'Đặng Văn Tiến',
+          alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
+          url: 'https://devtiendang.blog',
+          jobTitle: 'Mobile Developer & AI Enthusiast',
+        },
+      }) + '</script>'
+    : '';
+
+  const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>ChatDVT (Chat DVT) — by Đặng Văn Tiến (Tiến Đặng) — Mobile Developer &amp; AI Enthusiast — devtiendang.blog</p></div></noscript>`;
+
+  const injectedTags = `${canonicalLink}\n    ${keywordsMeta}\n    <script type="application/ld+json">${jsonLdApp}</script>${jsonLdWebsite}`;
 
   result = result.replace('</head>', `    ${injectedTags}\n  </head>`);
+
+  result = result.replace('<div id="root"></div>', `<div id="root"></div>\n    ${noscriptBlock}`);
 
   return result;
 }
