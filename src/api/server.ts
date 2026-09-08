@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { createSeoRoutes, createSeoFallbackHandler } from './seo';
 import axios from 'axios';
 
 import { prisma } from '../database/prisma';
@@ -368,15 +369,16 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0d1117;color:#c9d1d9;l
 });
 
 const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
+
+app.use(createSeoRoutes());
+
 app.use(express.static(CLIENT_BUILD_PATH));
 
 app.get('/ping', (req, res) => {
   res.sendFile(path.join(CLIENT_BUILD_PATH, 'ping', 'index.html'));
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html'));
-});
+app.get('*', createSeoFallbackHandler(CLIENT_BUILD_PATH));
 
 export const startApiServer = () => { 
   server.listen(PORT, () => {
