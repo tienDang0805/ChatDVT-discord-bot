@@ -4,6 +4,7 @@ import { EmbedBuilder } from 'discord.js';
 interface IWordleWord {
   word: string;
   hint: string;
+  charCount: number;
 }
 
 interface IPlayerGuess {
@@ -17,7 +18,7 @@ interface IWordleState {
   currentWordIndex: number;
   currentWord: string;
   currentHint: string;
-  wordLength: number;
+  charCount: number;
   maxGuesses: number;
   scores: Map<string, { wins: number; totalGuesses: number }>;
   playerStates: Map<string, IPlayerGuess>;
@@ -50,7 +51,7 @@ class WordleService {
     maxGuesses: number,
     tone: string
   ) {
-    const roundTimeoutSecs = 60;
+    const roundTimeoutSecs = 120;
     if (this.activeGames.has(guildId)) {
       return { success: false, message: '❌ Đang có Wordle diễn ra! Dùng `/wordle cancel` để hủy.' };
     }
@@ -58,19 +59,21 @@ class WordleService {
     await channel.send(`🔤 **Wordle** đang khởi động! Chủ đề: **${topic}** (${difficulty}) — Giọng văn: **${tone}**...`);
 
     try {
-      const wordLength = this.getWordLength(difficulty);
-      const words = await this.generateWords(numRounds, topic, difficulty, wordLength, tone);
+      const targetCharCount = this.getTargetCharCount(difficulty);
+      const words = await this.generateWords(numRounds, topic, difficulty, targetCharCount, tone);
 
       if (!words || words.length === 0) {
         return { success: false, message: '❌ Không tạo được từ. Thử lại nhé!' };
       }
 
+      const firstWord = words[0];
+
       this.activeGames.set(guildId, {
         words,
         currentWordIndex: 0,
-        currentWord: words[0].word.toUpperCase(),
-        currentHint: words[0].hint,
-        wordLength,
+        currentWord: firstWord.word.toLowerCase(),
+        currentHint: firstWord.hint,
+        charCount: firstWord.charCount,
         maxGuesses,
         scores: new Map(),
         playerStates: new Map(),
@@ -87,7 +90,7 @@ class WordleService {
 
       return {
         success: true,
-        message: `🎉 **Wordle** chủ đề **${topic}** (${difficulty}) với ${words.length} từ đã bắt đầu!\n📝 Gõ từ **${wordLength} chữ cái** vào chat để đoán. Tối đa **${maxGuesses} lượt/từ**, **${roundTimeoutSecs}s/từ**.`
+        message: `🎉 **Wordle** chủ đề **${topic}** (${difficulty}) với ${words.length} từ đã bắt đầu!\n📝 Gõ **tiếng Việt có dấu** vào chat để đoán. Tối đa **${maxGuesses} lượt/từ**, **${roundTimeoutSecs}s/từ**.`
       };
     } catch (error) {
       console.error('Wordle Start Error:', error);
@@ -108,40 +111,50 @@ class WordleService {
     return { success: true, message: '✅ Đã hủy Wordle.' };
   }
 
-  private getWordLength(difficulty: string): number {
+  private getTargetCharCount(difficulty: string): number {
     const d = difficulty.toLowerCase();
-    if (d.includes('dễ') || d.includes('easy')) return 4;
-    if (d.includes('khó') || d.includes('hard')) return 6;
-    if (d.includes('địa ngục') || d.includes('hell') || d.includes('nightmare')) return 7;
-    return 5;
+    if (d.includes('dễ') || d.includes('easy')) return 5;
+    if (d.includes('khó') || d.includes('hard')) return 8;
+    if (d.includes('địa ngục') || d.includes('hell') || d.includes('nightmare')) return 10;
+    return 6;
   }
 
-  private async generateWords(num: number, topic: string, difficulty: string, wordLength: number, tone: string): Promise<IWordleWord[]> {
-    const prompt = `Bạn là Wordle Game Master. Tạo ${num} từ Tiếng Việt KHÔNG DẤU (viết hoa) về chủ đề "${topic}".
+  private countChars(word: string): number {
+    return word.replace(/\s/g, '').length;
+  }
+
+  private splitToUnits(word: string): string[] {
+    return [...word];
+  }
+
+  private async generateWords(num: number, topic: string, difficulty: string, targetCharCount: number, tone: string): Promise<IWordleWord[]> {
+    const prompt = `Bạn là Wordle Game Master. Tạo ${num} từ/cụm từ Tiếng Việt CÓ DẤU về chủ đề "${topic}".
 Độ khó: ${difficulty}.
 Giọng văn viết gợi ý: ${tone}.
 
 QUAN TRỌNG:
-- Mỗi từ PHẢI có ĐÚNG ${wordLength} chữ cái (không tính dấu cách)
-- Từ KHÔNG DẤU, viết hoa, không khoảng trắng, chỉ A-Z
-- Ví dụ: NHACO (nhà cỏ), BALON (bóng), MEOCON (mèo con)
-- Từ phải là từ thực tế, có nghĩa, liên quan đến chủ đề
-- Hint phải viết theo giọng văn "${tone}" và KHÔNG được chứa đáp án
+- Từ/cụm từ TIẾNG VIỆT CÓ DẤU, viết thường
+- Số ký tự (KHÔNG tính dấu cách) khoảng ${targetCharCount} ký tự (sai lệch ±1 được)
+- Có thể là 1 từ hoặc cụm từ có dấu cách
+- Ví dụ: "con mèo" (6 ký tự), "bóng đá" (6 ký tự), "hoa hồng" (7 ký tự)
+- Từ phải là từ thực tế, có nghĩa, phổ biến, liên quan đến chủ đề
+- Hint phải viết theo giọng văn "${tone}" và KHÔNG được chứa đáp án hoặc phần nào của đáp án
 - Nếu giọng văn hài hước thì hint phải funny, nếu toxic thì hint phải cay, nếu thơ thì hint viết dạng thơ
 
 Trả về JSON Array CHÍNH XÁC:
 [
-  { "word": "ABCDE", "hint": "Gợi ý theo giọng văn ${tone}" }
+  { "word": "con mèo", "hint": "Gợi ý theo giọng văn ${tone}" }
 ]`;
 
     const result = await geminiService.generateJSON<IWordleWord[]>(prompt);
 
     return result
       .map(w => ({
-        word: w.word.toUpperCase().replace(/[^A-Z]/g, ''),
-        hint: w.hint
+        word: w.word.toLowerCase().trim(),
+        hint: w.hint,
+        charCount: this.countChars(w.word.toLowerCase().trim())
       }))
-      .filter(w => w.word.length >= 3 && w.word.length <= 8);
+      .filter(w => w.charCount >= 3 && w.charCount <= 15);
   }
 
   private async startRound(guildId: string, channel: any) {
@@ -154,20 +167,22 @@ Trả về JSON Array CHÍNH XÁC:
     }
 
     const wordData = state.words[state.currentWordIndex];
-    state.currentWord = wordData.word.toUpperCase();
+    state.currentWord = wordData.word.toLowerCase();
     state.currentHint = wordData.hint;
-    state.wordLength = state.currentWord.length;
+    state.charCount = wordData.charCount;
     state.playerStates.clear();
 
-    const embed = this.buildRoundEmbed(state, []);
+    const embed = this.buildRoundEmbed(state);
     const message = await channel.send({ embeds: [embed] });
     state.roundMessage = message;
 
     const collector = channel.createMessageCollector({
       filter: (msg: any) => {
         if (msg.author.bot) return false;
-        const content = msg.content.trim().toUpperCase().replace(/[^A-Z]/g, '');
-        return content.length === state.wordLength;
+        const content = msg.content.trim();
+        if (content.length === 0) return false;
+        if (content.startsWith('!') || content.startsWith('/') || content.startsWith('-')) return false;
+        return true;
       },
       time: state.roundTimeout
     });
@@ -195,7 +210,17 @@ Trả về JSON Array CHÍNH XÁC:
 
     const userId = msg.author.id;
     const username = msg.author.username;
-    const guess = msg.content.trim().toUpperCase().replace(/[^A-Z]/g, '');
+    const guess = msg.content.trim().toLowerCase();
+    const guessCharCount = this.countChars(guess);
+
+    if (guessCharCount !== state.charCount) {
+      await msg.react('❓');
+      try {
+        const hint = await msg.reply({ content: `⚠️ Cần **${state.charCount}** ký tự (không tính dấu cách), bạn gõ **${guessCharCount}**. Thử lại!`, allowedMentions: { repliedUser: false } });
+        setTimeout(() => { try { hint.delete(); } catch(_) {} }, 5000);
+      } catch (_) {}
+      return;
+    }
 
     if (!state.playerStates.has(userId)) {
       state.playerStates.set(userId, { guessCount: 0, solved: false, guesses: [] });
@@ -217,7 +242,7 @@ Trả về JSON Array CHÍNH XÁC:
     playerState.guesses.push(guess);
 
     const feedback = this.evaluateGuess(guess, state.currentWord);
-    const feedbackLine = `\`${guess}\` → ${feedback.emojis}`;
+    const feedbackLine = this.formatFeedbackLine(guess, feedback.charResults);
 
     if (feedback.isCorrect) {
       playerState.solved = true;
@@ -235,11 +260,8 @@ Trả về JSON Array CHÍNH XÁC:
 
       await channel.send({ embeds: [celebEmbed] });
 
-      const allSolved = [...state.playerStates.values()].every(p => p.solved || p.guessCount >= state.maxGuesses);
-      if (allSolved) {
-        this.cleanup(state);
-        await this.nextRound(guildId, channel);
-      }
+      this.cleanup(state);
+      await this.nextRound(guildId, channel);
       return;
     }
 
@@ -260,26 +282,30 @@ Trả về JSON Array CHÍNH XÁC:
     }
   }
 
-  private evaluateGuess(guess: string, answer: string): { emojis: string; isCorrect: boolean } {
-    if (guess === answer) {
-      return { emojis: '🟩'.repeat(answer.length), isCorrect: true };
+  private evaluateGuess(guess: string, answer: string): { charResults: string[]; isCorrect: boolean } {
+    const guessNoSpace = guess.replace(/\s/g, '');
+    const answerNoSpace = answer.replace(/\s/g, '');
+
+    if (guessNoSpace === answerNoSpace) {
+      return { charResults: Array(answerNoSpace.length).fill('🟩'), isCorrect: true };
     }
 
-    const result: string[] = new Array(answer.length).fill('⬛');
-    const answerChars = answer.split('');
-    const guessChars = guess.split('');
-    const used = new Array(answer.length).fill(false);
+    const guessChars = this.splitToUnits(guessNoSpace);
+    const answerChars = this.splitToUnits(answerNoSpace);
+    const result: string[] = new Array(guessChars.length).fill('⬛');
+    const used = new Array(answerChars.length).fill(false);
+    const guessUsed = new Array(guessChars.length).fill(false);
 
-    for (let i = 0; i < guessChars.length; i++) {
+    for (let i = 0; i < guessChars.length && i < answerChars.length; i++) {
       if (guessChars[i] === answerChars[i]) {
         result[i] = '🟩';
         used[i] = true;
-        guessChars[i] = '_';
+        guessUsed[i] = true;
       }
     }
 
     for (let i = 0; i < guessChars.length; i++) {
-      if (guessChars[i] === '_') continue;
+      if (guessUsed[i]) continue;
       for (let j = 0; j < answerChars.length; j++) {
         if (!used[j] && guessChars[i] === answerChars[j]) {
           result[i] = '🟨';
@@ -289,20 +315,46 @@ Trả về JSON Array CHÍNH XÁC:
       }
     }
 
-    return { emojis: result.join(''), isCorrect: false };
+    return { charResults: result, isCorrect: false };
   }
 
-  private buildRoundEmbed(state: IWordleState, _guessHistory: string[]): EmbedBuilder {
-    const blanks = '⬜'.repeat(state.wordLength);
+  private formatFeedbackLine(guess: string, charResults: string[]): string {
+    const guessNoSpace = guess.replace(/\s/g, '');
+    const chars = this.splitToUnits(guessNoSpace);
+
+    let line1 = '';
+    let line2 = '';
+    for (let i = 0; i < chars.length; i++) {
+      line1 += `\`${chars[i]}\` `;
+      line2 += `${charResults[i] || '⬛'} `;
+    }
+
+    return `${line1.trim()}\n${line2.trim()}`;
+  }
+
+  private buildRoundEmbed(state: IWordleState): EmbedBuilder {
     const roundNum = state.currentWordIndex + 1;
     const totalRounds = state.words.length;
+
+    const hasSpace = state.currentWord.includes(' ');
+    const wordParts = state.currentWord.split(' ');
+    let blankDisplay = '';
+    if (hasSpace) {
+      blankDisplay = wordParts.map(part => {
+        return this.splitToUnits(part).map(() => '⬜').join('');
+      }).join('  ');
+      blankDisplay += `\n📐 Gồm **${wordParts.length} từ**: ${wordParts.map(p => `(${this.splitToUnits(p).length} chữ)`).join(' + ')}`;
+    } else {
+      blankDisplay = Array(state.charCount).fill('⬜').join('');
+    }
 
     return new EmbedBuilder()
       .setTitle(`🔤 Wordle — Từ ${roundNum}/${totalRounds}`)
       .setDescription(
-        `📝 Gõ từ **${state.wordLength} chữ cái** (không dấu) vào chat để đoán!\n\n` +
-        `${blanks}\n\n` +
+        `📝 Gõ **tiếng Việt có dấu** vào chat để đoán!\n\n` +
+        `${blankDisplay}\n\n` +
         `💡 **Gợi ý**: ${state.currentHint}\n` +
+        `🔢 **Số ký tự**: ${state.charCount} (không tính dấu cách)\n` +
         `🎯 **Lượt đoán tối đa**: ${state.maxGuesses}\n\n` +
         `🟩 = Đúng chữ, đúng vị trí\n` +
         `🟨 = Đúng chữ, sai vị trí\n` +
