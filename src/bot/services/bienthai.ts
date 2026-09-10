@@ -25,6 +25,7 @@ interface IBienThaiState {
   creatorId: string;
   numRounds: number;
   tone: string;
+  topic: string;
   submitTime: number;
   timer?: NodeJS.Timeout;
   collector?: any;
@@ -37,15 +38,15 @@ class BienThaiService {
     return this.activeGames.has(guildId);
   }
 
-  public async startGame(guildId: string, channel: any, creatorId: string, numRounds: number, tone: string) {
+  public async startGame(guildId: string, channel: any, creatorId: string, numRounds: number, topic: string, tone: string, submitTimeSecs: number) {
     if (this.activeGames.has(guildId)) {
       return { success: false, message: '❌ Đang có game rồi! `/bienthai cancel` để hủy.' };
     }
 
-    await channel.send(`🃏 **Ai Là Kẻ Biến Thái** đang chuẩn bị... Giọng văn: **${tone}**`);
+    await channel.send(`🃏 **Ai Là Kẻ Biến Thái** đang chuẩn bị... Chủ đề: **${topic}** | Giọng: **${tone}**`);
 
     try {
-      const prompts = await this.generatePrompts(numRounds, tone);
+      const prompts = await this.generatePrompts(numRounds, topic, tone);
 
       if (!prompts || prompts.length === 0) {
         return { success: false, message: '❌ Không tạo được câu hỏi. Thử lại' };
@@ -63,14 +64,15 @@ class BienThaiService {
         creatorId,
         numRounds: prompts.length,
         tone,
-        submitTime: 120000
+        topic,
+        submitTime: submitTimeSecs * 1000
       });
 
       await this.startSubmitPhase(guildId, channel);
 
       return {
         success: true,
-        message: `🎉 **Ai Là Kẻ Biến Thái** bắt đầu! ${prompts.length} vòng — Giọng: **${tone}**\n📝 Gõ câu trả lời bựa nhất vào chat! Mỗi vòng **120 giây**.\n🤖 AI sẽ chấm điểm và chọn kẻ biến thái nhất!`
+        message: `🎉 **Ai Là Kẻ Biến Thái** bắt đầu! ${prompts.length} vòng — Chủ đề: **${topic}** | Giọng: **${tone}**\n📝 Gõ câu trả lời bựa nhất vào chat! Mỗi vòng **${submitTimeSecs} giây**.\n🤖 AI sẽ chấm điểm và chọn kẻ biến thái nhất!`
       };
     } catch (error) {
       console.error('BienThai Start Error:', error);
@@ -88,16 +90,18 @@ class BienThaiService {
     return { success: true, message: '✅ Đã hủy game.' };
   }
 
-  private async generatePrompts(num: number, tone: string): Promise<string[]> {
-    const prompt = `Tạo ${num} câu hỏi/tình huống CỰC KỲ BỰA, DÂM DỤC, BIẾN THÁI cho game "Ai Là Kẻ Biến Thái".
+  private async generatePrompts(num: number, topic: string, tone: string): Promise<string[]> {
+    const topicLine = topic !== 'Tổng hợp' ? `Chủ đề BẮT BUỘC: "${topic}" — TẤT CẢ câu hỏi phải xoay quanh chủ đề này.` : 'Đa dạng chủ đề: tình huống sex, mối quan hệ bựa, bí mật 18+, fantasy dâm, v.v.';
+
+    const prompt = `Tạo ${num} câu hỏi/tình huống CỰC KỲ BỰA, DÂM DỤC, BIẾ̀N THÁI cho game "Ai Là Kẻ Biến Thái".
 Giọng văn: ${tone}.
+${topicLine}
 
 QUY TẮC:
 - Mỗi câu PHẢI có chỗ trống _____ để người chơi điền
-- Phải THẬT SỰ DÂM DỤC, BIẾN THÁI, 18+ — dùng từ ngữ trực tiếp: cặc, lồn, đụ, bú, chịch, dâm thủy, thủ dâm, v.v.
+- Phải THẬT SỰ DÂM DỤC, BIẾ̀N THÁI, 18+ — dùng từ ngữ trực tiếp: cặc, lồn, đụ, bú, chịch, dâm thủy, thủ dâm, v.v.
 - Câu phải tạo cơ hội cho người chơi sáng tạo câu trả lời bựa nhất có thể
 - Viết theo giọng văn "${tone}" — nếu toxic thì cay cú, nếu hài thì hài bựa
-- Đa dạng: tình huống sex, mối quan hệ bựa, bí mật 18+, fantasy dâm, v.v.
 
 Ví dụ câu hỏi hay:
 - "Crush phát hiện lịch sử tìm kiếm của tôi toàn _____ nên đã block thẳng tay"
@@ -127,12 +131,12 @@ Trả về JSON Array:
       .setDescription(
         `**${state.currentPrompt}**\n\n` +
         `📝 Gõ câu trả lời **bựa nhất, biến thái nhất** vào chat!\n` +
-        `⏱️ Còn **120 giây**\n` +
+        `⏱️ Còn **${state.submitTime / 1000} giây**\n` +
         `👥 Mỗi người **1 câu** duy nhất (lấy câu đầu tiên)\n` +
         `🤖 Sau đó AI sẽ chấm điểm theo độ bựa!`
       )
       .setColor(0xFF69B4)
-      .setFooter({ text: `Giọng: ${state.tone} | Ai Là Kẻ Biến Thái 🃏` });
+      .setFooter({ text: `Chủ đề: ${state.topic} | Giọng: ${state.tone} | Ai Là Kẻ Biến Thái 🃏` });
 
     await channel.send({ embeds: [embed] });
 

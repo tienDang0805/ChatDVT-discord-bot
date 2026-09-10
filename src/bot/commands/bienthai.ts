@@ -28,6 +28,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setPlaceholder('Mặc định: 5')
       .setRequired(false);
 
+    const topicInput = new TextInputBuilder()
+      .setCustomId('bienthai_topic')
+      .setLabel('Chủ đề')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('VD: Tình dục, Crush, Công sở... (Mặc định: Tổng hợp)')
+      .setRequired(false);
+
     const toneInput = new TextInputBuilder()
       .setCustomId('bienthai_tone')
       .setLabel('Giọng văn (Toxic, Hài bựa, Dâm dục, Gen Z...)')
@@ -35,9 +42,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setPlaceholder('Mặc định: Dâm dục bựa')
       .setRequired(false);
 
+    const timeInput = new TextInputBuilder()
+      .setCustomId('bienthai_time')
+      .setLabel('Thời gian mỗi vòng (giây, 30-300)')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('Mặc định: 120')
+      .setRequired(false);
+
     modal.addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(roundsInput),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(toneInput)
+      new ActionRowBuilder<TextInputBuilder>().addComponents(topicInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(toneInput),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(timeInput)
     );
 
     await interaction.showModal(modal);

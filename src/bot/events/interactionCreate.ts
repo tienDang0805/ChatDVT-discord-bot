@@ -329,8 +329,12 @@ export async function handleInteraction(interaction: Interaction) {
 
               const roundsRaw = interaction.fields.getTextInputValue('bienthai_rounds');
               const rounds = roundsRaw ? Math.min(8, Math.max(3, parseInt(roundsRaw) || 5)) : 5;
+              const topicRaw = interaction.fields.getTextInputValue('bienthai_topic');
+              const topic = topicRaw ? topicRaw.trim() : 'Tổng hợp';
               const toneRaw = interaction.fields.getTextInputValue('bienthai_tone');
               const tone = toneRaw ? toneRaw.trim() : 'Dâm dục bựa';
+              const timeRaw = interaction.fields.getTextInputValue('bienthai_time');
+              const submitTimeSecs = timeRaw ? Math.min(300, Math.max(30, parseInt(timeRaw) || 120)) : 120;
 
               const guildId = interaction.guildId;
               if (!guildId) {
@@ -343,7 +347,9 @@ export async function handleInteraction(interaction: Interaction) {
                   interaction.channel,
                   interaction.user.id,
                   rounds,
-                  tone
+                  topic,
+                  tone,
+                  submitTimeSecs
               );
 
               await interaction.editReply(res.message);
