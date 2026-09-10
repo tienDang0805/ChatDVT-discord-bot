@@ -26,6 +26,7 @@ interface IWordleState {
   creatorId: string;
   topic: string;
   difficulty: string;
+  tone: string;
   timer?: NodeJS.Timeout;
   roundTimeout: number;
   roundMessage?: any;
@@ -47,17 +48,18 @@ class WordleService {
     topic: string,
     difficulty: string,
     maxGuesses: number,
-    roundTimeoutSecs: number
+    tone: string
   ) {
+    const roundTimeoutSecs = 60;
     if (this.activeGames.has(guildId)) {
       return { success: false, message: '❌ Đang có Wordle diễn ra! Dùng `/wordle cancel` để hủy.' };
     }
 
-    await channel.send(`🔤 **Wordle** đang khởi động! Chủ đề: **${topic}** (${difficulty})...`);
+    await channel.send(`🔤 **Wordle** đang khởi động! Chủ đề: **${topic}** (${difficulty}) — Giọng văn: **${tone}**...`);
 
     try {
       const wordLength = this.getWordLength(difficulty);
-      const words = await this.generateWords(numRounds, topic, difficulty, wordLength);
+      const words = await this.generateWords(numRounds, topic, difficulty, wordLength, tone);
 
       if (!words || words.length === 0) {
         return { success: false, message: '❌ Không tạo được từ. Thử lại nhé!' };
@@ -77,6 +79,7 @@ class WordleService {
         creatorId,
         topic,
         difficulty,
+        tone,
         roundTimeout: roundTimeoutSecs * 1000
       });
 
@@ -113,20 +116,22 @@ class WordleService {
     return 5;
   }
 
-  private async generateWords(num: number, topic: string, difficulty: string, wordLength: number): Promise<IWordleWord[]> {
+  private async generateWords(num: number, topic: string, difficulty: string, wordLength: number, tone: string): Promise<IWordleWord[]> {
     const prompt = `Bạn là Wordle Game Master. Tạo ${num} từ Tiếng Việt KHÔNG DẤU (viết hoa) về chủ đề "${topic}".
 Độ khó: ${difficulty}.
+Giọng văn viết gợi ý: ${tone}.
 
 QUAN TRỌNG:
 - Mỗi từ PHẢI có ĐÚNG ${wordLength} chữ cái (không tính dấu cách)
 - Từ KHÔNG DẤU, viết hoa, không khoảng trắng, chỉ A-Z
 - Ví dụ: NHACO (nhà cỏ), BALON (bóng), MEOCON (mèo con)
 - Từ phải là từ thực tế, có nghĩa, liên quan đến chủ đề
-- Hint phải gợi ý nhưng KHÔNG được chứa đáp án
+- Hint phải viết theo giọng văn "${tone}" và KHÔNG được chứa đáp án
+- Nếu giọng văn hài hước thì hint phải funny, nếu toxic thì hint phải cay, nếu thơ thì hint viết dạng thơ
 
 Trả về JSON Array CHÍNH XÁC:
 [
-  { "word": "ABCDE", "hint": "Gợi ý ngắn gọn" }
+  { "word": "ABCDE", "hint": "Gợi ý theo giọng văn ${tone}" }
 ]`;
 
     const result = await geminiService.generateJSON<IWordleWord[]>(prompt);
@@ -304,7 +309,7 @@ Trả về JSON Array CHÍNH XÁC:
         `⬛ = Không có chữ này`
       )
       .setColor(0x6AAA64)
-      .setFooter({ text: `Chủ đề: ${state.topic} | ${state.difficulty}` });
+      .setFooter({ text: `Chủ đề: ${state.topic} | ${state.difficulty} | Giọng: ${state.tone}` });
   }
 
   private async handleRoundTimeout(guildId: string, channel: any) {

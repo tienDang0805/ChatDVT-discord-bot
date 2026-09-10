@@ -49,11 +49,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .setPlaceholder('Mặc định: 6')
       .setRequired(false);
 
-    const timeLimitInput = new TextInputBuilder()
-      .setCustomId('wordle_time_limit')
-      .setLabel('Thời gian mỗi từ (giây)')
+    const toneInput = new TextInputBuilder()
+      .setCustomId('wordle_tone')
+      .setLabel('Giọng văn gợi ý (Hài hước, Thơ, Toxic...)')
       .setStyle(TextInputStyle.Short)
-      .setPlaceholder('Mặc định: 60')
+      .setPlaceholder('Mặc định: Trung tính')
       .setRequired(false);
 
     modal.addComponents(
@@ -61,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       new ActionRowBuilder<TextInputBuilder>().addComponents(topicInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(difficultyInput),
       new ActionRowBuilder<TextInputBuilder>().addComponents(maxGuessesInput),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(timeLimitInput)
+      new ActionRowBuilder<TextInputBuilder>().addComponents(toneInput)
     );
 
     await interaction.showModal(modal);

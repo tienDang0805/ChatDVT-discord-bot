@@ -295,8 +295,8 @@ export async function handleInteraction(interaction: Interaction) {
               const difficulty = difficultyRaw ? difficultyRaw.trim() : 'Trung bình';
               const maxGuessesRaw = interaction.fields.getTextInputValue('wordle_max_guesses');
               const maxGuesses = maxGuessesRaw ? Math.min(10, Math.max(3, parseInt(maxGuessesRaw) || 6)) : 6;
-              const timeLimitRaw = interaction.fields.getTextInputValue('wordle_time_limit');
-              const timeLimit = timeLimitRaw ? Math.min(300, Math.max(30, parseInt(timeLimitRaw) || 60)) : 60;
+              const toneRaw = interaction.fields.getTextInputValue('wordle_tone');
+              const tone = toneRaw ? toneRaw.trim() : 'Trung tính';
 
               const guildId = interaction.guildId;
               if (!guildId) {
@@ -317,7 +317,7 @@ export async function handleInteraction(interaction: Interaction) {
                   topic,
                   difficulty,
                   maxGuesses,
-                  timeLimit
+                  tone
               );
 
               await interaction.editReply(res.message);
