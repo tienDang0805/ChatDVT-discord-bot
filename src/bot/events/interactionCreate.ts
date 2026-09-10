@@ -5,6 +5,7 @@ import { ctwService } from '../services/ctw';
 import { petService } from '../services/pet';
 import { expeditionService } from '../services/expedition';
 import { codeChallengeService } from '../services/code-challenge';
+import { wordleService } from '../services/wordle';
 import { prisma } from '../../database/prisma';
 
 export async function handleInteraction(interaction: Interaction) {
@@ -282,6 +283,43 @@ export async function handleInteraction(interaction: Interaction) {
                   tone
               );
               
+              await interaction.editReply(res.message);
+          }
+
+          if (interaction.customId === 'wordle_setup_modal') {
+              await interaction.deferReply();
+
+              const numRounds = parseInt(interaction.fields.getTextInputValue('wordle_num_rounds'));
+              const topic = interaction.fields.getTextInputValue('wordle_topic');
+              const difficultyRaw = interaction.fields.getTextInputValue('wordle_difficulty');
+              const difficulty = difficultyRaw ? difficultyRaw.trim() : 'Trung bình';
+              const maxGuessesRaw = interaction.fields.getTextInputValue('wordle_max_guesses');
+              const maxGuesses = maxGuessesRaw ? Math.min(10, Math.max(3, parseInt(maxGuessesRaw) || 6)) : 6;
+              const timeLimitRaw = interaction.fields.getTextInputValue('wordle_time_limit');
+              const timeLimit = timeLimitRaw ? Math.min(300, Math.max(30, parseInt(timeLimitRaw) || 60)) : 60;
+
+              const guildId = interaction.guildId;
+              if (!guildId) {
+                  await interaction.editReply('❌ Lỗi: Không thể xác định Server.');
+                  return;
+              }
+
+              if (isNaN(numRounds) || numRounds < 3 || numRounds > 10) {
+                  await interaction.editReply('❌ Số lượng từ phải từ 3 đến 10.');
+                  return;
+              }
+
+              const res = await wordleService.startGame(
+                  guildId,
+                  interaction.channel,
+                  interaction.user.id,
+                  numRounds,
+                  topic,
+                  difficulty,
+                  maxGuesses,
+                  timeLimit
+              );
+
               await interaction.editReply(res.message);
           }
 
