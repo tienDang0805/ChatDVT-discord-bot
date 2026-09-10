@@ -48,7 +48,7 @@ class BienThaiService {
       const prompts = await this.generatePrompts(numRounds, tone);
 
       if (!prompts || prompts.length === 0) {
-        return { success: false, message: '❌ Không tạo được câu hỏi. Thử lại!' };
+        return { success: false, message: '❌ Không tạo được câu hỏi. Thử lại' };
       }
 
       this.activeGames.set(guildId, {
