@@ -182,6 +182,12 @@ Trả về JSON Array CHÍNH XÁC:
         const content = msg.content.trim();
         if (content.length === 0) return false;
         if (content.startsWith('!') || content.startsWith('/') || content.startsWith('-')) return false;
+        if (content.includes('http') || content.includes('://')) return false;
+        if (content.includes('<@') || content.includes('<#') || content.includes('<:')) return false;
+        if (/[?!.,;:()[\]{}"'`~@#$%^&*+=|\\<>]/.test(content)) return false;
+        if (content.split(' ').length > 5) return false;
+        const charCount = this.countChars(content);
+        if (charCount < 2 || charCount > 25) return false;
         return true;
       },
       time: state.roundTimeout
@@ -212,13 +218,16 @@ Trả về JSON Array CHÍNH XÁC:
     const username = msg.author.username;
     const guess = msg.content.trim().toLowerCase();
     const guessCharCount = this.countChars(guess);
+    const diff = Math.abs(guessCharCount - state.charCount);
 
     if (guessCharCount !== state.charCount) {
-      await msg.react('❓');
-      try {
-        const hint = await msg.reply({ content: `⚠️ Cần **${state.charCount}** ký tự (không tính dấu cách), bạn gõ **${guessCharCount}**. Thử lại!`, allowedMentions: { repliedUser: false } });
-        setTimeout(() => { try { hint.delete(); } catch(_) {} }, 5000);
-      } catch (_) {}
+      if (diff <= 3) {
+        await msg.react('❓');
+        try {
+          const hint = await msg.reply({ content: `⚠️ Cần **${state.charCount}** ký tự, bạn gõ **${guessCharCount}**!`, allowedMentions: { repliedUser: false } });
+          setTimeout(() => { try { hint.delete(); } catch(_) {} }, 4000);
+        } catch (_) {}
+      }
       return;
     }
 
