@@ -59,8 +59,7 @@ class WordleService {
     await channel.send(`🔤 **Wordle** đang khởi động! Chủ đề: **${topic}** (${difficulty}) — Giọng văn: **${tone}**...`);
 
     try {
-      const targetCharCount = this.getTargetCharCount(difficulty);
-      const words = await this.generateWords(numRounds, topic, difficulty, targetCharCount, tone);
+      const words = await this.generateWords(numRounds, topic, difficulty, tone);
 
       if (!words || words.length === 0) {
         return { success: false, message: '❌ Không tạo được từ. Thử lại nhé!' };
@@ -111,14 +110,6 @@ class WordleService {
     return { success: true, message: '✅ Đã hủy Wordle.' };
   }
 
-  private getTargetCharCount(difficulty: string): number {
-    const d = difficulty.toLowerCase();
-    if (d.includes('dễ') || d.includes('easy')) return 5;
-    if (d.includes('khó') || d.includes('hard')) return 8;
-    if (d.includes('địa ngục') || d.includes('hell') || d.includes('nightmare')) return 10;
-    return 6;
-  }
-
   private countChars(word: string): number {
     return word.replace(/\s/g, '').length;
   }
@@ -127,23 +118,32 @@ class WordleService {
     return [...word];
   }
 
-  private async generateWords(num: number, topic: string, difficulty: string, targetCharCount: number, tone: string): Promise<IWordleWord[]> {
-    const prompt = `Bạn là Wordle Game Master. Tạo ${num} từ/cụm từ Tiếng Việt CÓ DẤU về chủ đề "${topic}".
-Độ khó: ${difficulty}.
+  private async generateWords(num: number, topic: string, difficulty: string, tone: string): Promise<IWordleWord[]> {
+    const prompt = `Bạn là Wordle Game Master chuyên về tiếng Việt. Tạo ${num} từ/cụm từ Tiếng Việt CÓ DẤU về chủ đề "${topic}".
 Giọng văn viết gợi ý: ${tone}.
+Độ khó: ${difficulty}.
 
-QUAN TRỌNG:
-- Từ/cụm từ TIẾNG VIỆT CÓ DẤU, viết thường
-- Số ký tự (KHÔNG tính dấu cách) khoảng ${targetCharCount} ký tự (sai lệch ±1 được)
-- Có thể là 1 từ hoặc cụm từ có dấu cách
-- Ví dụ: "con mèo" (6 ký tự), "bóng đá" (6 ký tự), "hoa hồng" (7 ký tự)
-- Từ phải là từ thực tế, có nghĩa, phổ biến, liên quan đến chủ đề
-- Hint phải viết theo giọng văn "${tone}" và KHÔNG được chứa đáp án hoặc phần nào của đáp án
-- Nếu giọng văn hài hước thì hint phải funny, nếu toxic thì hint phải cay, nếu thơ thì hint viết dạng thơ
+QUY TẮC TẠO TỪ:
+- Từ/cụm từ phải LÀ TỪ THỰC, PHỔ BIẾ̀N, có nghĩa trong đời thực, không được bịa từ vô nghĩa
+- Viết thường, có dấu tiếng Việt đầy đủ, có thể có dấu cách
+- Ví dụ từ tốt: "con mèo", "bóng đá", "hoa hồng", "phiên chợ", "thảm họa", "trà sữa"
+- Ví dụ từ XẤU (KHÔNG TẠO): "xoay mặt vào", "thục cảm" - vô nghĩa, không ai dùng
+
+ĐỘ KHÓ QUYẾ̀T ĐỊNH:
+- Dễ: Từ đơn giản, phổ biến, ai cũng biết (VD: "con chó", "cơm", "nước")
+- Trung bình: Từ thông dụng nhưng cần suy nghĩ (VD: "phiên chợ", "thảo nguyên")
+- Khó: Từ ít gặp hơn, chuyên ngành hoặc học thuật (VD: "nguyệt thực", "khảo cổ")
+- Địa ngục: Từ hiếm, cổ xưa, hoặc rất chuyên sâu (VD: "sơn hào hải vị", "thượng lượng")
+
+QUY TẮC HINT (GỢI Ý):
+- Hint phải DÀI 2-3 câu, mô tả chi tiết, sinh động
+- Viết theo giọng văn "${tone}"
+- TUYỆT ĐỐI KHÔNG được chứa đáp án hoặc bất kỳ từ nào trong đáp án
+- Hint phải gợi ý đủ để người chơi suy luận ra được, nhưng không quá lộ liễu
 
 Trả về JSON Array CHÍNH XÁC:
 [
-  { "word": "con mèo", "hint": "Gợi ý theo giọng văn ${tone}" }
+  { "word": "hoa hồng", "hint": "Hint dài 2-3 câu theo giọng ${tone}, mô tả sinh động" }
 ]`;
 
     const result = await geminiService.generateJSON<IWordleWord[]>(prompt);
@@ -154,7 +154,7 @@ Trả về JSON Array CHÍNH XÁC:
         hint: w.hint,
         charCount: this.countChars(w.word.toLowerCase().trim())
       }))
-      .filter(w => w.charCount >= 3 && w.charCount <= 15);
+      .filter(w => w.charCount >= 2 && w.charCount <= 20);
   }
 
   private async startRound(guildId: string, channel: any) {
