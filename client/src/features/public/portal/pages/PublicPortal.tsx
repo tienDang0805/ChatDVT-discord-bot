@@ -1,9 +1,34 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote, Menu, Star, History } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
+
+const LS_FAVORITES = 'portal_favorites';
+const LS_RECENTS = 'portal_recents';
+const MAX_RECENTS = 5;
+
+const getFavorites = (): string[] => {
+  try { return JSON.parse(localStorage.getItem(LS_FAVORITES) || '[]'); } catch { return []; }
+};
+
+const getRecents = (): string[] => {
+  try { return JSON.parse(localStorage.getItem(LS_RECENTS) || '[]'); } catch { return []; }
+};
+
+const addRecent = (id: string) => {
+  const recents = getRecents().filter(r => r !== id);
+  recents.unshift(id);
+  localStorage.setItem(LS_RECENTS, JSON.stringify(recents.slice(0, MAX_RECENTS)));
+};
+
+const toggleFavorite = (id: string): string[] => {
+  const favs = getFavorites();
+  const next = favs.includes(id) ? favs.filter(f => f !== id) : [...favs, id];
+  localStorage.setItem(LS_FAVORITES, JSON.stringify(next));
+  return next;
+};
 
 const WeatherFAB = lazy(() => import('../../weather/pages/WeatherWidget').then(m => ({ default: m.WeatherFAB })));
 
@@ -85,7 +110,7 @@ const ConfettiOverlay = () => {
   );
 };
 
-const PortalHeader = () => {
+const PortalHeader = ({ onMobileMenuOpen }: { onMobileMenuOpen: () => void }) => {
   const { theme, toggleTheme } = useTheme();
 
   const handleScroll = (id: string) => {
@@ -99,12 +124,10 @@ const PortalHeader = () => {
   return (
     <header className="max-w-6xl mx-auto px-6 pt-6 sticky top-0 z-50 transition-colors duration-300">
       <div className="w-full bg-white/90 dark:bg-[#161b22]/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl h-16 flex items-center justify-between px-6 shadow-sm">
-        {/* Logo */}
         <div className="flex items-center gap-2 font-black text-xl text-slate-800 dark:text-white">
           <span>Chat<span className="text-orange-500">DVT</span> Community</span>
         </div>
 
-        {/* Nav Links - Center/Right */}
         <nav className="hidden md:flex items-center gap-6">
           <button onClick={() => handleScroll('features-grid')} className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
             <BrainCircuit size={18} /> Tính Năng
@@ -124,7 +147,6 @@ const PortalHeader = () => {
           
           <div className="w-px h-5 bg-slate-200 dark:bg-slate-700 mx-2"></div>
           
-          {/* Tác giả & Theme Toggle */}
           <div className="flex items-center gap-4">
             <Link to="/profile" className="flex items-center gap-2 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-white transition-colors">
               <Briefcase size={18} /> Tác Giả
@@ -140,7 +162,6 @@ const PortalHeader = () => {
           </div>
         </nav>
         
-        {/* Mobile Nav */}
         <div className="md:hidden flex items-center gap-3">
            <button
              onClick={toggleTheme}
@@ -148,9 +169,96 @@ const PortalHeader = () => {
            >
              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
            </button>
+           <button
+             onClick={onMobileMenuOpen}
+             className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1f2937] text-slate-600 dark:text-slate-300"
+             title="Menu"
+           >
+             <Menu size={18} />
+           </button>
         </div>
       </div>
     </header>
+  );
+};
+
+const MobileDrawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', handleKey); document.body.style.overflow = ''; };
+  }, [isOpen, onClose]);
+
+  const handleScroll = (id: string) => {
+    onClose();
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }, 300);
+  };
+
+  const navItems = [
+    { icon: BrainCircuit, label: 'Tính Năng', action: () => handleScroll('features-grid') },
+    { icon: BookOpen, label: 'English Hub', href: '/english' },
+    { icon: Heart, label: 'Mục Tiêu', action: () => handleScroll('goal-section') },
+    { icon: Coffee, label: 'Donate', action: () => handleScroll('donate-section') },
+    { icon: Bot, label: 'Discord Bot', action: () => handleScroll('discord-banner') },
+    { icon: Briefcase, label: 'Tác Giả', href: '/profile' },
+  ];
+
+  return (
+    <>
+      <div
+        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
+      <div
+        className={`fixed top-0 right-0 h-full w-72 bg-white dark:bg-[#161b22] border-l border-slate-200 dark:border-slate-800 z-[61] transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        } shadow-2xl`}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800">
+          <span className="font-black text-lg text-slate-800 dark:text-white">Chat<span className="text-orange-500">DVT</span></span>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1f2937] flex items-center justify-center text-slate-500 hover:text-orange-500 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+        <nav className="p-4 space-y-1">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            if (item.href) {
+              return (
+                <Link key={item.label} to={item.href} onClick={onClose} className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-500 transition-colors">
+                  <Icon size={18} /> {item.label}
+                </Link>
+              );
+            }
+            return (
+              <button key={item.label} onClick={item.action} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-500/10 hover:text-orange-500 transition-colors">
+                <Icon size={18} /> {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-800">
+          <button
+            onClick={() => { toggleTheme(); onClose(); }}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-100 dark:bg-[#1f2937] text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-orange-500 transition-colors"
+          >
+            {theme === 'dark' ? <><Sun size={16} /> Giao diện Sáng</> : <><Moon size={16} /> Giao diện Tối</>}
+          </button>
+        </div>
+      </div>
+    </>
   );
 };
 
@@ -537,6 +645,9 @@ export const PublicPortal = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [isScrollRestored, setIsScrollRestored] = useState(false);
   const [botAvatar, setBotAvatar] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>(getFavorites);
+  const [recents, setRecents] = useState<string[]>(getRecents);
 
   const scrollSaveEnabled = useRef(false);
 
@@ -667,6 +778,26 @@ export const PublicPortal = () => {
     }
   }, []);
 
+  const handleToggleFavorite = useCallback((e: React.MouseEvent, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = toggleFavorite(id);
+    setFavorites(next);
+    const wasFav = !next.includes(id);
+    toast.success(wasFav ? 'Đã bỏ yêu thích' : 'Đã thêm yêu thích!', { icon: wasFav ? '💔' : '❤️' });
+  }, []);
+
+  const handleFeatureClick = useCallback((id: string) => {
+    addRecent(id);
+    setRecents(getRecents());
+  }, []);
+
+  const FEATURED_IDS = ['english-hub', 'food-wheel', 'tarot', 'tech-duel', 'chicken-game'];
+  const featuredFeatures = FEATURED_IDS.map(id => features.find(f => f.id === id)).filter(Boolean) as typeof features;
+
+  const recentFeatures = recents.map(id => features.find(f => f.id === id)).filter(Boolean) as typeof features;
+  const favoriteFeatures = favorites.map(id => features.find(f => f.id === id)).filter(Boolean) as typeof features;
+
   const filteredFeatures = features.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const term = searchTerm.toLowerCase();
@@ -707,7 +838,8 @@ export const PublicPortal = () => {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
-      <PortalHeader />
+      <PortalHeader onMobileMenuOpen={() => setMobileMenuOpen(true)} />
+      <MobileDrawer isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
       {showConfetti && <ConfettiOverlay />}
       <div className="max-w-6xl mx-auto px-6 pb-10 pt-4">
         <AlertTicker />
@@ -878,6 +1010,83 @@ export const PublicPortal = () => {
           </a>
         </div>
 
+        {/* Nổi Bật Section */}
+        <div className="mb-10">
+          <h3 className="text-xs font-black text-orange-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Star size={14} /> Nổi Bật
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {featuredFeatures.map(item => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.id}
+                  to={item.href}
+                  onClick={() => handleFeatureClick(item.id)}
+                  className="group bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 rounded-xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-md shadow-sm"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                      <Icon size={18} className="text-orange-500" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200 leading-tight line-clamp-2">{item.title}</span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Yêu Thích Section */}
+        {favoriteFeatures.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xs font-black text-pink-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Heart size={14} /> Yêu Thích ({favoriteFeatures.length})
+            </h3>
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+              {favoriteFeatures.map(item => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.href}
+                    onClick={() => handleFeatureClick(item.id)}
+                    className="group shrink-0 w-44 bg-white dark:bg-[#131923] border border-pink-200 dark:border-pink-500/20 hover:border-pink-500/50 rounded-xl p-4 transition-all hover:-translate-y-0.5 hover:shadow-md shadow-sm"
+                  >
+                    <Icon size={20} className="text-pink-500 mb-2" />
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{item.title}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">{item.description.slice(0, 40)}...</p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Gần Đây Section */}
+        {recentFeatures.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xs font-black text-cyan-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <History size={14} /> Gần Đây
+            </h3>
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+              {recentFeatures.map(item => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.href}
+                    className="shrink-0 flex items-center gap-2 px-3.5 py-2 rounded-full bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-700 hover:border-cyan-500/50 text-xs font-semibold text-slate-600 dark:text-slate-300 transition-colors shadow-sm"
+                  >
+                    <Icon size={14} className="text-cyan-500" />
+                    {item.title}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Filters & Search */}
         <div id="features-grid" className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
            <div className="flex flex-wrap gap-2">
@@ -957,13 +1166,26 @@ export const PublicPortal = () => {
                     {item.number}
                   </span>
                   {!item.external && (
-                    <button
-                      onClick={(e) => handleShareOrCopy(e, item.href, item.title)}
-                      className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-orange-500 transition-all z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur p-1.5 rounded-lg shadow-sm"
-                      title="Chia sẻ"
-                    >
-                      <Share2 size={14} />
-                    </button>
+                    <div className="absolute bottom-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all z-20">
+                      <button
+                        onClick={(e) => handleToggleFavorite(e, item.id)}
+                        className={`p-1.5 rounded-lg shadow-sm backdrop-blur transition-all ${
+                          favorites.includes(item.id)
+                            ? 'bg-pink-500 text-white'
+                            : 'bg-white/80 dark:bg-slate-900/80 text-slate-400 hover:text-pink-500'
+                        }`}
+                        title={favorites.includes(item.id) ? 'Bỏ yêu thích' : 'Yêu thích'}
+                      >
+                        <Heart size={14} fill={favorites.includes(item.id) ? 'currentColor' : 'none'} />
+                      </button>
+                      <button
+                        onClick={(e) => handleShareOrCopy(e, item.href, item.title)}
+                        className="bg-white/80 dark:bg-slate-900/80 text-slate-400 hover:text-orange-500 backdrop-blur p-1.5 rounded-lg shadow-sm transition-all"
+                        title="Chia sẻ"
+                      >
+                        <Share2 size={14} />
+                      </button>
+                    </div>
                   )}
                   {item.external && (
                     <ExternalLink size={14} className="absolute bottom-4 right-4 text-slate-300 dark:text-slate-700" />
@@ -999,9 +1221,14 @@ export const PublicPortal = () => {
                   ) : (
                     <Link
                       to={item.href}
+                      onClick={() => handleFeatureClick(item.id)}
                       onMouseEnter={() => handlePrefetch(item.href)}
                       onTouchStart={() => handlePrefetch(item.href)}
-                      className="group relative bg-white dark:bg-[#131923] border border-slate-200 dark:border-slate-800 hover:border-orange-500/50 p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/5 block min-h-[260px] shadow-sm"
+                      className={`group relative bg-white dark:bg-[#131923] border p-8 rounded-xl overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-orange-500/5 block min-h-[260px] shadow-sm ${
+                        favorites.includes(item.id)
+                          ? 'border-pink-300 dark:border-pink-500/30 hover:border-pink-500/50'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-orange-500/50'
+                      }`}
                     >
                       {cardContent}
                     </Link>
