@@ -59,7 +59,7 @@ export const ProfilePage = () => {
   }, []);
 
   return (
-    <PageShell title="Đặng Văn Tiến" subtitle="Mobile Developer • Creator of ChatDVT & devtiendang.blog" maxWidth="3xl">
+    <PageShell title="Đặng Văn Tiến" subtitle="Mobile Developer • Side-project bằng vibe code" maxWidth="3xl">
 
       <div className="flex flex-col items-center text-center -mt-2">
         <div className="relative mb-5">
@@ -113,12 +113,10 @@ export const ProfilePage = () => {
           <h2 className="text-xs font-bold text-orange-500 uppercase tracking-widest">Về mình</h2>
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-          Một dev vừa đam mê code vừa thích tạo ra mấy thứ "vô tri nhưng hữu ích" 😂
-          Chuyên React Native & Kotlin, nhưng cũng build full-stack web, bot Discord, và mấy cái AI mini-app cho vui.
+          Dev mobile là nghề chính — React Native & Kotlin, ngày đi làm tối về ôm laptop tiếp 😂
         </p>
         <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-2">
-          <span className="text-orange-500 font-bold">devtiendang.blog</span> là nơi mình đổ hết tâm huyết side-project — 
-          từ tạo thơ AI, xem tử vi, đến biến ảnh thành sticker chibi. Tất cả đều miễn phí ❤️
+          <span className="text-orange-500 font-bold">devtiendang.blog</span> là side project cá nhân, code chủ yếu bằng vibe code — nghĩ tới đâu code tới đó, có gì hay ho thì ship lên luôn. Từ bot Discord, tạo thơ AI, xem tử vi, đến biến ảnh thành sticker chibi. Tất cả miễn phí, làm cho vui thôi ❤️
         </p>
       </div>
 
