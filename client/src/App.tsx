@@ -8,6 +8,11 @@ import { OfflineBanner } from './shared/components/OfflineBanner';
 import { NavigationProgress } from './shared/components/NavigationProgress';
 import { Toaster } from 'react-hot-toast';
 
+const params = new URLSearchParams(window.location.search);
+if ((params.has('frame_id') || params.has('instance_id')) && !window.location.pathname.includes('pixel-agents-activity')) {
+  window.location.replace('/pixel-agents-activity' + window.location.search);
+}
+
 const PublicPortal = lazy(() => import('./features/public/portal/pages/PublicPortal').then(m => ({ default: m.PublicPortal })));
 // Removed WeatherFAB from global imports
 const FoodWheel = lazy(() => import('./features/public/food-wheel/pages/FoodWheel'));
