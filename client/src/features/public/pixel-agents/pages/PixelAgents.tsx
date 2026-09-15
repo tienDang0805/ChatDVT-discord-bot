@@ -10,7 +10,7 @@ interface ChatMessage {
 
 const AGENT_NAMES = ['Tiến Đặng', 'Quang Huy', 'Ngọc Tâm', 'Thái Tài', 'Hoà Trần'];
 
-export const PixelAgents = () => {
+export const PixelAgents = ({ isActivity = false }: { isActivity?: boolean }) => {
   const { theme, toggleTheme } = useTheme();
   const [messages, setMessages] = useState<ChatMessage[]>([
     { speaker: 'HỆ THỐNG', message: 'Chào mừng đến với Văn phòng 8D. Nhập câu hỏi để bị chửi hội đồng nhé.' }
@@ -214,8 +214,8 @@ export const PixelAgents = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-[#0d1117]">
-      {/* Header */}
+    <div className={`flex flex-col ${isActivity ? 'h-screen' : 'h-[calc(100vh-64px)]'} bg-[#0d1117]`}>
+      {!isActivity && (
       <div className="h-16 flex items-center px-6 relative shrink-0 z-10">
         <h1 className="text-2xl font-black text-white tracking-widest font-mono uppercase" style={{ textShadow: '3px 3px 0px #f97316' }}>
           CUỘC SỐNG HẰNG NGÀY CỦA <span className="text-orange-500">8D</span>
@@ -228,6 +228,7 @@ export const PixelAgents = () => {
           {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
         </button>
       </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden px-6 pb-6 gap-5 w-full max-w-[1900px] mx-auto">
         

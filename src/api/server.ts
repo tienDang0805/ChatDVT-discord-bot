@@ -150,6 +150,25 @@ CHỈ TRẢ VỀ CHÍNH XÁC MẢNG JSON, KHÔNG CÓ DẤU BACKTICK HAY BẤT C�
     });
 });
 
+app.post('/api/activity-token', async (req, res) => {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'Missing code' });
+
+    try {
+        const response = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+            client_id: process.env.CLIENT_ID || '',
+            client_secret: process.env.DISCORD_CLIENT_SECRET || '',
+            grant_type: 'authorization_code',
+            code,
+        }).toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        });
+        res.json({ access_token: response.data.access_token });
+    } catch (err: any) {
+        console.error('Activity token exchange failed:', err.response?.data || err.message);
+        res.status(500).json({ error: 'Token exchange failed' });
+    }
+});
 
 // --- Auth Middleware ---
 
@@ -158,7 +177,7 @@ app.use('/api', poe2TradeRoutes);
 
 // Protect API Routes (except public routes)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/') || req.path.startsWith('/api/ping-sos')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/') || req.path.startsWith('/api/ping-sos') || req.path === '/api/activity-token') {
         return next();
     }
     if (req.path.startsWith('/api/')) {

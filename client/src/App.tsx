@@ -16,6 +16,7 @@ const HandsomeAnalyzer = lazy(() => import('./features/public/handsome-analyzer/
 const CVReviewer = lazy(() => import('./features/public/cv-reviewer/pages/CVReviewer').then(m => ({ default: m.CVReviewer })));
 const MusicStation = lazy(() => import('./features/public/music-station/pages/MusicStation'));
 const PixelAgents = lazy(() => import('./features/public/pixel-agents/pages/PixelAgents').then(m => ({ default: m.PixelAgents })));
+const PixelAgentsActivity = lazy(() => import('./features/public/pixel-agents/pages/PixelAgentsActivity').then(m => ({ default: m.PixelAgentsActivity })));
 const NumerologyPage = lazy(() => import('./features/public/numerology/pages/NumerologyPage').then(m => ({ default: m.NumerologyPage })));
 const GenderQuizPage = lazy(() => import('./features/public/gender-quiz/pages/GenderQuizPage').then(m => ({ default: m.GenderQuizPage })));
 const AstrologyPage = lazy(() => import('./features/public/astrology/pages/AstrologyPage').then(m => ({ default: m.AstrologyPage })));
@@ -132,6 +133,7 @@ function App() {
             <Route path="/cv-review" element={<CVReviewer />} />
             <Route path="/music" element={<MusicStation />} />
             <Route path="/pixel-agents" element={<PixelAgents />} />
+            <Route path="/pixel-agents-activity" element={<PixelAgentsActivity />} />
             <Route path="/numerology" element={<NumerologyPage />} />
             <Route path="/gender-quiz" element={<GenderQuizPage />} />
             <Route path="/astrology" element={<AstrologyPage />} />
