@@ -3,7 +3,7 @@ import { DiscordSDK } from '@discord/embedded-app-sdk';
 import { PixelAgents } from './PixelAgents';
 import { Loader2 } from 'lucide-react';
 
-const DISCORD_CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID || '';
+const DISCORD_CLIENT_ID = '1376397644238426173';
 
 interface DiscordUser {
   id: string;
