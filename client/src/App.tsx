@@ -8,10 +8,8 @@ import { OfflineBanner } from './shared/components/OfflineBanner';
 import { NavigationProgress } from './shared/components/NavigationProgress';
 import { Toaster } from 'react-hot-toast';
 
-const params = new URLSearchParams(window.location.search);
-if ((params.has('frame_id') || params.has('instance_id')) && !window.location.pathname.includes('pixel-agents-activity')) {
-  window.location.replace('/pixel-agents-activity' + window.location.search);
-}
+const _p = new URLSearchParams(window.location.search);
+const isDiscordActivity = _p.has('frame_id') || _p.has('instance_id');
 
 const PublicPortal = lazy(() => import('./features/public/portal/pages/PublicPortal').then(m => ({ default: m.PublicPortal })));
 // Removed WeatherFAB from global imports
@@ -130,7 +128,7 @@ function App() {
         <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={<PublicPortal />} />
+            <Route path="/" element={isDiscordActivity ? <PixelAgentsActivity /> : <PublicPortal />} />
             <Route path="/chatDVT" element={<PublicPortal />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
