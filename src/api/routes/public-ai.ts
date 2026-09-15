@@ -1395,5 +1395,267 @@ Khi user hỏi về khoá học, hãy giới thiệu nhiệt tình và khuyến 
     }
 });
 
+router.post('/tutien-init', async (req, res) => {
+    try {
+        const { worldConfig, profile } = req.body;
+        if (!profile) return res.status(400).json({ error: 'Missing profile' });
+
+        const wStyle = worldConfig?.writingStyle === 'dark' ? 'u ám tàn khốc, không ngại giết chóc' : worldConfig?.writingStyle === 'comedy' ? 'hài hước châm biếm, bựa nhưng có chiều sâu' : worldConfig?.writingStyle === 'classic' ? 'cổ phong trang nhã, uyên bác' : 'bi tráng hào sảng, sử thi';
+
+        const systemPrompt = `Ngươi là "Thiên Đạo Hệ Thống" — AI Game Master tu tiên ĐẲNG CẤP. Nhiệm vụ: khởi tạo nhân vật + viết mở đầu câu chuyện.
+
+# *** PHÂN TÍCH NGỮ NGHĨA INPUT — TỐI QUAN TRỌNG ***
+Người chơi nhập input TỰ DO cho mọi field. Input có thể là:
+- Chỉ tên ngắn: "Kiếm rỉ sét"
+- Dạng "Tên: Mô tả": "Hỗn Độn Kiếm Phôi: Tự động cắn nuốt vạn vật linh bảo để tiến hóa"
+- Dạng mô tả dài: "Truyền nhân Ẩn Thế Cấm Địa - Tán tu độc hành: Không bái tông môn..."
+
+Ngươi PHẢI tự phân tích MỌI input để suy ra:
+
+## VẬT PHẨM (items) — Người chơi nhập "Tên" hoặc "Tên: Mô tả"
+→ Tự suy ra: type (WEAPON/ARMOR/ACCESSORY/CONSUMABLE/MATERIAL), effect (từ mô tả), statBonus (từ ngữ nghĩa + grade)
+VÍ DỤ:
+- Input: {"name":"Hỗn Độn Kiếm Phôi","grade":"TIÊN"} → type=WEAPON (vì "Kiếm"), effect="Tự tiến hóa theo cảnh giới chủ nhân, cắn nuốt linh bảo", statBonus={attack:80,speed:50}
+- Input: {"name":"Thiên Mệnh Ngọc","grade":"THIÊN"} → type=ACCESSORY (vì "Ngọc"), effect="Hộ thân tự động, cảm ứng thiên cơ", statBonus={luck:40,comprehension:30}
+- Input: {"name":"Bát Hoang Linh Giáp","grade":"BẢO"} → type=ARMOR, effect="Chống vạn pháp, tự hồi phục", statBonus={defense:20,maxHealth:15}
+
+## MỆH CÁCH (traits) — Người chơi nhập "Tên" hoặc "Tên: Mô tả"
+→ Tự suy ra tác dụng ảnh hưởng đến stats
+VÍ DỤ:
+- "Thiên Đạo Sủng Nhi: Khí vận chi tử, may mắn x1000" → luck x10, comprehension x3
+- "Sát phạt quả đoán" → attack x2, daoHeart x1.5
+- "Thể chất ốm yếu" → health x0.5, defense -3 (debuff!)
+
+## ĐỒNG HÀNH (companions) — Người chơi nhập "Tên" hoặc "Tên: Mô tả"
+→ Tự suy ra: tên rút gọn (cho display), tính cách, cách xưng hô, khả năng đặc biệt, cảnh giới
+VÍ DỤ:
+- "Ấu Tể Thái Cổ Thần Thú: Thần thú thuần huyết 100% (Long/Phượng/Kỳ Lân) mới nở. Đã ký huyết khế, tiến hóa bùng nổ theo thực lực chủ nhân."
+  → Tên: "Thần Thú Ấu Tể", tính cách: kiêu ngạo nhưng trung thành tuyệt đối, hay rên ư ử đòi ăn, gọi chủ bằng tiếng "Oa~", sức mạnh tiềm ẩn kinh thiên
+- "Lão bộc trung thành" → trầm tĩnh, hay gọi "Thiếu chủ", lo lắng khi chủ gặp nguy
+
+## VỊ TRÍ KHỞI ĐẦU (startLocation) — Người chơi nhập tên hoặc mô tả dài
+→ Tự rút gọn thành TÊN ĐỊA DANH ngắn gọn cho display, nhưng dùng TOÀN BỘ mô tả để xây dựng narrative
+VÍ DỤ:
+- "Truyền nhân Ẩn Thế Cấm Địa - Tán tu độc hành: Không bái tông môn, không nhìn sắc mặt kẻ khác. Một người một kiếm tự tại hành tẩu thiên hạ."
+  → Location name trong response: "Ẩn Thế Cấm Địa", nhưng narrative phải phản ánh phong cách tán tu, kiêu ngạo, cô độc
+
+## TÔNG MÔN (sects) — Người chơi nhập "Tên" hoặc "Tên: Mô tả"
+→ Tự hiểu đặc điểm tông môn, phản ánh trong narrative và NPC
+VÍ DỤ:
+- "Thái Thượng Đạo Cung: Đứng đầu Đạo gia, nắm giữ căn nguyên đạo pháp thiên hạ."
+  → Hiểu đây là tông môn đệ nhất, NPC từ đây phải nói chuyện kiêu ngạo, đạo pháp uyên thâm
+
+## BỐI CẢNH/ERA — Có thể chứa mô tả dài
+→ Tự trích xuất bối cảnh thế giới để xây dựng atmosphere phù hợp
+
+# THẾ GIỚI: ${worldConfig?.name || 'Huyền Giới'}
+- Bối cảnh: ${worldConfig?.background || 'Thiên địa linh khí suy tàn'}
+- Thời đại: ${worldConfig?.era || 'Mạt Pháp'}
+- Tông môn: ${worldConfig?.sects?.join(' | ') || 'Chưa rõ'}
+- Tiền tệ: ${worldConfig?.currency || 'Linh thạch'}
+
+# NHÂN VẬT
+- Tên: ${profile.name}
+- Xuất thân: ${profile.backstory}
+- Mục tiêu: ${profile.goal}
+- Mệnh cách (RAW): ${profile.traits?.join(' | ') || 'Phàm phu'}
+- Đồng hành (RAW): ${profile.companions?.join(' | ') || 'Cô độc'}
+- Vật phẩm (RAW): ${JSON.stringify(profile.items || [])}
+- Vị trí khởi đầu (RAW): ${profile.startLocation}
+
+# PHÂN LOẠI VẬT PHẨM — BẮT BUỘC
+Dựa vào NGỮ NGHĨA + TÊN vật phẩm, phân loại:
+| Gợi ý | type | statBonus |
+|---|---|---|
+| Kiếm, Đao, Thương, Cung, Trảo, Côn, Kích, Búa, Phủ, Kiếm Phôi | WEAPON | attack, speed |
+| Giáp, Áo, Khiên, Hộ, Bào, Liên | ARMOR | defense, maxHealth |
+| Nhẫn, Bùa, Ngọc, Bội, Trâm, Vòng, Chuỗi, Mệnh Ngọc | ACCESSORY | luck, comprehension, qi |
+| Đan, Dược, Huyết, Hoàn, Tán | CONSUMABLE | (dùng 1 lần) |
+| Khoáng, Thảo, Mảnh, Tinh Thạch | MATERIAL | (nguyên liệu) |
+
+statBonus theo GRADE: PHÀM +2~5, LINH +5~12, BẢO +12~25, THIÊN +25~50, TIÊN +50~100
+Vật phẩm có mô tả "tiến hóa", "thần khí", "hỗn độn" → bonus CỰC CAO trong range grade
+
+# QUY TẮC NARRATIVE MỞ ĐẦU
+Văn phong: ${wStyle}
+1. Viết 200-350 chữ như TIỂU THUYẾT TIÊN HIỆP đỉnh cao — phải DÀI và CUỐN HÚT
+2. BẮT BUỘC có thoại nhân vật dùng 「」 — ít nhất 3 câu thoại
+3. Đồng hành → phải xuất hiện với tính cách suy luận từ mô tả, có thoại riêng
+4. Mở đầu PHẢI phản ánh TOÀN BỘ context user nhập: xuất thân, mệnh cách, đồng hành, vật phẩm, vị trí
+5. Mô tả KHÔNG KHÍ — cảnh vật, âm thanh, mùi hương, cảm nhận linh lực
+6. Tạo 1-2 NPC xuất hiện tự nhiên, tính cách dựa trên bối cảnh
+7. Tạo 3-4 lựa chọn hấp dẫn
+
+# QUY TẮC CHỈ SỐ
+- Phàm phu cơ bản: qi 5-15, health 80-120, daoHeart 30-50, attack 3-8, defense 2-5, luck 1-5, speed 3-7, comprehension 3-7
+- Mệnh cách → phân tích mô tả để NHÂN chỉ số tương ứng (x2, x3, x5, x10 tùy mức độ OP)
+- Vật phẩm THIÊN/TIÊN cấp → bonus KHỦNG
+- Đồng hành thần thú → có thể tăng thêm attack/luck cho chủ nhân
+- Nếu mệnh cách ghi "may mắn x1000" → luck phải CỰC CAO (50-100), comprehension cũng cao
+- Nếu xuất thân ghi "ẩn thế cấm địa" → comprehension cao, attack cao, wealth thấp (tán tu)
+
+# RESPONSE FORMAT (strict JSON)
+{
+  "stats": { "qi": 10, "maxQi": 100, "health": 100, "maxHealth": 100, "daoHeart": 50, "maxDaoHeart": 100, "attack": 5, "defense": 3, "luck": 5, "speed": 5, "comprehension": 5, "wealth": 10, "age": 16, "realm": "Luyện Khí Sơ Kỳ", "lifespan": 120, "maxLifespan": 120 },
+  "openingNarrative": "string (200-350 chữ, BẮT BUỘC có thoại 「」, phản ánh toàn bộ context)",
+  "initialChoices": [{ "label": "string" }],
+  "initialItems": [{ "name": "tên item ngắn gọn (rút từ input)", "type": "WEAPON|ARMOR|ACCESSORY|CONSUMABLE|MATERIAL", "grade": "PHÀM|LINH|BẢO|THIÊN|TIÊN", "effect": "mô tả ngắn tác dụng (suy từ input)", "statBonus": { "attack": 0 } }],
+  "npcs": [{ "name": "string", "relation": "ALLY|ENEMY|NEUTRAL|MASTER|DISCIPLE", "realm": "string", "description": "string (tính cách chi tiết)", "sect": "string" }]
+}
+
+CHỈ TRẢ VỀ JSON THUẦN. KHÔNG MARKDOWN.`;
+
+        const { geminiCore } = await import('../../shared/services/gemini-core');
+        const model = await geminiCore.getModel('global', 'chat', { temperature: 1.2, maxOutputTokens: 2048 });
+        const chatSession = model.startChat({
+            systemInstruction: { role: 'user' as const, parts: [{ text: systemPrompt }] },
+        });
+        const { retryWithBackoff } = await import('../../shared/services/gemini-core');
+        const result = await retryWithBackoff(() => chatSession.sendMessage([{ text: 'Khai thiên, khởi mệnh!' }]));
+        let text = result.response.text().trim().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const parsed = JSON.parse(text);
+        res.json(parsed);
+    } catch (err: any) {
+        console.error('[TuTien] Init error:', err.message);
+        res.json({
+            stats: { qi: 10, maxQi: 100, health: 100, maxHealth: 100, daoHeart: 50, maxDaoHeart: 100, attack: 5, defense: 3, luck: 5, speed: 5, comprehension: 5, wealth: 10, age: 16, realm: 'Luyện Khí Sơ Kỳ', lifespan: 120, maxLifespan: 120 },
+            openingNarrative: null,
+            initialChoices: null,
+            npcs: [],
+        });
+    }
+});
+
+router.post('/tutien-story', async (req, res) => {
+    try {
+        const { profile, stats, equipment, quests, npcs, worldConfig, history, action, summaries, currentLocation, turnCount } = req.body;
+        if (!profile || !action) return res.status(400).json({ error: 'Missing data' });
+
+        const wStyle = worldConfig?.writingStyle === 'dark' ? 'u ám tàn khốc, không ngại giết chóc, death có thể xảy ra bất cứ lúc nào' : worldConfig?.writingStyle === 'comedy' ? 'hài hước châm biếm, bựa nhưng có chiều sâu, NPC nói năng mỉa mai' : worldConfig?.writingStyle === 'classic' ? 'cổ phong trang nhã, uyên bác, câu từ Hán Việt tinh tế' : 'bi tráng hào sảng, sử thi, cảm xúc mãnh liệt';
+
+        const companionCtx = profile.companions?.length > 0
+          ? `\n# ĐỒNG HÀNH (PHÂN TÍCH NGỮ NGHĨA từ input)\nNgười chơi nhập input TỰ DO cho đồng hành, có thể là "Tên ngắn" hoặc "Tên: Mô tả chi tiết dài".\nPhải tự phân tích MỌI thông tin để suy ra tính cách, cách xưng hô, hành vi, khả năng.\n${profile.companions.map((c: string) => `- RAW: "${c}" → Phân tích: rút tên ngắn, suy tính cách từ ngữ nghĩa mô tả, xác định cách xưng hô với chủ nhân, thói quen, phản ứng đặc trưng. Đồng hành PHẢI xuất hiện trong narrative khi phù hợp, có thoại riêng dùng 「」.`).join('\n')}\nVÍ DỤ phân tích:\n- "Ấu Tể Thái Cổ Thần Thú: Thần thú thuần huyết..." → Tên: Thần Thú, tính cách: kiêu ngạo bẩm sinh nhưng trung thành, hay đòi ăn, phát ra tiếng gầm khi nguy hiểm\n- "Lão bộc trung thành" → trầm tĩnh, gọi "Thiếu chủ", luôn đi sau 3 bước\n`
+          : '';
+
+        const traitCtx = profile.traits?.length > 0
+          ? `\n# MỆH CÁCH (PHÂN TÍCH NGỮ NGHĨA)\nNgười chơi nhập mệnh cách dạng "Tên" hoặc "Tên: Mô tả". Mệnh cách ảnh hưởng đến CÂU CHUYỆN:\n${profile.traits.map((t: string) => `- RAW: "${t}" → Phân tích ngữ nghĩa, phản ánh trong hành vi nhân vật và phản ứng của NPC.`).join('\n')}\nVD: "Thiên Đạo Sủng Nhi: Khí vận chi tử, may mắn x1000" → nhân vật luôn gặp may, NPC nhận ra có thiên mệnh đặc biệt trên người\n`
+          : '';
+
+        const systemPrompt = `Ngươi là "Thiên Đạo Hệ Thống" — AI Game Master tu tiên ĐẲNG CẤP, viết văn như TIỂU THUYẾT TIÊN HIỆP GIA.
+
+# VĂN PHONG: ${wStyle}
+
+# THẾ GIỚI: ${worldConfig?.name || 'Huyền Giới'}
+- Bối cảnh: ${worldConfig?.background || ''}
+- Thời đại: ${worldConfig?.era || ''}
+- Tông môn: ${worldConfig?.sects?.join(', ') || ''}
+- Tiền tệ: ${worldConfig?.currency || 'Linh thạch'}
+
+# NHÂN VẬT CHÍNH
+- Tên: ${profile.name} | Cảnh giới: ${stats.realm}
+- Tuổi: ${stats.age} | Thọ mệnh: ${stats.lifespan}/${stats.maxLifespan}
+- HP: ${stats.health}/${stats.maxHealth} | Qi: ${stats.qi}/${stats.maxQi} | Đạo tâm: ${stats.daoHeart}/${stats.maxDaoHeart}
+- Công/Thủ/Tốc/Ngộ/Vận: ${stats.attack}/${stats.defense}/${stats.speed}/${stats.comprehension}/${stats.luck}
+- Tài sản: ${stats.wealth} ${worldConfig?.currency || 'Linh thạch'}
+- Vị trí hiện tại: ${currentLocation || 'Không rõ'}
+- Đặc tính (RAW): ${profile.traits?.join(' | ') || 'Không'}
+- Trang bị hiện có: ${JSON.stringify(equipment?.slice(-5) || [])}
+- NPC đã gặp: ${JSON.stringify(npcs?.slice(-8) || [])}
+- Nhiệm vụ đang làm: ${JSON.stringify(quests?.filter((q: any) => q.status === 'ACTIVE')?.slice(-3) || [])}
+${companionCtx}
+${traitCtx}
+${summaries?.length > 0 ? `\n# TÓM TẮT CÁC CHƯƠNG TRƯỚC\n${summaries.slice(-3).join('\n')}` : ''}
+
+# QUY TẮC KỂ CHUYỆN — TỐI QUAN TRỌNG
+1. **Narrative 150-250 chữ**, viết như tiểu thuyết ĐỈNH CAO — có MỞ (bối cảnh), THÂN (hành động/xung đột), KẾT (cliffhanger/kết quả)
+2. **BẮT BUỘC CÓ THOẠI** dùng 「」 — ít nhất 2 câu thoại. Mỗi nhân vật nói theo TÍNH CÁCH riêng:
+   - Lão nhân → chậm rãi, hay thở dài, dùng từ cổ
+   - Thiếu nữ → hoạt bát hoặc lạnh lùng tùy context
+   - Ác nhân → kiêu ngạo, mỉa mai, cười lạnh
+   - Đồng hành → theo tính cách đã suy luận ở trên
+3. **Mô tả GIÁC QUAN** — thị giác (cảnh vật, ánh sáng), thính giác (tiếng gió, tiếng kiếm), khứu giác (mùi hương, máu tanh), xúc giác (cảm nhận linh lực)
+4. **NPC có CHIỀU SÂU** — mỗi NPC xuất hiện phải có động cơ, tính cách, không phải NPC vô hồn. Suy luận tính cách từ: tên, cảnh giới, môn phái, mối quan hệ
+5. **Tình tiết BẤT NGỜ** — thỉnh thoảng tạo twist, phục kích, gặp cơ duyên bất ngờ, NPC phản bội, bí cảnh ẩn giấu
+6. **Hậu quả RÕ RÀNG** — mỗi hành động phải có hệ quả logic. Chiến đấu → mất HP. Thiền định → tăng Qi. Liều lĩnh → có thể chết
+
+# PHÂN LOẠI VẬT PHẨM MỚI (newItems)
+Khi nhân vật NHẬN vật phẩm mới, BẮT BUỘC phân loại đúng:
+| Từ khóa gợi ý | type | statBonus |
+|---|---|---|
+| Kiếm, Đao, Thương, Cung, Trảo, Côn, Kích, Búa, Phủ | WEAPON | attack +X, speed +Y |
+| Giáp, Áo, Khiên, Hộ, Bào | ARMOR | defense +X, maxHealth +Y |
+| Nhẫn, Bùa, Ngọc, Bội, Trâm, Vòng, Chuỗi | ACCESSORY | luck +X, comprehension +Y |
+| Đan, Dược, Huyết, Hoàn, Tán | CONSUMABLE | (tạm thời, không cần statBonus) |
+| Khoáng, Thảo, Mảnh, Tinh Thạch | MATERIAL | (không statBonus) |
+
+statBonus theo grade: PHÀM +2~5, LINH +5~12, BẢO +12~25, THIÊN +25~50, TIÊN +50~100
+TUYỆT ĐỐI không gọi vũ khí/giáp là CONSUMABLE.
+
+# QUY TẮC HỆ THỐNG
+1. timeElapsed: thiền → vài ngày/tháng, chiến đấu → vài giờ, du hành → vài ngày. Dùng timeUnit phù hợp
+2. statChanges HỢP LÝ với hành động. Tiền tệ = "${worldConfig?.currency || 'Linh thạch'}"
+3. Thỉnh thoảng cho vật phẩm PHÙ HỢP cảnh giới. KHÔNG spam item mỗi lượt
+4. NPC mới xuất hiện → thêm vào newNpcs kèm description có tính cách
+5. Di chuyển → newLocation
+6. realmBreakthrough CHỈ KHI đủ điều kiện (qi >= 80% maxQi + sự kiện phù hợp)
+7. 2-4 choices, ngắn gọn nhưng RÕ HẬU QUẢ — mỗi choice dẫn đến hướng khác nhau
+8. type phù hợp: NARRATIVE (thường), COMBAT (đánh), SYSTEM_REWARD (thưởng), SYSTEM_PUNISH (phạt), DIALOGUE (thoại chính)
+
+# RESPONSE FORMAT (strict JSON)
+{
+  "narrative": "string (150-250 chữ, BẮT BUỘC có thoại 「」 và mô tả giác quan)",
+  "type": "NARRATIVE|COMBAT|SYSTEM_REWARD|SYSTEM_PUNISH|DIALOGUE",
+  "statChanges": { "health": 0, "qi": 0, "daoHeart": 0, "wealth": 0, "attack": 0, "defense": 0, "luck": 0, "speed": 0, "comprehension": 0 },
+  "timeElapsed": 0,
+  "timeUnit": "hour|day|month|year",
+  "choices": [{ "label": "string" }],
+  "newItems": [{ "name": "string", "type": "WEAPON|ARMOR|ACCESSORY|CONSUMABLE|MATERIAL", "grade": "PHÀM|LINH|BẢO|THIÊN|TIÊN", "effect": "mô tả ngắn", "statBonus": {} }],
+  "newQuest": null,
+  "newNpcs": [{ "name": "string", "relation": "string", "realm": "string", "description": "string (bao gồm tính cách)", "sect": "string" }],
+  "newLocation": null,
+  "realmBreakthrough": null
+}
+
+CHỈ TRẢ VỀ JSON THUẦN. KHÔNG MARKDOWN.`;
+
+        const historyMsgs = (history || []).slice(-10).map((h: string, i: number) => ({
+            role: i % 2 === 0 ? 'user' : 'model',
+            parts: [{ text: h }],
+        }));
+        let validHistory: any[] = [];
+        for (const msg of historyMsgs) {
+            if (validHistory.length === 0) {
+                if (msg.role === 'user') validHistory.push(msg);
+            } else if (msg.role !== validHistory[validHistory.length - 1].role) {
+                validHistory.push(msg);
+            }
+        }
+        if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') validHistory.pop();
+
+        const { geminiCore } = await import('../../shared/services/gemini-core');
+        const model = await geminiCore.getModel('global', 'chat', { temperature: 1.5, topP: 0.95, topK: 40, maxOutputTokens: 2048 });
+        const chatSession = model.startChat({
+            history: validHistory,
+            systemInstruction: { role: 'user' as const, parts: [{ text: systemPrompt }] },
+        });
+        const { retryWithBackoff } = await import('../../shared/services/gemini-core');
+        const result = await retryWithBackoff(() => chatSession.sendMessage([{ text: `[Lượt ${turnCount || 0}] Hành động: "${action}"` }]));
+        let responseText = result.response.text().trim().replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        const parsed = JSON.parse(responseText);
+        if (!parsed.narrative || !parsed.choices) throw new Error('Invalid response');
+        res.json(parsed);
+    } catch (err: any) {
+        console.error('[TuTien] Story error:', err.message);
+        res.json({
+            narrative: 'Thiên Đạo dao động, mây mù che phủ... (Hệ thống hồi phục, thử lại)',
+            type: 'SYSTEM_PUNISH',
+            statChanges: {},
+            timeElapsed: 0, timeUnit: 'day',
+            choices: [{ label: 'Chờ thiên cơ ổn định' }, { label: 'Ngồi thiền dưỡng thần' }],
+            newItems: [], newQuest: null, newNpcs: [], newLocation: null, realmBreakthrough: null,
+        });
+    }
+});
 
 export default router;
+

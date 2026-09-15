@@ -195,6 +195,8 @@ export const ChatWidget = () => {
     'Donate ở đâu?',
   ];
 
+  if (window.location.pathname.startsWith('/tutien')) return null;
+
   return (
     <>
       <style>{`
