@@ -76,8 +76,11 @@ export default function ActionPanel() {
       }
 
       if (data.realmBreakthrough) {
-        updateStats({ realm: data.realmBreakthrough });
-        addLog({ id: (Date.now() + 2).toString(), text: `⚡ ĐỘT PHÁ! ${data.realmBreakthrough}! Thọ mệnh gia tăng!`, type: 'REALM_UP' });
+        const realmName = typeof data.realmBreakthrough === 'string'
+          ? data.realmBreakthrough
+          : data.realmBreakthrough.targetRealm || data.realmBreakthrough.realm || JSON.stringify(data.realmBreakthrough);
+        updateStats({ realm: realmName });
+        addLog({ id: (Date.now() + 2).toString(), text: `⚡ ĐỘT PHÁ! ${realmName}! Thọ mệnh gia tăng!`, type: 'REALM_UP' });
       }
 
       if (data.newItems && Array.isArray(data.newItems)) {
