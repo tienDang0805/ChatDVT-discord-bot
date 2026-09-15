@@ -34,15 +34,25 @@ export const PixelAgentsActivity = () => {
 
     if (!DISCORD_CLIENT_ID) {
       setStatus('error');
-      setError('VITE_DISCORD_CLIENT_ID not configured');
+      setError('DISCORD_CLIENT_ID not configured');
       return;
     }
 
     const initActivity = async () => {
       try {
+        console.log('[Activity] Step 1: Creating DiscordSDK...');
+        setError('SDK init...');
         const discordSdk = new DiscordSDK(DISCORD_CLIENT_ID);
-        await discordSdk.ready();
 
+        console.log('[Activity] Step 2: Waiting for ready()...');
+        setError('Waiting ready()...');
+        await Promise.race([
+          discordSdk.ready(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('SDK ready() timeout (15s) — Discord không phản hồi. Kiểm tra URL Mapping trong Developer Portal.')), 15000)),
+        ]);
+
+        console.log('[Activity] Step 3: Authorizing...');
+        setError('Authorizing...');
         const { code } = await discordSdk.commands.authorize({
           client_id: DISCORD_CLIENT_ID,
           response_type: 'code',
@@ -51,15 +61,22 @@ export const PixelAgentsActivity = () => {
           scope: ['identify'],
         });
 
+        console.log('[Activity] Step 4: Exchanging token...');
+        setError('Token exchange...');
         const tokenRes = await fetch('/api/activity-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code }),
         });
 
-        if (!tokenRes.ok) throw new Error('Token exchange failed');
+        if (!tokenRes.ok) {
+          const errBody = await tokenRes.text();
+          throw new Error(`Token exchange failed: ${tokenRes.status} ${errBody}`);
+        }
         const { access_token } = await tokenRes.json();
 
+        console.log('[Activity] Step 5: Authenticating...');
+        setError('Authenticating...');
         const auth = await discordSdk.commands.authenticate({ access_token });
         if (!auth) throw new Error('Authentication failed');
 
@@ -67,9 +84,11 @@ export const PixelAgentsActivity = () => {
           setDiscordUser(auth.user as DiscordUser);
         }
 
+        console.log('[Activity] ✅ Ready!');
+        setError('');
         setStatus('ready');
       } catch (err: any) {
-        console.error('Discord Activity init failed:', err);
+        console.error('[Activity] ❌ Failed:', err);
         setStatus('error');
         setError(err.message || 'Unknown error');
       }
@@ -89,6 +108,9 @@ export const PixelAgentsActivity = () => {
         <p className="text-slate-400 font-mono text-sm tracking-wider animate-pulse">
           Đang kết nối Discord Activity...
         </p>
+        {error && (
+          <p className="text-slate-600 font-mono text-xs">{error}</p>
+        )}
       </div>
     );
   }

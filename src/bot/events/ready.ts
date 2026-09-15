@@ -97,9 +97,17 @@ export async function handleReady(client: Client) {
         const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN!);
         const currentCommands = (client as any).commands.map((cmd: any) => cmd.data.toJSON());
         
+        const existingCommands = await rest.get(
+            Routes.applicationCommands(client.user?.id!)
+        ) as any[];
+        
+        const entryPointCommands = existingCommands
+            .filter((cmd: any) => cmd.type === 4)
+            .map((cmd: any) => ({ ...cmd }));
+        
         await rest.put(
              Routes.applicationCommands(client.user?.id!),
-             { body: currentCommands }
+             { body: [...currentCommands, ...entryPointCommands] }
         );
         
     } catch (error) {
