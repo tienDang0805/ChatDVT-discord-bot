@@ -22,6 +22,8 @@ const PixelAgents = lazy(() => import('./features/public/pixel-agents/pages/Pixe
 const PixelAgentsActivity = lazy(() => import('./features/public/pixel-agents/pages/PixelAgentsActivity').then(m => ({ default: m.PixelAgentsActivity })));
 const FlappyBirdGame = lazy(() => import('./features/public/flappy-bird/pages/FlappyBirdGame').then(m => ({ default: m.FlappyBirdGame })));
 const FlappyBirdActivity = lazy(() => import('./features/public/flappy-bird/pages/FlappyBirdActivity').then(m => ({ default: m.FlappyBirdActivity })));
+const SurvivorArena = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArena').then(m => ({ default: m.SurvivorArena })));
+const SurvivorArenaActivity = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArenaActivity').then(m => ({ default: m.SurvivorArenaActivity })));
 const NumerologyPage = lazy(() => import('./features/public/numerology/pages/NumerologyPage').then(m => ({ default: m.NumerologyPage })));
 const GenderQuizPage = lazy(() => import('./features/public/gender-quiz/pages/GenderQuizPage').then(m => ({ default: m.GenderQuizPage })));
 const AstrologyPage = lazy(() => import('./features/public/astrology/pages/AstrologyPage').then(m => ({ default: m.AstrologyPage })));
@@ -130,7 +132,7 @@ function App() {
         <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={isDiscordActivity ? <FlappyBirdActivity /> : <PublicPortal />} />
+            <Route path="/" element={isDiscordActivity ? <SurvivorArenaActivity /> : <PublicPortal />} />
             <Route path="/chatDVT" element={<PublicPortal />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
@@ -141,6 +143,8 @@ function App() {
             <Route path="/pixel-agents-activity" element={<PixelAgentsActivity />} />
             <Route path="/flappy-bird" element={<FlappyBirdGame />} />
             <Route path="/flappy-bird-activity" element={<FlappyBirdActivity />} />
+            <Route path="/survivor-arena" element={<SurvivorArena />} />
+            <Route path="/survivor-arena-activity" element={<SurvivorArenaActivity />} />
             <Route path="/numerology" element={<NumerologyPage />} />
             <Route path="/gender-quiz" element={<GenderQuizPage />} />
             <Route path="/astrology" element={<AstrologyPage />} />
