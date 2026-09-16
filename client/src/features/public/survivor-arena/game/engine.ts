@@ -10,6 +10,10 @@ import {
   generateWaveConfigs, getEnemyHp, getEnemyDmg, getEnemySpeed,
   getEnemyCount, getXpToLevel, getEndlessScale,
 } from './data';
+import { Camera } from './camera';
+import { ParticleSystem, FloatingDamageTextManager } from './particles';
+import { GameRenderer } from './renderer';
+import { AssetManager } from './assets';
 
 const MAX_ENEMIES = 300;
 const MAX_PROJECTILES = 400;
@@ -30,6 +34,16 @@ export class GameEngine {
   private projectiles: ProjectileState[] = [];
   private xpGems: XPGemState[] = [];
   private particles: ParticleState[] = [];
+
+  private camera!: Camera;
+  private particleSystem!: ParticleSystem;
+  private damageTexts!: FloatingDamageTextManager;
+  private renderer!: GameRenderer;
+  private assets!: AssetManager;
+  private facingLeft = false;
+  private isMoving = false;
+  private dustTimer = 0;
+  private statsTimer = 0;
 
   private input: InputState = { up: false, down: false, left: false, right: false, touchActive: false, touchDx: 0, touchDy: 0 };
   private camX = 0;
@@ -67,6 +81,12 @@ export class GameEngine {
   init(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
+    this.camera = new Camera(WORLD_W, WORLD_H);
+    this.particleSystem = new ParticleSystem();
+    this.damageTexts = new FloatingDamageTextManager();
+    this.renderer = new GameRenderer(this.ctx, this.camera, this.particleSystem, this.damageTexts);
+    this.assets = AssetManager.getInstance();
+    this.assets.loadAll();
     this.resize();
     this.bindInput();
   }
@@ -78,6 +98,9 @@ export class GameEngine {
     this.canvas.width = this.screenW * dpr;
     this.canvas.height = this.screenH * dpr;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (this.camera) {
+      this.camera.resize(this.screenW, this.screenH);
+    }
   }
 
   startGame(characterId: string): void {
@@ -208,18 +231,18 @@ export class GameEngine {
     this.updateProjectiles(dt);
     this.updateXPGems(dt);
     this.updateParticles(dt);
+    this.particleSystem.update(dt);
+    this.damageTexts.update(dt);
     this.checkCollisions();
     this.updateCamera(dt);
     this.updateWave(dt);
     this.checkLevelUp();
     this.updateRegen(dt);
 
-    if (this.player.characterId === 'huy') {
-      const maxCrit = 0.30;
-      const baseCrit = this.player.critChance;
-      if (baseCrit < maxCrit) {
-        // handled in kill
-      }
+    this.statsTimer += dt;
+    if (this.statsTimer >= 0.05) {
+      this.statsTimer = 0;
+      this.callbacks.onStatsUpdate(this.player, this.currentWave);
     }
   }
 
@@ -238,9 +261,21 @@ export class GameEngine {
     }
 
     const len = Math.sqrt(dx * dx + dy * dy);
+    this.isMoving = len > 0;
     if (len > 0) {
       dx /= len;
       dy /= len;
+    }
+
+    if (dx < 0) this.facingLeft = true;
+    else if (dx > 0) this.facingLeft = false;
+
+    if (this.isMoving) {
+      this.dustTimer += dt;
+      if (this.dustTimer >= 0.08) {
+        this.dustTimer = 0;
+        this.particleSystem.spawnDust(p.x, p.y, dx, dy);
+      }
     }
 
     const speed = p.baseSpeed * (1 + p.speedMul);
@@ -834,6 +869,10 @@ export class GameEngine {
       proj.x += proj.vx * dt;
       proj.y += proj.vy * dt;
 
+      if (!proj.isAura && Math.random() < 0.6) {
+        this.particleSystem.spawnTrail(proj.x, proj.y, proj.color, Math.max(2, proj.radius * 0.6));
+      }
+
       if (proj.x < -50 || proj.x > WORLD_W + 50 || proj.y < -50 || proj.y > WORLD_H + 50) {
         proj.active = false;
       }
@@ -863,7 +902,7 @@ export class GameEngine {
           const isCrit = Math.random() < p.critChance;
           if (isCrit) dmg *= 2;
 
-          this.damageEnemy(e, dmg);
+          this.damageEnemy(e, dmg, isCrit);
 
           if (!proj.isAura) {
             proj.pierced++;
@@ -872,7 +911,7 @@ export class GameEngine {
             }
           }
 
-          this.addHitParticles(e.x, e.y, isCrit ? '#fbbf24' : e.color);
+          this.particleSystem.spawnHitSparks(e.x, e.y, isCrit ? '#fbbf24' : e.color);
         }
       }
     }
@@ -898,10 +937,11 @@ export class GameEngine {
     }
   }
 
-  private damageEnemy(e: EnemyState, damage: number): void {
+  private damageEnemy(e: EnemyState, damage: number, isCrit = false): void {
     e.hp -= damage;
     e.flashTimer = 0.1;
     this.player.totalDamage += damage;
+    this.damageTexts.add(e.x, e.y, damage, isCrit);
 
     if (e.hp <= 0) {
       e.active = false;
@@ -913,10 +953,10 @@ export class GameEngine {
 
       const xpValue = e.isBoss ? 50 : (e.isElite ? 5 : 1 + Math.floor(this.currentWave / 10));
       this.spawnXP(e.x, e.y, xpValue);
-      this.addDeathParticles(e.x, e.y, e.color);
+      this.particleSystem.spawnBlood(e.x, e.y, e.color, e.isBoss ? 32 : 14);
 
       if (e.isBoss) {
-        this.shakeCamera(12);
+        this.camera.addTrauma(0.7);
         this.addBurstParticles(e.x, e.y, 60, '#fbbf24', 40);
       }
     }
@@ -929,8 +969,10 @@ export class GameEngine {
     const dmg = Math.max(1, rawDmg - p.baseArmor);
     p.hp -= dmg;
     p.invincibleTimer = INVINCIBLE_TIME;
-    this.shakeCamera(4);
-    this.addHitParticles(p.x, p.y, '#ef4444');
+    this.camera.addTrauma(0.45);
+    this.damageTexts.add(p.x, p.y, dmg, true);
+    this.particleSystem.spawnBlood(p.x, p.y, '#ef4444', 10);
+    this.callbacks.onStatsUpdate(p, this.currentWave);
 
     if (p.hp <= 0) {
       p.hp = 0;
@@ -1249,332 +1291,21 @@ export class GameEngine {
   }
 
   private render(): void {
-    const ctx = this.ctx;
-    const w = this.screenW;
-    const h = this.screenH;
-
-    ctx.fillStyle = '#0a0e1a';
-    ctx.fillRect(0, 0, w, h);
-
-    if (this.phase === 'SELECT') return;
-
-    ctx.save();
-    ctx.translate(-this.camX + this.camShakeX, -this.camY + this.camShakeY);
-
-    this.renderGrid(ctx);
-    this.renderXPGems(ctx);
-    this.renderProjectiles(ctx);
-    this.renderEnemies(ctx);
-    this.renderPlayer(ctx);
-    this.renderParticles(ctx);
-
-    ctx.restore();
-
-    this.renderHUD(ctx, w, h);
-
-    if (this.betweenWaves && this.currentWave < TOTAL_WAVES) {
-      this.renderWaveTransition(ctx, w, h);
+    if (this.phase === 'SELECT') {
+      this.ctx.fillStyle = '#080c16';
+      this.ctx.fillRect(0, 0, this.screenW, this.screenH);
+      return;
     }
 
-    if (this.bossWarningTimer > 0) {
-      this.renderBossWarning(ctx, w, h);
-    }
-  }
-
-  private renderGrid(ctx: CanvasRenderingContext2D): void {
-    const gridSize = 80;
-    const startX = Math.floor(this.camX / gridSize) * gridSize;
-    const startY = Math.floor(this.camY / gridSize) * gridSize;
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 1;
-    for (let x = startX; x <= this.camX + this.screenW + gridSize; x += gridSize) {
-      ctx.beginPath(); ctx.moveTo(x, this.camY); ctx.lineTo(x, this.camY + this.screenH); ctx.stroke();
-    }
-    for (let y = startY; y <= this.camY + this.screenH + gridSize; y += gridSize) {
-      ctx.beginPath(); ctx.moveTo(this.camX, y); ctx.lineTo(this.camX + this.screenW, y); ctx.stroke();
-    }
-
-    ctx.strokeStyle = 'rgba(239,68,68,0.3)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, WORLD_W, WORLD_H);
-  }
-
-  private renderPlayer(ctx: CanvasRenderingContext2D): void {
-    const p = this.player;
-    const charDef = CHARACTERS.find(c => c.id === p.characterId)!;
-
-    if (p.invincibleTimer > 0 && Math.floor(p.invincibleTimer * 10) % 2 === 0) return;
-
-    ctx.save();
-    ctx.translate(p.x, p.y);
-
-    ctx.shadowColor = charDef.color;
-    ctx.shadowBlur = 15;
-    ctx.fillStyle = charDef.color;
-    ctx.beginPath();
-    ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = '#0a0e1a';
-    ctx.beginPath();
-    ctx.arc(0, 0, p.radius * 0.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.font = `${p.radius}px system-ui`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(charDef.icon, 0, 1);
-
-    ctx.restore();
-  }
-
-  private renderEnemies(ctx: CanvasRenderingContext2D): void {
-    for (const e of this.enemies) {
-      if (!e.active) continue;
-
-      const sx = e.x - this.camX;
-      const sy = e.y - this.camY;
-      if (sx < -50 || sx > this.screenW + 50 || sy < -50 || sy > this.screenH + 50) continue;
-
-      ctx.save();
-      ctx.translate(e.x, e.y);
-
-      if (e.flashTimer > 0) {
-        ctx.fillStyle = '#fff';
-      } else if (e.isBoss) {
-        ctx.shadowColor = e.color;
-        ctx.shadowBlur = 20;
-        ctx.fillStyle = e.color;
-      } else {
-        ctx.fillStyle = e.color;
-      }
-
-      ctx.beginPath();
-      ctx.arc(0, 0, e.radius * e.sizeMultiplier, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.shadowBlur = 0;
-
-      if (e.isElite) {
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      if (e.isBoss) {
-        ctx.fillStyle = '#0a0e1a';
-        ctx.beginPath();
-        ctx.arc(0, 0, e.radius * 0.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        const def = e.bossId ? BOSS_DEFS[e.bossId] : null;
-        if (def) {
-          ctx.font = `${e.radius * 0.8}px system-ui`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(def.icon, 0, 1);
-        }
-
-        const barW = e.radius * 2.5;
-        const barH = 4;
-        const hpPct = e.hp / e.maxHp;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(-barW / 2, -e.radius - 12, barW, barH);
-        ctx.fillStyle = hpPct > 0.5 ? '#4ade80' : (hpPct > 0.25 ? '#fbbf24' : '#ef4444');
-        ctx.fillRect(-barW / 2, -e.radius - 12, barW * hpPct, barH);
-      }
-
-      ctx.restore();
-    }
-  }
-
-  private renderProjectiles(ctx: CanvasRenderingContext2D): void {
-    for (const proj of this.projectiles) {
-      if (!proj.active) continue;
-
-      const sx = proj.x - this.camX;
-      const sy = proj.y - this.camY;
-      if (sx < -50 || sx > this.screenW + 50 || sy < -50 || sy > this.screenH + 50) continue;
-
-      ctx.save();
-      ctx.translate(proj.x, proj.y);
-
-      if (proj.isAura) {
-        ctx.globalAlpha = 0.3 * (proj.lifetime / proj.maxLifetime);
-        ctx.fillStyle = proj.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, proj.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      } else {
-        ctx.shadowColor = proj.color;
-        ctx.shadowBlur = 8;
-        ctx.fillStyle = proj.color;
-        ctx.beginPath();
-        ctx.arc(0, 0, proj.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-
-      ctx.restore();
-    }
-  }
-
-  private renderXPGems(ctx: CanvasRenderingContext2D): void {
-    for (const gem of this.xpGems) {
-      if (!gem.active) continue;
-      const sx = gem.x - this.camX;
-      const sy = gem.y - this.camY;
-      if (sx < -30 || sx > this.screenW + 30 || sy < -30 || sy > this.screenH + 30) continue;
-
-      ctx.fillStyle = gem.color;
-      ctx.shadowColor = gem.color;
-      ctx.shadowBlur = 6;
-      ctx.fillRect(gem.x - gem.radius, gem.y - gem.radius, gem.radius * 2, gem.radius * 2);
-      ctx.shadowBlur = 0;
-    }
-  }
-
-  private renderParticles(ctx: CanvasRenderingContext2D): void {
-    for (const pt of this.particles) {
-      if (!pt.active) continue;
-      ctx.globalAlpha = Math.max(0, pt.life / pt.maxLife);
-      ctx.fillStyle = pt.color;
-      ctx.fillRect(pt.x - pt.size / 2, pt.y - pt.size / 2, pt.size, pt.size);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  private renderHUD(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    const p = this.player;
-    const pad = 12;
-
-    ctx.fillStyle = 'rgba(10,14,26,0.7)';
-    ctx.fillRect(0, 0, w, 65);
-
-    const hpPct = p.hp / p.maxHp;
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(pad, pad, 180, 10);
-    ctx.fillStyle = hpPct > 0.5 ? '#4ade80' : (hpPct > 0.25 ? '#fbbf24' : '#ef4444');
-    ctx.fillRect(pad, pad, 180 * hpPct, 10);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 9px system-ui';
-    ctx.textAlign = 'left';
-    ctx.fillText(`❤️ ${Math.ceil(p.hp)}/${p.maxHp}`, pad, pad + 22);
-
-    const xpPct = p.xp / p.xpToNext;
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(pad, pad + 30, 180, 8);
-    ctx.fillStyle = '#60a5fa';
-    ctx.fillRect(pad, pad + 30, 180 * xpPct, 8);
-    ctx.fillText(`⭐ Lv.${p.level}`, pad, pad + 50);
-
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 12px system-ui';
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillText(`Wave ${this.currentWave}${this.isEndless ? ' ♾️' : `/${TOTAL_WAVES}`}`, w / 2, pad + 12);
-
-    const mins = Math.floor(p.timeSurvived / 60);
-    const secs = Math.floor(p.timeSurvived % 60);
-    ctx.font = '10px system-ui';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`${mins}:${secs.toString().padStart(2, '0')}`, w / 2, pad + 28);
-
-    ctx.textAlign = 'right';
-    ctx.font = '10px system-ui';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`💀 ${p.kills}`, w - pad, pad + 12);
-
-    const skillY = 75;
-    for (let i = 0; i < p.skills.length; i++) {
-      const ps = p.skills[i];
-      const def = SKILLS[ps.skillId];
-      if (!def) continue;
-
-      const sy = skillY + i * 28;
-      ctx.fillStyle = 'rgba(10,14,26,0.7)';
-      ctx.fillRect(pad - 2, sy - 2, 170, 24);
-
-      ctx.font = '13px system-ui';
-      ctx.textAlign = 'left';
-      ctx.fillText(ps.isUltimate ? (def.ultimateIcon || def.icon) : def.icon, pad + 2, sy + 14);
-
-      ctx.font = 'bold 9px system-ui';
-      ctx.fillStyle = ps.isUltimate ? '#fbbf24' : '#e2e8f0';
-      ctx.fillText(ps.isUltimate ? def.ultimateName : def.name, pad + 20, sy + 10);
-
-      const stars = ps.isUltimate ? '★MAX' : '★'.repeat(ps.level) + '☆'.repeat(MAX_SKILL_LEVEL - ps.level);
-      ctx.font = '8px system-ui';
-      ctx.fillStyle = ps.isUltimate ? '#fbbf24' : '#94a3b8';
-      ctx.fillText(stars, pad + 20, sy + 20);
-
-      if (ps.level >= MAX_SKILL_LEVEL && !ps.isUltimate) {
-        const hasBuff = p.buffs.some(b => b.buffId === def.requiredBuffId);
-        const buffDef = BUFFS[def.requiredBuffId];
-        if (buffDef) {
-          ctx.font = '10px system-ui';
-          ctx.fillStyle = hasBuff ? '#fbbf24' : '#4b5563';
-          ctx.fillText(hasBuff ? `${buffDef.icon}✨` : `${buffDef.icon}🔒`, pad + 150, sy + 14);
-        }
-      }
-    }
-
-    if (p.buffs.length > 0) {
-      const buffY = h - 30;
-      ctx.font = '11px system-ui';
-      ctx.textAlign = 'left';
-      let bx = pad;
-      for (const pb of p.buffs) {
-        const def = BUFFS[pb.buffId];
-        if (!def) continue;
-        ctx.fillStyle = 'rgba(10,14,26,0.7)';
-        ctx.fillRect(bx - 2, buffY - 2, 32, 22);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillText(`${def.icon}${pb.level}`, bx, buffY + 13);
-        bx += 36;
-      }
-    }
-
-    if (this.joystickActive) {
-      this.renderJoystick(ctx);
-    }
-  }
-
-  private renderWaveTransition(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    ctx.fillStyle = 'rgba(10,14,26,0.5)';
-    ctx.fillRect(0, h / 2 - 30, w, 60);
-    ctx.font = 'bold 20px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillText(`Wave ${this.currentWave + 1}`, w / 2, h / 2 + 7);
-  }
-
-  private renderBossWarning(ctx: CanvasRenderingContext2D, w: number, h: number): void {
-    const alpha = 0.3 + Math.sin(this.globalTime * 8) * 0.2;
-    ctx.fillStyle = `rgba(239,68,68,${alpha})`;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.font = 'bold 28px system-ui';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
-    ctx.fillText('⚠️ BOSS WARNING ⚠️', w / 2, h / 2);
-  }
-
-  private renderJoystick(ctx: CanvasRenderingContext2D): void {
-    const cx = this.touchStartX;
-    const cy = this.touchStartY;
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(cx, cy, 40, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = '#f59e0b';
-    ctx.beginPath();
-    ctx.arc(cx + this.joystickX * 30, cy + this.joystickY * 30, 15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    this.renderer.render(
+      this.player,
+      this.enemies,
+      this.projectiles,
+      this.xpGems,
+      this.globalTime,
+      this.facingLeft,
+      this.isMoving
+    );
   }
 
   getStats(): import('./types').GameStats {

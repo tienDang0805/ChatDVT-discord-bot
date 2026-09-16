@@ -116,6 +116,8 @@ export interface XPGemState extends BaseEntity {
   color: string;
 }
 
+export type ParticleKind = 'spark' | 'blood' | 'dust' | 'trail';
+
 export interface ParticleState {
   x: number;
   y: number;
@@ -126,6 +128,24 @@ export interface ParticleState {
   color: string;
   size: number;
   active: boolean;
+  kind?: ParticleKind;
+  rotation?: number;
+  vRot?: number;
+  alpha?: number;
+}
+
+export interface DamageText {
+  id: number;
+  x: number;
+  y: number;
+  value: number;
+  isCrit: boolean;
+  life: number;
+  maxLife: number;
+  vx: number;
+  vy: number;
+  scale: number;
+  color: string;
 }
 
 export interface SkillDef {
