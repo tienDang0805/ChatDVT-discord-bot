@@ -148,7 +148,79 @@ CHỈ TRẢ VỀ CHÍNH XÁC MẢNG JSON, KHÔNG CÓ DẤU BACKTICK HAY BẤT C�
             }, 10000);
         }
     });
+
+    socket.on('flappy:join', (data: { channelId: string; userId: string; username: string; avatar: string | null }) => {
+        const { channelId, userId, username, avatar } = data;
+        socket.join(`flappy:${channelId}`);
+        (socket as any)._flappyChannel = channelId;
+        (socket as any)._flappyUser = userId;
+
+        if (!flappyRooms.has(channelId)) flappyRooms.set(channelId, new Map());
+        const room = flappyRooms.get(channelId)!;
+        if (!room.has(userId)) {
+            room.set(userId, { userId, username, avatar, bestScore: 0, currentScore: 0, isPlaying: false });
+        } else {
+            const existing = room.get(userId)!;
+            existing.username = username;
+            existing.avatar = avatar;
+        }
+        broadcastFlappyLeaderboard(channelId);
+    });
+
+    socket.on('flappy:score', (data: { channelId: string; userId: string; currentScore: number }) => {
+        const room = flappyRooms.get(data.channelId);
+        if (!room) return;
+        const entry = room.get(data.userId);
+        if (!entry) return;
+        entry.currentScore = data.currentScore;
+        entry.isPlaying = true;
+        broadcastFlappyLeaderboard(data.channelId);
+    });
+
+    socket.on('flappy:gameover', (data: { channelId: string; userId: string; finalScore: number }) => {
+        const room = flappyRooms.get(data.channelId);
+        if (!room) return;
+        const entry = room.get(data.userId);
+        if (!entry) return;
+        if (data.finalScore > entry.bestScore) entry.bestScore = data.finalScore;
+        entry.currentScore = 0;
+        entry.isPlaying = false;
+        broadcastFlappyLeaderboard(data.channelId);
+    });
+
+    socket.on('disconnect', () => {
+        const channelId = (socket as any)._flappyChannel as string | undefined;
+        const userId = (socket as any)._flappyUser as string | undefined;
+        if (channelId && userId) {
+            const room = flappyRooms.get(channelId);
+            if (room) {
+                room.delete(userId);
+                if (room.size === 0) {
+                    flappyRooms.delete(channelId);
+                } else {
+                    broadcastFlappyLeaderboard(channelId);
+                }
+            }
+        }
+    });
 });
+
+interface FlappyEntry {
+    userId: string;
+    username: string;
+    avatar: string | null;
+    bestScore: number;
+    currentScore: number;
+    isPlaying: boolean;
+}
+const flappyRooms = new Map<string, Map<string, FlappyEntry>>();
+
+function broadcastFlappyLeaderboard(channelId: string) {
+    const room = flappyRooms.get(channelId);
+    if (!room) return;
+    const sorted = Array.from(room.values()).sort((a, b) => b.bestScore - a.bestScore);
+    io.to(`flappy:${channelId}`).emit('flappy:leaderboard', sorted.slice(0, 10));
+}
 
 app.post('/api/activity-token', async (req, res) => {
     const { code } = req.body;
