@@ -28,6 +28,27 @@ export class FloatingDamageTextManager {
     }
   }
 
+  public addText(x: number, y: number, text: string, color: string, scale = 1.3): void {
+    this.texts.push({
+      id: this.nextId++,
+      x,
+      y,
+      value: 0,
+      text,
+      isCrit: true,
+      life: 1.2,
+      maxLife: 1.2,
+      vx: 0,
+      vy: -55,
+      scale,
+      color,
+    });
+
+    if (this.texts.length > 80) {
+      this.texts.shift();
+    }
+  }
+
   public update(dt: number): void {
     for (let i = this.texts.length - 1; i >= 0; i--) {
       const t = this.texts[i];
@@ -65,7 +86,7 @@ export class FloatingDamageTextManager {
       const fontSize = Math.round((t.isCrit ? 18 : 13) * t.scale);
       ctx.font = `900 ${fontSize}px system-ui, sans-serif`;
 
-      const text = t.isCrit ? `⚡${t.value}` : `${t.value}`;
+      const text = t.text !== undefined ? t.text : (t.isCrit ? `⚡${t.value}` : `${t.value}`);
 
       ctx.lineWidth = t.isCrit ? 4 : 3;
       ctx.strokeStyle = '#05070d';
@@ -205,8 +226,8 @@ export class ParticleSystem {
       }
     }
 
-    if (this.particles.length > 300) {
-      this.particles.splice(0, this.particles.length - 300);
+    if (this.particles.length > 120) {
+      this.particles.splice(0, this.particles.length - 120);
     }
   }
 
@@ -217,34 +238,10 @@ export class ParticleSystem {
     for (const p of this.particles) {
       const alpha = Math.max(0, Math.min(1.0, p.life / p.maxLife));
       ctx.globalAlpha = alpha;
-
-      if (p.kind === 'spark') {
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } else if (p.kind === 'trail') {
-        ctx.fillStyle = p.color;
-        ctx.shadowColor = p.color;
-        ctx.shadowBlur = 8;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } else if (p.kind === 'dust') {
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }

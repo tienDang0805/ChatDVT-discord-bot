@@ -14,18 +14,32 @@ export class Camera {
   private maxAngle = 0.04;
   private traumaDecay = 1.6;
 
+  public zoom = 1.0;
+  private targetZoom = 1.0;
+  private zoomSpeed = 2.5;
+
   constructor(worldW = 3000, worldH = 3000) {
     this.worldW = worldW;
     this.worldH = worldH;
   }
 
   public resize(w: number, h: number): void {
-    this.screenW = w;
-    this.screenH = h;
+    this.screenW = w > 0 ? w : 800;
+    this.screenH = h > 0 ? h : 600;
   }
 
   public addTrauma(amount: number): void {
     this.trauma = Math.min(1.0, this.trauma + amount);
+  }
+
+  public addShake(intensity: number, _duration = 0.4): void {
+    this.addTrauma(Math.min(1.0, intensity * 0.05));
+  }
+
+  public triggerZoomPunch(scale = 1.1, duration = 0.4): void {
+    this.zoom = scale;
+    this.targetZoom = 1.0;
+    this.zoomSpeed = (1 / Math.max(0.1, duration)) * 2;
   }
 
   public update(dt: number, targetX: number, targetY: number): void {
@@ -36,8 +50,17 @@ export class Camera {
     this.x += (idealX - this.x) * lerpFactor;
     this.y += (idealY - this.y) * lerpFactor;
 
-    this.x = Math.max(0, Math.min(this.worldW - this.screenW, this.x));
-    this.y = Math.max(0, Math.min(this.worldH - this.screenH, this.y));
+    const maxX = Math.max(0, this.worldW - this.screenW);
+    const maxY = Math.max(0, this.worldH - this.screenH);
+    this.x = Math.max(0, Math.min(maxX, this.x));
+    this.y = Math.max(0, Math.min(maxY, this.y));
+
+    if (this.zoom !== this.targetZoom) {
+      this.zoom += (this.targetZoom - this.zoom) * Math.min(1.0, dt * this.zoomSpeed);
+      if (Math.abs(this.zoom - this.targetZoom) < 0.005) {
+        this.zoom = this.targetZoom;
+      }
+    }
 
     if (this.trauma > 0) {
       this.trauma = Math.max(0, this.trauma - this.traumaDecay * dt);
@@ -55,6 +78,9 @@ export class Camera {
   public applyTransform(ctx: CanvasRenderingContext2D): void {
     ctx.save();
     ctx.translate(this.screenW / 2, this.screenH / 2);
+    if (this.zoom !== 1.0) {
+      ctx.scale(this.zoom, this.zoom);
+    }
     if (this.shakeAngle !== 0) {
       ctx.rotate(this.shakeAngle);
     }

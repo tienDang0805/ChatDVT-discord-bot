@@ -1,25 +1,35 @@
 import type {
   GamePhase, PlayerState, EnemyState, ProjectileState,
   XPGemState, ParticleState, InputState, GameCallbacks,
-  UpgradeOption, PlayerSkillState,
+  UpgradeOption, PlayerSkillState, WaveConfig,
 } from './types';
 import {
-  SKILLS, BUFFS, CHARACTERS, ENEMY_TYPES, BOSS_DEFS,
-  WORLD_W, WORLD_H, MAX_SKILLS, MAX_SKILL_LEVEL, MAX_BUFF_LEVEL,
-  PLAYER_RADIUS, INVINCIBLE_TIME, REGEN_INTERVAL, TOTAL_WAVES,
+  SKILLS, PASSIVES, CHARACTERS, ENEMY_TYPES, BOSS_DEFS,
+  WORLD_W, WORLD_H, MAX_SKILLS, MAX_SKILL_LEVEL, MAX_PASSIVES, MAX_PASSIVE_LEVEL,
+  UPGRADE_OPTIONS_COUNT, PLAYER_RADIUS, INVINCIBLE_TIME, REGEN_INTERVAL, TOTAL_WAVES,
   generateWaveConfigs, getEnemyHp, getEnemyDmg, getEnemySpeed,
-  getEnemyCount, getXpToLevel, getEndlessScale,
+  getXpToLevel, getEndlessScale,
 } from './data';
 import { Camera } from './camera';
 import { ParticleSystem, FloatingDamageTextManager } from './particles';
 import { GameRenderer } from './renderer';
 import { AssetManager } from './assets';
+import { SpatialHashGrid } from './spatialHash';
+import type { PickupState } from './types';
+import {
+  rollDrops, rollMapSpawn, PICKUP_DEFS,
+  MAP_SPAWN_INTERVAL_MIN, MAP_SPAWN_INTERVAL_MAX,
+  BOMB_DAMAGE, BOMB_RADIUS,
+  COIN_XP_VALUE, CHICKEN_HEAL_PERCENT, getChestUpgradeCount,
+} from './pickups';
 
-const MAX_ENEMIES = 300;
-const MAX_PROJECTILES = 400;
-const MAX_XP_GEMS = 500;
-const MAX_PARTICLES = 600;
+const MAX_ENEMIES = 90;
+const MAX_PROJECTILES = 250;
+const MAX_XP_GEMS = 120;
+const MAX_PARTICLES = 150;
+const MAX_PICKUPS = 40;
 const BASE_PICKUP_RANGE = 40;
+const PICKUP_COLLECT_RANGE = 28;
 
 export class GameEngine {
   private canvas!: HTMLCanvasElement;
@@ -34,6 +44,9 @@ export class GameEngine {
   private projectiles: ProjectileState[] = [];
   private xpGems: XPGemState[] = [];
   private particles: ParticleState[] = [];
+  private pickups: PickupState[] = [];
+  private mapSpawnTimer = 0;
+  private mapSpawnInterval = MAP_SPAWN_INTERVAL_MIN;
 
   private camera!: Camera;
   private particleSystem!: ParticleSystem;
@@ -48,9 +61,6 @@ export class GameEngine {
   private input: InputState = { up: false, down: false, left: false, right: false, touchActive: false, touchDx: 0, touchDy: 0 };
   private camX = 0;
   private camY = 0;
-  private camShakeX = 0;
-  private camShakeY = 0;
-  private camShakeDecay = 0;
 
   private currentWave = 0;
   private waveTimer = 0;
@@ -63,7 +73,6 @@ export class GameEngine {
   private isEndless = false;
   private bossActive = false;
 
-  private enemyIdCounter = 0;
   private touchStartX = 0;
   private touchStartY = 0;
   private joystickActive = false;
@@ -73,6 +82,11 @@ export class GameEngine {
   private screenW = 0;
   private screenH = 0;
   private globalTime = 0;
+  private pendingLevelUps = 0;
+  private chestOpenTimer = 0;
+  private hordeTimer = 0;
+  private nextEnemyId = 0;
+  private enemyGrid = new SpatialHashGrid(WORLD_W, WORLD_H, 128);
 
   constructor(callbacks: GameCallbacks) {
     this.callbacks = callbacks;
@@ -93,10 +107,11 @@ export class GameEngine {
 
   resize(): void {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    this.screenW = this.canvas.clientWidth;
-    this.screenH = this.canvas.clientHeight;
-    this.canvas.width = this.screenW * dpr;
-    this.canvas.height = this.screenH * dpr;
+    const rect = this.canvas.getBoundingClientRect();
+    this.screenW = rect.width || this.canvas.clientWidth || window.innerWidth || 800;
+    this.screenH = rect.height || this.canvas.clientHeight || window.innerHeight || 600;
+    this.canvas.width = Math.round(this.screenW * dpr);
+    this.canvas.height = Math.round(this.screenH * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (this.camera) {
       this.camera.resize(this.screenW, this.screenH);
@@ -104,6 +119,7 @@ export class GameEngine {
   }
 
   startGame(characterId: string): void {
+    this.resize();
     const charDef = CHARACTERS.find(c => c.id === characterId)!;
     this.player = {
       x: WORLD_W / 2, y: WORLD_H / 2, radius: PLAYER_RADIUS,
@@ -111,20 +127,23 @@ export class GameEngine {
       baseSpeed: charDef.baseSpeed, baseArmor: charDef.baseArmor,
       level: 1, xp: 0, xpToNext: getXpToLevel(1),
       skills: [{ skillId: charDef.startingSkillId, level: 1, cooldownTimer: 0, isUltimate: false }],
-      buffs: [], characterId, kills: 0, totalDamage: 0, timeSurvived: 0,
+      passives: [], characterId, kills: 0, totalDamage: 0, timeSurvived: 0,
       rerollsAvailable: 1, invincibleTimer: 0, regenTimer: 0,
       mightMul: 0, areaMul: 0, cooldownMul: 0, speedMul: 0,
       critChance: 0, pickupRange: 0, regenRate: 0, pierceMod: 0,
-      durationMul: 0, luckMul: 0,
+      durationMul: 0, luckMul: 0, activeEffects: {},
     };
 
-    this.applyCharacterPassive(charDef.id);
+
     this.recalcStats();
 
     this.enemies = [];
     this.projectiles = [];
     this.xpGems = [];
     this.particles = [];
+    this.pickups = [];
+    this.mapSpawnTimer = 0;
+    this.mapSpawnInterval = MAP_SPAWN_INTERVAL_MIN + Math.random() * (MAP_SPAWN_INTERVAL_MAX - MAP_SPAWN_INTERVAL_MIN);
     this.currentWave = 0;
     this.waveTimer = 0;
     this.betweenWaves = true;
@@ -133,26 +152,25 @@ export class GameEngine {
     this.isEndless = false;
     this.bossActive = false;
     this.globalTime = 0;
-    this.enemyIdCounter = 0;
+    this.chestOpenTimer = 0;
+    this.hordeTimer = 0;
+    this.nextEnemyId = 0;
 
     this.phase = 'PLAYING';
     this.callbacks.onPhaseChange('PLAYING');
+
+    const maxX = Math.max(0, WORLD_W - this.screenW);
+    const maxY = Math.max(0, WORLD_H - this.screenH);
+    this.camera.x = Math.max(0, Math.min(maxX, this.player.x - this.screenW / 2));
+    this.camera.y = Math.max(0, Math.min(maxY, this.player.y - this.screenH / 2));
+    this.camX = this.camera.x;
+    this.camY = this.camera.y;
+
     this.lastTime = performance.now();
     this.loop();
   }
 
-  private applyCharacterPassive(charId: string): void {
-    const p = this.player;
-    switch (charId) {
-      case 'tien': p.mightMul += 0.15; break;
-      case 'huy': break;
-      case 'tam': p.cooldownMul += 0.20; break;
-      case 'bao': break;
-      case 'tai': p.luckMul += 0.25; break;
-      case 'hoa': p.speedMul += 0.20; break;
-      case 'bot': p.regenRate += 0.5; break;
-    }
-  }
+
 
   private recalcStats(): void {
     const p = this.player;
@@ -162,8 +180,8 @@ export class GameEngine {
     let pickup = 0, regen = 0, pierce = 0, dur = 0, luck = 0;
     let armorBonus = 0, hpBonus = 0;
 
-    for (const b of p.buffs) {
-      const def = BUFFS[b.buffId];
+    for (const b of p.passives) {
+      const def = PASSIVES[b.passiveId];
       if (!def) continue;
       const val = def.effectPerLevel * b.level;
       switch (def.statKey) {
@@ -182,7 +200,6 @@ export class GameEngine {
       }
     }
 
-    this.applyCharacterPassive(p.characterId);
 
     p.mightMul = might + (p.characterId === 'tien' ? 0.15 : 0);
     p.areaMul = area;
@@ -230,12 +247,17 @@ export class GameEngine {
     this.updateWeapons(dt);
     this.updateProjectiles(dt);
     this.updateXPGems(dt);
+    this.updatePickups(dt);
+    this.updateActiveEffects(dt);
     this.updateParticles(dt);
     this.particleSystem.update(dt);
     this.damageTexts.update(dt);
     this.checkCollisions();
     this.updateCamera(dt);
     this.updateWave(dt);
+    if (this.chestOpenTimer > 0) {
+      this.chestOpenTimer -= dt;
+    }
     this.checkLevelUp();
     this.updateRegen(dt);
 
@@ -278,7 +300,8 @@ export class GameEngine {
       }
     }
 
-    const speed = p.baseSpeed * (1 + p.speedMul);
+    const speedBonus = p.activeEffects['speed_boost'] ? 0.5 : 0;
+    const speed = p.baseSpeed * (1 + p.speedMul + speedBonus);
     p.x += dx * speed * dt;
     p.y += dy * speed * dt;
 
@@ -329,12 +352,26 @@ export class GameEngine {
     const wc = this.getWaveConfig();
 
     this.spawnTimer += dt;
-    const interval = 1.0 / wc.spawnRate;
+    const effectiveRate = this.bossActive ? wc.spawnRate * 0.45 : wc.spawnRate;
+    const packAvg = Math.max(1, ((wc.packMin || 1) + (wc.packMax || 2)) / 2);
+    const interval = packAvg / Math.max(0.1, effectiveRate);
+    const maxActiveForWave = Math.min(MAX_ENEMIES, 24 + Math.min(66, this.currentWave * 3));
+
     while (this.spawnTimer >= interval) {
       this.spawnTimer -= interval;
-      if (this.enemies.length < MAX_ENEMIES && !this.bossActive) {
-        this.spawnEnemy(wc);
+      if (this.enemies.length < maxActiveForWave) {
+        const pMin = wc.packMin || 1;
+        const pMax = wc.packMax || 2;
+        const packCount = Math.floor(Math.random() * (pMax - pMin + 1)) + pMin;
+        this.spawnEnemyPack(wc, Math.min(packCount, maxActiveForWave - this.enemies.length));
       }
+    }
+
+    this.hordeTimer += dt;
+    const hordeInterval = wc.hordeInterval || 22;
+    if (this.hordeTimer >= hordeInterval) {
+      this.hordeTimer = 0;
+      this.triggerHordeEvent(wc);
     }
 
     if (this.waveTimer >= this.waveDuration) {
@@ -372,18 +409,93 @@ export class GameEngine {
     return ids[Math.floor(Math.random() * ids.length)];
   }
 
-  private spawnEnemy(wc: ReturnType<typeof this.getWaveConfig>): void {
+  private triggerHordeEvent(wc: WaveConfig): void {
+    if (this.enemies.length >= MAX_ENEMIES - 25) return;
+    const types = wc.enemyTypes;
+    const hordeType = types[Math.floor(Math.random() * types.length)];
+    const roll = Math.random();
+
+    if (roll < 0.5) {
+      const count = 22 + Math.floor(Math.random() * 10);
+      const radius = Math.max(this.screenW, this.screenH) * 0.65 + 80;
+      const angleStep = (Math.PI * 2) / count;
+      for (let i = 0; i < count; i++) {
+        if (this.enemies.length >= MAX_ENEMIES) break;
+        const angle = i * angleStep + (Math.random() - 0.5) * 0.2;
+        const x = Math.max(0, Math.min(WORLD_W, this.player.x + Math.cos(angle) * radius));
+        const y = Math.max(0, Math.min(WORLD_H, this.player.y + Math.sin(angle) * radius));
+        this.spawnSingleEnemy(hordeType, x, y, false, false);
+      }
+      this.damageTexts.addText(this.player.x, this.player.y - 60, '⚠️ ĐỘT KÍCH BAO VÂY!', '#ef4444', 1.5);
+      this.camera.addTrauma(0.35);
+    } else {
+      const count = 25 + Math.floor(Math.random() * 10);
+      const side = Math.floor(Math.random() * 4);
+      const cx = this.camX + this.screenW / 2;
+      const cy = this.camY + this.screenH / 2;
+      const margin = 80;
+      for (let i = 0; i < count; i++) {
+        if (this.enemies.length >= MAX_ENEMIES) break;
+        let x = 0, y = 0;
+        const offset = (Math.random() - 0.5) * (side < 2 ? this.screenH : this.screenW) * 1.1;
+        switch (side) {
+          case 0: x = cx - this.screenW / 2 - margin; y = cy + offset; break;
+          case 1: x = cx + this.screenW / 2 + margin; y = cy + offset; break;
+          case 2: x = cx + offset; y = cy - this.screenH / 2 - margin; break;
+          case 3: x = cx + offset; y = cy + this.screenH / 2 + margin; break;
+        }
+        x = Math.max(0, Math.min(WORLD_W, x));
+        y = Math.max(0, Math.min(WORLD_H, y));
+        this.spawnSingleEnemy(hordeType, x, y, false, false);
+      }
+      this.damageTexts.addText(this.player.x, this.player.y - 60, '🌊 BẦY QUÁI TRÀN TỚI!', '#f97316', 1.5);
+      this.camera.addTrauma(0.35);
+    }
+  }
+
+  private spawnEnemyPack(wc: WaveConfig, count: number): void {
     const typeId = wc.enemyTypes[Math.floor(Math.random() * wc.enemyTypes.length)];
-    const def = ENEMY_TYPES[typeId];
-    if (!def) return;
-
     const isElite = Math.random() < wc.eliteChance;
-    const wave = this.currentWave;
+    const side = Math.floor(Math.random() * 4);
+    const margin = 60;
+    const cx = this.camX + this.screenW / 2;
+    const cy = this.camY + this.screenH / 2;
+    let baseX = 0, baseY = 0;
 
-    let hp = getEnemyHp(def.baseHp, wave);
+    switch (side) {
+      case 0: baseX = cx - this.screenW / 2 - margin; baseY = cy + (Math.random() - 0.5) * this.screenH; break;
+      case 1: baseX = cx + this.screenW / 2 + margin; baseY = cy + (Math.random() - 0.5) * this.screenH; break;
+      case 2: baseX = cx + (Math.random() - 0.5) * this.screenW; baseY = cy - this.screenH / 2 - margin; break;
+      case 3: baseX = cx + (Math.random() - 0.5) * this.screenW; baseY = cy + this.screenH / 2 + margin; break;
+    }
+
+    for (let i = 0; i < count; i++) {
+      if (this.enemies.length >= MAX_ENEMIES) break;
+      const offsetX = (Math.random() - 0.5) * 70;
+      const offsetY = (Math.random() - 0.5) * 70;
+      const x = Math.max(0, Math.min(WORLD_W, baseX + offsetX));
+      const y = Math.max(0, Math.min(WORLD_H, baseY + offsetY));
+      this.spawnSingleEnemy(typeId, x, y, i === 0 && isElite, false);
+    }
+  }
+
+  private spawnSingleEnemy(
+    typeId: string,
+    x: number,
+    y: number,
+    isElite = false,
+    isMinion = false,
+    sizeMul = 1.0,
+    hpRatio = 1.0
+  ): EnemyState | null {
+    const def = ENEMY_TYPES[typeId];
+    if (!def) return null;
+
+    const wave = this.currentWave;
+    let hp = Math.max(1, Math.round(getEnemyHp(def.baseHp, wave) * hpRatio));
     let dmg = getEnemyDmg(def.baseDmg, wave);
     let speed = getEnemySpeed(def.baseSpeed, wave);
-    let radius = def.radius;
+    let radius = def.radius * sizeMul;
     let color = def.color;
 
     if (this.isEndless && wave > TOTAL_WAVES) {
@@ -400,30 +512,50 @@ export class GameEngine {
       color = '#fbbf24';
     }
 
-    const side = Math.floor(Math.random() * 4);
-    let x = 0, y = 0;
-    const margin = 50;
-    const cx = this.camX + this.screenW / 2;
-    const cy = this.camY + this.screenH / 2;
-
-    switch (side) {
-      case 0: x = cx - this.screenW / 2 - margin; y = cy + (Math.random() - 0.5) * this.screenH; break;
-      case 1: x = cx + this.screenW / 2 + margin; y = cy + (Math.random() - 0.5) * this.screenH; break;
-      case 2: x = cx + (Math.random() - 0.5) * this.screenW; y = cy - this.screenH / 2 - margin; break;
-      case 3: x = cx + (Math.random() - 0.5) * this.screenW; y = cy + this.screenH / 2 + margin; break;
+    if (isMinion) {
+      speed *= 1.2;
     }
 
-    x = Math.max(0, Math.min(WORLD_W, x));
-    y = Math.max(0, Math.min(WORLD_H, y));
+    const enemy: EnemyState = {
+      id: ++this.nextEnemyId,
+      x,
+      y,
+      radius,
+      active: true,
+      type: typeId,
+      hp,
+      maxHp: hp,
+      speed,
+      damage: dmg,
+      isElite,
+      isBoss: false,
+      aiTimer: Math.random() * 1.5,
+      aiState: 'chase',
+      aiSubTimer: 0,
+      targetAngle: 0,
+      telegraphTime: 0,
+      isCharging: false,
+      chargeVx: 0,
+      chargeVy: 0,
+      canSplit: def.aiType === 'splitter' && !isMinion,
+      isMinion,
+      invisibleAlpha: def.aiType === 'stalker' ? 0.35 : 1.0,
+      isPhasing: false,
+      vx: 0,
+      vy: 0,
+      flashTimer: 0,
+      color,
+      sizeMultiplier: (isElite ? 1.3 : 1.0) * sizeMul,
+    };
 
-    this.enemies.push({
-      x, y, radius, active: true,
-      type: typeId, hp, maxHp: hp, speed, damage: dmg,
-      isElite, isBoss: false,
-      aiTimer: 0, aiState: 'chase',
-      vx: 0, vy: 0, flashTimer: 0, color,
-      sizeMultiplier: isElite ? 1.3 : 1,
-    });
+    this.enemies.push(enemy);
+    return enemy;
+  }
+
+  private spawnSplitMinions(parent: EnemyState): void {
+    this.spawnSingleEnemy(parent.type, parent.x - 14, parent.y, false, true, 0.65, 0.4);
+    this.spawnSingleEnemy(parent.type, parent.x + 14, parent.y, false, true, 0.65, 0.4);
+    this.addBurstParticles(parent.x, parent.y, 20, parent.color, 16);
   }
 
   private spawnBoss(): void {
@@ -448,6 +580,7 @@ export class GameEngine {
       const dist = 300;
 
       this.enemies.push({
+        id: ++this.nextEnemyId,
         x: this.player.x + Math.cos(angle) * dist,
         y: this.player.y + Math.sin(angle) * dist,
         radius: def.radius, active: true,
@@ -471,17 +604,250 @@ export class GameEngine {
 
       if (e.flashTimer > 0) e.flashTimer -= dt;
 
-      const dx = p.x - e.x;
-      const dy = p.y - e.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist > 0) {
-        e.vx = (dx / dist) * e.speed;
-        e.vy = (dy / dist) * e.speed;
+      if (this.player.activeEffects['freeze']) {
+        e.vx = 0;
+        e.vy = 0;
+        continue;
       }
 
       if (e.isBoss) {
         this.updateBossAI(e, dt);
+        e.x += e.vx * dt;
+        e.y += e.vy * dt;
+        e.x = Math.max(e.radius, Math.min(WORLD_W - e.radius, e.x));
+        e.y = Math.max(e.radius, Math.min(WORLD_H - e.radius, e.y));
+        continue;
+      }
+
+      const def = ENEMY_TYPES[e.type];
+      const dx = p.x - e.x;
+      const dy = p.y - e.y;
+      const dist = Math.hypot(dx, dy);
+      const aiType = def?.aiType || 'chaser';
+
+      e.aiTimer += dt;
+
+      switch (aiType) {
+        case 'sniper': {
+          const shootRange = def?.shootRange || 240;
+          const shootCd = def?.shootCooldown || 2.6;
+
+          if (dist > shootRange + 30) {
+            e.vx = (dx / dist) * e.speed;
+            e.vy = (dy / dist) * e.speed;
+          } else if (dist < shootRange - 60) {
+            e.vx = -(dx / dist) * e.speed * 0.7;
+            e.vy = -(dy / dist) * e.speed * 0.7;
+          } else {
+            e.vx = 0;
+            e.vy = 0;
+          }
+
+          if (e.aiTimer >= shootCd - 0.5 && e.aiTimer < shootCd) {
+            e.aiState = 'aiming';
+            e.targetAngle = Math.atan2(dy, dx);
+            e.telegraphTime = 0.5;
+          } else if (e.aiTimer >= shootCd) {
+            e.aiTimer = 0;
+            e.aiState = 'chase';
+            e.telegraphTime = 0;
+            if (this.projectiles.length < MAX_PROJECTILES) {
+              const arrowAngle = e.targetAngle ?? Math.atan2(dy, dx);
+              this.projectiles.push({
+                x: e.x, y: e.y, radius: 5, active: true,
+                vx: Math.cos(arrowAngle) * 230,
+                vy: Math.sin(arrowAngle) * 230,
+                damage: e.damage,
+                pierce: 0, pierced: 0,
+                lifetime: 2.5, maxLifetime: 2.5,
+                skillId: 'enemy_arrow', ownerIsPlayer: false,
+                hitEnemies: new Set(), color: '#f87171',
+              });
+            }
+          }
+          break;
+        }
+
+        case 'spellcaster': {
+          const castRange = def?.shootRange || 260;
+          const castCd = def?.shootCooldown || 3.0;
+
+          if (dist > castRange + 30) {
+            e.vx = (dx / dist) * e.speed;
+            e.vy = (dy / dist) * e.speed;
+          } else if (dist < castRange - 50) {
+            e.vx = -(dx / dist) * e.speed * 0.6;
+            e.vy = -(dy / dist) * e.speed * 0.6;
+          } else {
+            e.vx = 0;
+            e.vy = 0;
+          }
+
+          if (e.aiTimer >= castCd - 0.6 && e.aiTimer < castCd) {
+            e.aiState = 'casting';
+            e.telegraphTime = 0.6;
+            e.targetAngle = Math.atan2(dy, dx);
+          } else if (e.aiTimer >= castCd) {
+            e.aiTimer = 0;
+            e.aiState = 'chase';
+            e.telegraphTime = 0;
+            if (this.projectiles.length < MAX_PROJECTILES) {
+              const spellAngle = Math.atan2(dy, dx);
+              this.projectiles.push({
+                x: e.x, y: e.y, radius: 7, active: true,
+                vx: Math.cos(spellAngle) * 155,
+                vy: Math.sin(spellAngle) * 155,
+                damage: Math.round(e.damage * 1.2),
+                pierce: 0, pierced: 0,
+                lifetime: 3.0, maxLifetime: 3.0,
+                skillId: 'enemy_spell', ownerIsPlayer: false,
+                hitEnemies: new Set(), color: '#c084fc',
+              });
+            }
+          }
+          break;
+        }
+
+        case 'charger': {
+          const chargeRange = def?.chargeRange || 190;
+          const chargeCd = def?.chargeCooldown || 3.4;
+
+          if (e.aiState === 'chase') {
+            if (dist > 0) {
+              e.vx = (dx / dist) * e.speed;
+              e.vy = (dy / dist) * e.speed;
+            }
+            if (dist < chargeRange && e.aiTimer >= chargeCd) {
+              e.aiState = 'telegraph_charge';
+              e.aiSubTimer = 0.55;
+              e.targetAngle = Math.atan2(dy, dx);
+              e.telegraphTime = 0.55;
+              e.vx = 0;
+              e.vy = 0;
+            }
+          } else if (e.aiState === 'telegraph_charge') {
+            e.vx = 0;
+            e.vy = 0;
+            e.aiSubTimer = (e.aiSubTimer || 0.55) - dt;
+            e.telegraphTime = Math.max(0, e.aiSubTimer);
+            if (e.aiSubTimer <= 0) {
+              e.aiState = 'charging';
+              e.aiSubTimer = 0.42;
+              const chargeSpeed = e.speed * 3.4;
+              const ang = e.targetAngle ?? Math.atan2(dy, dx);
+              e.chargeVx = Math.cos(ang) * chargeSpeed;
+              e.chargeVy = Math.sin(ang) * chargeSpeed;
+              e.isCharging = true;
+              e.telegraphTime = 0;
+            }
+          } else if (e.aiState === 'charging') {
+            e.vx = e.chargeVx || 0;
+            e.vy = e.chargeVy || 0;
+            e.aiSubTimer = (e.aiSubTimer || 0.42) - dt;
+            if (e.aiSubTimer <= 0) {
+              e.aiState = 'cooldown';
+              e.aiSubTimer = 0.75;
+              e.isCharging = false;
+              e.vx = 0;
+              e.vy = 0;
+              e.aiTimer = 0;
+            }
+          } else if (e.aiState === 'cooldown') {
+            e.vx = 0;
+            e.vy = 0;
+            e.aiSubTimer = (e.aiSubTimer || 0.75) - dt;
+            if (e.aiSubTimer <= 0) {
+              e.aiState = 'chase';
+            }
+          }
+          break;
+        }
+
+        case 'summoner': {
+          const summonCd = def?.summonCooldown || 4.2;
+          if (dist > 320) {
+            e.vx = (dx / dist) * e.speed;
+            e.vy = (dy / dist) * e.speed;
+          } else if (dist < 220) {
+            e.vx = -(dx / dist) * e.speed * 0.6;
+            e.vy = -(dy / dist) * e.speed * 0.6;
+          } else {
+            e.vx = 0;
+            e.vy = 0;
+          }
+
+          if (e.aiTimer >= summonCd - 0.7 && e.aiTimer < summonCd) {
+            e.aiState = 'summoning';
+            e.telegraphTime = 0.7;
+          } else if (e.aiTimer >= summonCd) {
+            e.aiTimer = 0;
+            e.aiState = 'chase';
+            e.telegraphTime = 0;
+            const minionCount = e.isElite ? 3 : 2;
+            for (let m = 0; m < minionCount; m++) {
+              if (this.enemies.length >= MAX_ENEMIES) break;
+              const offA = (Math.PI * 2 * m) / minionCount;
+              const sx = Math.max(0, Math.min(WORLD_W, e.x + Math.cos(offA) * 35));
+              const sy = Math.max(0, Math.min(WORLD_H, e.y + Math.sin(offA) * 35));
+              this.spawnSingleEnemy('skeleton', sx, sy, false, true, 0.85, 0.6);
+            }
+            this.addBurstParticles(e.x, e.y, 25, '#22c55e', 18);
+          }
+          break;
+        }
+
+        case 'phantom': {
+          if (dist > 0) {
+            e.vx = (dx / dist) * e.speed;
+            e.vy = (dy / dist) * e.speed;
+          }
+          if (e.aiTimer >= 4.5 && !e.isPhasing) {
+            e.isPhasing = true;
+            e.invisibleAlpha = 0.25;
+            e.aiSubTimer = 1.3;
+          } else if (e.isPhasing) {
+            e.aiSubTimer = (e.aiSubTimer || 1.3) - dt;
+            if (e.aiSubTimer <= 0) {
+              e.isPhasing = false;
+              e.invisibleAlpha = 1.0;
+              e.aiTimer = 0;
+            }
+          }
+          break;
+        }
+
+        case 'stalker': {
+          if (dist > 0) {
+            e.vx = (dx / dist) * e.speed;
+            e.vy = (dy / dist) * e.speed;
+          }
+          if (dist < 140 && e.aiTimer >= 2.6) {
+            e.aiTimer = 0;
+            e.x = p.x - (dx / dist) * 70;
+            e.y = p.y - (dy / dist) * 70;
+            e.invisibleAlpha = 1.0;
+            this.addBurstParticles(e.x, e.y, 18, '#a855f7', 15);
+          } else {
+            e.invisibleAlpha = 0.32;
+          }
+          break;
+        }
+
+        default: {
+          if (dist > 0) {
+            if (e.type === 'bat') {
+              const perpX = -dy / dist;
+              const perpY = dx / dist;
+              const wobble = Math.sin(this.globalTime * 8 + e.x * 0.05) * (e.speed * 0.65);
+              e.vx = (dx / dist) * e.speed + perpX * wobble;
+              e.vy = (dy / dist) * e.speed + perpY * wobble;
+            } else {
+              e.vx = (dx / dist) * e.speed;
+              e.vy = (dy / dist) * e.speed;
+            }
+          }
+          break;
+        }
       }
 
       e.x += e.vx * dt;
@@ -490,9 +856,21 @@ export class GameEngine {
       e.x = Math.max(e.radius, Math.min(WORLD_W - e.radius, e.x));
       e.y = Math.max(e.radius, Math.min(WORLD_H - e.radius, e.y));
     }
+
+    this.enemies = this.enemies.filter(e => e.active);
   }
 
   private updateBossAI(boss: EnemyState, dt: number): void {
+    const p = this.player;
+    const dx = p.x - boss.x;
+    const dy = p.y - boss.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 0) {
+      boss.vx = (dx / dist) * boss.speed;
+      boss.vy = (dy / dist) * boss.speed;
+    }
+
     boss.aiTimer += dt;
 
     if (boss.bossId === 'error_404') {
@@ -506,7 +884,81 @@ export class GameEngine {
       }
     }
 
-    if (boss.aiTimer > 2.5) {
+    if (boss.bossId === 'bug_king' && boss.aiTimer >= 3.8) {
+      boss.aiTimer = 0;
+      for (let m = 0; m < 3; m++) {
+        if (this.enemies.length < MAX_ENEMIES) {
+          const offA = (Math.PI * 2 * m) / 3;
+          this.spawnSingleEnemy('bat', boss.x + Math.cos(offA) * 45, boss.y + Math.sin(offA) * 45, false, true, 0.8, 0.5);
+        }
+      }
+      this.addBurstParticles(boss.x, boss.y, 30, '#22c55e', 24);
+      return;
+    }
+
+    if (boss.bossId === 'mech_titan' && boss.aiTimer >= 4.5) {
+      boss.aiTimer = 0;
+      this.camera.addTrauma(0.5);
+      this.addBurstParticles(boss.x, boss.y, 50, '#94a3b8', 35);
+      if (this.projectiles.length < MAX_PROJECTILES) {
+        this.projectiles.push({
+          x: boss.x, y: boss.y, radius: 25, active: true,
+          vx: 0, vy: 0, damage: boss.damage * 0.8,
+          pierce: 99, pierced: 0,
+          lifetime: 1.8, maxLifetime: 1.8,
+          skillId: 'boss_shockwave', ownerIsPlayer: false,
+          hitEnemies: new Set(), color: '#38bdf8', isAura: true,
+        });
+      }
+      return;
+    }
+
+    if (boss.bossId === 'chaos_dragon' && boss.aiTimer >= 3.5) {
+      boss.aiTimer = 0;
+      const baseAng = Math.atan2(dy, dx);
+      for (let f = -2; f <= 2; f++) {
+        if (this.projectiles.length < MAX_PROJECTILES) {
+          const a = baseAng + f * 0.22;
+          this.projectiles.push({
+            x: boss.x, y: boss.y, radius: 8, active: true,
+            vx: Math.cos(a) * 190, vy: Math.sin(a) * 190,
+            damage: boss.damage * 0.6,
+            pierce: 0, pierced: 0,
+            lifetime: 3, maxLifetime: 3,
+            skillId: 'boss_bullet', ownerIsPlayer: false,
+            hitEnemies: new Set(), color: '#ef4444',
+          });
+        }
+      }
+      return;
+    }
+
+    if (boss.bossId === 'shadow_lord' && boss.aiTimer >= 4.0) {
+      boss.aiTimer = 0;
+      const teleAng = Math.random() * Math.PI * 2;
+      boss.x = Math.max(100, Math.min(WORLD_W - 100, p.x + Math.cos(teleAng) * 180));
+      boss.y = Math.max(100, Math.min(WORLD_H - 100, p.y + Math.sin(teleAng) * 180));
+      this.camera.addTrauma(0.4);
+      this.addBurstParticles(boss.x, boss.y, 40, '#a855f7', 30);
+      const count = 10;
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count;
+        if (this.projectiles.length < MAX_PROJECTILES) {
+          this.projectiles.push({
+            x: boss.x, y: boss.y, radius: 6, active: true,
+            vx: Math.cos(angle) * 130, vy: Math.sin(angle) * 130,
+            damage: boss.damage * 0.5,
+            pierce: 0, pierced: 0,
+            lifetime: 3, maxLifetime: 3,
+            skillId: 'boss_bullet', ownerIsPlayer: false,
+            hitEnemies: new Set(), color: '#a855f7',
+          });
+        }
+      }
+      return;
+    }
+
+    if (boss.aiTimer > 2.8) {
       boss.aiTimer = 0;
       const count = boss.bossPhase === 2 ? 16 : 8;
       for (let i = 0; i < count; i++) {
@@ -598,7 +1050,7 @@ export class GameEngine {
       case 'chain': {
         if (nearest) {
           const chainCount = 1 + Math.floor(level * 0.7) + (isUlt ? 4 : 0);
-          this.doLightningChain(nearest, damage, chainCount, def.id);
+          this.doLightningChain(nearest, damage, chainCount);
         }
         break;
       }
@@ -623,7 +1075,7 @@ export class GameEngine {
           const isHoming = isUlt;
           const proj = this.addProjectile(p.x, p.y, Math.cos(angle) * speed, Math.sin(angle) * speed, damage, pierce, lifetime, def.id, '#eab308', def.baseRadius * areaScale);
           if (proj && isHoming) {
-            proj.homingTarget = nearest ? this.enemies.indexOf(nearest) : -1;
+            proj.homingTarget = nearest ? nearest.id : -1;
           }
         }
         break;
@@ -720,13 +1172,25 @@ export class GameEngine {
           const proj = this.addProjectile(p.x, p.y, Math.cos(angle) * 160, Math.sin(angle) * 160, damage, pierce, lifetime, def.id, '#a855f7', def.baseRadius * areaScale);
           if (proj) {
             const tgt = this.findNearestEnemy(p.x, p.y, 400);
-            proj.homingTarget = tgt ? this.enemies.indexOf(tgt) : -1;
+            proj.homingTarget = tgt ? tgt.id : -1;
           }
         }
         break;
       }
       case 'burst_aoe': {
         const radius = def.baseRadius * areaScale * (isUlt ? 1.6 : 1);
+
+        if (this.projectiles.length < MAX_PROJECTILES) {
+          this.projectiles.push({
+            x: p.x, y: p.y, radius, active: true,
+            vx: 0, vy: 0, damage: 0, pierce: 99, pierced: 0,
+            lifetime: 0.4, maxLifetime: 0.4,
+            skillId: def.id, ownerIsPlayer: true,
+            hitEnemies: new Set(), color: isUlt ? 'rgba(96,165,250,0.5)' : 'rgba(96,165,250,0.35)',
+            isAura: true,
+          });
+        }
+
         for (const e of this.enemies) {
           if (!e.active) continue;
           const dist = Math.sqrt((e.x - p.x) ** 2 + (e.y - p.y) ** 2);
@@ -740,7 +1204,8 @@ export class GameEngine {
             }
           }
         }
-        this.addBurstParticles(p.x, p.y, radius, '#60a5fa', 30);
+        this.addBurstParticles(p.x, p.y, radius * 0.8, '#60a5fa', isUlt ? 50 : 30);
+        this.camera.addTrauma(isUlt ? 0.3 : 0.15);
         break;
       }
     }
@@ -759,10 +1224,35 @@ export class GameEngine {
     return p;
   }
 
-  private doLightningChain(start: EnemyState, damage: number, maxChain: number, skillId: string): void {
+  private doLightningChain(start: EnemyState, damage: number, maxChain: number): void {
     const hit = new Set<EnemyState>();
     let current = start;
-    const chainRange = 120;
+    const chainRange = 140;
+
+    if (this.projectiles.length < MAX_PROJECTILES) {
+      this.projectiles.push({
+        x: this.player.x,
+        y: this.player.y,
+        radius: 8,
+        active: true,
+        vx: 0,
+        vy: 0,
+        damage: 0,
+        pierce: 99,
+        pierced: 0,
+        lifetime: 0.22,
+        maxLifetime: 0.22,
+        skillId: 'lightning_chain',
+        ownerIsPlayer: true,
+        hitEnemies: new Set(),
+        color: '#38bdf8',
+        startX: this.player.x,
+        startY: this.player.y,
+        targetX: start.x,
+        targetY: start.y,
+        isAura: true,
+      });
+    }
 
     for (let i = 0; i < maxChain; i++) {
       if (hit.has(current)) break;
@@ -779,11 +1269,30 @@ export class GameEngine {
       }
       if (!nearest) break;
 
-      this.particles.push({
-        x: current.x, y: current.y,
-        vx: (nearest.x - current.x) * 4, vy: (nearest.y - current.y) * 4,
-        life: 0.1, maxLife: 0.1, color: '#facc15', size: 2, active: true,
-      });
+      if (this.projectiles.length < MAX_PROJECTILES) {
+        this.projectiles.push({
+          x: current.x,
+          y: current.y,
+          radius: 8,
+          active: true,
+          vx: 0,
+          vy: 0,
+          damage: 0,
+          pierce: 99,
+          pierced: 0,
+          lifetime: 0.22,
+          maxLifetime: 0.22,
+          skillId: 'lightning_chain',
+          ownerIsPlayer: true,
+          hitEnemies: new Set(),
+          color: '#38bdf8',
+          startX: current.x,
+          startY: current.y,
+          targetX: nearest.x,
+          targetY: nearest.y,
+          isAura: true,
+        });
+      }
 
       current = nearest;
     }
@@ -811,8 +1320,8 @@ export class GameEngine {
       }
 
       if (proj.homingTarget !== undefined && proj.homingTarget >= 0) {
-        const target = this.enemies[proj.homingTarget];
-        if (target && target.active) {
+        const target = this.enemies.find(e => e.id === proj.homingTarget && e.active);
+        if (target) {
           const dx = target.x - proj.x;
           const dy = target.y - proj.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -827,6 +1336,10 @@ export class GameEngine {
               proj.vy = (proj.vy / speed) * maxSpeed;
             }
           }
+        } else {
+          const newTarget = this.findNearestEnemy(proj.x, proj.y, 350);
+          if (newTarget) proj.homingTarget = newTarget.id;
+          else proj.homingTarget = -1;
         }
       }
 
@@ -866,6 +1379,26 @@ export class GameEngine {
         }
       }
 
+      if (proj.skillId === 'enemy_spell' && !proj.ownerIsPlayer) {
+        const dx = p.x - proj.x;
+        const dy = p.y - proj.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 0) {
+          const steer = 2.2 * dt;
+          proj.vx += (dx / dist) * steer * 110;
+          proj.vy += (dy / dist) * steer * 110;
+          const spd = Math.hypot(proj.vx, proj.vy);
+          if (spd > 165) {
+            proj.vx = (proj.vx / spd) * 165;
+            proj.vy = (proj.vy / spd) * 165;
+          }
+        }
+      }
+
+      if (proj.skillId === 'boss_shockwave') {
+        proj.radius += 110 * dt;
+      }
+
       proj.x += proj.vx * dt;
       proj.y += proj.vy * dt;
 
@@ -877,26 +1410,39 @@ export class GameEngine {
         proj.active = false;
       }
     }
+
+    this.projectiles = this.projectiles.filter(p => p.active);
   }
 
   private checkCollisions(): void {
     const p = this.player;
 
-    for (const proj of this.projectiles) {
-      if (!proj.active || !proj.ownerIsPlayer) continue;
+    this.enemyGrid.clear();
+    for (let ei = 0; ei < this.enemies.length; ei++) {
+      const e = this.enemies[ei];
+      if (e.active) {
+        this.enemyGrid.insert(e.x, e.y, ei);
+      }
+    }
 
-      for (let ei = 0; ei < this.enemies.length; ei++) {
+    for (const proj of this.projectiles) {
+      if (!proj.active || !proj.ownerIsPlayer || proj.damage <= 0) continue;
+
+      const queryRadius = proj.isAura ? proj.radius : proj.radius + 60;
+      const nearbyIndices = this.enemyGrid.query(proj.x, proj.y, queryRadius);
+
+      for (const ei of nearbyIndices) {
         const e = this.enemies[ei];
         if (!e.active) continue;
-        if (proj.hitEnemies.has(ei)) continue;
+        if (proj.hitEnemies.has(e.id)) continue;
 
         const dx = proj.x - e.x;
         const dy = proj.y - e.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const distSq = dx * dx + dy * dy;
         const hitDist = proj.isAura ? proj.radius : proj.radius + e.radius;
 
-        if (dist < hitDist) {
-          proj.hitEnemies.add(ei);
+        if (distSq < hitDist * hitDist) {
+          proj.hitEnemies.add(e.id);
 
           let dmg = proj.damage;
           const isCrit = Math.random() < p.critChance;
@@ -921,23 +1467,32 @@ export class GameEngine {
 
       const dx = proj.x - p.x;
       const dy = proj.y - p.y;
-      if (Math.sqrt(dx * dx + dy * dy) < proj.radius + p.radius) {
-        this.damagePlayer(proj.damage);
-        proj.active = false;
+      if (dx * dx + dy * dy < (proj.radius + p.radius) * (proj.radius + p.radius)) {
+        if (!proj.hitEnemies.has(-1)) {
+          proj.hitEnemies.add(-1);
+          this.damagePlayer(proj.damage);
+        }
+        if (!proj.isAura) {
+          proj.active = false;
+        }
       }
     }
 
-    for (const e of this.enemies) {
-      if (!e.active) continue;
+    const contactIndices = this.enemyGrid.query(p.x, p.y, p.radius + 60);
+    for (const ei of contactIndices) {
+      const e = this.enemies[ei];
+      if (!e.active || e.isPhasing) continue;
       const dx = e.x - p.x;
       const dy = e.y - p.y;
-      if (Math.sqrt(dx * dx + dy * dy) < e.radius + p.radius) {
-        this.damagePlayer(e.damage);
+      if (dx * dx + dy * dy < (e.radius + p.radius) * (e.radius + p.radius)) {
+        const dmg = e.isCharging ? e.damage * 1.8 : e.damage;
+        this.damagePlayer(dmg);
       }
     }
   }
 
   private damageEnemy(e: EnemyState, damage: number, isCrit = false): void {
+    if (e.isPhasing) return;
     e.hp -= damage;
     e.flashTimer = 0.1;
     this.player.totalDamage += damage;
@@ -951,9 +1506,23 @@ export class GameEngine {
         this.player.critChance = Math.min(0.30, this.player.critChance + 0.001);
       }
 
-      const xpValue = e.isBoss ? 50 : (e.isElite ? 5 : 1 + Math.floor(this.currentWave / 10));
+      if (e.canSplit && !e.isMinion && this.enemies.length < MAX_ENEMIES - 2) {
+        this.spawnSplitMinions(e);
+      }
+
+      const xpValue = e.isBoss ? 50 : (e.isElite ? 5 : (e.isMinion ? 1 : 1 + Math.floor(this.currentWave / 10)));
       this.spawnXP(e.x, e.y, xpValue);
       this.particleSystem.spawnBlood(e.x, e.y, e.color, e.isBoss ? 32 : 14);
+
+      if (!e.isMinion) {
+        const luckBonus = this.player.activeEffects['luck_boost'] ? 0.15 : 0;
+        const enemyType = e.isBoss ? 'boss' as const : e.isElite ? 'elite' as const : 'normal' as const;
+        const drops = rollDrops(enemyType, this.player.luckMul + luckBonus, e.isBoss ? this.currentWave : undefined);
+        for (const drop of drops) {
+          const offset = (Math.random() - 0.5) * 40;
+          this.spawnPickup(e.x + offset, e.y + offset, drop.type, drop.chestTier);
+        }
+      }
 
       if (e.isBoss) {
         this.camera.addTrauma(0.7);
@@ -983,12 +1552,56 @@ export class GameEngine {
   }
 
   private spawnXP(x: number, y: number, value: number): void {
-    if (this.xpGems.length >= MAX_XP_GEMS) return;
+    if (this.xpGems.length >= 75) {
+      let nearest: XPGemState | null = null;
+      let minDistSq = 140 * 140;
+      for (let i = 0; i < this.xpGems.length; i++) {
+        const g = this.xpGems[i];
+        if (!g.active) continue;
+        const dx = g.x - x;
+        const dy = g.y - y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < minDistSq) {
+          minDistSq = d2;
+          nearest = g;
+        }
+      }
+      if (nearest) {
+        nearest.value += value;
+        nearest.radius = Math.min(8, 3.2 + Math.log2(nearest.value) * 0.8);
+        nearest.color = nearest.value >= 20 ? '#ef4444' : (nearest.value >= 10 ? '#fbbf24' : (nearest.value >= 5 ? '#38bdf8' : '#a855f7'));
+        return;
+      }
+    }
+
+    if (this.xpGems.length >= MAX_XP_GEMS) {
+      const p = this.player;
+      let furthest: XPGemState | null = null;
+      let maxDistSq = 0;
+      for (let i = 0; i < this.xpGems.length; i++) {
+        const g = this.xpGems[i];
+        if (!g.active) continue;
+        const dx = g.x - p.x;
+        const dy = g.y - p.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > maxDistSq) {
+          maxDistSq = d2;
+          furthest = g;
+        }
+      }
+      if (furthest) {
+        furthest.value += value;
+        furthest.radius = Math.min(8, 3.2 + Math.log2(furthest.value) * 0.8);
+        furthest.color = furthest.value >= 20 ? '#ef4444' : (furthest.value >= 10 ? '#fbbf24' : (furthest.value >= 5 ? '#38bdf8' : '#a855f7'));
+        return;
+      }
+    }
+
     const angle = Math.random() * Math.PI * 2;
-    const speed = 50 + Math.random() * 50;
-    const color = value >= 10 ? '#fbbf24' : (value >= 5 ? '#60a5fa' : '#4ade80');
+    const speed = 40 + Math.random() * 40;
+    const color = value >= 20 ? '#ef4444' : (value >= 10 ? '#fbbf24' : (value >= 5 ? '#38bdf8' : '#a855f7'));
     this.xpGems.push({
-      x, y, radius: Math.min(5, 2 + value * 0.3), active: true,
+      x, y, radius: Math.min(6, 2.5 + Math.log2(value) * 0.6), active: true,
       value, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
       magnetized: false, color,
     });
@@ -997,25 +1610,27 @@ export class GameEngine {
   private updateXPGems(dt: number): void {
     const p = this.player;
     const pickupR = BASE_PICKUP_RANGE * (1 + p.pickupRange);
-    const collectR = 15;
+    const pickupRSq = pickupR * pickupR;
+    const collectRSq = 225;
 
-    for (let i = this.xpGems.length - 1; i >= 0; i--) {
+    for (let i = 0; i < this.xpGems.length; i++) {
       const gem = this.xpGems[i];
-      if (!gem.active) { this.xpGems.splice(i, 1); continue; }
+      if (!gem.active) continue;
 
-      gem.vx *= 0.95;
-      gem.vy *= 0.95;
+      gem.vx *= 0.94;
+      gem.vy *= 0.94;
 
       const dx = p.x - gem.x;
       const dy = p.y - gem.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const distSq = dx * dx + dy * dy;
 
-      if (dist < pickupR) {
+      if (distSq < pickupRSq) {
         gem.magnetized = true;
       }
 
-      if (gem.magnetized && dist > 0) {
-        const magnetSpeed = 300;
+      if (gem.magnetized && distSq > 0) {
+        const dist = Math.sqrt(distSq);
+        const magnetSpeed = 340;
         gem.vx = (dx / dist) * magnetSpeed;
         gem.vy = (dy / dist) * magnetSpeed;
       }
@@ -1023,33 +1638,41 @@ export class GameEngine {
       gem.x += gem.vx * dt;
       gem.y += gem.vy * dt;
 
-      if (dist < collectR) {
+      if (distSq < collectRSq) {
         gem.active = false;
         p.xp += gem.value;
-        this.xpGems.splice(i, 1);
       }
     }
+
+    this.xpGems = this.xpGems.filter(g => g.active);
   }
 
   private checkLevelUp(): void {
+    if (this.chestOpenTimer > 0) return;
     const p = this.player;
+
     while (p.xp >= p.xpToNext) {
       p.xp -= p.xpToNext;
       p.level++;
       p.xpToNext = getXpToLevel(p.level);
+      this.pendingLevelUps++;
+    }
 
+    if (this.pendingLevelUps > 0 && this.phase !== 'LEVEL_UP') {
+      this.pendingLevelUps--;
       const options = this.generateUpgradeOptions();
       this.phase = 'LEVEL_UP';
       this.callbacks.onPhaseChange('LEVEL_UP');
       this.callbacks.onLevelUp(options);
       this.addBurstParticles(p.x, p.y, 80, '#fbbf24', 20);
-      return;
     }
   }
 
   generateUpgradeOptions(): UpgradeOption[] {
     const p = this.player;
-    const pool: UpgradeOption[] = [];
+    const skillPool: UpgradeOption[] = [];
+    const passivePool: UpgradeOption[] = [];
+    const evoPool: UpgradeOption[] = [];
 
     for (const ps of p.skills) {
       if (ps.isUltimate) continue;
@@ -1057,19 +1680,19 @@ export class GameEngine {
       if (!def) continue;
 
       if (ps.level >= MAX_SKILL_LEVEL) {
-        const hasBuff = p.buffs.some(b => b.buffId === def.requiredBuffId);
-        if (hasBuff) {
-          pool.push({
-            type: 'evolution', id: def.ultimateId,
+        const hasPassive = p.passives.some(b => b.passiveId === def.requiredPassiveId);
+        if (hasPassive) {
+          evoPool.push({
+            type: 'evolution', category: 'evolution', id: def.ultimateId,
             name: `${def.ultimateIcon} ${def.ultimateName}`,
             icon: def.ultimateIcon,
-            description: def.ultimateDescription,
+            description: `⚡ TIẾN HÓA ULTIMATE | ${def.ultimateDescription}`,
             isEvolution: true, currentLevel: ps.level, maxLevel: MAX_SKILL_LEVEL,
           });
         }
       } else {
-        pool.push({
-          type: 'skill_up', id: ps.skillId,
+        skillPool.push({
+          type: 'skill_up', category: 'weapon', id: ps.skillId,
           name: `${def.icon} ${def.name}`,
           icon: def.icon,
           description: `Lv.${ps.level} → Lv.${ps.level + 1} | +${def.damagePerLevel} dmg`,
@@ -1083,8 +1706,8 @@ export class GameEngine {
       const available = Object.values(SKILLS).filter(s => !ownedIds.has(s.id));
       const shuffled = available.sort(() => Math.random() - 0.5).slice(0, 2);
       for (const s of shuffled) {
-        pool.push({
-          type: 'new_skill', id: s.id,
+        skillPool.push({
+          type: 'new_skill', category: 'weapon', id: s.id,
           name: `${s.icon} ${s.name} (NEW)`,
           icon: s.icon,
           description: s.description,
@@ -1093,50 +1716,84 @@ export class GameEngine {
       }
     }
 
-    for (const pb of p.buffs) {
-      if (pb.level >= MAX_BUFF_LEVEL) continue;
-      const def = BUFFS[pb.buffId];
+    for (const pb of p.passives) {
+      if (pb.level >= MAX_PASSIVE_LEVEL) continue;
+      const def = PASSIVES[pb.passiveId];
       if (!def) continue;
-      pool.push({
-        type: 'buff_up', id: pb.buffId,
+      passivePool.push({
+        type: 'passive_up', category: 'passive', id: pb.passiveId,
         name: `${def.icon} ${def.name}`,
         icon: def.icon,
         description: `Lv.${pb.level} → Lv.${pb.level + 1} | ${def.description}`,
-        isEvolution: false, currentLevel: pb.level, maxLevel: MAX_BUFF_LEVEL,
+        isEvolution: false, currentLevel: pb.level, maxLevel: MAX_PASSIVE_LEVEL,
       });
     }
 
-    const ownedBuffIds = new Set(p.buffs.map(b => b.buffId));
-    const availBuffs = Object.values(BUFFS).filter(b => !ownedBuffIds.has(b.id));
-    const shuffledBuffs = availBuffs.sort(() => Math.random() - 0.5).slice(0, 2);
-    for (const b of shuffledBuffs) {
-      pool.push({
-        type: 'new_buff', id: b.id,
-        name: `${b.icon} ${b.name} (NEW)`,
-        icon: b.icon,
-        description: b.description,
-        isEvolution: false, currentLevel: 0, maxLevel: MAX_BUFF_LEVEL,
-      });
-    }
+    if (p.passives.length < MAX_PASSIVES) {
+      const ownedIds = new Set(p.passives.map(b => b.passiveId));
+      const neededPassiveIds = new Set<string>();
+      for (const ps of p.skills) {
+        if (ps.isUltimate) continue;
+        const def = SKILLS[ps.skillId];
+        if (def && !ownedIds.has(def.requiredPassiveId)) {
+          neededPassiveIds.add(def.requiredPassiveId);
+        }
+      }
 
-    const evolutions = pool.filter(o => o.isEvolution);
-    const nonEvo = pool.filter(o => !o.isEvolution).sort(() => Math.random() - 0.5);
+      for (const neededId of neededPassiveIds) {
+        const b = PASSIVES[neededId];
+        if (b) {
+          passivePool.unshift({
+            type: 'new_passive', category: 'passive', id: b.id,
+            name: `${b.icon} ${b.name} (CẦN CHO TIẾN HÓA)`,
+            icon: b.icon,
+            description: b.description,
+            isEvolution: false, currentLevel: 0, maxLevel: MAX_PASSIVE_LEVEL,
+          });
+        }
+      }
 
-    const result: UpgradeOption[] = [...evolutions, ...nonEvo].slice(0, 3);
-
-    if (result.length < 3) {
-      while (result.length < 3) {
-        const fallback = Object.values(BUFFS)[Math.floor(Math.random() * Object.values(BUFFS).length)];
-        result.push({
-          type: 'new_buff', id: fallback.id,
-          name: `${fallback.icon} ${fallback.name}`,
-          icon: fallback.icon, description: fallback.description,
-          isEvolution: false, currentLevel: 0, maxLevel: MAX_BUFF_LEVEL,
+      const availPassives = Object.values(PASSIVES).filter(b => !ownedIds.has(b.id) && !neededPassiveIds.has(b.id));
+      const shuffledPassives = availPassives.sort(() => Math.random() - 0.5).slice(0, 2);
+      for (const b of shuffledPassives) {
+        passivePool.push({
+          type: 'new_passive', category: 'passive', id: b.id,
+          name: `${b.icon} ${b.name} (NEW)`,
+          icon: b.icon,
+          description: b.description,
+          isEvolution: false, currentLevel: 0, maxLevel: MAX_PASSIVE_LEVEL,
         });
       }
     }
 
-    return result;
+    const shuffledSkills = skillPool.sort(() => Math.random() - 0.5);
+    const shuffledPassives2 = passivePool.sort(() => Math.random() - 0.5);
+
+    const result: UpgradeOption[] = [...evoPool];
+
+    const skillCount = Math.min(2, shuffledSkills.length);
+    const passiveCount = Math.min(2, shuffledPassives2.length);
+    result.push(...shuffledSkills.slice(0, skillCount));
+    result.push(...shuffledPassives2.slice(0, passiveCount));
+
+    const remaining = [...shuffledSkills.slice(skillCount), ...shuffledPassives2.slice(passiveCount)]
+      .sort(() => Math.random() - 0.5);
+
+    while (result.length < UPGRADE_OPTIONS_COUNT && remaining.length > 0) {
+      result.push(remaining.shift()!);
+    }
+
+    while (result.length < UPGRADE_OPTIONS_COUNT) {
+      const fallback = Object.values(PASSIVES)[Math.floor(Math.random() * Object.values(PASSIVES).length)];
+      result.push({
+        type: 'new_passive', category: 'passive', id: fallback.id,
+        name: `${fallback.icon} ${fallback.name}`,
+        icon: fallback.icon, description: fallback.description,
+        isEvolution: false, currentLevel: 0, maxLevel: MAX_PASSIVE_LEVEL,
+      });
+    }
+
+    return result.slice(0, UPGRADE_OPTIONS_COUNT);
   }
 
   selectUpgrade(option: UpgradeOption): void {
@@ -1165,26 +1822,44 @@ export class GameEngine {
         }
         break;
       }
-      case 'buff_up': {
-        const buff = p.buffs.find(b => b.buffId === option.id);
-        if (buff && buff.level < MAX_BUFF_LEVEL) buff.level++;
+      case 'passive_up': {
+        const passive = p.passives.find(b => b.passiveId === option.id);
+        if (passive && passive.level < MAX_PASSIVE_LEVEL) passive.level++;
         break;
       }
-      case 'new_buff': {
-        const existing = p.buffs.find(b => b.buffId === option.id);
+      case 'new_passive': {
+        const existing = p.passives.find(b => b.passiveId === option.id);
         if (existing) {
-          if (existing.level < MAX_BUFF_LEVEL) existing.level++;
-        } else {
-          p.buffs.push({ buffId: option.id, level: 1 });
+          if (existing.level < MAX_PASSIVE_LEVEL) existing.level++;
+        } else if (p.passives.length < MAX_PASSIVES) {
+          p.passives.push({ passiveId: option.id, level: 1 });
         }
         break;
       }
     }
 
     this.recalcStats();
-    this.phase = 'PLAYING';
-    this.callbacks.onPhaseChange('PLAYING');
-    this.checkLevelUp();
+    this.callbacks.onStatsUpdate(this.player, this.currentWave);
+
+    while (p.xp >= p.xpToNext) {
+      p.xp -= p.xpToNext;
+      p.level++;
+      p.xpToNext = getXpToLevel(p.level);
+      this.pendingLevelUps++;
+    }
+
+    if (this.pendingLevelUps > 0) {
+      this.pendingLevelUps--;
+      const options = this.generateUpgradeOptions();
+      this.phase = 'LEVEL_UP';
+      this.callbacks.onPhaseChange('LEVEL_UP');
+      this.callbacks.onLevelUp(options);
+      this.addBurstParticles(p.x, p.y, 80, '#fbbf24', 20);
+    } else {
+      this.phase = 'PLAYING';
+      this.callbacks.onPhaseChange('PLAYING');
+      this.callbacks.onLevelUp([]);
+    }
   }
 
   rerollUpgrades(): UpgradeOption[] | null {
@@ -1216,25 +1891,13 @@ export class GameEngine {
   }
 
   private updateCamera(dt: number): void {
-    const targetX = this.player.x - this.screenW / 2;
-    const targetY = this.player.y - this.screenH / 2;
-    this.camX += (targetX - this.camX) * 6 * dt;
-    this.camY += (targetY - this.camY) * 6 * dt;
-    this.camX = Math.max(0, Math.min(WORLD_W - this.screenW, this.camX));
-    this.camY = Math.max(0, Math.min(WORLD_H - this.screenH, this.camY));
-
-    if (this.camShakeDecay > 0) {
-      this.camShakeDecay -= dt * 10;
-      this.camShakeX = (Math.random() - 0.5) * this.camShakeDecay * 2;
-      this.camShakeY = (Math.random() - 0.5) * this.camShakeDecay * 2;
-    } else {
-      this.camShakeX = 0;
-      this.camShakeY = 0;
-    }
+    this.camera.update(dt, this.player.x, this.player.y);
+    this.camX = this.camera.x;
+    this.camY = this.camera.y;
   }
 
   private shakeCamera(intensity: number): void {
-    this.camShakeDecay = intensity;
+    this.camera.addTrauma(intensity * 0.08);
   }
 
   private updateParticles(dt: number): void {
@@ -1246,32 +1909,6 @@ export class GameEngine {
       pt.vy += 100 * dt;
       pt.life -= dt;
       if (pt.life <= 0) { pt.active = false; this.particles.splice(i, 1); }
-    }
-  }
-
-  private addHitParticles(x: number, y: number, color: string): void {
-    for (let i = 0; i < 4; i++) {
-      if (this.particles.length >= MAX_PARTICLES) break;
-      this.particles.push({
-        x, y,
-        vx: (Math.random() - 0.5) * 150,
-        vy: (Math.random() - 0.5) * 150,
-        life: 0.3, maxLife: 0.3,
-        color, size: 2 + Math.random() * 2, active: true,
-      });
-    }
-  }
-
-  private addDeathParticles(x: number, y: number, color: string): void {
-    for (let i = 0; i < 8; i++) {
-      if (this.particles.length >= MAX_PARTICLES) break;
-      this.particles.push({
-        x, y,
-        vx: (Math.random() - 0.5) * 200,
-        vy: (Math.random() - 0.5) * 200 - 50,
-        life: 0.5, maxLife: 0.5,
-        color, size: 3 + Math.random() * 3, active: true,
-      });
     }
   }
 
@@ -1304,8 +1941,190 @@ export class GameEngine {
       this.xpGems,
       this.globalTime,
       this.facingLeft,
-      this.isMoving
+      this.isMoving,
+      this.pickups
     );
+  }
+
+  private spawnPickup(x: number, y: number, type: import('./types').PickupType, chestTier?: import('./types').ChestTier): void {
+    if (this.pickups.length >= MAX_PICKUPS) return;
+    const def = PICKUP_DEFS[type];
+    this.pickups.push({
+      x, y, radius: 12, active: true,
+      pickupType: type,
+      lifetime: def.maxLifetime,
+      maxLifetime: def.maxLifetime,
+      chestTier,
+      vx: (Math.random() - 0.5) * 60,
+      vy: (Math.random() - 0.5) * 60 - 30,
+    });
+  }
+
+  private updatePickups(dt: number): void {
+    const p = this.player;
+
+    this.mapSpawnTimer += dt;
+    if (this.mapSpawnTimer >= this.mapSpawnInterval) {
+      this.mapSpawnTimer = 0;
+      this.mapSpawnInterval = MAP_SPAWN_INTERVAL_MIN + Math.random() * (MAP_SPAWN_INTERVAL_MAX - MAP_SPAWN_INTERVAL_MIN);
+      const spawn = rollMapSpawn();
+      if (spawn) {
+        const sx = p.x + (Math.random() - 0.5) * this.screenW * 0.8;
+        const sy = p.y + (Math.random() - 0.5) * this.screenH * 0.8;
+        const cx = Math.max(50, Math.min(WORLD_W - 50, sx));
+        const cy = Math.max(50, Math.min(WORLD_H - 50, sy));
+        this.spawnPickup(cx, cy, spawn.type, spawn.chestTier);
+      }
+    }
+
+    for (let i = this.pickups.length - 1; i >= 0; i--) {
+      const pk = this.pickups[i];
+      if (!pk.active) { this.pickups.splice(i, 1); continue; }
+
+      pk.vx *= 0.92;
+      pk.vy *= 0.92;
+      pk.x += pk.vx * dt;
+      pk.y += pk.vy * dt;
+
+      pk.lifetime -= dt;
+      if (pk.lifetime <= 0) {
+        pk.active = false;
+        this.pickups.splice(i, 1);
+        continue;
+      }
+
+      const dx = p.x - pk.x;
+      const dy = p.y - pk.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < PICKUP_COLLECT_RANGE + p.radius) {
+        this.applyPickup(pk);
+        pk.active = false;
+        this.pickups.splice(i, 1);
+      }
+    }
+  }
+
+  private applyPickup(pk: PickupState): void {
+    const p = this.player;
+    const def = PICKUP_DEFS[pk.pickupType];
+
+    this.addBurstParticles(pk.x, pk.y, 12, def.color, 20);
+    this.callbacks.onPickupCollected?.(def.icon, def.name);
+
+    switch (pk.pickupType) {
+      case 'magnet':
+        for (const gem of this.xpGems) {
+          gem.magnetized = true;
+        }
+        break;
+
+      case 'chicken': {
+        const heal = Math.floor(p.maxHp * CHICKEN_HEAL_PERCENT);
+        p.hp = Math.min(p.maxHp, p.hp + heal);
+        this.damageTexts.add(p.x, p.y - 20, heal, false);
+        break;
+      }
+
+      case 'coin': {
+        p.xp += COIN_XP_VALUE;
+        this.damageTexts.add(pk.x, pk.y, COIN_XP_VALUE, false);
+        break;
+      }
+
+      case 'bomb': {
+        this.camera.addTrauma(0.6);
+        for (const e of this.enemies) {
+          if (!e.active) continue;
+          const dx = e.x - pk.x;
+          const dy = e.y - pk.y;
+          if (Math.sqrt(dx * dx + dy * dy) < BOMB_RADIUS) {
+            this.damageEnemy(e, BOMB_DAMAGE);
+          }
+        }
+        this.addBurstParticles(pk.x, pk.y, 40, '#ff6633', 60);
+        break;
+      }
+
+      case 'rosary':
+        for (const e of this.enemies) {
+          if (!e.active || e.isBoss) continue;
+          e.hp = 0;
+          e.active = false;
+          p.kills++;
+          this.spawnXP(e.x, e.y, 1);
+          this.particleSystem.spawnBlood(e.x, e.y, '#f0f0ff', 8);
+        }
+        this.camera.addTrauma(0.5);
+        break;
+
+      case 'orologion':
+        p.activeEffects['freeze'] = def.duration || 8;
+        break;
+
+      case 'clover':
+        p.activeEffects['luck_boost'] = def.duration || 30;
+        break;
+
+      case 'speed_boost':
+        p.activeEffects['speed_boost'] = def.duration || 10;
+        break;
+
+      case 'shield_orb':
+        p.activeEffects['shield'] = def.duration || 5;
+        break;
+
+      case 'chest': {
+        const count = getChestUpgradeCount(pk.chestTier || 'bronze');
+        if (pk.chestTier === 'gold') {
+          p.hp = p.maxHp;
+        }
+
+        const tierColors: Record<string, string> = {
+          bronze: '#cd7f32',
+          silver: '#c0c0c0',
+          gold: '#fbbf24',
+        };
+        const tierLabels: Record<string, string> = {
+          bronze: '🥉 RƯƠNG ĐỒNG!',
+          silver: '🥈 RƯƠNG BẠC!',
+          gold: '🥇 RƯƠNG VÀNG!',
+        };
+        const tier = pk.chestTier || 'bronze';
+        const tierParticles = tier === 'gold' ? 50 : tier === 'silver' ? 30 : 20;
+        const traumaAmount = tier === 'gold' ? 0.65 : tier === 'silver' ? 0.45 : 0.3;
+        const zoomScale = tier === 'gold' ? 1.15 : tier === 'silver' ? 1.1 : 1.06;
+
+        this.addBurstParticles(pk.x, pk.y, tierParticles, tierColors[tier], 40);
+        this.camera.addTrauma(traumaAmount);
+        this.camera.triggerZoomPunch(zoomScale, 0.45);
+        this.damageTexts.addText(pk.x, pk.y - 24, tierLabels[tier], tierColors[tier], 1.4);
+
+        for (let c = 0; c < count; c++) {
+          this.pendingLevelUps++;
+        }
+        this.chestOpenTimer = 0.5;
+        break;
+      }
+    }
+
+    this.callbacks.onStatsUpdate(p, this.currentWave);
+  }
+
+  private updateActiveEffects(dt: number): void {
+    const p = this.player;
+    const effects = p.activeEffects;
+
+    for (const key of Object.keys(effects)) {
+      effects[key] -= dt;
+      if (effects[key] <= 0) {
+        delete effects[key];
+      }
+    }
+
+    if (effects['shield']) {
+      p.invincibleTimer = Math.max(p.invincibleTimer, 0.1);
+    }
   }
 
   getStats(): import('./types').GameStats {
@@ -1316,7 +2135,7 @@ export class GameEngine {
       timeSurvived: this.player.timeSurvived,
       level: this.player.level,
       skills: [...this.player.skills],
-      buffs: [...this.player.buffs],
+      passives: [...this.player.passives],
       characterId: this.player.characterId,
     };
   }

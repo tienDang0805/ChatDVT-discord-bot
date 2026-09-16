@@ -4,6 +4,7 @@ export interface Vec2 {
 }
 
 export interface BaseEntity {
+  id?: number;
   x: number;
   y: number;
   radius: number;
@@ -26,8 +27,8 @@ export interface PlayerSkillState {
   isUltimate: boolean;
 }
 
-export interface PlayerBuffState {
-  buffId: string;
+export interface PlayerPassiveState {
+  passiveId: string;
   level: number;
 }
 
@@ -43,7 +44,7 @@ export interface PlayerState {
   xp: number;
   xpToNext: number;
   skills: PlayerSkillState[];
-  buffs: PlayerBuffState[];
+  passives: PlayerPassiveState[];
   characterId: string;
   kills: number;
   totalDamage: number;
@@ -62,9 +63,11 @@ export interface PlayerState {
   pierceMod: number;
   durationMul: number;
   luckMul: number;
+  activeEffects: Record<string, number>;
 }
 
 export interface EnemyState extends BaseEntity {
+  id: number;
   type: string;
   hp: number;
   maxHp: number;
@@ -76,6 +79,16 @@ export interface EnemyState extends BaseEntity {
   bossPhase?: number;
   aiTimer: number;
   aiState: string;
+  aiSubTimer?: number;
+  targetAngle?: number;
+  telegraphTime?: number;
+  isCharging?: boolean;
+  chargeVx?: number;
+  chargeVy?: number;
+  canSplit?: boolean;
+  isMinion?: boolean;
+  invisibleAlpha?: number;
+  isPhasing?: boolean;
   vx: number;
   vy: number;
   flashTimer: number;
@@ -99,6 +112,8 @@ export interface ProjectileState extends BaseEntity {
   returning?: boolean;
   startX?: number;
   startY?: number;
+  targetX?: number;
+  targetY?: number;
   orbitAngle?: number;
   orbitSpeed?: number;
   orbitRadius?: number;
@@ -114,6 +129,29 @@ export interface XPGemState extends BaseEntity {
   vy: number;
   magnetized: boolean;
   color: string;
+}
+
+export type PickupType =
+  | 'magnet'
+  | 'chest'
+  | 'chicken'
+  | 'rosary'
+  | 'orologion'
+  | 'bomb'
+  | 'clover'
+  | 'coin'
+  | 'speed_boost'
+  | 'shield_orb';
+
+export type ChestTier = 'bronze' | 'silver' | 'gold';
+
+export interface PickupState extends BaseEntity {
+  pickupType: PickupType;
+  lifetime: number;
+  maxLifetime: number;
+  chestTier?: ChestTier;
+  vx: number;
+  vy: number;
 }
 
 export type ParticleKind = 'spark' | 'blood' | 'dust' | 'trail';
@@ -139,6 +177,7 @@ export interface DamageText {
   x: number;
   y: number;
   value: number;
+  text?: string;
   isCrit: boolean;
   life: number;
   maxLife: number;
@@ -161,14 +200,14 @@ export interface SkillDef {
   basePierce: number;
   baseLifetime: number;
   damagePerLevel: number;
-  requiredBuffId: string;
+  requiredPassiveId: string;
   ultimateId: string;
   ultimateName: string;
   ultimateIcon: string;
   ultimateDescription: string;
 }
 
-export interface BuffDef {
+export interface PassiveDef {
   id: string;
   name: string;
   icon: string;
@@ -199,10 +238,16 @@ export interface WaveConfig {
   eliteChance: number;
   isBossWave: boolean;
   bossId?: string;
+  packMin?: number;
+  packMax?: number;
+  hordeInterval?: number;
 }
 
+export type UpgradeCategory = 'weapon' | 'passive' | 'evolution';
+
 export interface UpgradeOption {
-  type: 'skill_up' | 'new_skill' | 'buff_up' | 'new_buff' | 'evolution';
+  type: 'skill_up' | 'new_skill' | 'passive_up' | 'new_passive' | 'evolution';
+  category: UpgradeCategory;
   id: string;
   name: string;
   icon: string;
@@ -220,6 +265,7 @@ export interface GameCallbacks {
   onWaveChange: (wave: number, maxWave: number) => void;
   onBossWarning: (bossName: string) => void;
   onStatsUpdate: (player: PlayerState, wave: number) => void;
+  onPickupCollected?: (icon: string, name: string) => void;
 }
 
 export interface GameStats {
@@ -229,7 +275,7 @@ export interface GameStats {
   timeSurvived: number;
   level: number;
   skills: PlayerSkillState[];
-  buffs: PlayerBuffState[];
+  passives: PlayerPassiveState[];
   characterId: string;
 }
 

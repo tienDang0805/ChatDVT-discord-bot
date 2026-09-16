@@ -1,10 +1,12 @@
-import type { SkillDef, BuffDef, CharacterDef, WaveConfig } from './types';
+import type { SkillDef, PassiveDef, CharacterDef, WaveConfig } from './types';
 
 export const WORLD_W = 3000;
 export const WORLD_H = 3000;
 export const MAX_SKILLS = 3;
-export const MAX_SKILL_LEVEL = 6;
-export const MAX_BUFF_LEVEL = 6;
+export const MAX_SKILL_LEVEL = 8;
+export const MAX_PASSIVES = 6;
+export const MAX_PASSIVE_LEVEL = 5;
+export const UPGRADE_OPTIONS_COUNT = 4;
 export const TOTAL_WAVES = 50;
 export const PLAYER_RADIUS = 14;
 export const XP_BASE = 10;
@@ -27,7 +29,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 0,
     baseLifetime: 1.5,
     damagePerLevel: 8,
-    requiredBuffId: 'might',
+    requiredPassiveId: 'might',
     ultimateId: 'inferno_storm',
     ultimateName: 'Inferno Storm',
     ultimateIcon: '🌋',
@@ -46,7 +48,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 99,
     damagePerLevel: 5,
-    requiredBuffId: 'area',
+    requiredPassiveId: 'area',
     ultimateId: 'plague',
     ultimateName: 'Plague',
     ultimateIcon: '🦠',
@@ -65,7 +67,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 0,
     baseLifetime: 0.3,
     damagePerLevel: 10,
-    requiredBuffId: 'cooldown',
+    requiredPassiveId: 'cooldown',
     ultimateId: 'thunder_god',
     ultimateName: 'Thunder God',
     ultimateIcon: '⚡',
@@ -84,7 +86,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 0.4,
     damagePerLevel: 7,
-    requiredBuffId: 'armor',
+    requiredPassiveId: 'armor',
     ultimateId: 'fortress',
     ultimateName: 'Fortress',
     ultimateIcon: '🏰',
@@ -103,7 +105,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 0,
     baseLifetime: 1.2,
     damagePerLevel: 6,
-    requiredBuffId: 'luck',
+    requiredPassiveId: 'luck',
     ultimateId: 'bullet_hell',
     ultimateName: 'Bullet Hell',
     ultimateIcon: '💥',
@@ -122,7 +124,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 0.25,
     damagePerLevel: 10,
-    requiredBuffId: 'speed',
+    requiredPassiveId: 'speed',
     ultimateId: 'death_dance',
     ultimateName: 'Death Dance',
     ultimateIcon: '💀',
@@ -141,7 +143,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 0.8,
     damagePerLevel: 8,
-    requiredBuffId: 'pierce',
+    requiredPassiveId: 'pierce',
     ultimateId: 'satellite',
     ultimateName: 'Satellite',
     ultimateIcon: '🛰️',
@@ -160,7 +162,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 3.0,
     damagePerLevel: 4,
-    requiredBuffId: 'duration',
+    requiredPassiveId: 'duration',
     ultimateId: 'biohazard',
     ultimateName: 'Biohazard',
     ultimateIcon: '☣️',
@@ -179,7 +181,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 3,
     baseLifetime: 2.0,
     damagePerLevel: 8,
-    requiredBuffId: 'crit',
+    requiredPassiveId: 'crit',
     ultimateId: 'chaos_blade',
     ultimateName: 'Chaos Blade',
     ultimateIcon: '⚔️',
@@ -198,7 +200,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 2.0,
     damagePerLevel: 10,
-    requiredBuffId: 'magnet',
+    requiredPassiveId: 'magnet',
     ultimateId: 'black_hole',
     ultimateName: 'Black Hole',
     ultimateIcon: '🕳️',
@@ -217,7 +219,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 0,
     baseLifetime: 2.5,
     damagePerLevel: 5,
-    requiredBuffId: 'max_hp',
+    requiredPassiveId: 'max_hp',
     ultimateId: 'meteor_shower',
     ultimateName: 'Meteor Shower',
     ultimateIcon: '✨',
@@ -236,7 +238,7 @@ export const SKILLS: Record<string, SkillDef> = {
     basePierce: 99,
     baseLifetime: 0.3,
     damagePerLevel: 7,
-    requiredBuffId: 'regen',
+    requiredPassiveId: 'regen',
     ultimateId: 'absolute_zero',
     ultimateName: 'Absolute Zero',
     ultimateIcon: '🥶',
@@ -244,40 +246,55 @@ export const SKILLS: Record<string, SkillDef> = {
   },
 };
 
-export const BUFFS: Record<string, BuffDef> = {
-  might: { id: 'might', name: 'Might', icon: '⚔️', description: '+12% damage/lv', effectPerLevel: 0.12, statKey: 'mightMul', isMultiplicative: false },
-  area: { id: 'area', name: 'Area', icon: '🔮', description: '+10% area/lv', effectPerLevel: 0.10, statKey: 'areaMul', isMultiplicative: false },
-  cooldown: { id: 'cooldown', name: 'Cooldown', icon: '⏱️', description: '-8% cooldown/lv', effectPerLevel: 0.08, statKey: 'cooldownMul', isMultiplicative: false },
+export const PASSIVES: Record<string, PassiveDef> = {
+  might: { id: 'might', name: 'Might', icon: '⚔️', description: '+15% damage/lv', effectPerLevel: 0.15, statKey: 'mightMul', isMultiplicative: false },
+  area: { id: 'area', name: 'Area', icon: '🔮', description: '+12% area/lv', effectPerLevel: 0.12, statKey: 'areaMul', isMultiplicative: false },
+  cooldown: { id: 'cooldown', name: 'Cooldown', icon: '⏱️', description: '-10% cooldown/lv', effectPerLevel: 0.10, statKey: 'cooldownMul', isMultiplicative: false },
   armor: { id: 'armor', name: 'Armor', icon: '🛡️', description: '+1 armor/lv', effectPerLevel: 1, statKey: 'baseArmor', isMultiplicative: false },
-  luck: { id: 'luck', name: 'Luck', icon: '🍀', description: '+10% luck/lv', effectPerLevel: 0.10, statKey: 'luckMul', isMultiplicative: false },
-  speed: { id: 'speed', name: 'Speed', icon: '🏃', description: '+8% speed/lv', effectPerLevel: 0.08, statKey: 'speedMul', isMultiplicative: false },
+  luck: { id: 'luck', name: 'Luck', icon: '🍀', description: '+12% luck/lv', effectPerLevel: 0.12, statKey: 'luckMul', isMultiplicative: false },
+  speed: { id: 'speed', name: 'Speed', icon: '🏃', description: '+10% speed/lv', effectPerLevel: 0.10, statKey: 'speedMul', isMultiplicative: false },
   pierce: { id: 'pierce', name: 'Pierce', icon: '🎯', description: '+1 pierce/lv', effectPerLevel: 1, statKey: 'pierceMod', isMultiplicative: false },
-  duration: { id: 'duration', name: 'Duration', icon: '⏳', description: '+12% duration/lv', effectPerLevel: 0.12, statKey: 'durationMul', isMultiplicative: false },
-  crit: { id: 'crit', name: 'Crit', icon: '💥', description: '+5% crit/lv', effectPerLevel: 0.05, statKey: 'critChance', isMultiplicative: false },
-  magnet: { id: 'magnet', name: 'Magnet', icon: '🧲', description: '+20% pickup/lv', effectPerLevel: 0.20, statKey: 'pickupRange', isMultiplicative: false },
-  max_hp: { id: 'max_hp', name: 'Max HP', icon: '❤️', description: '+20 HP/lv', effectPerLevel: 20, statKey: 'maxHp', isMultiplicative: false },
+  duration: { id: 'duration', name: 'Duration', icon: '⏳', description: '+15% duration/lv', effectPerLevel: 0.15, statKey: 'durationMul', isMultiplicative: false },
+  crit: { id: 'crit', name: 'Crit', icon: '💥', description: '+6% crit/lv', effectPerLevel: 0.06, statKey: 'critChance', isMultiplicative: false },
+  magnet: { id: 'magnet', name: 'Magnet', icon: '🧲', description: '+25% pickup/lv', effectPerLevel: 0.25, statKey: 'pickupRange', isMultiplicative: false },
+  max_hp: { id: 'max_hp', name: 'Max HP', icon: '❤️', description: '+25 HP/lv', effectPerLevel: 25, statKey: 'maxHp', isMultiplicative: false },
   regen: { id: 'regen', name: 'Regen', icon: '💚', description: '+1 HP/3s per lv', effectPerLevel: 1, statKey: 'regenRate', isMultiplicative: false },
 };
 
 export const CHARACTERS: CharacterDef[] = [
-  { id: 'tien', name: 'Tiến Đặng', nickname: 'Phì Đế 👑', icon: '👑', startingSkillId: 'code_flame', passiveDescription: '+15% All Damage', baseHp: 120, baseSpeed: 90, baseArmor: 1, color: '#f59e0b' },
+  { id: 'tien', name: 'Tiến Đặng', nickname: 'Phì Đế Mũ Gấu 🐻', icon: '🐻', startingSkillId: 'code_flame', passiveDescription: '+15% All Damage', baseHp: 120, baseSpeed: 90, baseArmor: 1, color: '#f59e0b' },
   { id: 'huy', name: 'Quang Huy', nickname: 'Bug Hunter 🐛', icon: '🐛', startingSkillId: 'bug_swarm', passiveDescription: 'Kill +1% crit (max 30%)', baseHp: 100, baseSpeed: 100, baseArmor: 0, color: '#22c55e' },
   { id: 'tam', name: 'Ngọc Tâm', nickname: 'Carry 💪', icon: '💪', startingSkillId: 'lightning_chain', passiveDescription: '+20% Attack Speed', baseHp: 90, baseSpeed: 110, baseArmor: 0, color: '#3b82f6' },
   { id: 'bao', name: 'Gia Bảo', nickname: 'Tank 🛡️', icon: '🛡️', startingSkillId: 'shield_bash', passiveDescription: '+3 Armor, -10% Speed', baseHp: 150, baseSpeed: 80, baseArmor: 3, color: '#6366f1' },
   { id: 'tai', name: 'Thái Tài', nickname: 'Lucky 🎰', icon: '🎰', startingSkillId: 'random_shot', passiveDescription: '+25% Luck', baseHp: 100, baseSpeed: 100, baseArmor: 0, color: '#eab308' },
   { id: 'hoa', name: 'Hoà Trần', nickname: 'Shadow 🔇', icon: '🔇', startingSkillId: 'shadow_blade', passiveDescription: '+20% Move Speed', baseHp: 85, baseSpeed: 120, baseArmor: 0, color: '#8b5cf6' },
-  { id: 'bot', name: 'ChatDVT', nickname: 'Bot 🤖', icon: '🤖', startingSkillId: 'data_beam', passiveDescription: 'Regen 1 HP/2s', baseHp: 100, baseSpeed: 95, baseArmor: 1, color: '#f97316' },
+  { id: 'bot', name: 'ChatDVT', nickname: 'Cún AI DJ 🎧🐶', icon: '🐶', startingSkillId: 'data_beam', passiveDescription: 'Regen 1 HP/2s', baseHp: 100, baseSpeed: 95, baseArmor: 1, color: '#f97316' },
 ];
 
-export const ENEMY_TYPES: Record<string, { name: string; baseHp: number; baseDmg: number; baseSpeed: number; color: string; radius: number }> = {
-  zombie: { name: 'Zombie', baseHp: 30, baseDmg: 5, baseSpeed: 35, color: '#4ade80', radius: 10 },
-  bat: { name: 'Bat', baseHp: 12, baseDmg: 3, baseSpeed: 70, color: '#a855f7', radius: 7 },
-  skeleton: { name: 'Skeleton', baseHp: 45, baseDmg: 8, baseSpeed: 45, color: '#60a5fa', radius: 11 },
-  ghost: { name: 'Ghost', baseHp: 35, baseDmg: 7, baseSpeed: 50, color: '#e2e8f0', radius: 9 },
-  demon: { name: 'Demon', baseHp: 80, baseDmg: 15, baseSpeed: 55, color: '#ef4444', radius: 13 },
-  mage: { name: 'Mage', baseHp: 50, baseDmg: 12, baseSpeed: 30, color: '#c084fc', radius: 10 },
-  assassin: { name: 'Assassin', baseHp: 40, baseDmg: 20, baseSpeed: 80, color: '#1e293b', radius: 8 },
-  necromancer: { name: 'Necromancer', baseHp: 60, baseDmg: 10, baseSpeed: 25, color: '#064e3b', radius: 11 },
+export interface EnemyDef {
+  name: string;
+  baseHp: number;
+  baseDmg: number;
+  baseSpeed: number;
+  color: string;
+  radius: number;
+  aiType: 'chaser' | 'sniper' | 'charger' | 'summoner' | 'splitter' | 'phantom' | 'stalker' | 'spellcaster';
+  shootCooldown?: number;
+  shootRange?: number;
+  chargeCooldown?: number;
+  chargeRange?: number;
+  summonCooldown?: number;
+}
+
+export const ENEMY_TYPES: Record<string, EnemyDef> = {
+  zombie: { name: 'Zombie', baseHp: 32, baseDmg: 6, baseSpeed: 38, color: '#4ade80', radius: 10, aiType: 'splitter' },
+  bat: { name: 'Bat', baseHp: 14, baseDmg: 4, baseSpeed: 75, color: '#a855f7', radius: 8, aiType: 'chaser' },
+  skeleton: { name: 'Skeleton Archer', baseHp: 45, baseDmg: 8, baseSpeed: 45, color: '#60a5fa', radius: 11, aiType: 'sniper', shootRange: 240, shootCooldown: 2.6 },
+  ghost: { name: 'Ghost', baseHp: 35, baseDmg: 7, baseSpeed: 50, color: '#e2e8f0', radius: 9, aiType: 'phantom' },
+  demon: { name: 'Demon', baseHp: 85, baseDmg: 15, baseSpeed: 52, color: '#ef4444', radius: 13, aiType: 'charger', chargeRange: 190, chargeCooldown: 3.4 },
+  mage: { name: 'Mage', baseHp: 52, baseDmg: 11, baseSpeed: 32, color: '#c084fc', radius: 10, aiType: 'spellcaster', shootRange: 260, shootCooldown: 3.0 },
+  assassin: { name: 'Assassin', baseHp: 42, baseDmg: 20, baseSpeed: 82, color: '#1e293b', radius: 8, aiType: 'stalker' },
+  necromancer: { name: 'Necromancer', baseHp: 65, baseDmg: 10, baseSpeed: 26, color: '#064e3b', radius: 11, aiType: 'summoner', summonCooldown: 4.2 },
 };
 
 export const BOSS_DEFS: Record<string, { name: string; hp: number; damage: number; speed: number; color: string; radius: number; icon: string }> = {
@@ -330,8 +347,11 @@ export function generateWaveConfigs(): WaveConfig[] {
     if (w === 50) duration = 90;
 
     const isBoss = bossMap[w] !== undefined;
-    const eliteChance = Math.min(0.5, (w > 30 ? 0.1 + (w - 30) * 0.02 : 0));
-    const spawnRate = 0.8 + w * 0.06;
+    const eliteChance = Math.min(0.5, (w > 30 ? 0.1 + (w - 30) * 0.02 : (w > 10 ? 0.05 + (w - 10) * 0.01 : 0)));
+    const spawnRate = Math.min(26, 2.5 + w * 0.45);
+    const packMin = Math.min(6, 2 + Math.floor(w / 12));
+    const packMax = Math.min(10, 3 + Math.floor(w / 8));
+    const hordeInterval = 22;
 
     waves.push({
       wave: w,
@@ -341,6 +361,9 @@ export function generateWaveConfigs(): WaveConfig[] {
       eliteChance,
       isBossWave: isBoss,
       bossId: isBoss ? undefined : undefined,
+      packMin,
+      packMax,
+      hordeInterval,
     });
 
     if (isBoss) {
