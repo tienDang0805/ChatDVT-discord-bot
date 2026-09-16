@@ -626,6 +626,17 @@ export const PublicPortal = () => {
       author: 'Thư Ký Tiến Đặng',
       category: 'utility',
       isNew: true
+    },
+    {
+      id: 'survivor-arena',
+      number: '32',
+      title: 'Survivor Arena 8D',
+      description: 'Game auto-shooter roguelike kiểu Vampire Survivors! 7 nhân vật 8D, 12 skills tiến hóa, 50 waves + boss + endless mode.',
+      icon: Swords,
+      href: '/survivor-arena',
+      author: 'Game Master Tiến Đặng',
+      category: 'game',
+      isNew: true
     }
   ];
 
@@ -752,6 +763,7 @@ export const PublicPortal = () => {
     '/qr-generator': () => import('../../qr-generator/pages/QRGenerator'),
     '/quiz': () => import('../../web-quiz/pages/Lobby'),
     '/love8d': () => import('../../love-8d/pages/Love8dPage'),
+    '/survivor-arena': () => import('../../survivor-arena/pages/SurvivorArena'),
   };
 
   const prefetchedRef = useRef<Set<string>>(new Set());
@@ -792,7 +804,7 @@ export const PublicPortal = () => {
     setRecents(getRecents());
   }, []);
 
-  const FEATURED_IDS = ['english-hub', 'food-wheel', 'tarot', 'tech-duel', 'chicken-game'];
+  const FEATURED_IDS = ['survivor-arena', 'english-hub', 'food-wheel', 'tarot', 'tech-duel', 'chicken-game'];
   const featuredFeatures = FEATURED_IDS.map(id => features.find(f => f.id === id)).filter(Boolean) as typeof features;
 
   const recentFeatures = recents.map(id => features.find(f => f.id === id)).filter(Boolean) as typeof features;
