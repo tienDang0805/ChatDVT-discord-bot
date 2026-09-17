@@ -6,14 +6,15 @@ import {
 } from '../../game/characterAssets';
 import tienDangAvatarUrl from '../../assets/tien_dang_avatar.png';
 import {
-  Swords, Shield, Sparkles, Flame, Zap, Award, Crosshair,
+  Swords, Shield, Sparkles, Flame, Zap, Award, Crosshair, ArrowLeft,
 } from 'lucide-react';
 
 interface CharacterSelectProps {
   onSelect: (id: string) => void;
+  onBack?: () => void;
 }
 
-export function CharacterSelect({ onSelect }: CharacterSelectProps) {
+export function CharacterSelect({ onSelect, onBack }: CharacterSelectProps) {
   const [selected, setSelected] = useState<string>(CHARACTERS[0].id);
 
   const selectedChar = CHARACTERS.find(c => c.id === selected) || CHARACTERS[0];
@@ -55,6 +56,16 @@ export function CharacterSelect({ onSelect }: CharacterSelectProps) {
   return (
     <div className="fixed inset-0 z-40 bg-gradient-to-b from-[#03060f] via-[#080d1a] to-[#04060c] text-slate-100 flex flex-col justify-between p-3 md:p-6 overflow-y-auto">
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-950/20 via-transparent to-transparent" />
+
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="relative z-20 inline-flex items-center gap-1.5 px-3 py-1.5 mb-2 text-xs font-bold text-slate-400 hover:text-white bg-slate-900/60 border border-slate-700/50 rounded-xl transition-all hover:border-amber-500/50 active:scale-95"
+        >
+          <ArrowLeft size={14} />
+          <span>Menu Game</span>
+        </button>
+      )}
 
       <div className="relative z-10 text-center max-w-2xl mx-auto pt-1 pb-3">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-black uppercase tracking-widest mb-1.5 shadow-[0_0_15px_rgba(245,158,11,0.2)]">

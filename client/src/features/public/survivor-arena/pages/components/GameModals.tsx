@@ -3,7 +3,7 @@ import { CHARACTERS, SKILLS, PASSIVES } from '../../game/data';
 import {
   Play, RotateCcw, BookOpen, X, RefreshCw,
   Swords, Timer, Skull, Zap, ChevronRight,
-  Sparkles, AlertTriangle,
+  Sparkles, AlertTriangle, ArrowLeft,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -132,9 +132,10 @@ interface PauseMenuProps {
   onRestart: () => void;
   onShowGuide: () => void;
   player: PlayerState | null;
+  onBackToMenu?: () => void;
 }
 
-export function PauseMenu({ onResume, onRestart, onShowGuide, player }: PauseMenuProps) {
+export function PauseMenu({ onResume, onRestart, onShowGuide, player, onBackToMenu }: PauseMenuProps) {
   return (
     <div className="absolute inset-0 z-40 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
       <div
@@ -190,6 +191,14 @@ export function PauseMenu({ onResume, onRestart, onShowGuide, player }: PauseMen
           >
             <RotateCcw size={14} /> Chơi lại
           </button>
+          {onBackToMenu && (
+            <button
+              onClick={onBackToMenu}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-800/50 hover:bg-slate-700/60 text-slate-300 font-bold rounded-xl transition-all border border-slate-700/50 text-xs"
+            >
+              <ArrowLeft size={14} /> Menu Game
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -213,9 +222,10 @@ interface GameOverScreenProps {
   isVictory: boolean;
   onRestart: () => void;
   onEndless?: () => void;
+  onBackToMenu?: () => void;
 }
 
-export function GameOverScreen({ stats, isVictory, onRestart, onEndless }: GameOverScreenProps) {
+export function GameOverScreen({ stats, isVictory, onRestart, onEndless, onBackToMenu }: GameOverScreenProps) {
   const charDef = CHARACTERS.find(c => c.id === stats.characterId);
   const mins = Math.floor(stats.timeSurvived / 60);
   const secs = Math.floor(stats.timeSurvived % 60);
@@ -261,6 +271,14 @@ export function GameOverScreen({ stats, isVictory, onRestart, onEndless }: GameO
           >
             <RotateCcw size={16} /> Chơi ván mới
           </button>
+          {onBackToMenu && (
+            <button
+              onClick={onBackToMenu}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-800/50 hover:bg-slate-700/60 text-slate-300 font-bold rounded-xl transition-all border border-slate-700/50 text-xs"
+            >
+              <ArrowLeft size={14} /> Menu Game
+            </button>
+          )}
         </div>
       </div>
     </div>

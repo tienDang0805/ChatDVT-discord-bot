@@ -34,16 +34,45 @@ const isRunningInDiscord = (): boolean => {
 const RANK_ICONS = [Crown, Trophy, Medal];
 const RANK_COLORS = ['text-amber-400', 'text-slate-300', 'text-amber-700'];
 
-export const FlappyBirdActivity = () => {
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'web'>('loading');
+interface FlappyBirdActivityProps {
+  preAuthUser?: DiscordUser | null;
+  preAuthChannelId?: string;
+  onBackToMenu?: () => void;
+}
+
+export const FlappyBirdActivity = ({ preAuthUser, preAuthChannelId, onBackToMenu }: FlappyBirdActivityProps) => {
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'web'>(() => {
+    if (preAuthUser) return 'ready';
+    return 'loading';
+  });
   const [error, setError] = useState('');
-  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(null);
+  const [discordUser, setDiscordUser] = useState<DiscordUser | null>(preAuthUser || null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const socketRef = useRef<Socket | null>(null);
-  const channelIdRef = useRef<string>('');
+  const channelIdRef = useRef<string>(preAuthChannelId || '');
 
   useEffect(() => {
+    if (preAuthUser) {
+      const socket = io({ transports: ['websocket', 'polling'] });
+      socketRef.current = socket;
+
+      socket.on('connect', () => {
+        socket.emit('flappy:join', {
+          channelId: preAuthChannelId || 'global',
+          userId: preAuthUser.id,
+          username: preAuthUser.global_name || preAuthUser.username,
+          avatar: preAuthUser.avatar,
+        });
+      });
+
+      socket.on('flappy:leaderboard', (data: LeaderboardEntry[]) => {
+        setLeaderboard(data);
+      });
+
+      return () => { socket.disconnect(); };
+    }
+
     if (!isRunningInDiscord()) {
       setStatus('web');
       return;
@@ -130,7 +159,7 @@ export const FlappyBirdActivity = () => {
     return () => {
       socketRef.current?.disconnect();
     };
-  }, []);
+  }, [preAuthUser, preAuthChannelId]);
 
   const handleScore = useCallback((currentScore: number) => {
     if (!socketRef.current || !discordUser) return;

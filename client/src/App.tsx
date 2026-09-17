@@ -24,6 +24,7 @@ const FlappyBirdGame = lazy(() => import('./features/public/flappy-bird/pages/Fl
 const FlappyBirdActivity = lazy(() => import('./features/public/flappy-bird/pages/FlappyBirdActivity').then(m => ({ default: m.FlappyBirdActivity })));
 const SurvivorArena = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArena').then(m => ({ default: m.SurvivorArena })));
 const SurvivorArenaActivity = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArenaActivity').then(m => ({ default: m.SurvivorArenaActivity })));
+const DiscordActivityHub = lazy(() => import('./features/public/discord-activity/pages/DiscordActivityHub').then(m => ({ default: m.DiscordActivityHub })));
 const NumerologyPage = lazy(() => import('./features/public/numerology/pages/NumerologyPage').then(m => ({ default: m.NumerologyPage })));
 const GenderQuizPage = lazy(() => import('./features/public/gender-quiz/pages/GenderQuizPage').then(m => ({ default: m.GenderQuizPage })));
 const AstrologyPage = lazy(() => import('./features/public/astrology/pages/AstrologyPage').then(m => ({ default: m.AstrologyPage })));
@@ -132,7 +133,7 @@ function App() {
         <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={isDiscordActivity ? <SurvivorArenaActivity /> : <PublicPortal />} />
+            <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <PublicPortal />} />
             <Route path="/chatDVT" element={<PublicPortal />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
@@ -145,6 +146,7 @@ function App() {
             <Route path="/flappy-bird-activity" element={<FlappyBirdActivity />} />
             <Route path="/survivor-arena" element={<SurvivorArena />} />
             <Route path="/survivor-arena-activity" element={<SurvivorArenaActivity />} />
+            <Route path="/activity" element={<DiscordActivityHub />} />
             <Route path="/numerology" element={<NumerologyPage />} />
             <Route path="/gender-quiz" element={<GenderQuizPage />} />
             <Route path="/astrology" element={<AstrologyPage />} />

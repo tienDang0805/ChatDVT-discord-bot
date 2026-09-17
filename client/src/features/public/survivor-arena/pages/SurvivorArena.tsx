@@ -8,7 +8,11 @@ import {
   BossIncomingOverlay, EvolutionGuide,
 } from './components/GameModals';
 
-export const SurvivorArena = () => {
+interface SurvivorArenaProps {
+  onBackToMenu?: () => void;
+}
+
+export const SurvivorArena = ({ onBackToMenu }: SurvivorArenaProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine | null>(null);
   const [phase, setPhase] = useState<GamePhase>('SELECT');
@@ -164,7 +168,7 @@ export const SurvivorArena = () => {
         />
       )}
 
-      {phase === 'SELECT' && <CharacterSelect onSelect={selectCharacter} />}
+      {phase === 'SELECT' && <CharacterSelect onSelect={selectCharacter} onBack={onBackToMenu} />}
 
       {phase === 'LEVEL_UP' && upgradeOptions.length > 0 && (
         <LevelUpModal
@@ -182,6 +186,7 @@ export const SurvivorArena = () => {
           onRestart={restartGame}
           onShowGuide={() => setShowGuide(true)}
           player={playerState}
+          onBackToMenu={onBackToMenu}
         />
       )}
 
@@ -191,6 +196,7 @@ export const SurvivorArena = () => {
           isVictory={phase === 'VICTORY'}
           onRestart={restartGame}
           onEndless={phase === 'VICTORY' ? enterEndless : undefined}
+          onBackToMenu={onBackToMenu}
         />
       )}
 
