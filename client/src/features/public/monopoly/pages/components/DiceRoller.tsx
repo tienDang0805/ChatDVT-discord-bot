@@ -55,18 +55,18 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
     const dots = DOT_POSITIONS[value] || DOT_POSITIONS[1];
     return (
       <div
-        className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-white via-slate-100 to-slate-300 shadow-[0_10px_20px_rgba(0,0,0,0.5),inset_0_-3px_6px_rgba(0,0,0,0.2)] border-2 border-slate-200/90 transform transition-all duration-150 ${
+        className={`relative w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-white via-slate-100 to-slate-200 shadow-[0_8px_16px_rgba(0,0,0,0.6),inset_0_-2px_4px_rgba(0,0,0,0.15)] border-2 border-slate-300 transform transition-all duration-150 ${
           isRolling
             ? index === 0
               ? 'rotate-[-20deg] scale-110 animate-bounce'
               : 'rotate-[20deg] scale-110 animate-bounce'
-            : 'hover:scale-105 hover:-translate-y-1'
+            : 'hover:scale-105'
         }`}
       >
         {dots.map(([top, left], idx) => (
           <div
             key={idx}
-            className="absolute w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-gradient-to-br from-slate-900 to-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] -translate-x-1/2 -translate-y-1/2"
+            className="absolute w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gradient-to-br from-slate-900 to-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] -translate-x-1/2 -translate-y-1/2"
             style={{ top: `${top}%`, left: `${left}%` }}
           />
         ))}
@@ -75,36 +75,38 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-2.5 select-none">
-      <div className="flex items-center gap-4 py-1">
+    <div className="flex flex-col items-center gap-1.5 select-none">
+      <div className="flex items-center gap-3 py-0.5">
         {renderDie(displayDice[0], 0)}
         {renderDie(displayDice[1], 1)}
       </div>
 
       <div className="text-center">
-        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-300 mb-2">
-          <span>Tổng số nút:</span>
-          <span className="text-amber-300 font-black text-base px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/30">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-200 mb-1.5">
+          <span className="text-[11px] text-slate-300 font-bold">Tổng nút:</span>
+          <span className="text-amber-300 font-black text-sm px-2 py-0.5 rounded-lg bg-black/60 border border-amber-400/50 shadow">
             {displayDice[0] + displayDice[1]}
           </span>
           {isDoubles && (
-            <span className="ml-1 text-[11px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black shadow-lg animate-pulse">
-              🎲 ĐÔI XÚC XẮC — ĐI TIẾP!
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-md animate-pulse">
+              🎲 NỔ ĐÔI — ĐI TIẾP!
             </span>
           )}
         </div>
 
-        <button
-          onClick={handleRollClick}
-          disabled={!canRoll || isRolling}
-          className={`px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-wider transition-all duration-200 shadow-xl ${
-            canRoll && !isRolling
-              ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-[0_0_25px_rgba(245,158,11,0.6)] hover:scale-105 active:scale-95 cursor-pointer animate-pulse border border-amber-300/40'
-              : 'bg-slate-800/80 text-slate-500 border border-slate-700/40 cursor-not-allowed'
-          }`}
-        >
-          {isRolling ? '🎲 Đang đổ xúc xắc...' : isMyTurn ? '🎲 TUNG XÚC XẮC (LƯỢT BẠN)' : 'Chờ đối thủ tung'}
-        </button>
+        {isMyTurn && (
+          <button
+            onClick={handleRollClick}
+            disabled={!canRoll || isRolling}
+            className={`px-6 py-2.5 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-xl ${
+              canRoll && !isRolling
+                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-[0_5px_0_#9a3412,0_10px_20px_rgba(245,158,11,0.5)] hover:scale-105 active:translate-y-1 active:shadow-[0_1px_0_#9a3412] cursor-pointer animate-pulse border border-amber-200'
+                : 'bg-slate-900/80 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow'
+            }`}
+          >
+            {isRolling ? '🎲 Đang tung xúc xắc...' : '🎲 TUNG XÚC XẮC'}
+          </button>
+        )}
       </div>
     </div>
   );
