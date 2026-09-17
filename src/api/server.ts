@@ -11,6 +11,7 @@ import { authenticateToken } from './middleware/auth';
 import poe2TradeRoutes from './routes/poe2-trade';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
+import { setupMonopolySocket } from './monopoly/MonopolyRoom';
 
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 const server = http.createServer(app);
 const io = new SocketServer(server, { cors: { origin: '*' } });
+setupMonopolySocket(io);
 const PORT = process.env.PORT || 3000;
 
 // Global 8D State

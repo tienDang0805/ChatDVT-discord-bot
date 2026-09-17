@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote, Menu, Star, History } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote, Menu, Star, History, Dices } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -635,6 +635,17 @@ export const PublicPortal = () => {
       icon: Swords,
       href: '/survivor-arena',
       author: 'Game Master Tiến Đặng',
+      category: 'game',
+      isNew: true
+    },
+    {
+      id: 'monopoly',
+      number: '33',
+      title: 'Cờ Tỷ Phú 8D',
+      description: 'Board game multiplayer cờ tỷ phú phiên bản 8D! Mua đất Đắk Nông, xây Biệt Thự Pha Ke, bị giang hồ dí, ỉa chảy giữa trận. 2-4 players turn-based.',
+      icon: Dices,
+      href: '/monopoly',
+      author: 'Địa Chủ Tiến Đặng',
       category: 'game',
       isNew: true
     }

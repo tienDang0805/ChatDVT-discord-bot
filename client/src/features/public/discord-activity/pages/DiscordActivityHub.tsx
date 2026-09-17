@@ -11,13 +11,16 @@ interface DiscordUser {
   avatar: string | null;
 }
 
-type ActiveGame = 'menu' | 'survivor' | 'flappy';
+type ActiveGame = 'menu' | 'survivor' | 'flappy' | 'monopoly';
 
 const SurvivorArena = lazy(() =>
   import('../../survivor-arena/pages/SurvivorArena').then(m => ({ default: m.SurvivorArena }))
 );
 const FlappyBirdActivity = lazy(() =>
   import('../../flappy-bird/pages/FlappyBirdActivity').then(m => ({ default: m.FlappyBirdActivity }))
+);
+const MonopolyGame = lazy(() =>
+  import('../../monopoly/pages/MonopolyGame').then(m => ({ default: m.MonopolyGame }))
 );
 
 const isRunningInDiscord = (): boolean => {
@@ -61,6 +64,17 @@ const GAMES: {
     border: 'border-emerald-500/40 hover:border-emerald-400/70',
     glow: 'hover:shadow-[0_0_40px_rgba(52,211,153,0.3)]',
     tags: ['Xếp hạng', 'Realtime', 'Dễ chơi khó Master'],
+  },
+  {
+    id: 'monopoly',
+    title: 'Cờ Tỷ Phú 8D',
+    subtitle: 'Board Game Multiplayer',
+    description: 'Cờ tỷ phú phiên bản 8D! Mua đất Đắk Nông, xây Biệt Thự Pha Ke, bị giang hồ dí, ỉa chảy giữa trận!',
+    icon: '🎲',
+    gradient: 'from-rose-600/30 via-amber-600/20 to-yellow-700/30',
+    border: 'border-rose-500/40 hover:border-rose-400/70',
+    glow: 'hover:shadow-[0_0_40px_rgba(244,63,94,0.3)]',
+    tags: ['2-4 Players', 'Turn-based', 'Đắk Nông VIP'],
   },
 ];
 
@@ -213,6 +227,17 @@ export const DiscordActivityHub = () => {
     );
   }
 
+  if (activeGame === 'monopoly') {
+    return (
+      <div className="relative min-h-screen">
+        <Suspense fallback={<GameHubLoading />}>
+          <MonopolyGame onBackToMenu={backToMenu} />
+        </Suspense>
+        <BackToMenuPill onClick={backToMenu} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0e1a] via-[#0d1225] to-[#060911] relative overflow-hidden">
       <style>{`
@@ -279,7 +304,7 @@ export const DiscordActivityHub = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-3xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl w-full">
           {GAMES.map((game, idx) => (
             <button
               key={game.id}
@@ -382,6 +407,15 @@ function WebGameHub({
     );
   }
 
+  if (activeGame === 'monopoly') {
+    return (
+      <Suspense fallback={<GameHubLoading />}>
+        <MonopolyGame onBackToMenu={onBack} />
+        <BackToMenuPill onClick={onBack} />
+      </Suspense>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0e1a] via-[#0d1225] to-[#060911] relative overflow-hidden">
       <style>{`
@@ -413,7 +447,7 @@ function WebGameHub({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-3xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 max-w-5xl w-full">
           {GAMES.map((game, idx) => (
             <button
               key={game.id}
