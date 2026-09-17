@@ -10,8 +10,12 @@ function broadcastState(io: Server, roomId: string, state: GameState) {
   rooms.set(roomId, state);
   io.to(roomId).emit('monopoly:game-state', state);
 
+  if (state.phase === 'LOBBY' || state.phase === 'COUNTDOWN' || state.phase === 'GAME_OVER') {
+    return;
+  }
+
   const gameOverCheck = Logic.checkGameOver(state);
-  if (gameOverCheck.isOver && state.phase !== 'GAME_OVER') {
+  if (gameOverCheck.isOver) {
     state.phase = 'GAME_OVER';
     io.to(roomId).emit('monopoly:game-over', {
       winnerId: gameOverCheck.winnerId,

@@ -1181,6 +1181,10 @@ export function calculateNetWorth(state: GameState, playerId: string): number {
 }
 
 export function checkGameOver(state: GameState): { isOver: boolean; winnerId?: string } {
+  if (state.phase === 'LOBBY' || state.phase === 'COUNTDOWN') {
+    return { isOver: false };
+  }
+
   const activePlayers = state.players.filter(p => !p.isEliminated);
   if (activePlayers.length === 1) {
     return { isOver: true, winnerId: activePlayers[0].id };
