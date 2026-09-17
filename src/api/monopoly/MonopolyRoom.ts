@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import type { GameState, JailAction, TradeState } from './types';
 import * as Logic from './MonopolyLogic';
 import { MAX_PLAYERS, MIN_PLAYERS } from './constants';
+import { TOKEN_OPTIONS } from './boardData';
 
 const rooms = new Map<string, GameState>();
 const timers = new Map<string, NodeJS.Timeout>();
@@ -57,10 +58,6 @@ function startTurnInterval(io: Server, roomId: string) {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
-      } else if (landRes.action === 'buyout_prompt') {
-        state.phase = 'BUYOUT_PROMPT';
-        state.turnTimer = 15;
-        state.pendingBuyoutTile = landRes.tileIndex;
       } else {
         const nextState = Logic.advanceTurn(state);
         Object.assign(state, nextState);
@@ -70,16 +67,9 @@ function startTurnInterval(io: Server, roomId: string) {
     }
 
     if (state.phase === 'BUY_PROMPT') {
-      const tileIndex = state.pendingBuyTile ?? currPlayer.position;
-      const nextState = Logic.startAuction(state, tileIndex);
-      Object.assign(state, nextState);
-      broadcastState(io, roomId, state);
-      return;
-    }
-
-    if (state.phase === 'AUCTION') {
-      const nextState = Logic.endAuction(state);
-      Object.assign(state, nextState);
+      state.pendingBuyTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
       broadcastState(io, roomId, state);
       return;
     }
@@ -99,7 +89,7 @@ function startTurnInterval(io: Server, roomId: string) {
       return;
     }
 
-    if (state.phase === 'CARD_REVEAL' || state.phase === 'GLOBAL_EVENT' || state.phase === 'BUILD_PHASE' || state.phase === 'END_TURN' || state.phase === 'MINI_GAME' || state.phase === 'BUYOUT_PROMPT') {
+    if (state.phase === 'CARD_REVEAL' || state.phase === 'GLOBAL_EVENT' || state.phase === 'BUILD_PHASE' || state.phase === 'END_TURN' || state.phase === 'MINI_GAME') {
       const nextState = Logic.advanceTurn(state);
       Object.assign(state, nextState);
       broadcastState(io, roomId, state);
@@ -132,11 +122,15 @@ export function setupMonopolySocket(io: Server): void {
           state.players[existingIdx].socketId = socket.id;
           state.players[existingIdx].username = player.username;
         } else if (state.phase === 'LOBBY' && state.players.length < MAX_PLAYERS) {
+          const tokenIdx = state.players.length % TOKEN_OPTIONS.length;
+          const defaultToken = TOKEN_OPTIONS[tokenIdx];
           const newPlayerState = Logic.createInitialState(roomId, [{
             id: player.id,
             socketId: socket.id,
             username: player.username,
-            avatar: player.avatar
+            avatar: player.avatar || defaultToken.avatar || null,
+            tokenEmoji: defaultToken.emoji,
+            tokenColor: defaultToken.color
           }]).players[0];
           newPlayerState.isHost = false;
           state.players.push(newPlayerState);
@@ -146,13 +140,14 @@ export function setupMonopolySocket(io: Server): void {
       broadcastState(io, roomId, state);
     });
 
-    socket.on('monopoly:select-token', (data: { roomId: string; playerId: string; emoji: string; color: string }) => {
+    socket.on('monopoly:select-token', (data: { roomId: string; playerId: string; emoji: string; color: string; avatar?: string }) => {
       const state = rooms.get(data.roomId);
       if (!state || state.phase !== 'LOBBY') return;
       const player = state.players.find(p => p.id === data.playerId);
       if (!player) return;
       player.tokenEmoji = data.emoji;
       player.tokenColor = data.color;
+      if (data.avatar) player.avatar = data.avatar;
       broadcastState(io, data.roomId, state);
     });
 
@@ -186,8 +181,27 @@ export function setupMonopolySocket(io: Server): void {
       if (!curr || curr.id !== data.playerId) return;
 
       const dice = Logic.rollDice();
+      const isDouble = dice[0] === dice[1];
       state.lastDice = dice;
       io.to(data.roomId).emit('monopoly:dice-rolled', { playerId: curr.id, dice });
+
+      curr.doublesCount = isDouble ? (curr.doublesCount || 0) + 1 : 0;
+
+      if (curr.doublesCount >= 3) {
+        curr.position = 7;
+        curr.inJail = true;
+        curr.jailTurns = 0;
+        curr.doublesCount = 0;
+        Logic.addLog(state, '🚔', `${curr.username} tung 3 đôi liên tiếp → bị Công An tóm vào tù!`);
+        broadcastState(io, data.roomId, state);
+        return;
+      }
+
+      if (isDouble) {
+        state.rolledDouble = true;
+      } else {
+        state.rolledDouble = false;
+      }
 
       const moveRes = Logic.movePlayer(state, curr.id, dice[0] + dice[1]);
       io.to(data.roomId).emit('monopoly:player-moved', {
@@ -202,10 +216,6 @@ export function setupMonopolySocket(io: Server): void {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
-      } else if (landRes.action === 'buyout_prompt') {
-        state.phase = 'BUYOUT_PROMPT';
-        state.turnTimer = 15;
-        state.pendingBuyoutTile = landRes.tileIndex;
       } else if (landRes.action === 'card_drawn') {
         state.phase = 'CARD_REVEAL';
         state.turnTimer = 10;
@@ -226,45 +236,15 @@ export function setupMonopolySocket(io: Server): void {
       broadcastState(io, data.roomId, state);
     });
 
-    socket.on('monopoly:buyout', (data: { roomId: string; playerId: string; tileIndex: number }) => {
-      const state = rooms.get(data.roomId);
-      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
-      const curr = state.players[state.currentPlayerIndex];
-      if (!curr || curr.id !== data.playerId) return;
-
-      const nextState = Logic.buyoutProperty(state, curr.id, data.tileIndex);
-      Object.assign(state, nextState);
-      broadcastState(io, data.roomId, state);
-    });
-
-    socket.on('monopoly:skip-buyout', (data: { roomId: string; playerId: string; tileIndex: number }) => {
-      const state = rooms.get(data.roomId);
-      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
-      const curr = state.players[state.currentPlayerIndex];
-      if (!curr || curr.id !== data.playerId) return;
-
-      state.phase = 'END_TURN';
-      state.pendingBuyoutTile = null;
-      state.turnTimer = 5;
-      broadcastState(io, data.roomId, state);
-    });
-
     socket.on('monopoly:skip-buy', (data: { roomId: string; playerId: string; tileIndex: number }) => {
       const state = rooms.get(data.roomId);
       if (!state || state.phase !== 'BUY_PROMPT') return;
       const curr = state.players[state.currentPlayerIndex];
       if (!curr || curr.id !== data.playerId) return;
 
-      const nextState = Logic.startAuction(state, data.tileIndex);
-      Object.assign(state, nextState);
-      broadcastState(io, data.roomId, state);
-    });
-
-    socket.on('monopoly:bid', (data: { roomId: string; playerId: string; amount: number }) => {
-      const state = rooms.get(data.roomId);
-      if (!state || state.phase !== 'AUCTION') return;
-      const nextState = Logic.placeBid(state, data.playerId, data.amount);
-      Object.assign(state, nextState);
+      state.pendingBuyTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
       broadcastState(io, data.roomId, state);
     });
 

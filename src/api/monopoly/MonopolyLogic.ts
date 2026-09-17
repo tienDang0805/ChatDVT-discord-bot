@@ -33,7 +33,6 @@ import {
   MAX_JAIL_TURNS,
   TURN_TIMER,
   BUY_TIMER,
-  AUCTION_TIMER,
   TRADE_TIMER,
   BUILD_TIMER,
   EVENT_EVERY_N_ROUNDS
@@ -55,7 +54,7 @@ export function createInitialState(roomId: string, playersData: PlayerJoinData[]
       id: p.id,
       socketId: p.socketId,
       username: p.username || `Player ${index + 1}`,
-      avatar: p.avatar || null,
+      avatar: p.avatar || defaultToken.avatar || null,
       tokenEmoji: p.tokenEmoji || defaultToken.emoji,
       tokenColor: p.tokenColor || defaultToken.color,
       money: START_MONEY,
@@ -230,52 +229,6 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
   return addLog(nextState, '🏠', `${player.username} đã mua "${tile.name}" với giá ${finalCost}Đ.`);
 }
 
-export function buyoutProperty(state: GameState, playerId: string, tileIndex: number): GameState {
-  const player = state.players.find(p => p.id === playerId);
-  const tile = BOARD_TILES[tileIndex];
-  const owner = state.players.find(p => p.properties.includes(tileIndex));
-  if (!player || !tile || !tile.price || !owner || owner.id === playerId) return state;
-
-  const currentLevel = owner.buildings[tileIndex] || 0;
-  if (currentLevel >= 4) return state;
-
-  const buyoutCost = tile.price * 2;
-  if (player.money < buyoutCost) return state;
-
-  const updatedPlayers = state.players.map(p => {
-    if (p.id === playerId) {
-      return {
-        ...p,
-        money: p.money - buyoutCost,
-        properties: [...p.properties, tileIndex],
-        buildings: { ...p.buildings, [tileIndex]: currentLevel }
-      };
-    }
-    if (p.id === owner.id) {
-      const remainingProps = p.properties.filter(idx => idx !== tileIndex);
-      const newBuildings = { ...p.buildings };
-      delete newBuildings[tileIndex];
-      return {
-        ...p,
-        money: p.money + buyoutCost,
-        properties: remainingProps,
-        buildings: newBuildings
-      };
-    }
-    return p;
-  });
-
-  const nextState: GameState = {
-    ...state,
-    players: updatedPlayers,
-    pendingBuyoutTile: null,
-    phase: 'BUILD_PHASE',
-    turnTimer: BUILD_TIMER
-  };
-
-  return addLog(nextState, '⚡', `${player.username} đã MUA LẠI ĐẤT "${tile.name}" từ ${owner.username} với giá ${buyoutCost}Đ!`);
-}
-
 export function canBuild(state: GameState, playerId: string, tileIndex: number): boolean {
   if (state.activeEvent && state.activeEvent.effect.type === 'no_build') {
     return false;
@@ -324,94 +277,6 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
 
   const levelName = BUILD_LEVELS[nextLevel].name;
   return addLog(nextState, '🔨', `${player.username} nâng cấp "${tile.name}" lên cấp ${nextLevel} (${levelName}) với giá ${cost}Đ.`);
-}
-
-export function startAuction(state: GameState, tileIndex: number): GameState {
-  const tile = BOARD_TILES[tileIndex];
-  if (!tile || !tile.price) return state;
-
-  const startPrice = Math.floor(tile.price * 0.5);
-
-  const nextState: GameState = {
-    ...state,
-    phase: 'AUCTION',
-    turnTimer: AUCTION_TIMER,
-    pendingBuyTile: null,
-    auctionState: {
-      tileIndex,
-      startPrice,
-      currentBid: startPrice,
-      currentBidderId: null,
-      timer: AUCTION_TIMER
-    }
-  };
-
-  return addLog(nextState, '📢', `Bắt đầu đấu giá "${tile.name}" với giá khởi điểm ${startPrice}Đ.`);
-}
-
-export function placeBid(state: GameState, playerId: string, amount: number): GameState {
-  if (!state.auctionState) return state;
-  const player = state.players.find(p => p.id === playerId);
-  if (!player || player.isEliminated || player.money < amount) return state;
-  if (amount <= state.auctionState.currentBid) return state;
-
-  const nextState: GameState = {
-    ...state,
-    turnTimer: AUCTION_TIMER,
-    auctionState: {
-      ...state.auctionState,
-      currentBid: amount,
-      currentBidderId: playerId,
-      timer: AUCTION_TIMER
-    }
-  };
-
-  const tile = BOARD_TILES[state.auctionState.tileIndex];
-  return addLog(nextState, '💰', `${player.username} đặt giá ${amount}Đ cho "${tile?.name || 'BĐS'}".`);
-}
-
-export function endAuction(state: GameState): GameState {
-  if (!state.auctionState) {
-    return advanceTurn(state);
-  }
-
-  const { tileIndex, currentBid, currentBidderId } = state.auctionState;
-  const tile = BOARD_TILES[tileIndex];
-
-  if (!currentBidderId) {
-    const nextState: GameState = {
-      ...state,
-      auctionState: null
-    };
-    return advanceTurn(addLog(nextState, '🔨', `Không ai đấu giá "${tile?.name || 'BĐS'}". BĐS vẫn để trống.`));
-  }
-
-  const winner = state.players.find(p => p.id === currentBidderId);
-  if (!winner) {
-    const nextState: GameState = { ...state, auctionState: null };
-    return advanceTurn(nextState);
-  }
-
-  const updatedPlayers = state.players.map(p => {
-    if (p.id === currentBidderId) {
-      return {
-        ...p,
-        money: p.money - currentBid,
-        properties: [...p.properties, tileIndex],
-        buildings: { ...p.buildings, [tileIndex]: 0 }
-      };
-    }
-    return p;
-  });
-
-  const nextState: GameState = {
-    ...state,
-    players: updatedPlayers,
-    auctionState: null
-  };
-
-  const loggedState = addLog(nextState, '🎉', `${winner.username} thắng đấu giá "${tile?.name}" với giá ${currentBid}Đ.`);
-  return advanceTurn(loggedState);
 }
 
 export function proposeTrade(state: GameState, proposal: TradeState): GameState {
@@ -964,22 +829,6 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
 
     addLog(state, '💸', `${player.username} trả ${payableRent}Đ tiền thuê cho ${owner.username} tại "${tile.name}".`);
     const afterBankrupt = checkBankruptcy(state, playerId);
-    if (afterBankrupt.players.find(p => p.id === playerId)?.isEliminated) {
-      state.phase = 'END_TURN';
-      state.turnTimer = 5;
-      return { action: 'rent_paid', rentAmount: payableRent, rentRecipientId: owner.id, tileIndex };
-    }
-
-    if (tile.type === 'property' && tile.price) {
-      const currentLevel = owner.buildings[tileIndex] || 0;
-      const buyoutCost = tile.price * 2;
-      if (currentLevel < 4 && player.money >= buyoutCost) {
-        state.phase = 'BUYOUT_PROMPT';
-        state.turnTimer = BUY_TIMER;
-        state.pendingBuyoutTile = tileIndex;
-        return { action: 'buyout_prompt', tileIndex };
-      }
-    }
 
     state.phase = 'END_TURN';
     state.turnTimer = 5;
@@ -1146,6 +995,25 @@ export function advanceTurn(state: GameState): GameState {
     };
   }
 
+  const rolledDouble = (state as any).rolledDouble === true;
+  if (rolledDouble) {
+    (state as any).rolledDouble = false;
+    let nextState: GameState = {
+      ...state,
+      pendingBuyTile: null,
+      discountBuyPercent: undefined,
+      lastDrawnCard: null,
+      tradeState: null,
+      auctionState: null,
+      phase: 'ROLL_DICE',
+      turnTimer: TURN_TIMER
+    };
+    const currPlayer = nextState.players[nextState.currentPlayerIndex];
+    if (currPlayer && !currPlayer.isEliminated && !currPlayer.inJail) {
+      return addLog(nextState, '🎲', `${currPlayer.username} tung trúng đôi! Được chơi thêm lượt.`);
+    }
+  }
+
   let nextIdx = (state.currentPlayerIndex + 1) % state.players.length;
   let attempts = 0;
   while (state.players[nextIdx].isEliminated && attempts < state.players.length) {
@@ -1189,6 +1057,8 @@ export function advanceTurn(state: GameState): GameState {
   };
 
   const nextPlayer = nextState.players[nextIdx];
+  nextPlayer.doublesCount = 0;
+
   if (nextPlayer.skipNextTurn) {
     const updatedPlayers = nextState.players.map(p =>
       p.id === nextPlayer.id ? { ...p, skipNextTurn: false } : p

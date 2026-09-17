@@ -179,10 +179,15 @@ export const MonopolyHUD: React.FC<MonopolyHUDProps> = ({
               <div className="flex items-center justify-between gap-1 mb-1.5">
                 <div className="flex items-center gap-2 truncate">
                   <div
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-sm font-black shadow shrink-0"
-                    style={{ backgroundColor: `${p.tokenColor}25`, borderColor: p.tokenColor, borderWidth: '1.5px' }}
+                    className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shrink-0 border-2 flex items-center justify-center bg-slate-950"
+                    style={{ borderColor: p.tokenColor }}
                   >
-                    {p.tokenEmoji}
+                    {p.avatar ? (
+                      <img src={p.avatar} alt={p.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-base">{p.tokenEmoji}</span>
+                    )}
+                    <span className="absolute bottom-0 right-0 text-[9px] drop-shadow">{p.tokenEmoji}</span>
                   </div>
                   <div className="truncate">
                     <div className="text-xs font-black text-white truncate flex items-center gap-1">

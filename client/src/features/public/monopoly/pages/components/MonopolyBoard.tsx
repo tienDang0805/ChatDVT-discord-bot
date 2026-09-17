@@ -6,6 +6,8 @@ import { PropertyCard } from './PropertyCard';
 interface MonopolyBoardProps {
   gameState: GameState;
   myPlayerId: string;
+  visualPositions?: Record<string, number>;
+  animatingPlayerId?: string | null;
   onTileClick?: (tile: TileDef) => void;
   centerOverlay?: React.ReactNode;
 }
@@ -41,26 +43,30 @@ const TILE_GRID_POSITIONS: Record<number, { row: number; col: number }> = {
   27: { row: 7, col: 8 },
 };
 
-const GROUP_STYLES: Record<string, { bar: string; badge: string; border: string }> = {
+const GROUP_STYLES: Record<string, { bar: string; badge: string; border: string; glow: string }> = {
   green: {
     bar: 'bg-gradient-to-r from-emerald-500 to-green-600',
     badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    border: 'hover:border-emerald-400'
+    border: 'hover:border-emerald-400 border-emerald-900/40',
+    glow: 'shadow-[0_0_12px_rgba(16,185,129,0.2)]'
   },
   blue: {
-    bar: 'bg-gradient-to-r from-blue-500 to-cyan-600',
+    bar: 'bg-gradient-to-r from-blue-500 via-sky-500 to-cyan-600',
     badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
-    border: 'hover:border-blue-400'
+    border: 'hover:border-blue-400 border-blue-900/40',
+    glow: 'shadow-[0_0_12px_rgba(59,130,246,0.2)]'
   },
   yellow: {
     bar: 'bg-gradient-to-r from-amber-400 to-yellow-500',
     badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    border: 'hover:border-amber-400'
+    border: 'hover:border-amber-400 border-amber-900/40',
+    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]'
   },
   red: {
     bar: 'bg-gradient-to-r from-rose-500 via-red-600 to-amber-600',
     badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-    border: 'hover:border-rose-400 ring-1 ring-rose-500/30'
+    border: 'hover:border-rose-400 border-red-900/60 ring-1 ring-rose-500/40',
+    glow: 'shadow-[0_0_15px_rgba(244,63,94,0.25)]'
   }
 };
 
@@ -93,6 +99,9 @@ const TILE_ICONS: Record<number, string> = {
 
 export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
   gameState,
+  myPlayerId,
+  visualPositions = {},
+  animatingPlayerId = null,
   onTileClick,
   centerOverlay
 }) => {
@@ -101,8 +110,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
   const playersByTile: Record<number, PlayerState[]> = {};
   gameState.players.forEach(p => {
     if (p.isEliminated) return;
-    if (!playersByTile[p.position]) playersByTile[p.position] = [];
-    playersByTile[p.position].push(p);
+    const tilePos = visualPositions[p.id] !== undefined ? visualPositions[p.id] : p.position;
+    if (!playersByTile[tilePos]) playersByTile[tilePos] = [];
+    playersByTile[tilePos].push(p);
   });
 
   const handleTileClick = (tile: TileDef) => {
@@ -114,10 +124,38 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     return gameState.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
   };
 
+  const currPlayer = gameState.players[gameState.currentPlayerIndex];
+
   return (
-    <div className="w-full flex flex-col items-center justify-center p-1 sm:p-3 select-none">
-      <div className="relative w-full max-w-[840px] aspect-square rounded-3xl p-1.5 sm:p-2.5 bg-gradient-to-br from-[#1a120b] via-[#0d1624] to-[#120e0a] border-4 border-amber-600/70 shadow-[0_0_50px_rgba(217,119,6,0.3)]">
-        <div className="w-full h-full grid grid-cols-8 grid-rows-8 gap-1 sm:gap-1.5 rounded-2xl bg-[#090d16] p-1 sm:p-1.5 relative">
+    <div className="w-full flex flex-col items-center justify-center p-1 sm:p-2 select-none">
+      <style>{`
+        @keyframes chibiHop {
+          0% {
+            transform: translateY(0) scale(1);
+          }
+          35% {
+            transform: translateY(-24px) scale(1.35) rotate(-8deg);
+            filter: drop-shadow(0 14px 10px rgba(0,0,0,0.6));
+          }
+          70% {
+            transform: translateY(-4px) scale(1.1) rotate(2deg);
+          }
+          100% {
+            transform: translateY(0) scale(1);
+          }
+        }
+        .animate-chibi-hop {
+          animation: chibiHop 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+      `}</style>
+
+      <div className="relative w-full max-w-[860px] aspect-square rounded-[32px] p-2 sm:p-3 bg-gradient-to-br from-[#26170d] via-[#121a2e] to-[#1e1309] border-4 border-amber-500/80 shadow-[0_0_60px_rgba(245,158,11,0.35)]">
+        <div className="absolute top-2 left-2 w-4 h-4 rounded-full bg-amber-400/80 shadow-md border border-white/50" />
+        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-amber-400/80 shadow-md border border-white/50" />
+        <div className="absolute bottom-2 left-2 w-4 h-4 rounded-full bg-amber-400/80 shadow-md border border-white/50" />
+        <div className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-amber-400/80 shadow-md border border-white/50" />
+
+        <div className="w-full h-full grid grid-cols-8 grid-rows-8 gap-1 sm:gap-1.5 rounded-2xl bg-[#0a0f1d] p-1 sm:p-1.5 relative">
           {BOARD_TILES.map((tile, idx) => {
             const pos = TILE_GRID_POSITIONS[idx];
             const isCorner = idx === 0 || idx === 7 || idx === 14 || idx === 21;
@@ -125,6 +163,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             const buildLevel = owner ? (owner.buildings[idx] || 0) : 0;
             const groupStyle = tile.group ? GROUP_STYLES[tile.group] : null;
             const playersHere = playersByTile[idx] || [];
+            const hasHoppingPlayer = playersHere.some(p => p.id === animatingPlayerId);
 
             return (
               <div
@@ -132,50 +171,52 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 onClick={() => handleTileClick(tile)}
                 style={{ gridRow: pos.row, gridColumn: pos.col }}
                 className={`relative flex flex-col justify-between rounded-xl overflow-hidden cursor-pointer transition-all duration-150 border text-left ${
-                  isCorner
-                    ? 'bg-gradient-to-br from-[#1b2436] to-[#0f172a] border-amber-500/50 shadow-inner'
-                    : 'bg-[#111827]/90 hover:bg-[#1f293d] border-slate-800'
+                  hasHoppingPlayer
+                    ? 'ring-2 ring-amber-400 bg-[#1e293b] scale-102 z-20 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                    : isCorner
+                    ? 'bg-gradient-to-br from-[#1b253b] via-[#101726] to-[#0d1424] border-amber-500/60 shadow-inner'
+                    : 'bg-[#101626]/95 hover:bg-[#19243d] border-slate-800/90'
                 } ${groupStyle ? groupStyle.border : ''} ${
-                  owner ? 'ring-1' : ''
+                  owner ? 'ring-1 ring-amber-400/40' : ''
                 }`}
-                style-prop={{}}
               >
                 {owner && (
                   <div
-                    className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 z-10 flex items-center justify-center rounded-bl-lg text-[9px] font-bold text-white shadow"
+                    className="absolute top-0 right-0 z-10 flex items-center gap-0.5 px-1.5 py-0.5 rounded-bl-lg text-[9px] font-black text-white shadow-md"
                     style={{ backgroundColor: owner.tokenColor }}
                     title={`Chủ đất: ${owner.username}`}
                   >
-                    {owner.tokenEmoji}
+                    <span>{owner.tokenEmoji}</span>
+                    <span className="hidden sm:inline text-[8px]">{owner.username.slice(0, 4)}</span>
                   </div>
                 )}
 
                 {tile.group && (
-                  <div className={`h-1.5 sm:h-2 w-full ${groupStyle?.bar || 'bg-slate-600'}`} />
+                  <div className={`h-2 sm:h-2.5 w-full shrink-0 ${groupStyle?.bar || 'bg-slate-600'}`} />
                 )}
 
                 <div className="flex-1 flex flex-col justify-between p-1 sm:p-1.5 overflow-hidden">
                   {idx === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-center">
                       <span className="text-xl sm:text-2xl animate-bounce">🏁</span>
-                      <span className="text-[10px] sm:text-xs font-black text-white leading-tight mt-0.5">XUẤT PHÁT</span>
-                      <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-400">+200Đ</span>
+                      <span className="text-[10px] sm:text-xs font-black text-amber-300 leading-tight mt-0.5">XUẤT PHÁT</span>
+                      <span className="text-[9px] sm:text-[10px] font-black text-emerald-400 mt-0.5">+200Đ LƯƠNG</span>
                     </div>
                   )}
 
                   {idx === 7 && (
                     <div className="h-full flex flex-col items-center justify-center text-center">
-                      <span className="text-lg sm:text-xl">🔒</span>
+                      <span className="text-lg sm:text-2xl">🔒</span>
                       <span className="text-[9px] sm:text-[11px] font-black text-slate-200 leading-tight">KHÁM CHÍ HÒA</span>
-                      <span className="text-[8px] sm:text-[9px] text-slate-400">Ở Tù / Thăm</span>
+                      <span className="text-[8px] sm:text-[9px] text-amber-400/80 font-bold">Thăm Tù / Ở Tù</span>
                     </div>
                   )}
 
                   {idx === 14 && (
                     <div className="h-full flex flex-col items-center justify-center text-center">
-                      <span className="text-lg sm:text-xl">☕</span>
+                      <span className="text-lg sm:text-2xl animate-pulse">☕</span>
                       <span className="text-[9px] sm:text-[11px] font-black text-amber-300 leading-tight">CÀ PHÊ 8D</span>
-                      <span className="text-[8px] sm:text-[9px] font-extrabold text-amber-400">
+                      <span className="text-[8px] sm:text-[10px] font-black text-amber-400 bg-amber-500/20 px-1.5 py-0.5 rounded-full mt-0.5 border border-amber-500/30">
                         {gameState.freeParkingPool}Đ
                       </span>
                     </div>
@@ -183,9 +224,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                   {idx === 21 && (
                     <div className="h-full flex flex-col items-center justify-center text-center">
-                      <span className="text-lg sm:text-xl animate-pulse">🚔</span>
+                      <span className="text-lg sm:text-2xl animate-bounce">🚔</span>
                       <span className="text-[9px] sm:text-[11px] font-black text-rose-400 leading-tight">CÔNG AN BẮT</span>
-                      <span className="text-[8px] sm:text-[9px] text-rose-300/80">Nồng độ cồn</span>
+                      <span className="text-[8px] sm:text-[9px] text-rose-300/80 font-bold">Nồng Độ Cồn</span>
                     </div>
                   )}
 
@@ -193,17 +234,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     <>
                       <div className="flex items-center justify-between gap-0.5">
                         <span className="text-xs sm:text-sm">{TILE_ICONS[idx] || '📍'}</span>
-                        {buildLevel > 0 && (
-                          <div className="flex items-center gap-0.5" title={BUILD_LEVELS[buildLevel]?.name}>
+                        {owner && (
+                          <div className="flex items-center gap-0.5 bg-black/40 px-1 py-0.5 rounded border border-amber-500/30" title={BUILD_LEVELS[buildLevel]?.name}>
                             <span className="text-[10px] sm:text-xs">{BUILD_LEVELS[buildLevel]?.icon}</span>
-                            <span className="text-[8px] sm:text-[9px] font-black text-amber-300">
-                              {'★'.repeat(buildLevel)}
-                            </span>
+                            {buildLevel > 0 && (
+                              <span className="text-[8px] sm:text-[9px] font-black text-amber-300">
+                                {buildLevel}
+                              </span>
+                            )}
                           </div>
                         )}
                       </div>
 
-                      <div className="truncate my-auto">
+                      <div className="my-auto truncate">
                         <div className="text-[9px] sm:text-[11px] font-black text-white leading-tight truncate">
                           {tile.name}
                         </div>
@@ -211,19 +254,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       <div className="flex items-center justify-between text-[8px] sm:text-[10px] font-bold">
                         {tile.price && (
-                          <span className="text-amber-300 font-extrabold">{tile.price}Đ</span>
+                          <span className="text-amber-300 font-black">{tile.price}Đ</span>
                         )}
                         {tile.type === 'tax' && (
-                          <span className="text-rose-400 font-extrabold">-{tile.taxAmount}Đ</span>
+                          <span className="text-rose-400 font-black">-{tile.taxAmount}Đ</span>
                         )}
                         {tile.type === 'chance' && (
-                          <span className="text-purple-300 text-[8px] font-black">CƠ HỘI</span>
+                          <span className="text-purple-300 text-[8px] font-black uppercase">Cơ Hội</span>
                         )}
                         {tile.type === 'community' && (
-                          <span className="text-cyan-300 text-[8px] font-black">KHÍ VẬN</span>
+                          <span className="text-cyan-300 text-[8px] font-black uppercase">Cộng Đồng</span>
                         )}
                         {tile.type === 'station' && (
-                          <span className="text-amber-400 font-extrabold">{tile.price}Đ</span>
+                          <span className="text-amber-400 font-black">{tile.price}Đ</span>
                         )}
                       </div>
                     </>
@@ -231,54 +274,72 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 </div>
 
                 {playersHere.length > 0 && (
-                  <div className="absolute inset-x-0 bottom-0.5 flex items-center justify-center gap-0.5 z-20 pointer-events-none">
-                    {playersHere.map(p => (
-                      <div
-                        key={p.id}
-                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-[0_2px_8px_rgba(0,0,0,0.8)] border-2 border-white transform transition-transform hover:scale-125 animate-bounce"
-                        style={{ backgroundColor: p.tokenColor }}
-                        title={p.username}
-                      >
-                        {p.tokenEmoji}
-                      </div>
-                    ))}
+                  <div className="absolute inset-x-0 bottom-0.5 flex items-center justify-center gap-1 z-30 pointer-events-none">
+                    {playersHere.map(p => {
+                      const isHopping = animatingPlayerId === p.id;
+                      const isTurn = p.id === currPlayer?.id;
+
+                      return (
+                        <div
+                          key={p.id}
+                          className={`relative flex flex-col items-center justify-center transition-all ${
+                            isHopping ? 'animate-chibi-hop scale-130 z-40' : 'hover:scale-125 z-30'
+                          }`}
+                        >
+                          <div
+                            className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.9)] border-2 overflow-hidden flex items-center justify-center bg-slate-950 ${
+                              isTurn ? 'ring-2 ring-amber-400 ring-offset-1 ring-offset-black' : ''
+                            }`}
+                            style={{ borderColor: p.tokenColor }}
+                            title={`${p.username} (${p.money}Đ)`}
+                          >
+                            {p.avatar ? (
+                              <img
+                                src={p.avatar}
+                                alt={p.username}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-xs">{p.tokenEmoji}</span>
+                            )}
+                          </div>
+                          <div
+                            className="text-[7px] sm:text-[8px] font-black px-1 rounded-sm bg-black/90 text-white truncate max-w-[40px] -mt-1 shadow border border-white/20"
+                            style={{ color: p.tokenColor }}
+                          >
+                            {p.username.slice(0, 4)}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             );
           })}
 
-          <div
-            style={{ gridRow: '2 / 8', gridColumn: '2 / 8' }}
-            className="relative rounded-2xl bg-gradient-to-br from-[#0a1420] via-[#080d17] to-[#120a06] border-2 border-amber-600/30 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center justify-between p-3 sm:p-6 overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+          <div className="col-start-2 col-end-8 row-start-2 row-end-8 rounded-2xl bg-gradient-to-br from-[#0c2217] via-[#09151c] to-[#120f1c] border-2 border-amber-600/40 p-2 sm:p-4 flex flex-col items-center justify-between shadow-inner relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.08)_0%,transparent_70%)] pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl">🎲</span>
-                <h1 className="text-base sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">
-                  CỜ TỶ PHÚ 8D
-                </h1>
-                <span className="text-xl sm:text-2xl">👑</span>
+            <div className="w-full flex items-center justify-between text-xs px-2 z-10">
+              <div className="flex items-center gap-1.5 bg-slate-950/70 border border-amber-500/30 px-3 py-1 rounded-full text-amber-300 font-black">
+                <span>👑</span>
+                <span>VÒNG {gameState.round}/{gameState.maxRounds}</span>
               </div>
-              <p className="text-[10px] sm:text-xs text-amber-200/60 font-semibold tracking-widest uppercase">
-                Bản Sắc Việt Nam • Đắk Nông Vương Quốc
-              </p>
+
+              <div className="text-[10px] text-slate-400 font-bold">
+                Bấm vào ô để xem Giấy Chứng Nhận (Sổ Đỏ)
+              </div>
             </div>
 
-            <div className="relative z-10 w-full flex flex-col items-center justify-center my-auto">
+            <div className="z-10 flex-1 flex items-center justify-center w-full">
               {centerOverlay}
             </div>
 
-            <div className="relative z-10 w-full flex items-center justify-between px-2 text-[10px] sm:text-xs text-slate-400 font-semibold border-t border-slate-800/80 pt-2">
-              <div className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <span>Bàn Cờ Trực Tuyến</span>
-              </div>
-              <div className="text-amber-400 font-bold">
-                Quy Tắc: Gom Nhóm Màu ➔ Xây Nhà
-              </div>
+            <div className="w-full flex items-center justify-center gap-2 text-[10px] sm:text-xs font-bold text-slate-400 z-10">
+              <span className="text-amber-400">Đắk Nông Vương Quốc</span>
+              <span>•</span>
+              <span>8D Gaming Squad</span>
             </div>
           </div>
         </div>
@@ -295,4 +356,3 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     </div>
   );
 };
-export default MonopolyBoard;

@@ -76,13 +76,13 @@ export const GLOBAL_EVENTS: GlobalEventDef[] = [
 ];
 
 export const TOKEN_OPTIONS: TokenOption[] = [
-  { emoji: '🐻', name: 'Tiến Đặng', color: '#f59e0b' },
-  { emoji: '🐛', name: 'Quang Huy', color: '#22c55e' },
-  { emoji: '💪', name: 'Ngọc Tâm', color: '#3b82f6' },
-  { emoji: '🛡️', name: 'Gia Bảo', color: '#6366f1' },
-  { emoji: '🎰', name: 'Thái Tài', color: '#eab308' },
-  { emoji: '🔇', name: 'Hoà Trần', color: '#8b5cf6' },
-  { emoji: '🐶', name: 'ChatDVT', color: '#f97316' },
+  { emoji: '🐻', name: 'Tiến Đặng', color: '#f59e0b', avatar: '/images/chibi/tien_dang.jpg', title: 'Vua Đắk Nông 👑', desc: 'Trùm bất động sản Tây Nguyên, đụng là mua đất' },
+  { emoji: '🐛', name: 'Quang Huy', color: '#22c55e', avatar: '/images/chibi/quang_huy.jpg', title: 'Chúa Hẻm Q4 🛵', desc: 'Lạng lách hẻm nhỏ né công an, thu tiền siêu nhanh' },
+  { emoji: '💪', name: 'Ngọc Tâm', color: '#3b82f6', avatar: '/images/chibi/ngoc_tam.jpg', title: 'Lực Sĩ Ninh Thuận 💪', desc: 'Nắng gió tôi luyện, sức bền vô hạn khi bị phạt' },
+  { emoji: '🛡️', name: 'Gia Bảo', color: '#6366f1', avatar: '/images/chibi/gia_bao.jpg', title: 'Hộ Vệ Bình Tân 🛡️', desc: 'Thủ nhà vững chắc, xây chuồng chó khắp nơi' },
+  { emoji: '🎰', name: 'Thái Tài', color: '#eab308', avatar: '/images/chibi/thai_tai.jpg', title: 'Thần Bài 8D 🎰', desc: 'Cờ bạc là đam mê, chuyên gia nổ đôi xúc xắc' },
+  { emoji: '🔇', name: 'Hoà Trần', color: '#8b5cf6', avatar: '/images/chibi/hoa_tran.jpg', title: 'Trùm Mute Mic 🔇', desc: 'Âm thầm gom đất đại gia, không nói một lời' },
+  { emoji: '🐶', name: 'ChatDVT', color: '#f97316', avatar: '/images/chibi/chatdvt.jpg', title: 'Linh Vật ChatDVT 🐶', desc: 'Gâu gâu cắn trộm tiền thuê, may mắn nhân đôi' },
 ];
 
 export const BUILD_LEVELS = [

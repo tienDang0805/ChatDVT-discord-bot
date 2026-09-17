@@ -144,7 +144,7 @@ export const BuyPrompt: React.FC<BuyPromptProps> = ({
                 onClick={onSkip}
                 className="flex-1 py-3 px-4 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95"
               >
-                {isBuyout ? 'Bỏ Qua' : 'Bỏ Qua (Đấu Giá)'}
+                Bỏ Qua
               </button>
             </div>
           ) : (
