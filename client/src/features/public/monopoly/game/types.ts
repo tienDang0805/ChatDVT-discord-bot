@@ -2,7 +2,7 @@ export type TileType = 'property' | 'station' | 'chance' | 'community' | 'tax' |
 export type PropertyGroup = 'green' | 'blue' | 'yellow' | 'red';
 export type GamePhase =
   | 'LOBBY' | 'COUNTDOWN' | 'ROLL_DICE' | 'MOVING' | 'LAND_ACTION'
-  | 'BUY_PROMPT' | 'AUCTION' | 'CARD_REVEAL' | 'MINI_GAME'
+  | 'BUY_PROMPT' | 'BUYOUT_PROMPT' | 'AUCTION' | 'CARD_REVEAL' | 'MINI_GAME'
   | 'JAIL_ACTION' | 'BUILD_PHASE' | 'TRADE_PHASE' | 'END_TURN'
   | 'GLOBAL_EVENT' | 'GAME_OVER';
 
@@ -136,6 +136,7 @@ export interface GameState {
   log: GameLogEntry[];
   lastDrawnCard?: CardDef | null;
   pendingBuyTile?: number | null;
+  pendingBuyoutTile?: number | null;
   discountBuyPercent?: number;
 }
 
@@ -161,7 +162,7 @@ export interface MoveResult {
 }
 
 export interface LandingResult {
-  action: 'none' | 'buy_prompt' | 'rent_paid' | 'card_drawn' | 'tax_paid' | 'go_jail' | 'free_parking_claimed';
+  action: 'none' | 'buy_prompt' | 'buyout_prompt' | 'rent_paid' | 'card_drawn' | 'tax_paid' | 'go_jail' | 'free_parking_claimed';
   rentAmount?: number;
   rentRecipientId?: string;
   taxAmount?: number;

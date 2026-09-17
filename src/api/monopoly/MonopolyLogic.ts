@@ -230,6 +230,52 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
   return addLog(nextState, '🏠', `${player.username} đã mua "${tile.name}" với giá ${finalCost}Đ.`);
 }
 
+export function buyoutProperty(state: GameState, playerId: string, tileIndex: number): GameState {
+  const player = state.players.find(p => p.id === playerId);
+  const tile = BOARD_TILES[tileIndex];
+  const owner = state.players.find(p => p.properties.includes(tileIndex));
+  if (!player || !tile || !tile.price || !owner || owner.id === playerId) return state;
+
+  const currentLevel = owner.buildings[tileIndex] || 0;
+  if (currentLevel >= 4) return state;
+
+  const buyoutCost = tile.price * 2;
+  if (player.money < buyoutCost) return state;
+
+  const updatedPlayers = state.players.map(p => {
+    if (p.id === playerId) {
+      return {
+        ...p,
+        money: p.money - buyoutCost,
+        properties: [...p.properties, tileIndex],
+        buildings: { ...p.buildings, [tileIndex]: currentLevel }
+      };
+    }
+    if (p.id === owner.id) {
+      const remainingProps = p.properties.filter(idx => idx !== tileIndex);
+      const newBuildings = { ...p.buildings };
+      delete newBuildings[tileIndex];
+      return {
+        ...p,
+        money: p.money + buyoutCost,
+        properties: remainingProps,
+        buildings: newBuildings
+      };
+    }
+    return p;
+  });
+
+  const nextState: GameState = {
+    ...state,
+    players: updatedPlayers,
+    pendingBuyoutTile: null,
+    phase: 'BUILD_PHASE',
+    turnTimer: BUILD_TIMER
+  };
+
+  return addLog(nextState, '⚡', `${player.username} đã MUA LẠI ĐẤT "${tile.name}" từ ${owner.username} với giá ${buyoutCost}Đ!`);
+}
+
 export function canBuild(state: GameState, playerId: string, tileIndex: number): boolean {
   if (state.activeEvent && state.activeEvent.effect.type === 'no_build') {
     return false;
@@ -917,7 +963,24 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     owner.totalRentCollected += payableRent;
 
     addLog(state, '💸', `${player.username} trả ${payableRent}Đ tiền thuê cho ${owner.username} tại "${tile.name}".`);
-    checkBankruptcy(state, playerId);
+    const afterBankrupt = checkBankruptcy(state, playerId);
+    if (afterBankrupt.players.find(p => p.id === playerId)?.isEliminated) {
+      state.phase = 'END_TURN';
+      state.turnTimer = 5;
+      return { action: 'rent_paid', rentAmount: payableRent, rentRecipientId: owner.id, tileIndex };
+    }
+
+    if (tile.type === 'property' && tile.price) {
+      const currentLevel = owner.buildings[tileIndex] || 0;
+      const buyoutCost = tile.price * 2;
+      if (currentLevel < 4 && player.money >= buyoutCost) {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = BUY_TIMER;
+        state.pendingBuyoutTile = tileIndex;
+        return { action: 'buyout_prompt', tileIndex };
+      }
+    }
+
     state.phase = 'END_TURN';
     state.turnTimer = 5;
     return { action: 'rent_paid', rentAmount: payableRent, rentRecipientId: owner.id, tileIndex };

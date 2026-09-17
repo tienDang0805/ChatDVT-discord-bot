@@ -57,6 +57,10 @@ function startTurnInterval(io: Server, roomId: string) {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
+      } else if (landRes.action === 'buyout_prompt') {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = 15;
+        state.pendingBuyoutTile = landRes.tileIndex;
       } else {
         const nextState = Logic.advanceTurn(state);
         Object.assign(state, nextState);
@@ -95,7 +99,7 @@ function startTurnInterval(io: Server, roomId: string) {
       return;
     }
 
-    if (state.phase === 'CARD_REVEAL' || state.phase === 'GLOBAL_EVENT' || state.phase === 'BUILD_PHASE' || state.phase === 'END_TURN' || state.phase === 'MINI_GAME') {
+    if (state.phase === 'CARD_REVEAL' || state.phase === 'GLOBAL_EVENT' || state.phase === 'BUILD_PHASE' || state.phase === 'END_TURN' || state.phase === 'MINI_GAME' || state.phase === 'BUYOUT_PROMPT') {
       const nextState = Logic.advanceTurn(state);
       Object.assign(state, nextState);
       broadcastState(io, roomId, state);
@@ -198,6 +202,10 @@ export function setupMonopolySocket(io: Server): void {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
+      } else if (landRes.action === 'buyout_prompt') {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = 15;
+        state.pendingBuyoutTile = landRes.tileIndex;
       } else if (landRes.action === 'card_drawn') {
         state.phase = 'CARD_REVEAL';
         state.turnTimer = 10;
@@ -215,6 +223,29 @@ export function setupMonopolySocket(io: Server): void {
       const discount = state.discountBuyPercent || 1;
       const nextState = Logic.buyProperty(state, curr.id, data.tileIndex, discount);
       Object.assign(state, nextState);
+      broadcastState(io, data.roomId, state);
+    });
+
+    socket.on('monopoly:buyout', (data: { roomId: string; playerId: string; tileIndex: number }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      const nextState = Logic.buyoutProperty(state, curr.id, data.tileIndex);
+      Object.assign(state, nextState);
+      broadcastState(io, data.roomId, state);
+    });
+
+    socket.on('monopoly:skip-buyout', (data: { roomId: string; playerId: string; tileIndex: number }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      state.phase = 'END_TURN';
+      state.pendingBuyoutTile = null;
+      state.turnTimer = 5;
       broadcastState(io, data.roomId, state);
     });
 
@@ -317,10 +348,53 @@ export function setupMonopolySocket(io: Server): void {
       broadcastState(io, data.roomId, state);
     });
 
+    socket.on('monopoly:leave', (data: { roomId: string; playerId: string }) => {
+      const state = rooms.get(data.roomId);
+      if (!state) return;
+
+      if (state.phase === 'LOBBY') {
+        state.players = state.players.filter(p => p.id !== data.playerId);
+        if (state.players.length === 0) {
+          rooms.delete(data.roomId);
+          if (timers.has(data.roomId)) {
+            clearInterval(timers.get(data.roomId)!);
+            timers.delete(data.roomId);
+          }
+        } else {
+          const hasHost = state.players.some(p => p.isHost);
+          if (!hasHost && state.players.length > 0) {
+            state.players[0].isHost = true;
+          }
+          broadcastState(io, data.roomId, state);
+        }
+      } else if (state.phase !== 'GAME_OVER') {
+        const player = state.players.find(p => p.id === data.playerId);
+        if (player) {
+          player.isEliminated = true;
+          player.money = 0;
+          player.properties = [];
+          player.buildings = {};
+          Logic.addLog(state, '🚪', `${player.username} đã rời khỏi ván đấu.`);
+          const gameOverCheck = Logic.checkGameOver(state);
+          if (gameOverCheck.isOver) {
+            state.phase = 'GAME_OVER';
+          } else if (state.players[state.currentPlayerIndex]?.id === data.playerId) {
+            const nextState = Logic.advanceTurn(state);
+            Object.assign(state, nextState);
+          }
+          broadcastState(io, data.roomId, state);
+        }
+      }
+
+      socket.leave(data.roomId);
+    });
+
     socket.on('disconnect', () => {
       for (const [roomId, state] of rooms.entries()) {
         const p = state.players.find(pl => pl.socketId === socket.id);
-        if (p && state.phase === 'LOBBY') {
+        if (!p) continue;
+
+        if (state.phase === 'LOBBY') {
           state.players = state.players.filter(pl => pl.socketId !== socket.id);
           if (state.players.length === 0) {
             rooms.delete(roomId);
@@ -339,3 +413,4 @@ export function setupMonopolySocket(io: Server): void {
     });
   });
 }
+

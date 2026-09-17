@@ -1,7 +1,7 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import type { GameState, TileDef, PlayerState } from '../../game/types';
 import { BOARD_TILES, BUILD_LEVELS } from '../../game/boardData';
-import { BOARD_SIZE } from '../../game/constants';
+import { PropertyCard } from './PropertyCard';
 
 interface MonopolyBoardProps {
   gameState: GameState;
@@ -10,427 +10,289 @@ interface MonopolyBoardProps {
   centerOverlay?: React.ReactNode;
 }
 
-const GROUP_COLORS: Record<string, string> = {
-  green: '#10b981',
-  blue: '#3b82f6',
-  yellow: '#f59e0b',
-  red: '#ef4444'
+const TILE_GRID_POSITIONS: Record<number, { row: number; col: number }> = {
+  0: { row: 8, col: 8 },
+  1: { row: 8, col: 7 },
+  2: { row: 8, col: 6 },
+  3: { row: 8, col: 5 },
+  4: { row: 8, col: 4 },
+  5: { row: 8, col: 3 },
+  6: { row: 8, col: 2 },
+  7: { row: 8, col: 1 },
+  8: { row: 7, col: 1 },
+  9: { row: 6, col: 1 },
+  10: { row: 5, col: 1 },
+  11: { row: 4, col: 1 },
+  12: { row: 3, col: 1 },
+  13: { row: 2, col: 1 },
+  14: { row: 1, col: 1 },
+  15: { row: 1, col: 2 },
+  16: { row: 1, col: 3 },
+  17: { row: 1, col: 4 },
+  18: { row: 1, col: 5 },
+  19: { row: 1, col: 6 },
+  20: { row: 1, col: 7 },
+  21: { row: 1, col: 8 },
+  22: { row: 2, col: 8 },
+  23: { row: 3, col: 8 },
+  24: { row: 4, col: 8 },
+  25: { row: 5, col: 8 },
+  26: { row: 6, col: 8 },
+  27: { row: 7, col: 8 },
 };
 
-interface TileRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-}
+const GROUP_STYLES: Record<string, { bar: string; badge: string; border: string }> = {
+  green: {
+    bar: 'bg-gradient-to-r from-emerald-500 to-green-600',
+    badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    border: 'hover:border-emerald-400'
+  },
+  blue: {
+    bar: 'bg-gradient-to-r from-blue-500 to-cyan-600',
+    badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+    border: 'hover:border-blue-400'
+  },
+  yellow: {
+    bar: 'bg-gradient-to-r from-amber-400 to-yellow-500',
+    badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    border: 'hover:border-amber-400'
+  },
+  red: {
+    bar: 'bg-gradient-to-r from-rose-500 via-red-600 to-amber-600',
+    badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+    border: 'hover:border-rose-400 ring-1 ring-rose-500/30'
+  }
+};
+
+const TILE_ICONS: Record<number, string> = {
+  1: '🛵',
+  2: '🤝',
+  3: '🏡',
+  4: '🚨',
+  5: '🚌',
+  6: '🍇',
+  8: '🎓',
+  9: '❓',
+  10: '🏙️',
+  11: '🌉',
+  12: '🚂',
+  13: '🏘️',
+  15: '☕',
+  16: '🤝',
+  17: '🚦',
+  18: '🏭',
+  19: '🚄',
+  20: '❓',
+  22: '🏞️',
+  23: '❓',
+  24: '🏢',
+  25: '💸',
+  26: '🏪',
+  27: '🏰'
+};
 
 export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
   gameState,
-  myPlayerId,
   onTileClick,
   centerOverlay
 }) => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [boardDimension, setBoardDimension] = useState(700);
   const [inspectedTile, setInspectedTile] = useState<TileDef | null>(null);
-  const animPosRef = useRef<Record<string, number>>({});
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.clientWidth;
-        const size = Math.min(width, 760);
-        setBoardDimension(Math.max(size, 340));
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const playersByTile: Record<number, PlayerState[]> = {};
+  gameState.players.forEach(p => {
+    if (p.isEliminated) return;
+    if (!playersByTile[p.position]) playersByTile[p.position] = [];
+    playersByTile[p.position].push(p);
+  });
 
-  const getTileRects = useCallback((size: number): TileRect[] => {
-    const cornerSize = size * 0.16;
-    const regularCount = 6;
-    const regularWidth = (size - 2 * cornerSize) / regularCount;
-    const tileHeight = cornerSize;
-    const rects: TileRect[] = new Array(BOARD_SIZE);
-
-    rects[0] = { x: size - cornerSize, y: size - cornerSize, width: cornerSize, height: cornerSize, rotation: 0 };
-
-    for (let i = 1; i <= 6; i++) {
-      rects[i] = {
-        x: size - cornerSize - i * regularWidth,
-        y: size - tileHeight,
-        width: regularWidth,
-        height: tileHeight,
-        rotation: 0
-      };
-    }
-
-    rects[7] = { x: 0, y: size - cornerSize, width: cornerSize, height: cornerSize, rotation: 90 };
-
-    for (let i = 1; i <= 6; i++) {
-      rects[7 + i] = {
-        x: 0,
-        y: size - cornerSize - i * regularWidth,
-        width: tileHeight,
-        height: regularWidth,
-        rotation: 90
-      };
-    }
-
-    rects[14] = { x: 0, y: 0, width: cornerSize, height: cornerSize, rotation: 180 };
-
-    for (let i = 1; i <= 6; i++) {
-      rects[14 + i] = {
-        x: cornerSize + (i - 1) * regularWidth,
-        y: 0,
-        width: regularWidth,
-        height: tileHeight,
-        rotation: 180
-      };
-    }
-
-    rects[21] = { x: size - cornerSize, y: 0, width: cornerSize, height: cornerSize, rotation: 270 };
-
-    for (let i = 1; i <= 6; i++) {
-      rects[21 + i] = {
-        x: size - tileHeight,
-        y: cornerSize + (i - 1) * regularWidth,
-        width: tileHeight,
-        height: regularWidth,
-        rotation: 270
-      };
-    }
-
-    return rects;
-  }, []);
-
-  const getTileCenter = useCallback((rect: TileRect): [number, number] => {
-    return [rect.x + rect.width / 2, rect.y + rect.height / 2];
-  }, []);
-
-  useEffect(() => {
-    let animationFrameId: number;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const size = boardDimension;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-
-    const tileRects = getTileRects(size);
-
-    gameState.players.forEach(p => {
-      if (animPosRef.current[p.id] === undefined) {
-        animPosRef.current[p.id] = p.position;
-      }
-    });
-
-    const render = () => {
-      gameState.players.forEach(p => {
-        const current = animPosRef.current[p.id] ?? p.position;
-        const target = p.position;
-        let diff = target - current;
-        if (diff < -BOARD_SIZE / 2) diff += BOARD_SIZE;
-        if (diff > BOARD_SIZE / 2) diff -= BOARD_SIZE;
-
-        if (Math.abs(diff) > 0.02) {
-          animPosRef.current[p.id] = (current + diff * 0.15) % BOARD_SIZE;
-          if (animPosRef.current[p.id] < 0) animPosRef.current[p.id] += BOARD_SIZE;
-        } else {
-          animPosRef.current[p.id] = target;
-        }
-      });
-
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.clearRect(0, 0, size, size);
-
-      ctx.fillStyle = '#0a0e17';
-      ctx.fillRect(0, 0, size, size);
-
-      const cornerSize = size * 0.16;
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(cornerSize, cornerSize, size - 2 * cornerSize, size - 2 * cornerSize);
-
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(cornerSize, cornerSize, size - 2 * cornerSize, size - 2 * cornerSize);
-
-      tileRects.forEach((rect, idx) => {
-        const tile = BOARD_TILES[idx];
-        if (!tile) return;
-
-        const isInspected = inspectedTile?.index === idx;
-        ctx.fillStyle = isInspected ? '#1e293b' : '#111827';
-        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-
-        ctx.strokeStyle = isInspected ? '#f59e0b' : '#1f2937';
-        ctx.lineWidth = isInspected ? 2 : 1;
-        ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-
-        const owner = gameState.players.find(p => !p.isEliminated && p.properties.includes(idx));
-        if (owner) {
-          ctx.fillStyle = owner.tokenColor;
-          if (idx <= 6) {
-            ctx.fillRect(rect.x, rect.y, rect.width, 3);
-          } else if (idx <= 13) {
-            ctx.fillRect(rect.x + rect.width - 3, rect.y, 3, rect.height);
-          } else if (idx <= 20) {
-            ctx.fillRect(rect.x, rect.y + rect.height - 3, rect.width, 3);
-          } else {
-            ctx.fillRect(rect.x, rect.y, 3, rect.height);
-          }
-        }
-
-        if (tile.group) {
-          ctx.fillStyle = GROUP_COLORS[tile.group] || '#64748b';
-          const headerDepth = Math.max(rect.height * 0.22, 10);
-          if (idx <= 6) {
-            ctx.fillRect(rect.x, rect.y, rect.width, headerDepth);
-          } else if (idx <= 13) {
-            ctx.fillRect(rect.x + rect.width - headerDepth, rect.y, headerDepth, rect.height);
-          } else if (idx <= 20) {
-            ctx.fillRect(rect.x, rect.y + rect.height - headerDepth, rect.width, headerDepth);
-          } else {
-            ctx.fillRect(rect.x, rect.y, headerDepth, rect.height);
-          }
-        }
-
-        ctx.save();
-        const [cx, cy] = getTileCenter(rect);
-        ctx.translate(cx, cy);
-
-        if (idx === 0) {
-          ctx.fillStyle = '#ef4444';
-          ctx.font = 'bold 16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🏁', 0, -12);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 10px sans-serif';
-          ctx.fillText('BẮT ĐẦU', 0, 6);
-          ctx.fillStyle = '#10b981';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillText('+200Đ', 0, 18);
-        } else if (idx === 7) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🔒', 0, -10);
-          ctx.font = 'bold 10px sans-serif';
-          ctx.fillText('Ở TÙ', 0, 8);
-        } else if (idx === 14) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('☕', 0, -12);
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillText('CÀ PHÊ 8D', 0, 5);
-          ctx.fillStyle = '#f59e0b';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillText(`${gameState.freeParkingPool}Đ`, 0, 18);
-        } else if (idx === 21) {
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('🚔', 0, -10);
-          ctx.fillStyle = '#f87171';
-          ctx.font = 'bold 9px sans-serif';
-          ctx.fillText('VÀO TÙ', 0, 8);
-        } else {
-          let textAngle = 0;
-          if (idx > 0 && idx < 7) textAngle = 0;
-          else if (idx > 7 && idx < 14) textAngle = Math.PI / 2;
-          else if (idx > 14 && idx < 21) textAngle = Math.PI;
-          else if (idx > 21 && idx < 28) textAngle = -Math.PI / 2;
-
-          ctx.rotate(textAngle);
-
-          ctx.fillStyle = '#e2e8f0';
-          ctx.font = `bold ${Math.max(Math.floor(size * 0.014), 9)}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-
-          const words = tile.name.split(' ');
-          if (words.length > 2) {
-            ctx.fillText(words.slice(0, 2).join(' '), 0, -12);
-            ctx.fillText(words.slice(2).join(' '), 0, -2);
-          } else {
-            ctx.fillText(tile.name, 0, -8);
-          }
-
-          if (tile.price) {
-            ctx.fillStyle = '#f59e0b';
-            ctx.font = `bold ${Math.max(Math.floor(size * 0.013), 8)}px sans-serif`;
-            ctx.fillText(`${tile.price}Đ`, 0, 10);
-          } else if (tile.type === 'tax') {
-            ctx.fillStyle = '#ef4444';
-            ctx.font = 'bold 8px sans-serif';
-            ctx.fillText(`-${tile.taxAmount}Đ`, 0, 10);
-          } else if (tile.type === 'chance' || tile.type === 'community') {
-            ctx.fillStyle = '#a855f7';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(tile.type === 'chance' ? '❓' : '👥', 0, 8);
-          }
-
-          if (owner) {
-            const buildLevel = owner.buildings[idx] || 0;
-            if (buildLevel > 0) {
-              const bDef = BUILD_LEVELS[buildLevel];
-              ctx.font = '10px sans-serif';
-              ctx.fillText(bDef.icon, 0, 22);
-            }
-          }
-        }
-
-        ctx.restore();
-      });
-
-      const playersAtTile: Record<number, PlayerState[]> = {};
-      gameState.players.forEach(p => {
-        if (p.isEliminated) return;
-        const posKey = Math.floor(animPosRef.current[p.id] ?? p.position);
-        if (!playersAtTile[posKey]) playersAtTile[posKey] = [];
-        playersAtTile[posKey].push(p);
-      });
-
-      gameState.players.forEach(p => {
-        if (p.isEliminated) return;
-        const currentFloatPos = animPosRef.current[p.id] ?? p.position;
-        const baseIdx = Math.floor(currentFloatPos) % BOARD_SIZE;
-        const nextIdx = (baseIdx + 1) % BOARD_SIZE;
-        const fraction = currentFloatPos - Math.floor(currentFloatPos);
-
-        const rectBase = tileRects[baseIdx];
-        const rectNext = tileRects[nextIdx];
-        if (!rectBase || !rectNext) return;
-
-        const [cx1, cy1] = getTileCenter(rectBase);
-        const [cx2, cy2] = getTileCenter(rectNext);
-
-        let tokenX = cx1 + (cx2 - cx1) * fraction;
-        let tokenY = cy1 + (cy2 - cy1) * fraction;
-
-        const group = playersAtTile[baseIdx] || [];
-        const pIndexInGroup = group.findIndex(pl => pl.id === p.id);
-        if (group.length > 1 && fraction < 0.1) {
-          const angle = (pIndexInGroup / group.length) * Math.PI * 2;
-          const radius = Math.min(rectBase.width, rectBase.height) * 0.25;
-          tokenX += Math.cos(angle) * radius;
-          tokenY += Math.sin(angle) * radius;
-        }
-
-        ctx.save();
-        ctx.shadowColor = p.tokenColor;
-        ctx.shadowBlur = 10;
-
-        ctx.fillStyle = p.tokenColor;
-        ctx.beginPath();
-        const tokenRadius = Math.max(size * 0.024, 13);
-        ctx.arc(tokenX, tokenY, tokenRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.font = `${Math.floor(tokenRadius * 1.3)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(p.tokenEmoji, tokenX, tokenY + 1);
-
-        ctx.restore();
-      });
-
-      ctx.restore();
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [gameState, boardDimension, getTileRects, getTileCenter, inspectedTile]);
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const clickX = (e.clientX - rect.left) * (boardDimension / rect.width);
-    const clickY = (e.clientY - rect.top) * (boardDimension / rect.height);
-
-    const tileRects = getTileRects(boardDimension);
-    for (let i = 0; i < tileRects.length; i++) {
-      const tr = tileRects[i];
-      if (clickX >= tr.x && clickX <= tr.x + tr.width && clickY >= tr.y && clickY <= tr.y + tr.height) {
-        const clickedTile = BOARD_TILES[i];
-        setInspectedTile(clickedTile);
-        if (onTileClick) onTileClick(clickedTile);
-        break;
-      }
-    }
+  const handleTileClick = (tile: TileDef) => {
+    setInspectedTile(tile);
+    if (onTileClick) onTileClick(tile);
   };
 
-  const cornerPx = boardDimension * 0.16;
+  const getOwner = (tileIndex: number) => {
+    return gameState.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
+  };
 
   return (
-    <div ref={containerRef} className="relative flex items-center justify-center p-2 select-none">
-      <canvas
-        ref={canvasRef}
-        onClick={handleCanvasClick}
-        className="rounded-3xl shadow-2xl border border-slate-800 cursor-pointer"
-      />
+    <div className="w-full flex flex-col items-center justify-center p-1 sm:p-3 select-none">
+      <div className="relative w-full max-w-[840px] aspect-square rounded-3xl p-1.5 sm:p-2.5 bg-gradient-to-br from-[#1a120b] via-[#0d1624] to-[#120e0a] border-4 border-amber-600/70 shadow-[0_0_50px_rgba(217,119,6,0.3)]">
+        <div className="w-full h-full grid grid-cols-8 grid-rows-8 gap-1 sm:gap-1.5 rounded-2xl bg-[#090d16] p-1 sm:p-1.5 relative">
+          {BOARD_TILES.map((tile, idx) => {
+            const pos = TILE_GRID_POSITIONS[idx];
+            const isCorner = idx === 0 || idx === 7 || idx === 14 || idx === 21;
+            const owner = getOwner(idx);
+            const buildLevel = owner ? (owner.buildings[idx] || 0) : 0;
+            const groupStyle = tile.group ? GROUP_STYLES[tile.group] : null;
+            const playersHere = playersByTile[idx] || [];
 
-      <div
-        className="absolute pointer-events-auto flex flex-col items-center justify-center"
-        style={{
-          width: `${boardDimension - 2 * cornerPx - 16}px`,
-          height: `${boardDimension - 2 * cornerPx - 16}px`
-        }}
-      >
-        {centerOverlay}
+            return (
+              <div
+                key={idx}
+                onClick={() => handleTileClick(tile)}
+                style={{ gridRow: pos.row, gridColumn: pos.col }}
+                className={`relative flex flex-col justify-between rounded-xl overflow-hidden cursor-pointer transition-all duration-150 border text-left ${
+                  isCorner
+                    ? 'bg-gradient-to-br from-[#1b2436] to-[#0f172a] border-amber-500/50 shadow-inner'
+                    : 'bg-[#111827]/90 hover:bg-[#1f293d] border-slate-800'
+                } ${groupStyle ? groupStyle.border : ''} ${
+                  owner ? 'ring-1' : ''
+                }`}
+                style-prop={{}}
+              >
+                {owner && (
+                  <div
+                    className="absolute top-0 right-0 w-3 h-3 sm:w-4 sm:h-4 z-10 flex items-center justify-center rounded-bl-lg text-[9px] font-bold text-white shadow"
+                    style={{ backgroundColor: owner.tokenColor }}
+                    title={`Chủ đất: ${owner.username}`}
+                  >
+                    {owner.tokenEmoji}
+                  </div>
+                )}
+
+                {tile.group && (
+                  <div className={`h-1.5 sm:h-2 w-full ${groupStyle?.bar || 'bg-slate-600'}`} />
+                )}
+
+                <div className="flex-1 flex flex-col justify-between p-1 sm:p-1.5 overflow-hidden">
+                  {idx === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <span className="text-xl sm:text-2xl animate-bounce">🏁</span>
+                      <span className="text-[10px] sm:text-xs font-black text-white leading-tight mt-0.5">XUẤT PHÁT</span>
+                      <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-400">+200Đ</span>
+                    </div>
+                  )}
+
+                  {idx === 7 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <span className="text-lg sm:text-xl">🔒</span>
+                      <span className="text-[9px] sm:text-[11px] font-black text-slate-200 leading-tight">KHÁM CHÍ HÒA</span>
+                      <span className="text-[8px] sm:text-[9px] text-slate-400">Ở Tù / Thăm</span>
+                    </div>
+                  )}
+
+                  {idx === 14 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <span className="text-lg sm:text-xl">☕</span>
+                      <span className="text-[9px] sm:text-[11px] font-black text-amber-300 leading-tight">CÀ PHÊ 8D</span>
+                      <span className="text-[8px] sm:text-[9px] font-extrabold text-amber-400">
+                        {gameState.freeParkingPool}Đ
+                      </span>
+                    </div>
+                  )}
+
+                  {idx === 21 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center">
+                      <span className="text-lg sm:text-xl animate-pulse">🚔</span>
+                      <span className="text-[9px] sm:text-[11px] font-black text-rose-400 leading-tight">CÔNG AN BẮT</span>
+                      <span className="text-[8px] sm:text-[9px] text-rose-300/80">Nồng độ cồn</span>
+                    </div>
+                  )}
+
+                  {!isCorner && (
+                    <>
+                      <div className="flex items-center justify-between gap-0.5">
+                        <span className="text-xs sm:text-sm">{TILE_ICONS[idx] || '📍'}</span>
+                        {buildLevel > 0 && (
+                          <div className="flex items-center gap-0.5" title={BUILD_LEVELS[buildLevel]?.name}>
+                            <span className="text-[10px] sm:text-xs">{BUILD_LEVELS[buildLevel]?.icon}</span>
+                            <span className="text-[8px] sm:text-[9px] font-black text-amber-300">
+                              {'★'.repeat(buildLevel)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="truncate my-auto">
+                        <div className="text-[9px] sm:text-[11px] font-black text-white leading-tight truncate">
+                          {tile.name}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[8px] sm:text-[10px] font-bold">
+                        {tile.price && (
+                          <span className="text-amber-300 font-extrabold">{tile.price}Đ</span>
+                        )}
+                        {tile.type === 'tax' && (
+                          <span className="text-rose-400 font-extrabold">-{tile.taxAmount}Đ</span>
+                        )}
+                        {tile.type === 'chance' && (
+                          <span className="text-purple-300 text-[8px] font-black">CƠ HỘI</span>
+                        )}
+                        {tile.type === 'community' && (
+                          <span className="text-cyan-300 text-[8px] font-black">KHÍ VẬN</span>
+                        )}
+                        {tile.type === 'station' && (
+                          <span className="text-amber-400 font-extrabold">{tile.price}Đ</span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {playersHere.length > 0 && (
+                  <div className="absolute inset-x-0 bottom-0.5 flex items-center justify-center gap-0.5 z-20 pointer-events-none">
+                    {playersHere.map(p => (
+                      <div
+                        key={p.id}
+                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-[0_2px_8px_rgba(0,0,0,0.8)] border-2 border-white transform transition-transform hover:scale-125 animate-bounce"
+                        style={{ backgroundColor: p.tokenColor }}
+                        title={p.username}
+                      >
+                        {p.tokenEmoji}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <div
+            style={{ gridRow: '2 / 8', gridColumn: '2 / 8' }}
+            className="relative rounded-2xl bg-gradient-to-br from-[#0a1420] via-[#080d17] to-[#120a06] border-2 border-amber-600/30 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] flex flex-col items-center justify-between p-3 sm:p-6 overflow-hidden"
+          >
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <div className="flex items-center gap-2">
+                <span className="text-xl sm:text-2xl">🎲</span>
+                <h1 className="text-base sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">
+                  CỜ TỶ PHÚ 8D
+                </h1>
+                <span className="text-xl sm:text-2xl">👑</span>
+              </div>
+              <p className="text-[10px] sm:text-xs text-amber-200/60 font-semibold tracking-widest uppercase">
+                Bản Sắc Việt Nam • Đắk Nông Vương Quốc
+              </p>
+            </div>
+
+            <div className="relative z-10 w-full flex flex-col items-center justify-center my-auto">
+              {centerOverlay}
+            </div>
+
+            <div className="relative z-10 w-full flex items-center justify-between px-2 text-[10px] sm:text-xs text-slate-400 font-semibold border-t border-slate-800/80 pt-2">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span>Bàn Cờ Trực Tuyến</span>
+              </div>
+              <div className="text-amber-400 font-bold">
+                Quy Tắc: Gom Nhóm Màu ➔ Xây Nhà
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {inspectedTile && (
-        <div className="absolute bottom-4 left-4 z-20 bg-[#131923]/95 border border-slate-700 p-3 rounded-xl shadow-xl max-w-xs text-xs backdrop-blur-md">
-          <div className="flex items-center justify-between gap-3 mb-1">
-            <span className="font-bold text-white text-sm">{inspectedTile.name}</span>
-            <button
-              onClick={() => setInspectedTile(null)}
-              className="text-slate-400 hover:text-white text-sm font-bold"
-            >
-              ✕
-            </button>
-          </div>
-          <p className="text-slate-400 italic mb-2">{inspectedTile.flavor}</p>
-          {inspectedTile.price && (
-            <div className="flex justify-between text-slate-300">
-              <span>Giá mua:</span>
-              <span className="font-extrabold text-amber-400">{inspectedTile.price}Đ</span>
-            </div>
-          )}
-          {inspectedTile.baseRent && (
-            <div className="flex justify-between text-slate-300">
-              <span>Thuê gốc:</span>
-              <span className="font-extrabold text-amber-400">{inspectedTile.baseRent}Đ</span>
-            </div>
-          )}
-        </div>
+        <PropertyCard
+          tile={inspectedTile}
+          owner={getOwner(inspectedTile.index)}
+          buildLevel={getOwner(inspectedTile.index)?.buildings[inspectedTile.index] || 0}
+          onClose={() => setInspectedTile(null)}
+        />
       )}
     </div>
   );
 };
+export default MonopolyBoard;

@@ -21,166 +21,359 @@ interface MonopolyGameProps {
   onBackToMenu?: () => void;
 }
 
-function getStoredPlayerInfo() {
-  const savedId = localStorage.getItem('monopoly_player_id');
-  const savedName = localStorage.getItem('monopoly_player_name');
-  if (savedId && savedName) {
-    return { id: savedId, username: savedName };
+type Screen = 'pre_lobby' | 'in_game';
+
+function generateRoomCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 5; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
   }
-  const newId = `p_${Math.random().toString(36).substring(2, 9)}`;
-  const randomNum = Math.floor(Math.random() * 900) + 100;
-  const newName = `Player_${randomNum}`;
-  localStorage.setItem('monopoly_player_id', newId);
-  localStorage.setItem('monopoly_player_name', newName);
-  return { id: newId, username: newName };
+  return code;
+}
+
+function generatePlayerId(): string {
+  return `p_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
 export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
-  const [playerInfo] = useState(getStoredPlayerInfo);
+  const [screen, setScreen] = useState<Screen>('pre_lobby');
+  const [playerName, setPlayerName] = useState(() => localStorage.getItem('monopoly_player_name') || '');
+  const [roomCode, setRoomCode] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [playerId] = useState(() => generatePlayerId());
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBuildMenu, setShowBuildMenu] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const roomId = urlParams.get('room') || 'default-room';
+  const urlRoomParam = new URLSearchParams(window.location.search).get('room');
 
   useEffect(() => {
+    if (urlRoomParam && playerName.trim()) {
+      joinRoom(urlRoomParam);
+    }
+  }, []);
+
+  const connectSocket = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
     const socket = io();
     socketRef.current = socket;
-
-    socket.emit('monopoly:join', {
-      roomId,
-      player: {
-        id: playerInfo.id,
-        username: playerInfo.username,
-        avatar: null
-      }
-    });
 
     socket.on('monopoly:game-state', (state: GameState) => {
       setGameState(state);
     });
 
-    return () => {
-      socket.disconnect();
-    };
-  }, [roomId, playerInfo]);
+    socket.on('monopoly:error', (data: { message: string }) => {
+      setJoinError(data.message);
+    });
+
+    socket.on('monopoly:kicked', () => {
+      setScreen('pre_lobby');
+      setGameState(null);
+      setActiveRoomId(null);
+    });
+
+    return socket;
+  }, []);
+
+  const joinRoom = useCallback((targetRoomId: string) => {
+    const name = playerName.trim();
+    if (!name) {
+      setJoinError('Vui lòng nhập tên trước khi vào phòng!');
+      return;
+    }
+    if (name.length < 2 || name.length > 16) {
+      setJoinError('Tên phải từ 2–16 ký tự!');
+      return;
+    }
+
+    localStorage.setItem('monopoly_player_name', name);
+    setJoinError('');
+
+    const socket = connectSocket();
+    const rid = targetRoomId.toUpperCase().trim();
+    setActiveRoomId(rid);
+
+    socket.emit('monopoly:join', {
+      roomId: rid,
+      player: {
+        id: playerId,
+        username: name,
+        avatar: null
+      }
+    });
+
+    setScreen('in_game');
+  }, [playerName, playerId, connectSocket]);
+
+  const handleCreateRoom = () => {
+    const code = generateRoomCode();
+    joinRoom(code);
+  };
+
+  const handleJoinRoom = () => {
+    if (!roomCode.trim()) {
+      setJoinError('Vui lòng nhập mã phòng!');
+      return;
+    }
+    joinRoom(roomCode.trim());
+  };
+
+  const handleLeaveRoom = useCallback(() => {
+    if (socketRef.current && activeRoomId) {
+      socketRef.current.emit('monopoly:leave', {
+        roomId: activeRoomId,
+        playerId: playerId
+      });
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+    setScreen('pre_lobby');
+    setGameState(null);
+    setActiveRoomId(null);
+    setRoomCode('');
+  }, [activeRoomId, playerId]);
 
   const handleSelectToken = useCallback((token: TokenOption) => {
     socketRef.current?.emit('monopoly:select-token', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       emoji: token.emoji,
       color: token.color
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleToggleReady = useCallback(() => {
     socketRef.current?.emit('monopoly:ready', {
-      roomId,
-      playerId: playerInfo.id
+      roomId: activeRoomId,
+      playerId: playerId
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleStartGame = useCallback(() => {
     socketRef.current?.emit('monopoly:start', {
-      roomId,
-      playerId: playerInfo.id
+      roomId: activeRoomId,
+      playerId: playerId
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleRollDice = useCallback(() => {
     socketRef.current?.emit('monopoly:roll', {
-      roomId,
-      playerId: playerInfo.id
+      roomId: activeRoomId,
+      playerId: playerId
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleBuyProperty = useCallback(() => {
     if (!gameState || gameState.pendingBuyTile === null || gameState.pendingBuyTile === undefined) return;
     socketRef.current?.emit('monopoly:buy', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       tileIndex: gameState.pendingBuyTile
     });
-  }, [roomId, playerInfo.id, gameState]);
+  }, [activeRoomId, playerId, gameState]);
 
   const handleSkipBuyProperty = useCallback(() => {
     if (!gameState || gameState.pendingBuyTile === null || gameState.pendingBuyTile === undefined) return;
     socketRef.current?.emit('monopoly:skip-buy', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       tileIndex: gameState.pendingBuyTile
     });
-  }, [roomId, playerInfo.id, gameState]);
+  }, [activeRoomId, playerId, gameState]);
+
+  const handleBuyoutProperty = useCallback(() => {
+    if (!gameState || gameState.pendingBuyoutTile === null || gameState.pendingBuyoutTile === undefined) return;
+    socketRef.current?.emit('monopoly:buyout', {
+      roomId: activeRoomId,
+      playerId: playerId,
+      tileIndex: gameState.pendingBuyoutTile
+    });
+  }, [activeRoomId, playerId, gameState]);
+
+  const handleSkipBuyoutProperty = useCallback(() => {
+    if (!gameState || gameState.pendingBuyoutTile === null || gameState.pendingBuyoutTile === undefined) return;
+    socketRef.current?.emit('monopoly:skip-buyout', {
+      roomId: activeRoomId,
+      playerId: playerId,
+      tileIndex: gameState.pendingBuyoutTile
+    });
+  }, [activeRoomId, playerId, gameState]);
 
   const handlePlaceBid = useCallback((amount: number) => {
     socketRef.current?.emit('monopoly:bid', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       amount
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleBuildTile = useCallback((tileIndex: number) => {
     socketRef.current?.emit('monopoly:build', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       tileIndex
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleEndTurn = useCallback(() => {
     setShowBuildMenu(false);
     socketRef.current?.emit('monopoly:end-turn', {
-      roomId,
-      playerId: playerInfo.id
+      roomId: activeRoomId,
+      playerId: playerId
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleJailAction = useCallback((action: JailAction) => {
     socketRef.current?.emit('monopoly:jail-action', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       action
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleApplyCard = useCallback(() => {
     socketRef.current?.emit('monopoly:apply-card', {
-      roomId,
-      playerId: playerInfo.id
+      roomId: activeRoomId,
+      playerId: playerId
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleProposeTrade = useCallback((proposal: TradeState) => {
     socketRef.current?.emit('monopoly:trade-propose', {
-      roomId,
+      roomId: activeRoomId,
       proposal
     });
-  }, [roomId]);
+  }, [activeRoomId]);
 
   const handleRespondTrade = useCallback((response: 'accept' | 'reject') => {
     socketRef.current?.emit('monopoly:trade-respond', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       response
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handleMiniGameComplete = useCallback((rewardMoney: number) => {
     socketRef.current?.emit('monopoly:mini-game-result', {
-      roomId,
-      playerId: playerInfo.id,
+      roomId: activeRoomId,
+      playerId: playerId,
       rewardMoney
     });
-  }, [roomId, playerInfo.id]);
+  }, [activeRoomId, playerId]);
 
   const handlePlayAgain = useCallback(() => {
-    window.location.reload();
-  }, []);
+    handleLeaveRoom();
+  }, [handleLeaveRoom]);
+
+  if (screen === 'pre_lobby') {
+    return (
+      <PageShell backTo="/" title="Cờ Tỷ Phú 8D" icon="🎲">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 py-8">
+          <div className="w-full max-w-md bg-[#131923] border-2 border-amber-500/50 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.2)] overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-950 via-[#1a1528] to-amber-950 p-5 text-center border-b border-amber-500/40">
+              <div className="text-3xl mb-1">🎲</div>
+              <h1 className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200 tracking-wider">
+                CỜ TỶ PHÚ 8D
+              </h1>
+              <p className="text-xs text-amber-200/60 font-semibold tracking-widest uppercase mt-0.5">
+                Bản Sắc Việt Nam • Đắk Nông Vương Quốc
+              </p>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-5">
+              <div>
+                <label className="block text-xs font-black text-amber-400 uppercase tracking-widest mb-2">
+                  Tên Hiển Thị Của Bạn
+                </label>
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={e => { setPlayerName(e.target.value); setJoinError(''); }}
+                  maxLength={16}
+                  placeholder="Nhập tên (VD: Tiến Đặng, Bug Hunter...)"
+                  className="w-full bg-slate-900 border-2 border-slate-700 focus:border-amber-500 text-white rounded-xl px-4 py-3 text-sm font-bold outline-none transition-colors placeholder:text-slate-500"
+                  onKeyDown={e => { if (e.key === 'Enter' && playerName.trim()) handleCreateRoom(); }}
+                />
+                <p className="text-[11px] text-slate-500 mt-1 font-semibold">{playerName.length}/16 ký tự</p>
+              </div>
+
+              {joinError && (
+                <div className="bg-rose-500/10 border border-rose-500/40 text-rose-400 px-4 py-2.5 rounded-xl text-xs font-bold text-center">
+                  {joinError}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <button
+                  onClick={handleCreateRoom}
+                  disabled={!playerName.trim()}
+                  className={`w-full py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl ${
+                    playerName.trim()
+                      ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white shadow-[0_0_30px_rgba(245,158,11,0.5)] hover:scale-[1.02] active:scale-95'
+                      : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  🏠 Tạo Phòng Mới
+                </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-800" />
+                  <span className="text-xs font-bold text-slate-500 uppercase">hoặc</span>
+                  <div className="flex-1 h-px bg-slate-800" />
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={roomCode}
+                    onChange={e => { setRoomCode(e.target.value.toUpperCase()); setJoinError(''); }}
+                    maxLength={6}
+                    placeholder="Nhập mã phòng"
+                    className="flex-1 bg-slate-900 border-2 border-slate-700 focus:border-amber-500 text-white rounded-xl px-4 py-3 text-sm font-mono font-bold tracking-widest text-center outline-none transition-colors uppercase placeholder:text-slate-500 placeholder:tracking-normal placeholder:font-sans"
+                    onKeyDown={e => { if (e.key === 'Enter') handleJoinRoom(); }}
+                  />
+                  <button
+                    onClick={handleJoinRoom}
+                    disabled={!playerName.trim() || !roomCode.trim()}
+                    className={`px-5 py-3 rounded-xl font-black text-sm transition-all ${
+                      playerName.trim() && roomCode.trim()
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 active:scale-95'
+                        : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Vào Phòng
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/60 rounded-2xl p-4 border border-slate-800 space-y-2 text-xs text-slate-400 font-semibold">
+                <div className="text-amber-400 font-black uppercase tracking-widest text-[10px]">Hướng Dẫn Nhanh</div>
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-300 shrink-0">1.</span>
+                  <span>Nhập tên ➔ <strong className="text-white">Tạo Phòng Mới</strong> để làm chủ phòng (Host)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-300 shrink-0">2.</span>
+                  <span>Gửi <strong className="text-amber-300">mã phòng</strong> cho bạn bè để họ nhập và tham gia</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-amber-300 shrink-0">3.</span>
+                  <span>Host bấm <strong className="text-white">BẮT ĐẦU</strong> khi đủ 2–4 người</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PageShell>
+    );
+  }
 
   if (!gameState) {
     return (
@@ -189,7 +382,13 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           <div className="w-16 h-16 rounded-3xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-3xl animate-spin">
             🎲
           </div>
-          <div className="text-sm font-bold text-slate-300">Đang kết nối vào phòng bàn cờ 8D...</div>
+          <div className="text-sm font-bold text-slate-300">Đang kết nối vào phòng {activeRoomId}...</div>
+          <button
+            onClick={handleLeaveRoom}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-bold transition-all"
+          >
+            ← Quay lại
+          </button>
         </div>
       </PageShell>
     );
@@ -201,11 +400,11 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         <div className="py-4">
           <MonopolyLobby
             gameState={gameState}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             onSelectToken={handleSelectToken}
             onToggleReady={handleToggleReady}
             onStartGame={handleStartGame}
-            onBackToMenu={onBackToMenu}
+            onBackToMenu={handleLeaveRoom}
           />
         </div>
       </PageShell>
@@ -213,7 +412,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   }
 
   const currPlayer = gameState.players[gameState.currentPlayerIndex];
-  const isMyTurn = currPlayer?.id === playerInfo.id;
+  const isMyTurn = currPlayer?.id === playerId;
   const canRoll = isMyTurn && gameState.phase === 'ROLL_DICE';
 
   return (
@@ -221,16 +420,16 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
       <div className="flex flex-col gap-3 py-2">
         <MonopolyHUD
           gameState={gameState}
-          myPlayerId={playerInfo.id}
+          myPlayerId={playerId}
           onOpenLog={() => setShowLog(true)}
           onOpenTrade={() => setShowTradeModal(true)}
-          onBackToMenu={onBackToMenu}
+          onBackToMenu={handleLeaveRoom}
         />
 
         <div className="flex justify-center">
           <MonopolyBoard
             gameState={gameState}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             centerOverlay={
               <div className="flex flex-col items-center justify-center gap-3 p-4">
                 <DiceRoller
@@ -246,6 +445,15 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
                     className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs shadow-lg shadow-amber-600/30 animate-pulse"
                   >
                     🔨 Nâng cấp đất & Xây nhà
+                  </button>
+                )}
+
+                {isMyTurn && (gameState.phase === 'BUILD_PHASE' || gameState.phase === 'END_TURN') && (
+                  <button
+                    onClick={handleEndTurn}
+                    className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs"
+                  >
+                    Kết Thúc Lượt ➔
                   </button>
                 )}
               </div>
@@ -265,11 +473,24 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           />
         )}
 
+        {gameState.phase === 'BUYOUT_PROMPT' && gameState.pendingBuyoutTile !== null && gameState.pendingBuyoutTile !== undefined && (
+          <BuyPrompt
+            tileIndex={gameState.pendingBuyoutTile}
+            playerMoney={currPlayer?.money || 0}
+            isBuyout={true}
+            currentOwnerName={gameState.players.find(p => p.properties.includes(gameState.pendingBuyoutTile!))?.username}
+            timer={gameState.turnTimer}
+            isMyTurn={isMyTurn}
+            onBuy={handleBuyoutProperty}
+            onSkip={handleSkipBuyoutProperty}
+          />
+        )}
+
         {gameState.phase === 'AUCTION' && gameState.auctionState && (
           <AuctionModal
             auctionState={gameState.auctionState}
             players={gameState.players}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             onPlaceBid={handlePlaceBid}
           />
         )}
@@ -294,7 +515,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         {(gameState.phase === 'TRADE_PHASE' || showTradeModal) && (
           <TradeModal
             gameState={gameState}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             onProposeTrade={handleProposeTrade}
             onRespondTrade={handleRespondTrade}
             onClose={() => setShowTradeModal(false)}
@@ -304,7 +525,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         {gameState.phase === 'BUILD_PHASE' && showBuildMenu && (
           <BuildMenu
             gameState={gameState}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             onBuild={handleBuildTile}
             onEndTurn={handleEndTurn}
           />
@@ -331,9 +552,9 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         {gameState.phase === 'GAME_OVER' && (
           <GameOverScreen
             gameState={gameState}
-            myPlayerId={playerInfo.id}
+            myPlayerId={playerId}
             onPlayAgain={handlePlayAgain}
-            onBackToMenu={onBackToMenu || (() => { window.location.href = '/'; })}
+            onBackToMenu={handleLeaveRoom}
           />
         )}
       </div>
