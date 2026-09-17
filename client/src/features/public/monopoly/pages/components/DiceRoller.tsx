@@ -66,7 +66,11 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
         {dots.map(([top, left], idx) => (
           <div
             key={idx}
-            className="absolute w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gradient-to-br from-slate-900 to-black shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] -translate-x-1/2 -translate-y-1/2"
+            className={`absolute rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)] -translate-x-1/2 -translate-y-1/2 ${
+              value === 1
+                ? 'w-3 h-3 sm:w-3.5 sm:h-3.5 bg-gradient-to-br from-red-500 to-rose-700'
+                : 'w-2 h-2 sm:w-2.5 sm:h-2.5 bg-gradient-to-br from-slate-900 to-black'
+            }`}
             style={{ top: `${top}%`, left: `${left}%` }}
           />
         ))}
