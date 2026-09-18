@@ -66,6 +66,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [showBuildMenu, setShowBuildMenu] = useState(false);
   const [showPlayerDetail, setShowPlayerDetail] = useState<PlayerState | null>(null);
   const socketRef = useRef<Socket | null>(null);
+  const animatingRef = useRef<boolean>(false);
 
   const urlRoomParam = new URLSearchParams(window.location.search).get('room');
 
@@ -80,27 +81,15 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
     socket.on('monopoly:game-state', (state: GameState) => {
       setGameState(state);
-      setVisualPositions(prev => {
-        const next = { ...prev };
-        state.players.forEach(p => {
-          if (next[p.id] === undefined) {
+      if (!animatingRef.current) {
+        setVisualPositions(() => {
+          const next: Record<string, number> = {};
+          state.players.forEach(p => {
             next[p.id] = p.position;
-          }
-        });
-        return next;
-      });
-      setAnimatingPlayerId(currentAnimId => {
-        if (!currentAnimId) {
-          setVisualPositions(prev => {
-            const next = { ...prev };
-            state.players.forEach(p => {
-              next[p.id] = p.position;
-            });
-            return next;
           });
-        }
-        return currentAnimId;
-      });
+          return next;
+        });
+      }
     });
 
     socket.on('monopoly:player-moved', (data: { playerId: string; newPos: number; passedGo: boolean; path: number[] }) => {
@@ -110,9 +99,9 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         return;
       }
 
+      animatingRef.current = true;
       setIsHopping(true);
       setAnimatingPlayerId(pId);
-      setVisualPositions(prev => ({ ...prev, [pId]: path[0] }));
 
       path.forEach((stepPos, idx) => {
         setTimeout(() => {
@@ -124,6 +113,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
               setAnimatingPlayerId(null);
               setIsHopping(false);
+              animatingRef.current = false;
               setSelectedTileIndex(newPos);
 
               if (passedGo) {

@@ -90,7 +90,7 @@ function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNo
       <div
         className="absolute -top-3.5 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-45deg)',
           transformOrigin: 'bottom center'
         }}
       >
@@ -133,7 +133,7 @@ function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNo
       <div
         className="absolute -top-4 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-45deg)',
           transformOrigin: 'bottom center'
         }}
       >
@@ -176,7 +176,7 @@ function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNo
       <div
         className="absolute -top-5 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-45deg)',
           transformOrigin: 'bottom center'
         }}
       >
@@ -222,7 +222,7 @@ function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNo
       <div
         className="absolute -top-6 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-45deg)',
           transformOrigin: 'bottom center'
         }}
       >
@@ -270,7 +270,7 @@ function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNo
     <div
       className="absolute -top-8 left-1/2 pointer-events-none z-30 flex flex-col items-center"
       style={{
-        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-45deg)',
         transformOrigin: 'bottom center'
       }}
     >
@@ -359,13 +359,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
   return (
     <div
       className="w-full h-full flex items-center justify-center select-none overflow-visible"
-      style={{ perspective: '1200px', perspectiveOrigin: 'center center' }}
+      style={{ perspective: '1800px', perspectiveOrigin: 'center 40%' }}
     >
       <style>{`
         @keyframes boardTokenHop {
-          0%, 100% { transform: rotateZ(45deg) rotateX(-48deg) translateY(0) scale(1); }
-          40% { transform: rotateZ(45deg) rotateX(-48deg) translateY(-22px) scale(1.25); }
-          70% { transform: rotateZ(45deg) rotateX(-48deg) translateY(-8px) scale(1.1); }
+          0%, 100% { transform: rotateZ(45deg) rotateX(-45deg) translateY(0) scale(1); }
+          40% { transform: rotateZ(45deg) rotateX(-45deg) translateY(-22px) scale(1.25); }
+          70% { transform: rotateZ(45deg) rotateX(-45deg) translateY(-8px) scale(1.1); }
         }
         @keyframes tileHoverPulse {
           0%, 100% { filter: drop-shadow(0 0 0px transparent); }
@@ -391,9 +391,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(780px, calc(100vw * 0.7), calc((100vh - 60px) * 1.1))',
+          width: 'min(850px, calc(100vw * 0.82), calc((100vh - 50px) * 1.2))',
           aspectRatio: '1',
-          transform: 'rotateX(48deg) rotateZ(-45deg) translateY(-3%)',
+          transform: 'rotateX(45deg) rotateZ(-45deg) translateY(-8%)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #92400e 0%, #78350f 30%, #5c2707 70%, #451a03 100%)',
           border: '8px solid #b45309',
@@ -453,12 +453,8 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           }}
         >
           <div
-            className="w-full h-full grid gap-[2px] p-[2px] rounded-xl relative"
-            style={{
-              background: '#cbd5e1',
-              gridTemplateColumns: '2.4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2.4fr',
-              gridTemplateRows: '2.4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2.4fr'
-            }}
+            className="w-full h-full grid grid-cols-10 grid-rows-10 gap-[2px] p-[2px] rounded-xl relative"
+            style={{ background: '#cbd5e1' }}
           >
             {BOARD_TILES.map((tile, idx) => {
               const pos = getTileGridPosition(idx);
@@ -783,7 +779,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             style={
                               !isHopping
                                 ? {
-                                    transform: 'rotateZ(45deg) rotateX(-54deg)',
+                                    transform: 'rotateZ(45deg) rotateX(-50deg)',
                                     transformOrigin: 'bottom center'
                                   }
                                 : {
@@ -792,7 +788,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             }
                           >
                             <div
-                              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex items-center justify-center relative shadow-lg"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center relative shadow-lg"
                               style={{
                                 border: `3px solid ${p.tokenColor}`,
                                 background: '#0f172a',
@@ -813,8 +809,18 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                                 />
                               )}
                             </div>
+                            <span
+                              className="text-[7px] font-black px-1.5 py-0.5 rounded-full mt-0.5 leading-none whitespace-nowrap max-w-[52px] truncate text-center shadow-lg"
+                              style={{
+                                background: p.tokenColor,
+                                color: '#fff',
+                                textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+                              }}
+                            >
+                              {p.username}
+                            </span>
                             <div
-                              className="w-6 h-2.5 rounded-full mt-0.5"
+                              className="w-7 h-2 rounded-full mt-0.5"
                               style={{
                                 background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 80%)'
                               }}
