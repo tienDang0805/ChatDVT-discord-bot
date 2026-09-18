@@ -83,8 +83,8 @@ function getTileGridPosition(index: number): { row: number; col: number; side: '
 }
 
 function getTileCenterPercent(index: number): { x: number; y: number } {
-  const colCenters = [6.31, 17.29, 26.64, 35.98, 45.33, 54.67, 64.02, 73.37, 82.71, 93.69];
-  const rowCenters = [6.31, 17.29, 26.64, 35.98, 45.33, 54.67, 64.02, 73.37, 82.71, 93.69];
+  const colCenters = [8.87, 21.77, 29.84, 37.90, 45.97, 54.03, 62.10, 70.16, 78.23, 91.13];
+  const rowCenters = [8.87, 21.77, 29.84, 37.90, 45.97, 54.03, 62.10, 70.16, 78.23, 91.13];
   const pos = getTileGridPosition(index);
   return {
     x: colCenters[pos.col - 1],
@@ -97,15 +97,15 @@ function render3DBuildingModel(level: number, ownerColor: string = '#f59e0b'): R
     <div
       className="absolute top-1/2 left-1/2 pointer-events-none z-30 flex flex-col items-center select-none"
       style={{
-        transform: 'translate(-50%, -50%) rotateZ(45deg) rotateX(-54deg) translateY(-8px)',
+        transform: 'translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg) translateY(-10px)',
         transformOrigin: 'bottom center'
       }}
     >
-      <div className="relative flex flex-col items-center drop-shadow-[0_8px_12px_rgba(0,0,0,0.65)]">
-        <div className="absolute -top-3.5 -right-2 flex items-start z-20">
-          <div className="w-[2px] h-4 bg-amber-200 shadow-sm" />
+      <div className="relative flex flex-col items-center drop-shadow-[0_10px_16px_rgba(0,0,0,0.7)]">
+        <div className="absolute -top-4 -right-2.5 flex items-start z-20">
+          <div className="w-[2px] h-4.5 bg-amber-200 shadow-sm" />
           <div
-            className="w-3 h-2 shadow-sm"
+            className="w-3.5 h-2.5 shadow-sm"
             style={{
               background: ownerColor,
               clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
@@ -115,7 +115,7 @@ function render3DBuildingModel(level: number, ownerColor: string = '#f59e0b'): R
 
         {level === 0 && (
           <div className="flex flex-col items-center">
-            <div className="w-5 h-5 rounded-full bg-amber-900 border border-amber-500 flex items-center justify-center text-[10px] shadow-lg">
+            <div className="w-6 h-6 rounded-full bg-amber-900 border-2 border-amber-400 flex items-center justify-center text-xs shadow-lg">
               🐶
             </div>
           </div>
@@ -124,11 +124,11 @@ function render3DBuildingModel(level: number, ownerColor: string = '#f59e0b'): R
         {level === 1 && (
           <div className="flex flex-col items-center">
             <div
-              className="w-6 h-3 bg-gradient-to-r from-red-600 to-rose-700 shadow-md"
+              className="w-7 h-3.5 bg-gradient-to-r from-red-600 to-rose-700 shadow-md"
               style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
             />
-            <div className="w-5 h-4 bg-gradient-to-b from-amber-100 to-amber-200 border border-amber-900 flex items-center justify-center shadow-inner -mt-0.5">
-              <div className="w-1.5 h-2 bg-amber-900 rounded-t-sm" />
+            <div className="w-6 h-5 bg-gradient-to-b from-amber-100 to-amber-200 border border-amber-900 flex items-center justify-center shadow-inner -mt-0.5">
+              <div className="w-2 h-2.5 bg-amber-900 rounded-t-sm" />
             </div>
           </div>
         )}
@@ -136,81 +136,55 @@ function render3DBuildingModel(level: number, ownerColor: string = '#f59e0b'): R
         {level === 2 && (
           <div className="flex flex-col items-center">
             <div
-              className="w-7 h-3.5 bg-gradient-to-r from-sky-600 to-blue-700 shadow-md"
+              className="w-8 h-4 bg-gradient-to-r from-sky-600 to-blue-700 shadow-md"
               style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
             />
-            <div className="w-6 h-6 bg-gradient-to-b from-sky-50 to-sky-200 border border-sky-950 flex flex-col items-center justify-between p-0.5 shadow-inner -mt-0.5">
+            <div className="w-7 h-7 bg-gradient-to-b from-sky-50 to-sky-200 border border-sky-950 flex flex-col items-center justify-between p-0.5 shadow-inner -mt-0.5">
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-sky-900" />
                 <div className="w-1.5 h-1.5 bg-sky-900" />
               </div>
-              <div className="w-2 h-2.5 bg-amber-900 rounded-t-sm" />
+              <div className="w-2.5 h-3 bg-amber-900 rounded-t-sm" />
             </div>
           </div>
         )}
 
         {level === 3 && (
           <div className="flex flex-col items-center">
-            <div className="w-6 h-2 bg-gradient-to-r from-amber-400 to-yellow-500 border border-amber-600 rounded-t-sm" />
-            <div className="w-7 h-9 bg-gradient-to-b from-slate-100 via-amber-50 to-slate-200 border-2 border-amber-700 flex flex-col items-center justify-around py-0.5 shadow-xl -mt-0.5">
-              <div className="flex gap-1">
+            <div className="w-7 h-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 border border-amber-600 rounded-t-sm" />
+            <div className="w-8 h-10 bg-gradient-to-b from-slate-100 via-amber-50 to-slate-200 border-2 border-amber-700 flex flex-col items-center justify-around py-1 shadow-xl -mt-0.5">
+              <div className="flex gap-1.5">
                 <div className="w-1.5 h-1.5 bg-amber-800" />
                 <div className="w-1.5 h-1.5 bg-amber-800" />
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 <div className="w-1.5 h-1.5 bg-amber-800" />
                 <div className="w-1.5 h-1.5 bg-amber-800" />
               </div>
-              <div className="w-2.5 h-3 bg-amber-950 rounded-t-sm" />
+              <div className="w-3 h-3.5 bg-amber-950 rounded-t-sm" />
             </div>
           </div>
         )}
 
         {level === 4 && (
           <div className="flex flex-col items-center animate-pulse">
-            <div className="text-base leading-none -mb-1 drop-shadow-[0_0_8px_rgba(245,158,11,1)]">👑</div>
+            <div className="text-lg leading-none -mb-1 drop-shadow-[0_0_10px_rgba(245,158,11,1)]">👑</div>
             <div
-              className="w-8 h-4 bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 border border-amber-600 shadow-lg"
+              className="w-10 h-5 bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-500 border border-amber-600 shadow-lg"
               style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}
             />
-            <div className="w-8 h-10 bg-gradient-to-b from-amber-100 via-yellow-300 to-amber-500 border-2 border-amber-800 flex flex-col items-center justify-between py-1 shadow-[0_0_15px_rgba(245,158,11,0.8)] -mt-0.5">
-              <div className="flex gap-1">
+            <div className="w-9 h-12 bg-gradient-to-b from-amber-100 via-yellow-300 to-amber-500 border-2 border-amber-800 flex flex-col items-center justify-between py-1 shadow-[0_0_20px_rgba(245,158,11,0.9)] -mt-0.5">
+              <div className="flex gap-1.5">
                 <div className="w-2 h-2 bg-amber-900 rounded-sm" />
                 <div className="w-2 h-2 bg-amber-900 rounded-sm" />
               </div>
-              <div className="w-3 h-4 bg-slate-950 rounded-t-sm border border-amber-300" />
+              <div className="w-3.5 h-5 bg-slate-950 rounded-t-sm border border-amber-300" />
             </div>
           </div>
         )}
       </div>
 
-      <div className="w-7 h-2 rounded-full bg-black/50 blur-[1px] mt-0.5" />
-    </div>
-  );
-}
-
-function renderMoneyStack(style: React.CSSProperties): React.ReactNode {
-  return (
-    <div
-      className="absolute pointer-events-none select-none z-10 hidden md:flex flex-col items-center"
-      style={style}
-    >
-      <div
-        className="flex flex-col -space-y-2.5 drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)]"
-        style={{ transform: 'rotateX(54deg) rotateZ(-45deg)' }}
-      >
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="w-14 h-8 rounded-sm bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-800 border border-emerald-400/80 shadow flex items-center justify-center relative"
-          >
-            <div className="w-10 h-5 border border-emerald-300/40 rounded-sm flex items-center justify-center">
-              <span className="text-[7px] font-black text-emerald-200 opacity-90">💵 $100K</span>
-            </div>
-            <div className="absolute inset-x-0 bottom-0 h-1 bg-black/40" />
-          </div>
-        ))}
-      </div>
+      <div className="w-9 h-2.5 rounded-full bg-black/55 blur-[1px] mt-0.5" />
     </div>
   );
 }
@@ -251,16 +225,16 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     >
       <style>{`
         @keyframes pawnHopBillboard {
-          0%, 100% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-54deg) translateY(0) scale(1); }
-          50% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-54deg) translateY(-24px) scale(1.22); }
+          0%, 100% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg) translateY(0) scale(1); }
+          50% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg) translateY(-26px) scale(1.22); }
         }
         @keyframes tileHoverGlow {
           0%, 100% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4)); }
-          50% { filter: drop-shadow(0 0 12px rgba(245, 158, 11, 1)); }
+          50% { filter: drop-shadow(0 0 14px rgba(245, 158, 11, 1)); }
         }
         @keyframes landingPulse {
-          0%, 100% { box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.7), 0 0 25px rgba(245, 158, 11, 0.9); }
-          50% { box-shadow: inset 0 0 30px rgba(245, 158, 11, 1), 0 0 45px rgba(251, 191, 36, 1); }
+          0%, 100% { box-shadow: inset 0 0 18px rgba(245, 158, 11, 0.7), 0 0 30px rgba(245, 158, 11, 0.95); }
+          50% { box-shadow: inset 0 0 36px rgba(245, 158, 11, 1), 0 0 50px rgba(251, 191, 36, 1); }
         }
         .iso-tile {
           transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
@@ -278,18 +252,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
         }
       `}</style>
 
-      {renderMoneyStack({ bottom: '8%', left: '14%' })}
-      {renderMoneyStack({ top: '10%', left: '14%' })}
-      {renderMoneyStack({ top: '10%', right: '14%' })}
-      {renderMoneyStack({ bottom: '8%', right: '14%' })}
-
       <div
         className="relative transition-transform duration-500 rounded-3xl"
         style={{
-          width: 'min(980px, 86vw, calc(100vh - 30px))',
-          height: 'min(980px, 86vw, calc(100vh - 30px))',
+          width: 'min(1120px, 94vw, calc(115vh - 20px))',
+          height: 'min(1120px, 94vw, calc(115vh - 20px))',
           aspectRatio: '1',
-          transform: 'rotateX(54deg) rotateZ(-45deg) translateY(-2%) scale(1.04)',
+          transform: 'rotateX(50deg) rotateZ(-45deg) translateY(-2%) scale(1.18)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #78350f 0%, #592506 30%, #3e1903 70%, #290f02 100%)',
           border: '10px solid #92400e',
@@ -300,56 +269,56 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             0 16px 0 #180801,
             0 20px 0 #0d0400,
             0 30px 50px rgba(0,0,0,0.8),
-            0 50px 90px rgba(0,0,0,0.9)
+            0 55px 100px rgba(0,0,0,0.92)
           `
         }}
       >
         <div
-          className="absolute -top-3.5 -left-3.5 w-11 h-11 rounded-tl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
+          className="absolute -top-4 -left-4 w-12 h-12 rounded-tl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
           style={{
             background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
             border: '3px solid #f1f5f9'
           }}
         >
-          <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
         </div>
         <div
-          className="absolute -top-3.5 -right-3.5 w-11 h-11 rounded-tr-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
+          className="absolute -top-4 -right-4 w-12 h-12 rounded-tr-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
           style={{
             background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
             border: '3px solid #f1f5f9'
           }}
         >
-          <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
         </div>
         <div
-          className="absolute -bottom-3.5 -left-3.5 w-11 h-11 rounded-bl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
+          className="absolute -bottom-4 -left-4 w-12 h-12 rounded-bl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
           style={{
             background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
             border: '3px solid #f1f5f9'
           }}
         >
-          <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
         </div>
         <div
-          className="absolute -bottom-3.5 -right-3.5 w-11 h-11 rounded-br-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
+          className="absolute -bottom-4 -right-4 w-12 h-12 rounded-br-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
           style={{
             background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
             border: '3px solid #f1f5f9'
           }}
         >
-          <div className="w-3 h-3 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
+          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
         </div>
 
         <div
           className="absolute inset-[6px] rounded-2xl overflow-hidden z-10 border-2 border-amber-400/80 shadow-inner"
         >
           <div
-            className="w-full h-full grid gap-[2px] p-[2px] rounded-xl relative"
+            className="w-full h-full grid gap-[3px] p-[2px] rounded-xl relative"
             style={{
               background: '#0f172a',
-              gridTemplateColumns: '1.45fr repeat(8, 1fr) 1.45fr',
-              gridTemplateRows: '1.45fr repeat(8, 1fr) 1.45fr'
+              gridTemplateColumns: '2.2fr repeat(8, 1fr) 2.2fr',
+              gridTemplateRows: '2.2fr repeat(8, 1fr) 2.2fr'
             }}
           >
             {BOARD_TILES.map((tile, idx) => {
@@ -389,19 +358,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               const tileBorder = isLandingTarget
                 ? '3.5px solid #fbbf24'
                 : isCorner
-                ? '2px solid #64748b'
+                ? '2.5px solid #64748b'
                 : owner
-                ? `2.5px solid ${owner.tokenColor}`
+                ? `3px solid ${owner.tokenColor}`
                 : isStation
-                ? '2px solid #f59e0b'
+                ? '2.5px solid #f59e0b'
                 : isResort
                 ? '2.5px solid #8b5cf6'
                 : isTax
-                ? '1.5px solid #ef4444'
+                ? '2px solid #ef4444'
                 : isChance
-                ? '1.5px solid #f97316'
+                ? '2px solid #f97316'
                 : isCommunity
-                ? '1.5px solid #6366f1'
+                ? '2px solid #6366f1'
                 : groupConf
                 ? `2px solid ${groupConf.border}`
                 : '1.5px solid #94a3b8';
@@ -420,31 +389,31 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     border: tileBorder,
                     cursor: 'pointer'
                   }}
-                  className={`iso-tile rounded-sm sm:rounded-md overflow-hidden flex flex-col justify-between relative shadow-sm ${
+                  className={`iso-tile rounded-md overflow-hidden flex flex-col justify-between relative shadow-sm ${
                     isLandingTarget ? 'animate-[landingPulse_1.2s_ease-in-out_infinite] z-20' : isInspected ? 'iso-tile-selected z-15' : 'z-0'
                   }`}
                 >
                   {owner && !isCorner ? (
                     <div
-                      className="h-[16px] sm:h-[18px] w-full shrink-0 flex items-center justify-between px-1 overflow-hidden border-b border-white/40"
+                      className="h-[20px] sm:h-[24px] w-full shrink-0 flex items-center justify-between px-1.5 overflow-hidden border-b border-white/40"
                       style={{
                         background: `linear-gradient(90deg, ${owner.tokenColor}, #0f172a 90%)`,
-                        boxShadow: `0 1px 4px ${owner.tokenColor}`
+                        boxShadow: `0 1px 5px ${owner.tokenColor}`
                       }}
                     >
                       <div className="flex items-center gap-1 min-w-0">
-                        <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
                           {owner.avatar ? (
                             <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <span className="text-[8px]">{owner.tokenEmoji}</span>
+                            <span className="text-[9px]">{owner.tokenEmoji}</span>
                           )}
                         </div>
-                        <span className="text-[7.5px] sm:text-[9px] font-black text-white truncate max-w-[48px] leading-none uppercase drop-shadow">
+                        <span className="text-[8.5px] sm:text-[10px] font-black text-white truncate max-w-[55px] leading-none uppercase drop-shadow">
                           {owner.username}
                         </span>
                       </div>
-                      <span className="text-[7px] sm:text-[8px] font-black text-amber-300 shrink-0 leading-none">
+                      <span className="text-[8px] sm:text-[9.5px] font-black text-amber-300 shrink-0 leading-none">
                         {isStation ? 'TRẠM' : buildLevel === 4 ? '👑 MAX' : `Lv.${buildLevel}`}
                       </span>
                     </div>
@@ -452,13 +421,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     <>
                       {groupConf && !isResort && (
                         <div
-                          className="h-[14px] sm:h-[16px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[18px] sm:h-[22px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: groupConf.headerGradient,
                             boxShadow: `0 1px 4px ${groupConf.glow}`
                           }}
                         >
-                          <span className="text-[7px] sm:text-[8.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm">
+                          <span className="text-[8px] sm:text-[10px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm">
                             {groupConf.name}
                           </span>
                         </div>
@@ -466,13 +435,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       {isResort && (
                         <div
-                          className="h-[14px] sm:h-[16px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[18px] sm:h-[22px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: 'linear-gradient(90deg, #4c1d95, #7c3aed, #c084fc, #7c3aed, #4c1d95)',
-                            boxShadow: '0 1px 4px rgba(124,58,237,0.7)'
+                            boxShadow: '0 1px 5px rgba(124,58,237,0.7)'
                           }}
                         >
-                          <span className="text-[7.5px] sm:text-[9px] font-black text-amber-200 tracking-wider uppercase leading-none drop-shadow">
+                          <span className="text-[8.5px] sm:text-[10.5px] font-black text-amber-200 tracking-wider uppercase leading-none drop-shadow">
                             👑 RESORT 5⭐
                           </span>
                         </div>
@@ -480,13 +449,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       {isStation && (
                         <div
-                          className="h-[14px] sm:h-[16px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[18px] sm:h-[22px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: 'linear-gradient(90deg, #92400e, #d97706, #fbbf24, #d97706, #92400e)',
-                            boxShadow: '0 1px 4px rgba(245,158,11,0.7)'
+                            boxShadow: '0 1px 5px rgba(245,158,11,0.7)'
                           }}
                         >
-                          <span className="text-[7.5px] sm:text-[9px] font-black text-slate-950 tracking-wider uppercase leading-none">
+                          <span className="text-[8.5px] sm:text-[10px] font-black text-slate-950 tracking-wider uppercase leading-none">
                             ⭐ TRẠM ĐẶC BIỆT ⭐
                           </span>
                         </div>
@@ -494,13 +463,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       {isTax && (
                         <div
-                          className="h-[13px] sm:h-[15px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[16px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: 'linear-gradient(90deg, #881337, #dc2626, #f87171, #dc2626, #881337)',
-                            boxShadow: '0 1px 3px rgba(220,38,38,0.6)'
+                            boxShadow: '0 1px 4px rgba(220,38,38,0.6)'
                           }}
                         >
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-white tracking-wider uppercase leading-none">
+                          <span className="text-[8.5px] sm:text-[10px] font-black text-white tracking-wider uppercase leading-none">
                             🚨 NỘP PHẠT
                           </span>
                         </div>
@@ -508,13 +477,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       {isChance && (
                         <div
-                          className="h-[13px] sm:h-[15px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[16px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: 'linear-gradient(90deg, #c2410c, #ea580c, #fdba74, #ea580c, #c2410c)',
-                            boxShadow: '0 1px 3px rgba(234,88,12,0.6)'
+                            boxShadow: '0 1px 4px rgba(234,88,12,0.6)'
                           }}
                         >
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-white tracking-wider uppercase leading-none">
+                          <span className="text-[8.5px] sm:text-[10px] font-black text-white tracking-wider uppercase leading-none">
                             🎴 CƠ HỘI
                           </span>
                         </div>
@@ -522,13 +491,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                       {isCommunity && (
                         <div
-                          className="h-[13px] sm:h-[15px] w-full shrink-0 flex items-center justify-center overflow-hidden"
+                          className="h-[16px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
                           style={{
                             background: 'linear-gradient(90deg, #4338ca, #6366f1, #a5b4fc, #6366f1, #4338ca)',
-                            boxShadow: '0 1px 3px rgba(99,102,241,0.6)'
+                            boxShadow: '0 1px 4px rgba(99,102,241,0.6)'
                           }}
                         >
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-white tracking-wider uppercase leading-none">
+                          <span className="text-[8.5px] sm:text-[10px] font-black text-white tracking-wider uppercase leading-none">
                             🎁 KHÍ VẬN
                           </span>
                         </div>
@@ -536,19 +505,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     </>
                   )}
 
-                  <div className="w-full flex-1 flex flex-col items-center justify-center px-0.5 pointer-events-none min-h-0 overflow-hidden">
+                  <div className="w-full flex-1 flex flex-col items-center justify-center px-1 pointer-events-none min-h-0 overflow-hidden py-1">
                     {isCorner && cornerData ? (
-                      <div className="flex flex-col items-center justify-center text-center gap-0.5 p-1 w-full h-full">
-                        <span className="text-2xl sm:text-3xl drop-shadow">{cornerData.icon}</span>
+                      <div className="flex flex-col items-center justify-center text-center gap-1 p-1 w-full h-full">
+                        <span className="text-3xl sm:text-4xl drop-shadow">{cornerData.icon}</span>
                         <span
-                          className={`text-[9.5px] sm:text-[11px] font-black tracking-wider leading-tight text-center ${
+                          className={`text-[10.5px] sm:text-[12.5px] font-black tracking-wider leading-tight text-center ${
                             cornerData.textDark ? 'text-slate-900' : 'text-white'
                           }`}
                         >
                           {cornerData.label}
                         </span>
                         <span
-                          className={`text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full mt-0.5 shadow-sm ${
+                          className={`text-[9px] sm:text-[10.5px] font-black px-2 py-0.5 rounded-full mt-0.5 shadow-sm ${
                             cornerData.textDark
                               ? 'bg-emerald-600 text-white'
                               : 'bg-black/75 text-amber-300'
@@ -559,17 +528,17 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </div>
                     ) : (
                       <>
-                        <span className={`drop-shadow-sm leading-none mt-0.5 ${isStation || isResort ? 'text-lg sm:text-2xl' : 'text-sm sm:text-base'}`}>
+                        <span className={`drop-shadow-sm leading-none mt-0.5 ${isStation || isResort ? 'text-xl sm:text-2xl' : 'text-base sm:text-lg'}`}>
                           {tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : '🏠')}
                         </span>
                         <div className="w-full text-center px-0.5 my-0.5 flex items-center justify-center">
                           <span
                             className={`font-black text-center leading-tight break-words truncate max-w-full ${
                               isStation
-                                ? 'text-[8.5px] sm:text-[10px] text-amber-950 font-black'
+                                ? 'text-[9.5px] sm:text-[11.5px] text-amber-950 font-black'
                                 : isResort
-                                ? 'text-[9px] sm:text-[10.5px] text-violet-950 font-black'
-                                : 'text-[8.5px] sm:text-[10px] text-slate-900'
+                                ? 'text-[10px] sm:text-[12px] text-violet-950 font-black'
+                                : 'text-[9.5px] sm:text-[11.5px] text-slate-900'
                             }`}
                           >
                             {tile.name}
@@ -577,7 +546,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                         </div>
 
                         {owner && (tile.type === 'property' || isStation) ? (
-                          <span className="text-[7.5px] sm:text-[8.5px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm border border-rose-300 flex items-center gap-0.5">
+                          <span className="text-[8.5px] sm:text-[10px] font-black px-2 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm border border-rose-300 flex items-center gap-0.5">
                             <span className="opacity-90">Thuê:</span>
                             <span className="text-yellow-200 font-black">
                               {(() => {
@@ -591,7 +560,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                           </span>
                         ) : tile.price ? (
                           <span
-                            className={`text-[7.5px] sm:text-[8.5px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 shadow-sm ${
+                            className={`text-[8.5px] sm:text-[10px] font-black px-2 py-0.5 rounded-full leading-none mb-0.5 shadow-sm ${
                               isStation
                                 ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 font-black'
                                 : isResort
@@ -605,7 +574,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
 
                         {tile.taxAmount && (
                           <span
-                            className="text-[7.5px] sm:text-[8.5px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm"
+                            className="text-[8.5px] sm:text-[10px] font-black px-2 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm"
                           >
                             -{tile.taxAmount}Đ
                           </span>
@@ -642,36 +611,36 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               />
 
               <div
-                className="absolute top-5 left-5 flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-amber-400/80 shadow-[0_8px_20px_rgba(0,0,0,0.8)]"
+                className="absolute top-4 left-4 flex flex-col items-center justify-center p-2.5 rounded-xl border-2 border-amber-400/80 shadow-[0_6px_16px_rgba(0,0,0,0.8)]"
                 style={{
                   background: 'linear-gradient(135deg, #1e293b, #0f172a)'
                 }}
               >
-                <span className="text-3xl">🎴</span>
-                <span className="text-[10px] font-black text-amber-300 mt-1 tracking-wider">CƠ HỘI</span>
+                <span className="text-2xl">🎴</span>
+                <span className="text-[9px] font-black text-amber-300 mt-0.5 tracking-wider">CƠ HỘI</span>
               </div>
 
               <div
-                className="absolute bottom-5 right-5 flex flex-col items-center justify-center p-3 rounded-2xl border-2 border-purple-400/80 shadow-[0_8px_20px_rgba(0,0,0,0.8)]"
+                className="absolute bottom-4 right-4 flex flex-col items-center justify-center p-2.5 rounded-xl border-2 border-purple-400/80 shadow-[0_6px_16px_rgba(0,0,0,0.8)]"
                 style={{
                   background: 'linear-gradient(135deg, #1e293b, #0f172a)'
                 }}
               >
-                <span className="text-3xl">🎁</span>
-                <span className="text-[10px] font-black text-purple-300 mt-1 tracking-wider">KHÍ VẬN</span>
+                <span className="text-2xl">🎁</span>
+                <span className="text-[9px] font-black text-purple-300 mt-0.5 tracking-wider">KHÍ VẬN</span>
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                 <div
-                  className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border border-amber-300/30 flex flex-col items-center justify-center opacity-30 pointer-events-none"
+                  className="w-28 h-28 sm:w-36 sm:h-36 rounded-full border border-amber-300/30 flex flex-col items-center justify-center opacity-30 pointer-events-none"
                   style={{
                     background: 'radial-gradient(circle, rgba(254,240,138,0.15) 0%, transparent 70%)',
                     boxShadow: '0 0 35px rgba(245,158,11,0.25)'
                   }}
                 >
-                  <span className="text-5xl sm:text-6xl drop-shadow-xl">👑</span>
+                  <span className="text-4xl sm:text-5xl drop-shadow-xl">👑</span>
                   <span
-                    className="text-[12px] sm:text-[14px] font-black tracking-widest text-amber-200 mt-1 uppercase"
+                    className="text-[11px] sm:text-[13px] font-black tracking-widest text-amber-200 mt-1 uppercase"
                     style={{ textShadow: '0 2px 10px rgba(0,0,0,0.9)' }}
                   >
                     CỜ TỶ PHÚ 8D
@@ -725,7 +694,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     style={
                       !isHopping
                         ? {
-                            transform: 'translate(-50%, -50%) rotateZ(45deg) rotateX(-54deg)',
+                            transform: 'translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg)',
                             transformOrigin: 'bottom center'
                           }
                         : {

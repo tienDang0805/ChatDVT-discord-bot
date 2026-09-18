@@ -120,6 +120,8 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         } else {
           setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
           setSelectedTileIndex(newPos);
+          setIsHopping(false);
+          setAnimatingPlayerId(null);
 
           if (passedGo) {
             sounds.playCoin();
@@ -128,8 +130,6 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           }
 
           setTimeout(() => {
-            setIsHopping(false);
-            setAnimatingPlayerId(null);
             setPostAnimDelay(false);
             animatingRef.current = false;
           }, 1000);
