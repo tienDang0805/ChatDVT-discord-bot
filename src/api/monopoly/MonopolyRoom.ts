@@ -58,6 +58,10 @@ function startTurnInterval(io: Server, roomId: string) {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
+      } else if (landRes.action === 'buyout_prompt') {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = 15;
+        state.pendingBuyoutTile = landRes.tileIndex;
       } else {
         const nextState = Logic.advanceTurn(state);
         Object.assign(state, nextState);
@@ -68,6 +72,14 @@ function startTurnInterval(io: Server, roomId: string) {
 
     if (state.phase === 'BUY_PROMPT') {
       state.pendingBuyTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
+      broadcastState(io, roomId, state);
+      return;
+    }
+
+    if (state.phase === 'BUYOUT_PROMPT') {
+      state.pendingBuyoutTile = null;
       state.phase = 'BUILD_PHASE';
       state.turnTimer = 15;
       broadcastState(io, roomId, state);
@@ -188,11 +200,12 @@ export function setupMonopolySocket(io: Server): void {
       curr.doublesCount = isDouble ? (curr.doublesCount || 0) + 1 : 0;
 
       if (curr.doublesCount >= 3) {
-        curr.position = 7;
+        curr.position = 9;
         curr.inJail = true;
         curr.jailTurns = 0;
         curr.doublesCount = 0;
-        Logic.addLog(state, '🚔', `${curr.username} tung 3 đôi liên tiếp → bị Công An tóm vào tù!`);
+        const loggedState = Logic.addLog(state, '🚔', `${curr.username} tung 3 đôi liên tiếp → bị Công An tóm!`, 'jail');
+        Object.assign(state, loggedState);
         broadcastState(io, data.roomId, state);
         return;
       }
@@ -216,6 +229,10 @@ export function setupMonopolySocket(io: Server): void {
         state.phase = 'BUY_PROMPT';
         state.turnTimer = 15;
         state.pendingBuyTile = landRes.tileIndex;
+      } else if (landRes.action === 'buyout_prompt') {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = 15;
+        state.pendingBuyoutTile = landRes.tileIndex;
       } else if (landRes.action === 'card_drawn') {
         state.phase = 'CARD_REVEAL';
         state.turnTimer = 10;
@@ -248,11 +265,38 @@ export function setupMonopolySocket(io: Server): void {
       broadcastState(io, data.roomId, state);
     });
 
+    socket.on('monopoly:buyout', (data: { roomId: string; playerId: string; tileIndex: number }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      const nextState = Logic.buyoutProperty(state, curr.id, data.tileIndex);
+      Object.assign(state, nextState);
+      broadcastState(io, data.roomId, state);
+    });
+
+    socket.on('monopoly:skip-buyout', (data: { roomId: string; playerId: string }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUYOUT_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      state.pendingBuyoutTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
+      broadcastState(io, data.roomId, state);
+    });
+
     socket.on('monopoly:build', (data: { roomId: string; playerId: string; tileIndex: number }) => {
       const state = rooms.get(data.roomId);
       if (!state) return;
-      const nextState = Logic.buildOnTile(state, data.playerId, data.tileIndex);
-      Object.assign(state, nextState);
+      const result = Logic.buildOnTile(state, data.playerId, data.tileIndex);
+      if (result.success) {
+        Object.assign(state, result.state);
+      } else {
+        socket.emit('monopoly:error', { message: result.error || 'Không thể xây dựng.' });
+      }
       broadcastState(io, data.roomId, state);
     });
 
@@ -354,7 +398,8 @@ export function setupMonopolySocket(io: Server): void {
           player.money = 0;
           player.properties = [];
           player.buildings = {};
-          Logic.addLog(state, '🚪', `${player.username} đã rời khỏi ván đấu.`);
+          const loggedState = Logic.addLog(state, '🚪', `${player.username} đã rời khỏi ván đấu.`, 'system');
+          Object.assign(state, loggedState);
           const gameOverCheck = Logic.checkGameOver(state);
           if (gameOverCheck.isOver) {
             state.phase = 'GAME_OVER';
@@ -393,4 +438,3 @@ export function setupMonopolySocket(io: Server): void {
     });
   });
 }
-

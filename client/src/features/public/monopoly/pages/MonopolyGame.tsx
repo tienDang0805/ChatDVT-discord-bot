@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { PageShell } from '../../../../shared/components/PageShell';
-import type { GameState, TokenOption, TradeState, JailAction } from '../game/types';
+import type { GameState, TokenOption, TradeState, JailAction, PlayerState } from '../game/types';
 import { TOKEN_OPTIONS, BOARD_TILES } from '../game/boardData';
 import { sounds } from '../utils/audio';
 import { MonopolyLobby } from './components/MonopolyLobby';
@@ -15,8 +15,9 @@ import { JailModal } from './components/JailModal';
 import { TradeModal } from './components/TradeModal';
 import { MiniGameOverlay } from './components/MiniGameOverlay';
 import { EventBanner } from './components/EventBanner';
-import { GameLog } from './components/GameLog';
+import { GameLog, LiveTicker } from './components/GameLog';
 import { GameOverScreen } from './components/GameOverScreen';
+import { PlayerDetailModal } from './components/PlayerDetailModal';
 
 interface MonopolyGameProps {
   onBackToMenu?: () => void;
@@ -55,6 +56,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [showLog, setShowLog] = useState(false);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBuildMenu, setShowBuildMenu] = useState(false);
+  const [showPlayerDetail, setShowPlayerDetail] = useState<PlayerState | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
   const urlRoomParam = new URLSearchParams(window.location.search).get('room');
@@ -235,6 +237,23 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
       tileIndex: gameState.pendingBuyTile
     });
   }, [activeRoomId, playerId, gameState]);
+
+  const handleBuyoutProperty = useCallback(() => {
+    if (!activeRoomId || !gameState || gameState.pendingBuyoutTile === undefined || gameState.pendingBuyoutTile === null) return;
+    socketRef.current?.emit('monopoly:buyout', {
+      roomId: activeRoomId,
+      playerId: playerId,
+      tileIndex: gameState.pendingBuyoutTile
+    });
+  }, [activeRoomId, playerId, gameState]);
+
+  const handleSkipBuyout = useCallback(() => {
+    if (!activeRoomId) return;
+    socketRef.current?.emit('monopoly:skip-buyout', {
+      roomId: activeRoomId,
+      playerId: playerId
+    });
+  }, [activeRoomId, playerId]);
 
   const handleApplyCard = useCallback(() => {
     if (!activeRoomId) return;
@@ -528,6 +547,8 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               player={p}
               isCurrentTurn={p.id === currPlayer?.id}
               isMe={p.id === playerId}
+              gameState={gameState}
+              onClick={() => setShowPlayerDetail(p)}
             />
           ))}
         </div>
@@ -611,6 +632,8 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               player={p}
               isCurrentTurn={p.id === currPlayer?.id}
               isMe={p.id === playerId}
+              gameState={gameState}
+              onClick={() => setShowPlayerDetail(p)}
             />
           ))}
 
@@ -631,6 +654,10 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         </div>
       </div>
 
+      <div className="w-full px-3 pb-1 shrink-0">
+        <LiveTicker logs={gameState.log} />
+      </div>
+
       {!isHopping && isMyTurn && gameState.phase === 'BUY_PROMPT' && gameState.pendingBuyTile !== null && gameState.pendingBuyTile !== undefined && (
         <BuyPrompt
           tileIndex={gameState.pendingBuyTile}
@@ -642,6 +669,22 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           onSkip={handleSkipBuyProperty}
         />
       )}
+
+      {!isHopping && isMyTurn && gameState.phase === 'BUYOUT_PROMPT' && gameState.pendingBuyoutTile !== null && gameState.pendingBuyoutTile !== undefined && (() => {
+        const buyoutOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(gameState.pendingBuyoutTile!));
+        return (
+          <BuyPrompt
+            tileIndex={gameState.pendingBuyoutTile}
+            playerMoney={currPlayer?.money || 0}
+            timer={gameState.turnTimer}
+            isMyTurn={true}
+            isBuyout={true}
+            currentOwnerName={buyoutOwner?.username}
+            onBuy={handleBuyoutProperty}
+            onSkip={handleSkipBuyout}
+          />
+        );
+      })()}
 
       {!isHopping && isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
         <CardReveal
@@ -694,6 +737,15 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         <GameLog
           logs={gameState.log}
           onClose={() => setShowLog(false)}
+        />
+      )}
+
+      {showPlayerDetail && (
+        <PlayerDetailModal
+          player={showPlayerDetail}
+          gameState={gameState}
+          isMe={showPlayerDetail.id === playerId}
+          onClose={() => setShowPlayerDetail(null)}
         />
       )}
 

@@ -18,7 +18,8 @@ const GROUP_COLORS: Record<string, string> = {
   green: '#10b981',
   blue: '#3b82f6',
   yellow: '#f59e0b',
-  red: '#ef4444'
+  red: '#ef4444',
+  purple: '#8b5cf6'
 };
 
 export const BuyPrompt: React.FC<BuyPromptProps> = ({
@@ -90,16 +91,23 @@ export const BuyPrompt: React.FC<BuyPromptProps> = ({
             {tile.type === 'station' ? (
               <div className="space-y-1 text-xs">
                 <div className="flex justify-between text-slate-300">
-                  <span>Sở hữu 1 bến:</span>
+                  <span>Sở hữu 1 ga:</span>
                   <span className="font-bold text-amber-300">{STATION_RENTS[1]}Đ</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Sở hữu 2 bến:</span>
+                  <span>Sở hữu 2 ga:</span>
                   <span className="font-bold text-amber-300">{STATION_RENTS[2]}Đ</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Sở hữu 3 bến:</span>
+                  <span>Sở hữu 3 ga:</span>
                   <span className="font-bold text-amber-300">{STATION_RENTS[3]}Đ</span>
+                </div>
+                <div className="flex justify-between text-amber-300 font-black bg-amber-500/10 py-1 px-1 rounded-lg border border-amber-500/30">
+                  <span>🏆 Sở hữu 4 ga:</span>
+                  <span>{STATION_RENTS[4]}Đ + THẮNG!</span>
+                </div>
+                <div className="text-[10px] text-slate-500 italic text-center mt-1">
+                  Không thể nâng cấp • Không thể bị thâu tóm
                 </div>
               </div>
             ) : (

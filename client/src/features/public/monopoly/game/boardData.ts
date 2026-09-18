@@ -2,33 +2,48 @@ import type { TileDef, CardDef, GlobalEventDef, TokenOption } from './types';
 
 export const BOARD_TILES: TileDef[] = [
   { index: 0, type: 'start', name: 'XUẤT PHÁT', flavor: 'Đi qua đây nhận 200Đ' },
-  { index: 1, type: 'property', name: 'Quận 4', flavor: 'Nhà Huy — Hẻm nhỏ nhưng có tình', group: 'green', price: 80, baseRent: 8 },
+
+  { index: 1, type: 'property', name: 'Quận 4', flavor: 'Nhà Huy — Hẻm nhỏ nhưng có tình', group: 'green', price: 60, baseRent: 6 },
   { index: 2, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
-  { index: 3, type: 'property', name: 'Bình Tân', flavor: 'Nhà Bảo — Xa trung tâm nhưng yên tĩnh', group: 'green', price: 90, baseRent: 10 },
-  { index: 4, type: 'tax', name: 'Phạt Giao Thông', flavor: 'Vượt đèn đỏ!', taxAmount: 100 },
-  { index: 5, type: 'station', name: 'Bến Xe Miền Đông', flavor: 'Xe khách liên tỉnh', price: 150 },
-  { index: 6, type: 'property', name: 'Ninh Thuận', flavor: 'Nhà Tâm — Nắng gió quanh năm', group: 'green', price: 100, baseRent: 12 },
-  { index: 7, type: 'jail', name: 'TÙ / THĂM TÙ', flavor: 'Ở ngoài thì thăm thôi' },
-  { index: 8, type: 'property', name: 'Thủ Đức', flavor: 'TP mới, đất đang lên', group: 'blue', price: 140, baseRent: 16 },
-  { index: 9, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
-  { index: 10, type: 'property', name: 'Quận 1', flavor: 'Đất vàng Sài Gòn', group: 'yellow', price: 200, baseRent: 24 },
-  { index: 11, type: 'property', name: 'Bình Thạnh', flavor: 'Gần sông, view đẹp', group: 'blue', price: 150, baseRent: 18 },
-  { index: 12, type: 'station', name: 'Ga Sài Gòn', flavor: 'Tàu lửa Bắc-Nam', price: 150 },
-  { index: 13, type: 'property', name: 'Tân Phú', flavor: 'Khu dân cư đông đúc', group: 'blue', price: 160, baseRent: 20 },
-  { index: 14, type: 'free_parking', name: 'Quán Cà Phê 8D', flavor: 'Nghỉ chân, nhặt quỹ charity' },
-  { index: 15, type: 'property', name: 'Phú Nhuận', flavor: 'Sầm uất 24/7', group: 'yellow', price: 220, baseRent: 26 },
-  { index: 16, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
-  { index: 17, type: 'property', name: 'Gò Vấp', flavor: 'Kẹt xe huyền thoại', group: 'yellow', price: 180, baseRent: 22 },
-  { index: 18, type: 'property', name: 'Bình Dương', flavor: 'Khu Công Nghiệp bạt ngàn', group: 'yellow', price: 190, baseRent: 22 },
-  { index: 19, type: 'station', name: 'Ga Biên Hoà', flavor: 'Ga lớn miền Đông', price: 150 },
-  { index: 20, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
-  { index: 21, type: 'go_jail', name: 'BỊ CÔNG AN BẮT', flavor: 'Vào tù ngay!' },
-  { index: 22, type: 'property', name: 'Đắk Nông', flavor: 'Thủ phủ Tây Nguyên', group: 'red', price: 280, baseRent: 32 },
-  { index: 23, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
-  { index: 24, type: 'property', name: 'Gia Nghĩa Center', flavor: 'Trung tâm hành chính', group: 'red', price: 320, baseRent: 38 },
-  { index: 25, type: 'tax', name: 'Thuế Nhà Đất', flavor: 'Nộp thuế cho nhà nước!', taxAmount: 150 },
-  { index: 26, type: 'property', name: 'Chợ Gia Nghĩa', flavor: 'Chợ lớn nhất vùng', group: 'red', price: 350, baseRent: 42 },
-  { index: 27, type: 'property', name: 'Resort Gia Nghĩa 5⭐', flavor: 'Biệt Thự Tiến Đặng 👑', group: 'red', price: 400, baseRent: 50 },
+  { index: 3, type: 'property', name: 'Bình Tân', flavor: 'Nhà Bảo — Xa trung tâm nhưng yên tĩnh', group: 'green', price: 70, baseRent: 8 },
+  { index: 4, type: 'tax', name: 'Phạt Giao Thông', flavor: 'Vượt đèn đỏ!', taxAmount: 80 },
+  { index: 5, type: 'station', name: 'Bến Xe Miền Đông', flavor: 'Xe khách liên tỉnh', price: 150, stationIcon: '🚌' },
+  { index: 6, type: 'property', name: 'Ninh Thuận', flavor: 'Nhà Tâm — Nắng gió quanh năm', group: 'green', price: 80, baseRent: 10 },
+  { index: 7, type: 'property', name: 'Bình Dương', flavor: 'Khu Công Nghiệp bạt ngàn', group: 'green', price: 90, baseRent: 12 },
+  { index: 8, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
+
+  { index: 9, type: 'jail', name: 'TÙ / THĂM TÙ', flavor: 'Ở ngoài thì thăm thôi' },
+
+  { index: 10, type: 'property', name: 'Thủ Đức', flavor: 'TP mới, đất đang lên', group: 'blue', price: 100, baseRent: 14 },
+  { index: 11, type: 'property', name: 'Bình Thạnh', flavor: 'Gần sông, view đẹp', group: 'blue', price: 110, baseRent: 16 },
+  { index: 12, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
+  { index: 13, type: 'property', name: 'Tân Phú', flavor: 'Khu dân cư đông đúc', group: 'blue', price: 120, baseRent: 18 },
+  { index: 14, type: 'station', name: 'Ga Sài Gòn', flavor: 'Tàu lửa Bắc-Nam', price: 150, stationIcon: '🚂' },
+  { index: 15, type: 'property', name: 'Gò Vấp', flavor: 'Kẹt xe huyền thoại', group: 'blue', price: 130, baseRent: 20 },
+  { index: 16, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
+  { index: 17, type: 'property', name: 'Tân Bình', flavor: 'Gần sân bay, đất hot', group: 'blue', price: 140, baseRent: 22 },
+
+  { index: 18, type: 'free_parking', name: 'Quán Cà Phê 8D', flavor: 'Nghỉ chân, nhặt quỹ charity' },
+
+  { index: 19, type: 'property', name: 'Phú Nhuận', flavor: 'Sầm uất 24/7', group: 'yellow', price: 160, baseRent: 24 },
+  { index: 20, type: 'property', name: 'Quận 1', flavor: 'Đất vàng Sài Gòn', group: 'yellow', price: 180, baseRent: 28 },
+  { index: 21, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
+  { index: 22, type: 'property', name: 'Quận 3', flavor: 'Trung tâm sang chảnh', group: 'yellow', price: 190, baseRent: 30 },
+  { index: 23, type: 'station', name: 'Sân Bay Tân Sơn Nhất', flavor: 'Hàng không quốc tế', price: 150, stationIcon: '✈️' },
+  { index: 24, type: 'property', name: 'Đà Lạt', flavor: 'Thành phố ngàn hoa', group: 'yellow', price: 200, baseRent: 32 },
+  { index: 25, type: 'tax', name: 'Thuế Nhà Đất', flavor: 'Nộp thuế cho nhà nước!', taxAmount: 120 },
+  { index: 26, type: 'property', name: 'Nha Trang', flavor: 'Biển xanh cát trắng', group: 'yellow', price: 210, baseRent: 34 },
+
+  { index: 27, type: 'go_jail', name: 'BỊ CÔNG AN BẮT', flavor: 'Vào tù ngay!' },
+
+  { index: 28, type: 'property', name: 'Đắk Nông', flavor: 'Thủ phủ Tây Nguyên', group: 'red', price: 240, baseRent: 36 },
+  { index: 29, type: 'property', name: 'Gia Nghĩa Center', flavor: 'Trung tâm hành chính', group: 'red', price: 260, baseRent: 40 },
+  { index: 30, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
+  { index: 31, type: 'property', name: 'Chợ Gia Nghĩa', flavor: 'Chợ lớn nhất vùng', group: 'red', price: 280, baseRent: 44 },
+  { index: 32, type: 'station', name: 'Ga Biên Hoà', flavor: 'Ga lớn miền Đông', price: 150, stationIcon: '🚄' },
+  { index: 33, type: 'property', name: 'Hà Nội', flavor: 'Thủ đô ngàn năm', group: 'purple', price: 320, baseRent: 50 },
+  { index: 34, type: 'property', name: 'Huế', flavor: 'Cố đô vương triều', group: 'purple', price: 350, baseRent: 55 },
+  { index: 35, type: 'property', name: 'Resort Gia Nghĩa 5⭐', flavor: 'Biệt Thự Tiến Đặng 👑', group: 'purple', price: 400, baseRent: 60 },
 ];
 
 export const CHANCE_CARDS: CardDef[] = [
@@ -47,6 +62,9 @@ export const CHANCE_CARDS: CardDef[] = [
   { key: 'SUGAR_DADDY', name: 'Sugar daddy cho tiền', icon: '💎', description: 'Mỗi player khác trả 40Đ', effect: { type: 'collect_from_all', amount: 40 } },
   { key: 'DISCORD_LAG', name: 'Lag Discord', icon: '📡', description: 'Hoán đổi vị trí với player gần nhất', effect: { type: 'swap_nearest' } },
   { key: 'FLASH_SALE', name: 'Flash Sale', icon: '⚡', description: 'Mua BĐS đang đứng giảm 50%', effect: { type: 'flash_sale' } },
+  { key: 'BA_KHI_Q1', name: 'Múa bá khí giữa Q1', icon: '🕺', description: 'Nhận 100Đ tiền tips từ fan hâm mộ', effect: { type: 'gain_money', amount: 100 } },
+  { key: 'TRUNG_DE', name: 'Trúng đề', icon: '🎯', description: '+200Đ trúng lô đề', effect: { type: 'gain_money', amount: 200 } },
+  { key: 'LUA_DAO', name: 'Sập bẫy lừa đảo', icon: '🕳️', description: '-150Đ mất sạch vì tin lời ngọt', effect: { type: 'lose_money', amount: 150 } },
 ];
 
 export const COMMUNITY_CARDS: CardDef[] = [
@@ -60,6 +78,8 @@ export const COMMUNITY_CARDS: CardDef[] = [
   { key: 'SELL_GAME_ACC', name: 'Bán acc game', icon: '🎮', description: '+100Đ', effect: { type: 'gain_money', amount: 100 } },
   { key: 'DRAMA_CHAT', name: 'Drama group chat', icon: '😤', description: 'Giàu nhất trả 50Đ cho nghèo nhất', effect: { type: 'richest_pays_poorest', amount: 50 } },
   { key: 'CHARITY_8D', name: 'Charity 8D', icon: '❤️', description: 'Tất cả nộp 25Đ vào Free Parking', effect: { type: 'all_pay_to_pool', amount: 25 } },
+  { key: 'BAO_NHAU', name: 'Bao 8D đi nhậu', icon: '🍻', description: '-100Đ tiền nhậu cho cả nhóm', effect: { type: 'lose_money', amount: 100 } },
+  { key: 'CHATDVT_GAU', name: 'ChatDVT gâu gâu', icon: '🐶', description: 'Cắn trộm 50Đ từ mỗi player', effect: { type: 'collect_from_all', amount: 50 } },
 ];
 
 export const GLOBAL_EVENTS: GlobalEventDef[] = [
@@ -69,7 +89,7 @@ export const GLOBAL_EVENTS: GlobalEventDef[] = [
   { key: 'FESTIVAL_8D', name: 'Festival 8D', icon: '🎊', description: 'Qua START được 300Đ', duration: 3, effect: { type: 'bonus_go', amount: 300 } },
   { key: 'BLACKOUT', name: 'Mất Điện', icon: '🔌', description: 'Không ai được mua/xây', duration: 2, effect: { type: 'no_build' } },
   { key: 'DOG_ESCAPE', name: 'Chó Sổng Chuồng', icon: '🐕', description: 'BĐS cấp 0 bị reset', duration: 0, effect: { type: 'reset_level0' } },
-  { key: 'CASINO_NIGHT', name: 'Casino Đêm', icon: '🃏', description: 'Tung xúc xắc: chẵn +100, lẻ -100', duration: 0, effect: { type: 'casino_roll' } },
+  { key: 'CASINO_NIGHT', name: 'Casino Đêm', icon: '🃏', description: 'Tung xúc xắc: chẵn +150, lẻ -150', duration: 0, effect: { type: 'casino_roll' } },
   { key: 'COVID_WAVE', name: 'Đại Dịch COVID', icon: '😷', description: 'Tất cả skip 1 lượt', duration: 1, effect: { type: 'skip_all' } },
   { key: 'FUND_8D', name: 'Quỹ Đầu Tư 8D', icon: '💼', description: 'Nghèo nhất nhận 200Đ', duration: 0, effect: { type: 'aid_poorest', amount: 200 } },
   { key: 'HOUSE_FIRE', name: 'Cháy Nhà', icon: '🧯', description: '1 BĐS cấp ≥2 bị hạ cấp', duration: 0, effect: { type: 'downgrade_random' } },
@@ -93,8 +113,12 @@ export const BUILD_LEVELS = [
   { level: 4, name: 'Biệt Thự Pha Ke', icon: '🏰', cost: 250, rentMultiplier: 15 },
 ];
 
-export const STATION_RENTS = [0, 25, 50, 100];
+export const STATION_RENTS = [0, 25, 50, 100, 200];
 
 export function getGroupTiles(group: string): number[] {
   return BOARD_TILES.filter(t => t.group === group).map(t => t.index);
+}
+
+export function getStationTiles(): number[] {
+  return BOARD_TILES.filter(t => t.type === 'station').map(t => t.index);
 }

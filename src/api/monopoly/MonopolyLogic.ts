@@ -9,6 +9,7 @@ import type {
   JailAction,
   TradeState,
   GameLogEntry,
+  LogCategory,
   PropertyGroup
 } from './types';
 import {
@@ -19,7 +20,8 @@ import {
   BUILD_LEVELS,
   STATION_RENTS,
   TOKEN_OPTIONS,
-  getGroupTiles
+  getGroupTiles,
+  getStationTiles
 } from './boardData';
 import {
   START_MONEY,
@@ -35,7 +37,10 @@ import {
   BUY_TIMER,
   TRADE_TIMER,
   BUILD_TIMER,
-  EVENT_EVERY_N_ROUNDS
+  EVENT_EVERY_N_ROUNDS,
+  BUYOUT_MULTIPLIER,
+  BUYOUT_MAX_LEVEL,
+  STATION_COUNT_TO_WIN
 } from './constants';
 
 export function shuffleDeck<T>(deck: T[]): T[] {
@@ -92,7 +97,9 @@ export function createInitialState(roomId: string, playersData: PlayerJoinData[]
       {
         timestamp: Date.now(),
         icon: '🎲',
-        message: 'Phòng cờ tỷ phú 8D đã được khởi tạo.'
+        message: 'Phòng cờ tỷ phú 8D đã được khởi tạo.',
+        category: 'system',
+        round: 0
       }
     ]
   };
@@ -104,24 +111,27 @@ export function rollDice(): [number, number] {
   return [d1, d2];
 }
 
-export function addLog(state: GameState, icon: string, message: string): GameState {
+export function addLog(state: GameState, icon: string, message: string, category: LogCategory = 'system'): GameState {
   const newEntry: GameLogEntry = {
     timestamp: Date.now(),
     icon,
-    message
+    message,
+    category,
+    round: state.round
   };
   return {
     ...state,
-    log: [newEntry, ...state.log].slice(0, 50)
+    log: [newEntry, ...state.log].slice(0, 80)
   };
 }
 
 export function movePlayer(state: GameState, playerId: string, steps: number): MoveResult {
-  const player = state.players.find(p => p.id === playerId);
-  if (!player) {
+  const playerIdx = state.players.findIndex(p => p.id === playerId);
+  if (playerIdx === -1) {
     return { newPos: 0, passedGo: false, path: [] };
   }
 
+  const player = state.players[playerIdx];
   const oldPos = player.position;
   const path: number[] = [];
   for (let i = 1; i <= steps; i++) {
@@ -136,10 +146,18 @@ export function movePlayer(state: GameState, playerId: string, steps: number): M
     salary = state.activeEvent.effect.amount;
   }
 
-  player.position = newPos;
-  if (passedGo) {
-    player.money += salary;
-  }
+  const updatedPlayers = state.players.map((p, idx) => {
+    if (idx === playerIdx) {
+      return {
+        ...p,
+        position: newPos,
+        money: passedGo ? p.money + salary : p.money
+      };
+    }
+    return p;
+  });
+
+  state.players = updatedPlayers;
 
   return { newPos, passedGo, path };
 }
@@ -152,11 +170,16 @@ export function ownsFullGroup(state: GameState, playerId: string, group: string)
   return groupTiles.every(tileIdx => player.properties.includes(tileIdx));
 }
 
-export function getStationRent(state: GameState, ownerId: string): number {
+export function getStationCount(state: GameState, ownerId: string): number {
   const owner = state.players.find(p => p.id === ownerId);
   if (!owner) return 0;
-  const stationCount = owner.properties.filter(tIdx => BOARD_TILES[tIdx]?.type === 'station').length;
-  const index = Math.min(stationCount, STATION_RENTS.length - 1);
+  const stationTiles = getStationTiles();
+  return owner.properties.filter(tIdx => stationTiles.includes(tIdx)).length;
+}
+
+export function getStationRent(state: GameState, ownerId: string): number {
+  const count = getStationCount(state, ownerId);
+  const index = Math.min(count, STATION_RENTS.length - 1);
   return STATION_RENTS[index] || 25;
 }
 
@@ -217,7 +240,7 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
     return p;
   });
 
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     players: updatedPlayers,
     pendingBuyTile: null,
@@ -226,7 +249,83 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
     turnTimer: BUILD_TIMER
   };
 
-  return addLog(nextState, '🏠', `${player.username} đã mua "${tile.name}" với giá ${finalCost}Đ.`);
+  nextState = addLog(nextState, '🏠', `${player.username} đã mua "${tile.name}" với giá ${finalCost}Đ.`, 'buy');
+
+  if (tile.type === 'station') {
+    const stationCount = getStationCount(nextState, playerId);
+    if (stationCount >= STATION_COUNT_TO_WIN) {
+      nextState = addLog(nextState, '🏆', `${player.username} sở hữu cả ${STATION_COUNT_TO_WIN} Ga/Sân Bay/Bến Xe → THẮNG NGAY LẬP TỨC!`, 'system');
+      nextState.phase = 'GAME_OVER';
+    }
+  }
+
+  return nextState;
+}
+
+export function canBuyout(state: GameState, playerId: string, tileIndex: number): boolean {
+  const tile = BOARD_TILES[tileIndex];
+  if (!tile || !tile.price) return false;
+  if (tile.type === 'station') return false;
+  if (tile.type !== 'property') return false;
+
+  const player = state.players.find(p => p.id === playerId);
+  if (!player || player.isEliminated) return false;
+
+  const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
+  if (!owner || owner.id === playerId) return false;
+
+  const buildLevel = owner.buildings[tileIndex] || 0;
+  if (buildLevel >= BUYOUT_MAX_LEVEL) return false;
+
+  const buyoutCost = tile.price * BUYOUT_MULTIPLIER;
+  return player.money >= buyoutCost;
+}
+
+export function buyoutProperty(state: GameState, playerId: string, tileIndex: number): GameState {
+  if (!canBuyout(state, playerId, tileIndex)) return state;
+
+  const tile = BOARD_TILES[tileIndex];
+  if (!tile || !tile.price) return state;
+
+  const buyoutCost = tile.price * BUYOUT_MULTIPLIER;
+  const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
+  if (!owner) return state;
+
+  const ownerName = owner.username;
+
+  const updatedPlayers = state.players.map(p => {
+    if (p.id === playerId) {
+      return {
+        ...p,
+        money: p.money - buyoutCost,
+        properties: [...p.properties, tileIndex],
+        buildings: { ...p.buildings, [tileIndex]: 0 }
+      };
+    }
+    if (p.id === owner.id) {
+      return {
+        ...p,
+        money: p.money + buyoutCost,
+        properties: p.properties.filter(idx => idx !== tileIndex),
+        buildings: Object.fromEntries(
+          Object.entries(p.buildings).filter(([key]) => Number(key) !== tileIndex)
+        )
+      };
+    }
+    return p;
+  });
+
+  const buyer = state.players.find(p => p.id === playerId);
+
+  let nextState: GameState = {
+    ...state,
+    players: updatedPlayers,
+    pendingBuyoutTile: null,
+    phase: 'BUILD_PHASE',
+    turnTimer: BUILD_TIMER
+  };
+
+  return addLog(nextState, '⚡', `${buyer?.username} đã THÂU TÓM "${tile.name}" từ ${ownerName} với giá ${buyoutCost}Đ!`, 'buyout');
 }
 
 export function canBuild(state: GameState, playerId: string, tileIndex: number): boolean {
@@ -248,12 +347,30 @@ export function canBuild(state: GameState, playerId: string, tileIndex: number):
   return player.money >= cost;
 }
 
-export function buildOnTile(state: GameState, playerId: string, tileIndex: number): GameState {
-  if (!canBuild(state, playerId, tileIndex)) return state;
+export interface BuildResult {
+  success: boolean;
+  state: GameState;
+  error?: string;
+}
+
+export function buildOnTile(state: GameState, playerId: string, tileIndex: number): BuildResult {
+  if (!canBuild(state, playerId, tileIndex)) {
+    const tile = BOARD_TILES[tileIndex];
+    const player = state.players.find(p => p.id === playerId);
+
+    let error = 'Không thể xây dựng.';
+    if (tile?.type === 'station') error = 'Ga/Sân bay không thể nâng cấp.';
+    else if (!player?.properties.includes(tileIndex)) error = 'Bạn không sở hữu ô này.';
+    else if (tile?.group && !ownsFullGroup(state, playerId, tile.group)) error = 'Cần sở hữu trọn bộ nhóm màu.';
+    else if ((player?.buildings[tileIndex] || 0) >= 4) error = 'Đã đạt cấp tối đa.';
+    else if (state.activeEvent?.effect.type === 'no_build') error = 'Sự kiện Mất Điện: không được xây.';
+
+    return { success: false, state, error };
+  }
 
   const player = state.players.find(p => p.id === playerId);
   const tile = BOARD_TILES[tileIndex];
-  if (!player || !tile) return state;
+  if (!player || !tile) return { success: false, state, error: 'Dữ liệu không hợp lệ.' };
 
   const currentLevel = player.buildings[tileIndex] || 0;
   const nextLevel = currentLevel + 1;
@@ -270,13 +387,15 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
     return p;
   });
 
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     players: updatedPlayers
   };
 
   const levelName = BUILD_LEVELS[nextLevel].name;
-  return addLog(nextState, '🔨', `${player.username} nâng cấp "${tile.name}" lên cấp ${nextLevel} (${levelName}) với giá ${cost}Đ.`);
+  nextState = addLog(nextState, '🔨', `${player.username} nâng cấp "${tile.name}" lên cấp ${nextLevel} (${levelName}) — ${cost}Đ.`, 'build');
+
+  return { success: true, state: nextState };
 }
 
 export function proposeTrade(state: GameState, proposal: TradeState): GameState {
@@ -288,7 +407,7 @@ export function proposeTrade(state: GameState, proposal: TradeState): GameState 
   const hasProps = proposal.offering.properties.every(idx => fromP.properties.includes(idx));
   if (!hasProps) return state;
 
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     phase: 'TRADE_PHASE',
     turnTimer: TRADE_TIMER,
@@ -298,7 +417,7 @@ export function proposeTrade(state: GameState, proposal: TradeState): GameState 
     }
   };
 
-  return addLog(nextState, '🤝', `${fromP.username} gửi đề nghị giao dịch cho ${toP.username}.`);
+  return addLog(nextState, '🤝', `${fromP.username} gửi đề nghị giao dịch cho ${toP.username}.`, 'trade');
 }
 
 export function acceptTrade(state: GameState): GameState {
@@ -313,13 +432,13 @@ export function acceptTrade(state: GameState): GameState {
   }
 
   if (fromP.money < offering.money || toP.money < requesting.money) {
-    return addLog({ ...state, tradeState: null, phase: 'END_TURN' }, '❌', 'Giao dịch thất bại: không đủ tiền.');
+    return addLog({ ...state, tradeState: null, phase: 'END_TURN' }, '❌', 'Giao dịch thất bại: không đủ tiền.', 'trade');
   }
 
   const fromHasProps = offering.properties.every(idx => fromP.properties.includes(idx));
   const toHasProps = requesting.properties.every(idx => toP.properties.includes(idx));
   if (!fromHasProps || !toHasProps) {
-    return addLog({ ...state, tradeState: null, phase: 'END_TURN' }, '❌', 'Giao dịch thất bại: quyền sở hữu BĐS đã đổi.');
+    return addLog({ ...state, tradeState: null, phase: 'END_TURN' }, '❌', 'Giao dịch thất bại: quyền sở hữu BĐS đã đổi.', 'trade');
   }
 
   const updatedPlayers = state.players.map(p => {
@@ -342,7 +461,7 @@ export function acceptTrade(state: GameState): GameState {
     return p;
   });
 
-  const nextState: GameState = {
+  let nextState: GameState = {
     ...state,
     players: updatedPlayers,
     tradeState: null,
@@ -350,7 +469,7 @@ export function acceptTrade(state: GameState): GameState {
     turnTimer: BUILD_TIMER
   };
 
-  return addLog(nextState, '✅', `${toP.username} đã chấp nhận giao dịch từ ${fromP.username}.`);
+  return addLog(nextState, '✅', `${toP.username} đã chấp nhận giao dịch từ ${fromP.username}.`, 'trade');
 }
 
 export function handleJailAction(state: GameState, playerId: string, action: JailAction): GameState {
@@ -361,24 +480,19 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
     if (player.money < JAIL_BAIL) return state;
     const updatedPlayers = state.players.map(p => {
       if (p.id === playerId) {
-        return {
-          ...p,
-          money: p.money - JAIL_BAIL,
-          inJail: false,
-          jailTurns: 0
-        };
+        return { ...p, money: p.money - JAIL_BAIL, inJail: false, jailTurns: 0 };
       }
       return p;
     });
 
-    const nextState: GameState = {
+    let nextState: GameState = {
       ...state,
       players: updatedPlayers,
       freeParkingPool: state.freeParkingPool + JAIL_BAIL,
       phase: 'ROLL_DICE',
       turnTimer: TURN_TIMER
     };
-    return addLog(nextState, '🔓', `${player.username} đã nộp bảo lãnh ${JAIL_BAIL}Đ và ra tù.`);
+    return addLog(nextState, '🔓', `${player.username} đã nộp bảo lãnh ${JAIL_BAIL}Đ và ra tù.`, 'jail');
   }
 
   if (action === 'card') {
@@ -390,23 +504,18 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
         const cardIndex = p.cards.indexOf('GET_OUT_JAIL');
         const nextCards = [...p.cards];
         nextCards.splice(cardIndex, 1);
-        return {
-          ...p,
-          cards: nextCards,
-          inJail: false,
-          jailTurns: 0
-        };
+        return { ...p, cards: nextCards, inJail: false, jailTurns: 0 };
       }
       return p;
     });
 
-    const nextState: GameState = {
+    let nextState: GameState = {
       ...state,
       players: updatedPlayers,
       phase: 'ROLL_DICE',
       turnTimer: TURN_TIMER
     };
-    return addLog(nextState, '🎟️', `${player.username} sử dụng Thẻ Ra Tù và tự do.`);
+    return addLog(nextState, '🎟️', `${player.username} sử dụng Thẻ Ra Tù và tự do.`, 'jail');
   }
 
   if (action === 'roll') {
@@ -416,25 +525,19 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
     if (isDouble) {
       const updatedPlayers = state.players.map(p => {
         if (p.id === playerId) {
-          return {
-            ...p,
-            inJail: false,
-            jailTurns: 0
-          };
+          return { ...p, inJail: false, jailTurns: 0 };
         }
         return p;
       });
 
-      const nextState: GameState = {
-        ...state,
-        players: updatedPlayers,
-        lastDice: dice
-      };
-      const loggedState = addLog(nextState, '🎲', `${player.username} lắc trúng đôi [${dice[0]}, ${dice[1]}] và thoát tù tự do!`);
-      const moveRes = movePlayer(loggedState, playerId, dice[0] + dice[1]);
-      return handleLanding(loggedState, playerId).action === 'buy_prompt'
-        ? { ...loggedState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos }
-        : advanceTurn(loggedState);
+      let nextState: GameState = { ...state, players: updatedPlayers, lastDice: dice };
+      nextState = addLog(nextState, '🎲', `${player.username} lắc trúng đôi [${dice[0]}, ${dice[1]}] và thoát tù!`, 'jail');
+      const moveRes = movePlayer(nextState, playerId, dice[0] + dice[1]);
+      const landRes = handleLanding(nextState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...nextState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos };
+      }
+      return advanceTurn(nextState);
     }
 
     const turns = player.jailTurns + 1;
@@ -442,46 +545,36 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
       const bailCost = Math.min(player.money, JAIL_BAIL);
       const updatedPlayers = state.players.map(p => {
         if (p.id === playerId) {
-          return {
-            ...p,
-            money: p.money - bailCost,
-            inJail: false,
-            jailTurns: 0
-          };
+          return { ...p, money: p.money - bailCost, inJail: false, jailTurns: 0 };
         }
         return p;
       });
 
-      const nextState: GameState = {
+      let nextState: GameState = {
         ...state,
         players: updatedPlayers,
         freeParkingPool: state.freeParkingPool + bailCost,
         lastDice: dice
       };
-      const loggedState = addLog(nextState, '👮', `${player.username} hết hạn ở tù (lần ${turns}), buộc nộp ${bailCost}Đ và ra tù.`);
-      const moveRes = movePlayer(loggedState, playerId, dice[0] + dice[1]);
-      return handleLanding(loggedState, playerId).action === 'buy_prompt'
-        ? { ...loggedState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos }
-        : advanceTurn(loggedState);
+      nextState = addLog(nextState, '👮', `${player.username} hết hạn ở tù (lần ${turns}), buộc nộp ${bailCost}Đ.`, 'jail');
+      const moveRes = movePlayer(nextState, playerId, dice[0] + dice[1]);
+      const landRes = handleLanding(nextState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...nextState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos };
+      }
+      return advanceTurn(nextState);
     }
 
     const updatedPlayers = state.players.map(p => {
       if (p.id === playerId) {
-        return {
-          ...p,
-          jailTurns: turns
-        };
+        return { ...p, jailTurns: turns };
       }
       return p;
     });
 
-    const nextState: GameState = {
-      ...state,
-      players: updatedPlayers,
-      lastDice: dice
-    };
-    const loggedState = addLog(nextState, '🔒', `${player.username} tung [${dice[0]}, ${dice[1]}] không trúng đôi. Tiếp tục ở tù (${turns}/${MAX_JAIL_TURNS}).`);
-    return advanceTurn(loggedState);
+    let nextState: GameState = { ...state, players: updatedPlayers, lastDice: dice };
+    nextState = addLog(nextState, '🔒', `${player.username} tung [${dice[0]}, ${dice[1]}] không trúng đôi. Tiếp tục ở tù (${turns}/${MAX_JAIL_TURNS}).`, 'jail');
+    return advanceTurn(nextState);
   }
 
   return state;
@@ -510,7 +603,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, money: p.money + effect.amount } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, card.icon, `${player.username} nhận được ${effect.amount}Đ từ "${card.name}".`);
+      currentState = addLog(currentState, card.icon, `${player.username} nhận ${effect.amount}Đ từ "${card.name}".`, 'card');
       break;
     }
 
@@ -523,17 +616,19 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         players: updatedPlayers,
         freeParkingPool: currentState.freeParkingPool + effect.amount
       };
-      currentState = addLog(currentState, card.icon, `${player.username} mất ${effect.amount}Đ từ "${card.name}".`);
+      currentState = addLog(currentState, card.icon, `${player.username} mất ${effect.amount}Đ từ "${card.name}".`, 'card');
       currentState = checkBankruptcy(currentState, playerId);
       break;
     }
 
     case 'move_forward': {
       const moveRes = movePlayer(currentState, playerId, effect.steps);
-      currentState = addLog(currentState, card.icon, `${player.username} tiến ${effect.steps} ô tới ${BOARD_TILES[moveRes.newPos]?.name}.`);
-      return handleLanding(currentState, playerId).action === 'buy_prompt'
-        ? { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos }
-        : currentState;
+      currentState = addLog(currentState, card.icon, `${player.username} tiến ${effect.steps} ô tới ${BOARD_TILES[moveRes.newPos]?.name}.`, 'card');
+      const landRes = handleLanding(currentState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos };
+      }
+      return currentState;
     }
 
     case 'move_to': {
@@ -541,10 +636,12 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, position: effect.position } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, card.icon, `${player.username} di chuyển tới ${BOARD_TILES[effect.position]?.name}.`);
-      return handleLanding(currentState, playerId).action === 'buy_prompt'
-        ? { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: effect.position }
-        : currentState;
+      currentState = addLog(currentState, card.icon, `${player.username} di chuyển tới ${BOARD_TILES[effect.position]?.name}.`, 'card');
+      const landRes = handleLanding(currentState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: effect.position };
+      }
+      return currentState;
     }
 
     case 'move_random': {
@@ -553,10 +650,12 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, position: randomPos } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, card.icon, `${player.username} say xỉn dịch chuyển tới ${BOARD_TILES[randomPos]?.name}.`);
-      return handleLanding(currentState, playerId).action === 'buy_prompt'
-        ? { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: randomPos }
-        : currentState;
+      currentState = addLog(currentState, card.icon, `${player.username} say xỉn dịch chuyển tới ${BOARD_TILES[randomPos]?.name}.`, 'card');
+      const landRes = handleLanding(currentState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: randomPos };
+      }
+      return currentState;
     }
 
     case 'move_to_own_or_start': {
@@ -566,7 +665,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, position: targetPos } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, card.icon, `${player.username} trở về đất nhà ${BOARD_TILES[targetPos]?.name}.`);
+      currentState = addLog(currentState, card.icon, `${player.username} trở về đất nhà ${BOARD_TILES[targetPos]?.name}.`, 'card');
       break;
     }
 
@@ -575,7 +674,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, position: JAIL_POSITION, inJail: true, jailTurns: 0 } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '🚔', `${player.username} bị bắt vào tù!`);
+      currentState = addLog(currentState, '🚔', `${player.username} bị bắt vào tù!`, 'jail');
       break;
     }
 
@@ -584,7 +683,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, skipNextTurn: true } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '💩', `${player.username} sẽ mất lượt kế tiếp.`);
+      currentState = addLog(currentState, '💩', `${player.username} sẽ mất lượt kế tiếp.`, 'card');
       break;
     }
 
@@ -606,7 +705,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
           return p;
         });
         currentState = { ...currentState, players: updatedPlayers };
-        currentState = addLog(currentState, '📡', `${player.username} hoán đổi vị trí với ${target.username}.`);
+        currentState = addLog(currentState, '📡', `${player.username} hoán đổi vị trí với ${target.username}.`, 'card');
       }
       break;
     }
@@ -624,7 +723,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, money: p.money + totalCollected } : p
       );
       currentState = { ...currentState, players: finalPlayers };
-      currentState = addLog(currentState, card.icon, `${player.username} thu về tổng cộng ${totalCollected}Đ từ tất cả người chơi.`);
+      currentState = addLog(currentState, card.icon, `${player.username} thu ${totalCollected}Đ từ tất cả người chơi.`, 'card');
       break;
     }
 
@@ -639,7 +738,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         players: updatedPlayers,
         freeParkingPool: currentState.freeParkingPool + totalCost
       };
-      currentState = addLog(currentState, card.icon, `${player.username} nộp ${totalCost}Đ (${totalProps} BĐS × ${effect.amount}Đ).`);
+      currentState = addLog(currentState, card.icon, `${player.username} nộp ${totalCost}Đ (${totalProps} BĐS × ${effect.amount}Đ).`, 'card');
       currentState = checkBankruptcy(currentState, playerId);
       break;
     }
@@ -649,7 +748,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, cards: [...p.cards, 'INSURANCE'] } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '🛡️', `${player.username} giữ thẻ Bảo Hiểm VIP (miễn thuê 1 lần).`);
+      currentState = addLog(currentState, '🛡️', `${player.username} giữ thẻ Bảo Hiểm VIP.`, 'card');
       break;
     }
 
@@ -658,7 +757,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         p.id === playerId ? { ...p, cards: [...p.cards, 'GET_OUT_JAIL'] } : p
       );
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '🚪', `${player.username} giữ Thẻ Ra Tù.`);
+      currentState = addLog(currentState, '🚪', `${player.username} giữ Thẻ Ra Tù.`, 'card');
       break;
     }
 
@@ -667,7 +766,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         ...currentState,
         discountBuyPercent: 0.5
       };
-      currentState = addLog(currentState, '⚡', `${player.username} được giảm giá 50% mua BĐS hiện tại.`);
+      currentState = addLog(currentState, '⚡', `${player.username} được giảm giá 50% mua BĐS!`, 'card');
       break;
     }
 
@@ -685,7 +784,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
           return p;
         });
         currentState = { ...currentState, players: updatedPlayers };
-        currentState = addLog(currentState, '😤', `Drama: ${richest.username} phải chuyển ${transfer}Đ cho ${poorest.username}.`);
+        currentState = addLog(currentState, '😤', `Drama: ${richest.username} chuyển ${transfer}Đ cho ${poorest.username}.`, 'card');
       }
       break;
     }
@@ -703,15 +802,12 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         players: updatedPlayers,
         freeParkingPool: currentState.freeParkingPool + poolAdd
       };
-      currentState = addLog(currentState, '❤️', `Tất cả người chơi nộp ${effect.amount}Đ vào Quỹ Quán Cà Phê 8D (+${poolAdd}Đ).`);
+      currentState = addLog(currentState, '❤️', `Tất cả nộp ${effect.amount}Đ vào Quỹ (+${poolAdd}Đ).`, 'card');
       break;
     }
 
     case 'mini_game': {
-      currentState = {
-        ...currentState,
-        phase: 'MINI_GAME'
-      };
+      currentState = { ...currentState, phase: 'MINI_GAME' };
       break;
     }
   }
@@ -727,11 +823,7 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
   const tile = BOARD_TILES[tileIndex];
   if (!tile) return { action: 'none', tileIndex };
 
-  if (tile.type === 'start') {
-    return { action: 'none', tileIndex };
-  }
-
-  if (tile.type === 'jail') {
+  if (tile.type === 'start' || tile.type === 'jail') {
     return { action: 'none', tileIndex };
   }
 
@@ -742,7 +834,8 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     state.players = updatedPlayers;
     state.phase = 'END_TURN';
     state.turnTimer = 5;
-    addLog(state, '🚔', `${player.username} bị Công An bắt vào tù!`);
+    const loggedState = addLog(state, '🚔', `${player.username} bị Công An bắt vào tù!`, 'jail');
+    Object.assign(state, loggedState);
     return { action: 'go_jail', tileIndex };
   }
 
@@ -754,8 +847,9 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     );
     state.players = updatedPlayers;
     state.freeParkingPool += actualTax;
-    addLog(state, '💸', `${player.username} nộp phạt ${actualTax}Đ tại "${tile.name}".`);
-    checkBankruptcy(state, playerId);
+    const loggedState = addLog(state, '💸', `${player.username} nộp phạt ${actualTax}Đ tại "${tile.name}".`, 'system');
+    Object.assign(state, loggedState);
+    checkBankruptcyMutate(state, playerId);
     state.phase = 'END_TURN';
     state.turnTimer = 5;
     return { action: 'tax_paid', taxAmount: actualTax, tileIndex };
@@ -769,15 +863,15 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
       );
       state.players = updatedPlayers;
       state.freeParkingPool = 0;
-      addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D và hốt trọn quỹ từ thiện ${pool}Đ!`);
-      state.phase = 'END_TURN';
-      state.turnTimer = 5;
-      return { action: 'free_parking_claimed', poolAmount: pool, tileIndex };
+      const loggedState = addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D và hốt trọn quỹ ${pool}Đ!`, 'system');
+      Object.assign(state, loggedState);
+    } else {
+      const loggedState = addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D ngắm cảnh.`, 'system');
+      Object.assign(state, loggedState);
     }
-    addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D uống cà phê ngắm cảnh.`);
     state.phase = 'END_TURN';
     state.turnTimer = 5;
-    return { action: 'none', tileIndex };
+    return { action: pool > 0 ? 'free_parking_claimed' : 'none', poolAmount: pool, tileIndex };
   }
 
   if (tile.type === 'chance' || tile.type === 'community') {
@@ -785,12 +879,14 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     Object.assign(state, newState);
     state.phase = 'CARD_REVEAL';
     state.turnTimer = 10;
-    addLog(state, card.icon, `${player.username} bốc thẻ ${tile.name}: "${card.name}".`);
+    const loggedState = addLog(state, card.icon, `${player.username} bốc thẻ ${tile.name}: "${card.name}".`, 'card');
+    Object.assign(state, loggedState);
     return { action: 'card_drawn', card, tileIndex };
   }
 
   if (tile.type === 'property' || tile.type === 'station') {
     const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
+
     if (!owner) {
       state.phase = 'BUY_PROMPT';
       state.turnTimer = BUY_TIMER;
@@ -811,9 +907,26 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
 
     const hasInsurance = player.cards.includes('INSURANCE');
     if (hasInsurance) {
-      const cardIdx = player.cards.indexOf('INSURANCE');
-      player.cards.splice(cardIdx, 1);
-      addLog(state, '🛡️', `${player.username} dùng thẻ Bảo Hiểm VIP, miễn hoàn toàn tiền thuê tại "${tile.name}"!`);
+      const updatedPlayers = state.players.map(p => {
+        if (p.id === playerId) {
+          const cardIdx = p.cards.indexOf('INSURANCE');
+          const nextCards = [...p.cards];
+          nextCards.splice(cardIdx, 1);
+          return { ...p, cards: nextCards };
+        }
+        return p;
+      });
+      state.players = updatedPlayers;
+      const loggedState = addLog(state, '🛡️', `${player.username} dùng Bảo Hiểm VIP, miễn thuê tại "${tile.name}"!`, 'rent');
+      Object.assign(state, loggedState);
+
+      if (canBuyout(state, playerId, tileIndex)) {
+        state.phase = 'BUYOUT_PROMPT';
+        state.turnTimer = BUY_TIMER;
+        state.pendingBuyoutTile = tileIndex;
+        return { action: 'buyout_prompt', tileIndex };
+      }
+
       state.phase = 'END_TURN';
       state.turnTimer = 5;
       return { action: 'none', tileIndex };
@@ -822,13 +935,28 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     const rent = calculateRent(state, tileIndex);
     const payableRent = Math.min(player.money, rent);
 
-    player.money -= payableRent;
-    player.totalRentPaid += payableRent;
-    owner.money += payableRent;
-    owner.totalRentCollected += payableRent;
+    const updatedPlayers = state.players.map(p => {
+      if (p.id === playerId) {
+        return { ...p, money: p.money - payableRent, totalRentPaid: p.totalRentPaid + payableRent };
+      }
+      if (p.id === owner.id) {
+        return { ...p, money: p.money + payableRent, totalRentCollected: p.totalRentCollected + payableRent };
+      }
+      return p;
+    });
+    state.players = updatedPlayers;
 
-    addLog(state, '💸', `${player.username} trả ${payableRent}Đ tiền thuê cho ${owner.username} tại "${tile.name}".`);
-    const afterBankrupt = checkBankruptcy(state, playerId);
+    const loggedState = addLog(state, '💸', `${player.username} trả ${payableRent}Đ tiền thuê cho ${owner.username} tại "${tile.name}".`, 'rent');
+    Object.assign(state, loggedState);
+    checkBankruptcyMutate(state, playerId);
+
+    const updatedPlayer = state.players.find(p => p.id === playerId);
+    if (updatedPlayer && !updatedPlayer.isEliminated && canBuyout(state, playerId, tileIndex)) {
+      state.phase = 'BUYOUT_PROMPT';
+      state.turnTimer = BUY_TIMER;
+      state.pendingBuyoutTile = tileIndex;
+      return { action: 'buyout_prompt', rentAmount: payableRent, rentRecipientId: owner.id, tileIndex };
+    }
 
     state.phase = 'END_TURN';
     state.turnTimer = 5;
@@ -836,6 +964,23 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
   }
 
   return { action: 'none', tileIndex };
+}
+
+function checkBankruptcyMutate(state: GameState, playerId: string): void {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player || player.isEliminated) return;
+
+  if (player.money <= 0 && player.properties.length === 0) {
+    const updatedPlayers = state.players.map(p => {
+      if (p.id === playerId) {
+        return { ...p, isEliminated: true, properties: [], buildings: {} };
+      }
+      return p;
+    });
+    state.players = updatedPlayers;
+    const loggedState = addLog(state, '💀', `${player.username} đã phá sản và bị loại!`, 'system');
+    Object.assign(state, loggedState);
+  }
 }
 
 export function triggerGlobalEvent(state: GameState): { state: GameState; event: GlobalEventDef } {
@@ -852,7 +997,7 @@ export function triggerGlobalEvent(state: GameState): { state: GameState; event:
 }
 
 export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameState {
-  let currentState = addLog(state, event.icon, `SỰ KIỆN TOÀN CỤC: ${event.name} — ${event.description}`);
+  let currentState = addLog(state, event.icon, `SỰ KIỆN: ${event.name} — ${event.description}`, 'event');
   const effect = event.effect;
 
   switch (effect.type) {
@@ -878,7 +1023,7 @@ export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameS
         return { ...p, buildings: nextBuildings };
       });
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '🐕', 'Tất cả Chuồng Chó (cấp 0) đã bị chó sổng phá huỷ!');
+      currentState = addLog(currentState, '🐕', 'Tất cả Chuồng Chó (cấp 0) đã bị phá huỷ!', 'event');
       break;
     }
 
@@ -890,11 +1035,11 @@ export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameS
         if (p.isEliminated) return p;
         return {
           ...p,
-          money: isEven ? p.money + 100 : Math.max(0, p.money - 100)
+          money: isEven ? p.money + 150 : Math.max(0, p.money - 150)
         };
       });
       currentState = { ...currentState, players: updatedPlayers };
-      currentState = addLog(currentState, '🃏', `Casino lắc ra tổng ${sum} (${isEven ? 'Chẵn: mỗi người +100Đ' : 'Lẻ: mỗi người -100Đ'}).`);
+      currentState = addLog(currentState, '🃏', `Casino lắc tổng ${sum} (${isEven ? 'Chẵn: +150Đ' : 'Lẻ: -150Đ'}).`, 'event');
       break;
     }
 
@@ -914,7 +1059,7 @@ export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameS
           p.id === poorest.id ? { ...p, money: p.money + effect.amount } : p
         );
         currentState = { ...currentState, players: updatedPlayers };
-        currentState = addLog(currentState, '💼', `Quỹ Đầu Tư 8D hỗ trợ ${effect.amount}Đ cho ${poorest.username}.`);
+        currentState = addLog(currentState, '💼', `Quỹ 8D hỗ trợ ${effect.amount}Đ cho ${poorest.username}.`, 'event');
       }
       break;
     }
@@ -942,7 +1087,7 @@ export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameS
         });
         currentState = { ...currentState, players: updatedPlayers };
         const tile = BOARD_TILES[picked.tileIndex];
-        currentState = addLog(currentState, '🧯', `Hoả hoạn! "${tile?.name}" bị giáng xuống cấp ${picked.level - 1}.`);
+        currentState = addLog(currentState, '🧯', `Hoả hoạn! "${tile?.name}" giáng xuống cấp ${picked.level - 1}.`, 'event');
       }
       break;
     }
@@ -968,31 +1113,19 @@ export function eliminatePlayer(state: GameState, playerId: string): GameState {
 
   const updatedPlayers = state.players.map(p => {
     if (p.id === playerId) {
-      return {
-        ...p,
-        isEliminated: true,
-        properties: [],
-        buildings: {}
-      };
+      return { ...p, isEliminated: true, properties: [], buildings: {} };
     }
     return p;
   });
 
-  const nextState: GameState = {
-    ...state,
-    players: updatedPlayers
-  };
-
-  return addLog(nextState, '💀', `${player.username} đã phá sản và bị loại khỏi ván cờ!`);
+  let nextState: GameState = { ...state, players: updatedPlayers };
+  return addLog(nextState, '💀', `${player.username} đã phá sản và bị loại khỏi ván cờ!`, 'system');
 }
 
 export function advanceTurn(state: GameState): GameState {
   const activePlayers = state.players.filter(p => !p.isEliminated);
   if (activePlayers.length <= 1) {
-    return {
-      ...state,
-      phase: 'GAME_OVER'
-    };
+    return { ...state, phase: 'GAME_OVER' };
   }
 
   const rolledDouble = (state as any).rolledDouble === true;
@@ -1001,6 +1134,7 @@ export function advanceTurn(state: GameState): GameState {
     let nextState: GameState = {
       ...state,
       pendingBuyTile: null,
+      pendingBuyoutTile: null,
       discountBuyPercent: undefined,
       lastDrawnCard: null,
       tradeState: null,
@@ -1010,7 +1144,7 @@ export function advanceTurn(state: GameState): GameState {
     };
     const currPlayer = nextState.players[nextState.currentPlayerIndex];
     if (currPlayer && !currPlayer.isEliminated && !currPlayer.inJail) {
-      return addLog(nextState, '🎲', `${currPlayer.username} tung trúng đôi! Được chơi thêm lượt.`);
+      return addLog(nextState, '🎲', `${currPlayer.username} tung trúng đôi! Được chơi thêm lượt.`, 'move');
     }
   }
 
@@ -1036,10 +1170,7 @@ export function advanceTurn(state: GameState): GameState {
   }
 
   if (nextRound > state.maxRounds) {
-    return {
-      ...state,
-      phase: 'GAME_OVER'
-    };
+    return { ...state, phase: 'GAME_OVER' };
   }
 
   let nextState: GameState = {
@@ -1049,6 +1180,7 @@ export function advanceTurn(state: GameState): GameState {
     eventRoundsLeft: nextEventRoundsLeft,
     activeEvent,
     pendingBuyTile: null,
+    pendingBuyoutTile: null,
     discountBuyPercent: undefined,
     lastDrawnCard: null,
     tradeState: null,
@@ -1063,21 +1195,14 @@ export function advanceTurn(state: GameState): GameState {
     const updatedPlayers = nextState.players.map(p =>
       p.id === nextPlayer.id ? { ...p, skipNextTurn: false } : p
     );
-    nextState = {
-      ...nextState,
-      players: updatedPlayers
-    };
-    nextState = addLog(nextState, '⏸️', `${nextPlayer.username} bị mất lượt này.`);
+    nextState = { ...nextState, players: updatedPlayers };
+    nextState = addLog(nextState, '⏸️', `${nextPlayer.username} bị mất lượt này.`, 'system');
     return advanceTurn(nextState);
   }
 
   if (nextPlayer.inJail) {
-    nextState = {
-      ...nextState,
-      phase: 'JAIL_ACTION',
-      turnTimer: TURN_TIMER
-    };
-    return addLog(nextState, '🔒', `Đến lượt ${nextPlayer.username} (Đang ở trong tù).`);
+    nextState = { ...nextState, phase: 'JAIL_ACTION', turnTimer: TURN_TIMER };
+    return addLog(nextState, '🔒', `Đến lượt ${nextPlayer.username} (Đang ở trong tù).`, 'jail');
   }
 
   if (nextRound > state.round && nextRound % EVENT_EVERY_N_ROUNDS === 0 && !activeEvent) {
@@ -1085,13 +1210,8 @@ export function advanceTurn(state: GameState): GameState {
     return res.state;
   }
 
-  nextState = {
-    ...nextState,
-    phase: 'ROLL_DICE',
-    turnTimer: TURN_TIMER
-  };
-
-  return addLog(nextState, '👉', `Đến lượt ${nextPlayer.username} tung xúc xắc.`);
+  nextState = { ...nextState, phase: 'ROLL_DICE', turnTimer: TURN_TIMER };
+  return addLog(nextState, '👉', `Đến lượt ${nextPlayer.username} tung xúc xắc.`, 'move');
 }
 
 export function calculateNetWorth(state: GameState, playerId: string): number {
@@ -1121,6 +1241,14 @@ export function checkGameOver(state: GameState): { isOver: boolean; winnerId?: s
   const activePlayers = state.players.filter(p => !p.isEliminated);
   if (activePlayers.length === 1) {
     return { isOver: true, winnerId: activePlayers[0].id };
+  }
+
+  const stationTiles = getStationTiles();
+  for (const p of activePlayers) {
+    const stationCount = p.properties.filter(tIdx => stationTiles.includes(tIdx)).length;
+    if (stationCount >= STATION_COUNT_TO_WIN) {
+      return { isOver: true, winnerId: p.id };
+    }
   }
 
   if (state.round > state.maxRounds || state.phase === 'GAME_OVER') {
