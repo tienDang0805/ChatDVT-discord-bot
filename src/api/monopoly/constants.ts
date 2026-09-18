@@ -20,6 +20,6 @@ export const MIN_BID_INCREMENT = 10;
 export const EVENT_EVERY_N_ROUNDS = 5;
 export const MINI_GAME_CHANCE = 0.3;
 export const SELL_BUILDING_REFUND_PERCENT = 0.5;
-export const BUYOUT_MULTIPLIER = 2;
+export const BUYOUT_MULTIPLIER = 1.5;
 export const BUYOUT_MAX_LEVEL = 4;
 export const STATION_COUNT_TO_WIN = 4;

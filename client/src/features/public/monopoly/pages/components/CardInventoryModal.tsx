@@ -77,7 +77,7 @@ export const CardInventoryModal: React.FC<CardInventoryModalProps> = ({
               <div className="text-3xl mb-2 opacity-40">🃏</div>
               <div className="text-xs text-slate-400 font-bold">Chưa có thẻ nào</div>
               <div className="text-[10px] text-slate-500 mt-1">
-                Thu thập thẻ từ ô Cơ Hội và Cộng Đồng
+                Thu thập thẻ từ ô Cơ Hội và Khí Vận
               </div>
             </div>
           ) : (

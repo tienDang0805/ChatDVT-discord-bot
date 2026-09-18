@@ -391,9 +391,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(850px, calc(100vw * 0.82), calc((100vh - 50px) * 1.2))',
+          width: 'min(750px, calc(100vw * 0.68), calc((100vh - 50px) * 0.95))',
           aspectRatio: '1',
-          transform: 'rotateX(45deg) rotateZ(-45deg) translateY(-8%)',
+          transform: 'rotateX(45deg) rotateZ(-45deg) translateY(-6%)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #92400e 0%, #78350f 30%, #5c2707 70%, #451a03 100%)',
           border: '8px solid #b45309',
@@ -453,8 +453,12 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           }}
         >
           <div
-            className="w-full h-full grid grid-cols-10 grid-rows-10 gap-[2px] p-[2px] rounded-xl relative"
-            style={{ background: '#cbd5e1' }}
+            className="w-full h-full grid gap-[2px] p-[2px] rounded-xl relative"
+            style={{
+              background: '#cbd5e1',
+              gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.5fr',
+              gridTemplateRows: '1.5fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.5fr'
+            }}
           >
             {BOARD_TILES.map((tile, idx) => {
               const pos = getTileGridPosition(idx);
@@ -647,7 +651,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                           }}
                         >
                           <span className="text-[7.5px] font-black text-white tracking-wider uppercase leading-none">
-                            🎁 CỘNG ĐỒNG
+                            🎁 KHÍ VẬN
                           </span>
                         </div>
                       )}

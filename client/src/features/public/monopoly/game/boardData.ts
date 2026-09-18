@@ -4,7 +4,7 @@ export const BOARD_TILES: TileDef[] = [
   { index: 0, type: 'start', name: 'XUẤT PHÁT', flavor: 'Đi qua đây nhận 200Đ' },
 
   { index: 1, type: 'property', name: 'Quận 4', flavor: 'Nhà Huy — Hẻm nhỏ nhưng có tình', group: 'green', price: 60, baseRent: 6 },
-  { index: 2, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
+  { index: 2, type: 'community', name: 'Khí Vận', flavor: 'Rút 1 thẻ' },
   { index: 3, type: 'property', name: 'Bình Tân', flavor: 'Nhà Bảo — Xa trung tâm nhưng yên tĩnh', group: 'green', price: 70, baseRent: 8 },
   { index: 4, type: 'tax', name: 'Phạt Giao Thông', flavor: 'Vượt đèn đỏ!', taxAmount: 80 },
   { index: 5, type: 'station', name: 'Cà Phê HP Gia Lai', flavor: 'Tụ điểm 8D — Nơi bắt đầu mọi drama', price: 150, stationIcon: '☕' },
@@ -16,7 +16,7 @@ export const BOARD_TILES: TileDef[] = [
 
   { index: 10, type: 'property', name: 'Thủ Đức', flavor: 'TP mới, đất đang lên', group: 'blue', price: 100, baseRent: 14 },
   { index: 11, type: 'property', name: 'Bình Thạnh', flavor: 'Gần sông, view đẹp', group: 'blue', price: 110, baseRent: 16 },
-  { index: 12, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
+  { index: 12, type: 'community', name: 'Khí Vận', flavor: 'Rút 1 thẻ' },
   { index: 13, type: 'property', name: 'Tân Phú', flavor: 'Khu dân cư đông đúc', group: 'blue', price: 120, baseRent: 18 },
   { index: 14, type: 'station', name: 'Nhà Kim Liễu', flavor: 'Nơi anh 6 trấn giữ — vào là không muốn ra', price: 150, stationIcon: '💅' },
   { index: 15, type: 'property', name: 'Gò Vấp', flavor: 'Kẹt xe huyền thoại', group: 'blue', price: 130, baseRent: 20 },
@@ -27,7 +27,7 @@ export const BOARD_TILES: TileDef[] = [
 
   { index: 19, type: 'property', name: 'Phú Nhuận', flavor: 'Sầm uất 24/7', group: 'yellow', price: 160, baseRent: 24 },
   { index: 20, type: 'property', name: 'Quận 1', flavor: 'Đất vàng Sài Gòn', group: 'yellow', price: 180, baseRent: 28 },
-  { index: 21, type: 'community', name: 'Cộng Đồng', flavor: 'Rút 1 thẻ' },
+  { index: 21, type: 'community', name: 'Khí Vận', flavor: 'Rút 1 thẻ' },
   { index: 22, type: 'property', name: 'Quận 3', flavor: 'Trung tâm sang chảnh', group: 'yellow', price: 190, baseRent: 30 },
   { index: 23, type: 'station', name: 'Sân Bay Tân Sơn Nhất', flavor: 'Hàng không quốc tế', price: 150, stationIcon: '✈️' },
   { index: 24, type: 'property', name: 'Đà Lạt', flavor: 'Thành phố ngàn hoa', group: 'yellow', price: 200, baseRent: 32 },

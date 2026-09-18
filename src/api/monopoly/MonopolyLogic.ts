@@ -202,7 +202,7 @@ export function calculateRent(state: GameState, tileIndex: number): number {
   const buildConfig = BUILD_LEVELS[buildLevel] || BUILD_LEVELS[0];
   let rent = baseRent * buildConfig.rentMultiplier;
 
-  if (tile.group && ownsFullGroup(state, owner.id, tile.group) && buildLevel === 0) {
+  if (tile.group && ownsFullGroup(state, owner.id, tile.group)) {
     rent *= 2;
   }
 
@@ -338,7 +338,6 @@ export function canBuild(state: GameState, playerId: string, tileIndex: number):
   const tile = BOARD_TILES[tileIndex];
   if (!player || !tile || tile.type !== 'property' || !tile.group) return false;
   if (!player.properties.includes(tileIndex)) return false;
-  if (!ownsFullGroup(state, playerId, tile.group)) return false;
 
   const currentLevel = player.buildings[tileIndex] || 0;
   if (currentLevel >= 4) return false;
@@ -362,7 +361,6 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
     let error = 'Không thể xây dựng.';
     if (tile?.type === 'station') error = 'Ga/Sân bay không thể nâng cấp.';
     else if (!player?.properties.includes(tileIndex)) error = 'Bạn không sở hữu ô này.';
-    else if (tile?.group && !ownsFullGroup(state, playerId, tile.group)) error = 'Cần sở hữu trọn bộ nhóm màu.';
     else if ((player?.buildings[tileIndex] || 0) >= 4) error = 'Đã đạt cấp tối đa.';
     else if (state.activeEvent?.effect.type === 'no_build') error = 'Sự kiện Mất Điện: không được xây.';
 

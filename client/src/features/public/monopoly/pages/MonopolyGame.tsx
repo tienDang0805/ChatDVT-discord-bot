@@ -57,6 +57,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [animatingPlayerId, setAnimatingPlayerId] = useState<string | null>(null);
   const [isHopping, setIsHopping] = useState(false);
   const [passedGoAlert, setPassedGoAlert] = useState(false);
+  const [postAnimDelay, setPostAnimDelay] = useState(false);
 
   const [selectedTileIndex, setSelectedTileIndex] = useState<number>(0);
   const [modalTile, setModalTile] = useState<TileDef | null>(null);
@@ -67,6 +68,45 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [showPlayerDetail, setShowPlayerDetail] = useState<PlayerState | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const animatingRef = useRef<boolean>(false);
+  const animPathRef = useRef<{
+    playerId: string;
+    path: number[];
+    newPos: number;
+    passedGo: boolean;
+    stepIndex: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const anim = animPathRef.current;
+      if (!anim) return;
+
+      if (anim.stepIndex < anim.path.length) {
+        const stepPos = anim.path[anim.stepIndex];
+        setVisualPositions(prev => ({ ...prev, [anim.playerId]: stepPos }));
+        sounds.playStep();
+        anim.stepIndex++;
+      } else {
+        setVisualPositions(prev => ({ ...prev, [anim.playerId]: anim.newPos }));
+        setSelectedTileIndex(anim.newPos);
+        setAnimatingPlayerId(null);
+        setIsHopping(false);
+        animatingRef.current = false;
+
+        if (anim.passedGo) {
+          sounds.playCoin();
+          setPassedGoAlert(true);
+          setTimeout(() => setPassedGoAlert(false), 2500);
+        }
+
+        animPathRef.current = null;
+        setPostAnimDelay(true);
+        setTimeout(() => setPostAnimDelay(false), 600);
+      }
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const urlRoomParam = new URLSearchParams(window.location.search).get('room');
 
@@ -102,29 +142,13 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
       animatingRef.current = true;
       setIsHopping(true);
       setAnimatingPlayerId(pId);
-
-      path.forEach((stepPos, idx) => {
-        setTimeout(() => {
-          setVisualPositions(prev => ({ ...prev, [pId]: stepPos }));
-          sounds.playStep();
-
-          if (idx === path.length - 1) {
-            setTimeout(() => {
-              setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
-              setAnimatingPlayerId(null);
-              setIsHopping(false);
-              animatingRef.current = false;
-              setSelectedTileIndex(newPos);
-
-              if (passedGo) {
-                sounds.playCoin();
-                setPassedGoAlert(true);
-                setTimeout(() => setPassedGoAlert(false), 2500);
-              }
-            }, 250);
-          }
-        }, idx * 280);
-      });
+      animPathRef.current = {
+        playerId: pId,
+        path,
+        newPos,
+        passedGo,
+        stepIndex: 0
+      };
     });
 
     socket.on('monopoly:error', (data: { message: string }) => {
@@ -728,20 +752,12 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               />
 
               {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowBuildMenu(true)}
-                    className="px-4 py-2 rounded-full bg-slate-800/90 hover:bg-slate-700 text-emerald-400 hover:text-emerald-300 font-black text-[11px] cursor-pointer border border-emerald-500/40 transition-all active:scale-95"
-                  >
-                    🔨 Xây Nhà Khác
-                  </button>
-                  <button
-                    onClick={handleEndTurn}
-                    className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-200 font-black text-xs cursor-pointer shadow-[0_4px_0_#b45309,0_8px_16px_rgba(217,119,6,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#b45309] hover:scale-105 transition-all"
-                  >
-                    KẾT THÚC LƯỢT ➔
-                  </button>
-                </div>
+                <button
+                  onClick={handleEndTurn}
+                  className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-200 font-black text-xs cursor-pointer shadow-[0_4px_0_#b45309,0_8px_16px_rgba(217,119,6,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#b45309] hover:scale-105 transition-all"
+                >
+                  KẾT THÚC LƯỢT ➔
+                </button>
               )}
 
               {isMyTurn && gameState.phase === 'END_TURN' && !isHopping && (
@@ -766,7 +782,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         <LiveTicker logs={gameState.log} />
       </div>
 
-      {!isHopping && isMyTurn && gameState.phase === 'BUY_PROMPT' && gameState.pendingBuyTile !== null && gameState.pendingBuyTile !== undefined && (
+      {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUY_PROMPT' && gameState.pendingBuyTile !== null && gameState.pendingBuyTile !== undefined && (
         <BuyPrompt
           tileIndex={gameState.pendingBuyTile}
           playerMoney={currPlayer?.money || 0}
@@ -778,7 +794,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         />
       )}
 
-      {!isHopping && isMyTurn && gameState.phase === 'BUYOUT_PROMPT' && gameState.pendingBuyoutTile !== null && gameState.pendingBuyoutTile !== undefined && (() => {
+      {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUYOUT_PROMPT' && gameState.pendingBuyoutTile !== null && gameState.pendingBuyoutTile !== undefined && (() => {
         const buyoutOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(gameState.pendingBuyoutTile!));
         return (
           <BuyPrompt
@@ -794,7 +810,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         );
       })()}
 
-      {!isHopping && isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
+      {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
         <CardReveal
           card={gameState.lastDrawnCard}
           isMyTurn={true}
@@ -803,7 +819,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         />
       )}
 
-      {!isHopping && isMyTurn && gameState.phase === 'JAIL_ACTION' && currPlayer && (
+      {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'JAIL_ACTION' && currPlayer && (
         <JailModal
           player={currPlayer}
           isMyTurn={true}
@@ -821,14 +837,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         />
       )}
 
-      {gameState.phase === 'BUILD_PHASE' && showBuildMenu && (
-        <BuildMenu
-          gameState={gameState}
-          myPlayerId={playerId}
-          onBuild={handleBuildTile}
-          onEndTurn={handleEndTurn}
-        />
-      )}
+
 
       {gameState.phase === 'MINI_GAME' && (
         <MiniGameOverlay onComplete={handleMiniGameComplete} />
@@ -876,7 +885,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         />
       )}
 
-      {!isHopping && isMyTurn && gameState.phase === 'BUILD_PROMPT' && gameState.pendingBuildTile !== null && gameState.pendingBuildTile !== undefined && (() => {
+      {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUILD_PROMPT' && gameState.pendingBuildTile !== null && gameState.pendingBuildTile !== undefined && (() => {
         const me = gameState.players.find(p => p.id === playerId);
         const buildLevel = me?.buildings[gameState.pendingBuildTile] || 0;
         return (
