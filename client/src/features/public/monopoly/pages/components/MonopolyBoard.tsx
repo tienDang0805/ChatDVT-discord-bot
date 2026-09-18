@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { GameState, TileDef, PlayerState } from '../../game/types';
-import { BOARD_TILES, BUILD_LEVELS } from '../../game/boardData';
+import { BOARD_TILES, BUILD_LEVELS, STATION_RENTS } from '../../game/boardData';
 import { PropertyCard } from './PropertyCard';
 
 interface MonopolyBoardProps {
@@ -391,7 +391,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(880px, calc((100vw - 40px) * 0.75), calc((100vh - 90px) * 1.25))',
+          width: 'min(960px, calc((100vw - 20px) * 0.88), calc((100vh - 70px) * 1.35))',
           aspectRatio: '1',
           transform: 'rotateX(48deg) rotateZ(-45deg)',
           transformStyle: 'preserve-3d',
@@ -453,8 +453,12 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           }}
         >
           <div
-            className="w-full h-full grid grid-cols-10 grid-rows-10 gap-[2.5px] p-[2.5px] rounded-xl relative"
-            style={{ background: '#cbd5e1' }}
+            className="w-full h-full grid gap-[2px] p-[2px] rounded-xl relative"
+            style={{
+              background: '#cbd5e1',
+              gridTemplateColumns: '2.4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2.4fr',
+              gridTemplateRows: '2.4fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 2.4fr'
+            }}
           >
             {BOARD_TILES.map((tile, idx) => {
               const pos = getTileGridPosition(idx);

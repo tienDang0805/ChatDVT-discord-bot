@@ -80,6 +80,15 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
     socket.on('monopoly:game-state', (state: GameState) => {
       setGameState(state);
+      setVisualPositions(prev => {
+        const next = { ...prev };
+        state.players.forEach(p => {
+          if (next[p.id] === undefined) {
+            next[p.id] = p.position;
+          }
+        });
+        return next;
+      });
     });
 
     socket.on('monopoly:player-moved', (data: { playerId: string; newPos: number; passedGo: boolean; path: number[] }) => {
@@ -601,7 +610,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
       <div className="w-full flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
         {gameState.players[0] && (
-          <div className="absolute top-3 left-3 z-20 w-44 sm:w-52">
+          <div className="absolute top-2 left-2 z-20 w-36 sm:w-44">
             <MonopolyPlayerCard
               player={gameState.players[0]}
               isCurrentTurn={gameState.players[0].id === currPlayer?.id}
@@ -613,7 +622,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         )}
 
         {gameState.players[1] && (
-          <div className="absolute top-3 right-3 z-20 w-44 sm:w-52">
+          <div className="absolute top-2 right-2 z-20 w-36 sm:w-44">
             <MonopolyPlayerCard
               player={gameState.players[1]}
               isCurrentTurn={gameState.players[1].id === currPlayer?.id}
@@ -625,7 +634,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         )}
 
         {gameState.players[2] && (
-          <div className="absolute bottom-3 right-3 z-20 w-44 sm:w-52">
+          <div className="absolute bottom-2 right-2 z-20 w-36 sm:w-44">
             <MonopolyPlayerCard
               player={gameState.players[2]}
               isCurrentTurn={gameState.players[2].id === currPlayer?.id}
@@ -637,7 +646,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         )}
 
         {gameState.players[3] && (
-          <div className="absolute bottom-3 left-3 z-20 w-44 sm:w-52">
+          <div className="absolute bottom-2 left-2 z-20 w-36 sm:w-44">
             <MonopolyPlayerCard
               player={gameState.players[3]}
               isCurrentTurn={gameState.players[3].id === currPlayer?.id}

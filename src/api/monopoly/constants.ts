@@ -1,6 +1,6 @@
 export const START_MONEY = 800;
 export const GO_SALARY = 200;
-export const MAX_ROUNDS = 30;
+export const MAX_ROUNDS = 100;
 export const MAX_PLAYERS = 4;
 export const MIN_PLAYERS = 2;
 export const BOARD_SIZE = 36;
