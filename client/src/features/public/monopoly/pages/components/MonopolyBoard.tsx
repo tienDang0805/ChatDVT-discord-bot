@@ -25,12 +25,54 @@ function getTileGridPosition(index: number): { row: number; col: number; side: '
   return { row: 1, col: 1, side: 'corner' };
 }
 
-const GROUP_COLORS: Record<string, { main: string; dark: string; light: string; glow: string }> = {
-  green: { main: '#10b981', dark: '#059669', light: '#a7f3d0', glow: 'rgba(16,185,129,0.6)' },
-  blue: { main: '#0284c7', dark: '#0369a1', light: '#bae6fd', glow: 'rgba(2,132,199,0.6)' },
-  yellow: { main: '#f59e0b', dark: '#d97706', light: '#fef3c7', glow: 'rgba(245,158,11,0.6)' },
-  red: { main: '#e11d48', dark: '#be123c', light: '#fecdd3', glow: 'rgba(225,29,72,0.6)' },
-  purple: { main: '#7c3aed', dark: '#6d28d9', light: '#ede9fe', glow: 'rgba(124,58,237,0.6)' }
+const GROUP_CONFIG: Record<string, {
+  name: string;
+  headerGradient: string;
+  glow: string;
+  tintBg: string;
+  border: string;
+  accent: string;
+}> = {
+  green: {
+    name: '🌿 NGOẠI THÀNH',
+    headerGradient: 'linear-gradient(90deg, #047857, #10b981, #34d399, #10b981, #047857)',
+    glow: 'rgba(16,185,129,0.7)',
+    tintBg: 'linear-gradient(180deg, #f0fdf4 0%, #ffffff 50%, #dcfce7 100%)',
+    border: '#4ade80',
+    accent: '#15803d'
+  },
+  blue: {
+    name: '🌊 VEN ĐÔ',
+    headerGradient: 'linear-gradient(90deg, #0369a1, #0284c7, #38bdf8, #0284c7, #0369a1)',
+    glow: 'rgba(2,132,199,0.7)',
+    tintBg: 'linear-gradient(180deg, #f0f9ff 0%, #ffffff 50%, #e0f2fe 100%)',
+    border: '#38bdf8',
+    accent: '#0369a1'
+  },
+  yellow: {
+    name: '👑 ĐẤT VÀNG',
+    headerGradient: 'linear-gradient(90deg, #b45309, #f59e0b, #fde047, #f59e0b, #b45309)',
+    glow: 'rgba(245,158,11,0.7)',
+    tintBg: 'linear-gradient(180deg, #fffbeb 0%, #ffffff 50%, #fef3c7 100%)',
+    border: '#facc15',
+    accent: '#b45309'
+  },
+  red: {
+    name: '🔥 TÂY NGUYÊN',
+    headerGradient: 'linear-gradient(90deg, #9f1239, #e11d48, #fb7185, #e11d48, #9f1239)',
+    glow: 'rgba(225,29,72,0.7)',
+    tintBg: 'linear-gradient(180deg, #fff1f2 0%, #ffffff 50%, #ffe4e6 100%)',
+    border: '#fb7185',
+    accent: '#be123c'
+  },
+  purple: {
+    name: '💎 CAO CẤP',
+    headerGradient: 'linear-gradient(90deg, #5b21b6, #7c3aed, #c084fc, #7c3aed, #5b21b6)',
+    glow: 'rgba(124,58,237,0.7)',
+    tintBg: 'linear-gradient(180deg, #faf5ff 0%, #ffffff 50%, #ede9fe 100%)',
+    border: '#c084fc',
+    accent: '#6d28d9'
+  }
 };
 
 const CORNER_DATA: Record<number, { icon: string; label: string; sub: string; bg: string; textDark?: boolean }> = {
@@ -40,57 +82,245 @@ const CORNER_DATA: Record<number, { icon: string; label: string; sub: string; bg
   27: { icon: '🚔', label: 'VÀO TÙ', sub: 'ĐỪNG CHẠY', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)' }
 };
 
-function renderBuildingVisual(level: number): React.ReactNode {
-  if (level === 0) return null;
-  if (level >= 4) {
+function renderBuildingVisual(level: number, ownerColor?: string): React.ReactNode {
+  const flagColor = ownerColor || '#f59e0b';
+
+  if (level === 0) {
+    return (
+      <div
+        className="absolute -top-3.5 left-1/2 pointer-events-none z-30 flex flex-col items-center"
+        style={{
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transformOrigin: 'bottom center'
+        }}
+      >
+        <div className="relative flex flex-col items-center">
+          <div className="absolute -top-2.5 -right-2 flex items-start">
+            <div className="w-[1.5px] h-3 bg-amber-900 shadow-sm" />
+            <div
+              className="w-2.5 h-1.5 shadow-sm"
+              style={{
+                background: flagColor,
+                clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
+              }}
+            />
+          </div>
+          <div
+            className="w-5 h-2 rounded-t-sm"
+            style={{
+              background: 'linear-gradient(135deg, #ef4444, #991b1b)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+            }}
+          />
+          <div
+            className="w-4 h-3 rounded-b-sm flex items-center justify-center -mt-0.5 border border-amber-950"
+            style={{
+              background: 'linear-gradient(to bottom, #d97706, #78350f)',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.5)'
+            }}
+          >
+            <span className="text-[8px] leading-none">🐶</span>
+          </div>
+        </div>
+        <div className="w-5 h-1 rounded-full bg-black/60 blur-[0.8px] mt-0.5" />
+      </div>
+    );
+  }
+
+  if (level === 1) {
     return (
       <div
         className="absolute -top-4 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-54deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
           transformOrigin: 'bottom center'
         }}
       >
-        <div
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shadow-xl"
-          style={{
-            background: 'linear-gradient(135deg, #fef08a, #f59e0b, #b45309)',
-            boxShadow: '0 4px 10px rgba(0,0,0,0.7), 0 0 16px rgba(245,158,11,0.9)',
-            border: '2px solid #ffffff'
-          }}
-        >
-          ⭐
+        <div className="relative flex flex-col items-center">
+          <div className="absolute -top-3 -right-2 flex items-start">
+            <div className="w-[1.5px] h-3.5 bg-amber-300 shadow-sm" />
+            <div
+              className="w-3 h-2 shadow-sm"
+              style={{
+                background: flagColor,
+                clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
+              }}
+            />
+          </div>
+          <div
+            className="w-6 h-3 rounded-t-sm"
+            style={{
+              background: 'linear-gradient(135deg, #f97316, #c2410c)',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.55)',
+              clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
+            }}
+          />
+          <div
+            className="w-5 h-3.5 rounded-b-sm flex items-center justify-center -mt-0.5 border border-amber-300"
+            style={{
+              background: 'linear-gradient(to bottom, #fef3c7, #fde68a)',
+              boxShadow: '0 3px 6px rgba(0,0,0,0.5)'
+            }}
+          >
+            <div className="w-2 h-2 rounded-sm bg-sky-600 border border-white shadow-inner" />
+          </div>
         </div>
-        <div className="w-5 h-2 rounded-full bg-black/60 blur-[1px] -mt-0.5" />
+        <div className="w-6 h-1.5 rounded-full bg-black/60 blur-[0.8px] mt-0.5" />
       </div>
     );
   }
+
+  if (level === 2) {
+    return (
+      <div
+        className="absolute -top-5 left-1/2 pointer-events-none z-30 flex flex-col items-center"
+        style={{
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transformOrigin: 'bottom center'
+        }}
+      >
+        <div className="relative flex flex-col items-center">
+          <div className="absolute -top-3.5 -right-2.5 flex items-start">
+            <div className="w-[1.5px] h-4 bg-slate-300 shadow-sm" />
+            <div
+              className="w-3.5 h-2 shadow-sm"
+              style={{
+                background: flagColor,
+                clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
+              }}
+            />
+          </div>
+          <div
+            className="w-7 h-2.5 rounded-t-sm"
+            style={{
+              background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.6)'
+            }}
+          />
+          <div
+            className="w-6 h-5 rounded-b-sm flex flex-col items-center justify-between p-0.5 border border-slate-300"
+            style={{
+              background: 'linear-gradient(to bottom, #ffffff, #e2e8f0)',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.55)'
+            }}
+          >
+            <div className="flex gap-1 mt-0.5">
+              <div className="w-1.5 h-1.5 rounded-sm bg-sky-500 border border-white shadow-inner" />
+              <div className="w-1.5 h-1.5 rounded-sm bg-sky-500 border border-white shadow-inner" />
+            </div>
+            <div className="w-2.5 h-2 rounded-t-sm bg-amber-700 border border-white/70" />
+          </div>
+        </div>
+        <div className="w-7 h-1.5 rounded-full bg-black/65 blur-[1px] mt-0.5" />
+      </div>
+    );
+  }
+
+  if (level === 3) {
+    return (
+      <div
+        className="absolute -top-6 left-1/2 pointer-events-none z-30 flex flex-col items-center"
+        style={{
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
+          transformOrigin: 'bottom center'
+        }}
+      >
+        <div className="relative flex flex-col items-center">
+          <div className="absolute -top-4 -right-3 flex items-start">
+            <div className="w-0.5 h-4.5 bg-amber-400 shadow-sm" />
+            <div
+              className="w-4 h-2.5 shadow-sm"
+              style={{
+                background: flagColor,
+                clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
+              }}
+            />
+          </div>
+          <div
+            className="w-8 h-3 rounded-t-md"
+            style={{
+              background: 'linear-gradient(135deg, #f59e0b, #b45309)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.65)'
+            }}
+          />
+          <div
+            className="w-7 h-6 rounded-b-sm flex flex-col items-center justify-between p-0.5 border border-amber-300"
+            style={{
+              background: 'linear-gradient(to bottom, #ffffff, #fef3c7)',
+              boxShadow: '0 5px 10px rgba(0,0,0,0.6), 0 0 10px rgba(245,158,11,0.5)'
+            }}
+          >
+            <div className="flex gap-1 mt-0.5">
+              <div className="w-2 h-1.5 rounded-sm bg-amber-400 border border-white shadow-inner" />
+              <div className="w-2 h-1.5 rounded-sm bg-amber-400 border border-white shadow-inner" />
+            </div>
+            <div className="flex gap-1 mb-0.5">
+              <div className="w-2 h-1.5 rounded-sm bg-sky-500 border border-white shadow-inner" />
+              <div className="w-2 h-1.5 rounded-sm bg-sky-500 border border-white shadow-inner" />
+            </div>
+          </div>
+        </div>
+        <div className="w-8 h-2 rounded-full bg-black/70 blur-[1px] mt-0.5" />
+      </div>
+    );
+  }
+
   return (
     <div
-      className="absolute -top-3 left-1/2 pointer-events-none z-30 flex items-center justify-center gap-0.5"
+      className="absolute -top-8 left-1/2 pointer-events-none z-30 flex flex-col items-center"
       style={{
-        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-54deg)',
+        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-48deg)',
         transformOrigin: 'bottom center'
       }}
     >
-      {Array.from({ length: level }).map((_, i) => (
-        <div key={i} className="flex flex-col items-center">
+      <div className="relative flex flex-col items-center animate-bounce-subtle">
+        <div className="absolute -top-4 -left-3 flex items-start">
           <div
-            className="w-3 h-4 rounded-t-sm"
+            className="w-3.5 h-2.5 shadow-sm"
             style={{
-              background:
-                level === 3
-                  ? 'linear-gradient(to bottom, #fbbf24, #b45309)'
-                  : level === 2
-                  ? 'linear-gradient(to bottom, #34d399, #047857)'
-                  : 'linear-gradient(to bottom, #a3e635, #4d7c0f)',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.7)',
-              border: '0.5px solid rgba(0,0,0,0.15)'
+              background: flagColor,
+              clipPath: 'polygon(100% 0%, 0% 50%, 100% 100%)'
             }}
           />
-          <div className="w-2.5 h-1 rounded-full bg-black/40 blur-[0.5px]" />
+          <div className="w-0.5 h-5 bg-amber-300 shadow-sm" />
         </div>
-      ))}
+        <div className="absolute -top-4 -right-3 flex items-start">
+          <div className="w-0.5 h-5 bg-amber-300 shadow-sm" />
+          <div
+            className="w-3.5 h-2.5 shadow-sm"
+            style={{
+              background: flagColor,
+              clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)'
+            }}
+          />
+        </div>
+        <div
+          className="w-8 h-4 rounded-t-full flex items-center justify-center text-sm"
+          style={{
+            background: 'linear-gradient(135deg, #fef08a, #f59e0b, #b45309)',
+            boxShadow: '0 0 16px rgba(245,158,11,1)'
+          }}
+        >
+          👑
+        </div>
+        <div
+          className="w-9 h-7 rounded-md flex flex-col items-center justify-between p-0.5 border-2 border-white -mt-0.5"
+          style={{
+            background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #92400e 100%)',
+            boxShadow: '0 6px 14px rgba(0,0,0,0.75), 0 0 20px rgba(245,158,11,0.95)'
+          }}
+        >
+          <div className="text-[8px] font-black text-white tracking-widest leading-none mt-0.5 drop-shadow">
+            MAX
+          </div>
+          <div className="flex gap-1.5 mb-0.5">
+            <div className="w-2 h-2 rounded-sm bg-amber-200 border border-white shadow-inner" />
+            <div className="w-2 h-2 rounded-sm bg-amber-200 border border-white shadow-inner" />
+          </div>
+        </div>
+      </div>
+      <div className="w-10 h-2.5 rounded-full bg-black/75 blur-[1.2px] mt-0.5" />
     </div>
   );
 }
@@ -133,27 +363,24 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     >
       <style>{`
         @keyframes boardTokenHop {
-          0%, 100% { transform: rotateZ(45deg) rotateX(-54deg) translateY(0) scale(1); }
-          40% { transform: rotateZ(45deg) rotateX(-54deg) translateY(-22px) scale(1.25); }
-          70% { transform: rotateZ(45deg) rotateX(-54deg) translateY(-8px) scale(1.1); }
+          0%, 100% { transform: rotateZ(45deg) rotateX(-48deg) translateY(0) scale(1); }
+          40% { transform: rotateZ(45deg) rotateX(-48deg) translateY(-22px) scale(1.25); }
+          70% { transform: rotateZ(45deg) rotateX(-48deg) translateY(-8px) scale(1.1); }
         }
         @keyframes tileHoverPulse {
-          0%, 100% { box-shadow: inset 0 0 0 2px rgba(245,158,11,0.95), 0 0 18px rgba(245,158,11,0.7); }
-          50% { box-shadow: inset 0 0 0 3px rgba(245,158,11,1), 0 0 28px rgba(245,158,11,0.95); }
+          0%, 100% { filter: drop-shadow(0 0 0px transparent); }
+          50% { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9)); }
         }
         .iso-tile {
-          transform-style: preserve-3d;
-          transition: transform 0.18s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.18s ease;
-          cursor: pointer;
-          position: relative;
+          transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
         }
         .iso-tile:hover {
-          transform: translateZ(12px) scale(1.06);
+          transform: translateZ(10px) scale(1.04);
           z-index: 25 !important;
         }
         .iso-tile-active {
           animation: tileHoverPulse 1.6s ease-in-out infinite;
-          transform: translateZ(14px) scale(1.07);
+          transform: translateZ(12px) scale(1.05);
           z-index: 26 !important;
         }
         .token-hop-billboard {
@@ -164,9 +391,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(860px, calc((100vw - 40px) * 0.72), calc((100vh - 100px) * 1.2))',
+          width: 'min(880px, calc((100vw - 40px) * 0.75), calc((100vh - 90px) * 1.25))',
           aspectRatio: '1',
-          transform: 'rotateX(54deg) rotateZ(-45deg)',
+          transform: 'rotateX(48deg) rotateZ(-45deg)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #92400e 0%, #78350f 30%, #5c2707 70%, #451a03 100%)',
           border: '8px solid #b45309',
@@ -234,32 +461,66 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               const isCorner = cornerIndices.includes(idx);
               const owner = getOwner(idx);
               const buildLevel = owner ? (owner.buildings[idx] || 0) : 0;
-              const groupColor = tile.group ? GROUP_COLORS[tile.group] : null;
+              const groupConf = tile.group ? GROUP_CONFIG[tile.group] : null;
               const playersHere = playersByTile[idx] || [];
               const hasHoppingPlayer = playersHere.some(p => p.id === animatingPlayerId);
               const isInspected = activeIndex === idx;
               const isStation = tile.type === 'station';
+              const isTax = tile.type === 'tax';
+              const isChance = tile.type === 'chance';
+              const isCommunity = tile.type === 'community';
+              const isResort = idx === 35;
               const cornerData = isCorner ? CORNER_DATA[idx] : null;
 
               const tileBg = isCorner
                 ? cornerData!.bg
-                : owner
-                ? `linear-gradient(180deg, #ffffff 0%, ${owner.tokenColor}20 60%, #e2e8f0 100%)`
+                : owner && tile.type === 'property'
+                ? `linear-gradient(180deg, ${owner.tokenColor}20 0%, #ffffff 40%, #f8fafc 70%, ${owner.tokenColor}30 100%)`
+                : isStation
+                ? 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 40%, #fde68a 100%)'
+                : isResort
+                ? 'linear-gradient(180deg, #faf5ff 0%, #ede9fe 40%, #ddd6fe 100%)'
+                : isTax
+                ? 'linear-gradient(180deg, #fef2f2 0%, #ffffff 50%, #fee2e2 100%)'
+                : isChance
+                ? 'linear-gradient(180deg, #fff7ed 0%, #ffffff 50%, #ffedd5 100%)'
+                : isCommunity
+                ? 'linear-gradient(180deg, #eef2ff 0%, #ffffff 50%, #e0e7ff 100%)'
+                : groupConf
+                ? groupConf.tintBg
                 : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)';
 
-              const tileShadow = isCorner
-                ? 'inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.2)'
+              const tileBorder = isCorner
+                ? '1.5px solid #94a3b8'
                 : owner
-                ? `inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.25)`
-                : 'inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(148,163,184,0.35), 0 2px 5px rgba(0,0,0,0.18)';
+                ? `3px solid ${owner.tokenColor}`
+                : isStation
+                ? '2px solid #f59e0b'
+                : isResort
+                ? '2.5px solid #8b5cf6'
+                : isTax
+                ? '1.5px solid #ef4444'
+                : isChance
+                ? '1.5px solid #f97316'
+                : isCommunity
+                ? '1.5px solid #6366f1'
+                : groupConf
+                ? `1.5px solid ${groupConf.border}`
+                : '1.5px solid #94a3b8';
+
+              const tileShadow = isCorner
+                ? 'inset 1px 1px 0 rgba(255,255,255,1), 0 2px 5px rgba(0,0,0,0.18)'
+                : owner
+                ? `0 0 16px ${owner.tokenColor}aa, inset 0 0 10px ${owner.tokenColor}30, 0 3px 8px rgba(0,0,0,0.3)`
+                : isStation
+                ? 'inset 0 0 8px rgba(245,158,11,0.35), 0 3px 6px rgba(0,0,0,0.22)'
+                : isResort
+                ? 'inset 0 0 10px rgba(139,92,246,0.35), 0 3px 6px rgba(0,0,0,0.25)'
+                : 'inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(148,163,184,0.3), 0 2px 5px rgba(0,0,0,0.18)';
 
               return (
                 <div
                   key={idx}
-                  onMouseEnter={() => {
-                    setInternalTileIndex(idx);
-                    if (onTileClick) onTileClick(tile);
-                  }}
                   onClick={() => {
                     setInternalTileIndex(idx);
                     if (onTileClick) onTileClick(tile);
@@ -271,49 +532,126 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     boxShadow: hasHoppingPlayer
                       ? `0 0 24px rgba(245,158,11,1), ${tileShadow}`
                       : tileShadow,
-                    border: owner && !isCorner ? `2.5px solid ${owner.tokenColor}` : '1.5px solid #94a3b8'
+                    border: tileBorder,
+                    cursor: 'pointer'
                   }}
                   className={`iso-tile rounded-md overflow-visible flex flex-col justify-between ${
                     hasHoppingPlayer ? 'z-30' : isInspected ? 'iso-tile-active z-20' : 'z-10'
                   }`}
                 >
-                  {groupColor && (
+                  {owner && !isCorner ? (
                     <div
-                      className="h-[7px] w-full shrink-0 rounded-t-sm relative overflow-hidden"
+                      className="h-[15px] w-full shrink-0 rounded-t-sm relative flex items-center justify-between px-1 overflow-hidden z-20 border-b border-white/40"
                       style={{
-                        background: `linear-gradient(90deg, ${groupColor.dark}, ${groupColor.main}, ${groupColor.light}, ${groupColor.main}, ${groupColor.dark})`,
-                        boxShadow: `0 1px 4px ${groupColor.glow}`
+                        background: `linear-gradient(90deg, ${owner.tokenColor}, #0f172a 85%)`,
+                        boxShadow: `0 1px 6px ${owner.tokenColor}`
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent h-[2px]" />
-                    </div>
-                  )}
-
-                  {isStation && !isCorner && (
-                    <div
-                      className="h-[7px] w-full shrink-0 rounded-t-sm relative overflow-hidden"
-                      style={{
-                        background: 'linear-gradient(90deg, #0284c7, #38bdf8, #e0f2fe, #38bdf8, #0284c7)',
-                        boxShadow: '0 1px 4px rgba(2,132,199,0.5)'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/70 to-transparent h-[2px]" />
-                    </div>
-                  )}
-
-                  {owner && !isCorner && (
-                    <div className="absolute top-0.5 right-0.5 z-20">
-                      <div
-                        className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center border border-white shadow-md"
-                        style={{ background: owner.tokenColor }}
-                      >
-                        {owner.avatar ? (
-                          <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span style={{ fontSize: '8px' }}>{owner.tokenEmoji}</span>
-                        )}
+                      <div className="flex items-center gap-1 min-w-0">
+                        <div className="w-3.5 h-3.5 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
+                          {owner.avatar ? (
+                            <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[7px]">{owner.tokenEmoji}</span>
+                          )}
+                        </div>
+                        <span className="text-[7.5px] sm:text-[8px] font-black text-white truncate max-w-[46px] leading-none uppercase drop-shadow">
+                          {owner.username}
+                        </span>
                       </div>
+                      <span className="text-[7px] font-black text-amber-300 shrink-0 leading-none">
+                        {isStation ? 'TRẠM' : buildLevel === 4 ? '👑 MAX' : `Lv.${buildLevel}`}
+                      </span>
                     </div>
+                  ) : (
+                    <>
+                      {groupConf && !isResort && (
+                        <div
+                          className="h-[13px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: groupConf.headerGradient,
+                            boxShadow: `0 1px 4px ${groupConf.glow}`
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent h-[2px]" />
+                          <span className="text-[7px] sm:text-[8px] font-black text-white tracking-widest uppercase leading-none drop-shadow-sm">
+                            {groupConf.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {isResort && (
+                        <div
+                          className="h-[14px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(90deg, #4c1d95, #7c3aed, #c084fc, #7c3aed, #4c1d95)',
+                            boxShadow: '0 1px 5px rgba(124,58,237,0.7)'
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent h-[2px]" />
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-amber-200 tracking-wider uppercase leading-none drop-shadow">
+                            👑 SIÊU RESORT 5⭐
+                          </span>
+                        </div>
+                      )}
+
+                      {isStation && (
+                        <div
+                          className="h-[14px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(90deg, #92400e, #d97706, #fbbf24, #d97706, #92400e)',
+                            boxShadow: '0 1px 5px rgba(245,158,11,0.7)'
+                          }}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent h-[2px]" />
+                          <span className="text-[7.5px] sm:text-[8.5px] font-black text-slate-950 tracking-wider uppercase leading-none drop-shadow-sm">
+                            ⭐ TRẠM ĐẶC BIỆT ⭐
+                          </span>
+                        </div>
+                      )}
+
+                      {isTax && (
+                        <div
+                          className="h-[13px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(90deg, #881337, #dc2626, #f87171, #dc2626, #881337)',
+                            boxShadow: '0 1px 4px rgba(220,38,38,0.6)'
+                          }}
+                        >
+                          <span className="text-[7.5px] font-black text-white tracking-wider uppercase leading-none">
+                            🚨 NỘP PHẠT
+                          </span>
+                        </div>
+                      )}
+
+                      {isChance && (
+                        <div
+                          className="h-[13px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(90deg, #c2410c, #ea580c, #fdba74, #ea580c, #c2410c)',
+                            boxShadow: '0 1px 4px rgba(234,88,12,0.6)'
+                          }}
+                        >
+                          <span className="text-[7.5px] font-black text-white tracking-wider uppercase leading-none">
+                            🎴 CƠ HỘI
+                          </span>
+                        </div>
+                      )}
+
+                      {isCommunity && (
+                        <div
+                          className="h-[13px] w-full shrink-0 rounded-t-sm relative flex items-center justify-center overflow-hidden"
+                          style={{
+                            background: 'linear-gradient(90deg, #4338ca, #6366f1, #a5b4fc, #6366f1, #4338ca)',
+                            boxShadow: '0 1px 4px rgba(99,102,241,0.6)'
+                          }}
+                        >
+                          <span className="text-[7.5px] font-black text-white tracking-wider uppercase leading-none">
+                            🎁 CỘNG ĐỒNG
+                          </span>
+                        </div>
+                      )}
+                    </>
                   )}
 
                   <div className="w-full flex-1 flex flex-col items-center justify-center px-0.5 pointer-events-none min-h-0 overflow-visible">
@@ -339,23 +677,78 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </div>
                     ) : (
                       <>
-                        <span className="text-sm sm:text-base drop-shadow-sm leading-none mt-0.5">
-                          {tile.stationIcon || '🏠'}
+                        <span className={`drop-shadow-sm leading-none mt-0.5 ${isStation || isResort ? 'text-xl sm:text-2xl' : 'text-sm sm:text-base'}`}>
+                          {tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : '🏠')}
                         </span>
                         <div className="w-full text-center px-0.5 my-0.5 flex items-center justify-center">
                           <span
-                            className="text-[9.5px] sm:text-[11px] font-black text-slate-900 text-center leading-tight break-words"
+                            className={`font-black text-center leading-tight break-words ${
+                              isStation
+                                ? 'text-[9px] sm:text-[10.5px] text-amber-950 font-black'
+                                : isResort
+                                ? 'text-[9.5px] sm:text-[11px] text-violet-950 font-black'
+                                : 'text-[9px] sm:text-[10.5px] text-slate-900'
+                            }`}
                           >
                             {tile.name}
                           </span>
                         </div>
-                        {tile.price && (
+
+                        {owner && !isStation && !isCorner && (
+                          <div className="flex items-center justify-center my-0.5">
+                            <span
+                              className={`text-[7.5px] sm:text-[8.5px] font-black px-1.5 py-0.5 rounded-md leading-none shadow-md border ${
+                                buildLevel === 4
+                                  ? 'bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 text-slate-950 border-white shadow-[0_0_12px_rgba(245,158,11,1)] animate-pulse'
+                                  : buildLevel === 3
+                                  ? 'bg-amber-600 text-amber-100 border-amber-300'
+                                  : buildLevel === 2
+                                  ? 'bg-sky-600 text-sky-100 border-sky-300'
+                                  : buildLevel === 1
+                                  ? 'bg-emerald-600 text-emerald-100 border-emerald-300'
+                                  : 'bg-stone-800 text-stone-200 border-stone-500'
+                              }`}
+                            >
+                              {buildLevel === 4
+                                ? '👑 LANDMARK'
+                                : buildLevel === 3
+                                ? '⭐⭐⭐ CẤP 3'
+                                : buildLevel === 2
+                                ? '⭐⭐ CẤP 2'
+                                : buildLevel === 1
+                                ? '⭐ CẤP 1'
+                                : '🐕 CẤP 0'}
+                            </span>
+                          </div>
+                        )}
+
+                        {owner && (tile.type === 'property' || isStation) ? (
+                          <span className="text-[8px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-md border border-rose-300 flex items-center gap-0.5">
+                            <span className="opacity-90">Thuê:</span>
+                            <span className="text-yellow-200 font-black">
+                              {(() => {
+                                if (isStation) {
+                                  const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
+                                  return STATION_RENTS[stCount] || STATION_RENTS[1];
+                                }
+                                return Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
+                              })()}Đ
+                            </span>
+                          </span>
+                        ) : tile.price ? (
                           <span
-                            className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-amber-300 text-amber-950 border border-amber-400 shadow-sm"
+                            className={`text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 shadow-sm ${
+                              isStation
+                                ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 font-black'
+                                : isResort
+                                ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white border border-violet-400 font-black'
+                                : 'bg-amber-300 text-amber-950 border border-amber-400'
+                            }`}
                           >
                             {tile.price}Đ
                           </span>
-                        )}
+                        ) : null}
+
                         {tile.taxAmount && (
                           <span
                             className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm"
@@ -363,11 +756,16 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             -{tile.taxAmount}Đ
                           </span>
                         )}
+                        {isStation && !owner && (
+                          <span className="text-[6.5px] sm:text-[7.5px] text-amber-800 font-extrabold leading-none">
+                            4 Ô = Thắng
+                          </span>
+                        )}
                       </>
                     )}
                   </div>
 
-                  {renderBuildingVisual(buildLevel)}
+                  {owner && !isStation && !isCorner && renderBuildingVisual(buildLevel, owner.tokenColor)}
 
                   {playersHere.length > 0 && (
                     <div className="absolute inset-x-0 bottom-1 flex items-center justify-center gap-1 z-40 pointer-events-none">

@@ -2,7 +2,7 @@ export type TileType = 'property' | 'station' | 'chance' | 'community' | 'tax' |
 export type PropertyGroup = 'green' | 'blue' | 'yellow' | 'red' | 'purple';
 export type GamePhase =
   | 'LOBBY' | 'COUNTDOWN' | 'ROLL_DICE' | 'MOVING' | 'LAND_ACTION'
-  | 'BUY_PROMPT' | 'BUYOUT_PROMPT' | 'CARD_REVEAL' | 'MINI_GAME'
+  | 'BUY_PROMPT' | 'BUYOUT_PROMPT' | 'BUILD_PROMPT' | 'CARD_REVEAL' | 'MINI_GAME'
   | 'JAIL_ACTION' | 'BUILD_PHASE' | 'TRADE_PHASE' | 'END_TURN'
   | 'GLOBAL_EVENT' | 'GAME_OVER';
 
@@ -145,6 +145,7 @@ export interface GameState {
   pendingBuyoutTile?: number | null;
   discountBuyPercent?: number;
   rolledDouble?: boolean;
+  pendingBuildTile?: number | null;
 }
 
 export interface TokenOption {

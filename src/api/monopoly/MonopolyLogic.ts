@@ -910,12 +910,16 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     }
 
     if (owner.id === playerId) {
+      const loggedState = addLog(state, '🏡', `${player.username} ghé thăm đất của mình: "${tile.name}".`, 'move');
+      Object.assign(state, loggedState);
+
       if (tile.type === 'property' && canBuild(state, playerId, tileIndex)) {
+        state.phase = 'BUILD_PROMPT';
+        state.turnTimer = 10;
+        state.pendingBuildTile = tileIndex;
+      } else {
         state.phase = 'BUILD_PHASE';
         state.turnTimer = BUILD_TIMER;
-      } else {
-        state.phase = 'END_TURN';
-        state.turnTimer = 5;
       }
       return { action: 'none', tileIndex };
     }
@@ -1150,6 +1154,7 @@ export function advanceTurn(state: GameState): GameState {
       ...state,
       pendingBuyTile: null,
       pendingBuyoutTile: null,
+      pendingBuildTile: null,
       discountBuyPercent: undefined,
       lastDrawnCard: null,
       tradeState: null,
@@ -1196,6 +1201,7 @@ export function advanceTurn(state: GameState): GameState {
     activeEvent,
     pendingBuyTile: null,
     pendingBuyoutTile: null,
+    pendingBuildTile: null,
     discountBuyPercent: undefined,
     lastDrawnCard: null,
     tradeState: null,

@@ -101,6 +101,14 @@ function startTurnInterval(io: Server, roomId: string) {
       return;
     }
 
+    if (state.phase === 'BUILD_PROMPT') {
+      state.pendingBuildTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
+      broadcastState(io, roomId, state);
+      return;
+    }
+
     if (state.phase === 'CARD_REVEAL' || state.phase === 'GLOBAL_EVENT' || state.phase === 'BUILD_PHASE' || state.phase === 'END_TURN' || state.phase === 'MINI_GAME') {
       const nextState = Logic.advanceTurn(state);
       Object.assign(state, nextState);
@@ -285,6 +293,40 @@ export function setupMonopolySocket(io: Server): void {
       if (!curr || curr.id !== data.playerId) return;
 
       state.pendingBuyoutTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
+      broadcastState(io, data.roomId, state);
+    });
+
+    socket.on('monopoly:build-prompt-accept', (data: { roomId: string; playerId: string }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUILD_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      const tileIndex = state.pendingBuildTile;
+      if (tileIndex === null || tileIndex === undefined) return;
+
+      const result = Logic.buildOnTile(state, curr.id, tileIndex);
+      if (result.success) {
+        Object.assign(state, result.state);
+      } else {
+        socket.emit('monopoly:error', { message: result.error || 'Không thể nâng cấp.' });
+      }
+
+      state.pendingBuildTile = null;
+      state.phase = 'BUILD_PHASE';
+      state.turnTimer = 15;
+      broadcastState(io, data.roomId, state);
+    });
+
+    socket.on('monopoly:build-prompt-skip', (data: { roomId: string; playerId: string }) => {
+      const state = rooms.get(data.roomId);
+      if (!state || state.phase !== 'BUILD_PROMPT') return;
+      const curr = state.players[state.currentPlayerIndex];
+      if (!curr || curr.id !== data.playerId) return;
+
+      state.pendingBuildTile = null;
       state.phase = 'BUILD_PHASE';
       state.turnTimer = 15;
       broadcastState(io, data.roomId, state);

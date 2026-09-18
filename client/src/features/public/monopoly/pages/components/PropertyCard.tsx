@@ -32,9 +32,23 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
     ? owner.properties.filter(t => getStationTiles().includes(t)).length
     : 0;
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-sm rounded-3xl bg-[#131923] border-2 border-amber-500/60 shadow-[0_0_50px_rgba(245,158,11,0.25)] overflow-hidden">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in cursor-pointer"
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        className="relative w-full max-w-sm rounded-3xl bg-[#131923] border-2 border-amber-500/60 shadow-[0_0_50px_rgba(245,158,11,0.25)] overflow-hidden cursor-default"
+      >
         <div className="bg-gradient-to-r from-red-800 via-rose-900 to-red-800 p-4 text-center border-b-2 border-amber-400 relative">
           <button
             onClick={onClose}
