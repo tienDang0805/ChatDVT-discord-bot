@@ -233,7 +233,6 @@ export const DiscordActivityHub = () => {
         <Suspense fallback={<GameHubLoading />}>
           <MonopolyGame onBackToMenu={backToMenu} />
         </Suspense>
-        <BackToMenuPill onClick={backToMenu} />
       </div>
     );
   }
@@ -411,7 +410,6 @@ function WebGameHub({
     return (
       <Suspense fallback={<GameHubLoading />}>
         <MonopolyGame onBackToMenu={onBack} />
-        <BackToMenuPill onClick={onBack} />
       </Suspense>
     );
   }

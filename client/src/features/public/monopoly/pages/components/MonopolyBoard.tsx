@@ -423,27 +423,33 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                           : '#64748b'
                       }}
                     >
-                      <span className="text-[9px] sm:text-[10.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm px-1 truncate">
+                      <span className="text-[9px] sm:text-[10.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm px-1 whitespace-nowrap truncate max-w-full">
                         {isResort ? '👑 RESORT 5⭐' : isStation ? '⭐ TRẠM ⭐' : isTax ? '🚨 NỘP PHẠT' : isChance ? '🎴 CƠ HỘI' : isCommunity ? '🎁 KHÍ VẬN' : groupConf?.name}
                       </span>
                     </div>
                   )}
 
-                  <div className="w-full flex-1 flex flex-col items-center justify-center px-1 min-h-0 py-0.5">
-                    <span className={`drop-shadow-sm leading-none ${isStation || isResort ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
+                  <div className="w-full flex-1 flex flex-col items-center justify-center px-1 min-h-0 py-0.5 overflow-hidden">
+                    <span className={`drop-shadow-sm leading-none shrink-0 ${isStation || isResort ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
                       {tileIcon}
                     </span>
-                    <span
-                      className="font-black text-center text-[12.5px] sm:text-[14.5px] text-slate-900 leading-tight break-words max-w-full mt-0.5"
-                      style={{ textShadow: '0 1px 2px rgba(255,255,255,0.9)' }}
-                    >
-                      {tile.name}
-                    </span>
+                    <div className="w-full flex items-center justify-center text-center mt-0.5 px-0.5 min-w-0">
+                      <span
+                        className={`font-black text-center text-slate-900 leading-tight ${
+                          tile.name.length <= 12
+                            ? 'text-[12px] sm:text-[14px] whitespace-nowrap'
+                            : 'text-[10px] sm:text-[11.5px] break-normal line-clamp-2'
+                        }`}
+                        style={{ textShadow: '0 1px 2px rgba(255,255,255,0.9)' }}
+                      >
+                        {tile.name}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="pb-0.5 shrink-0">
                     {owner && (tile.type === 'property' || isStation) ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300">
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300 whitespace-nowrap">
                         {(() => {
                           if (isStation) {
                             const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
@@ -453,11 +459,11 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                         })()}Đ
                       </span>
                     ) : tile.price ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-amber-300 text-amber-950 border border-amber-400 shadow-sm">
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-amber-300 text-amber-950 border border-amber-400 shadow-sm whitespace-nowrap">
                         {tile.price}Đ
                       </span>
                     ) : tile.taxAmount ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm">
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm whitespace-nowrap">
                         -{tile.taxAmount}Đ
                       </span>
                     ) : null}
@@ -487,14 +493,14 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     <div className="flex flex-col items-center justify-center text-center gap-1.5 p-1 w-full h-full select-none">
                       <span className="text-3xl sm:text-4xl md:text-5xl drop-shadow">{cornerData.icon}</span>
                       <span
-                        className={`text-[12px] sm:text-[14px] font-black tracking-wider leading-tight text-center ${
+                        className={`text-[12px] sm:text-[14px] font-black tracking-wider leading-tight text-center whitespace-nowrap ${
                           cornerData.textDark ? 'text-slate-900' : 'text-white'
                         }`}
                       >
                         {cornerData.label}
                       </span>
                       <span
-                        className={`text-[10px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full mt-0.5 shadow-sm ${
+                        className={`text-[10px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full mt-0.5 shadow-sm whitespace-nowrap ${
                           cornerData.textDark
                             ? 'bg-emerald-600 text-white'
                             : 'bg-black/75 text-amber-300'

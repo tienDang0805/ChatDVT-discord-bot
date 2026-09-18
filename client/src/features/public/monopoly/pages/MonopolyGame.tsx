@@ -597,6 +597,16 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         background: 'radial-gradient(ellipse at 50% 35%, #1e3a5f 0%, #13273e 45%, #0a1624 100%)'
       }}
     >
+      <style>{`
+        .chat-widget-root,
+        .widget-tag,
+        .chat-widget-fab,
+        #chat-widget-root,
+        [data-chat-widget] {
+          display: none !important;
+        }
+      `}</style>
+
       <div
         className="absolute inset-0 pointer-events-none opacity-25"
         style={{
@@ -764,10 +774,6 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="w-full px-3 pb-1 shrink-0">
-        <LiveTicker logs={gameState.log} />
       </div>
 
       {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUY_PROMPT' && gameState.pendingBuyTile !== null && gameState.pendingBuyTile !== undefined && (
