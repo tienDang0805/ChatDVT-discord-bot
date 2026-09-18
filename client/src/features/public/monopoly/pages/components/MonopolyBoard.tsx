@@ -237,6 +237,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           50% { box-shadow: inset 0 0 36px rgba(245, 158, 11, 1), 0 0 50px rgba(251, 191, 36, 1); }
         }
         .iso-tile {
+          container-type: size;
           transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
         }
         .iso-tile:hover {
@@ -255,10 +256,10 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-3xl"
         style={{
-          width: 'min(940px, 88vw, calc(94vh - 65px))',
-          height: 'min(940px, 88vw, calc(94vh - 65px))',
+          width: 'min(1150px, 94vw, calc(116vh - 65px))',
+          height: 'min(1150px, 94vw, calc(116vh - 65px))',
           aspectRatio: '1',
-          transform: 'rotateX(47deg) rotateZ(-45deg) translateY(-6%) scale(1.04)',
+          transform: 'rotateX(46deg) rotateZ(-45deg) translateY(-2%) scale(1.16)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #78350f 0%, #592506 30%, #3e1903 70%, #290f02 100%)',
           border: '10px solid #92400e',
@@ -375,30 +376,94 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 ? `2px solid ${groupConf.border}`
                 : '1.5px solid #94a3b8';
 
-              const isSideRotated = pos.side === 'left' || pos.side === 'right';
-              const sideRotationStyle: React.CSSProperties = isCorner
-                ? { width: '100%', height: '100%' }
-                : pos.side === 'left'
-                ? {
-                    width: '220%',
-                    height: '45.45%',
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%) rotate(90deg)'
-                  }
-                : pos.side === 'right'
-                ? {
-                    width: '220%',
-                    height: '45.45%',
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%) rotate(-90deg)'
-                  }
-                : pos.side === 'top'
-                ? { width: '100%', height: '100%', transform: 'rotate(180deg)' }
-                : { width: '100%', height: '100%' };
+              const tileIcon = tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : '🏠');
+
+              const renderTileInner = () => (
+                <div className="w-full h-full flex flex-col justify-between items-center select-none overflow-hidden p-1 sm:p-1.5">
+                  {owner ? (
+                    <div
+                      className="h-[22px] sm:h-[25px] w-full shrink-0 flex items-center justify-between px-1.5 overflow-hidden rounded-t-sm border-b border-white/40"
+                      style={{
+                        background: `linear-gradient(90deg, ${owner.tokenColor}, #0f172a 90%)`,
+                        boxShadow: `0 1px 5px ${owner.tokenColor}`
+                      }}
+                    >
+                      <div className="flex items-center gap-1 min-w-0">
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
+                          {owner.avatar ? (
+                            <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-[10px]">{owner.tokenEmoji}</span>
+                          )}
+                        </div>
+                        <span className="text-[9.5px] sm:text-[11px] font-black text-white truncate max-w-[65px] leading-none uppercase drop-shadow">
+                          {owner.username}
+                        </span>
+                      </div>
+                      <span className="text-[9px] sm:text-[10.5px] font-black text-amber-300 shrink-0 leading-none">
+                        {isStation ? 'TRẠM' : buildLevel === 4 ? '👑 MAX' : `Lv.${buildLevel}`}
+                      </span>
+                    </div>
+                  ) : (
+                    <div
+                      className="h-[20px] sm:h-[23px] w-full shrink-0 flex items-center justify-center overflow-hidden rounded-t-sm shadow-sm"
+                      style={{
+                        background: isResort
+                          ? 'linear-gradient(90deg, #4c1d95, #7c3aed)'
+                          : isStation
+                          ? 'linear-gradient(90deg, #92400e, #d97706)'
+                          : isTax
+                          ? 'linear-gradient(90deg, #881337, #dc2626)'
+                          : isChance
+                          ? 'linear-gradient(90deg, #c2410c, #ea580c)'
+                          : isCommunity
+                          ? 'linear-gradient(90deg, #4338ca, #6366f1)'
+                          : groupConf
+                          ? groupConf.headerGradient
+                          : '#64748b'
+                      }}
+                    >
+                      <span className="text-[9px] sm:text-[10.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm px-1 truncate">
+                        {isResort ? '👑 RESORT 5⭐' : isStation ? '⭐ TRẠM ⭐' : isTax ? '🚨 NỘP PHẠT' : isChance ? '🎴 CƠ HỘI' : isCommunity ? '🎁 KHÍ VẬN' : groupConf?.name}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="w-full flex-1 flex flex-col items-center justify-center px-1 min-h-0 py-0.5">
+                    <span className={`drop-shadow-sm leading-none ${isStation || isResort ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
+                      {tileIcon}
+                    </span>
+                    <span
+                      className="font-black text-center text-[12.5px] sm:text-[14.5px] text-slate-900 leading-tight break-words max-w-full mt-0.5"
+                      style={{ textShadow: '0 1px 2px rgba(255,255,255,0.9)' }}
+                    >
+                      {tile.name}
+                    </span>
+                  </div>
+
+                  <div className="pb-0.5 shrink-0">
+                    {owner && (tile.type === 'property' || isStation) ? (
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300">
+                        {(() => {
+                          if (isStation) {
+                            const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
+                            return STATION_RENTS[stCount] || STATION_RENTS[1];
+                          }
+                          return Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
+                        })()}Đ
+                      </span>
+                    ) : tile.price ? (
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-amber-300 text-amber-950 border border-amber-400 shadow-sm">
+                        {tile.price}Đ
+                      </span>
+                    ) : tile.taxAmount ? (
+                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm">
+                        -{tile.taxAmount}Đ
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              );
 
               return (
                 <div
@@ -418,197 +483,57 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     isLandingTarget ? 'animate-[landingPulse_1.2s_ease-in-out_infinite] z-20' : isInspected ? 'iso-tile-selected z-15' : 'z-0'
                   }`}
                 >
-                  <div style={sideRotationStyle} className="flex flex-col justify-between items-center select-none overflow-hidden">
-                    {isCorner && cornerData ? (
-                      <div className="flex flex-col items-center justify-center text-center gap-1 p-1 w-full h-full">
-                        <span className="text-3xl sm:text-4xl drop-shadow">{cornerData.icon}</span>
-                        <span
-                          className={`text-[10.5px] sm:text-[12.5px] font-black tracking-wider leading-tight text-center ${
-                            cornerData.textDark ? 'text-slate-900' : 'text-white'
-                          }`}
-                        >
-                          {cornerData.label}
-                        </span>
-                        <span
-                          className={`text-[9px] sm:text-[10.5px] font-black px-2 py-0.5 rounded-full mt-0.5 shadow-sm ${
-                            cornerData.textDark
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-black/75 text-amber-300'
-                          }`}
-                        >
-                          {idx === 18 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
-                        </span>
-                      </div>
-                    ) : (
-                      <>
-                        {owner ? (
-                          <div
-                            className="h-[20px] sm:h-[22px] w-full shrink-0 flex items-center justify-between px-1.5 overflow-hidden border-b border-white/40"
-                            style={{
-                              background: `linear-gradient(90deg, ${owner.tokenColor}, #0f172a 90%)`,
-                              boxShadow: `0 1px 5px ${owner.tokenColor}`
-                            }}
-                          >
-                            <div className="flex items-center gap-1 min-w-0">
-                              <div className="w-4 h-4 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
-                                {owner.avatar ? (
-                                  <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="text-[9px]">{owner.tokenEmoji}</span>
-                                )}
-                              </div>
-                              <span className="text-[8.5px] sm:text-[9.5px] font-black text-white truncate max-w-[55px] leading-none uppercase drop-shadow">
-                                {owner.username}
-                              </span>
-                            </div>
-                            <span className="text-[8px] sm:text-[9px] font-black text-amber-300 shrink-0 leading-none">
-                              {isStation ? 'TRẠM' : buildLevel === 4 ? '👑 MAX' : `Lv.${buildLevel}`}
-                            </span>
-                          </div>
-                        ) : (
-                          <>
-                            {groupConf && !isResort && (
-                              <div
-                                className="h-[18px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: groupConf.headerGradient,
-                                  boxShadow: `0 1px 4px ${groupConf.glow}`
-                                }}
-                              >
-                                <span className="text-[8px] sm:text-[9.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm">
-                                  {groupConf.name}
-                                </span>
-                              </div>
-                            )}
-
-                            {isResort && (
-                              <div
-                                className="h-[18px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: 'linear-gradient(90deg, #4c1d95, #7c3aed, #c084fc, #7c3aed, #4c1d95)',
-                                  boxShadow: '0 1px 5px rgba(124,58,237,0.7)'
-                                }}
-                              >
-                                <span className="text-[8.5px] sm:text-[10px] font-black text-amber-200 tracking-wider uppercase leading-none drop-shadow">
-                                  👑 RESORT 5⭐
-                                </span>
-                              </div>
-                            )}
-
-                            {isStation && (
-                              <div
-                                className="h-[18px] sm:h-[20px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: 'linear-gradient(90deg, #92400e, #d97706, #fbbf24, #d97706, #92400e)',
-                                  boxShadow: '0 1px 5px rgba(245,158,11,0.7)'
-                                }}
-                              >
-                                <span className="text-[8.5px] sm:text-[9.5px] font-black text-slate-950 tracking-wider uppercase leading-none">
-                                  ⭐ TRẠM ĐẶC BIỆT ⭐
-                                </span>
-                              </div>
-                            )}
-
-                            {isTax && (
-                              <div
-                                className="h-[16px] sm:h-[18px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: 'linear-gradient(90deg, #881337, #dc2626, #f87171, #dc2626, #881337)',
-                                  boxShadow: '0 1px 4px rgba(220,38,38,0.6)'
-                                }}
-                              >
-                                <span className="text-[8.5px] sm:text-[9.5px] font-black text-white tracking-wider uppercase leading-none">
-                                  🚨 NỘP PHẠT
-                                </span>
-                              </div>
-                            )}
-
-                            {isChance && (
-                              <div
-                                className="h-[16px] sm:h-[18px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: 'linear-gradient(90deg, #c2410c, #ea580c, #fdba74, #ea580c, #c2410c)',
-                                  boxShadow: '0 1px 4px rgba(234,88,12,0.6)'
-                                }}
-                              >
-                                <span className="text-[8.5px] sm:text-[9.5px] font-black text-white tracking-wider uppercase leading-none">
-                                  🎴 CƠ HỘI
-                                </span>
-                              </div>
-                            )}
-
-                            {isCommunity && (
-                              <div
-                                className="h-[16px] sm:h-[18px] w-full shrink-0 flex items-center justify-center overflow-hidden"
-                                style={{
-                                  background: 'linear-gradient(90deg, #4338ca, #6366f1, #a5b4fc, #6366f1, #4338ca)',
-                                  boxShadow: '0 1px 4px rgba(99,102,241,0.6)'
-                                }}
-                              >
-                                <span className="text-[8.5px] sm:text-[9.5px] font-black text-white tracking-wider uppercase leading-none">
-                                  🎁 KHÍ VẬN
-                                </span>
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        <div className="w-full flex-1 flex flex-col items-center justify-center px-1 pointer-events-none min-h-0 py-0.5">
-                          <span className={`drop-shadow-sm leading-none ${isStation || isResort ? 'text-lg sm:text-2xl' : 'text-base sm:text-lg'}`}>
-                            {tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : '🏠')}
-                          </span>
-                          <div className="w-full text-center px-0.5 my-0.5 flex items-center justify-center">
-                            <span
-                              className={`font-black text-center leading-tight break-words truncate max-w-full ${
-                                isStation
-                                  ? 'text-[9.5px] sm:text-[11.5px] text-amber-950 font-black'
-                                  : isResort
-                                  ? 'text-[10px] sm:text-[12px] text-violet-950 font-black'
-                                  : 'text-[9.5px] sm:text-[11.5px] text-slate-900'
-                              }`}
-                            >
-                              {tile.name}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="pb-1 pointer-events-none">
-                          {owner && (tile.type === 'property' || isStation) ? (
-                            <span className="text-[8px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300 flex items-center gap-0.5">
-                              <span className="opacity-90">Thuê:</span>
-                              <span className="text-yellow-200 font-black">
-                                {(() => {
-                                  if (isStation) {
-                                    const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
-                                    return STATION_RENTS[stCount] || STATION_RENTS[1];
-                                  }
-                                  return Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
-                                })()}Đ
-                              </span>
-                            </span>
-                          ) : tile.price ? (
-                            <span
-                              className={`text-[8px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full leading-none shadow-sm ${
-                                isStation
-                                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border border-amber-300 font-black'
-                                  : isResort
-                                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white border border-violet-400 font-black'
-                                  : 'bg-amber-300 text-amber-950 border border-amber-400'
-                              }`}
-                            >
-                              {tile.price}Đ
-                            </span>
-                          ) : tile.taxAmount ? (
-                            <span
-                              className="text-[8px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm"
-                            >
-                              -{tile.taxAmount}Đ
-                            </span>
-                          ) : null}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  {isCorner && cornerData ? (
+                    <div className="flex flex-col items-center justify-center text-center gap-1.5 p-1 w-full h-full select-none">
+                      <span className="text-3xl sm:text-4xl md:text-5xl drop-shadow">{cornerData.icon}</span>
+                      <span
+                        className={`text-[12px] sm:text-[14px] font-black tracking-wider leading-tight text-center ${
+                          cornerData.textDark ? 'text-slate-900' : 'text-white'
+                        }`}
+                      >
+                        {cornerData.label}
+                      </span>
+                      <span
+                        className={`text-[10px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full mt-0.5 shadow-sm ${
+                          cornerData.textDark
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-black/75 text-amber-300'
+                        }`}
+                      >
+                        {idx === 18 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
+                      </span>
+                    </div>
+                  ) : pos.side === 'left' ? (
+                    <div
+                      style={{
+                        width: '100cqh',
+                        height: '100cqw',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%) rotate(90deg)'
+                      }}
+                    >
+                      {renderTileInner()}
+                    </div>
+                  ) : pos.side === 'right' ? (
+                    <div
+                      style={{
+                        width: '100cqh',
+                        height: '100cqw',
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%) rotate(-90deg)'
+                      }}
+                    >
+                      {renderTileInner()}
+                    </div>
+                  ) : (
+                    <div className="w-full h-full">
+                      {renderTileInner()}
+                    </div>
+                  )}
 
                   {owner && !isStation && !isCorner && render3DBuildingModel(buildLevel, owner.tokenColor)}
                 </div>
