@@ -52,7 +52,8 @@ export function shuffleDeck<T>(deck: T[]): T[] {
   return result;
 }
 
-export function createInitialState(roomId: string, playersData: PlayerJoinData[]): GameState {
+export function createInitialState(roomId: string, playersData: PlayerJoinData[], customStartMoney?: number): GameState {
+  const moneyAmount = customStartMoney || START_MONEY;
   const players: PlayerState[] = playersData.map((p, index) => {
     const defaultToken = TOKEN_OPTIONS[index % TOKEN_OPTIONS.length];
     return {
@@ -62,7 +63,7 @@ export function createInitialState(roomId: string, playersData: PlayerJoinData[]
       avatar: p.avatar || defaultToken.avatar || null,
       tokenEmoji: p.tokenEmoji || defaultToken.emoji,
       tokenColor: p.tokenColor || defaultToken.color,
-      money: START_MONEY,
+      money: moneyAmount,
       position: 0,
       properties: [],
       buildings: {},
@@ -804,6 +805,20 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
       };
       currentState = addLog(currentState, '❤️', `Tất cả nộp ${effect.amount}Đ vào Quỹ (+${poolAdd}Đ).`, 'card');
       break;
+    }
+
+    case 'move_to_tile': {
+      const targetTileIdx = effect.tileIndex;
+      const updatedPlayers = currentState.players.map(p =>
+        p.id === playerId ? { ...p, position: targetTileIdx } : p
+      );
+      currentState = { ...currentState, players: updatedPlayers };
+      currentState = addLog(currentState, card.icon, `${player.username} bị đưa tới ${BOARD_TILES[targetTileIdx]?.name}! "${card.description}"`, 'card');
+      const landRes = handleLanding(currentState, playerId);
+      if (landRes.action === 'buy_prompt') {
+        return { ...currentState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: targetTileIdx };
+      }
+      return currentState;
     }
 
     case 'mini_game': {

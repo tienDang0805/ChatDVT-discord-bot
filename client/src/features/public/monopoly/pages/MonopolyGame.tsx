@@ -46,6 +46,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [joinError, setJoinError] = useState('');
   const [playerId] = useState(() => generatePlayerId());
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [startMoney, setStartMoney] = useState(800);
 
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [visualPositions, setVisualPositions] = useState<Record<string, number>>({});
@@ -83,6 +84,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
       setIsHopping(true);
       setAnimatingPlayerId(pId);
+      setVisualPositions(prev => ({ ...prev, [pId]: path[0] }));
 
       path.forEach((stepPos, idx) => {
         setTimeout(() => {
@@ -100,9 +102,9 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
                 setPassedGoAlert(true);
                 setTimeout(() => setPassedGoAlert(false), 2500);
               }
-            }, 180);
+            }, 250);
           }
-        }, idx * 220);
+        }, idx * 280);
       });
     });
 
@@ -145,7 +147,8 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         avatar: selectedToken.avatar,
         tokenEmoji: selectedToken.emoji,
         tokenColor: selectedToken.color
-      }
+      },
+      settings: { startMoney }
     });
 
     setScreen('in_game');
@@ -405,6 +408,28 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
                       "{selectedToken.desc}"
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">
+                  💰 Tiền Khởi Đầu
+                </label>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[500, 800, 1200, 1500, 2000].map(amount => (
+                    <button
+                      key={amount}
+                      type="button"
+                      onClick={() => setStartMoney(amount)}
+                      className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        startMoney === amount
+                          ? 'bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.4)] scale-105 border-2 border-amber-300'
+                          : 'bg-slate-800 text-slate-300 border-2 border-slate-700 hover:border-slate-600'
+                      }`}
+                    >
+                      {amount}Đ
+                    </button>
+                  ))}
                 </div>
               </div>
 

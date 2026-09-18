@@ -41,7 +41,8 @@ export type CardEffect =
   | { type: 'flash_sale' }
   | { type: 'richest_pays_poorest'; amount: number }
   | { type: 'all_pay_to_pool'; amount: number }
-  | { type: 'mini_game'; miniGameType: MiniGameType };
+  | { type: 'mini_game'; miniGameType: MiniGameType }
+  | { type: 'move_to_tile'; tileIndex: number };
 
 export interface CardDef {
   key: string;

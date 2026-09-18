@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import type { GameState, JailAction, TradeState } from './types';
 import * as Logic from './MonopolyLogic';
-import { MAX_PLAYERS, MIN_PLAYERS } from './constants';
+import { MAX_PLAYERS, MIN_PLAYERS, START_MONEY } from './constants';
 import { TOKEN_OPTIONS } from './boardData';
 
 const rooms = new Map<string, GameState>();
@@ -114,20 +114,21 @@ function startTurnInterval(io: Server, roomId: string) {
 
 export function setupMonopolySocket(io: Server): void {
   io.on('connection', (socket: Socket) => {
-    socket.on('monopoly:join', (data: { roomId: string; player: { id: string; username: string; avatar?: string | null } }) => {
-      const { roomId, player } = data;
+    socket.on('monopoly:join', (data: { roomId: string; player: { id: string; username: string; avatar?: string | null }; settings?: { startMoney?: number } }) => {
+      const { roomId, player, settings } = data;
       if (!roomId || !player?.id) return;
 
       socket.join(roomId);
 
       let state = rooms.get(roomId);
       if (!state) {
+        const customStartMoney = settings?.startMoney || START_MONEY;
         state = Logic.createInitialState(roomId, [{
           id: player.id,
           socketId: socket.id,
           username: player.username,
           avatar: player.avatar
-        }]);
+        }], customStartMoney);
       } else {
         const existingIdx = state.players.findIndex(p => p.id === player.id);
         if (existingIdx !== -1) {
@@ -136,6 +137,7 @@ export function setupMonopolySocket(io: Server): void {
         } else if (state.phase === 'LOBBY' && state.players.length < MAX_PLAYERS) {
           const tokenIdx = state.players.length % TOKEN_OPTIONS.length;
           const defaultToken = TOKEN_OPTIONS[tokenIdx];
+          const hostMoney = state.players[0]?.money || START_MONEY;
           const newPlayerState = Logic.createInitialState(roomId, [{
             id: player.id,
             socketId: socket.id,
@@ -143,7 +145,7 @@ export function setupMonopolySocket(io: Server): void {
             avatar: player.avatar || defaultToken.avatar || null,
             tokenEmoji: defaultToken.emoji,
             tokenColor: defaultToken.color
-          }]).players[0];
+          }], hostMoney).players[0];
           newPlayerState.isHost = false;
           state.players.push(newPlayerState);
         }
