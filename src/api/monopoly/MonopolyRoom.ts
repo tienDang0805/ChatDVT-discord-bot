@@ -52,7 +52,13 @@ function startTurnInterval(io: Server, roomId: string) {
       const dice = Logic.rollDice();
       state.lastDice = dice;
       io.to(roomId).emit('monopoly:dice-rolled', { playerId: currPlayer.id, dice });
-      Logic.movePlayer(state, currPlayer.id, dice[0] + dice[1]);
+      const moveRes = Logic.movePlayer(state, currPlayer.id, dice[0] + dice[1]);
+      io.to(roomId).emit('monopoly:player-moved', {
+        playerId: currPlayer.id,
+        newPos: moveRes.newPos,
+        passedGo: moveRes.passedGo,
+        path: moveRes.path
+      });
       const landRes = Logic.handleLanding(state, currPlayer.id);
       if (landRes.action === 'buy_prompt') {
         state.phase = 'BUY_PROMPT';

@@ -391,9 +391,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(960px, calc((100vw - 20px) * 0.88), calc((100vh - 70px) * 1.35))',
+          width: 'min(780px, calc(100vw * 0.7), calc((100vh - 60px) * 1.1))',
           aspectRatio: '1',
-          transform: 'rotateX(48deg) rotateZ(-45deg)',
+          transform: 'rotateX(48deg) rotateZ(-45deg) translateY(-3%)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #92400e 0%, #78350f 30%, #5c2707 70%, #451a03 100%)',
           border: '8px solid #b45309',

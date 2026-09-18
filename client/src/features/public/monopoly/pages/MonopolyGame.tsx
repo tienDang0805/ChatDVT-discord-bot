@@ -89,6 +89,18 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         });
         return next;
       });
+      setAnimatingPlayerId(currentAnimId => {
+        if (!currentAnimId) {
+          setVisualPositions(prev => {
+            const next = { ...prev };
+            state.players.forEach(p => {
+              next[p.id] = p.position;
+            });
+            return next;
+          });
+        }
+        return currentAnimId;
+      });
     });
 
     socket.on('monopoly:player-moved', (data: { playerId: string; newPos: number; passedGo: boolean; path: number[] }) => {
@@ -608,7 +620,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         onBackToMenu={handleLeaveRoom}
       />
 
-      <div className="w-full flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
+      <div className="w-full flex-1 min-h-0 relative flex items-center justify-center overflow-visible">
         {gameState.players[0] && (
           <div className="absolute top-2 left-2 z-20 w-36 sm:w-44">
             <MonopolyPlayerCard
