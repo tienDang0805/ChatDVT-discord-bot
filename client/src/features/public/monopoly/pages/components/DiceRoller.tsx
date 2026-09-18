@@ -55,7 +55,7 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
     const dots = DOT_POSITIONS[value] || DOT_POSITIONS[1];
     return (
       <div
-        className={`relative w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-white via-slate-100 to-slate-200 shadow-[0_8px_16px_rgba(0,0,0,0.6),inset_0_-2px_4px_rgba(0,0,0,0.15)] border-2 border-slate-300 transform transition-all duration-150 ${
+        className={`relative w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br from-white via-slate-100 to-slate-200 shadow-[0_12px_24px_rgba(0,0,0,0.65),inset_0_-2px_4px_rgba(0,0,0,0.2)] border-2 border-slate-200 transform transition-all duration-150 ${
           isRolling
             ? index === 0
               ? 'rotate-[-20deg] scale-110 animate-bounce'
@@ -79,20 +79,20 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 select-none">
-      <div className="flex items-center gap-3 py-0.5">
+    <div className="flex flex-col items-center gap-1 select-none">
+      <div className="flex items-center gap-3.5 py-1">
         {renderDie(displayDice[0], 0)}
         {renderDie(displayDice[1], 1)}
       </div>
 
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-200 mb-1.5">
-          <span className="text-[11px] text-slate-300 font-bold">Tổng nút:</span>
-          <span className="text-amber-300 font-black text-sm px-2 py-0.5 rounded-lg bg-black/60 border border-amber-400/50 shadow">
-            {displayDice[0] + displayDice[1]}
-          </span>
+      <div className="text-center flex flex-col items-center gap-1.5">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-slate-200">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-950/75 border border-amber-400/40 shadow-lg text-amber-300 font-black text-xs backdrop-blur-[2px]">
+            <span className="text-slate-300 font-medium text-[11px]">Tổng nút:</span>
+            <span className="text-amber-300 font-black text-sm">{displayDice[0] + displayDice[1]}</span>
+          </div>
           {isDoubles && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-md animate-pulse">
+            <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-lg animate-pulse border border-amber-200">
               🎲 NỔ ĐÔI — ĐI TIẾP!
             </span>
           )}
@@ -102,9 +102,9 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
           <button
             onClick={handleRollClick}
             disabled={!canRoll || isRolling}
-            className={`px-6 py-2.5 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-xl ${
+            className={`px-8 py-2.5 rounded-full font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-2xl ${
               canRoll && !isRolling
-                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-[0_5px_0_#9a3412,0_10px_20px_rgba(245,158,11,0.5)] hover:scale-105 active:translate-y-1 active:shadow-[0_1px_0_#9a3412] cursor-pointer animate-pulse border border-amber-200'
+                ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 shadow-[0_5px_0_#9a3412,0_12px_24px_rgba(245,158,11,0.6)] hover:scale-105 active:translate-y-1 active:shadow-[0_1px_0_#9a3412] cursor-pointer animate-pulse border-2 border-amber-200'
                 : 'bg-slate-900/80 text-slate-500 border border-slate-700/50 cursor-not-allowed shadow'
             }`}
           >

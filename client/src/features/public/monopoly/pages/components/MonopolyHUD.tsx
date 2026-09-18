@@ -196,17 +196,36 @@ export const MonopolyPlayerCard: React.FC<MonopolyPlayerCardProps> = ({
     progress[g] = player.properties.filter(t => GROUP_TILES[g].includes(t)).length;
   });
 
+  const activePlayers = gameState.players.filter(p => !p.isEliminated);
+  const sortedPlayers = [...activePlayers].sort((a, b) => b.money - a.money);
+  const rank = sortedPlayers.findIndex(p => p.id === player.id) + 1;
+  const rankBadges: Record<number, { label: string; bg: string; text: string; border: string }> = {
+    1: { label: '1st', bg: 'linear-gradient(135deg, #fbbf24, #d97706)', text: 'text-amber-950', border: 'border-amber-300' },
+    2: { label: '2nd', bg: 'linear-gradient(135deg, #e2e8f0, #94a3b8)', text: 'text-slate-900', border: 'border-slate-300' },
+    3: { label: '3rd', bg: 'linear-gradient(135deg, #f97316, #c2410c)', text: 'text-white', border: 'border-orange-400' },
+    4: { label: '4th', bg: 'linear-gradient(135deg, #64748b, #475569)', text: 'text-white', border: 'border-slate-500' }
+  };
+  const rankInfo = rankBadges[rank] || rankBadges[4];
+
   return (
     <div
       onClick={onClick}
-      className={`relative rounded-2xl p-2.5 border-2 transition-all duration-200 select-none shadow-lg cursor-pointer hover:scale-[1.02] ${
+      className={`relative rounded-2xl p-2.5 border-2 transition-all duration-200 select-none shadow-xl cursor-pointer hover:scale-[1.03] backdrop-blur-md ${
         player.isEliminated
-          ? 'bg-rose-950/20 border-rose-900/30 opacity-40 grayscale'
+          ? 'bg-rose-950/30 border-rose-900/40 opacity-40 grayscale'
           : isCurrentTurn
-          ? 'bg-gradient-to-br from-[#2f1f0e] via-[#1a2538] to-[#131d2d] border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/50 scale-[1.02]'
-          : 'bg-gradient-to-b from-[#162032]/95 to-[#0e1625]/95 border-slate-800 hover:border-slate-700'
+          ? 'bg-gradient-to-b from-slate-900/95 via-amber-950/40 to-slate-950/95 border-amber-400 shadow-[0_0_25px_rgba(245,158,11,0.5)] ring-2 ring-amber-400/60 scale-[1.03]'
+          : 'bg-gradient-to-b from-slate-900/90 via-slate-800/80 to-slate-950/90 border-slate-700/80 hover:border-amber-400/60'
       }`}
     >
+      <div className="absolute -top-2.5 -right-2 z-20">
+        <span
+          className={`px-2 py-0.5 rounded-full font-black text-[10px] shadow-md border ${rankInfo.border} ${rankInfo.text}`}
+          style={{ background: rankInfo.bg }}
+        >
+          {rankInfo.label}
+        </span>
+      </div>
       <div className="flex items-center justify-between gap-1.5 mb-2">
         <div className="flex items-center gap-2 truncate">
           <div

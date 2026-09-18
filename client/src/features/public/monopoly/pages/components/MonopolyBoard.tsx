@@ -26,18 +26,18 @@ function getTileGridPosition(index: number): { row: number; col: number; side: '
 }
 
 const GROUP_COLORS: Record<string, { main: string; dark: string; light: string; glow: string }> = {
-  green: { main: '#10b981', dark: '#065f46', light: '#6ee7b7', glow: 'rgba(16,185,129,0.5)' },
-  blue: { main: '#3b82f6', dark: '#1e3a8a', light: '#93c5fd', glow: 'rgba(59,130,246,0.5)' },
-  yellow: { main: '#f59e0b', dark: '#92400e', light: '#fcd34d', glow: 'rgba(245,158,11,0.5)' },
-  red: { main: '#ef4444', dark: '#7f1d1d', light: '#fca5a5', glow: 'rgba(239,68,68,0.5)' },
-  purple: { main: '#8b5cf6', dark: '#4c1d95', light: '#c4b5fd', glow: 'rgba(139,92,246,0.5)' }
+  green: { main: '#10b981', dark: '#059669', light: '#a7f3d0', glow: 'rgba(16,185,129,0.6)' },
+  blue: { main: '#0284c7', dark: '#0369a1', light: '#bae6fd', glow: 'rgba(2,132,199,0.6)' },
+  yellow: { main: '#f59e0b', dark: '#d97706', light: '#fef3c7', glow: 'rgba(245,158,11,0.6)' },
+  red: { main: '#e11d48', dark: '#be123c', light: '#fecdd3', glow: 'rgba(225,29,72,0.6)' },
+  purple: { main: '#7c3aed', dark: '#6d28d9', light: '#ede9fe', glow: 'rgba(124,58,237,0.6)' }
 };
 
-const CORNER_DATA: Record<number, { icon: string; label: string; sub: string; bg: string }> = {
-  0: { icon: '🏁', label: 'XUẤT PHÁT', sub: '+200Đ', bg: 'linear-gradient(135deg, #047857 0%, #065f46 50%, #064e3b 100%)' },
-  9: { icon: '🔒', label: 'TÙ', sub: 'GIAM GIỮ', bg: 'linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%)' },
-  18: { icon: '☕', label: 'NGHỈ CHÂN', sub: 'QUỸ CHUNG', bg: 'linear-gradient(135deg, #b45309 0%, #92400e 50%, #78350f 100%)' },
-  27: { icon: '🚔', label: 'VÀO TÙ', sub: 'ĐỪNG CHẠY', bg: 'linear-gradient(135deg, #991b1b 0%, #7f1d1d 50%, #450a0a 100%)' }
+const CORNER_DATA: Record<number, { icon: string; label: string; sub: string; bg: string; textDark?: boolean }> = {
+  0: { icon: '🏁', label: 'XUẤT PHÁT', sub: '+200Đ', bg: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)', textDark: true },
+  9: { icon: '🔒', label: 'TÙ', sub: 'GIAM GIỮ', bg: 'linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%)' },
+  18: { icon: '☕', label: 'NGHỈ CHÂN', sub: 'QUỸ CHUNG', bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)' },
+  27: { icon: '🚔', label: 'VÀO TÙ', sub: 'ĐỪNG CHẠY', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)' }
 };
 
 function renderBuildingVisual(level: number): React.ReactNode {
@@ -45,38 +45,38 @@ function renderBuildingVisual(level: number): React.ReactNode {
   if (level >= 4) {
     return (
       <div
-        className="absolute -top-3 left-1/2 pointer-events-none z-30 flex flex-col items-center"
+        className="absolute -top-4 left-1/2 pointer-events-none z-30 flex flex-col items-center"
         style={{
-          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-60deg)',
+          transform: 'translateX(-50%) rotateZ(45deg) rotateX(-54deg)',
           transformOrigin: 'bottom center'
         }}
       >
         <div
-          className="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-xs font-black shadow-lg"
+          className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black shadow-xl"
           style={{
             background: 'linear-gradient(135deg, #fef08a, #f59e0b, #b45309)',
-            boxShadow: '0 3px 6px rgba(0,0,0,0.8), 0 0 10px rgba(245,158,11,0.8)',
-            border: '1px solid #fef08a'
+            boxShadow: '0 4px 10px rgba(0,0,0,0.7), 0 0 16px rgba(245,158,11,0.9)',
+            border: '2px solid #ffffff'
           }}
         >
           ⭐
         </div>
-        <div className="w-4 h-1.5 rounded-full bg-black/60 blur-[1px] -mt-0.5" />
+        <div className="w-5 h-2 rounded-full bg-black/60 blur-[1px] -mt-0.5" />
       </div>
     );
   }
   return (
     <div
-      className="absolute -top-2.5 left-1/2 pointer-events-none z-30 flex items-center justify-center gap-0.5"
+      className="absolute -top-3 left-1/2 pointer-events-none z-30 flex items-center justify-center gap-0.5"
       style={{
-        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-60deg)',
+        transform: 'translateX(-50%) rotateZ(45deg) rotateX(-54deg)',
         transformOrigin: 'bottom center'
       }}
     >
       {Array.from({ length: level }).map((_, i) => (
         <div key={i} className="flex flex-col items-center">
           <div
-            className="w-2 sm:w-2.5 h-3 sm:h-3.5 rounded-t-sm"
+            className="w-3 h-4 rounded-t-sm"
             style={{
               background:
                 level === 3
@@ -84,11 +84,11 @@ function renderBuildingVisual(level: number): React.ReactNode {
                   : level === 2
                   ? 'linear-gradient(to bottom, #34d399, #047857)'
                   : 'linear-gradient(to bottom, #a3e635, #4d7c0f)',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.4)',
-              border: '0.5px solid rgba(255,255,255,0.2)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.7)',
+              border: '0.5px solid rgba(0,0,0,0.15)'
             }}
           />
-          <div className="w-2.5 h-1 rounded-full bg-black/50 blur-[0.5px]" />
+          <div className="w-2.5 h-1 rounded-full bg-black/40 blur-[0.5px]" />
         </div>
       ))}
     </div>
@@ -133,13 +133,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     >
       <style>{`
         @keyframes boardTokenHop {
-          0%, 100% { transform: rotateZ(45deg) rotateX(-60deg) translateY(0) scale(1); }
-          40% { transform: rotateZ(45deg) rotateX(-60deg) translateY(-18px) scale(1.2); }
-          70% { transform: rotateZ(45deg) rotateX(-60deg) translateY(-6px) scale(1.08); }
+          0%, 100% { transform: rotateZ(45deg) rotateX(-54deg) translateY(0) scale(1); }
+          40% { transform: rotateZ(45deg) rotateX(-54deg) translateY(-22px) scale(1.25); }
+          70% { transform: rotateZ(45deg) rotateX(-54deg) translateY(-8px) scale(1.1); }
         }
         @keyframes tileHoverPulse {
-          0%, 100% { box-shadow: inset 0 0 0 1.5px rgba(251,191,36,0.9), 0 0 15px rgba(245,158,11,0.5); }
-          50% { box-shadow: inset 0 0 0 2px rgba(251,191,36,1), 0 0 24px rgba(245,158,11,0.85); }
+          0%, 100% { box-shadow: inset 0 0 0 2px rgba(245,158,11,0.95), 0 0 18px rgba(245,158,11,0.7); }
+          50% { box-shadow: inset 0 0 0 3px rgba(245,158,11,1), 0 0 28px rgba(245,158,11,0.95); }
         }
         .iso-tile {
           transform-style: preserve-3d;
@@ -148,12 +148,12 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           position: relative;
         }
         .iso-tile:hover {
-          transform: translateZ(8px) scale(1.04);
+          transform: translateZ(12px) scale(1.06);
           z-index: 25 !important;
         }
         .iso-tile-active {
           animation: tileHoverPulse 1.6s ease-in-out infinite;
-          transform: translateZ(10px) scale(1.05);
+          transform: translateZ(14px) scale(1.07);
           z-index: 26 !important;
         }
         .token-hop-billboard {
@@ -162,43 +162,72 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       `}</style>
 
       <div
-        className="relative transition-transform duration-500 rounded-3xl"
+        className="relative transition-transform duration-500 rounded-[30px]"
         style={{
-          width: 'min(650px, calc(100vw - 360px), calc(84vh - 80px))',
+          width: 'min(860px, calc((100vw - 40px) * 0.72), calc((100vh - 100px) * 1.2))',
           aspectRatio: '1',
-          transform: 'rotateX(60deg) rotateZ(-45deg)',
+          transform: 'rotateX(54deg) rotateZ(-45deg)',
           transformStyle: 'preserve-3d',
-          background: 'linear-gradient(135deg, #3d2412 0%, #281609 50%, #170c04 100%)',
-          border: '4px solid #5a3418',
+          background: 'linear-gradient(135deg, #92400e 0%, #78350f 30%, #5c2707 70%, #451a03 100%)',
+          border: '8px solid #b45309',
           boxShadow: `
-            0 2px 0 #42230d,
-            0 4px 0 #3a1e0b,
-            0 6px 0 #321909,
-            0 8px 0 #2a1407,
-            0 10px 0 #221005,
-            0 12px 0 #1a0c04,
-            0 14px 0 #120803,
-            0 16px 0 #0c0502,
-            0 22px 30px rgba(0,0,0,0.85),
-            0 40px 70px rgba(0,0,0,0.95)
+            0 3px 0 #78350f,
+            0 6px 0 #5c2707,
+            0 9px 0 #451a03,
+            0 12px 0 #311302,
+            0 15px 0 #1e0b01,
+            0 25px 40px rgba(0,0,0,0.5),
+            0 45px 80px rgba(0,0,0,0.7)
           `
         }}
       >
-        <div className="absolute -top-1.5 -left-1.5 w-6 h-6 border-t-4 border-l-4 border-amber-400/90 rounded-tl-lg pointer-events-none z-30" />
-        <div className="absolute -top-1.5 -right-1.5 w-6 h-6 border-t-4 border-r-4 border-amber-400/90 rounded-tr-lg pointer-events-none z-30" />
-        <div className="absolute -bottom-1.5 -left-1.5 w-6 h-6 border-b-4 border-l-4 border-amber-400/90 rounded-bl-lg pointer-events-none z-30" />
-        <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 border-b-4 border-r-4 border-amber-400/90 rounded-br-lg pointer-events-none z-30" />
+        <div
+          className="absolute -top-2.5 -left-2.5 w-9 h-9 rounded-tl-2xl flex items-center justify-center pointer-events-none z-30 shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #ffffff, #e2e8f0, #94a3b8)',
+            border: '2.5px solid #f8fafc'
+          }}
+        >
+          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-inner" />
+        </div>
+        <div
+          className="absolute -top-2.5 -right-2.5 w-9 h-9 rounded-tr-2xl flex items-center justify-center pointer-events-none z-30 shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #ffffff, #e2e8f0, #94a3b8)',
+            border: '2.5px solid #f8fafc'
+          }}
+        >
+          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-inner" />
+        </div>
+        <div
+          className="absolute -bottom-2.5 -left-2.5 w-9 h-9 rounded-bl-2xl flex items-center justify-center pointer-events-none z-30 shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #ffffff, #e2e8f0, #94a3b8)',
+            border: '2.5px solid #f8fafc'
+          }}
+        >
+          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-inner" />
+        </div>
+        <div
+          className="absolute -bottom-2.5 -right-2.5 w-9 h-9 rounded-br-2xl flex items-center justify-center pointer-events-none z-30 shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #ffffff, #e2e8f0, #94a3b8)',
+            border: '2.5px solid #f8fafc'
+          }}
+        >
+          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-inner" />
+        </div>
 
         <div
-          className="absolute inset-[8px] sm:inset-[10px] rounded-2xl overflow-hidden z-10"
+          className="absolute inset-[8px] rounded-2xl overflow-hidden z-10"
           style={{
-            border: '2px solid rgba(217, 119, 6, 0.4)',
-            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.8)'
+            border: '2.5px solid rgba(245, 158, 11, 0.8)',
+            boxShadow: 'inset 0 0 25px rgba(0,0,0,0.6)'
           }}
         >
           <div
-            className="w-full h-full grid grid-cols-10 grid-rows-10 gap-[2px] p-[2px] rounded-xl relative"
-            style={{ background: '#0a0f18' }}
+            className="w-full h-full grid grid-cols-10 grid-rows-10 gap-[2.5px] p-[2.5px] rounded-xl relative"
+            style={{ background: '#cbd5e1' }}
           >
             {BOARD_TILES.map((tile, idx) => {
               const pos = getTileGridPosition(idx);
@@ -215,16 +244,14 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               const tileBg = isCorner
                 ? cornerData!.bg
                 : owner
-                ? `linear-gradient(180deg, ${owner.tokenColor}38 0%, #0e1724 100%)`
-                : isStation
-                ? 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)'
-                : 'linear-gradient(180deg, #182234 0%, #0c121e 100%)';
+                ? `linear-gradient(180deg, #ffffff 0%, ${owner.tokenColor}20 60%, #e2e8f0 100%)`
+                : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)';
 
               const tileShadow = isCorner
-                ? 'inset 1px 1px 0 rgba(255,255,255,0.2), inset -1px -1px 0 rgba(0,0,0,0.6), 0 3px 6px rgba(0,0,0,0.6)'
+                ? 'inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.2)'
                 : owner
-                ? `inset 1px 1px 0 rgba(255,255,255,0.15), inset -1px -1px 0 rgba(0,0,0,0.7), 0 3px 6px rgba(0,0,0,0.6)`
-                : 'inset 1px 1px 0 rgba(255,255,255,0.12), inset -1px -1px 0 rgba(0,0,0,0.6), 0 2px 5px rgba(0,0,0,0.5)';
+                ? `inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.25)`
+                : 'inset 1px 1px 0 rgba(255,255,255,1), inset -1px -1px 0 rgba(148,163,184,0.35), 0 2px 5px rgba(0,0,0,0.18)';
 
               return (
                 <div
@@ -242,9 +269,9 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     gridColumn: pos.col,
                     background: tileBg,
                     boxShadow: hasHoppingPlayer
-                      ? `0 0 20px rgba(245,158,11,0.9), ${tileShadow}`
+                      ? `0 0 24px rgba(245,158,11,1), ${tileShadow}`
                       : tileShadow,
-                    border: owner && !isCorner ? `2px solid ${owner.tokenColor}` : undefined
+                    border: owner && !isCorner ? `2.5px solid ${owner.tokenColor}` : '1.5px solid #94a3b8'
                   }}
                   className={`iso-tile rounded-md overflow-visible flex flex-col justify-between ${
                     hasHoppingPlayer ? 'z-30' : isInspected ? 'iso-tile-active z-20' : 'z-10'
@@ -252,36 +279,33 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 >
                   {groupColor && (
                     <div
-                      className="h-[6px] w-full shrink-0 rounded-t-md relative overflow-hidden"
+                      className="h-[7px] w-full shrink-0 rounded-t-sm relative overflow-hidden"
                       style={{
                         background: `linear-gradient(90deg, ${groupColor.dark}, ${groupColor.main}, ${groupColor.light}, ${groupColor.main}, ${groupColor.dark})`,
                         boxShadow: `0 1px 4px ${groupColor.glow}`
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent h-[2px]" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent h-[2px]" />
                     </div>
                   )}
 
                   {isStation && !isCorner && (
                     <div
-                      className="h-[6px] w-full shrink-0 rounded-t-md relative overflow-hidden"
+                      className="h-[7px] w-full shrink-0 rounded-t-sm relative overflow-hidden"
                       style={{
-                        background: 'linear-gradient(90deg, #475569, #94a3b8, #f8fafc, #94a3b8, #475569)',
-                        boxShadow: '0 1px 4px rgba(148,163,184,0.4)'
+                        background: 'linear-gradient(90deg, #0284c7, #38bdf8, #e0f2fe, #38bdf8, #0284c7)',
+                        boxShadow: '0 1px 4px rgba(2,132,199,0.5)'
                       }}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-transparent h-[2px]" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/70 to-transparent h-[2px]" />
                     </div>
                   )}
 
                   {owner && !isCorner && (
-                    <div className="absolute top-0 right-0 z-20">
+                    <div className="absolute top-0.5 right-0.5 z-20">
                       <div
-                        className="w-4 h-4 rounded-bl-md overflow-hidden flex items-center justify-center border-l border-b border-black/40"
-                        style={{
-                          background: `linear-gradient(135deg, ${owner.tokenColor}, #0f172a)`,
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.7)'
-                        }}
+                        className="w-4 h-4 rounded-full overflow-hidden flex items-center justify-center border border-white shadow-md"
+                        style={{ background: owner.tokenColor }}
                       >
                         {owner.avatar ? (
                           <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
@@ -295,59 +319,46 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                   <div className="w-full flex-1 flex flex-col items-center justify-center px-0.5 pointer-events-none min-h-0 overflow-visible">
                     {isCorner && cornerData ? (
                       <div className="flex flex-col items-center justify-center text-center gap-0.5 p-0.5">
-                        <span className="text-base sm:text-lg drop-shadow-md">{cornerData.icon}</span>
+                        <span className="text-xl drop-shadow">{cornerData.icon}</span>
                         <span
-                          className="text-[8px] sm:text-[9px] font-black tracking-wider leading-none"
-                          style={{
-                            color: idx === 0 ? '#6ee7b7' : idx === 18 ? '#fcd34d' : idx === 27 ? '#fca5a5' : '#e2e8f0',
-                            textShadow: '0 1px 3px rgba(0,0,0,0.9)'
-                          }}
+                          className={`text-[9px] sm:text-[10px] font-black tracking-wider leading-none ${
+                            cornerData.textDark ? 'text-slate-900' : 'text-white'
+                          }`}
                         >
                           {cornerData.label}
                         </span>
                         <span
-                          className="text-[7px] font-extrabold px-1 py-[1px] rounded-sm mt-0.5"
-                          style={{
-                            background: 'rgba(0,0,0,0.6)',
-                            color: idx === 0 ? '#34d399' : '#cbd5e1'
-                          }}
+                          className={`text-[8px] font-black px-1.5 py-[1px] rounded-full mt-0.5 shadow-sm ${
+                            cornerData.textDark
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-black/70 text-amber-300'
+                          }`}
                         >
                           {idx === 18 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
                         </span>
                       </div>
                     ) : (
                       <>
-                        <span className="text-xs sm:text-sm drop-shadow leading-none mt-0.5">
+                        <span className="text-sm sm:text-base drop-shadow-sm leading-none mt-0.5">
                           {tile.stationIcon || '🏠'}
                         </span>
                         <div className="w-full text-center px-0.5 my-0.5 flex items-center justify-center">
                           <span
-                            className="text-[8px] sm:text-[9px] font-black text-slate-100 text-center leading-tight break-words line-clamp-2"
-                            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+                            className="text-[9.5px] sm:text-[11px] font-black text-slate-900 text-center leading-tight break-words"
                           >
                             {tile.name}
                           </span>
                         </div>
                         {tile.price && (
                           <span
-                            className="text-[7px] sm:text-[8px] font-black px-1.5 py-[1px] rounded-full leading-none mb-0.5"
-                            style={{
-                              background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                              color: '#1c1917',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                            }}
+                            className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-amber-300 text-amber-950 border border-amber-400 shadow-sm"
                           >
                             {tile.price}Đ
                           </span>
                         )}
                         {tile.taxAmount && (
                           <span
-                            className="text-[7px] sm:text-[8px] font-black px-1.5 py-[1px] rounded-full leading-none mb-0.5"
-                            style={{
-                              background: 'linear-gradient(135deg, #ef4444, #991b1b)',
-                              color: '#fff',
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.5)'
-                            }}
+                            className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none mb-0.5 bg-rose-600 text-white shadow-sm"
                           >
                             -{tile.taxAmount}Đ
                           </span>
@@ -370,7 +381,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             style={
                               !isHopping
                                 ? {
-                                    transform: 'rotateZ(45deg) rotateX(-60deg)',
+                                    transform: 'rotateZ(45deg) rotateX(-54deg)',
                                     transformOrigin: 'bottom center'
                                   }
                                 : {
@@ -379,31 +390,31 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             }
                           >
                             <div
-                              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden flex items-center justify-center relative"
+                              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden flex items-center justify-center relative shadow-lg"
                               style={{
-                                border: `2.5px solid ${p.tokenColor}`,
-                                background: '#0a0f1a',
+                                border: `3px solid ${p.tokenColor}`,
+                                background: '#0f172a',
                                 boxShadow: isTurn
-                                  ? `0 4px 10px rgba(0,0,0,0.9), 0 0 14px ${p.tokenColor}, 0 0 20px rgba(245,158,11,0.6)`
-                                  : `0 3px 8px rgba(0,0,0,0.8), 0 0 8px ${p.tokenColor}60`
+                                  ? `0 5px 14px rgba(0,0,0,0.8), 0 0 16px ${p.tokenColor}, 0 0 22px rgba(245,158,11,0.8)`
+                                  : `0 4px 10px rgba(0,0,0,0.7), 0 0 10px ${p.tokenColor}70`
                               }}
                             >
                               {p.avatar ? (
                                 <img src={p.avatar} alt={p.username} className="w-full h-full object-cover" />
                               ) : (
-                                <span className="text-xs">{p.tokenEmoji}</span>
+                                <span className="text-sm">{p.tokenEmoji}</span>
                               )}
                               {isTurn && (
                                 <div
-                                  className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full animate-ping"
+                                  className="absolute top-0 right-0 w-3 h-3 rounded-full animate-ping"
                                   style={{ background: '#fbbf24' }}
                                 />
                               )}
                             </div>
                             <div
-                              className="w-5 h-2 rounded-full mt-0.5"
+                              className="w-6 h-2.5 rounded-full mt-0.5"
                               style={{
-                                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, transparent 80%)'
+                                background: 'radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 80%)'
                               }}
                             />
                           </div>
@@ -418,57 +429,57 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             <div
               className="col-start-2 col-end-10 row-start-2 row-end-10 rounded-xl relative z-10 flex flex-col overflow-hidden select-none pointer-events-none"
               style={{
-                background: 'radial-gradient(ellipse at center, #0e4b30 0%, #083420 50%, #052316 100%)',
-                border: '3px solid #8b6938',
+                background: 'radial-gradient(ellipse at center, #22c55e 0%, #16a34a 35%, #15803d 70%, #14532d 100%)',
+                border: '3.5px solid #f59e0b',
                 boxShadow: `
-                  inset 0 0 50px rgba(0,0,0,0.9),
-                  inset 0 2px 0 rgba(217,119,6,0.4),
-                  0 0 20px rgba(16,185,129,0.1)
+                  inset 0 0 55px rgba(20,83,45,0.8),
+                  inset 0 2px 0 rgba(254,240,138,0.6),
+                  0 0 30px rgba(34,197,94,0.3)
                 `
               }}
             >
               <div
-                className="absolute inset-0 rounded-xl opacity-20 pointer-events-none"
+                className="absolute inset-0 rounded-xl opacity-25 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, transparent 60%),
-                    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.08) 10px, rgba(0,0,0,0.08) 11px)
+                    radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 60%),
+                    repeating-linear-gradient(45deg, transparent, transparent 14px, rgba(0,0,0,0.06) 14px, rgba(0,0,0,0.06) 15px)
                   `
                 }}
               />
 
               <div
-                className="absolute top-3 left-3 flex flex-col items-center justify-center p-2 rounded-lg"
+                className="absolute top-4 left-4 flex flex-col items-center justify-center p-2 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                  border: '1.5px solid rgba(245,158,11,0.5)',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.7)',
+                  border: '2px solid rgba(245,158,11,0.8)',
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.7)',
                   transform: 'rotateZ(12deg)'
                 }}
               >
-                <span className="text-xl">🎴</span>
-                <span className="text-[8px] font-black text-amber-300 mt-0.5">CƠ HỘI</span>
+                <span className="text-2xl">🎴</span>
+                <span className="text-[9px] font-black text-amber-300 mt-0.5">CƠ HỘI</span>
               </div>
 
               <div
-                className="absolute bottom-3 right-3 flex flex-col items-center justify-center p-2 rounded-lg"
+                className="absolute bottom-4 right-4 flex flex-col items-center justify-center p-2 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                  border: '1.5px solid rgba(139,92,246,0.5)',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.7)',
+                  border: '2px solid rgba(139,92,246,0.8)',
+                  boxShadow: '0 6px 16px rgba(0,0,0,0.7)',
                   transform: 'rotateZ(-15deg)'
                 }}
               >
-                <span className="text-xl">🔮</span>
-                <span className="text-[8px] font-black text-purple-300 mt-0.5">KHÍ VẬN</span>
+                <span className="text-2xl">🔮</span>
+                <span className="text-[9px] font-black text-purple-300 mt-0.5">KHÍ VẬN</span>
               </div>
 
               <div
-                className="absolute top-3 right-3 flex flex-col items-center p-1.5 rounded-md"
+                className="absolute top-4 right-4 flex flex-col items-center p-2 rounded-lg"
                 style={{
-                  background: 'linear-gradient(135deg, #065f46, #047857)',
-                  border: '1px solid #34d399',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+                  background: 'linear-gradient(135deg, #059669, #047857)',
+                  border: '1.5px solid #6ee7b7',
+                  boxShadow: '0 6px 14px rgba(0,0,0,0.6)',
                   transform: 'rotateZ(-8deg)'
                 }}
               >
@@ -476,29 +487,29 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               </div>
 
               <div
-                className="absolute bottom-3 left-3 flex flex-col items-center p-1.5 rounded-md"
+                className="absolute bottom-4 left-4 flex flex-col items-center p-2 rounded-lg"
                 style={{
-                  background: 'linear-gradient(135deg, #1e3a8a, #1d4ed8)',
-                  border: '1px solid #60a5fa',
-                  boxShadow: '0 4px 8px rgba(0,0,0,0.6)',
+                  background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                  border: '1.5px solid #7dd3fc',
+                  boxShadow: '0 6px 14px rgba(0,0,0,0.6)',
                   transform: 'rotateZ(10deg)'
                 }}
               >
-                <span className="text-xs font-black text-blue-100">💵 200K</span>
+                <span className="text-xs font-black text-sky-100">💵 200K</span>
               </div>
 
               <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                 <div
-                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-amber-400/40 flex flex-col items-center justify-center"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-amber-300/40 flex flex-col items-center justify-center opacity-40 pointer-events-none"
                   style={{
-                    background: 'radial-gradient(circle, rgba(217,119,6,0.15) 0%, transparent 70%)',
+                    background: 'radial-gradient(circle, rgba(254,240,138,0.2) 0%, transparent 70%)',
                     boxShadow: '0 0 25px rgba(245,158,11,0.2)'
                   }}
                 >
-                  <span className="text-2xl sm:text-3xl drop-shadow-md">👑</span>
+                  <span className="text-3xl sm:text-4xl drop-shadow-lg">👑</span>
                   <span
-                    className="text-[9px] sm:text-[10px] font-black tracking-widest text-amber-300 mt-1"
-                    style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}
+                    className="text-[10px] sm:text-[11px] font-black tracking-widest text-amber-200 mt-1"
+                    style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}
                   >
                     CỜ TỶ PHÚ 8D
                   </span>

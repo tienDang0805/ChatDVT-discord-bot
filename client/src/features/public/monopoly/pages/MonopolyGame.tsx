@@ -550,11 +550,20 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const isMyTurn = currPlayer?.id === playerId;
   const canRoll = isMyTurn && gameState.phase === 'ROLL_DICE' && !isHopping;
 
-  const leftPlayers = gameState.players.length === 2 ? [gameState.players[0]] : gameState.players.slice(0, 2);
-  const rightPlayers = gameState.players.length === 2 ? [gameState.players[1]] : gameState.players.slice(2);
-
   return (
-    <div className="fixed inset-0 z-40 bg-[#070d1a] flex flex-col overflow-hidden select-none">
+    <div
+      className="fixed inset-0 z-40 flex flex-col overflow-hidden select-none"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 35%, #1e3a5f 0%, #13273e 45%, #0a1624 100%)'
+      }}
+    >
+      <div
+        className="absolute inset-0 pointer-events-none opacity-25"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 50% 40%, rgba(56,189,248,0.25) 0%, transparent 60%)'
+        }}
+      />
+
       {passedGoAlert && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 text-white font-black text-xs sm:text-sm shadow-[0_0_35px_rgba(16,185,129,0.7)] border-2 border-emerald-300 animate-bounce">
           <span className="text-xl">🏁</span>
@@ -571,21 +580,64 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         onBackToMenu={handleLeaveRoom}
       />
 
-      <div className="w-full flex-1 min-h-0 flex flex-col md:flex-row items-center justify-between gap-3 px-3 py-2">
-        <div className="w-full md:w-48 lg:w-56 flex md:flex-col gap-2.5 shrink-0 justify-center">
-          {leftPlayers.map(p => (
+      <div className="w-full flex-1 min-h-0 relative flex items-center justify-center overflow-hidden">
+        {gameState.players[0] && (
+          <div className="absolute top-3 left-3 z-20 w-44 sm:w-52">
             <MonopolyPlayerCard
-              key={p.id}
-              player={p}
-              isCurrentTurn={p.id === currPlayer?.id}
-              isMe={p.id === playerId}
+              player={gameState.players[0]}
+              isCurrentTurn={gameState.players[0].id === currPlayer?.id}
+              isMe={gameState.players[0].id === playerId}
               gameState={gameState}
-              onClick={() => setShowPlayerDetail(p)}
+              onClick={() => setShowPlayerDetail(gameState.players[0])}
             />
-          ))}
-        </div>
+          </div>
+        )}
 
-        <div className="flex-1 min-h-0 h-full w-full relative flex items-center justify-center overflow-visible">
+        {gameState.players[1] && (
+          <div className="absolute top-3 right-3 z-20 w-44 sm:w-52">
+            <MonopolyPlayerCard
+              player={gameState.players[1]}
+              isCurrentTurn={gameState.players[1].id === currPlayer?.id}
+              isMe={gameState.players[1].id === playerId}
+              gameState={gameState}
+              onClick={() => setShowPlayerDetail(gameState.players[1])}
+            />
+          </div>
+        )}
+
+        {gameState.players[2] && (
+          <div className="absolute bottom-3 right-3 z-20 w-44 sm:w-52">
+            <MonopolyPlayerCard
+              player={gameState.players[2]}
+              isCurrentTurn={gameState.players[2].id === currPlayer?.id}
+              isMe={gameState.players[2].id === playerId}
+              gameState={gameState}
+              onClick={() => setShowPlayerDetail(gameState.players[2])}
+            />
+          </div>
+        )}
+
+        {gameState.players[3] && (
+          <div className="absolute bottom-3 left-3 z-20 w-44 sm:w-52">
+            <MonopolyPlayerCard
+              player={gameState.players[3]}
+              isCurrentTurn={gameState.players[3].id === currPlayer?.id}
+              isMe={gameState.players[3].id === playerId}
+              gameState={gameState}
+              onClick={() => setShowPlayerDetail(gameState.players[3])}
+            />
+          </div>
+        )}
+
+        {gameState.activeEvent && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-3 py-1 rounded-xl bg-gradient-to-r from-red-950/90 to-amber-950/90 border border-amber-400/60 shadow-xl text-xs">
+            <span className="text-base">{gameState.activeEvent.icon}</span>
+            <span className="font-black text-amber-300">{gameState.activeEvent.name}</span>
+            <span className="text-[10px] text-slate-300">({gameState.eventRoundsLeft} vòng)</span>
+          </div>
+        )}
+
+        <div className="w-full h-full flex items-center justify-center relative overflow-visible">
           <MonopolyBoard
             gameState={gameState}
             myPlayerId={playerId}
@@ -598,174 +650,157 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
             }}
           />
 
-          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-30 overflow-visible">
-            {showFloatingTileCard && (() => {
-              const selectedTile = BOARD_TILES[selectedTileIndex] || BOARD_TILES[0];
-              const tileOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(selectedTile.index));
-              const tileLevel = tileOwner ? (tileOwner.buildings[selectedTile.index] || 0) : 0;
-              const stationCount = tileOwner ? tileOwner.properties.filter(t => BOARD_TILES[t]?.type === 'station').length : 0;
-              const currentRent = selectedTile.type === 'station'
-                ? (STATION_RENTS[stationCount] || STATION_RENTS[1])
-                : selectedTile.rent
-                ? (selectedTile.rent[tileLevel] || selectedTile.rent[0])
-                : null;
-
-              return (
-                <div
-                  className="pointer-events-auto absolute top-2 right-2 sm:top-4 sm:right-4 md:right-6 z-40 max-w-[210px] sm:max-w-[230px] rounded-2xl p-3 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 border-2 border-amber-300/80 shadow-[0_20px_40px_rgba(0,0,0,0.95),0_0_20px_rgba(245,158,11,0.25)] animate-fade-in flex flex-col gap-1.5 select-none"
-                >
-                  <div className="flex items-center justify-between border-b border-amber-400/30 pb-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-base">{selectedTile.stationIcon || '🏠'}</span>
-                      <span className="text-xs font-black text-amber-300 truncate">
-                        {selectedTile.name}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-30">
+            <div className="relative flex items-center justify-center pointer-events-none">
+              <div className="pointer-events-auto flex flex-col items-center justify-center gap-1.5 select-none">
+                {!isMyTurn && gameState.phase === 'BUY_PROMPT' && currPlayer && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/90 border border-amber-400/80 shadow-xl text-center animate-fade-in max-w-[260px] backdrop-blur-[2px]">
+                    <span className="text-base">📜</span>
+                    <div className="flex flex-col items-start leading-tight min-w-0">
+                      <span className="text-[10px] font-bold text-amber-300 truncate w-full">
+                        {currPlayer.username} đang xem mua
+                      </span>
+                      <span className="text-[11px] font-black text-white truncate w-full">
+                        {BOARD_TILES[gameState.pendingBuyTile || 0]?.name} ({BOARD_TILES[gameState.pendingBuyTile || 0]?.price}Đ)
                       </span>
                     </div>
-                    <button
-                      onClick={() => setShowFloatingTileCard(false)}
-                      className="text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
-                    >
-                      ✕
-                    </button>
+                    <span className="text-[10px] text-amber-400 font-black bg-amber-500/25 px-2 py-0.5 rounded-full border border-amber-400/40 shrink-0">
+                      {gameState.turnTimer}s
+                    </span>
                   </div>
+                )}
 
-                  <div className="text-[10px] text-slate-300 flex flex-col gap-0.5">
-                    {tileOwner ? (
-                      <div className="flex items-center gap-1 text-emerald-300 font-bold">
-                        <span>👑</span>
-                        <span className="truncate">{tileOwner.username}</span>
-                        <span className="text-[9px] text-amber-400 font-normal">
-                          ({BUILD_LEVELS[tileLevel]?.name || 'Cấp 0'})
+                {!isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/90 border border-purple-400/80 shadow-xl text-center animate-fade-in max-w-[260px] backdrop-blur-[2px]">
+                    <span className="text-base">{gameState.lastDrawnCard.icon}</span>
+                    <div className="flex flex-col items-start leading-tight min-w-0 text-left">
+                      <span className="text-[11px] font-black text-purple-300 truncate w-full">
+                        {gameState.lastDrawnCard.name}
+                      </span>
+                      <span className="text-[9px] text-slate-300 truncate w-full">
+                        {gameState.lastDrawnCard.description}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {!isMyTurn && gameState.phase === 'ROLL_DICE' && currPlayer && (
+                  <div className="px-3.5 py-1 rounded-full bg-slate-950/80 border border-amber-400/50 shadow-xl text-xs font-black text-amber-300 flex items-center gap-1.5 animate-pulse backdrop-blur-[2px]">
+                    <span>⏳</span>
+                    <span>Đang đợi <strong className="text-amber-200 font-black">{currPlayer.username}</strong> tung xúc xắc...</span>
+                  </div>
+                )}
+
+                <DiceRoller
+                  lastDice={gameState.lastDice}
+                  isMyTurn={isMyTurn}
+                  canRoll={canRoll}
+                  onRoll={handleRollDice}
+                />
+
+                {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
+                  <button
+                    onClick={() => setShowBuildMenu(true)}
+                    className="px-6 py-2.5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs sm:text-sm shadow-[0_5px_0_#064e3b,0_12px_24px_rgba(16,185,129,0.5)] animate-pulse cursor-pointer border-2 border-emerald-200 active:translate-y-1 active:shadow-[0_1px_0_#064e3b] transition-all"
+                  >
+                    🔨 NÂNG CẤP & XÂY NHÀ
+                  </button>
+                )}
+
+                {isMyTurn && (gameState.phase === 'BUILD_PHASE' || gameState.phase === 'END_TURN') && !isHopping && (
+                  <button
+                    onClick={handleEndTurn}
+                    className="px-6 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-200 font-black text-xs cursor-pointer shadow-[0_5px_0_#b45309,0_10px_20px_rgba(217,119,6,0.5)] active:translate-y-1 active:shadow-[0_1px_0_#b45309] hover:scale-105 transition-all"
+                  >
+                    KẾT THÚC LƯỢT ➔
+                  </button>
+                )}
+
+                <div className="flex items-center gap-3 text-[10px] font-black text-amber-300 px-3 py-0.5 rounded-full bg-slate-950/75 border border-amber-400/40 shadow-md backdrop-blur-[2px]">
+                  <span>👑 VÒNG {gameState.round}/{gameState.maxRounds}</span>
+                  <span>☕ Quỹ: {gameState.freeParkingPool}Đ</span>
+                </div>
+              </div>
+
+              {showFloatingTileCard && (() => {
+                const selectedTile = BOARD_TILES[selectedTileIndex] || BOARD_TILES[0];
+                const tileOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(selectedTile.index));
+                const tileLevel = tileOwner ? (tileOwner.buildings[selectedTile.index] || 0) : 0;
+                const stationCount = tileOwner ? tileOwner.properties.filter(t => BOARD_TILES[t]?.type === 'station').length : 0;
+                const currentRent = selectedTile.type === 'station'
+                  ? (STATION_RENTS[stationCount] || STATION_RENTS[1])
+                  : selectedTile.rent
+                  ? (selectedTile.rent[tileLevel] || selectedTile.rent[0])
+                  : null;
+
+                return (
+                  <div
+                    className="pointer-events-auto absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 z-40 w-48 sm:w-56 rounded-2xl p-3 bg-gradient-to-b from-white via-slate-50 to-slate-100 text-slate-900 border-2 border-slate-300 shadow-[0_20px_45px_rgba(0,0,0,0.85)] animate-fade-in flex flex-col gap-1.5 select-none"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-300 pb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-base">{selectedTile.stationIcon || '🏠'}</span>
+                        <span className="text-xs font-black text-slate-900 truncate uppercase tracking-wider">
+                          {selectedTile.name}
                         </span>
                       </div>
-                    ) : (
-                      <div className="text-slate-400 italic">
-                        {selectedTile.price ? 'Chưa có chủ sở hữu' : selectedTile.flavor || 'Ô đặc biệt'}
-                      </div>
-                    )}
+                      <button
+                        onClick={() => setShowFloatingTileCard(false)}
+                        className="text-slate-400 hover:text-slate-800 text-xs font-bold px-1 py-0.5 rounded cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
 
-                    {selectedTile.price && (
-                      <div className="flex justify-between items-center text-[10px] mt-0.5">
-                        <span className="text-slate-400">Giá mua:</span>
-                        <span className="font-black text-amber-400">{selectedTile.price}Đ</span>
-                      </div>
-                    )}
+                    <div className="text-[10px] text-slate-700 flex flex-col gap-0.5">
+                      {tileOwner ? (
+                        <div className="flex items-center gap-1 font-black text-emerald-700">
+                          <span>👑</span>
+                          <span className="truncate">{tileOwner.username}</span>
+                          <span className="text-[9px] text-amber-700 font-bold">
+                            ({BUILD_LEVELS[tileLevel]?.name || 'Cấp 0'})
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-slate-500 font-bold italic">
+                          {selectedTile.price ? 'Chưa có chủ sở hữu' : selectedTile.flavor || 'Ô đặc biệt'}
+                        </div>
+                      )}
 
-                    {currentRent !== null && (
-                      <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-slate-400">Tiền thuê:</span>
-                        <span className="font-black text-rose-400">{currentRent}Đ</span>
-                      </div>
-                    )}
+                      {selectedTile.price && (
+                        <div className="flex justify-between items-center text-[10px] mt-0.5 font-bold">
+                          <span className="text-slate-500">Giá mua:</span>
+                          <span className="font-black text-amber-600">{selectedTile.price}Đ</span>
+                        </div>
+                      )}
+
+                      {currentRent !== null && (
+                        <div className="flex justify-between items-center text-[10px] font-bold">
+                          <span className="text-slate-500">Tiền thuê:</span>
+                          <span className="font-black text-rose-600">{currentRent}Đ</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-slate-200">
+                      <button
+                        onClick={() => setModalTile(selectedTile)}
+                        className="flex-1 py-1 px-2 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-black text-[10px] shadow text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      >
+                        📖 Xem Sổ Đỏ
+                      </button>
+                      <button
+                        onClick={() => setShowFloatingTileCard(false)}
+                        className="py-1 px-2.5 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-black text-[10px] text-center cursor-pointer"
+                      >
+                        Đóng
+                      </button>
+                    </div>
                   </div>
-
-                  <div className="flex items-center gap-1.5 mt-1 pt-1.5 border-t border-slate-800">
-                    <button
-                      onClick={() => setModalTile(selectedTile)}
-                      className="flex-1 py-1 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-[10px] shadow text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
-                    >
-                      📖 Xem Sổ Đỏ
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            <div className="pointer-events-auto flex flex-col items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-md border-2 border-amber-400/60 shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_25px_rgba(245,158,11,0.25)] max-w-[280px] sm:max-w-[320px] transition-all">
-              {!isMyTurn && gameState.phase === 'BUY_PROMPT' && currPlayer && (
-                <div className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900/90 border border-amber-400/80 shadow text-center animate-fade-in w-full">
-                  <span className="text-xl mb-0.5">📜</span>
-                  <div className="text-xs font-black text-amber-300 truncate w-full">
-                    {currPlayer.username} đang cân nhắc mua
-                  </div>
-                  <div className="text-xs font-black text-white mt-0.5 truncate w-full">
-                    {BOARD_TILES[gameState.pendingBuyTile || 0]?.name}
-                  </div>
-                  <div className="text-[10px] text-amber-400 font-extrabold mt-1 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40">
-                    Giá: {BOARD_TILES[gameState.pendingBuyTile || 0]?.price}Đ • Còn {gameState.turnTimer}s
-                  </div>
-                </div>
-              )}
-
-              {!isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
-                <div className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900/90 border border-purple-400/80 shadow text-center animate-fade-in w-full">
-                  <span className="text-xl mb-0.5">{gameState.lastDrawnCard.icon}</span>
-                  <div className="text-xs font-black text-purple-300 truncate w-full">
-                    {gameState.lastDrawnCard.name}
-                  </div>
-                  <div className="text-[10px] text-slate-200 mt-0.5 line-clamp-2">
-                    {gameState.lastDrawnCard.description}
-                  </div>
-                </div>
-              )}
-
-              {!isMyTurn && gameState.phase === 'ROLL_DICE' && currPlayer && (
-                <div className="text-center py-0.5">
-                  <div className="text-xs font-black text-amber-300 animate-pulse">
-                    ⏳ Đang đợi {currPlayer.username} tung xúc xắc...
-                  </div>
-                </div>
-              )}
-
-              <DiceRoller
-                lastDice={gameState.lastDice}
-                isMyTurn={isMyTurn}
-                canRoll={canRoll}
-                onRoll={handleRollDice}
-              />
-
-              {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
-                <button
-                  onClick={() => setShowBuildMenu(true)}
-                  className="px-5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs sm:text-sm shadow-[0_5px_0_#064e3b,0_10px_20px_rgba(16,185,129,0.4)] animate-pulse cursor-pointer border border-emerald-200 active:translate-y-1 active:shadow-[0_1px_0_#064e3b] transition-all"
-                >
-                  🔨 NÂNG CẤP & XÂY NHÀ
-                </button>
-              )}
-
-              {isMyTurn && (gameState.phase === 'BUILD_PHASE' || gameState.phase === 'END_TURN') && !isHopping && (
-                <button
-                  onClick={handleEndTurn}
-                  className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-400/50 font-black text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all"
-                >
-                  KẾT THÚC LƯỢT ➔
-                </button>
-              )}
-
-              <div className="w-full flex items-center justify-between text-[10px] font-black text-amber-300/80 px-2 pt-1 border-t border-amber-400/20 mt-0.5">
-                <span>👑 VÒNG {gameState.round}/{gameState.maxRounds}</span>
-                <span>☕ Quỹ: {gameState.freeParkingPool}Đ</span>
-              </div>
+                );
+              })()}
             </div>
           </div>
-        </div>
-
-        <div className="w-full md:w-48 lg:w-56 flex md:flex-col gap-2.5 shrink-0 justify-center">
-          {rightPlayers.map(p => (
-            <MonopolyPlayerCard
-              key={p.id}
-              player={p}
-              isCurrentTurn={p.id === currPlayer?.id}
-              isMe={p.id === playerId}
-              gameState={gameState}
-              onClick={() => setShowPlayerDetail(p)}
-            />
-          ))}
-
-          {gameState.activeEvent && (
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-red-950/80 to-amber-950/70 border-2 border-amber-400/70 shadow-xl text-xs">
-              <div className="flex items-center gap-1.5 font-black text-amber-300 mb-1">
-                <span className="text-base">{gameState.activeEvent.icon}</span>
-                <span className="truncate">{gameState.activeEvent.name}</span>
-              </div>
-              <div className="text-[10px] text-slate-200 line-clamp-2 leading-relaxed">
-                {gameState.activeEvent.description}
-              </div>
-              <div className="text-[9px] font-black text-amber-400 mt-1.5 text-right">
-                Còn {gameState.eventRoundsLeft} vòng
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
