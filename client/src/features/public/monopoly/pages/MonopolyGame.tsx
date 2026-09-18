@@ -68,45 +68,6 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [showPlayerDetail, setShowPlayerDetail] = useState<PlayerState | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const animatingRef = useRef<boolean>(false);
-  const animPathRef = useRef<{
-    playerId: string;
-    path: number[];
-    newPos: number;
-    passedGo: boolean;
-    stepIndex: number;
-  } | null>(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const anim = animPathRef.current;
-      if (!anim) return;
-
-      if (anim.stepIndex < anim.path.length) {
-        const stepPos = anim.path[anim.stepIndex];
-        setVisualPositions(prev => ({ ...prev, [anim.playerId]: stepPos }));
-        sounds.playStep();
-        anim.stepIndex++;
-      } else {
-        setVisualPositions(prev => ({ ...prev, [anim.playerId]: anim.newPos }));
-        setSelectedTileIndex(anim.newPos);
-        setAnimatingPlayerId(null);
-        setIsHopping(false);
-        animatingRef.current = false;
-
-        if (anim.passedGo) {
-          sounds.playCoin();
-          setPassedGoAlert(true);
-          setTimeout(() => setPassedGoAlert(false), 2500);
-        }
-
-        animPathRef.current = null;
-        setPostAnimDelay(true);
-        setTimeout(() => setPostAnimDelay(false), 600);
-      }
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const urlRoomParam = new URLSearchParams(window.location.search).get('room');
 
@@ -136,19 +97,46 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
       const { playerId: pId, newPos, passedGo, path } = data;
       if (!path || path.length === 0) {
         setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
+        setSelectedTileIndex(newPos);
         return;
       }
 
       animatingRef.current = true;
       setIsHopping(true);
       setAnimatingPlayerId(pId);
-      animPathRef.current = {
-        playerId: pId,
-        path,
-        newPos,
-        passedGo,
-        stepIndex: 0
+      setPostAnimDelay(true);
+
+      let stepIdx = 0;
+      const stepInterval = 280;
+
+      const takeStep = () => {
+        if (stepIdx < path.length) {
+          const stepTile = path[stepIdx];
+          setVisualPositions(prev => ({ ...prev, [pId]: stepTile }));
+          setSelectedTileIndex(stepTile);
+          sounds.playStep();
+          stepIdx++;
+          setTimeout(takeStep, stepInterval);
+        } else {
+          setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
+          setSelectedTileIndex(newPos);
+
+          if (passedGo) {
+            sounds.playCoin();
+            setPassedGoAlert(true);
+            setTimeout(() => setPassedGoAlert(false), 2500);
+          }
+
+          setTimeout(() => {
+            setIsHopping(false);
+            setAnimatingPlayerId(null);
+            setPostAnimDelay(false);
+            animatingRef.current = false;
+          }, 1000);
+        }
       };
+
+      setTimeout(takeStep, 100);
     });
 
     socket.on('monopoly:error', (data: { message: string }) => {
