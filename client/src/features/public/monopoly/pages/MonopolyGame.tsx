@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { PageShell } from '../../../../shared/components/PageShell';
-import type { GameState, TokenOption, TradeState, JailAction, PlayerState } from '../game/types';
-import { TOKEN_OPTIONS, BOARD_TILES } from '../game/boardData';
+import type { GameState, TokenOption, TradeState, JailAction, PlayerState, TileDef } from '../game/types';
+import { TOKEN_OPTIONS, BOARD_TILES, BUILD_LEVELS, STATION_RENTS } from '../game/boardData';
 import { sounds } from '../utils/audio';
 import { MonopolyLobby } from './components/MonopolyLobby';
 import { MonopolyBoard } from './components/MonopolyBoard';
 import { MonopolyTopBar, MonopolyPlayerCard } from './components/MonopolyHUD';
+import { PropertyCard } from './components/PropertyCard';
 import { DiceRoller } from './components/DiceRoller';
 import { BuyPrompt } from './components/BuyPrompt';
 import { CardReveal } from './components/CardReveal';
@@ -54,6 +55,10 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [isHopping, setIsHopping] = useState(false);
   const [passedGoAlert, setPassedGoAlert] = useState(false);
 
+  const [selectedTileIndex, setSelectedTileIndex] = useState<number>(0);
+  const [showFloatingTileCard, setShowFloatingTileCard] = useState<boolean>(true);
+  const [modalTile, setModalTile] = useState<TileDef | null>(null);
+
   const [showLog, setShowLog] = useState(false);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [showBuildMenu, setShowBuildMenu] = useState(false);
@@ -96,6 +101,8 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               setVisualPositions(prev => ({ ...prev, [pId]: newPos }));
               setAnimatingPlayerId(null);
               setIsHopping(false);
+              setSelectedTileIndex(newPos);
+              setShowFloatingTileCard(true);
 
               if (passedGo) {
                 sounds.playCoin();
@@ -578,76 +585,159 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           ))}
         </div>
 
-        <div className="flex-1 min-h-0 h-full max-h-[min(650px,calc(100vh-80px))] flex items-center justify-center">
+        <div className="flex-1 min-h-0 h-full w-full relative flex items-center justify-center overflow-visible">
           <MonopolyBoard
             gameState={gameState}
             myPlayerId={playerId}
             visualPositions={visualPositions}
             animatingPlayerId={animatingPlayerId}
-            centerOverlay={
-              <div className="flex flex-col items-center justify-center gap-2 p-1">
-                {!isMyTurn && gameState.phase === 'BUY_PROMPT' && currPlayer && (
-                  <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-950/95 border-2 border-amber-400/90 shadow-2xl text-center animate-fade-in max-w-[230px]">
-                    <span className="text-2xl mb-0.5">📜</span>
-                    <div className="text-xs font-black text-amber-300 truncate w-full">
-                      {currPlayer.username} đang cân nhắc mua
-                    </div>
-                    <div className="text-xs font-black text-white mt-0.5 truncate w-full">
-                      {BOARD_TILES[gameState.pendingBuyTile || 0]?.name}
-                    </div>
-                    <div className="text-[10px] text-amber-400 font-extrabold mt-1 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40">
-                      Giá: {BOARD_TILES[gameState.pendingBuyTile || 0]?.price}Đ • Còn {gameState.turnTimer}s
-                    </div>
-                  </div>
-                )}
-
-                {!isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
-                  <div className="flex flex-col items-center justify-center p-3 rounded-2xl bg-slate-950/95 border-2 border-purple-400/90 shadow-2xl text-center animate-fade-in max-w-[230px]">
-                    <span className="text-2xl mb-0.5">{gameState.lastDrawnCard.icon}</span>
-                    <div className="text-xs font-black text-purple-300 truncate w-full">
-                      {gameState.lastDrawnCard.name}
-                    </div>
-                    <div className="text-[10px] text-slate-200 mt-0.5 line-clamp-2">
-                      {gameState.lastDrawnCard.description}
-                    </div>
-                  </div>
-                )}
-
-                {!isMyTurn && gameState.phase === 'ROLL_DICE' && currPlayer && (
-                  <div className="text-center py-1">
-                    <div className="text-xs font-black text-amber-300 animate-pulse">
-                      ⏳ Đang đợi {currPlayer.username} tung xúc xắc...
-                    </div>
-                  </div>
-                )}
-
-                <DiceRoller
-                  lastDice={gameState.lastDice}
-                  isMyTurn={isMyTurn}
-                  canRoll={canRoll}
-                  onRoll={handleRollDice}
-                />
-
-                {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
-                  <button
-                    onClick={() => setShowBuildMenu(true)}
-                    className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs sm:text-sm shadow-[0_5px_0_#064e3b,0_10px_20px_rgba(16,185,129,0.4)] animate-pulse cursor-pointer border border-emerald-200 active:translate-y-1 active:shadow-[0_1px_0_#064e3b] transition-all"
-                  >
-                    🔨 NÂNG CẤP & XÂY NHÀ
-                  </button>
-                )}
-
-                {isMyTurn && (gameState.phase === 'BUILD_PHASE' || gameState.phase === 'END_TURN') && !isHopping && (
-                  <button
-                    onClick={handleEndTurn}
-                    className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-400/50 font-black text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all"
-                  >
-                    KẾT THÚC LƯỢT ➔
-                  </button>
-                )}
-              </div>
-            }
+            selectedTileIndex={selectedTileIndex}
+            onTileClick={(tile) => {
+              setSelectedTileIndex(tile.index);
+              setShowFloatingTileCard(true);
+            }}
           />
+
+          <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center z-30 overflow-visible">
+            {showFloatingTileCard && (() => {
+              const selectedTile = BOARD_TILES[selectedTileIndex] || BOARD_TILES[0];
+              const tileOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(selectedTile.index));
+              const tileLevel = tileOwner ? (tileOwner.buildings[selectedTile.index] || 0) : 0;
+              const stationCount = tileOwner ? tileOwner.properties.filter(t => BOARD_TILES[t]?.type === 'station').length : 0;
+              const currentRent = selectedTile.type === 'station'
+                ? (STATION_RENTS[stationCount] || STATION_RENTS[1])
+                : selectedTile.rent
+                ? (selectedTile.rent[tileLevel] || selectedTile.rent[0])
+                : null;
+
+              return (
+                <div
+                  className="pointer-events-auto absolute top-2 right-2 sm:top-4 sm:right-4 md:right-6 z-40 max-w-[210px] sm:max-w-[230px] rounded-2xl p-3 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 border-2 border-amber-300/80 shadow-[0_20px_40px_rgba(0,0,0,0.95),0_0_20px_rgba(245,158,11,0.25)] animate-fade-in flex flex-col gap-1.5 select-none"
+                >
+                  <div className="flex items-center justify-between border-b border-amber-400/30 pb-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-base">{selectedTile.stationIcon || '🏠'}</span>
+                      <span className="text-xs font-black text-amber-300 truncate">
+                        {selectedTile.name}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setShowFloatingTileCard(false)}
+                      className="text-slate-400 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="text-[10px] text-slate-300 flex flex-col gap-0.5">
+                    {tileOwner ? (
+                      <div className="flex items-center gap-1 text-emerald-300 font-bold">
+                        <span>👑</span>
+                        <span className="truncate">{tileOwner.username}</span>
+                        <span className="text-[9px] text-amber-400 font-normal">
+                          ({BUILD_LEVELS[tileLevel]?.name || 'Cấp 0'})
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-slate-400 italic">
+                        {selectedTile.price ? 'Chưa có chủ sở hữu' : selectedTile.flavor || 'Ô đặc biệt'}
+                      </div>
+                    )}
+
+                    {selectedTile.price && (
+                      <div className="flex justify-between items-center text-[10px] mt-0.5">
+                        <span className="text-slate-400">Giá mua:</span>
+                        <span className="font-black text-amber-400">{selectedTile.price}Đ</span>
+                      </div>
+                    )}
+
+                    {currentRent !== null && (
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="text-slate-400">Tiền thuê:</span>
+                        <span className="font-black text-rose-400">{currentRent}Đ</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5 mt-1 pt-1.5 border-t border-slate-800">
+                    <button
+                      onClick={() => setModalTile(selectedTile)}
+                      className="flex-1 py-1 px-2 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-[10px] shadow text-center cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    >
+                      📖 Xem Sổ Đỏ
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="pointer-events-auto flex flex-col items-center justify-center gap-2 p-3 sm:p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-md border-2 border-amber-400/60 shadow-[0_20px_50px_rgba(0,0,0,0.95),0_0_25px_rgba(245,158,11,0.25)] max-w-[280px] sm:max-w-[320px] transition-all">
+              {!isMyTurn && gameState.phase === 'BUY_PROMPT' && currPlayer && (
+                <div className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900/90 border border-amber-400/80 shadow text-center animate-fade-in w-full">
+                  <span className="text-xl mb-0.5">📜</span>
+                  <div className="text-xs font-black text-amber-300 truncate w-full">
+                    {currPlayer.username} đang cân nhắc mua
+                  </div>
+                  <div className="text-xs font-black text-white mt-0.5 truncate w-full">
+                    {BOARD_TILES[gameState.pendingBuyTile || 0]?.name}
+                  </div>
+                  <div className="text-[10px] text-amber-400 font-extrabold mt-1 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40">
+                    Giá: {BOARD_TILES[gameState.pendingBuyTile || 0]?.price}Đ • Còn {gameState.turnTimer}s
+                  </div>
+                </div>
+              )}
+
+              {!isMyTurn && gameState.phase === 'CARD_REVEAL' && gameState.lastDrawnCard && (
+                <div className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-900/90 border border-purple-400/80 shadow text-center animate-fade-in w-full">
+                  <span className="text-xl mb-0.5">{gameState.lastDrawnCard.icon}</span>
+                  <div className="text-xs font-black text-purple-300 truncate w-full">
+                    {gameState.lastDrawnCard.name}
+                  </div>
+                  <div className="text-[10px] text-slate-200 mt-0.5 line-clamp-2">
+                    {gameState.lastDrawnCard.description}
+                  </div>
+                </div>
+              )}
+
+              {!isMyTurn && gameState.phase === 'ROLL_DICE' && currPlayer && (
+                <div className="text-center py-0.5">
+                  <div className="text-xs font-black text-amber-300 animate-pulse">
+                    ⏳ Đang đợi {currPlayer.username} tung xúc xắc...
+                  </div>
+                </div>
+              )}
+
+              <DiceRoller
+                lastDice={gameState.lastDice}
+                isMyTurn={isMyTurn}
+                canRoll={canRoll}
+                onRoll={handleRollDice}
+              />
+
+              {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
+                <button
+                  onClick={() => setShowBuildMenu(true)}
+                  className="px-5 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs sm:text-sm shadow-[0_5px_0_#064e3b,0_10px_20px_rgba(16,185,129,0.4)] animate-pulse cursor-pointer border border-emerald-200 active:translate-y-1 active:shadow-[0_1px_0_#064e3b] transition-all"
+                >
+                  🔨 NÂNG CẤP & XÂY NHÀ
+                </button>
+              )}
+
+              {isMyTurn && (gameState.phase === 'BUILD_PHASE' || gameState.phase === 'END_TURN') && !isHopping && (
+                <button
+                  onClick={handleEndTurn}
+                  className="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border-2 border-amber-400/50 font-black text-xs cursor-pointer shadow hover:scale-105 active:scale-95 transition-all"
+                >
+                  KẾT THÚC LƯỢT ➔
+                </button>
+              )}
+
+              <div className="w-full flex items-center justify-between text-[10px] font-black text-amber-300/80 px-2 pt-1 border-t border-amber-400/20 mt-0.5">
+                <span>👑 VÒNG {gameState.round}/{gameState.maxRounds}</span>
+                <span>☕ Quỹ: {gameState.freeParkingPool}Đ</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="w-full md:w-48 lg:w-56 flex md:flex-col gap-2.5 shrink-0 justify-center">
@@ -771,6 +861,16 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           gameState={gameState}
           isMe={showPlayerDetail.id === playerId}
           onClose={() => setShowPlayerDetail(null)}
+        />
+      )}
+
+      {modalTile && (
+        <PropertyCard
+          tile={modalTile}
+          owner={gameState.players.find(p => !p.isEliminated && p.properties.includes(modalTile.index))}
+          buildLevel={gameState.players.find(p => !p.isEliminated && p.properties.includes(modalTile.index))?.buildings[modalTile.index] || 0}
+          gameState={gameState}
+          onClose={() => setModalTile(null)}
         />
       )}
 
