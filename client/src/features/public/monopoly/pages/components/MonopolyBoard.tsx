@@ -459,69 +459,87 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </div>
                     </div>
                   ) : pos.side === 'left' ? (
-                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
+                    <div className="w-full h-full relative overflow-hidden select-none flex items-center justify-center">
                       <div
-                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-t-xs shadow-xs overflow-hidden"
-                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                        className="flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden absolute"
+                        style={{
+                          width: 'calc(100% * 14 / 16)',
+                          height: 'calc(100% * 16 / 14)',
+                          transform: 'rotate(90deg)'
+                        }}
                       >
-                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
-                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
-                        </span>
-                      </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
-                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
-                        <span
-                          className="font-black text-slate-900 leading-tight text-center max-w-full"
-                          style={{
-                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
-                            wordBreak: 'keep-all',
-                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
-                          }}
+                        <div
+                          className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-t-xs shadow-xs overflow-hidden"
+                          style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
                         >
-                          {tile.name}
-                        </span>
-                        {owner && (
-                          <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
-                            {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
+                          <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                            {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
                           </span>
-                        )}
-                      </div>
-                      <div className="shrink-0 pb-0.5 flex items-center justify-center">
-                        {renderPriceBadge()}
+                        </div>
+                        <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
+                          {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
+                          <span
+                            className="font-black text-slate-900 leading-tight text-center max-w-full"
+                            style={{
+                              fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                              textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                              wordBreak: 'keep-all',
+                              whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
+                            }}
+                          >
+                            {tile.name}
+                          </span>
+                          {owner && (
+                            <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                              {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="shrink-0 pb-0.5 flex items-center justify-center">
+                          {renderPriceBadge()}
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
-                      <div className="shrink-0 pt-0.5 flex items-center justify-center">
-                        {renderPriceBadge()}
-                      </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
-                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
-                        <span
-                          className="font-black text-slate-900 leading-tight text-center max-w-full"
-                          style={{
-                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
-                            wordBreak: 'keep-all',
-                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
-                          }}
-                        >
-                          {tile.name}
-                        </span>
-                        {owner && (
-                          <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
-                            {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
-                          </span>
-                        )}
-                      </div>
+                    <div className="w-full h-full relative overflow-hidden select-none flex items-center justify-center">
                       <div
-                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-b-xs shadow-xs overflow-hidden"
-                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                        className="flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden absolute"
+                        style={{
+                          width: 'calc(100% * 14 / 16)',
+                          height: 'calc(100% * 16 / 14)',
+                          transform: 'rotate(90deg)'
+                        }}
                       >
-                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
-                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
-                        </span>
+                        <div className="shrink-0 pt-0.5 flex items-center justify-center">
+                          {renderPriceBadge()}
+                        </div>
+                        <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
+                          {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
+                          <span
+                            className="font-black text-slate-900 leading-tight text-center max-w-full"
+                            style={{
+                              fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                              textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                              wordBreak: 'keep-all',
+                              whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
+                            }}
+                          >
+                            {tile.name}
+                          </span>
+                          {owner && (
+                            <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                              {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-b-xs shadow-xs overflow-hidden"
+                          style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                        >
+                          <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                            {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   )}
