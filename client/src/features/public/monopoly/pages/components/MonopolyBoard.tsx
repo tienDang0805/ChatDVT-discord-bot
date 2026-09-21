@@ -65,26 +65,26 @@ const GROUP_CONFIG: Record<string, {
 
 const CORNER_DATA: Record<number, { icon: string; label: string; sub: string; bg: string; textDark?: boolean }> = {
   0: { icon: '🏁', label: 'XUẤT PHÁT', sub: '+200Đ', bg: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%)', textDark: true },
-  9: { icon: '🔒', label: 'TÙ', sub: 'GIAM GIỮ', bg: 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)' },
-  18: { icon: '☕', label: 'CÀ PHÊ 8D', sub: 'NGHỈ CHÂN', bg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)' },
-  27: { icon: '🚔', label: 'VÀO TÙ', sub: 'CÔNG AN BẮT', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)' }
+  7: { icon: '🔒', label: 'TÙ', sub: 'GIAM GIỮ', bg: 'linear-gradient(135deg, #475569 0%, #334155 50%, #1e293b 100%)' },
+  14: { icon: '☕', label: 'CÀ PHÊ 8D', sub: 'NGHỈ CHÂN', bg: 'linear-gradient(135deg, #d97706 0%, #b45309 50%, #78350f 100%)' },
+  21: { icon: '🚔', label: 'VÀO TÙ', sub: 'CÔNG AN BẮT', bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #991b1b 100%)' }
 };
 
 function getTileGridPosition(index: number): { row: number; col: number; side: 'bottom' | 'left' | 'top' | 'right' | 'corner' } {
-  if (index === 0) return { row: 10, col: 10, side: 'corner' };
-  if (index >= 1 && index <= 8) return { row: 10, col: 10 - index, side: 'bottom' };
-  if (index === 9) return { row: 10, col: 1, side: 'corner' };
-  if (index >= 10 && index <= 17) return { row: 10 - (index - 9), col: 1, side: 'left' };
-  if (index === 18) return { row: 1, col: 1, side: 'corner' };
-  if (index >= 19 && index <= 26) return { row: 1, col: 1 + (index - 18), side: 'top' };
-  if (index === 27) return { row: 1, col: 10, side: 'corner' };
-  if (index >= 28 && index <= 35) return { row: 1 + (index - 27), col: 10, side: 'right' };
-  return { row: 10, col: 10, side: 'corner' };
+  if (index === 0) return { row: 8, col: 8, side: 'corner' };
+  if (index >= 1 && index <= 6) return { row: 8, col: 8 - index, side: 'bottom' };
+  if (index === 7) return { row: 8, col: 1, side: 'corner' };
+  if (index >= 8 && index <= 13) return { row: 8 - (index - 7), col: 1, side: 'left' };
+  if (index === 14) return { row: 1, col: 1, side: 'corner' };
+  if (index >= 15 && index <= 20) return { row: 1, col: 1 + (index - 14), side: 'top' };
+  if (index === 21) return { row: 1, col: 8, side: 'corner' };
+  if (index >= 22 && index <= 27) return { row: 1 + (index - 21), col: 8, side: 'right' };
+  return { row: 8, col: 8, side: 'corner' };
 }
 
 function getTileCenterPercent(index: number): { x: number; y: number } {
-  const colCenters = [8.87, 21.77, 29.84, 37.90, 45.97, 54.03, 62.10, 70.16, 78.23, 91.13];
-  const rowCenters = [8.87, 21.77, 29.84, 37.90, 45.97, 54.03, 62.10, 70.16, 78.23, 91.13];
+  const colCenters = [8.93, 23.21, 33.93, 44.64, 55.36, 66.07, 76.79, 91.07];
+  const rowCenters = [8.93, 23.21, 33.93, 44.64, 55.36, 66.07, 76.79, 91.07];
   const pos = getTileGridPosition(index);
   return {
     x: colCenters[pos.col - 1],
@@ -208,7 +208,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     return gameState.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
   };
 
-  const cornerIndices = [0, 9, 18, 27];
+  const cornerIndices = [0, 7, 14, 21];
 
   const activePlayers = gameState.players.filter(p => !p.isEliminated);
   const playerTileIndexMap: Record<number, PlayerState[]> = {};
@@ -281,8 +281,8 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             className="w-full h-full grid gap-[3px] p-[2px] rounded-xl relative"
             style={{
               background: '#0f172a',
-              gridTemplateColumns: '2.2fr repeat(8, 1fr) 2.2fr',
-              gridTemplateRows: '2.2fr repeat(8, 1fr) 2.2fr'
+              gridTemplateColumns: '2fr repeat(6, 1.25fr) 2fr',
+              gridTemplateRows: '2fr repeat(6, 1.25fr) 2fr'
             }}
           >
             {BOARD_TILES.map((tile, idx) => {
@@ -296,7 +296,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               const isTax = tile.type === 'tax';
               const isChance = tile.type === 'chance';
               const isCommunity = tile.type === 'community';
-              const isResort = idx === 35;
+              const isResort = idx === 27;
               const cornerData = isCorner ? CORNER_DATA[idx] : null;
 
               const isLandingTarget = animatingPlayerId !== null && (visualPositions[animatingPlayerId] === idx);
@@ -400,25 +400,25 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             : 'bg-black/75 text-amber-300'
                         }`}
                       >
-                        {idx === 18 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
+                        {idx === 14 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
                       </span>
                     </div>
                   ) : pos.side === 'bottom' ? (
                     <div className="w-full h-full flex flex-col justify-between items-center p-1 select-none">
                       <div
-                        className="h-[15px] w-full shrink-0 flex items-center justify-center rounded-t-sm shadow-xs overflow-hidden"
+                        className="h-[16px] w-full shrink-0 flex items-center justify-center rounded-t-sm shadow-xs overflow-hidden"
                         style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
                       >
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                        <span className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-wider truncate px-0.5">
                           {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
                         </span>
                       </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0">
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-1 py-0.5 min-h-0">
                         {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '10.5px' : '9.5px',
+                            fontSize: tile.name.length <= 6 ? '12.5px' : tile.name.length <= 10 ? '11px' : '10px',
                             textShadow: '0 1px 2px rgba(255,255,255,0.95)'
                           }}
                         >
@@ -434,12 +434,12 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       <div className="shrink-0 pt-0.5 flex items-center justify-center">
                         {renderPriceBadge()}
                       </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0">
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-1 py-0.5 min-h-0">
                         {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '10.5px' : '9.5px',
+                            fontSize: tile.name.length <= 6 ? '12.5px' : tile.name.length <= 10 ? '11px' : '10px',
                             textShadow: '0 1px 2px rgba(255,255,255,0.95)'
                           }}
                         >
@@ -447,10 +447,10 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                         </span>
                       </div>
                       <div
-                        className="h-[15px] w-full shrink-0 flex items-center justify-center rounded-b-sm shadow-xs overflow-hidden"
+                        className="h-[16px] w-full shrink-0 flex items-center justify-center rounded-b-sm shadow-xs overflow-hidden"
                         style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
                       >
-                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                        <span className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-wider truncate px-0.5">
                           {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
                         </span>
                       </div>
@@ -460,19 +460,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       <div className="shrink-0 pl-0.5 flex items-center justify-center">
                         {renderPriceBadge()}
                       </div>
-                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0">
+                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1.5 min-w-0">
                         {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '11px' : '10px',
+                            fontSize: tile.name.length <= 6 ? '13px' : tile.name.length <= 10 ? '11.5px' : '10.5px',
                             textShadow: '0 1px 2px rgba(255,255,255,0.95)'
                           }}
                         >
                           {tile.name}
                         </span>
                         {owner && (
-                          <span className="text-[7.5px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                          <span className="text-[8px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
                             {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
                           </span>
                         )}
@@ -488,19 +488,19 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                         className="w-[12px] h-full shrink-0 rounded-l-sm shadow-xs"
                         style={{ background: owner ? owner.tokenColor : headerGradient }}
                       />
-                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0">
+                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1.5 min-w-0">
                         {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '11px' : '10px',
+                            fontSize: tile.name.length <= 6 ? '13px' : tile.name.length <= 10 ? '11.5px' : '10.5px',
                             textShadow: '0 1px 2px rgba(255,255,255,0.95)'
                           }}
                         >
                           {tile.name}
                         </span>
                         {owner && (
-                          <span className="text-[7.5px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                          <span className="text-[8px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
                             {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
                           </span>
                         )}
@@ -517,7 +517,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             })}
 
             <div
-              className="col-start-2 col-end-10 row-start-2 row-end-10 rounded-xl relative z-10 flex flex-col overflow-hidden select-none pointer-events-none"
+              className="col-start-2 col-end-8 row-start-2 row-end-8 rounded-xl relative z-10 flex flex-col overflow-hidden select-none pointer-events-none"
               style={{
                 background: 'radial-gradient(ellipse at center, #15803d 0%, #166534 38%, #14532d 72%, #052e16 100%)',
                 border: '3.5px solid #f59e0b',
