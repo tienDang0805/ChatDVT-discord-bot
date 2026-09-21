@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chatdvt-v2';
+const CACHE_NAME = 'chatdvt-v3';
 const PRECACHE_URLS = [
   '/',
   '/index.html'

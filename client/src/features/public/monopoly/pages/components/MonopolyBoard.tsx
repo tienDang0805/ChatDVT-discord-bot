@@ -83,8 +83,8 @@ function getTileGridPosition(index: number): { row: number; col: number; side: '
 }
 
 function getTileCenterPercent(index: number): { x: number; y: number } {
-  const colCenters = [8.93, 23.21, 33.93, 44.64, 55.36, 66.07, 76.79, 91.07];
-  const rowCenters = [8.93, 23.21, 33.93, 44.64, 55.36, 66.07, 76.79, 91.07];
+  const colCenters = [6.90, 19.83, 31.90, 43.97, 56.03, 68.10, 80.17, 93.10];
+  const rowCenters = [6.90, 19.83, 31.90, 43.97, 56.03, 68.10, 80.17, 93.10];
   const pos = getTileGridPosition(index);
   return {
     x: colCenters[pos.col - 1],
@@ -237,7 +237,6 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           50% { box-shadow: inset 0 0 36px rgba(245, 158, 11, 1), 0 0 50px rgba(251, 191, 36, 1); }
         }
         .iso-tile {
-          container-type: size;
           transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
         }
         .iso-tile:hover {
@@ -256,8 +255,8 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-3xl"
         style={{
-          width: 'min(760px, 63vw, calc((100vh - 85px) * 0.94))',
-          height: 'min(760px, 63vw, calc((100vh - 85px) * 0.94))',
+          width: 'min(820px, 70vw, calc((100vh - 60px) * 0.98))',
+          height: 'min(820px, 70vw, calc((100vh - 60px) * 0.98))',
           aspectRatio: '1',
           transform: 'rotateX(44deg) rotateZ(-45deg) translateY(-1%) scale(1)',
           transformStyle: 'preserve-3d',
@@ -281,8 +280,8 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
             className="w-full h-full grid gap-[3px] p-[2px] rounded-xl relative"
             style={{
               background: '#0f172a',
-              gridTemplateColumns: '2fr repeat(6, 1.25fr) 2fr',
-              gridTemplateRows: '2fr repeat(6, 1.25fr) 2fr'
+              gridTemplateColumns: '1.6fr repeat(6, 1.4fr) 1.6fr',
+              gridTemplateRows: '1.6fr repeat(6, 1.4fr) 1.6fr'
             }}
           >
             {BOARD_TILES.map((tile, idx) => {
@@ -343,21 +342,21 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       })()
                     : Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
                   return (
-                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300 whitespace-nowrap ${extraClass}`}>
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-xs border border-rose-300 whitespace-nowrap ${extraClass}`}>
                       {rentAmount}Đ
                     </span>
                   );
                 }
                 if (tile.price) {
                   return (
-                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-amber-200 text-amber-950 border border-amber-400 shadow-sm whitespace-nowrap ${extraClass}`}>
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-amber-200 text-amber-950 border border-amber-400 shadow-xs whitespace-nowrap ${extraClass}`}>
                       {tile.price}Đ
                     </span>
                   );
                 }
                 if (tile.taxAmount) {
                   return (
-                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm whitespace-nowrap ${extraClass}`}>
+                    <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-xs whitespace-nowrap ${extraClass}`}>
                       -{tile.taxAmount}Đ
                     </span>
                   );
@@ -387,14 +386,14 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     <div className="flex flex-col items-center justify-center text-center gap-1 p-1 w-full h-full select-none">
                       <span className="text-xl sm:text-2xl drop-shadow">{cornerData.icon}</span>
                       <span
-                        className={`text-[10px] sm:text-[11.5px] font-black tracking-wider leading-tight text-center ${
+                        className={`text-[9.5px] sm:text-[10.5px] font-black tracking-wider leading-tight text-center ${
                           cornerData.textDark ? 'text-slate-900' : 'text-white'
                         }`}
                       >
                         {cornerData.label}
                       </span>
                       <span
-                        className={`text-[8.5px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap ${
+                        className={`text-[8px] sm:text-[8.5px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap ${
                           cornerData.textDark
                             ? 'bg-emerald-600 text-white'
                             : 'bg-black/75 text-amber-300'
@@ -404,22 +403,24 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </span>
                     </div>
                   ) : pos.side === 'bottom' ? (
-                    <div className="w-full h-full flex flex-col justify-between items-center p-1 select-none">
+                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
                       <div
-                        className="h-[16px] w-full shrink-0 flex items-center justify-center rounded-t-sm shadow-xs overflow-hidden"
+                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-t-xs shadow-xs overflow-hidden"
                         style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
                       >
-                        <span className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
                           {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
                         </span>
                       </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-1 py-0.5 min-h-0">
-                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
+                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
+                          className="font-black text-slate-900 leading-tight text-center max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12.5px' : tile.name.length <= 10 ? '11px' : '10px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                            wordBreak: 'keep-all',
+                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
                           }}
                         >
                           {tile.name}
@@ -430,82 +431,88 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </div>
                     </div>
                   ) : pos.side === 'top' ? (
-                    <div className="w-full h-full flex flex-col justify-between items-center p-1 select-none">
+                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
                       <div className="shrink-0 pt-0.5 flex items-center justify-center">
                         {renderPriceBadge()}
                       </div>
-                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-1 py-0.5 min-h-0">
-                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
+                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
+                          className="font-black text-slate-900 leading-tight text-center max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '12.5px' : tile.name.length <= 10 ? '11px' : '10px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                            wordBreak: 'keep-all',
+                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
                           }}
                         >
                           {tile.name}
                         </span>
                       </div>
                       <div
-                        className="h-[16px] w-full shrink-0 flex items-center justify-center rounded-b-sm shadow-xs overflow-hidden"
+                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-b-xs shadow-xs overflow-hidden"
                         style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
                       >
-                        <span className="text-[8px] sm:text-[9px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
                           {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
                         </span>
                       </div>
                     </div>
                   ) : pos.side === 'left' ? (
-                    <div className="w-full h-full flex flex-row items-center justify-between p-1 select-none">
-                      <div className="shrink-0 pl-0.5 flex items-center justify-center">
+                    <div className="w-full h-full flex flex-row items-stretch justify-between p-0.5 select-none overflow-hidden">
+                      <div className="shrink-0 flex items-center justify-center pl-0.5">
                         {renderPriceBadge()}
                       </div>
-                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1.5 min-w-0">
-                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                      <div className="flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0 overflow-hidden">
+                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
+                          className="font-black text-slate-900 leading-tight text-center max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '13px' : tile.name.length <= 10 ? '11.5px' : '10.5px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                            wordBreak: 'keep-all',
+                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
                           }}
                         >
                           {tile.name}
                         </span>
                         {owner && (
-                          <span className="text-[8px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                          <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
                             {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
                           </span>
                         )}
                       </div>
                       <div
-                        className="w-[12px] h-full shrink-0 rounded-r-sm shadow-xs"
+                        className="w-[8px] shrink-0 rounded-r-xs shadow-xs"
                         style={{ background: owner ? owner.tokenColor : headerGradient }}
                       />
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-row items-center justify-between p-1 select-none">
+                    <div className="w-full h-full flex flex-row items-stretch justify-between p-0.5 select-none overflow-hidden">
                       <div
-                        className="w-[12px] h-full shrink-0 rounded-l-sm shadow-xs"
+                        className="w-[8px] shrink-0 rounded-l-xs shadow-xs"
                         style={{ background: owner ? owner.tokenColor : headerGradient }}
                       />
-                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1.5 min-w-0">
-                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                      <div className="flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0 overflow-hidden">
+                        {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
-                          className="font-black text-slate-900 leading-tight text-center break-words max-w-full"
+                          className="font-black text-slate-900 leading-tight text-center max-w-full"
                           style={{
-                            fontSize: tile.name.length <= 6 ? '13px' : tile.name.length <= 10 ? '11.5px' : '10.5px',
-                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                            fontSize: tile.name.length <= 8 ? '8.5px' : tile.name.length <= 11 ? '8px' : '7.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)',
+                            wordBreak: 'keep-all',
+                            whiteSpace: tile.name.length <= 10 ? 'nowrap' : 'normal'
                           }}
                         >
                           {tile.name}
                         </span>
                         {owner && (
-                          <span className="text-[8px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                          <span className="text-[7px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
                             {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
                           </span>
                         )}
                       </div>
-                      <div className="shrink-0 pr-0.5 flex items-center justify-center">
+                      <div className="shrink-0 flex items-center justify-center pr-0.5">
                         {renderPriceBadge()}
                       </div>
                     </div>
