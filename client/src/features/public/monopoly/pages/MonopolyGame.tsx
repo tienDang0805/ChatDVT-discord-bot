@@ -592,14 +592,17 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex flex-col overflow-hidden select-none"
+      id="monopoly-game-root"
+      className="monopoly-game-active fixed inset-0 z-40 flex flex-col overflow-hidden select-none"
       style={{
         background: 'radial-gradient(ellipse at 50% 35%, #1e3a5f 0%, #13273e 45%, #0a1624 100%)'
       }}
     >
       <style>{`
+        #chat-widget-fab-container,
         .chat-widget-root,
         .widget-tag,
+        .widget-btn-ring,
         .chat-widget-fab,
         #chat-widget-root,
         [data-chat-widget] {

@@ -225,8 +225,8 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
     >
       <style>{`
         @keyframes pawnHopBillboard {
-          0%, 100% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg) translateY(0) scale(1); }
-          50% { transform: translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg) translateY(-26px) scale(1.22); }
+          0%, 100% { transform: rotateZ(45deg) rotateX(-50deg) translateY(0) scale(1); }
+          50% { transform: rotateZ(45deg) rotateX(-50deg) translateY(-24px) scale(1.2); }
         }
         @keyframes tileHoverGlow {
           0%, 100% { filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.4)); }
@@ -256,13 +256,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
       <div
         className="relative transition-transform duration-500 rounded-3xl"
         style={{
-          width: 'min(1150px, 94vw, calc(116vh - 65px))',
-          height: 'min(1150px, 94vw, calc(116vh - 65px))',
+          width: 'min(760px, 63vw, calc((100vh - 85px) * 0.94))',
+          height: 'min(760px, 63vw, calc((100vh - 85px) * 0.94))',
           aspectRatio: '1',
-          transform: 'rotateX(46deg) rotateZ(-45deg) translateY(-2%) scale(1.16)',
+          transform: 'rotateX(44deg) rotateZ(-45deg) translateY(-1%) scale(1)',
           transformStyle: 'preserve-3d',
           background: 'linear-gradient(135deg, #78350f 0%, #592506 30%, #3e1903 70%, #290f02 100%)',
-          border: '10px solid #92400e',
+          border: '9px solid #92400e',
           boxShadow: `
             0 4px 0 #592506,
             0 8px 0 #3e1903,
@@ -274,43 +274,6 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
           `
         }}
       >
-        <div
-          className="absolute -top-4 -left-4 w-12 h-12 rounded-tl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
-          style={{
-            background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
-            border: '3px solid #f1f5f9'
-          }}
-        >
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
-        </div>
-        <div
-          className="absolute -top-4 -right-4 w-12 h-12 rounded-tr-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
-          style={{
-            background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
-            border: '3px solid #f1f5f9'
-          }}
-        >
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
-        </div>
-        <div
-          className="absolute -bottom-4 -left-4 w-12 h-12 rounded-bl-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
-          style={{
-            background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
-            border: '3px solid #f1f5f9'
-          }}
-        >
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
-        </div>
-        <div
-          className="absolute -bottom-4 -right-4 w-12 h-12 rounded-br-2xl flex items-center justify-center pointer-events-none z-30 shadow-2xl"
-          style={{
-            background: 'linear-gradient(135deg, #f8fafc, #cbd5e1, #64748b)',
-            border: '3px solid #f1f5f9'
-          }}
-        >
-          <div className="w-3.5 h-3.5 rounded-full bg-amber-400 border border-amber-600 shadow-inner" />
-        </div>
-
         <div
           className="absolute inset-[6px] rounded-2xl overflow-hidden z-10 border-2 border-amber-400/80 shadow-inner"
         >
@@ -341,135 +304,66 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
               const tileBg = isCorner
                 ? cornerData!.bg
                 : owner && tile.type === 'property'
-                ? `linear-gradient(180deg, ${owner.tokenColor}25 0%, #ffffff 40%, #f8fafc 70%, ${owner.tokenColor}35 100%)`
-                : isStation
-                ? 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 40%, #fde68a 100%)'
-                : isResort
-                ? 'linear-gradient(180deg, #faf5ff 0%, #ede9fe 40%, #ddd6fe 100%)'
-                : isTax
-                ? 'linear-gradient(180deg, #fef2f2 0%, #ffffff 50%, #fee2e2 100%)'
-                : isChance
-                ? 'linear-gradient(180deg, #fff7ed 0%, #ffffff 50%, #ffedd5 100%)'
-                : isCommunity
-                ? 'linear-gradient(180deg, #eef2ff 0%, #ffffff 50%, #e0e7ff 100%)'
-                : groupConf
-                ? groupConf.tintBg
-                : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%)';
+                ? `linear-gradient(180deg, ${owner.tokenColor}25 0%, #ffffff 45%, #f8fafc 100%)`
+                : 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)';
 
               const tileBorder = isLandingTarget
-                ? '3.5px solid #fbbf24'
+                ? '3px solid #fbbf24'
                 : isCorner
-                ? '2.5px solid #64748b'
+                ? '2px solid #64748b'
                 : owner
-                ? `3px solid ${owner.tokenColor}`
+                ? `2.5px solid ${owner.tokenColor}`
+                : '1.5px solid #cbd5e1';
+
+              const tileIcon = tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : null);
+              const isSpecial = isStation || isTax || isChance || isCommunity || isResort;
+
+              const headerGradient = isResort
+                ? 'linear-gradient(90deg, #4c1d95, #7c3aed)'
                 : isStation
-                ? '2.5px solid #f59e0b'
-                : isResort
-                ? '2.5px solid #8b5cf6'
+                ? 'linear-gradient(90deg, #92400e, #d97706)'
                 : isTax
-                ? '2px solid #ef4444'
+                ? 'linear-gradient(90deg, #881337, #dc2626)'
                 : isChance
-                ? '2px solid #f97316'
+                ? 'linear-gradient(90deg, #c2410c, #ea580c)'
                 : isCommunity
-                ? '2px solid #6366f1'
+                ? 'linear-gradient(90deg, #4338ca, #6366f1)'
                 : groupConf
-                ? `2px solid ${groupConf.border}`
-                : '1.5px solid #94a3b8';
+                ? groupConf.headerGradient
+                : '#64748b';
 
-              const tileIcon = tile.stationIcon || (isTax ? '🚨' : isChance ? '🎴' : isCommunity ? '🎁' : isResort ? '🏰' : '🏠');
+              const headerTitle = isResort ? 'RESORT' : isStation ? 'TRẠM' : isTax ? 'PHẠT' : isChance ? 'CƠ HỘI' : isCommunity ? 'KHÍ VẬN' : groupConf?.name || '';
 
-              const renderTileInner = () => (
-                <div className="w-full h-full flex flex-col justify-between items-center select-none overflow-hidden p-1 sm:p-1.5">
-                  {owner ? (
-                    <div
-                      className="h-[22px] sm:h-[25px] w-full shrink-0 flex items-center justify-between px-1.5 overflow-hidden rounded-t-sm border-b border-white/40"
-                      style={{
-                        background: `linear-gradient(90deg, ${owner.tokenColor}, #0f172a 90%)`,
-                        boxShadow: `0 1px 5px ${owner.tokenColor}`
-                      }}
-                    >
-                      <div className="flex items-center gap-1 min-w-0">
-                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full overflow-hidden shrink-0 border border-white bg-slate-900 flex items-center justify-center shadow-sm">
-                          {owner.avatar ? (
-                            <img src={owner.avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-[10px]">{owner.tokenEmoji}</span>
-                          )}
-                        </div>
-                        <span className="text-[9.5px] sm:text-[11px] font-black text-white truncate max-w-[65px] leading-none uppercase drop-shadow">
-                          {owner.username}
-                        </span>
-                      </div>
-                      <span className="text-[9px] sm:text-[10.5px] font-black text-amber-300 shrink-0 leading-none">
-                        {isStation ? 'TRẠM' : buildLevel === 4 ? '👑 MAX' : `Lv.${buildLevel}`}
-                      </span>
-                    </div>
-                  ) : (
-                    <div
-                      className="h-[20px] sm:h-[23px] w-full shrink-0 flex items-center justify-center overflow-hidden rounded-t-sm shadow-sm"
-                      style={{
-                        background: isResort
-                          ? 'linear-gradient(90deg, #4c1d95, #7c3aed)'
-                          : isStation
-                          ? 'linear-gradient(90deg, #92400e, #d97706)'
-                          : isTax
-                          ? 'linear-gradient(90deg, #881337, #dc2626)'
-                          : isChance
-                          ? 'linear-gradient(90deg, #c2410c, #ea580c)'
-                          : isCommunity
-                          ? 'linear-gradient(90deg, #4338ca, #6366f1)'
-                          : groupConf
-                          ? groupConf.headerGradient
-                          : '#64748b'
-                      }}
-                    >
-                      <span className="text-[9px] sm:text-[10.5px] font-black text-white tracking-wider uppercase leading-none drop-shadow-sm px-1 whitespace-nowrap truncate max-w-full">
-                        {isResort ? '👑 RESORT 5⭐' : isStation ? '⭐ TRẠM ⭐' : isTax ? '🚨 NỘP PHẠT' : isChance ? '🎴 CƠ HỘI' : isCommunity ? '🎁 KHÍ VẬN' : groupConf?.name}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="w-full flex-1 flex flex-col items-center justify-center px-1 min-h-0 py-0.5 overflow-hidden">
-                    <span className={`drop-shadow-sm leading-none shrink-0 ${isStation || isResort ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}`}>
-                      {tileIcon}
+              const renderPriceBadge = (extraClass = '') => {
+                if (owner && (tile.type === 'property' || isStation)) {
+                  const rentAmount = isStation
+                    ? (() => {
+                        const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
+                        return STATION_RENTS[stCount] || STATION_RENTS[1];
+                      })()
+                    : Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
+                  return (
+                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300 whitespace-nowrap ${extraClass}`}>
+                      {rentAmount}Đ
                     </span>
-                    <div className="w-full flex items-center justify-center text-center mt-0.5 px-0.5 min-w-0">
-                      <span
-                        className={`font-black text-center text-slate-900 leading-tight ${
-                          tile.name.length <= 12
-                            ? 'text-[12px] sm:text-[14px] whitespace-nowrap'
-                            : 'text-[10px] sm:text-[11.5px] break-normal line-clamp-2'
-                        }`}
-                        style={{ textShadow: '0 1px 2px rgba(255,255,255,0.9)' }}
-                      >
-                        {tile.name}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pb-0.5 shrink-0">
-                    {owner && (tile.type === 'property' || isStation) ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm border border-rose-300 whitespace-nowrap">
-                        {(() => {
-                          if (isStation) {
-                            const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
-                            return STATION_RENTS[stCount] || STATION_RENTS[1];
-                          }
-                          return Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
-                        })()}Đ
-                      </span>
-                    ) : tile.price ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-amber-300 text-amber-950 border border-amber-400 shadow-sm whitespace-nowrap">
-                        {tile.price}Đ
-                      </span>
-                    ) : tile.taxAmount ? (
-                      <span className="text-[9.5px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm whitespace-nowrap">
-                        -{tile.taxAmount}Đ
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              );
+                  );
+                }
+                if (tile.price) {
+                  return (
+                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-amber-200 text-amber-950 border border-amber-400 shadow-sm whitespace-nowrap ${extraClass}`}>
+                      {tile.price}Đ
+                    </span>
+                  );
+                }
+                if (tile.taxAmount) {
+                  return (
+                    <span className={`text-[8px] sm:text-[9.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-sm whitespace-nowrap ${extraClass}`}>
+                      -{tile.taxAmount}Đ
+                    </span>
+                  );
+                }
+                return null;
+              };
 
               return (
                 <div
@@ -490,17 +384,17 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                   }`}
                 >
                   {isCorner && cornerData ? (
-                    <div className="flex flex-col items-center justify-center text-center gap-1.5 p-1 w-full h-full select-none">
-                      <span className="text-3xl sm:text-4xl md:text-5xl drop-shadow">{cornerData.icon}</span>
+                    <div className="flex flex-col items-center justify-center text-center gap-1 p-1 w-full h-full select-none">
+                      <span className="text-xl sm:text-2xl drop-shadow">{cornerData.icon}</span>
                       <span
-                        className={`text-[12px] sm:text-[14px] font-black tracking-wider leading-tight text-center whitespace-nowrap ${
+                        className={`text-[10px] sm:text-[11.5px] font-black tracking-wider leading-tight text-center ${
                           cornerData.textDark ? 'text-slate-900' : 'text-white'
                         }`}
                       >
                         {cornerData.label}
                       </span>
                       <span
-                        className={`text-[10px] sm:text-[11.5px] font-black px-2.5 py-0.5 rounded-full mt-0.5 shadow-sm whitespace-nowrap ${
+                        className={`text-[8.5px] sm:text-[9.5px] font-black px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap ${
                           cornerData.textDark
                             ? 'bg-emerald-600 text-white'
                             : 'bg-black/75 text-amber-300'
@@ -509,35 +403,111 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                         {idx === 18 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
                       </span>
                     </div>
-                  ) : pos.side === 'left' ? (
-                    <div
-                      style={{
-                        width: '100cqh',
-                        height: '100cqw',
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%) rotate(90deg)'
-                      }}
-                    >
-                      {renderTileInner()}
+                  ) : pos.side === 'bottom' ? (
+                    <div className="w-full h-full flex flex-col justify-between items-center p-1 select-none">
+                      <div
+                        className="h-[15px] w-full shrink-0 flex items-center justify-center rounded-t-sm shadow-xs overflow-hidden"
+                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                      >
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
+                        </span>
+                      </div>
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0">
+                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                        <span
+                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          style={{
+                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '10.5px' : '9.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                          }}
+                        >
+                          {tile.name}
+                        </span>
+                      </div>
+                      <div className="shrink-0 pb-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
                     </div>
-                  ) : pos.side === 'right' ? (
-                    <div
-                      style={{
-                        width: '100cqh',
-                        height: '100cqw',
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%) rotate(-90deg)'
-                      }}
-                    >
-                      {renderTileInner()}
+                  ) : pos.side === 'top' ? (
+                    <div className="w-full h-full flex flex-col justify-between items-center p-1 select-none">
+                      <div className="shrink-0 pt-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0">
+                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                        <span
+                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          style={{
+                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '10.5px' : '9.5px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                          }}
+                        >
+                          {tile.name}
+                        </span>
+                      </div>
+                      <div
+                        className="h-[15px] w-full shrink-0 flex items-center justify-center rounded-b-sm shadow-xs overflow-hidden"
+                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                      >
+                        <span className="text-[7.5px] sm:text-[8.5px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
+                        </span>
+                      </div>
+                    </div>
+                  ) : pos.side === 'left' ? (
+                    <div className="w-full h-full flex flex-row items-center justify-between p-1 select-none">
+                      <div className="shrink-0 pl-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
+                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0">
+                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                        <span
+                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          style={{
+                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '11px' : '10px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                          }}
+                        >
+                          {tile.name}
+                        </span>
+                        {owner && (
+                          <span className="text-[7.5px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                            {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="w-[12px] h-full shrink-0 rounded-r-sm shadow-xs"
+                        style={{ background: owner ? owner.tokenColor : headerGradient }}
+                      />
                     </div>
                   ) : (
-                    <div className="w-full h-full">
-                      {renderTileInner()}
+                    <div className="w-full h-full flex flex-row items-center justify-between p-1 select-none">
+                      <div
+                        className="w-[12px] h-full shrink-0 rounded-l-sm shadow-xs"
+                        style={{ background: owner ? owner.tokenColor : headerGradient }}
+                      />
+                      <div className="h-full flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0">
+                        {isSpecial && <span className="text-xs mb-0.5">{tileIcon}</span>}
+                        <span
+                          className="font-black text-slate-900 leading-snug break-words max-w-full text-center"
+                          style={{
+                            fontSize: tile.name.length <= 6 ? '12px' : tile.name.length <= 9 ? '11px' : '10px',
+                            textShadow: '0 1px 2px rgba(255,255,255,0.95)'
+                          }}
+                        >
+                          {tile.name}
+                        </span>
+                        {owner && (
+                          <span className="text-[7.5px] font-bold text-amber-800 leading-none mt-0.5 truncate max-w-full">
+                            {owner.username} • {isStation ? 'TRẠM' : `Lv.${buildLevel}`}
+                          </span>
+                        )}
+                      </div>
+                      <div className="shrink-0 pr-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
                     </div>
                   )}
 
@@ -652,7 +622,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     style={
                       !isHopping
                         ? {
-                            transform: 'translate(-50%, -50%) rotateZ(45deg) rotateX(-50deg)',
+                            transform: 'rotateZ(45deg) rotateX(-50deg)',
                             transformOrigin: 'bottom center'
                           }
                         : {
