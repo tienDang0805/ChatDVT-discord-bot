@@ -459,11 +459,16 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                       </div>
                     </div>
                   ) : pos.side === 'left' ? (
-                    <div className="w-full h-full flex flex-row items-stretch justify-between p-0.5 select-none overflow-hidden">
-                      <div className="shrink-0 flex items-center justify-center pl-0.5">
-                        {renderPriceBadge()}
+                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
+                      <div
+                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-t-xs shadow-xs overflow-hidden"
+                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                      >
+                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
+                        </span>
                       </div>
-                      <div className="flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0 overflow-hidden">
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
                         {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
                           className="font-black text-slate-900 leading-tight text-center max-w-full"
@@ -482,18 +487,16 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                           </span>
                         )}
                       </div>
-                      <div
-                        className="w-[8px] shrink-0 rounded-r-xs shadow-xs"
-                        style={{ background: owner ? owner.tokenColor : headerGradient }}
-                      />
+                      <div className="shrink-0 pb-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
                     </div>
                   ) : (
-                    <div className="w-full h-full flex flex-row items-stretch justify-between p-0.5 select-none overflow-hidden">
-                      <div
-                        className="w-[8px] shrink-0 rounded-l-xs shadow-xs"
-                        style={{ background: owner ? owner.tokenColor : headerGradient }}
-                      />
-                      <div className="flex-1 flex flex-col items-center justify-center text-center px-1 min-w-0 overflow-hidden">
+                    <div className="w-full h-full flex flex-col items-stretch justify-between p-0.5 select-none overflow-hidden">
+                      <div className="shrink-0 pt-0.5 flex items-center justify-center">
+                        {renderPriceBadge()}
+                      </div>
+                      <div className="w-full flex-1 flex flex-col items-center justify-center text-center px-0.5 py-0.5 min-h-0 overflow-hidden">
                         {isSpecial && <span className="text-[10px] leading-none mb-0.5 shrink-0">{tileIcon}</span>}
                         <span
                           className="font-black text-slate-900 leading-tight text-center max-w-full"
@@ -512,8 +515,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="shrink-0 flex items-center justify-center pr-0.5">
-                        {renderPriceBadge()}
+                      <div
+                        className="h-[13px] w-full shrink-0 flex items-center justify-center rounded-b-xs shadow-xs overflow-hidden"
+                        style={{ background: owner ? `linear-gradient(90deg, ${owner.tokenColor}, #0f172a)` : headerGradient }}
+                      >
+                        <span className="text-[7px] font-black text-white uppercase tracking-wider truncate px-0.5">
+                          {owner ? (isStation ? `${owner.username} • TRẠM` : `${owner.username} • Lv.${buildLevel}`) : headerTitle}
+                        </span>
                       </div>
                     </div>
                   )}
