@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { usePageTracker } from '../../../../shared/hooks/usePageTracker';
 import { Link, useNavigate } from 'react-router-dom';
-import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote, Menu, Star, History, Dices } from 'lucide-react';
+import { BrainCircuit, Cat, Sparkles, Github, Rocket, Heart, Coffee, AlertTriangle, Music2, Wallet, X, Search, ArrowUp, Moon, Sun, Scan, Briefcase, Bot, Hash, Rainbow, QrCode, Eye, Flame, PenLine, Crosshair, Zap, Feather, Palette, ScanFace, MoonStar, Swords, Shuffle, Share2, ExternalLink, BookOpen, Shield, GitBranch, Check, Calendar, Clock, CreditCard, ChevronRight, Play, Smartphone, StickyNote, Menu, Star, History, Dices, Link2 } from 'lucide-react';
 import { useTheme } from '../../../../shared/contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
@@ -647,6 +647,17 @@ export const PublicPortal = () => {
       href: '/monopoly',
       author: 'Địa Chủ Tiến Đặng',
       category: 'game',
+      isNew: true
+    },
+    {
+      id: 'deeplink-tester',
+      number: '34',
+      title: 'Deep Link Tester',
+      description: 'Soạn thảo, parse tham số URL, sinh mã QR quét điện thoại, tạo lệnh ADB / Simctl 1 chạm và kiểm tra cấu hình AASA / AssetLinks cho Mobile Dev.',
+      icon: Link2,
+      href: '/deeplink-tester',
+      author: 'Mobile Dev Tools (Tiến Đặng)',
+      category: 'mobile_unity',
       isNew: true
     }
   ];
