@@ -103,7 +103,7 @@ export const QRGenerator = () => {
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.title = 'Tạo Mã QR Custom | ChatDVT Portal';
+    document.title = 'Tạo Mã QR Custom | Tiến Đặng';
   }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

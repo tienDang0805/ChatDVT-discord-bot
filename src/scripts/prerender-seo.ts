@@ -1,65 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { injectSeoMeta, generateSitemapXml } from '../api/seo';
+import { generateSitemapXml, getIndexableRoutePaths, injectSeoMeta } from '../api/seo';
 
 const CLIENT_DIST = path.join(__dirname, '../../client/dist');
 
-const PRERENDER_ROUTES = [
-  '/',
-  '/playground',
-  '/mobile',
-  '/discord',
-  '/blog',
-  '/blog/chatdvt-phan-1',
-  '/me',
-  '/food-wheel',
-  '/excuse-generator',
-  '/handsome',
-  '/cv-review',
-  '/music',
-  '/pixel-agents',
-  '/numerology',
-  '/gender-quiz',
-  '/astrology',
-  '/qr-generator',
-  '/cost-study',
-  '/tarot',
-  '/magic-ball',
-  '/deep-status',
-  '/chicken-game',
-  '/burnout-check',
-  '/poem-generator',
-  '/chibi-sticker',
-  '/face-reader',
-  '/dream-interpreter',
-  '/tech-duel',
-  '/english',
-  '/english/chat',
-  '/english/flashcard',
-  '/english/challenge',
-  '/english/dictionary',
-  '/english/daily-puzzle',
-  '/english/word-sprint',
-  '/english/spelling-bee',
-  '/english/course',
-  '/english/writing',
-  '/english/dictation',
-  '/english/scramble',
-  '/english/word-match',
-  '/english/idiom-quest',
-  '/english/context-clues',
-  '/petlandingpage',
-  '/tutien',
-  '/quiz',
-  '/mermaid-editor',
-  '/mermaid-tutorial',
-  '/digital-detox',
-  '/poe2-trade-link',
-  '/note-daily',
-  '/love8d',
-  '/profile',
-  '/emulator-check',
-];
+const PRERENDER_ROUTES = getIndexableRoutePaths();
 
 function prerender(): void {
   const indexHtmlPath = path.join(CLIENT_DIST, 'index.html');

@@ -9,7 +9,11 @@ import { featuredProjects, utilityItems } from '../content/siteData';
 const mobileTools = utilityItems.filter(item => ['deeplink', 'webview', 'qr'].includes(item.id));
 
 export function HomePage() {
-  usePageMeta('Tiến Đặng — Mobile Developer');
+  usePageMeta('Tiến Đặng — Mobile Developer React Native & Android', {
+    description: 'Portfolio của Đặng Văn Tiến, dev mobile React Native và Android/Kotlin tại TP.HCM. Dự án cá nhân, mobile utility, ChatDVT và những ghi chép lúc làm sản phẩm.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, Mobile Developer, React Native, Android, Kotlin, devtiendang',
+    schema: 'website',
+  });
   usePageTracker('Home');
 
   return <SiteLayout>

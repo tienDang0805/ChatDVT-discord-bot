@@ -22,7 +22,14 @@ export function BlogArticlePage() {
   const [post, setPost] = useState<BlogPost | null>(fallback);
   const [loading, setLoading] = useState(true);
   const safeContent = useMemo(() => post ? sanitizeBlogHtml(post.content) : '', [post]);
-  usePageMeta(post?.title || 'Bài viết — Tiến Đặng', post?.excerpt || 'Bài viết trên devtiendang.blog.');
+  usePageMeta(post?.title || 'Bài viết — Tiến Đặng', {
+    description: post?.excerpt || 'Bài viết trên devtiendang.blog.',
+    type: 'article',
+    schema: 'article',
+    noIndex: !post && !loading,
+    publishedTime: post?.publishedAt,
+    modifiedTime: post?.updatedAt,
+  });
   usePageTracker(`BlogArticle:${slug}`);
 
   useEffect(() => {

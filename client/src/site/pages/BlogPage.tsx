@@ -17,7 +17,11 @@ function formatDate(value: string | null): string {
 
 export function BlogPage() {
   const [posts, setPosts] = useState<BlogPostSummary[]>([DEFAULT_BLOG_POST]);
-  usePageMeta('Blog — Tiến Đặng', 'Mấy bài mình viết lại trong lúc làm mobile, ChatDVT và các project cá nhân.');
+  usePageMeta('Blog về mobile, bot và side project | Tiến Đặng', {
+    description: 'Mấy bài mình viết lại trong lúc làm mobile, ChatDVT và các project cá nhân.',
+    keywords: 'blog mobile developer, React Native, Android, ChatDVT, Discord bot, side project, Tiến Đặng',
+    schema: 'blog',
+  });
   usePageTracker('Blog');
 
   useEffect(() => {

@@ -154,7 +154,7 @@ export const EmulatorCheck = () => {
   }, [calculateScale]);
 
   useEffect(() => {
-    document.title = 'WebView Simulator | ChatDVT Portal';
+    document.title = 'WebView Simulator | Tiến Đặng';
   }, []);
 
   useEffect(() => {

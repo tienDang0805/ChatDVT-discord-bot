@@ -14,7 +14,11 @@ const capabilities = [
 ];
 
 export function DiscordPage() {
-  usePageMeta('ChatDVT Discord Bot');
+  usePageMeta('ChatDVT — Discord Bot | Tiến Đặng', {
+    description: 'ChatDVT là Discord bot mình làm cho nhóm 8D, gồm AI chat, hệ thống kinh tế, pet và mini game.',
+    keywords: 'ChatDVT, Discord bot, Discord.js, Gemini, Prisma, Discord mini game',
+    schema: 'software',
+  });
   usePageTracker('DiscordBot');
   return <SiteLayout>
     <section className="discord-hero"><div className="site-container discord-hero__content"><BotAvatar className="discord-avatar" /><p className="site-kicker">Discord Bot</p><h1>ChatDVT</h1><p>Bot Discord của nhóm 8D, gồm AI chat, hệ thống kinh tế, pet và mini game.</p><div className="site-hero__actions"><a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> Thêm vào server</a><a className="site-button" href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer"><Github size={18} /> Source code</a></div></div></section>

@@ -10,7 +10,11 @@ const groups: Array<{ ids: string[]; eyebrow: string; title: string; description
 ];
 
 export function MobilePage() {
-  usePageMeta('Mobile Utility — Tiến Đặng');
+  usePageMeta('Mobile Utility — React Native & Android | Tiến Đặng', {
+    description: 'Các công cụ mình dùng khi làm mobile: kiểm tra deep link, WebView, tạo QR, cùng tài liệu React Native và Android/Kotlin.',
+    keywords: 'mobile utility, React Native, Android, Kotlin, deep link tester, WebView simulator, QR generator',
+    schema: 'collection',
+  });
   usePageTracker('MobileUtility');
   return <SiteLayout>
     <section className="page-hero"><div className="site-container page-hero__grid"><div><p className="site-kicker">React Native · Android/Kotlin</p><h1>Mobile Utility</h1><p className="page-hero__aside">Deep link, WebView, QR và ghi chú React Native mình gom lại để dùng hằng ngày.</p></div></div></section>

@@ -15,7 +15,11 @@ const socials = [
 ];
 
 export function MePage() {
-  usePageMeta('Đặng Văn Tiến — Mobile Developer');
+  usePageMeta('Đặng Văn Tiến — Mobile Developer React Native & Android', {
+    description: 'Mình là dev mobile React Native và Android/Kotlin tại TP.HCM. Đây là nơi mình ghi lại kinh nghiệm, project đã làm và cách liên hệ.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, React Native developer, Android developer, Kotlin developer, TP.HCM',
+    schema: 'profile',
+  });
   usePageTracker('Me');
 
   return <SiteLayout>

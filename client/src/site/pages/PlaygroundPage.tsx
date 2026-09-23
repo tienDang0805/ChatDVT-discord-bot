@@ -27,7 +27,11 @@ function categoryOf(item: SiteItem): Exclude<PlaygroundFilter, 'all'> {
 }
 
 export function PlaygroundPage() {
-  usePageMeta('Playground — Tiến Đặng');
+  usePageMeta('Playground — Game và project nhỏ | Tiến Đặng', {
+    description: 'Một vài game, demo AI và project web mình làm để thử ý tưởng, gồm Survivor Arena 8D, Web Quiz AI và Chibi Sticker.',
+    keywords: 'Tiến Đặng playground, Survivor Arena 8D, Web Quiz AI, Chibi Sticker, web game, side project',
+    schema: 'collection',
+  });
   usePageTracker('Playground');
   const [tab, setTab] = useState<PlaygroundFilter>('all');
   const [query, setQuery] = useState('');

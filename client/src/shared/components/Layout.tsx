@@ -94,7 +94,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar */}
       <aside className={clsx(
-        "fixed md:relative inset-y-0 left-0 w-64 bg-slate-50 dark:bg-surface border-r border-slate-200 dark:border-slate-700/50 flex flex-col p-4 z-50 transition-transform duration-300 shadow-2xl md:shadow-none",
+        "fixed md:relative inset-y-0 left-0 w-64 min-h-0 overflow-hidden bg-slate-50 dark:bg-surface border-r border-slate-200 dark:border-slate-700/50 flex flex-col p-4 z-50 transition-transform duration-300 shadow-2xl md:shadow-none",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       )}>
         
@@ -106,7 +106,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <X size={20} />
         </button>
 
-        <div className="flex items-center gap-3 px-4 py-6 mb-6 relative z-10 group cursor-default">
+        <div className="flex shrink-0 items-center gap-3 px-4 py-6 mb-6 relative z-10 group cursor-default">
           {botInfo?.avatar ? (
              <div className="relative">
                 <div className="absolute inset-0 bg-primary/30 rounded-full blur-md animate-pulse"></div>
@@ -133,7 +133,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2 mt-4 md:mt-0">
+        <nav className="min-h-0 flex-1 space-y-2 mt-4 md:mt-0 overflow-y-auto overscroll-contain pr-1">
           <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/admin/prompts" icon={ScrollText} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
           <NavItem to="/admin/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
@@ -170,7 +170,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           </button>
         </nav>
 
-        <div className="mt-4 px-4 py-4 border-t border-slate-200 dark:border-slate-700/50">
+        <div className="mt-4 shrink-0 px-4 py-4 border-t border-slate-200 dark:border-slate-700/50">
           <div className="text-xs text-slate-500">
             v2.0.0 (Hybrid)
             <br />

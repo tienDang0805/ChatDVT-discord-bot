@@ -1,7 +1,7 @@
 {
-  "name": "Tiến Đặng — Mobile Developer",
+  "name": "Tiến Đặng — Mobile Developer React Native & Android",
   "short_name": "Tiến Đặng",
-  "description": "Dự án, công cụ mobile và ghi chú kỹ thuật của Đặng Văn Tiến",
+  "description": "Portfolio của Đặng Văn Tiến: dự án mobile, utility, ChatDVT và blog.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d1117",

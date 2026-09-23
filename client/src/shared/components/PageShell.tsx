@@ -42,7 +42,7 @@ export const PageShell = ({
           : resolvedBackTo === '/' ? 'Trang chủ'
             : 'Quay lại'
   );
-  usePageMeta(title);
+  usePageMeta(title, subtitle);
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 relative">
       <style>{`

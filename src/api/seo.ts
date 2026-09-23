@@ -1,59 +1,97 @@
 import { Request, Response, Router } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { prisma } from '../database/prisma';
 
 const SITE_URL = 'https://devtiendang.blog';
 const DEFAULT_OG_IMAGE = 'https://devtiendang.blog/site-og.png';
+const AUTHOR_SCHEMA = {
+  '@type': 'Person',
+  '@id': `${SITE_URL}/me#person`,
+  name: 'Đặng Văn Tiến',
+  alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
+  url: `${SITE_URL}/me`,
+  jobTitle: 'Mobile Developer',
+  sameAs: [
+    'https://github.com/tienDang0805',
+    'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
+    'https://www.facebook.com/dvtien8599',
+  ],
+};
+const INDEXABLE_PATHS = new Set([
+  '/', '/playground', '/mobile', '/discord', '/me', '/blog',
+  '/blog/chatdvt-phan-1', '/survivor-arena', '/quiz', '/chibi-sticker',
+  '/mermaid-editor', '/mermaid-tutorial', '/cv-review', '/english',
+  '/english/chat', '/english/flashcard', '/english/challenge',
+  '/english/dictionary', '/english/daily-puzzle', '/english/word-sprint',
+  '/english/spelling-bee', '/english/course', '/english/writing',
+  '/english/dictation', '/english/scramble', '/english/word-match',
+  '/english/idiom-quest', '/english/context-clues', '/deeplink-tester',
+  '/emulator-check', '/qr-generator', '/rn-learning-guide', '/pd-learning-guide',
+]);
 
 interface RouteMeta {
   title: string;
   description: string;
   keywords?: string;
   image?: string;
+  imageAlt?: string;
+  pageType?: 'website' | 'profile' | 'collection' | 'software' | 'blog' | 'article' | 'webapp';
+  ogType?: 'website' | 'article';
+  indexable?: boolean;
+  publishedTime?: string;
+  modifiedTime?: string;
+  lastmod?: string;
   priority?: number;
   changefreq?: 'daily' | 'weekly' | 'monthly' | 'yearly';
 }
 
 const ROUTE_META: Record<string, RouteMeta> = {
   '/': {
-    title: 'Tiến Đặng — Mobile Developer',
-    description: 'Trang cá nhân của Đặng Văn Tiến, Mobile Developer làm việc với React Native và Android/Kotlin.',
-    keywords: 'Tiến Đặng, Đặng Văn Tiến, devtiendang, mobile developer, React Native, Kotlin, ChatDVT, Discord bot, playground',
+    title: 'Tiến Đặng — Mobile Developer React Native & Android',
+    description: 'Portfolio của Đặng Văn Tiến, dev mobile React Native và Android/Kotlin tại TP.HCM. Dự án cá nhân, mobile utility, ChatDVT và những ghi chép lúc làm sản phẩm.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, devtiendang, Mobile Developer, React Native, Android, Kotlin, ChatDVT',
+    pageType: 'website',
     priority: 1.0,
     changefreq: 'weekly',
   },
   '/playground': {
-    title: 'Playground — Tiến Đặng',
-    description: 'Danh sách game, công cụ AI và các project web nhỏ của Đặng Văn Tiến.',
-    keywords: 'web playground, AI tools, mini game, side project, Tiến Đặng',
+    title: 'Playground — Game và project nhỏ | Tiến Đặng',
+    description: 'Một vài game, demo AI và project web mình làm để thử ý tưởng, gồm Survivor Arena 8D, Web Quiz AI và Chibi Sticker.',
+    keywords: 'Tiến Đặng playground, Survivor Arena 8D, Web Quiz AI, Chibi Sticker, web game, side project',
+    pageType: 'collection',
     priority: 0.9,
     changefreq: 'weekly',
   },
   '/mobile': {
-    title: 'Công cụ mobile — Tiến Đặng',
-    description: 'Deep link, WebView, QR và tài liệu phục vụ công việc React Native, Android và iOS.',
-    keywords: 'mobile utility, React Native, Kotlin, Android, iOS, deep link tester, WebView tester',
+    title: 'Mobile Utility — React Native & Android | Tiến Đặng',
+    description: 'Các công cụ mình dùng khi làm mobile: kiểm tra deep link, WebView, tạo QR, cùng tài liệu React Native và Android/Kotlin.',
+    keywords: 'mobile utility, React Native, Android, Kotlin, deep link tester, WebView simulator, QR generator',
+    pageType: 'collection',
     priority: 0.9,
     changefreq: 'weekly',
   },
   '/discord': {
-    title: 'ChatDVT Discord Bot — Tiến Đặng',
-    description: 'ChatDVT là Discord bot gồm AI chat, hệ thống kinh tế, pet và mini game.',
-    keywords: 'ChatDVT, Discord bot, AI chatbot, Discord game, pet RPG',
+    title: 'ChatDVT — Discord Bot | Tiến Đặng',
+    description: 'ChatDVT là Discord bot mình làm cho nhóm 8D, gồm AI chat, hệ thống kinh tế, pet và mini game.',
+    keywords: 'ChatDVT, Discord bot, Discord.js, Gemini, Prisma, Discord mini game',
+    pageType: 'software',
     priority: 0.8,
     changefreq: 'weekly',
   },
   '/me': {
-    title: 'Đặng Văn Tiến — Mobile Developer',
-    description: 'Thông tin nghề nghiệp, dự án và tài liệu của Đặng Văn Tiến, Mobile Developer tại TP.HCM.',
+    title: 'Đặng Văn Tiến — Mobile Developer React Native & Android',
+    description: 'Mình là dev mobile React Native và Android/Kotlin tại TP.HCM. Đây là nơi mình ghi lại kinh nghiệm, project đã làm và cách liên hệ.',
     keywords: 'Đặng Văn Tiến, Tiến Đặng, mobile developer, React Native developer, Kotlin developer',
+    pageType: 'profile',
     priority: 0.8,
     changefreq: 'monthly',
   },
   '/blog': {
-    title: 'Blog — Tiến Đặng',
-    description: 'Chuyện làm app, làm bot và các project cá nhân của Đặng Văn Tiến.',
+    title: 'Blog về mobile, bot và side project | Tiến Đặng',
+    description: 'Mấy bài mình viết lại trong lúc làm mobile, ChatDVT và các project cá nhân.',
     keywords: 'blog lập trình, mobile developer, ChatDVT, React Native, Discord bot, Tiến Đặng',
+    pageType: 'blog',
     priority: 0.8,
     changefreq: 'weekly',
   },
@@ -61,7 +99,44 @@ const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Vì sao một Mobile Dev lại đi làm bot? — ChatDVT Phần 1 | Tiến Đặng',
     description: 'ChatDVT bắt đầu từ một trò troll trong group Telegram, rồi đi qua Apps Script, Gemini, Discord.js và những căn nhà cloud đầu tiên.',
     keywords: 'ChatDVT, Telegram bot, Discord bot, Gemini, Google Apps Script, Node.js, cloud',
+    pageType: 'article',
+    ogType: 'article',
+    publishedTime: '2026-09-23T00:00:00.000Z',
+    modifiedTime: '2026-09-23T00:00:00.000Z',
+    lastmod: '2026-09-23',
     priority: 0.8,
+    changefreq: 'monthly',
+  },
+  '/survivor-arena': {
+    title: 'Survivor Arena 8D — Web game | Tiến Đặng',
+    description: 'Auto-shooter roguelike mình làm để thử game loop, canvas, điều khiển cảm ứng, 50 đợt quái và hệ thống nâng cấp kỹ năng.',
+    keywords: 'Survivor Arena 8D, web game, canvas game, roguelike, auto shooter, Tiến Đặng',
+    pageType: 'webapp',
+    priority: 0.7,
+    changefreq: 'monthly',
+  },
+  '/deeplink-tester': {
+    title: 'Deep Link Tester cho iOS và Android | Tiến Đặng',
+    description: 'Soạn và kiểm tra deep link, Universal Link và App Link; tạo QR cùng lệnh ADB hoặc Simctl để mở app nhanh.',
+    keywords: 'deep link tester, Universal Link, Android App Link, ADB, Simctl, React Native',
+    pageType: 'webapp',
+    priority: 0.8,
+    changefreq: 'monthly',
+  },
+  '/rn-learning-guide': {
+    title: 'React Native Learning Guide | Tiến Đặng',
+    description: 'Tài liệu React Native từ JS/TS, React core và navigation đến native architecture, testing, security và CI/CD.',
+    keywords: 'React Native guide, React Native architecture, Kotlin Android, mobile development, Tiến Đặng',
+    pageType: 'collection',
+    priority: 0.8,
+    changefreq: 'monthly',
+  },
+  '/pd-learning-guide': {
+    title: 'Physical Design căn bản — Floorplan đến Signoff | Tiến Đặng',
+    description: 'Tài liệu Physical Design căn bản gồm floorplan, powerplan, CTS, routing, timing closure và signoff.',
+    keywords: 'Physical Design, VLSI, floorplan, CTS, timing closure, signoff',
+    pageType: 'collection',
+    priority: 0.6,
     changefreq: 'monthly',
   },
   '/food-wheel': {
@@ -103,6 +178,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Văn Phòng 8D Pixel — Chat AI Real-time | ChatDVT',
     description: 'Phòng chat pixel art real-time với 5 AI agents cá tính, chat bựa kiểu Gen Z Việt Nam.',
     keywords: 'pixel art chat, ai chat room, 8d office, chat ai vui',
+    indexable: false,
     priority: 0.7,
     changefreq: 'monthly',
   },
@@ -376,6 +452,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Love 8D — Tình Yêu Văn Phòng 8D | ChatDVT',
     description: 'Trang kỷ niệm tình yêu và câu chuyện của nhóm 8D.',
     keywords: 'love 8d, tình yêu',
+    indexable: false,
     priority: 0.3,
     changefreq: 'yearly',
   },
@@ -383,36 +460,131 @@ const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Hồ Sơ Cá Nhân | ChatDVT',
     description: 'Xem thông tin cá nhân, thành tích và lịch sử hoạt động trên ChatDVT.',
     keywords: 'profile, hồ sơ cá nhân, chatdvt profile',
+    indexable: false,
     priority: 0.4,
     changefreq: 'monthly',
   },
   '/emulator-check': {
-    title: 'Emulator Check — Phát Hiện Giả Lập | ChatDVT',
-    description: 'Kiểm tra thiết bị đang dùng có phải giả lập (emulator) hay không.',
-    keywords: 'emulator check, phát hiện giả lập, emulator detection',
-    priority: 0.4,
-    changefreq: 'yearly',
+    title: 'WebView Simulator — Chạy thử HTML trên khung mobile | Tiến Đặng',
+    description: 'Dán HTML, CSS và JavaScript để chạy thử trong khung WebView mobile, đổi kích thước thiết bị và xem debug console.',
+    keywords: 'WebView simulator, mobile WebView, HTML preview, React Native WebView, debug console',
+    pageType: 'webapp',
+    priority: 0.7,
+    changefreq: 'monthly',
+  },
+  '/hbd': {
+    title: 'Trang riêng tư | Tiến Đặng',
+    description: 'Trang riêng tư không xuất hiện trên danh mục công khai.',
+    indexable: false,
+  },
+  '/pixel-agents-activity': {
+    title: 'Pixel Agents Activity | Tiến Đặng',
+    description: 'Discord Activity của Pixel Agents.',
+    indexable: false,
+  },
+  '/flappy-bird-activity': {
+    title: 'Flappy Bird Activity | Tiến Đặng',
+    description: 'Discord Activity của Flappy Bird.',
+    indexable: false,
+  },
+  '/survivor-arena-activity': {
+    title: 'Survivor Arena Activity | Tiến Đặng',
+    description: 'Discord Activity của Survivor Arena.',
+    indexable: false,
+  },
+  '/activity': {
+    title: 'Discord Activity | Tiến Đặng',
+    description: 'Điểm vào dành cho Discord Activity.',
+    indexable: false,
+  },
+  '/quiz/room': {
+    title: 'Phòng Web Quiz | Tiến Đặng',
+    description: 'Phòng chơi Web Quiz theo thời gian thực.',
+    indexable: false,
+  },
+  '/login': {
+    title: 'Đăng nhập quản trị | Tiến Đặng',
+    description: 'Trang đăng nhập dành cho quản trị viên.',
+    indexable: false,
+  },
+  '/admin': {
+    title: 'Quản trị | Tiến Đặng',
+    description: 'Khu vực quản trị riêng.',
+    indexable: false,
   },
 };
 
-export function getRouteMeta(pathname: string): RouteMeta | null {
-  if (ROUTE_META[pathname]) return ROUTE_META[pathname];
-
-  const dynamicMatch = Object.keys(ROUTE_META).find(
-    (pattern) => pathname.startsWith(pattern + '/')
-  );
-  return dynamicMatch ? ROUTE_META[dynamicMatch] : null;
+function normalizePathname(pathname: string): string {
+  if (!pathname || pathname === '/') return '/';
+  return pathname.replace(/\/+$/, '') || '/';
 }
 
-export function generateSitemapXml(): string {
-  const today = new Date().toISOString().split('T')[0];
-  const urls = Object.entries(ROUTE_META)
-    .map(([path, meta]) => {
+function normalizePortfolioTitle(title: string): string {
+  const normalized = title
+    .replace(/\s*\|\s*ChatDVT$/, ' | Tiến Đặng')
+    .replace(/\s*—\s*ChatDVT$/, ' | Tiến Đặng');
+  return /Tiến Đặng|Đặng Văn Tiến|devtiendang/i.test(normalized)
+    ? normalized
+    : `${normalized} | Tiến Đặng`;
+}
+
+function isIndexableRoute(route: string, meta: RouteMeta): boolean {
+  return meta.indexable ?? INDEXABLE_PATHS.has(route);
+}
+
+export function getRouteMeta(pathname: string): RouteMeta | null {
+  const normalizedPath = normalizePathname(pathname);
+  const exact = ROUTE_META[normalizedPath];
+  if (exact) return {
+    ...exact,
+    title: normalizePortfolioTitle(exact.title),
+    indexable: isIndexableRoute(normalizedPath, exact),
+  };
+
+  const dynamicMatch = Object.keys(ROUTE_META)
+    .sort((a, b) => b.length - a.length)
+    .find((pattern) => normalizedPath.startsWith(`${pattern}/`));
+  if (!dynamicMatch) return null;
+  const meta = ROUTE_META[dynamicMatch];
+  return {
+    ...meta,
+    title: normalizePortfolioTitle(meta.title),
+    indexable: isIndexableRoute(dynamicMatch, meta),
+  };
+}
+
+export function getIndexableRoutePaths(): string[] {
+  return Object.entries(ROUTE_META)
+    .filter(([route, meta]) => isIndexableRoute(route, meta))
+    .map(([route]) => route);
+}
+
+interface SitemapEntry {
+  path: string;
+  lastmod?: string;
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+export function generateSitemapXml(additionalEntries: SitemapEntry[] = []): string {
+  const entries = new Map<string, SitemapEntry>();
+  Object.entries(ROUTE_META)
+    .filter(([route, meta]) => isIndexableRoute(route, meta))
+    .forEach(([route, meta]) => entries.set(route, { path: route, lastmod: meta.lastmod }));
+  additionalEntries.forEach((entry) => entries.set(normalizePathname(entry.path), entry));
+
+  const urls = Array.from(entries.values())
+    .map(({ path: route, lastmod }) => {
+      const lastmodTag = lastmod ? `\n    <lastmod>${escapeXml(lastmod)}</lastmod>` : '';
       return `  <url>
-    <loc>${SITE_URL}${path}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>${meta.changefreq || 'monthly'}</changefreq>
-    <priority>${meta.priority ?? 0.5}</priority>
+    <loc>${escapeXml(`${SITE_URL}${route === '/' ? '/' : route}`)}</loc>${lastmodTag}
   </url>`;
     })
     .join('\n');
@@ -431,14 +603,73 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;');
 }
 
-export function injectSeoMeta(html: string, pathname: string): string {
-  const meta = getRouteMeta(pathname);
+function upsertHeadTag(html: string, pattern: RegExp, tag: string): string {
+  if (pattern.test(html)) return html.replace(pattern, tag);
+  return html.replace('</head>', `    ${tag}\n  </head>`);
+}
+
+function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: string) {
+  const base = {
+    '@context': 'https://schema.org',
+    name: meta.title,
+    description: meta.description,
+    url: canonicalUrl,
+  };
+
+  switch (meta.pageType || 'webapp') {
+    case 'website':
+      return { ...base, '@type': 'WebSite', author: AUTHOR_SCHEMA };
+    case 'profile':
+      return { ...base, '@type': 'ProfilePage', mainEntity: AUTHOR_SCHEMA };
+    case 'collection':
+      return { ...base, '@type': 'CollectionPage', author: AUTHOR_SCHEMA };
+    case 'software':
+      return {
+        ...base,
+        '@type': 'SoftwareApplication',
+        applicationCategory: 'EntertainmentApplication',
+        operatingSystem: 'Discord',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
+        author: AUTHOR_SCHEMA,
+      };
+    case 'blog':
+      return { ...base, '@type': 'Blog', author: AUTHOR_SCHEMA };
+    case 'article':
+      return {
+        ...base,
+        '@type': 'BlogPosting',
+        headline: meta.title,
+        image: ogImage,
+        mainEntityOfPage: canonicalUrl,
+        datePublished: meta.publishedTime,
+        dateModified: meta.modifiedTime || meta.publishedTime,
+        author: AUTHOR_SCHEMA,
+      };
+    default:
+      return {
+        ...base,
+        '@type': 'WebApplication',
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'All',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
+        author: AUTHOR_SCHEMA,
+      };
+  }
+}
+
+export function injectSeoMeta(html: string, pathname: string, overrideMeta?: RouteMeta): string {
+  const normalizedPath = normalizePathname(pathname);
+  const meta = overrideMeta || getRouteMeta(normalizedPath);
   if (!meta) return html;
 
   const safeTitle = escapeHtml(meta.title);
   const safeDesc = escapeHtml(meta.description);
-  const canonicalUrl = `${SITE_URL}${pathname}`;
+  const canonicalUrl = `${SITE_URL}${normalizedPath === '/' ? '/' : normalizedPath}`;
   const ogImage = meta.image || DEFAULT_OG_IMAGE;
+  const imageAlt = meta.imageAlt || `${meta.title} — devtiendang.blog`;
+  const robots = meta.indexable === false
+    ? 'noindex, nofollow'
+    : 'index, follow, max-image-preview:large';
 
   let result = html;
 
@@ -482,9 +713,10 @@ export function injectSeoMeta(html: string, pathname: string): string {
     `<meta name="twitter:description" content="${safeDesc}"`
   );
 
-  result = result.replace(
-    /<meta property="twitter:url" content="[^"]*"/,
-    `<meta property="twitter:url" content="${canonicalUrl}"`
+  result = upsertHeadTag(
+    result,
+    /<meta name="twitter:url" content="[^"]*"\s*\/?>/,
+    `<meta name="twitter:url" content="${canonicalUrl}" />`
   );
 
   result = result.replace(
@@ -492,77 +724,35 @@ export function injectSeoMeta(html: string, pathname: string): string {
     `<meta name="twitter:image" content="${ogImage}"`
   );
 
-  const keywordsMeta = meta.keywords
-    ? `<meta name="keywords" content="${escapeHtml(meta.keywords)}">`
-    : '';
+  result = upsertHeadTag(result, /<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="${robots}" />`);
+  result = upsertHeadTag(result, /<meta property="og:type" content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${meta.ogType || (meta.pageType === 'article' ? 'article' : 'website')}" />`);
+  result = upsertHeadTag(result, /<meta property="og:site_name" content="[^"]*"\s*\/?>/, '<meta property="og:site_name" content="Tiến Đặng" />');
+  result = upsertHeadTag(result, /<meta property="og:locale" content="[^"]*"\s*\/?>/, '<meta property="og:locale" content="vi_VN" />');
+  result = upsertHeadTag(result, /<meta property="og:image:alt" content="[^"]*"\s*\/?>/, `<meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />`);
+  result = upsertHeadTag(result, /<meta name="twitter:image:alt" content="[^"]*"\s*\/?>/, `<meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />`);
+  result = upsertHeadTag(result, /<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${canonicalUrl}" />`);
 
-  const canonicalLink = `<link rel="canonical" href="${canonicalUrl}">`;
+  if (meta.keywords) {
+    result = upsertHeadTag(result, /<meta name="keywords" content="[^"]*"\s*\/?>/, `<meta name="keywords" content="${escapeHtml(meta.keywords)}" />`);
+  } else {
+    result = result.replace(/\s*<meta name="keywords" content="[^"]*"\s*\/?>/, '');
+  }
 
-  const author = {
-    '@type': 'Person',
-    name: 'Đặng Văn Tiến',
-    alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
-    url: SITE_URL,
-    jobTitle: 'Mobile Developer',
-  };
+  result = result.replace(/\s*<meta property="article:(published_time|modified_time)" content="[^"]*"\s*\/?>/g, '');
+  if (meta.pageType === 'article') {
+    if (meta.publishedTime) {
+      result = result.replace('</head>', `    <meta property="article:published_time" content="${escapeHtml(meta.publishedTime)}" />\n  </head>`);
+    }
+    if (meta.modifiedTime || meta.publishedTime) {
+      result = result.replace('</head>', `    <meta property="article:modified_time" content="${escapeHtml(meta.modifiedTime || meta.publishedTime || '')}" />\n  </head>`);
+    }
+  }
 
-  const structuredData = pathname === '/blog/chatdvt-phan-1'
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'BlogPosting',
-        headline: meta.title,
-        description: meta.description,
-        url: canonicalUrl,
-        datePublished: '2026-09-23',
-        dateModified: '2026-09-23',
-        author,
-      }
-    : pathname === '/blog'
-      ? {
-          '@context': 'https://schema.org',
-          '@type': 'Blog',
-          name: meta.title,
-          description: meta.description,
-          url: canonicalUrl,
-          author,
-        }
-      : {
-          '@context': 'https://schema.org',
-          '@type': 'WebApplication',
-          name: meta.title,
-          description: meta.description,
-          url: canonicalUrl,
-          applicationCategory: 'UtilitiesApplication',
-          operatingSystem: 'All',
-          offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
-          author,
-        };
-
-  const jsonLdApp = JSON.stringify(structuredData);
-
-  const jsonLdWebsite = pathname === '/'
-    ? '\n    <script type="application/ld+json">' + JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Tiến Đặng',
-        alternateName: ['Đặng Văn Tiến', 'Dang Van Tien', 'devtiendang'],
-        url: SITE_URL,
-        description: 'Trang cá nhân về mobile development, dự án, công cụ và tài liệu của Đặng Văn Tiến.',
-        author: {
-          '@type': 'Person',
-          name: 'Đặng Văn Tiến',
-          alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
-          url: 'https://devtiendang.blog',
-          jobTitle: 'Mobile Developer',
-        },
-      }) + '</script>'
-    : '';
+  const structuredData = buildStructuredData(meta, canonicalUrl, ogImage);
+  result = result.replace(/\s*<script id="page-structured-data" type="application\/ld\+json">[\s\S]*?<\/script>/, '');
 
   const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · Mobile Developer · devtiendang.blog</p></div></noscript>`;
-
-  const injectedTags = `${canonicalLink}\n    ${keywordsMeta}\n    <script type="application/ld+json">${jsonLdApp}</script>${jsonLdWebsite}`;
-
-  result = result.replace('</head>', `    ${injectedTags}\n  </head>`);
+  result = result.replace('</head>', `    <script id="page-structured-data" type="application/ld+json">${JSON.stringify(structuredData)}</script>\n  </head>`);
 
   result = result.replace('<div id="root"></div>', `<div id="root"></div>\n    ${noscriptBlock}`);
 
@@ -572,10 +762,24 @@ export function injectSeoMeta(html: string, pathname: string): string {
 export function createSeoRoutes(): Router {
   const router = Router();
 
-  router.get('/sitemap.xml', (_req: Request, res: Response) => {
+  router.get('/sitemap.xml', async (_req: Request, res: Response) => {
+    let blogEntries: SitemapEntry[] = [];
+    try {
+      const posts = await prisma.blogPost.findMany({
+        where: { status: 'published' },
+        select: { slug: true, publishedAt: true, updatedAt: true },
+      });
+      blogEntries = posts.map((post) => ({
+        path: `/blog/${post.slug}`,
+        lastmod: (post.updatedAt || post.publishedAt)?.toISOString().split('T')[0],
+      }));
+    } catch (error) {
+      console.warn('[SEO] Could not load blog posts for sitemap:', error);
+    }
+
     res.set('Content-Type', 'application/xml');
     res.set('Cache-Control', 'public, max-age=3600');
-    res.send(generateSitemapXml());
+    res.send(generateSitemapXml(blogEntries));
   });
 
   return router;
@@ -591,12 +795,65 @@ export function createSeoFallbackHandler(clientBuildPath: string) {
     console.warn('[SEO] index.html not found at build path, meta injection disabled.');
   }
 
-  return (req: Request, res: Response) => {
+  return async (req: Request, res: Response) => {
     if (!indexHtmlTemplate) {
       return res.sendFile(indexHtmlPath);
     }
 
-    const injectedHtml = injectSeoMeta(indexHtmlTemplate, req.path);
+    const normalizedPath = normalizePathname(req.path);
+    let meta = getRouteMeta(normalizedPath);
+
+    if (normalizedPath.startsWith('/blog/') && !ROUTE_META[normalizedPath]) {
+      const slug = normalizedPath.slice('/blog/'.length);
+      try {
+        const post = await prisma.blogPost.findFirst({
+          where: { slug, status: 'published' },
+          select: {
+            title: true,
+            excerpt: true,
+            publishedAt: true,
+            updatedAt: true,
+          },
+        });
+        if (post) {
+          meta = {
+            title: normalizePortfolioTitle(post.title),
+            description: post.excerpt,
+            pageType: 'article',
+            ogType: 'article',
+            publishedTime: post.publishedAt?.toISOString(),
+            modifiedTime: post.updatedAt.toISOString(),
+          };
+        } else {
+          meta = {
+            title: 'Không tìm thấy bài viết | Tiến Đặng',
+            description: 'Bài viết này không tồn tại hoặc chưa được xuất bản.',
+            pageType: 'article',
+            ogType: 'article',
+            indexable: false,
+          };
+        }
+      } catch (error) {
+        console.warn(`[SEO] Could not load metadata for ${normalizedPath}:`, error);
+        meta = {
+          title: 'Blog | Tiến Đặng',
+          description: 'Mấy bài mình viết lại trong lúc làm mobile, ChatDVT và các project cá nhân.',
+          pageType: 'blog',
+          indexable: false,
+        };
+      }
+    }
+
+    if (!meta) {
+      meta = {
+        title: 'Project thử nghiệm | Tiến Đặng',
+        description: 'Một project thử nghiệm trên devtiendang.blog.',
+        pageType: 'webapp',
+        indexable: false,
+      };
+    }
+
+    const injectedHtml = injectSeoMeta(indexHtmlTemplate, normalizedPath, meta);
     res.set('Content-Type', 'text/html');
     res.send(injectedHtml);
   };
