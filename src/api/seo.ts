@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 const SITE_URL = 'https://devtiendang.blog';
-const DEFAULT_OG_IMAGE = 'https://cdn.jsdelivr.net/gh/tienDang0805/ChatDVT-discord-bot@main/client/public/images/chibi-bear.jpg';
+const DEFAULT_OG_IMAGE = 'https://devtiendang.blog/site-og.png';
 
 interface RouteMeta {
   title: string;
@@ -16,11 +16,53 @@ interface RouteMeta {
 
 const ROUTE_META: Record<string, RouteMeta> = {
   '/': {
-    title: 'ChatDVT Portal — 30+ AI Tools & Games Miễn Phí | by Đặng Văn Tiến',
-    description: 'ChatDVT (Chat DVT) — Bộ sưu tập 30+ tính năng AI, Game, Tiện ích miễn phí bởi Đặng Văn Tiến (Tiến Đặng). Thần số học, Tarot AI, CV Review, English Hub, Tu Tiên, Xem Tướng AI và nhiều hơn nữa. devtiendang.blog — Mobile Developer & AI Enthusiast.',
-    keywords: 'chatdvt, chat dvt, ChatDVT, Chat DVT, Đặng Văn Tiến, Dang Van Tien, Tiến Đặng, devtiendang, tien dang, tiendang, Đặng Văn Tiến mobile dev, Đặng Văn Tiến developer, ai tools, game, tiện ích miễn phí, thần số học, tarot ai, cv review, english learning, mobile developer vietnam',
+    title: 'Tiến Đặng — Mobile Developer',
+    description: 'Trang cá nhân của Đặng Văn Tiến, Mobile Developer làm việc với React Native và Android/Kotlin.',
+    keywords: 'Tiến Đặng, Đặng Văn Tiến, devtiendang, mobile developer, React Native, Kotlin, ChatDVT, Discord bot, playground',
     priority: 1.0,
-    changefreq: 'daily',
+    changefreq: 'weekly',
+  },
+  '/playground': {
+    title: 'Playground — Tiến Đặng',
+    description: 'Danh sách game, công cụ AI và các project web nhỏ của Đặng Văn Tiến.',
+    keywords: 'web playground, AI tools, mini game, side project, Tiến Đặng',
+    priority: 0.9,
+    changefreq: 'weekly',
+  },
+  '/mobile': {
+    title: 'Công cụ mobile — Tiến Đặng',
+    description: 'Deep link, WebView, QR và tài liệu phục vụ công việc React Native, Android và iOS.',
+    keywords: 'mobile utility, React Native, Kotlin, Android, iOS, deep link tester, WebView tester',
+    priority: 0.9,
+    changefreq: 'weekly',
+  },
+  '/discord': {
+    title: 'ChatDVT Discord Bot — Tiến Đặng',
+    description: 'ChatDVT là Discord bot gồm AI chat, hệ thống kinh tế, pet và mini game.',
+    keywords: 'ChatDVT, Discord bot, AI chatbot, Discord game, pet RPG',
+    priority: 0.8,
+    changefreq: 'weekly',
+  },
+  '/me': {
+    title: 'Đặng Văn Tiến — Mobile Developer',
+    description: 'Thông tin nghề nghiệp, dự án và tài liệu của Đặng Văn Tiến, Mobile Developer tại TP.HCM.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, mobile developer, React Native developer, Kotlin developer',
+    priority: 0.8,
+    changefreq: 'monthly',
+  },
+  '/blog': {
+    title: 'Blog — Tiến Đặng',
+    description: 'Chuyện làm app, làm bot và các project cá nhân của Đặng Văn Tiến.',
+    keywords: 'blog lập trình, mobile developer, ChatDVT, React Native, Discord bot, Tiến Đặng',
+    priority: 0.8,
+    changefreq: 'weekly',
+  },
+  '/blog/chatdvt-phan-1': {
+    title: 'Vì sao một Mobile Dev lại đi làm bot? — ChatDVT Phần 1 | Tiến Đặng',
+    description: 'ChatDVT bắt đầu từ một trò troll trong group Telegram, rồi đi qua Apps Script, Gemini, Discord.js và những căn nhà cloud đầu tiên.',
+    keywords: 'ChatDVT, Telegram bot, Discord bot, Gemini, Google Apps Script, Node.js, cloud',
+    priority: 0.8,
+    changefreq: 'monthly',
   },
   '/food-wheel': {
     title: 'Vòng Quay Phong Thủy Ẩm Thực — Hôm Nay Ăn Gì? | ChatDVT',
@@ -456,43 +498,67 @@ export function injectSeoMeta(html: string, pathname: string): string {
 
   const canonicalLink = `<link rel="canonical" href="${canonicalUrl}">`;
 
-  const jsonLdApp = JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'WebApplication',
-    name: meta.title,
-    description: meta.description,
-    url: canonicalUrl,
-    applicationCategory: 'UtilitiesApplication',
-    operatingSystem: 'All',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
-    author: {
-      '@type': 'Person',
-      name: 'Đặng Văn Tiến',
-      alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang', 'ChatDVT'],
-      url: 'https://devtiendang.blog',
-      jobTitle: 'Mobile Developer & AI Enthusiast',
-    },
-  });
+  const author = {
+    '@type': 'Person',
+    name: 'Đặng Văn Tiến',
+    alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
+    url: SITE_URL,
+    jobTitle: 'Mobile Developer',
+  };
+
+  const structuredData = pathname === '/blog/chatdvt-phan-1'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: meta.title,
+        description: meta.description,
+        url: canonicalUrl,
+        datePublished: '2026-09-23',
+        dateModified: '2026-09-23',
+        author,
+      }
+    : pathname === '/blog'
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Blog',
+          name: meta.title,
+          description: meta.description,
+          url: canonicalUrl,
+          author,
+        }
+      : {
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: meta.title,
+          description: meta.description,
+          url: canonicalUrl,
+          applicationCategory: 'UtilitiesApplication',
+          operatingSystem: 'All',
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
+          author,
+        };
+
+  const jsonLdApp = JSON.stringify(structuredData);
 
   const jsonLdWebsite = pathname === '/'
     ? '\n    <script type="application/ld+json">' + JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'ChatDVT',
-        alternateName: ['Chat DVT', 'ChatDVT Portal', 'devtiendang'],
+        name: 'Tiến Đặng',
+        alternateName: ['Đặng Văn Tiến', 'Dang Van Tien', 'devtiendang'],
         url: SITE_URL,
-        description: 'Bộ sưu tập 30+ tính năng AI, Game, Tiện ích miễn phí bởi Đặng Văn Tiến (Tiến Đặng).',
+        description: 'Trang cá nhân về mobile development, dự án, công cụ và tài liệu của Đặng Văn Tiến.',
         author: {
           '@type': 'Person',
           name: 'Đặng Văn Tiến',
           alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
           url: 'https://devtiendang.blog',
-          jobTitle: 'Mobile Developer & AI Enthusiast',
+          jobTitle: 'Mobile Developer',
         },
       }) + '</script>'
     : '';
 
-  const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>ChatDVT (Chat DVT) — by Đặng Văn Tiến (Tiến Đặng) — Mobile Developer &amp; AI Enthusiast — devtiendang.blog</p></div></noscript>`;
+  const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · Mobile Developer · devtiendang.blog</p></div></noscript>`;
 
   const injectedTags = `${canonicalLink}\n    ${keywordsMeta}\n    <script type="application/ld+json">${jsonLdApp}</script>${jsonLdWebsite}`;
 

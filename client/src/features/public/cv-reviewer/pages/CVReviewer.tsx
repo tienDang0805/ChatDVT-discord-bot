@@ -586,8 +586,8 @@ export const CVReviewer = () => {
       <div className="max-w-[1500px] mx-auto">
          <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
           <div className="flex items-center gap-5">
-            <Link to="/" className="text-slate-400 hover:text-cyan-500 transition-all p-2 bg-[#161b22] hover:bg-[#1f2937] rounded-full border border-slate-800 shadow-xl shrink-0 flex items-center justify-center w-10 h-10 active:scale-90">
-              <ArrowLeft size={18} />
+            <Link to="/playground" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-cyan-500 transition-colors shrink-0" title="Về Playground">
+              <ArrowLeft size={16} /><span className="hidden sm:inline">Playground</span>
             </Link>
             <h1 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-500 uppercase tracking-tighter flex items-center gap-3">
               <FileIcon size={36} className="text-cyan-500 hidden md:block" /> CỨU RỖI CV CHẶP VÁ

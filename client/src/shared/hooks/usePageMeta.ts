@@ -38,14 +38,15 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
 
   useEffect(() => {
     const prev = document.title;
-    document.title = `${title} | ChatDVT`;
+    const fullTitle = /Tiến Đặng|ChatDVT/i.test(title) ? title : `${title} | ChatDVT`;
+    document.title = fullTitle;
 
     const canonicalUrl = `${SITE_URL}${window.location.pathname}`;
     setCanonical(canonicalUrl);
 
-    setMetaTag('og:title', `${title} | ChatDVT`);
+    setMetaTag('og:title', fullTitle);
     setMetaTag('og:url', canonicalUrl);
-    setMetaTag('twitter:title', `${title} | ChatDVT`, true);
+    setMetaTag('twitter:title', fullTitle, true);
 
     if (desc) {
       setMetaTag('description', desc, true);

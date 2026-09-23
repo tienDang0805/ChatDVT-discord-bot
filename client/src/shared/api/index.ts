@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { BlogPost, BlogPostInput, BlogPostSummary } from '../types/blog';
 
 const api = axios.create({
   baseURL: '/api', 
@@ -110,6 +111,21 @@ export const getSystemLogs = async () => (await api.get('/system-logs')).data;
 export const resetChatHistory = async (guildId: string) => (await api.delete(`/prompts/history/${guildId}`)).data;
 export const getGeminiApiKey = async (guildId: string = 'global') => (await api.get(`/gemini-api-key?guildId=${guildId}`)).data;
 export const updateGeminiApiKey = async (data: { apiKey: string }, guildId: string = 'global') => (await api.post('/gemini-api-key', { ...data, guildId })).data;
+
+// --- BLOG ---
+export const getPublishedBlogPosts = async (): Promise<BlogPostSummary[]> =>
+    (await api.get('/blog/posts')).data;
+export const getPublishedBlogPost = async (slug: string): Promise<BlogPost> =>
+    (await api.get(`/blog/posts/${encodeURIComponent(slug)}`)).data;
+export const getAdminBlogPosts = async (): Promise<BlogPost[]> =>
+    (await api.get('/admin/blog-posts')).data;
+export const createBlogPost = async (data: BlogPostInput): Promise<BlogPost> =>
+    (await api.post('/admin/blog-posts', data)).data;
+export const updateBlogPost = async (id: number, data: BlogPostInput): Promise<BlogPost> =>
+    (await api.put(`/admin/blog-posts/${id}`, data)).data;
+export const deleteBlogPost = async (id: number): Promise<void> => {
+    await api.delete(`/admin/blog-posts/${id}`);
+};
 
 // Control Panel Endpoints
 export const sendControlMessage = async (guildId: string, channelId: string, content: string, embed?: any, files?: File[]) => {

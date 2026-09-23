@@ -372,7 +372,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
   if (screen === 'pre_lobby') {
     return (
-      <PageShell backTo="/" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="4xl">
+      <PageShell backTo="/playground" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="4xl">
         <div className="flex flex-col items-center justify-center min-h-[70vh] px-2 sm:px-4 py-4">
           <div className="w-full max-w-2xl bg-gradient-to-b from-[#141b2e] via-[#0e1424] to-[#0a0d18] border-2 border-amber-500/50 rounded-3xl shadow-[0_0_50px_rgba(245,158,11,0.25)] overflow-hidden">
             <div className="bg-gradient-to-r from-amber-950 via-[#1f1633] to-amber-950 p-4 sm:p-5 text-center border-b border-amber-500/40 relative">
@@ -552,7 +552,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
   if (!gameState) {
     return (
-      <PageShell backTo="/" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="2xl">
+      <PageShell backTo="/playground" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="2xl">
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl animate-spin">
             🎲
@@ -571,7 +571,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
   if (gameState.phase === 'LOBBY') {
     return (
-      <PageShell backTo="/" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="5xl">
+      <PageShell backTo="/playground" title="Cờ Tỷ Phú 8D" icon="🎲" maxWidth="5xl">
         <div className="py-2">
           <MonopolyLobby
             gameState={gameState}

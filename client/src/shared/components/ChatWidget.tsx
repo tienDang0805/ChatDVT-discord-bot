@@ -423,7 +423,7 @@ export const ChatWidget = () => {
       {!isOpen && (
         <div id="chat-widget-fab-container" className="chat-widget-root fixed bottom-5 right-4 md:right-6 z-[9999] flex items-end gap-2">
           <div
-            className="widget-tag mb-2 mr-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1.5 shadow-lg flex items-center gap-1.5 cursor-pointer hover:border-orange-500/50 transition-all"
+            className="widget-tag mb-2 mr-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full px-3 py-1.5 shadow-lg hidden sm:flex items-center gap-1.5 cursor-pointer hover:border-orange-500/50 transition-all"
             onClick={() => setIsOpen(true)}
           >
             <span className="relative flex h-2 w-2">

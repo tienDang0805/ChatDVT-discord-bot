@@ -6,6 +6,12 @@ const CLIENT_DIST = path.join(__dirname, '../../client/dist');
 
 const PRERENDER_ROUTES = [
   '/',
+  '/playground',
+  '/mobile',
+  '/discord',
+  '/blog',
+  '/blog/chatdvt-phan-1',
+  '/me',
   '/food-wheel',
   '/excuse-generator',
   '/handsome',

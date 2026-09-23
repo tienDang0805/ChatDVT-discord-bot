@@ -148,8 +148,8 @@ export const CostStudy = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50 dark:from-[#0a0e1a] dark:via-[#0f1629] dark:to-[#0a0e1a] text-slate-800 dark:text-slate-200 selection:bg-indigo-500/30">
       <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#0d1225]/80 backdrop-blur-xl border-b border-slate-200/50 dark:border-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-500 transition-colors font-medium">
-            <ArrowLeft size={18} /> Portal
+          <Link to="/playground" className="flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-500 transition-colors font-medium">
+            <ArrowLeft size={18} /> Playground
           </Link>
           <div className="hidden md:flex items-center gap-1">
             {sections.map(s => (

@@ -11,7 +11,13 @@ import { Toaster } from 'react-hot-toast';
 const _p = new URLSearchParams(window.location.search);
 const isDiscordActivity = _p.has('frame_id') || _p.has('instance_id');
 
-const PublicPortal = lazy(() => import('./features/public/portal/pages/PublicPortal').then(m => ({ default: m.PublicPortal })));
+const HomePage = lazy(() => import('./site/pages/HomePage').then(m => ({ default: m.HomePage })));
+const PlaygroundPage = lazy(() => import('./site/pages/PlaygroundPage').then(m => ({ default: m.PlaygroundPage })));
+const MobilePage = lazy(() => import('./site/pages/MobilePage').then(m => ({ default: m.MobilePage })));
+const DiscordPage = lazy(() => import('./site/pages/DiscordPage').then(m => ({ default: m.DiscordPage })));
+const MePage = lazy(() => import('./site/pages/MePage').then(m => ({ default: m.MePage })));
+const BlogPage = lazy(() => import('./site/pages/BlogPage').then(m => ({ default: m.BlogPage })));
+const BlogArticlePage = lazy(() => import('./site/pages/BlogArticlePage').then(m => ({ default: m.BlogArticlePage })));
 // Removed WeatherFAB from global imports
 const FoodWheel = lazy(() => import('./features/public/food-wheel/pages/FoodWheel'));
 const ExcuseGenerator = lazy(() => import('./features/public/excuse-generator/pages/ExcuseGenerator'));
@@ -44,7 +50,6 @@ const ChibiSticker = lazy(() => import('./features/public/chibi-sticker/pages/Ch
 const FaceReader = lazy(() => import('./features/public/face-reader/pages/FaceReader').then(m => ({ default: m.FaceReader })));
 const DreamInterpreter = lazy(() => import('./features/public/dream-interpreter/pages/DreamInterpreter').then(m => ({ default: m.DreamInterpreter })));
 const TechDuel = lazy(() => import('./features/public/tech-duel/pages/TechDuel').then(m => ({ default: m.TechDuel })));
-const ProfilePage = lazy(() => import('./features/public/profile/pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const EnglishHub = lazy(() => import('./features/public/english/pages/EnglishHub').then(m => ({ default: m.EnglishHub })));
 const EnglishChat = lazy(() => import('./features/public/english/pages/EnglishChat').then(m => ({ default: m.EnglishChat })));
 const EnglishFlashcard = lazy(() => import('./features/public/english/pages/EnglishFlashcard').then(m => ({ default: m.EnglishFlashcard })));
@@ -86,6 +91,7 @@ const UserManagement = lazy(() => import('./features/admin/user-management/pages
 const Identity = lazy(() => import('./features/admin/identity/pages/Identity').then(m => ({ default: m.Identity })));
 const CoupleLandingPage = lazy(() => import('./features/admin/couple/pages/CoupleLandingPage').then(m => ({ default: m.CoupleLandingPage })));
 const WebChatPrompt = lazy(() => import('./features/admin/web-chat-prompt/pages/WebChatPrompt').then(m => ({ default: m.WebChatPrompt })));
+const BlogManager = lazy(() => import('./features/admin/blog/pages/BlogManager').then(m => ({ default: m.BlogManager })));
 
 const LoadingFallback = () => (
   <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] transition-colors">
@@ -131,12 +137,18 @@ function App() {
           style: { borderRadius: '12px', padding: '16px' }
         }} />
         <GlobalMusicPlayer />
-        <ChatWidget />
+        {!isDiscordActivity && <ChatWidget />}
         <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <PublicPortal />} />
-            <Route path="/chatDVT" element={<PublicPortal />} />
+            <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <HomePage />} />
+            <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/mobile" element={<MobilePage />} />
+            <Route path="/discord" element={<DiscordPage />} />
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogArticlePage />} />
+            <Route path="/me" element={<MePage />} />
+            <Route path="/chatDVT" element={<Navigate to="/discord" replace />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
             <Route path="/handsome" element={<HandsomeAnalyzer />} />
@@ -182,7 +194,7 @@ function App() {
             <Route path="/english/word-match" element={<WordMatch />} />
             <Route path="/english/idiom-quest" element={<IdiomQuest />} />
             <Route path="/english/context-clues" element={<ContextClues />} />
-            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile" element={<Navigate to="/me" replace />} />
 
             <Route path="/petlandingpage" element={<PetLandingPage />} />
             <Route path="/tutien" element={<TuTienGame />} />
@@ -211,6 +223,7 @@ function App() {
                     <Route path="/logs" element={<Logs />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/web-chat-prompt" element={<WebChatPrompt />} />
+                    <Route path="/blog" element={<BlogManager />} />
                   </Routes>
                 </Layout>
               </RequireAuth>

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { usePageMeta } from '../hooks/usePageMeta';
 
@@ -9,6 +9,7 @@ interface PageShellProps {
   maxWidth?: '2xl' | '3xl' | '4xl' | '5xl' | '6xl';
   accentColor?: string;
   backTo?: string;
+  backLabel?: string;
   children: React.ReactNode;
   stars?: boolean;
 }
@@ -26,10 +27,21 @@ export const PageShell = ({
   subtitle,
   icon,
   maxWidth = '5xl',
-  backTo = '/',
+  backTo,
+  backLabel,
   children,
   stars = false,
 }: PageShellProps) => {
+  const { pathname } = useLocation();
+  const mobileRoutes = ['/deeplink-tester', '/emulator-check', '/qr-generator'];
+  const resolvedBackTo = backTo || (mobileRoutes.some(route => pathname.startsWith(route)) ? '/mobile' : '/playground');
+  const resolvedBackLabel = backLabel || (
+    resolvedBackTo === '/mobile' ? 'Mobile Utility'
+      : resolvedBackTo === '/playground' ? 'Playground'
+        : resolvedBackTo === '/english' ? 'English Hub'
+          : resolvedBackTo === '/' ? 'Trang chủ'
+            : 'Quay lại'
+  );
   usePageMeta(title);
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 relative">
@@ -59,14 +71,16 @@ export const PageShell = ({
       )}
 
       <div className={`${maxWidthMap[maxWidth]} mx-auto px-3 sm:px-6 md:px-8 py-4 md:py-14 pb-24 md:pb-14 relative z-10`}>
-        <header className="flex items-center gap-3 mb-6 md:mb-10">
+        <header className="mb-6 md:mb-10">
           <Link
-            to={backTo}
-            className="text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-all p-2 bg-white dark:bg-[#1f2937] hover:bg-slate-50 dark:hover:bg-[#283547] rounded-full border border-slate-200 dark:border-slate-700 shadow-sm shrink-0 flex items-center justify-center w-10 h-10 active:scale-90"
+            to={resolvedBackTo}
+            className="inline-flex items-center gap-2 mb-4 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-orange-500 dark:hover:text-orange-400 transition-colors"
+            aria-label={`Quay lại ${resolvedBackLabel}`}
           >
-            <ArrowLeft size={18} />
+            <ArrowLeft size={15} />
+            <span>{resolvedBackLabel}</span>
           </Link>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0">
             <h1 className="text-xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight truncate flex items-center gap-1.5">
               {icon && <span className="shrink-0">{icon}</span>}
               <span className="truncate">{title}</span>

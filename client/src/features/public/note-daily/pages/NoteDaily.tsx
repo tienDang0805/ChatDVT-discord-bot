@@ -282,7 +282,7 @@ export const NoteDaily = () => {
   }, [addTodo]);
 
   return (
-    <PageShell title="Note Daily" subtitle="Todo List · Xây dựng thói quen mỗi ngày" icon="✅" backTo="/" maxWidth="5xl">
+    <PageShell title="Note Daily" subtitle="Todo List · Xây dựng thói quen mỗi ngày" icon="✅" backTo="/playground" maxWidth="5xl">
       <style>{`
         @keyframes todoSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .todo-enter { animation: todoSlideIn 0.25s ease-out; }

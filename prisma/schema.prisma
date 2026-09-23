@@ -17,7 +17,7 @@ model ChatLog {
   username  String
   content   String
   response  String
-  type      String   // 'chat', 'image', 'video', 'voice'
+  type      String // 'chat', 'image', 'video', 'voice'
   createdAt DateTime @default(now())
 
   @@index([guildId])
@@ -26,14 +26,14 @@ model ChatLog {
 }
 
 model UserIdentity {
-  id              Int      @id @default(autoincrement())
-  userId          String   @unique
-  nickname        String   @default("")
-  signature       String   @default("")
-  money           Float    @default(0)
-  lastDaily       DateTime?
-  lastRankReward  DateTime?
-  updatedAt       DateTime @updatedAt
+  id             Int       @id @default(autoincrement())
+  userId         String    @unique
+  nickname       String    @default("")
+  signature      String    @default("")
+  money          Float     @default(0)
+  lastDaily      DateTime?
+  lastRankReward DateTime?
+  updatedAt      DateTime  @updatedAt
 }
 
 model InventoryItem {
@@ -52,8 +52,8 @@ model InventoryItem {
 model GuildConfig {
   id            Int      @id @default(autoincrement())
   guildId       String   @unique
-  systemPrompts String   // JSON string
-  activeModules String   // JSON string
+  systemPrompts String // JSON string
+  activeModules String // JSON string
   geminiApiKey  String?
   updatedAt     DateTime @updatedAt
 }
@@ -61,8 +61,8 @@ model GuildConfig {
 model BotConfig {
   id            Int      @id @default(autoincrement())
   key           String   @unique // 'global'
-  systemPrompts String   // JSON string
-  features      String   // JSON string
+  systemPrompts String // JSON string
+  features      String // JSON string
   geminiApiKey  String?
   updatedAt     DateTime @updatedAt
 }
@@ -75,12 +75,12 @@ model Pet {
   description     String
   rarity          String
   element         String
-  stats           String   // JSON
-  skills          String   // JSON
-  traits          String   // JSON
+  stats           String // JSON
+  skills          String // JSON
+  traits          String // JSON
   imageBasePrompt String
-  imageData       String   // Base64
-  status          String   // JSON
+  imageData       String // Base64
+  status          String // JSON
   evolutionStage  Int      @default(1)
   level           Int      @default(1)
   exp             Int      @default(0)
@@ -100,11 +100,12 @@ model UserEggCooldown {
   lastEggOpenTime DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
 model SystemLog {
   id        String   @id @default(uuid())
-  level     String   // "info", "warn", "error", "debug"
+  level     String // "info", "warn", "error", "debug"
   message   String
-  metadata  String?  // JSON string
+  metadata  String? // JSON string
   timestamp DateTime @default(now())
 }
 
@@ -113,7 +114,7 @@ model PkBattle {
   player1Id String
   player2Id String
   winnerId  String?
-  log       String   // JSON array of turn logs
+  log       String // JSON array of turn logs
   status    String   @default("pending") // pending, ongoing, finished
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,7 +137,7 @@ model UserItemPurchaseLog {
   itemId       String
   quantity     Int      @default(0)
   purchaseDate DateTime @default(now()) // Stored as just the Date (truncated to Day) to track daily resets easily
-  
+
   @@unique([userId, itemId, purchaseDate])
   @@index([userId])
 }
@@ -152,24 +153,24 @@ model ExpeditionProgress {
 }
 
 model UserDailyPk {
-  id          Int      @id @default(autoincrement())
-  userId      String   @unique
-  dailyCount  Int      @default(0)
-  lastPkTime  DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  userId     String   @unique
+  dailyCount Int      @default(0)
+  lastPkTime DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Couple {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   user1Id   String
   user2Id   String
-  affection Int      @default(0) // Mức độ tình cảm
-  level     Int      @default(1)
-  status    String   @default("dating") // dating, married
+  affection Int       @default(0) // Mức độ tình cảm
+  level     Int       @default(1)
+  status    String    @default("dating") // dating, married
   marriedAt DateTime?
-  poopCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  poopCount Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@unique([user1Id, user2Id])
   @@index([user1Id])
@@ -200,17 +201,17 @@ model MusicPlaylist {
 }
 
 model CodeSubmission {
-  id          Int      @id @default(autoincrement())
-  userId      String
-  guildId     String
-  topic       String
-  difficulty  String
-  language    String
-  challenge   String
-  code        String
-  score       Int      @default(0)
-  feedback    String
-  createdAt   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  userId     String
+  guildId    String
+  topic      String
+  difficulty String
+  language   String
+  challenge  String
+  code       String
+  score      Int      @default(0)
+  feedback   String
+  createdAt  DateTime @default(now())
 
   @@index([userId])
   @@index([guildId])
@@ -218,16 +219,16 @@ model CodeSubmission {
 }
 
 model CodeLeaderboard {
-  id              Int      @id @default(autoincrement())
-  userId          String
-  guildId         String
-  totalScore      Int      @default(0)
-  totalSolved     Int      @default(0)
-  easySolved      Int      @default(0)
-  mediumSolved    Int      @default(0)
-  hardSolved      Int      @default(0)
-  bestScore       Int      @default(0)
-  updatedAt       DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  userId       String
+  guildId      String
+  totalScore   Int      @default(0)
+  totalSolved  Int      @default(0)
+  easySolved   Int      @default(0)
+  mediumSolved Int      @default(0)
+  hardSolved   Int      @default(0)
+  bestScore    Int      @default(0)
+  updatedAt    DateTime @updatedAt
 
   @@unique([userId, guildId])
   @@index([guildId, totalScore])
@@ -253,4 +254,19 @@ model FbChatLog {
 
   @@index([senderId])
   @@index([createdAt])
+}
+
+model BlogPost {
+  id             Int       @id @default(autoincrement())
+  title          String
+  slug           String    @unique
+  excerpt        String
+  content        String
+  status         String    @default("draft")
+  readingMinutes Int       @default(1)
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status, publishedAt])
 }

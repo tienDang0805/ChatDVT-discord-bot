@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Tiến Đặng">
+  <rect width="64" height="64" rx="14" fill="#17181a"/>
+  <path d="M12 17h25v8h-8v23h-9V25h-8z" fill="#f7f5ef"/>
+  <path d="M37 17h8.5C55 17 60 23.2 60 32.2 60 42.1 54.8 48 45.2 48H37V17zm8.2 23.1c4.1 0 6.1-2.7 6.1-7.8 0-4.9-2-7.4-6.1-7.4v15.2z" fill="#f06a2f"/>
+</svg>

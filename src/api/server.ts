@@ -251,7 +251,7 @@ app.use('/api', poe2TradeRoutes);
 
 // Protect API Routes (except public routes)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/') || req.path.startsWith('/api/ping-sos') || req.path === '/api/activity-token' || req.path === '/api/tutien-story' || req.path === '/api/tutien-init' || req.path.startsWith('/api/deeplink')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || (req.method === 'GET' && req.path.startsWith('/api/blog/')) || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path.startsWith('/api/facebook/') || req.path.startsWith('/api/ping-sos') || req.path === '/api/activity-token' || req.path === '/api/tutien-story' || req.path === '/api/tutien-init' || req.path.startsWith('/api/deeplink')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -267,6 +267,7 @@ import webQuizRoutes from './routes/web-quiz';
 import musicRoutes from './routes/music';
 import detoxRoutes from './routes/detox';
 import deeplinkRoutes from './routes/deeplink';
+import blogRoutes from './routes/blog';
 app.use('/api', weatherRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', botDataRoutes);
@@ -274,6 +275,7 @@ app.use('/api', webQuizRoutes);
 app.use('/api', musicRoutes);
 app.use('/api', detoxRoutes);
 app.use('/api', deeplinkRoutes);
+app.use('/api', blogRoutes);
 import facebookRoutes from './routes/facebook';
 app.use('/api', facebookRoutes);
 

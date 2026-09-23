@@ -218,8 +218,9 @@ export const EmulatorCheck = () => {
     <div className="h-screen flex flex-col bg-[#0a0e17] text-slate-200 font-sans overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-800 bg-[#0d1220] shrink-0">
         <div className="flex items-center gap-3">
-          <Link to="/" className="text-slate-500 hover:text-cyan-400 transition-colors">
+          <Link to="/mobile" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-cyan-400 transition-colors" title="Về Mobile Utility">
             <ArrowLeft size={18} />
+            <span className="hidden sm:inline">Mobile Utility</span>
           </Link>
           <div className="flex items-center gap-2">
             <Smartphone size={18} className="text-cyan-400" />

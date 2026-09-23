@@ -461,7 +461,7 @@ export const MermaidEditor = () => {
 
       <header className="shrink-0 flex items-center justify-between px-3 py-1.5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#131923]">
         <div className="flex items-center gap-2">
-          <Link to="/" className="text-slate-400 hover:text-orange-500 transition-colors p-1.5 bg-white dark:bg-[#1f2937] rounded-lg border border-slate-200 dark:border-slate-700" title="Về Portal"><ArrowLeft size={16} /></Link>
+          <Link to="/playground" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-orange-500 transition-colors" title="Về Playground"><ArrowLeft size={16} /><span className="hidden sm:inline">Playground</span></Link>
           <span className="text-sm font-black text-slate-800 dark:text-white">📐 Mermaid Editor</span>
           <div className="flex bg-slate-100 dark:bg-[#1f2937] rounded-lg p-0.5 ml-2">
             <button onClick={() => setViewMode('editor')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all ${viewMode === 'editor' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-500 hover:text-orange-500'}`}><Code2 size={11} className="inline mr-1" />Editor</button>
