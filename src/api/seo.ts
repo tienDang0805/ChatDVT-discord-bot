@@ -27,7 +27,7 @@ const INDEXABLE_PATHS = new Set([
   '/english/spelling-bee', '/english/course', '/english/writing',
   '/english/dictation', '/english/scramble', '/english/word-match',
   '/english/idiom-quest', '/english/context-clues', '/deeplink-tester',
-  '/emulator-check', '/qr-generator', '/rn-learning-guide', '/pd-learning-guide',
+  '/emulator-check', '/qr-generator', '/android-toolbox', '/rn-learning-guide', '/pd-learning-guide',
 ]);
 
 interface RouteMeta {
@@ -119,6 +119,14 @@ const ROUTE_META: Record<string, RouteMeta> = {
     title: 'Deep Link Tester cho iOS và Android | Tiến Đặng',
     description: 'Soạn và kiểm tra deep link, Universal Link và App Link; tạo QR cùng lệnh ADB hoặc Simctl để mở app nhanh.',
     keywords: 'deep link tester, Universal Link, Android App Link, ADB, Simctl, React Native',
+    pageType: 'webapp',
+    priority: 0.8,
+    changefreq: 'monthly',
+  },
+  '/android-toolbox': {
+    title: 'Android Device Toolbox — WebUSB ADB | Tiến Đặng',
+    description: 'Kết nối Android thật qua USB từ trình duyệt để điều khiển app, test permission, chụp màn hình và lấy Logcat.',
+    keywords: 'Android toolbox, WebUSB, ADB, React Native, Logcat, Android debugging',
     pageType: 'webapp',
     priority: 0.8,
     changefreq: 'monthly',

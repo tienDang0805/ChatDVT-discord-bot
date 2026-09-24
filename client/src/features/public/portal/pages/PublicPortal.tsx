@@ -659,6 +659,17 @@ export const PublicPortal = () => {
       author: 'Mobile Dev Tools (Tiến Đặng)',
       category: 'mobile_unity',
       isNew: true
+    },
+    {
+      id: 'android-toolbox',
+      number: '35',
+      title: 'Android Device Toolbox',
+      description: 'Kết nối Android thật qua USB: mở/dừng app, test permission, chụp màn hình và lấy Logcat ngay trên trình duyệt.',
+      icon: Smartphone,
+      href: '/android-toolbox',
+      author: 'Mobile Dev Tools (Tiến Đặng)',
+      category: 'mobile_unity',
+      isNew: true
     }
   ];
 

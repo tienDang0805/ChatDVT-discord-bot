@@ -8,7 +8,7 @@ const INDEXABLE_PATHS = new Set([
   '/', '/playground', '/mobile', '/discord', '/me', '/blog',
   '/survivor-arena', '/quiz', '/chibi-sticker', '/mermaid-editor',
   '/mermaid-tutorial', '/cv-review', '/english', '/deeplink-tester',
-  '/emulator-check', '/qr-generator',
+  '/emulator-check', '/qr-generator', '/android-toolbox',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
 

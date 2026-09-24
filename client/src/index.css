@@ -271,8 +271,10 @@
 
 .me-page { width: min(800px, calc(100% - 40px)); }
 .me-intro { padding: 88px 0 72px; }
+.me-identity { display: flex; align-items: center; gap: 20px; }
+.me-avatar { width: 72px; height: 72px; flex: none; border: 1px solid var(--site-line); border-radius: 50%; object-fit: cover; object-position: 28% 54%; }
 .me-intro h1 { margin: 0; font-size: clamp(44px, 5vw, 64px); font-weight: 700; line-height: 1.12; letter-spacing: -.02em; }
-.me-role { margin: 20px 0 0; font-size: 19px; font-weight: 500; line-height: 1.5; }
+.me-role { margin: 8px 0 0; font-size: 19px; font-weight: 500; line-height: 1.5; }
 .me-meta { margin: 8px 0 0; color: var(--site-muted); font-size: 14px; line-height: 1.6; }
 .me-lead { max-width: 680px; margin: 28px 0 0; color: var(--site-muted); font-size: 17px; line-height: 1.7; }
 .me-socials { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px; }
@@ -439,6 +441,8 @@
   .discord-hero .site-hero__actions { flex-direction: column; }
   .currently-strip { grid-template-columns: 1fr; gap: 8px; }
   .me-intro { padding: 68px 0 58px; }
+  .me-identity { align-items: flex-start; gap: 14px; }
+  .me-avatar { width: 58px; height: 58px; }
   .me-intro h1 { font-size: 42px; }
   .me-role { font-size: 17px; }
   .me-socials { gap: 16px 20px; }

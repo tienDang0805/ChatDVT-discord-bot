@@ -33,7 +33,7 @@ export const PageShell = ({
   stars = false,
 }: PageShellProps) => {
   const { pathname } = useLocation();
-  const mobileRoutes = ['/deeplink-tester', '/emulator-check', '/qr-generator'];
+  const mobileRoutes = ['/deeplink-tester', '/emulator-check', '/qr-generator', '/android-toolbox'];
   const resolvedBackTo = backTo || (mobileRoutes.some(route => pathname.startsWith(route)) ? '/mobile' : '/playground');
   const resolvedBackLabel = backLabel || (
     resolvedBackTo === '/mobile' ? 'Mobile Utility'

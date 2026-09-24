@@ -26,6 +26,7 @@ export const playgroundItems: SiteItem[] = [
 ];
 
 export const utilityItems: SiteItem[] = [
+  { id: 'android-toolbox', title: 'Android Device Toolbox', description: 'Kết nối Android qua USB để điều khiển app, test permission, chụp màn hình và lấy log.', href: '/android-toolbox', kind: 'mobile', icon: TerminalSquare, tags: ['Android', 'WebUSB', 'Debug'], featured: true },
   { id: 'deeplink', title: 'Deep Link Tester', description: 'Soạn và kiểm tra URI, tạo QR hoặc lệnh mở app trên iOS/Android.', href: '/deeplink-tester', kind: 'mobile', icon: Link2, tags: ['iOS', 'Android', 'Deep link'], featured: true },
   { id: 'webview', title: 'WebView Simulator', description: 'Dán HTML/JS để xem nhanh trong khung thiết bị mobile.', href: '/emulator-check', kind: 'mobile', icon: Smartphone, tags: ['WebView', 'Debug'] },
   { id: 'qr', title: 'QR Generator', description: 'Tạo mã QR có logo, màu riêng và tải xuống thành ảnh.', href: '/qr-generator', kind: 'mobile', icon: QrCode, tags: ['QR', 'Testing'] },

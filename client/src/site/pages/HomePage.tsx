@@ -6,7 +6,7 @@ import { BotAvatar } from '../components/BotAvatar';
 import { ArrowLink, SectionHeading, SiteLayout } from '../components/SiteLayout';
 import { featuredProjects, utilityItems } from '../content/siteData';
 
-const mobileTools = utilityItems.filter(item => ['deeplink', 'webview', 'qr'].includes(item.id));
+const mobileTools = utilityItems.filter(item => item.kind === 'mobile');
 
 export function HomePage() {
   usePageMeta('Tiến Đặng — Mobile Developer React Native & Android', {

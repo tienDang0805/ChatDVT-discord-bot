@@ -26,9 +26,14 @@ export function MePage() {
     <div className="site-container me-page">
       <header className="me-intro">
         <p className="site-kicker">Me</p>
-        <h1>Đặng Văn Tiến</h1>
-        <p className="me-role">Mobile dev · React Native · Android/Kotlin</p>
-        <p className="me-meta">Đang làm ở South Telecom · TP.HCM</p>
+        <div className="me-identity">
+          <img className="me-avatar" src="/images/tien-dang-profile.jpg" alt="Đặng Văn Tiến" width="72" height="72" />
+          <div>
+            <h1>Đặng Văn Tiến</h1>
+            <p className="me-role">Mobile dev · React Native · Android/Kotlin</p>
+            <p className="me-meta">Đang làm ở South Telecom · TP.HCM</p>
+          </div>
+        </div>
         <p className="me-lead">Ban ngày mình làm app mobile. Ngoài giờ thì code ChatDVT, vài tool web và viết lại mấy thứ đã học.</p>
         <div className="me-socials">
           {socials.map(item => <a key={item.label} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noreferrer' : undefined}><item.icon size={16} /> {item.label}</a>)}
