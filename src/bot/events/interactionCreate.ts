@@ -6,7 +6,6 @@ import { petService } from '../services/pet';
 import { expeditionService } from '../services/expedition';
 import { codeChallengeService } from '../services/code-challenge';
 import { wordleService } from '../services/wordle';
-import { bienThaiService } from '../services/bienthai';
 import { prisma } from '../../database/prisma';
 
 export async function handleInteraction(interaction: Interaction) {
@@ -319,37 +318,6 @@ export async function handleInteraction(interaction: Interaction) {
                   difficulty,
                   maxGuesses,
                   tone
-              );
-
-              await interaction.editReply(res.message);
-          }
-
-          if (interaction.customId === 'bienthai_setup_modal') {
-              await interaction.deferReply();
-
-              const roundsRaw = interaction.fields.getTextInputValue('bienthai_rounds');
-              const rounds = roundsRaw ? Math.min(8, Math.max(3, parseInt(roundsRaw) || 5)) : 5;
-              const topicRaw = interaction.fields.getTextInputValue('bienthai_topic');
-              const topic = topicRaw ? topicRaw.trim() : 'Tổng hợp';
-              const toneRaw = interaction.fields.getTextInputValue('bienthai_tone');
-              const tone = toneRaw ? toneRaw.trim() : 'Dâm dục bựa';
-              const timeRaw = interaction.fields.getTextInputValue('bienthai_time');
-              const submitTimeSecs = timeRaw ? Math.min(300, Math.max(30, parseInt(timeRaw) || 120)) : 120;
-
-              const guildId = interaction.guildId;
-              if (!guildId) {
-                  await interaction.editReply('❌ Lỗi: Không thể xác định Server.');
-                  return;
-              }
-
-              const res = await bienThaiService.startGame(
-                  guildId,
-                  interaction.channel,
-                  interaction.user.id,
-                  rounds,
-                  topic,
-                  tone,
-                  submitTimeSecs
               );
 
               await interaction.editReply(res.message);

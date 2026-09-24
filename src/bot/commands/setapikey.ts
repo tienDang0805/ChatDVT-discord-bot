@@ -1,10 +1,11 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { ADMIN_ID } from '../../config/constants';
 import { prisma } from '../../database/prisma';
 
 export const data = new SlashCommandBuilder()
   .setName('setapikey')
   .setDescription('🔑 [Admin] Cài đặt Gemini API Key cho server này')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .addSubcommand(sub =>
       sub.setName('set')
          .setDescription('Mở popup nhập API Key mới')
