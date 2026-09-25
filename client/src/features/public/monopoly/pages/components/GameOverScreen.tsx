@@ -1,6 +1,6 @@
 import React from 'react';
 import type { GameState } from '../../game/types';
-import { BOARD_TILES, BUILD_LEVELS } from '../../game/boardData';
+import { calculateNetWorth } from '../../game/economy';
 
 interface GameOverScreenProps {
   gameState: GameState;
@@ -15,23 +15,10 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
   onPlayAgain,
   onBackToMenu
 }) => {
-  const calculateNetWorth = (p: typeof gameState.players[0]) => {
-    let worth = p.money;
-    p.properties.forEach(tIdx => {
-      const tile = BOARD_TILES[tIdx];
-      if (tile?.price) worth += tile.price;
-      const bLvl = p.buildings[tIdx] || 0;
-      for (let i = 1; i <= bLvl; i++) {
-        worth += BUILD_LEVELS[i]?.cost || 0;
-      }
-    });
-    return worth;
-  };
-
   const rankedPlayers = [...gameState.players].sort((a, b) => {
     if (a.isEliminated && !b.isEliminated) return 1;
     if (!a.isEliminated && b.isEliminated) return -1;
-    return calculateNetWorth(b) - calculateNetWorth(a);
+    return calculateNetWorth(gameState, b.id) - calculateNetWorth(gameState, a.id);
   });
 
   const winner = rankedPlayers[0];
@@ -55,7 +42,7 @@ export const GameOverScreen: React.FC<GameOverScreenProps> = ({
 
         <div className="space-y-2">
           {rankedPlayers.map((p, idx) => {
-            const netWorth = calculateNetWorth(p);
+            const netWorth = calculateNetWorth(gameState, p.id);
             const isMe = p.id === myPlayerId;
 
             return (

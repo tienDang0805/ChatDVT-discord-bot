@@ -77,6 +77,9 @@ export const MonopolyTopBar: React.FC<MonopolyTopBarProps> = ({
             <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/50 text-[10px] font-black tracking-widest shadow">
               VÒNG {round}/{maxRounds}
             </span>
+            <span className="hidden lg:inline px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-400/40 text-[9px] font-black tracking-wide">
+              {gameState.economy.label.toUpperCase()} • {gameState.economy.startMoney}Đ
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-950/80 to-yellow-950/50 border border-amber-400/50 px-3 py-1 rounded-xl shadow-inner text-xs">

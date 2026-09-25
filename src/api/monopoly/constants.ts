@@ -1,5 +1,5 @@
-export const START_MONEY = 800;
-export const GO_SALARY = 200;
+export const START_MONEY = 1200;
+export const GO_SALARY = 150;
 export const MAX_ROUNDS = 100;
 export const MAX_PLAYERS = 4;
 export const MIN_PLAYERS = 2;
@@ -20,6 +20,6 @@ export const MIN_BID_INCREMENT = 10;
 export const EVENT_EVERY_N_ROUNDS = 5;
 export const MINI_GAME_CHANCE = 0.3;
 export const SELL_BUILDING_REFUND_PERCENT = 0.5;
-export const BUYOUT_MULTIPLIER = 1.5;
+export const BUYOUT_MULTIPLIER = 1.6;
 export const BUYOUT_MAX_LEVEL = 4;
 export const STATION_COUNT_TO_WIN = 4;

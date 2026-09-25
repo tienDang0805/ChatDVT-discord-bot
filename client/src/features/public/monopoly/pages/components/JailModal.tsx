@@ -1,19 +1,21 @@
 import React from 'react';
 import type { PlayerState, JailAction } from '../../game/types';
-import { JAIL_BAIL, MAX_JAIL_TURNS } from '../../game/constants';
+import { MAX_JAIL_TURNS } from '../../game/constants';
 
 interface JailModalProps {
   player: PlayerState;
   isMyTurn: boolean;
+  bailAmount: number;
   onAction: (action: JailAction) => void;
 }
 
 export const JailModal: React.FC<JailModalProps> = ({
   player,
   isMyTurn,
+  bailAmount,
   onAction
 }) => {
-  const canAffordBail = player.money >= JAIL_BAIL;
+  const canAffordBail = player.money >= bailAmount;
   const hasJailCard = player.cards.includes('GET_OUT_JAIL');
 
   return (
@@ -40,7 +42,7 @@ export const JailModal: React.FC<JailModalProps> = ({
               disabled={!canAffordBail}
               className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              💰 Nộp bảo lãnh {JAIL_BAIL}Đ (Ra tù ngay)
+              💰 Nộp bảo lãnh {bailAmount}Đ (Ra tù ngay)
             </button>
 
             <button

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PlayerState, GameState } from '../../game/types';
-import { BOARD_TILES, BUILD_LEVELS, getStationTiles, STATION_RENTS } from '../../game/boardData';
+import { BOARD_TILES, BUILD_LEVELS, getStationTiles } from '../../game/boardData';
+import { calculateNetWorth, getDisplayedRent, getStationRent } from '../../game/economy';
 
 interface PlayerDetailModalProps {
   player: PlayerState;
@@ -25,26 +26,13 @@ const GROUP_BG_MAP: Record<string, string> = {
   purple: 'bg-violet-950/40 border-violet-500/30'
 };
 
-function calculateNetWorth(player: PlayerState): number {
-  let worth = player.money;
-  player.properties.forEach(tileIndex => {
-    const tile = BOARD_TILES[tileIndex];
-    if (tile?.price) worth += tile.price;
-    const buildLevel = player.buildings[tileIndex] || 0;
-    for (let l = 1; l <= buildLevel; l++) {
-      worth += BUILD_LEVELS[l]?.cost || 0;
-    }
-  });
-  return worth;
-}
-
 export const PlayerDetailModal: React.FC<PlayerDetailModalProps> = ({
   player,
   gameState,
   isMe,
   onClose
 }) => {
-  const netWorth = calculateNetWorth(player);
+  const netWorth = calculateNetWorth(gameState, player.id);
   const stationTiles = getStationTiles();
   const ownedStations = player.properties.filter(t => stationTiles.includes(t));
   const ownedProperties = player.properties.filter(t => !stationTiles.includes(t));
@@ -112,7 +100,7 @@ export const PlayerDetailModal: React.FC<PlayerDetailModalProps> = ({
               <div className="text-[10px] font-black text-slate-300 uppercase mb-2 flex items-center justify-between">
                 <span>🚉 Ga / Sân Bay / Bến Xe ({ownedStations.length}/4)</span>
                 <span className="text-amber-400">
-                  Thuê: {STATION_RENTS[Math.min(ownedStations.length, STATION_RENTS.length - 1)]}Đ
+                  Thuê: {getStationRent(gameState, ownedStations.length)}Đ
                 </span>
               </div>
               {ownedStations.length >= 4 && (
@@ -142,7 +130,7 @@ export const PlayerDetailModal: React.FC<PlayerDetailModalProps> = ({
                 if (!tile) return null;
                 const level = player.buildings[tileIndex] || 0;
                 const buildInfo = BUILD_LEVELS[level];
-                const rent = (tile.baseRent || 10) * (buildInfo?.rentMultiplier || 1);
+                const rent = getDisplayedRent(gameState, tileIndex, level, player.id);
                 const groupClass = tile.group ? GROUP_BG_MAP[tile.group] : 'bg-slate-900/50 border-slate-700';
                 const textClass = tile.group ? GROUP_COLOR_MAP[tile.group] : 'text-slate-300';
 

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface MiniGameOverlayProps {
   onComplete: (rewardMoney: number) => void;
+  worldScale: number;
 }
 
-export const MiniGameOverlay: React.FC<MiniGameOverlayProps> = ({ onComplete }) => {
+export const MiniGameOverlay: React.FC<MiniGameOverlayProps> = ({ onComplete, worldScale }) => {
   const [tapCount, setTapCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(5);
   const [isFinished, setIsFinished] = useState(false);
@@ -12,7 +13,7 @@ export const MiniGameOverlay: React.FC<MiniGameOverlayProps> = ({ onComplete }) 
   useEffect(() => {
     if (timeLeft <= 0) {
       setIsFinished(true);
-      const earned = Math.min(tapCount * 10, 250);
+      const earned = Math.round(Math.min(tapCount * 10, 250) * worldScale / 10) * 10;
       const timer = setTimeout(() => {
         onComplete(earned);
       }, 1500);
@@ -24,7 +25,7 @@ export const MiniGameOverlay: React.FC<MiniGameOverlayProps> = ({ onComplete }) 
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft, tapCount, onComplete]);
+  }, [timeLeft, onComplete]);
 
   const handleTap = () => {
     if (timeLeft > 0) {
@@ -32,7 +33,7 @@ export const MiniGameOverlay: React.FC<MiniGameOverlayProps> = ({ onComplete }) 
     }
   };
 
-  const earned = Math.min(tapCount * 10, 250);
+  const earned = Math.round(Math.min(tapCount * 10, 250) * worldScale / 10) * 10;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">

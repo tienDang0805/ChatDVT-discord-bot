@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { PageShell } from '../../../../shared/components/PageShell';
 import type { GameState, TokenOption, TradeState, JailAction, PlayerState, TileDef } from '../game/types';
-import { TOKEN_OPTIONS, BOARD_TILES, BUILD_LEVELS, STATION_RENTS } from '../game/boardData';
+import { TOKEN_OPTIONS, BOARD_TILES } from '../game/boardData';
+import { getTilePrice } from '../game/economy';
 import { sounds } from '../utils/audio';
 import { MonopolyLobby } from './components/MonopolyLobby';
 import { MonopolyBoard } from './components/MonopolyBoard';
@@ -22,6 +23,7 @@ import { PlayerDetailModal } from './components/PlayerDetailModal';
 import { MonopolyActionToast } from './components/MonopolyActionToast';
 import { BuildPrompt } from './components/BuildPrompt';
 import { MoneyDeltaToast } from './components/MoneyDeltaToast';
+import { AuctionModal } from './components/AuctionModal';
 
 interface MonopolyGameProps {
   onBackToMenu?: () => void;
@@ -50,7 +52,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
   const [joinError, setJoinError] = useState('');
   const [playerId] = useState(() => generatePlayerId());
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [startMoney, setStartMoney] = useState(800);
+  const [startMoney, setStartMoney] = useState(1200);
 
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [visualPositions, setVisualPositions] = useState<Record<string, number>>({});
@@ -91,6 +93,19 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
           return next;
         });
       }
+    });
+
+    socket.on('monopoly:timer-tick', (data: { timer: number; phase: GameState['phase'] }) => {
+      setGameState(previous => {
+        if (!previous || previous.phase !== data.phase) return previous;
+        return {
+          ...previous,
+          turnTimer: data.timer,
+          auctionState: previous.auctionState
+            ? { ...previous.auctionState, timer: data.timer }
+            : null
+        };
+      });
     });
 
     socket.on('monopoly:player-moved', (data: { playerId: string; newPos: number; passedGo: boolean; path: number[] }) => {
@@ -183,13 +198,19 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
     });
 
     setScreen('in_game');
-  }, [playerName, playerId, selectedToken, connectSocket]);
+  }, [playerName, playerId, selectedToken, connectSocket, startMoney]);
 
   useEffect(() => {
     if (urlRoomParam && playerName.trim()) {
       joinRoom(urlRoomParam);
     }
   }, []);
+
+  useEffect(() => {
+    if (gameState?.phase !== 'BUILD_PHASE') {
+      setShowBuildMenu(false);
+    }
+  }, [gameState?.phase]);
 
   const handleCreateRoom = () => {
     const code = generateRoomCode();
@@ -359,10 +380,19 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
   const handleMiniGameComplete = useCallback((rewardMoney: number) => {
     if (!activeRoomId) return;
-    socketRef.current?.emit('monopoly:minigame-complete', {
+    socketRef.current?.emit('monopoly:mini-game-result', {
       roomId: activeRoomId,
       playerId: playerId,
       rewardMoney
+    });
+  }, [activeRoomId, playerId]);
+
+  const handleAuctionBid = useCallback((amount: number) => {
+    if (!activeRoomId) return;
+    socketRef.current?.emit('monopoly:auction-bid', {
+      roomId: activeRoomId,
+      playerId,
+      amount
     });
   }, [activeRoomId, playerId]);
 
@@ -463,18 +493,27 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
                   💰 Tiền Khởi Đầu
                 </label>
                 <div className="grid grid-cols-5 gap-1.5">
-                  {[500, 800, 1200, 1500, 2000].map(amount => (
+                  {([
+                    { amount: 500, label: 'Sinh tồn' },
+                    { amount: 800, label: 'Khó' },
+                    { amount: 1200, label: 'Cân bằng' },
+                    { amount: 1500, label: 'Dễ' },
+                    { amount: 2000, label: 'Đại gia' }
+                  ]).map(({ amount, label }) => (
                     <button
                       key={amount}
                       type="button"
                       onClick={() => setStartMoney(amount)}
-                      className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      className={`py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex flex-col items-center leading-tight ${
                         startMoney === amount
                           ? 'bg-gradient-to-b from-amber-400 to-orange-500 text-slate-950 shadow-[0_0_10px_rgba(245,158,11,0.4)] scale-105 border-2 border-amber-300'
                           : 'bg-slate-800 text-slate-300 border-2 border-slate-700 hover:border-slate-600'
                       }`}
                     >
-                      {amount}Đ
+                      <span>{amount}Đ</span>
+                      <span className={`text-[8px] mt-0.5 ${startMoney === amount ? 'text-slate-800' : 'text-slate-500'}`}>
+                        {label}{amount === 1200 ? ' ★' : ''}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -620,7 +659,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
       {passedGoAlert && (
         <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-green-500 to-emerald-600 text-white font-black text-xs sm:text-sm shadow-[0_0_35px_rgba(16,185,129,0.7)] border-2 border-emerald-300 animate-bounce">
           <span className="text-xl">🏁</span>
-          <span>ĐI QUA XUẤT PHÁT! NHẬN +200Đ LƯƠNG THÁNG!</span>
+          <span>ĐI QUA XUẤT PHÁT! NHẬN +{gameState.economy.goSalary}Đ LƯƠNG THÁNG!</span>
           <span className="text-xl">💰</span>
         </div>
       )}
@@ -715,7 +754,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
                       {currPlayer.username} đang xem mua
                     </span>
                     <span className="text-[11px] font-black text-white truncate w-full">
-                      {BOARD_TILES[gameState.pendingBuyTile || 0]?.name} ({BOARD_TILES[gameState.pendingBuyTile || 0]?.price}Đ)
+                      {BOARD_TILES[gameState.pendingBuyTile || 0]?.name} ({getTilePrice(gameState, gameState.pendingBuyTile || 0)}Đ)
                     </span>
                   </div>
                   <span className="text-[10px] text-amber-400 font-black bg-amber-500/25 px-2 py-0.5 rounded-full border border-amber-400/40 shrink-0">
@@ -753,12 +792,23 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
               />
 
               {isMyTurn && gameState.phase === 'BUILD_PHASE' && !isHopping && (
-                <button
-                  onClick={handleEndTurn}
-                  className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-200 font-black text-xs cursor-pointer shadow-[0_4px_0_#b45309,0_8px_16px_rgba(217,119,6,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#b45309] hover:scale-105 transition-all"
-                >
-                  KẾT THÚC LƯỢT ➔
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowBuildMenu(true)}
+                    disabled={Boolean(currPlayer?.hasBuiltThisTurn)}
+                    className={`px-4 py-2 rounded-full border-2 font-black text-xs transition-all ${currPlayer?.hasBuiltThisTurn
+                      ? 'cursor-not-allowed border-slate-600 bg-slate-800 text-slate-500'
+                      : 'cursor-pointer border-sky-200 bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-[0_4px_0_#1d4ed8] hover:scale-105 active:translate-y-1'}`}
+                  >
+                    🔨 XÂY DỰNG
+                  </button>
+                  <button
+                    onClick={handleEndTurn}
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 border-2 border-amber-200 font-black text-xs cursor-pointer shadow-[0_4px_0_#b45309,0_8px_16px_rgba(217,119,6,0.4)] active:translate-y-1 active:shadow-[0_1px_0_#b45309] hover:scale-105 transition-all"
+                  >
+                    KẾT THÚC LƯỢT ➔
+                  </button>
+                </div>
               )}
 
               {isMyTurn && gameState.phase === 'END_TURN' && !isHopping && (
@@ -781,6 +831,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
       {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUY_PROMPT' && gameState.pendingBuyTile !== null && gameState.pendingBuyTile !== undefined && (
         <BuyPrompt
+          gameState={gameState}
           tileIndex={gameState.pendingBuyTile}
           playerMoney={currPlayer?.money || 0}
           discount={gameState.discountBuyPercent || 1}
@@ -795,6 +846,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         const buyoutOwner = gameState.players.find(p => !p.isEliminated && p.properties.includes(gameState.pendingBuyoutTile!));
         return (
           <BuyPrompt
+            gameState={gameState}
             tileIndex={gameState.pendingBuyoutTile}
             playerMoney={currPlayer?.money || 0}
             timer={gameState.turnTimer}
@@ -820,6 +872,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         <JailModal
           player={currPlayer}
           isMyTurn={true}
+          bailAmount={gameState.economy.jailBail}
           onAction={handleJailAction}
         />
       )}
@@ -837,7 +890,11 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
 
 
       {gameState.phase === 'MINI_GAME' && (
-        <MiniGameOverlay onComplete={handleMiniGameComplete} />
+        <MiniGameOverlay onComplete={handleMiniGameComplete} worldScale={gameState.economy.worldScale} />
+      )}
+
+      {gameState.phase === 'AUCTION' && gameState.auctionState && (
+        <AuctionModal gameState={gameState} myPlayerId={playerId} onBid={handleAuctionBid} />
       )}
 
       {gameState.phase === 'GLOBAL_EVENT' && gameState.activeEvent && (
@@ -882,11 +939,24 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({ onBackToMenu }) => {
         />
       )}
 
+      {showBuildMenu && isMyTurn && gameState.phase === 'BUILD_PHASE' && (
+        <BuildMenu
+          gameState={gameState}
+          myPlayerId={playerId}
+          onBuild={(tileIndex) => {
+            handleBuildTile(tileIndex);
+            setShowBuildMenu(false);
+          }}
+          onEndTurn={handleEndTurn}
+        />
+      )}
+
       {!isHopping && !postAnimDelay && isMyTurn && gameState.phase === 'BUILD_PROMPT' && gameState.pendingBuildTile !== null && gameState.pendingBuildTile !== undefined && (() => {
         const me = gameState.players.find(p => p.id === playerId);
         const buildLevel = me?.buildings[gameState.pendingBuildTile] || 0;
         return (
           <BuildPrompt
+            gameState={gameState}
             tileIndex={gameState.pendingBuildTile}
             playerMoney={me?.money || 0}
             currentLevel={buildLevel}

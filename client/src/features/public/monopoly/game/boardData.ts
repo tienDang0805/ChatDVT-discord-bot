@@ -3,39 +3,39 @@ import type { TileDef, CardDef, GlobalEventDef, TokenOption } from './types';
 export const BOARD_TILES: TileDef[] = [
   { index: 0, type: 'start', name: 'XUẤT PHÁT', flavor: 'Đi qua đây nhận 200Đ' },
 
-  { index: 1, type: 'property', name: 'Quận 4', flavor: 'Nhà Huy — Hẻm nhỏ nhưng có tình', group: 'green', price: 60, baseRent: 6 },
+  { index: 1, type: 'property', name: 'Quận 4', flavor: 'Nhà Huy — Hẻm nhỏ nhưng có tình', group: 'green', price: 100, baseRent: 15, rentByLevel: [15, 40, 80, 160, 300], riskTier: 'normal' },
   { index: 2, type: 'community', name: 'Khí Vận', flavor: 'Rút 1 thẻ' },
-  { index: 3, type: 'property', name: 'Bình Tân', flavor: 'Nhà Bảo — Xa trung tâm nhưng yên tĩnh', group: 'green', price: 70, baseRent: 8 },
-  { index: 4, type: 'tax', name: 'Phạt Giao Thông', flavor: 'Vượt đèn đỏ!', taxAmount: 80 },
-  { index: 5, type: 'station', name: 'Cà Phê HP', flavor: 'Tụ điểm 8D — Nơi bắt đầu mọi drama', price: 150, stationIcon: '☕' },
-  { index: 6, type: 'property', name: 'Ninh Thuận', flavor: 'Nhà Tâm — Nắng gió quanh năm', group: 'green', price: 80, baseRent: 10 },
+  { index: 3, type: 'property', name: 'Bình Tân', flavor: 'Nhà Bảo — Xa trung tâm nhưng yên tĩnh', group: 'green', price: 130, baseRent: 20, rentByLevel: [20, 50, 100, 200, 380], riskTier: 'normal' },
+  { index: 4, type: 'tax', name: 'Phạt Giao Thông', flavor: 'Vượt đèn đỏ!', taxAmount: 120 },
+  { index: 5, type: 'station', name: 'Cà Phê HP', flavor: 'Tụ điểm 8D — Nơi bắt đầu mọi drama', price: 250, stationIcon: '☕' },
+  { index: 6, type: 'property', name: 'Ninh Thuận', flavor: 'Nhà Tâm — Nắng gió quanh năm', group: 'green', price: 160, baseRent: 25, rentByLevel: [25, 60, 120, 240, 450], riskTier: 'normal' },
 
   { index: 7, type: 'jail', name: 'TÙ / THĂM TÙ', flavor: 'Ở ngoài thì thăm thôi' },
 
-  { index: 8, type: 'property', name: 'Thủ Đức', flavor: 'TP mới, đất đang lên', group: 'blue', price: 100, baseRent: 14 },
+  { index: 8, type: 'property', name: 'Thủ Đức', flavor: 'TP mới, đất đang lên', group: 'blue', price: 200, baseRent: 30, rentByLevel: [30, 75, 150, 300, 550], riskTier: 'normal' },
   { index: 9, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
-  { index: 10, type: 'property', name: 'Bình Thạnh', flavor: 'Gần sông, view đẹp', group: 'blue', price: 120, baseRent: 16 },
-  { index: 11, type: 'station', name: 'Nhà Kim Liễu', flavor: 'Nơi anh 6 trấn giữ — vào là không muốn ra', price: 150, stationIcon: '💅' },
-  { index: 12, type: 'property', name: 'Gò Vấp', flavor: 'Kẹt xe huyền thoại', group: 'blue', price: 130, baseRent: 18 },
-  { index: 13, type: 'property', name: 'Tân Bình', flavor: 'Gần sân bay, đất hot', group: 'blue', price: 140, baseRent: 20 },
+  { index: 10, type: 'property', name: 'Bình Thạnh', flavor: 'Gần sông, view đẹp', group: 'blue', price: 230, baseRent: 35, rentByLevel: [35, 90, 180, 360, 650], riskTier: 'normal' },
+  { index: 11, type: 'station', name: 'Nhà Kim Liễu', flavor: 'Nơi anh 6 trấn giữ — vào là không muốn ra', price: 250, stationIcon: '💅' },
+  { index: 12, type: 'property', name: 'Gò Vấp', flavor: 'Kẹt xe huyền thoại', group: 'blue', price: 260, baseRent: 40, rentByLevel: [40, 105, 210, 420, 750], riskTier: 'normal' },
+  { index: 13, type: 'property', name: 'Tân Bình', flavor: 'Gần sân bay, đất hot', group: 'blue', price: 290, baseRent: 45, rentByLevel: [45, 120, 240, 480, 850], riskTier: 'hot' },
 
   { index: 14, type: 'free_parking', name: 'Quán Cà Phê 8D', flavor: 'Nghỉ chân, nhặt quỹ charity' },
 
-  { index: 15, type: 'property', name: 'Phú Nhuận', flavor: 'Sầm uất 24/7', group: 'yellow', price: 160, baseRent: 22 },
+  { index: 15, type: 'property', name: 'Phú Nhuận', flavor: 'Sầm uất 24/7', group: 'yellow', price: 340, baseRent: 50, rentByLevel: [50, 150, 300, 600, 1000], riskTier: 'hot' },
   { index: 16, type: 'community', name: 'Khí Vận', flavor: 'Rút 1 thẻ' },
-  { index: 17, type: 'property', name: 'Quận 1', flavor: 'Đất vàng Sài Gòn', group: 'yellow', price: 180, baseRent: 26 },
-  { index: 18, type: 'station', name: 'Sân Bay TSN', flavor: 'Hàng không quốc tế', price: 150, stationIcon: '✈️' },
-  { index: 19, type: 'tax', name: 'Thuế Nhà Đất', flavor: 'Nộp thuế cho nhà nước!', taxAmount: 120 },
-  { index: 20, type: 'property', name: 'Nha Trang', flavor: 'Biển xanh cát trắng', group: 'yellow', price: 210, baseRent: 30 },
+  { index: 17, type: 'property', name: 'Quận 1', flavor: 'Đất vàng Sài Gòn', group: 'yellow', price: 390, baseRent: 60, rentByLevel: [60, 180, 360, 720, 1200], riskTier: 'hot' },
+  { index: 18, type: 'station', name: 'Sân Bay TSN', flavor: 'Hàng không quốc tế', price: 250, stationIcon: '✈️' },
+  { index: 19, type: 'tax', name: 'Thuế Nhà Đất', flavor: 'Nộp thuế cho nhà nước!', taxAmount: 200 },
+  { index: 20, type: 'property', name: 'Nha Trang', flavor: 'Biển xanh cát trắng', group: 'yellow', price: 450, baseRent: 70, rentByLevel: [70, 210, 420, 840, 1400], riskTier: 'hot' },
 
   { index: 21, type: 'go_jail', name: 'BỊ CÔNG AN BẮT', flavor: 'Vào tù ngay!' },
 
-  { index: 22, type: 'property', name: 'Đắk Nông', flavor: 'Thủ phủ Tây Nguyên', group: 'red', price: 240, baseRent: 34 },
+  { index: 22, type: 'property', name: 'Đắk Nông', flavor: 'Thủ phủ Tây Nguyên', group: 'red', price: 520, baseRent: 80, rentByLevel: [80, 240, 480, 960, 1600], riskTier: 'critical' },
   { index: 23, type: 'chance', name: 'Cơ Hội', flavor: 'Rút 1 thẻ' },
-  { index: 24, type: 'property', name: 'Gia Nghĩa Center', flavor: 'Trung tâm hành chính', group: 'red', price: 270, baseRent: 38 },
-  { index: 25, type: 'station', name: 'Nhà Chị Hân', flavor: 'Dọn trọ giúp chị nhưng chị đi chơi với thằng khác', price: 150, stationIcon: '💔' },
-  { index: 26, type: 'property', name: 'Hà Nội', flavor: 'Thủ đô ngàn năm', group: 'purple', price: 320, baseRent: 46 },
-  { index: 27, type: 'property', name: 'Resort 5⭐', flavor: 'Biệt Thự Tiến Đặng 👑', group: 'purple', price: 400, baseRent: 60 },
+  { index: 24, type: 'property', name: 'Gia Nghĩa Center', flavor: 'Trung tâm hành chính', group: 'red', price: 600, baseRent: 100, rentByLevel: [100, 280, 560, 1100, 1800], riskTier: 'critical' },
+  { index: 25, type: 'station', name: 'Nhà Chị Hân', flavor: 'Dọn trọ giúp chị nhưng chị đi chơi với thằng khác', price: 250, stationIcon: '💔' },
+  { index: 26, type: 'property', name: 'Hà Nội', flavor: 'Thủ đô ngàn năm', group: 'purple', price: 750, baseRent: 110, rentByLevel: [110, 320, 640, 1250, 2000], riskTier: 'critical' },
+  { index: 27, type: 'property', name: 'Resort 5⭐', flavor: 'Biệt Thự Tiến Đặng 👑', group: 'purple', price: 900, baseRent: 130, rentByLevel: [130, 380, 760, 1450, 2300], riskTier: 'critical' },
 ];
 
 export const CHANCE_CARDS: CardDef[] = [
@@ -78,7 +78,7 @@ export const COMMUNITY_CARDS: CardDef[] = [
 ];
 
 export const GLOBAL_EVENTS: GlobalEventDef[] = [
-  { key: 'DAKNONG_FEVER', name: 'Sốt Đất Đắk Nông', icon: '🏔️', description: 'Thuê nhóm Đỏ ×3!', duration: 3, effect: { type: 'multiply_rent_group', group: 'red', multiplier: 3 } },
+  { key: 'DAKNONG_FEVER', name: 'Sốt Đất Đắk Nông', icon: '🏔️', description: 'Thuê nhóm Đỏ ×1.5!', duration: 3, effect: { type: 'multiply_rent_group', group: 'red', multiplier: 1.5 } },
   { key: 'SAIGON_FLOOD', name: 'Ngập Lụt Sài Gòn', icon: '🌧️', description: 'Nhóm Xanh đóng băng', duration: 2, effect: { type: 'freeze_groups', groups: ['green', 'blue'] } },
   { key: 'INFLATION', name: 'Lạm Phát', icon: '📉', description: 'Mất 10% số tiền', duration: 0, effect: { type: 'lose_percent', percent: 10 } },
   { key: 'FESTIVAL_8D', name: 'Festival 8D', icon: '🎊', description: 'Qua START được 300Đ', duration: 3, effect: { type: 'bonus_go', amount: 300 } },
@@ -102,13 +102,13 @@ export const TOKEN_OPTIONS: TokenOption[] = [
 
 export const BUILD_LEVELS = [
   { level: 0, name: 'Chuồng Chó', icon: '🐕', cost: 0, rentMultiplier: 1 },
-  { level: 1, name: 'Nhà Cấp 4', icon: '🏚️', cost: 50, rentMultiplier: 3 },
-  { level: 2, name: 'Nhà Phố', icon: '🏠', cost: 100, rentMultiplier: 5 },
-  { level: 3, name: 'Biệt Thự Mini', icon: '🏢', cost: 150, rentMultiplier: 8 },
-  { level: 4, name: 'Biệt Thự Pha Ke', icon: '🏰', cost: 250, rentMultiplier: 15 },
+  { level: 1, name: 'Nhà Cấp 4', icon: '🏚️', cost: 70, rentMultiplier: 1 },
+  { level: 2, name: 'Nhà Phố', icon: '🏠', cost: 120, rentMultiplier: 1 },
+  { level: 3, name: 'Biệt Thự Mini', icon: '🏢', cost: 200, rentMultiplier: 1 },
+  { level: 4, name: 'Biệt Thự Pha Ke', icon: '🏰', cost: 320, rentMultiplier: 1 },
 ];
 
-export const STATION_RENTS = [0, 25, 50, 100, 200];
+export const STATION_RENTS = [0, 70, 170, 350, 650];
 
 export function getGroupTiles(group: string): number[] {
   return BOARD_TILES.filter(t => t.group === group).map(t => t.index);

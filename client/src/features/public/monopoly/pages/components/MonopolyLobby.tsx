@@ -56,7 +56,8 @@ export const MonopolyLobby: React.FC<MonopolyLobbyProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-400 font-semibold mt-0.5">
-              Chọn nhân vật Chibi 8D và sẵn sàng trước khi Host bắt đầu
+              Chế độ <strong className="text-amber-300">{gameState.economy.label}</strong>
+              {' • '}{gameState.economy.startMoney}Đ khởi đầu • tối đa {gameState.maxRounds} vòng
             </p>
           </div>
         </div>

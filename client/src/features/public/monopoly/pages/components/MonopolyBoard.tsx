@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { GameState, TileDef, PlayerState } from '../../game/types';
-import { BOARD_TILES, BUILD_LEVELS, STATION_RENTS } from '../../game/boardData';
+import { BOARD_TILES, BUILD_LEVELS } from '../../game/boardData';
+import { getDisplayedRent, getTilePrice } from '../../game/economy';
 import { PropertyCard } from './PropertyCard';
 
 interface MonopolyBoardProps {
@@ -250,6 +251,13 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
         .pawn-hopping-3d {
           animation: pawnHopBillboard 0.28s ease-in-out infinite;
         }
+        @keyframes criticalBurn {
+          0%, 100% { filter: saturate(1) drop-shadow(0 0 3px rgba(239,68,68,0.7)); }
+          50% { filter: saturate(1.35) drop-shadow(0 0 11px rgba(249,115,22,1)); }
+        }
+        .critical-burn {
+          animation: criticalBurn 1.15s ease-in-out infinite;
+        }
       `}</style>
 
       <div
@@ -331,16 +339,12 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 ? groupConf.headerGradient
                 : '#64748b';
 
-              const headerTitle = isResort ? 'RESORT' : isStation ? 'TRẠM' : isTax ? 'PHẠT' : isChance ? 'CƠ HỘI' : isCommunity ? 'KHÍ VẬN' : groupConf?.name || '';
+              const riskLabel = tile.riskTier === 'critical' ? 'CRITICAL' : tile.riskTier === 'hot' ? 'HOT ZONE' : '';
+              const headerTitle = isResort ? 'RESORT' : isStation ? 'TRẠM' : isTax ? 'PHẠT' : isChance ? 'CƠ HỘI' : isCommunity ? 'KHÍ VẬN' : riskLabel || groupConf?.name || '';
 
               const renderPriceBadge = (extraClass = '') => {
                 if (owner && (tile.type === 'property' || isStation)) {
-                  const rentAmount = isStation
-                    ? (() => {
-                        const stCount = gameState.players.find(p => p.id === owner.id)?.properties.filter(t => BOARD_TILES[t]?.type === 'station').length || 1;
-                        return STATION_RENTS[stCount] || STATION_RENTS[1];
-                      })()
-                    : Math.floor((tile.baseRent || 10) * (BUILD_LEVELS[buildLevel]?.rentMultiplier || 1));
+                  const rentAmount = getDisplayedRent(gameState, tile.index, buildLevel, owner.id);
                   return (
                     <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-xs border border-rose-300 whitespace-nowrap ${extraClass}`}>
                       {rentAmount}Đ
@@ -350,14 +354,14 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                 if (tile.price) {
                   return (
                     <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-amber-200 text-amber-950 border border-amber-400 shadow-xs whitespace-nowrap ${extraClass}`}>
-                      {tile.price}Đ
+                      {getTilePrice(gameState, tile.index)}Đ
                     </span>
                   );
                 }
                 if (tile.taxAmount) {
                   return (
                     <span className={`text-[7.5px] font-black px-1.5 py-0.5 rounded-full leading-none bg-rose-600 text-white shadow-xs whitespace-nowrap ${extraClass}`}>
-                      -{tile.taxAmount}Đ
+                      -{gameState.economy.taxAmounts[tile.index] || tile.taxAmount}Đ
                     </span>
                   );
                 }
@@ -376,9 +380,14 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                     gridColumn: pos.col,
                     background: tileBg,
                     border: tileBorder,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    boxShadow: tile.riskTier === 'critical'
+                      ? 'inset 0 0 0 2px rgba(239,68,68,0.65), 0 0 14px rgba(239,68,68,0.7)'
+                      : tile.riskTier === 'hot'
+                        ? 'inset 0 0 0 1px rgba(249,115,22,0.55), 0 0 8px rgba(249,115,22,0.45)'
+                        : undefined
                   }}
-                  className={`iso-tile rounded-md overflow-hidden relative shadow-sm ${
+                  className={`iso-tile rounded-md overflow-hidden relative shadow-sm ${tile.riskTier === 'critical' && buildLevel >= 3 ? 'critical-burn' : ''} ${
                     isLandingTarget ? 'animate-[landingPulse_1.2s_ease-in-out_infinite] z-20' : isInspected ? 'iso-tile-selected z-15' : 'z-0'
                   }`}
                 >
@@ -399,7 +408,7 @@ export const MonopolyBoard: React.FC<MonopolyBoardProps> = ({
                             : 'bg-black/75 text-amber-300'
                         }`}
                       >
-                        {idx === 14 ? `${gameState.freeParkingPool}Đ` : cornerData.sub}
+                        {idx === 14 ? `${gameState.freeParkingPool}Đ` : idx === 0 ? `+${gameState.economy.goSalary}Đ` : cornerData.sub}
                       </span>
                     </div>
                   ) : pos.side === 'bottom' ? (

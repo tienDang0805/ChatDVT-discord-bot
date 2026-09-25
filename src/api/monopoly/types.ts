@@ -1,8 +1,10 @@
 export type TileType = 'property' | 'station' | 'chance' | 'community' | 'tax' | 'start' | 'jail' | 'go_jail' | 'free_parking';
 export type PropertyGroup = 'green' | 'blue' | 'yellow' | 'red' | 'purple';
+export type RiskTier = 'normal' | 'hot' | 'critical';
+export type EconomyMode = 'SURVIVAL' | 'HARD' | 'BALANCED' | 'EASY' | 'TYCOON';
 export type GamePhase =
   | 'LOBBY' | 'COUNTDOWN' | 'ROLL_DICE' | 'MOVING' | 'LAND_ACTION'
-  | 'BUY_PROMPT' | 'BUYOUT_PROMPT' | 'BUILD_PROMPT' | 'CARD_REVEAL' | 'MINI_GAME'
+  | 'BUY_PROMPT' | 'BUYOUT_PROMPT' | 'AUCTION' | 'BUILD_PROMPT' | 'CARD_REVEAL' | 'MINI_GAME'
   | 'JAIL_ACTION' | 'BUILD_PHASE' | 'TRADE_PHASE' | 'END_TURN'
   | 'GLOBAL_EVENT' | 'GAME_OVER';
 
@@ -20,6 +22,8 @@ export interface TileDef {
   group?: PropertyGroup;
   price?: number;
   baseRent?: number;
+  rentByLevel?: [number, number, number, number, number];
+  riskTier?: RiskTier;
   taxAmount?: number;
   stationIcon?: string;
 }
@@ -94,6 +98,8 @@ export interface PlayerState {
   isHost: boolean;
   totalRentPaid: number;
   totalRentCollected: number;
+  buyoutsThisLap: number;
+  hasBuiltThisTurn: boolean;
 }
 
 export interface AuctionState {
@@ -102,6 +108,32 @@ export interface AuctionState {
   currentBid: number;
   currentBidderId: string | null;
   timer: number;
+}
+
+export interface EconomyConfig {
+  mode: EconomyMode;
+  label: string;
+  startMoney: 500 | 800 | 1200 | 1500 | 2000;
+  worldScale: number;
+  goSalary: number;
+  jailBail: number;
+  freeParkingPayoutCap: number;
+  propertyPrices: Record<number, number>;
+  rentsByTile: Record<number, number[]>;
+  buildCostsByGroup: Record<PropertyGroup, number[]>;
+  stationRents: number[];
+  taxAmounts: Record<number, number>;
+}
+
+export interface BuyoutQuote {
+  tileIndex: number;
+  assetValue: number;
+  salePrice: number;
+  transactionFee: number;
+  buyerPays: number;
+  ownerReceives: number;
+  level: number;
+  setPremiumApplied: boolean;
 }
 
 export interface TradeOffer {
@@ -132,6 +164,7 @@ export interface GameState {
   currentPlayerIndex: number;
   round: number;
   maxRounds: number;
+  economy: EconomyConfig;
   lastDice: [number, number];
   activeEvent: GlobalEventDef | null;
   eventRoundsLeft: number;
@@ -143,6 +176,7 @@ export interface GameState {
   lastDrawnCard?: CardDef | null;
   pendingBuyTile?: number | null;
   pendingBuyoutTile?: number | null;
+  pendingBuyoutQuote?: BuyoutQuote | null;
   discountBuyPercent?: number;
   rolledDouble?: boolean;
   pendingBuildTile?: number | null;

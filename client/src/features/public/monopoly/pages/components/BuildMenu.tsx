@@ -1,6 +1,7 @@
 import React from 'react';
 import type { GameState } from '../../game/types';
 import { BOARD_TILES, BUILD_LEVELS, getGroupTiles } from '../../game/boardData';
+import { getBuildCost, getDisplayedRent } from '../../game/economy';
 
 interface BuildMenuProps {
   gameState: GameState;
@@ -48,12 +49,13 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
               const isMaxLevel = currentLevel >= 4;
               const nextLevel = currentLevel + 1;
               const nextConfig = BUILD_LEVELS[nextLevel];
-              const cost = nextConfig?.cost || 0;
+              const cost = getBuildCost(gameState, tile.index, nextLevel);
 
               const groupTiles = tile.group ? getGroupTiles(tile.group) : [];
               const ownsGroup = groupTiles.length > 0 && groupTiles.every(tIdx => me.properties.includes(tIdx));
               const canAfford = me.money >= cost;
-              const canUpgrade = ownsGroup && !isMaxLevel && canAfford;
+              const needsFullGroup = nextLevel >= 3;
+              const canUpgrade = !me.hasBuiltThisTurn && (!needsFullGroup || ownsGroup) && !isMaxLevel && canAfford;
 
               return (
                 <div
@@ -69,10 +71,11 @@ export const BuildMenu: React.FC<BuildMenuProps> = ({
                     </div>
 
                     <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400">
-                      <span>Thuê: <strong className="text-amber-400">{(tile.baseRent || 10) * BUILD_LEVELS[currentLevel].rentMultiplier}Đ</strong></span>
-                      {!ownsGroup && (
-                        <span className="text-red-400 text-[10px] font-semibold">• Cần sở hữu trọn bộ màu để xây</span>
+                      <span>Thuê: <strong className="text-amber-400">{getDisplayedRent(gameState, tile.index, currentLevel, me.id)}Đ</strong></span>
+                      {needsFullGroup && !ownsGroup && (
+                        <span className="text-red-400 text-[10px] font-semibold">• Cấp 3–4 cần trọn bộ màu</span>
                       )}
+                      {me.hasBuiltThisTurn && <span className="text-amber-400 text-[10px] font-semibold">• Đã xây trong lượt này</span>}
                     </div>
                   </div>
 

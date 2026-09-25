@@ -18,31 +18,35 @@ import {
   COMMUNITY_CARDS,
   GLOBAL_EVENTS,
   BUILD_LEVELS,
-  STATION_RENTS,
   TOKEN_OPTIONS,
   getGroupTiles,
   getStationTiles
 } from './boardData';
 import {
   START_MONEY,
-  GO_SALARY,
   MAX_ROUNDS,
   BOARD_SIZE,
   JAIL_POSITION,
-  GO_JAIL_POSITION,
-  FREE_PARKING_POSITION,
-  JAIL_BAIL,
   MAX_JAIL_TURNS,
   TURN_TIMER,
   BUY_TIMER,
+  AUCTION_TIMER,
+  MIN_BID_INCREMENT,
   TRADE_TIMER,
   BUILD_TIMER,
   EVENT_EVERY_N_ROUNDS,
-  BUYOUT_MULTIPLIER,
-  BUYOUT_MAX_LEVEL,
   STATION_COUNT_TO_WIN,
   SELL_BUILDING_REFUND_PERCENT
 } from './constants';
+import {
+  createEconomyConfig,
+  getBuildCost,
+  getBuyoutQuote,
+  getRentAtLevel,
+  getTilePrice,
+  roundMoney,
+  scaleMoney
+} from './economy';
 
 export function shuffleDeck<T>(deck: T[]): T[] {
   const result = [...deck];
@@ -54,7 +58,8 @@ export function shuffleDeck<T>(deck: T[]): T[] {
 }
 
 export function createInitialState(roomId: string, playersData: PlayerJoinData[], customStartMoney?: number): GameState {
-  const moneyAmount = customStartMoney || START_MONEY;
+  const economy = createEconomyConfig(customStartMoney || START_MONEY);
+  const moneyAmount = economy.startMoney;
   const players: PlayerState[] = playersData.map((p, index) => {
     const defaultToken = TOKEN_OPTIONS[index % TOKEN_OPTIONS.length];
     return {
@@ -77,7 +82,9 @@ export function createInitialState(roomId: string, playersData: PlayerJoinData[]
       isReady: false,
       isHost: index === 0,
       totalRentPaid: 0,
-      totalRentCollected: 0
+      totalRentCollected: 0,
+      buyoutsThisLap: 0,
+      hasBuiltThisTurn: false
     };
   });
 
@@ -88,6 +95,7 @@ export function createInitialState(roomId: string, playersData: PlayerJoinData[]
     currentPlayerIndex: 0,
     round: 1,
     maxRounds: MAX_ROUNDS,
+    economy,
     lastDice: [1, 1],
     activeEvent: null,
     eventRoundsLeft: 0,
@@ -143,7 +151,7 @@ export function movePlayer(state: GameState, playerId: string, steps: number): M
   const newPos = (oldPos + steps) % BOARD_SIZE;
   const passedGo = oldPos + steps >= BOARD_SIZE;
 
-  let salary = GO_SALARY;
+  let salary = state.economy.goSalary;
   if (state.activeEvent && state.activeEvent.effect.type === 'bonus_go') {
     salary = state.activeEvent.effect.amount;
   }
@@ -153,7 +161,8 @@ export function movePlayer(state: GameState, playerId: string, steps: number): M
       return {
         ...p,
         position: newPos,
-        money: passedGo ? p.money + salary : p.money
+        money: passedGo ? p.money + salary : p.money,
+        buyoutsThisLap: passedGo ? 0 : p.buyoutsThisLap
       };
     }
     return p;
@@ -181,8 +190,8 @@ export function getStationCount(state: GameState, ownerId: string): number {
 
 export function getStationRent(state: GameState, ownerId: string): number {
   const count = getStationCount(state, ownerId);
-  const index = Math.min(count, STATION_RENTS.length - 1);
-  return STATION_RENTS[index] || 25;
+  const index = Math.min(count, state.economy.stationRents.length - 1);
+  return state.economy.stationRents[index] || state.economy.stationRents[1] || 0;
 }
 
 export function calculateRent(state: GameState, tileIndex: number): number {
@@ -198,13 +207,11 @@ export function calculateRent(state: GameState, tileIndex: number): number {
 
   if (tile.type !== 'property') return 0;
 
-  const baseRent = tile.baseRent || 10;
   const buildLevel = owner.buildings[tileIndex] || 0;
-  const buildConfig = BUILD_LEVELS[buildLevel] || BUILD_LEVELS[0];
-  let rent = baseRent * buildConfig.rentMultiplier;
+  let rent = getRentAtLevel(state, tileIndex, buildLevel);
 
   if (tile.group && ownsFullGroup(state, owner.id, tile.group)) {
-    rent *= 2;
+    rent *= 1.25;
   }
 
   if (state.activeEvent) {
@@ -216,7 +223,14 @@ export function calculateRent(state: GameState, tileIndex: number): number {
     }
   }
 
-  return Math.floor(rent);
+  const maxRent = getRentAtLevel(state, tileIndex, 4) * 1.5;
+  return roundMoney(Math.min(rent, maxRent));
+}
+
+export function depositPenalty(state: GameState, paidAmount: number): number {
+  const poolShare = Math.floor(paidAmount * 0.5);
+  state.freeParkingPool += poolShare;
+  return poolShare;
 }
 
 export interface PaymentResult {
@@ -274,7 +288,7 @@ export function executePayment(
 
     const t = buildingTiles[0];
     const lvl = debtor.buildings[t];
-    const cost = BUILD_LEVELS[lvl]?.cost || 100;
+    const cost = getBuildCost(state, t, lvl) || 100;
     const refund = Math.floor(cost * SELL_BUILDING_REFUND_PERCENT);
     debtor.money += refund;
 
@@ -294,14 +308,14 @@ export function executePayment(
 
   while (debtor.money < amount && debtor.properties.length > 0) {
     const sortedProps = [...debtor.properties].sort((a, b) => {
-      const priceA = BOARD_TILES[a]?.price || 50;
-      const priceB = BOARD_TILES[b]?.price || 50;
+      const priceA = getTilePrice(state, a) || 50;
+      const priceB = getTilePrice(state, b) || 50;
       return priceA - priceB;
     });
 
     const propToSell = sortedProps[0];
     const tileDef = BOARD_TILES[propToSell];
-    const propRefund = Math.floor((tileDef?.price || 60) * 0.5);
+    const propRefund = Math.floor((getTilePrice(state, propToSell) || 60) * 0.5);
     debtor.money += propRefund;
 
     debtor.properties = debtor.properties.filter(t => t !== propToSell);
@@ -366,8 +380,9 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
   const player = state.players.find(p => p.id === playerId);
   const tile = BOARD_TILES[tileIndex];
   if (!player || !tile || !tile.price) return state;
+  if (state.activeEvent?.effect.type === 'no_build') return state;
 
-  const finalCost = Math.floor(tile.price * discount);
+  const finalCost = roundMoney(getTilePrice(state, tileIndex) * discount);
   if (player.money < finalCost) return state;
 
   const isAlreadyOwned = state.players.some(p => p.properties.includes(tileIndex));
@@ -407,23 +422,88 @@ export function buyProperty(state: GameState, playerId: string, tileIndex: numbe
   return nextState;
 }
 
-export function canBuyout(state: GameState, playerId: string, tileIndex: number): boolean {
+export function startAuction(state: GameState, tileIndex: number): GameState {
   const tile = BOARD_TILES[tileIndex];
-  if (!tile || !tile.price) return false;
-  if (tile.type === 'station') return false;
-  if (tile.type !== 'property') return false;
+  const price = getTilePrice(state, tileIndex);
+  if (state.activeEvent?.effect.type === 'no_build') return { ...state, pendingBuyTile: null, phase: 'BUILD_PHASE', turnTimer: BUILD_TIMER };
+  if (!tile?.price || price <= 0 || state.players.some(p => p.properties.includes(tileIndex))) return state;
 
+  const startPrice = roundMoney(price * 0.5);
+  let nextState: GameState = {
+    ...state,
+    phase: 'AUCTION',
+    pendingBuyTile: null,
+    auctionState: {
+      tileIndex,
+      startPrice,
+      currentBid: 0,
+      currentBidderId: null,
+      timer: AUCTION_TIMER
+    },
+    turnTimer: AUCTION_TIMER
+  };
+  return addLog(nextState, '🔨', `Đấu giá "${tile.name}" bắt đầu từ ${startPrice}Đ!`, 'buy');
+}
+
+export function placeAuctionBid(state: GameState, playerId: string, amount: number): GameState {
+  const auction = state.auctionState;
+  const player = state.players.find(p => p.id === playerId && !p.isEliminated);
+  if (!auction || state.phase !== 'AUCTION' || !player || !Number.isFinite(amount)) return state;
+
+  const increment = scaleMoney(state, MIN_BID_INCREMENT);
+  const minimumBid = auction.currentBidderId ? auction.currentBid + increment : auction.startPrice;
+  const bid = roundMoney(amount);
+  if (bid < minimumBid || player.money < bid) return state;
+
+  const nextState: GameState = {
+    ...state,
+    auctionState: { ...auction, currentBid: bid, currentBidderId: playerId, timer: AUCTION_TIMER },
+    turnTimer: AUCTION_TIMER
+  };
+  return addLog(nextState, '🔨', `${player.username} trả giá ${bid}Đ cho "${BOARD_TILES[auction.tileIndex]?.name}".`, 'buy');
+}
+
+export function finalizeAuction(state: GameState): GameState {
+  const auction = state.auctionState;
+  if (!auction) return { ...state, phase: 'BUILD_PHASE', turnTimer: BUILD_TIMER };
+
+  const tile = BOARD_TILES[auction.tileIndex];
+  const winner = auction.currentBidderId
+    ? state.players.find(p => p.id === auction.currentBidderId && !p.isEliminated && p.money >= auction.currentBid)
+    : null;
+
+  if (!winner || !tile) {
+    return addLog({ ...state, auctionState: null, phase: 'BUILD_PHASE', turnTimer: BUILD_TIMER }, '🔨', `Đấu giá "${tile?.name || 'BĐS'}" kết thúc mà không có người mua.`, 'buy');
+  }
+
+  const updatedPlayers = state.players.map(p => p.id === winner.id ? {
+    ...p,
+    money: p.money - auction.currentBid,
+    properties: [...p.properties, auction.tileIndex],
+    buildings: { ...p.buildings, [auction.tileIndex]: 0 }
+  } : p);
+
+  let nextState: GameState = {
+    ...state,
+    players: updatedPlayers,
+    auctionState: null,
+    phase: 'BUILD_PHASE',
+    turnTimer: BUILD_TIMER
+  };
+  nextState = addLog(nextState, '🏷️', `${winner.username} thắng đấu giá "${tile.name}" với ${auction.currentBid}Đ!`, 'buy');
+
+  if (tile.type === 'station' && getStationCount(nextState, winner.id) >= STATION_COUNT_TO_WIN) {
+    nextState.phase = 'GAME_OVER';
+    nextState = addLog(nextState, '🏆', `${winner.username} sở hữu đủ ${STATION_COUNT_TO_WIN} ga và thắng ngay!`, 'system');
+  }
+  return nextState;
+}
+
+export function canBuyout(state: GameState, playerId: string, tileIndex: number): boolean {
   const player = state.players.find(p => p.id === playerId);
   if (!player || player.isEliminated) return false;
-
-  const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
-  if (!owner || owner.id === playerId) return false;
-
-  const buildLevel = owner.buildings[tileIndex] || 0;
-  if (buildLevel >= BUYOUT_MAX_LEVEL) return false;
-
-  const buyoutCost = tile.price * BUYOUT_MULTIPLIER;
-  return player.money >= buyoutCost;
+  const quote = getBuyoutQuote(state, playerId, tileIndex);
+  return Boolean(quote && player.money >= quote.buyerPays);
 }
 
 export function buyoutProperty(state: GameState, playerId: string, tileIndex: number): GameState {
@@ -431,8 +511,8 @@ export function buyoutProperty(state: GameState, playerId: string, tileIndex: nu
 
   const tile = BOARD_TILES[tileIndex];
   if (!tile || !tile.price) return state;
-
-  const buyoutCost = tile.price * BUYOUT_MULTIPLIER;
+  const quote = getBuyoutQuote(state, playerId, tileIndex);
+  if (!quote) return state;
   const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
   if (!owner) return state;
 
@@ -442,15 +522,16 @@ export function buyoutProperty(state: GameState, playerId: string, tileIndex: nu
     if (p.id === playerId) {
       return {
         ...p,
-        money: p.money - buyoutCost,
+        money: p.money - quote.buyerPays,
         properties: [...p.properties, tileIndex],
-        buildings: { ...p.buildings, [tileIndex]: 0 }
+        buildings: { ...p.buildings, [tileIndex]: 0 },
+        buyoutsThisLap: p.buyoutsThisLap + 1
       };
     }
     if (p.id === owner.id) {
       return {
         ...p,
-        money: p.money + buyoutCost,
+        money: p.money + quote.ownerReceives,
         properties: p.properties.filter(idx => idx !== tileIndex),
         buildings: Object.fromEntries(
           Object.entries(p.buildings).filter(([key]) => Number(key) !== tileIndex)
@@ -466,11 +547,12 @@ export function buyoutProperty(state: GameState, playerId: string, tileIndex: nu
     ...state,
     players: updatedPlayers,
     pendingBuyoutTile: null,
+    pendingBuyoutQuote: null,
     phase: 'BUILD_PHASE',
     turnTimer: BUILD_TIMER
   };
 
-  return addLog(nextState, '⚡', `${buyer?.username} đã THÂU TÓM "${tile.name}" từ ${ownerName} với giá ${buyoutCost}Đ!`, 'buyout');
+  return addLog(nextState, '⚡', `${buyer?.username} đã THÂU TÓM "${tile.name}" từ ${ownerName}: trả ${quote.buyerPays}Đ, chủ cũ nhận ${quote.ownerReceives}Đ, phí ngân hàng ${quote.transactionFee}Đ!`, 'buyout');
 }
 
 export function canBuild(state: GameState, playerId: string, tileIndex: number): boolean {
@@ -482,12 +564,14 @@ export function canBuild(state: GameState, playerId: string, tileIndex: number):
   const tile = BOARD_TILES[tileIndex];
   if (!player || !tile || tile.type !== 'property' || !tile.group) return false;
   if (!player.properties.includes(tileIndex)) return false;
+  if (player.hasBuiltThisTurn) return false;
 
   const currentLevel = player.buildings[tileIndex] || 0;
   if (currentLevel >= 4) return false;
 
   const nextLevel = currentLevel + 1;
-  const cost = BUILD_LEVELS[nextLevel]?.cost || 999999;
+  if (nextLevel >= 3 && !ownsFullGroup(state, playerId, tile.group)) return false;
+  const cost = getBuildCost(state, tileIndex, nextLevel) || 999999;
   return player.money >= cost;
 }
 
@@ -506,6 +590,8 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
     if (tile?.type === 'station') error = 'Ga/Sân bay không thể nâng cấp.';
     else if (!player?.properties.includes(tileIndex)) error = 'Bạn không sở hữu ô này.';
     else if ((player?.buildings[tileIndex] || 0) >= 4) error = 'Đã đạt cấp tối đa.';
+    else if (player?.hasBuiltThisTurn) error = 'Mỗi lượt chỉ được nâng cấp một lần.';
+    else if ((player?.buildings[tileIndex] || 0) + 1 >= 3 && tile?.group && !ownsFullGroup(state, playerId, tile.group)) error = 'Cần sở hữu đủ bộ màu để xây cấp 3–4.';
     else if (state.activeEvent?.effect.type === 'no_build') error = 'Sự kiện Mất Điện: không được xây.';
 
     return { success: false, state, error };
@@ -517,14 +603,15 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
 
   const currentLevel = player.buildings[tileIndex] || 0;
   const nextLevel = currentLevel + 1;
-  const cost = BUILD_LEVELS[nextLevel].cost;
+  const cost = getBuildCost(state, tileIndex, nextLevel);
 
   const updatedPlayers = state.players.map(p => {
     if (p.id === playerId) {
       return {
         ...p,
         money: p.money - cost,
-        buildings: { ...p.buildings, [tileIndex]: nextLevel }
+        buildings: { ...p.buildings, [tileIndex]: nextLevel },
+        hasBuiltThisTurn: true
       };
     }
     return p;
@@ -542,6 +629,12 @@ export function buildOnTile(state: GameState, playerId: string, tileIndex: numbe
 }
 
 export function proposeTrade(state: GameState, proposal: TradeState): GameState {
+  if (!proposal || !Number.isFinite(proposal.offering?.money) || !Number.isFinite(proposal.requesting?.money)) return state;
+  if (proposal.offering.money < 0 || proposal.requesting.money < 0) return state;
+  if (!Array.isArray(proposal.offering.properties) || !Array.isArray(proposal.requesting.properties)) return state;
+  if (new Set(proposal.offering.properties).size !== proposal.offering.properties.length) return state;
+  if (new Set(proposal.requesting.properties).size !== proposal.requesting.properties.length) return state;
+
   const fromP = state.players.find(p => p.id === proposal.fromPlayerId);
   const toP = state.players.find(p => p.id === proposal.toPlayerId);
   if (!fromP || !toP || fromP.isEliminated || toP.isEliminated) return state;
@@ -618,12 +711,13 @@ export function acceptTrade(state: GameState): GameState {
 export function handleJailAction(state: GameState, playerId: string, action: JailAction): GameState {
   const player = state.players.find(p => p.id === playerId);
   if (!player || !player.inJail) return state;
+  const jailBail = state.economy.jailBail;
 
   if (action === 'pay') {
-    if (player.money < JAIL_BAIL) return state;
+    if (player.money < jailBail) return state;
     const updatedPlayers = state.players.map(p => {
       if (p.id === playerId) {
-        return { ...p, money: p.money - JAIL_BAIL, inJail: false, jailTurns: 0 };
+        return { ...p, money: p.money - jailBail, inJail: false, jailTurns: 0 };
       }
       return p;
     });
@@ -631,11 +725,11 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
     let nextState: GameState = {
       ...state,
       players: updatedPlayers,
-      freeParkingPool: state.freeParkingPool + JAIL_BAIL,
       phase: 'ROLL_DICE',
       turnTimer: TURN_TIMER
     };
-    return addLog(nextState, '🔓', `${player.username} đã nộp bảo lãnh ${JAIL_BAIL}Đ và ra tù.`, 'jail');
+    depositPenalty(nextState, jailBail);
+    return addLog(nextState, '🔓', `${player.username} đã nộp bảo lãnh ${jailBail}Đ và ra tù.`, 'jail');
   }
 
   if (action === 'card') {
@@ -680,13 +774,13 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
       if (landRes.action === 'buy_prompt') {
         return { ...nextState, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos };
       }
-      return advanceTurn(nextState);
+      return nextState;
     }
 
     const turns = player.jailTurns + 1;
     if (turns >= MAX_JAIL_TURNS) {
-      const payment = executePayment(state, playerId, JAIL_BAIL, null, 'tax', 'Hết hạn ở tù');
-      state.freeParkingPool += payment.paidAmount;
+      const payment = executePayment(state, playerId, jailBail, null, 'tax', 'Hết hạn ở tù');
+      depositPenalty(state, payment.paidAmount);
       const updatedPlayers = state.players.map(p => {
         if (p.id === playerId) {
           return { ...p, inJail: false, jailTurns: 0 };
@@ -705,7 +799,7 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
       if (landRes.action === 'buy_prompt') {
         return { ...state, phase: 'BUY_PROMPT', turnTimer: BUY_TIMER, pendingBuyTile: moveRes.newPos };
       }
-      return advanceTurn(state);
+      return state;
     }
 
     const updatedPlayers = state.players.map(p => {
@@ -725,7 +819,17 @@ export function handleJailAction(state: GameState, playerId: string, action: Jai
 
 export function drawCard(state: GameState, deckType: 'chance' | 'community'): { state: GameState; card: CardDef } {
   const deck = deckType === 'chance' ? CHANCE_CARDS : COMMUNITY_CARDS;
-  const card = deck[Math.floor(Math.random() * deck.length)];
+  const baseCard = deck[Math.floor(Math.random() * deck.length)];
+  let card: CardDef = baseCard;
+  const effect = baseCard.effect;
+  if ('amount' in effect) {
+    const scaledAmount = scaleMoney(state, effect.amount);
+    card = {
+      ...baseCard,
+      description: baseCard.description.replace(/\d+Đ/, `${scaledAmount}Đ`),
+      effect: { ...effect, amount: scaledAmount } as CardDef['effect']
+    };
+  }
   const nextState: GameState = {
     ...state,
     lastDrawnCard: card
@@ -752,7 +856,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
 
     case 'lose_money': {
       const payment = executePayment(currentState, playerId, effect.amount, null, 'card', card.name);
-      currentState.freeParkingPool += payment.paidAmount;
+      depositPenalty(currentState, payment.paidAmount);
       break;
     }
 
@@ -860,7 +964,7 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
       const totalCost = totalProps * effect.amount;
       if (totalCost > 0) {
         const payment = executePayment(currentState, playerId, totalCost, null, 'card', `${card.name} (${totalProps} BĐS)`);
-        currentState.freeParkingPool += payment.paidAmount;
+        depositPenalty(currentState, payment.paidAmount);
       }
       break;
     }
@@ -919,12 +1023,9 @@ export function applyCardEffect(state: GameState, playerId: string, card: CardDe
         poolAdd += amt;
         return { ...p, money: p.money - amt };
       });
-      currentState = {
-        ...currentState,
-        players: updatedPlayers,
-        freeParkingPool: currentState.freeParkingPool + poolAdd
-      };
-      currentState = addLog(currentState, '❤️', `Tất cả nộp ${effect.amount}Đ vào Quỹ (+${poolAdd}Đ).`, 'card');
+      currentState = { ...currentState, players: updatedPlayers };
+      const poolShare = depositPenalty(currentState, poolAdd);
+      currentState = addLog(currentState, '❤️', `Tất cả nộp ${effect.amount}Đ; ${poolShare}Đ vào Quỹ, phần còn lại về Ngân hàng.`, 'card');
       break;
     }
 
@@ -960,6 +1061,8 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
   if (!tile) return { action: 'none', tileIndex };
 
   if (tile.type === 'start' || tile.type === 'jail') {
+    state.phase = 'BUILD_PHASE';
+    state.turnTimer = BUILD_TIMER;
     return { action: 'none', tileIndex };
   }
 
@@ -976,23 +1079,24 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
   }
 
   if (tile.type === 'tax') {
-    const tax = tile.taxAmount || 100;
+    const baseTax = state.economy.taxAmounts[tileIndex] || scaleMoney(state, tile.taxAmount || 100);
+    const tax = tileIndex === 19 ? Math.max(baseTax, roundMoney(player.money * 0.08)) : baseTax;
     const payment = executePayment(state, playerId, tax, null, 'tax', tile.name);
-    state.freeParkingPool += payment.paidAmount;
+    depositPenalty(state, payment.paidAmount);
     state.phase = 'END_TURN';
     state.turnTimer = 5;
     return { action: 'tax_paid', taxAmount: payment.paidAmount, tileIndex };
   }
 
   if (tile.type === 'free_parking') {
-    const pool = state.freeParkingPool;
-    if (pool > 0) {
+    const payout = Math.min(state.freeParkingPool, state.economy.freeParkingPayoutCap);
+    if (payout > 0) {
       const updatedPlayers = state.players.map(p =>
-        p.id === playerId ? { ...p, money: p.money + pool } : p
+        p.id === playerId ? { ...p, money: p.money + payout } : p
       );
       state.players = updatedPlayers;
-      state.freeParkingPool = 0;
-      const loggedState = addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D và hốt trọn quỹ ${pool}Đ!`, 'system');
+      state.freeParkingPool -= payout;
+      const loggedState = addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D và nhận ${payout}Đ từ quỹ (trần ${state.economy.freeParkingPayoutCap}Đ)!`, 'system');
       Object.assign(state, loggedState);
     } else {
       const loggedState = addLog(state, '☕', `${player.username} ghé Quán Cà Phê 8D ngắm cảnh.`, 'system');
@@ -1000,7 +1104,7 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     }
     state.phase = 'END_TURN';
     state.turnTimer = 5;
-    return { action: pool > 0 ? 'free_parking_claimed' : 'none', poolAmount: pool, tileIndex };
+    return { action: payout > 0 ? 'free_parking_claimed' : 'none', poolAmount: payout, tileIndex };
   }
 
   if (tile.type === 'chance' || tile.type === 'community') {
@@ -1017,6 +1121,12 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
     const owner = state.players.find(p => !p.isEliminated && p.properties.includes(tileIndex));
 
     if (!owner) {
+      if (state.activeEvent?.effect.type === 'no_build') {
+        state.phase = 'BUILD_PHASE';
+        state.turnTimer = BUILD_TIMER;
+        Object.assign(state, addLog(state, '🔌', `Mất Điện: chưa thể mua hoặc đấu giá "${tile.name}" trong lượt này.`, 'event'));
+        return { action: 'none', tileIndex };
+      }
       state.phase = 'BUY_PROMPT';
       state.turnTimer = BUY_TIMER;
       state.pendingBuyTile = tileIndex;
@@ -1057,6 +1167,7 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
         state.phase = 'BUYOUT_PROMPT';
         state.turnTimer = BUY_TIMER;
         state.pendingBuyoutTile = tileIndex;
+        state.pendingBuyoutQuote = getBuyoutQuote(state, playerId, tileIndex);
         return { action: 'buyout_prompt', tileIndex };
       }
 
@@ -1079,6 +1190,7 @@ export function handleLanding(state: GameState, playerId: string): LandingResult
       state.phase = 'BUYOUT_PROMPT';
       state.turnTimer = BUY_TIMER;
       state.pendingBuyoutTile = tileIndex;
+      state.pendingBuyoutQuote = getBuyoutQuote(state, playerId, tileIndex);
       return { action: 'buyout_prompt', rentAmount: payment.paidAmount, rentRecipientId: owner.id, tileIndex };
     }
 
@@ -1108,7 +1220,19 @@ function checkBankruptcyMutate(state: GameState, playerId: string): void {
 }
 
 export function triggerGlobalEvent(state: GameState): { state: GameState; event: GlobalEventDef } {
-  const event = GLOBAL_EVENTS[Math.floor(Math.random() * GLOBAL_EVENTS.length)];
+  const baseEvent = GLOBAL_EVENTS[Math.floor(Math.random() * GLOBAL_EVENTS.length)];
+  let event = baseEvent;
+  if ('amount' in baseEvent.effect) {
+    const scaledAmount = scaleMoney(state, baseEvent.effect.amount);
+    event = {
+      ...baseEvent,
+      description: baseEvent.description.replace(/\d+Đ/, `${scaledAmount}Đ`),
+      effect: { ...baseEvent.effect, amount: scaledAmount } as GlobalEventDef['effect']
+    };
+  } else if (baseEvent.effect.type === 'casino_roll') {
+    const casinoAmount = scaleMoney(state, 150);
+    event = { ...baseEvent, description: `Tung xúc xắc: chẵn +${casinoAmount}, lẻ -${casinoAmount}` };
+  }
   let nextState: GameState = {
     ...state,
     activeEvent: event,
@@ -1155,20 +1279,21 @@ export function applyGlobalEvent(state: GameState, event: GlobalEventDef): GameS
       const dice = rollDice();
       const sum = dice[0] + dice[1];
       const isEven = sum % 2 === 0;
+      const casinoAmount = scaleMoney(currentState, 150);
       if (isEven) {
         const updatedPlayers = currentState.players.map(p => {
           if (p.isEliminated) return p;
-          return { ...p, money: p.money + 150 };
+          return { ...p, money: p.money + casinoAmount };
         });
         currentState = { ...currentState, players: updatedPlayers };
-        currentState = addLog(currentState, '🃏', `Casino lắc tổng ${sum} (Chẵn: +150Đ cho tất cả).`, 'event');
+        currentState = addLog(currentState, '🃏', `Casino lắc tổng ${sum} (Chẵn: +${casinoAmount}Đ cho tất cả).`, 'event');
       } else {
         const activePs = currentState.players.filter(p => !p.isEliminated);
         for (const p of activePs) {
-          const payment = executePayment(currentState, p.id, 150, null, 'event', 'Casino Đêm');
-          currentState.freeParkingPool += payment.paidAmount;
+          const payment = executePayment(currentState, p.id, casinoAmount, null, 'event', 'Casino Đêm');
+          depositPenalty(currentState, payment.paidAmount);
         }
-        currentState = addLog(currentState, '🃏', `Casino lắc tổng ${sum} (Lẻ: nộp 150Đ vào Quỹ).`, 'event');
+        currentState = addLog(currentState, '🃏', `Casino lắc tổng ${sum} (Lẻ: nộp ${casinoAmount}Đ, chia Quỹ/Ngân hàng).`, 'event');
       }
       break;
     }
@@ -1265,6 +1390,7 @@ export function advanceTurn(state: GameState): GameState {
       ...state,
       pendingBuyTile: null,
       pendingBuyoutTile: null,
+      pendingBuyoutQuote: null,
       pendingBuildTile: null,
       discountBuyPercent: undefined,
       lastDrawnCard: null,
@@ -1312,6 +1438,7 @@ export function advanceTurn(state: GameState): GameState {
     activeEvent,
     pendingBuyTile: null,
     pendingBuyoutTile: null,
+    pendingBuyoutQuote: null,
     pendingBuildTile: null,
     discountBuyPercent: undefined,
     lastDrawnCard: null,
@@ -1322,6 +1449,7 @@ export function advanceTurn(state: GameState): GameState {
 
   const nextPlayer = nextState.players[nextIdx];
   nextPlayer.doublesCount = 0;
+  nextPlayer.hasBuiltThisTurn = false;
 
   if (nextPlayer.skipNextTurn) {
     const updatedPlayers = nextState.players.map(p =>
@@ -1352,13 +1480,10 @@ export function calculateNetWorth(state: GameState, playerId: string): number {
 
   let worth = player.money;
   player.properties.forEach(tileIndex => {
-    const tile = BOARD_TILES[tileIndex];
-    if (tile?.price) {
-      worth += tile.price;
-    }
+    worth += getTilePrice(state, tileIndex);
     const buildLevel = player.buildings[tileIndex] || 0;
     for (let l = 1; l <= buildLevel; l++) {
-      worth += BUILD_LEVELS[l]?.cost || 0;
+      worth += getBuildCost(state, tileIndex, l);
     }
   });
 

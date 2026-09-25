@@ -1,9 +1,11 @@
 import React from 'react';
 import { BOARD_TILES, BUILD_LEVELS } from '../../game/boardData';
-import type { TileDef } from '../../game/types';
+import type { GameState, TileDef } from '../../game/types';
+import { getBuildCost, getDisplayedRent } from '../../game/economy';
 
 interface BuildPromptProps {
   tileIndex: number;
+  gameState: GameState;
   playerMoney: number;
   currentLevel: number;
   timer: number;
@@ -21,6 +23,7 @@ const GROUP_COLORS: Record<string, string> = {
 
 export const BuildPrompt: React.FC<BuildPromptProps> = ({
   tileIndex,
+  gameState,
   playerMoney,
   currentLevel,
   timer,
@@ -34,11 +37,12 @@ export const BuildPrompt: React.FC<BuildPromptProps> = ({
 
   if (!nextConfig) return null;
 
-  const cost = nextConfig.cost;
+  const cost = getBuildCost(gameState, tileIndex, nextLevel);
   const canAfford = playerMoney >= cost;
   const groupColor = tile.group ? GROUP_COLORS[tile.group] || '#64748b' : '#64748b';
-  const currentRent = (tile.baseRent || 10) * (currentConfig?.rentMultiplier || 1);
-  const nextRent = (tile.baseRent || 10) * nextConfig.rentMultiplier;
+  const owner = gameState.players.find(p => p.properties.includes(tileIndex));
+  const currentRent = getDisplayedRent(gameState, tileIndex, currentLevel, owner?.id);
+  const nextRent = getDisplayedRent(gameState, tileIndex, nextLevel, owner?.id);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in select-none">

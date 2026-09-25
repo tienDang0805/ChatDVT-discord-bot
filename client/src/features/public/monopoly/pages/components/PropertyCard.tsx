@@ -1,7 +1,8 @@
 import React from 'react';
 import type { TileDef, PlayerState, GameState } from '../../game/types';
-import { BUILD_LEVELS, STATION_RENTS, getStationTiles } from '../../game/boardData';
-import { BUYOUT_MULTIPLIER, BUYOUT_MAX_LEVEL } from '../../game/constants';
+import { BUILD_LEVELS, getStationTiles } from '../../game/boardData';
+import { BUYOUT_MAX_LEVEL } from '../../game/constants';
+import { calculateBuyoutPreview, getDisplayedRent, getStationRent, getTilePrice } from '../../game/economy';
 
 interface PropertyCardProps {
   tile: TileDef;
@@ -31,6 +32,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   const ownerStationCount = owner && gameState
     ? owner.properties.filter(t => getStationTiles().includes(t)).length
     : 0;
+  const currentPlayer = gameState?.players[gameState.currentPlayerIndex];
+  const buyoutQuote = gameState && owner && currentPlayer && currentPlayer.id !== owner.id
+    ? calculateBuyoutPreview(gameState, currentPlayer.id, tile.index)
+    : null;
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -94,7 +99,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block">Giá Mua</span>
               <span className="text-base font-black text-amber-400">
-                {tile.price ? `${tile.price}Đ` : 'Đặc biệt'}
+                {gameState && tile.price ? `${getTilePrice(gameState, tile.index).toLocaleString()}Đ` : 'Đặc biệt'}
               </span>
             </div>
             <div className="text-right">
@@ -120,7 +125,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
                   {owner && <span className="text-amber-400 font-bold">Cấp {buildLevel}/4</span>}
                 </div>
                 {BUILD_LEVELS.map(lvl => {
-                  const rent = (tile.baseRent || 10) * lvl.rentMultiplier;
+                  const rent = gameState ? getDisplayedRent(gameState, tile.index, lvl.level, owner?.id) : 0;
                   const isCurrent = lvl.level === buildLevel && owner;
                   return (
                     <div
@@ -141,10 +146,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
                 })}
               </div>
 
-              {owner && buildLevel < BUYOUT_MAX_LEVEL && tile.price && (
+              {owner && buildLevel < BUYOUT_MAX_LEVEL && tile.price && buyoutQuote && (
                 <div className="bg-rose-950/40 p-2.5 rounded-xl border border-rose-500/30 text-xs">
                   <div className="text-[10px] font-black text-rose-400 uppercase mb-1">Giá Thâu Tóm</div>
-                  <div className="text-amber-300 font-black">{tile.price * BUYOUT_MULTIPLIER}Đ <span className="text-slate-400 font-normal">(x{BUYOUT_MULTIPLIER} giá gốc)</span></div>
+                  <div className="text-amber-300 font-black">{buyoutQuote.buyerPays.toLocaleString()}Đ <span className="text-slate-400 font-normal">(gồm {buyoutQuote.transactionFee}Đ phí)</span></div>
                   <div className="text-[10px] text-slate-400 mt-0.5">Nâng lên cấp {BUYOUT_MAX_LEVEL} ({BUILD_LEVELS[BUYOUT_MAX_LEVEL]?.name}) để chặn thâu tóm</div>
                 </div>
               )}
@@ -166,7 +171,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
                 Sở hữu cả 4 Ga/Sân Bay/Bến Xe → THẮNG NGAY!
               </div>
               {[1, 2, 3, 4].map(count => {
-                const rent = STATION_RENTS[count] || 0;
+                const rent = gameState ? getStationRent(gameState, count) : 0;
                 const isCurrentCount = ownerStationCount === count && owner;
                 return (
                   <div key={count} className={`flex justify-between py-1 px-2 rounded-lg ${
