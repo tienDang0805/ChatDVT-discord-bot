@@ -3,8 +3,8 @@ import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
-const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'devtiendang.blog'];
-const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.';
+const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog'];
+const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.';
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
   '/', '/playground', '/me', '/blog', '/mermaid-tutorial',
@@ -15,11 +15,11 @@ const AUTHOR = {
   '@type': 'Person',
   '@id': `${SITE_URL}/me#person`,
   name: 'Đặng Văn Tiến',
-  alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
+  alternateName: ['Tiến Đặng', 'Tien Dang', 'Dang Van Tien', 'devtiendang'],
   url: `${SITE_URL}/me`,
   image: `${SITE_URL}/images/tien-dang-profile.jpg`,
   jobTitle: 'Mobile Developer',
-  description: 'Mobile Developer chuyên React Native và Android/Kotlin, tác giả devtiendang.blog và ChatDVT.',
+  description: 'Mobile Developer chuyên React Native và Android/Kotlin, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
   knowsAbout: ['React Native', 'Android', 'Kotlin', 'Mobile Development', 'Discord Bot', 'ChatDVT'],
   sameAs: [
     'https://github.com/tienDang0805',
@@ -174,7 +174,21 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
         : pageSchema === 'collection'
           ? { ...base, '@type': 'CollectionPage', author: AUTHOR }
           : pageSchema === 'software'
-            ? { ...base, '@type': 'SoftwareApplication', name: schemaName || fullTitle, applicationCategory: 'EntertainmentApplication', operatingSystem: 'Discord', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, creator: AUTHOR }
+          ? {
+            ...base,
+            '@type': 'SoftwareApplication',
+            name: schemaName || fullTitle,
+            alternateName: schemaName === 'ChatDVT' ? ['Chat DVT', 'ChatDVT Discord Bot'] : undefined,
+            applicationCategory: schemaName === 'ChatDVT' ? 'CommunicationApplication' : 'UtilitiesApplication',
+            operatingSystem: schemaName === 'ChatDVT' ? 'Discord' : 'All',
+            image: resolvedImage,
+            isAccessibleForFree: true,
+            featureList: schemaName === 'ChatDVT'
+              ? ['AI chat bằng mention', 'Phân tích ảnh và video', 'Tóm tắt hội thoại', 'Mini game cho Discord']
+              : undefined,
+            offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
+            creator: AUTHOR,
+          }
             : pageSchema === 'blog'
               ? { ...base, '@type': 'Blog', author: AUTHOR, publisher: AUTHOR }
               : pageSchema === 'article'

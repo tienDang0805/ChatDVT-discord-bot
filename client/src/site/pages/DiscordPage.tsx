@@ -103,9 +103,9 @@ const commandGroups = [
 ];
 
 export function DiscordPage() {
-  usePageMeta('ChatDVT — AI Chat Bot & Mini Game cho Discord | Tiến Đặng', {
-    description: 'ChatDVT là AI chatbot cho Discord: chat bằng mention, phân tích ảnh và video, tóm tắt hội thoại, tạo identity và chơi Quiz, Wordle, Code Challenge.',
-    keywords: 'ChatDVT, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game, Quiz Discord, Wordle Discord',
+  usePageMeta('ChatDVT — AI Chatbot & Mini Game cho Discord | Đặng Văn Tiến', {
+    description: 'ChatDVT là AI chatbot cho Discord do Đặng Văn Tiến phát triển: chat bằng mention, phân tích ảnh/video, tóm tắt hội thoại và chơi mini game.',
+    keywords: 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
     schema: 'software',
     schemaName: 'ChatDVT',
   });
@@ -116,7 +116,7 @@ export function DiscordPage() {
       <div className="site-container discord-hero__content">
         <BotAvatar className="discord-avatar" />
         <p className="site-kicker">Discord AI Bot</p>
-        <h1>ChatDVT</h1>
+        <h1>ChatDVT — AI chatbot cho Discord</h1>
         <p>AI chatbot cho Discord: mention để hỏi, gửi ảnh hoặc video để phân tích, tóm tắt hội thoại và chơi mini game cùng server.</p>
         <div className="site-hero__actions">
           <a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> Thêm vào server</a>

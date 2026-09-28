@@ -6,19 +6,19 @@ import { isFeatureIndexable } from '../shared/featureCatalog';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
-const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'devtiendang.blog'];
+const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog'];
 const HOME_TITLE = 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT';
-const HOME_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.';
+const HOME_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/site-og.png`;
 const AUTHOR_SCHEMA = {
   '@type': 'Person',
   '@id': `${SITE_URL}/me#person`,
   name: SITE_NAME,
-  alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
+  alternateName: ['Tiến Đặng', 'Tien Dang', 'Dang Van Tien', 'devtiendang'],
   url: `${SITE_URL}/me`,
   image: `${SITE_URL}/images/tien-dang-profile.jpg`,
   jobTitle: 'Mobile Developer',
-  description: 'Mobile Developer chuyên React Native và Android/Kotlin, tác giả devtiendang.blog và ChatDVT.',
+  description: 'Mobile Developer chuyên React Native và Android/Kotlin, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
   knowsAbout: ['React Native', 'Android', 'Kotlin', 'Mobile Development', 'Discord Bot', 'ChatDVT'],
   sameAs: [
     'https://github.com/tienDang0805',
@@ -59,6 +59,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     description: HOME_DESCRIPTION,
     keywords: 'Đặng Văn Tiến, Tiến Đặng, devtiendang, Mobile Developer, React Native, Android, Kotlin, ChatDVT',
     pageType: 'website',
+    lastmod: '2026-09-28',
     priority: 1.0,
     changefreq: 'weekly',
   },
@@ -79,19 +80,21 @@ const ROUTE_META: Record<string, RouteMeta> = {
     changefreq: 'weekly',
   },
   '/discord': {
-    title: 'ChatDVT — Discord Bot | Tiến Đặng',
-    description: 'ChatDVT là Discord bot mình làm cho nhóm 8D, gồm AI chat, hệ thống kinh tế, pet và mini game.',
-    keywords: 'ChatDVT, Discord bot, Discord.js, Gemini, Prisma, Discord mini game',
+    title: 'ChatDVT — AI Chatbot & Mini Game cho Discord | Đặng Văn Tiến',
+    description: 'ChatDVT là AI chatbot cho Discord do Đặng Văn Tiến phát triển: chat bằng mention, phân tích ảnh/video, tóm tắt hội thoại và chơi mini game.',
+    keywords: 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
     schemaName: 'ChatDVT',
     pageType: 'software',
+    lastmod: '2026-09-28',
     priority: 0.8,
     changefreq: 'weekly',
   },
   '/me': {
     title: 'Đặng Văn Tiến — Mobile Developer React Native & Android',
-    description: 'Mình là dev mobile React Native và Android/Kotlin tại TP.HCM. Đây là nơi mình ghi lại kinh nghiệm, project đã làm và cách liên hệ.',
-    keywords: 'Đặng Văn Tiến, Tiến Đặng, mobile developer, React Native developer, Kotlin developer',
+    description: 'Đặng Văn Tiến là Mobile Developer tại TP.HCM, làm việc với React Native và Android/Kotlin. Xem kinh nghiệm, dự án thực tế và thông tin liên hệ.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, Tien Dang, mobile developer, React Native developer, Android developer, Kotlin developer',
     pageType: 'profile',
+    lastmod: '2026-09-28',
     priority: 0.8,
     changefreq: 'monthly',
   },
@@ -675,8 +678,14 @@ function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: str
         ...base,
         '@type': 'SoftwareApplication',
         name: meta.schemaName || meta.title,
-        applicationCategory: 'EntertainmentApplication',
-        operatingSystem: 'Discord',
+        alternateName: meta.schemaName === 'ChatDVT' ? ['Chat DVT', 'ChatDVT Discord Bot'] : undefined,
+        applicationCategory: meta.schemaName === 'ChatDVT' ? 'CommunicationApplication' : 'UtilitiesApplication',
+        operatingSystem: meta.schemaName === 'ChatDVT' ? 'Discord' : 'All',
+        image: ogImage,
+        isAccessibleForFree: true,
+        featureList: meta.schemaName === 'ChatDVT'
+          ? ['AI chat bằng mention', 'Phân tích ảnh và video', 'Tóm tắt hội thoại', 'Mini game cho Discord']
+          : undefined,
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
         creator: AUTHOR_SCHEMA,
       };

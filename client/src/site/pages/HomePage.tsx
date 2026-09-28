@@ -10,8 +10,8 @@ const mobileTools = mobileItems.filter(item => item.id !== 'rn-guide');
 
 export function HomePage() {
   usePageMeta('Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', {
-    description: 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.',
-    keywords: 'Đặng Văn Tiến, Tiến Đặng, Mobile Developer, React Native, Android, Kotlin, devtiendang',
+    description: 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
+    keywords: 'Đặng Văn Tiến, Tiến Đặng, Tien Dang, Mobile Developer, React Native, Android, Kotlin, devtiendang, ChatDVT',
     schema: 'website',
   });
   usePageTracker('Home');

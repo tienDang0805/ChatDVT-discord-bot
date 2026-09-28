@@ -4,19 +4,20 @@ import {
   Briefcase,
   ExternalLink,
   Facebook,
+  Gamepad2,
   Github,
+  Globe2,
   Linkedin,
   Mail,
   MapPin,
+  MessageCircle,
   Smartphone,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
-import { BotAvatar } from '../components/BotAvatar';
-import { SectionHeading, SiteLayout } from '../components/SiteLayout';
+import { SiteLayout } from '../components/SiteLayout';
 
-const INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot';
 const EMAIL_URL = 'mailto:dvtien0805@gmail.com?subject=Trao%20đổi%20cơ%20hội%20Mobile%20Developer';
 const LINKEDIN_URL = 'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/';
 const GITHUB_URL = 'https://github.com/tienDang0805';
@@ -106,32 +107,38 @@ export function MePage() {
       </section>
 
       <section className="me-section" id="work">
-        <SectionHeading eyebrow="SELECTED WORK" title="Một vài thứ mình đã xây" action={<Link to="/playground" className="arrow-link"><span>Xem tất cả project</span><b>↗</b></Link>} />
-        <div className="me-work-grid">
-          <article className="me-work-card me-work-card--chatdvt">
-            <div className="me-work-card__visual"><BotAvatar className="bot-avatar--project" /><span>AI CHATBOT · DISCORD</span></div>
-            <div className="me-work-card__copy">
-              <small>FEATURED PROJECT</small>
-              <h3>ChatDVT</h3>
-              <p>Discord AI chatbot hỗ trợ hội thoại, phân tích ảnh/video, tóm tắt và các mini game ngắn.</p>
-              <div className="me-work-card__links">
-                <Link to="/discord">Xem chi tiết <ArrowUpRight size={14} /></Link>
-                <a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">Source <Github size={14} /></a>
-                <a href={INVITE_URL} target="_blank" rel="noreferrer">Invite <Bot size={14} /></a>
-              </div>
-            </div>
-          </article>
+        <div className="me-side-heading">
+          <div><small>SIDE PROJECTS</small><h2>devtiendang.blog là nơi mình học bằng cách tự làm.</h2><p>Không chỉ là portfolio, đây là website mình tự phát triển để thử AI, làm công cụ mobile, viết blog và đưa các ý tưởng nhỏ thành sản phẩm dùng được.</p></div>
+          <Link to="/playground" className="arrow-link"><span>Xem toàn bộ Projects & Lab</span><b>↗</b></Link>
+        </div>
 
-          <Link to="/deeplink-tester" className="me-work-card me-work-card--tool">
-            <div className="me-work-card__index">01</div>
-            <div><small>DEVELOPER TOOL</small><h3>Deep Link Tester</h3><p>Soạn URI, tạo QR và sinh lệnh ADB/Simctl cho iOS và Android.</p></div>
-            <ArrowUpRight size={18} />
+        <div className="me-side-grid">
+          <Link to="/" className="me-side-card">
+            <div className="me-side-card__top"><span><Globe2 size={19} /></span><small>01</small></div>
+            <h3>devtiendang.blog</h3>
+            <p>Website cá nhân mình tự xây để giới thiệu bản thân, viết blog và kết nối tất cả sản phẩm đang làm.</p>
+            <b>Khám phá website <ArrowUpRight size={14} /></b>
           </Link>
 
-          <Link to="/survivor-arena" className="me-work-card me-work-card--game">
-            <div className="me-work-card__index">02</div>
-            <div><small>GAME EXPERIMENT</small><h3>Survivor Arena 8D</h3><p>Auto-shooter thử nghiệm game loop, canvas và điều khiển cảm ứng.</p></div>
-            <ArrowUpRight size={18} />
+          <button type="button" className="me-side-card me-side-card--chat" onClick={() => window.dispatchEvent(new Event('open-chat-widget'))}>
+            <div className="me-side-card__top"><span><MessageCircle size={19} /></span><small>02</small></div>
+            <h3>ChatDVT trên web</h3>
+            <p>AI chat nằm ngay trên website. Bạn có thể hỏi về mình, các project hoặc nhờ bot dẫn tới nội dung muốn khám phá.</p>
+            <b>Chat thử ngay <ArrowUpRight size={14} /></b>
+          </button>
+
+          <Link to="/playground" className="me-side-card">
+            <div className="me-side-card__top"><span><Gamepad2 size={19} /></span><small>03</small></div>
+            <h3>Projects & Lab</h3>
+            <p>Nơi gom developer tool, AI lab, learning app và web game mình làm khi thấy một ý tưởng thú vị.</p>
+            <b>Vào Playground <ArrowUpRight size={14} /></b>
+          </Link>
+
+          <Link to="/discord" className="me-side-card">
+            <div className="me-side-card__top"><span><Bot size={19} /></span><small>04</small></div>
+            <h3>ChatDVT Discord Bot</h3>
+            <p>AI chatbot cho Discord với hội thoại, phân tích ảnh/video, tóm tắt và một số mini game ngắn.</p>
+            <b>Xem bot làm được gì <ArrowUpRight size={14} /></b>
           </Link>
         </div>
       </section>
