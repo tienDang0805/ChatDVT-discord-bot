@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import * as htmlToImage from 'html-to-image';
 import {
@@ -6,6 +6,7 @@ import {
   Type, Image, Sliders, Sparkles, QrCode, ChevronDown, ImagePlus, PenLine, Frame
 } from 'lucide-react';
 import { PageShell } from '../../../../shared/components/PageShell';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 const FONT_OPTIONS = [
   { name: 'Sans Serif', value: '"Inter", "Segoe UI", sans-serif' },
@@ -53,6 +54,10 @@ const presets: PresetTheme[] = [
 ];
 
 export const QRGenerator = () => {
+  usePageMeta('Tạo QR Code Miễn Phí Online', {
+    description: 'Tạo mã QR miễn phí cho URL, text, WiFi và nhiều loại dữ liệu khác. Đẹp, nhanh, không cần đăng ký.',
+    keywords: 'tạo qr code, qr generator, mã qr miễn phí, qr code online',
+  });
   const qrRef = useRef<QRCode>(null);
 
   const [text, setText] = useState('https://chatdvt.com');
@@ -101,10 +106,6 @@ export const QRGenerator = () => {
   const [activeSection, setActiveSection] = useState<string>('content');
 
   const previewContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    document.title = 'Tạo Mã QR Custom | Tiến Đặng';
-  }, []);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

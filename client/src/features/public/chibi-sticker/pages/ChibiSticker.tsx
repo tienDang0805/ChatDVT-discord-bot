@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Upload, Sparkles, Download, RotateCcw, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 import { GeminiKeyInput, getStoredGeminiKey } from '../../../../shared/components/GeminiKeyInput';
 import { PageShell } from '../../../../shared/components/PageShell';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -44,6 +45,10 @@ const IMAGE_MODELS = [
 ];
 
 export const ChibiSticker = () => {
+  usePageMeta('Tạo Sticker Chibi AI Từ Ảnh', {
+    description: 'Upload ảnh để AI biến thành sticker chibi dễ thương. Tạo sticker cá nhân hóa miễn phí.',
+    keywords: 'tạo sticker chibi, chibi ai, sticker từ ảnh, sticker dễ thương',
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [mode, setMode] = useState<'real' | 'chibi-ref'>('real');
@@ -57,10 +62,6 @@ export const ChibiSticker = () => {
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    document.title = 'Chibi Sticker AI | devtiendang.blog';
-  }, []);
 
   const handleFileChange = (file: File) => {
     if (!file.type.startsWith('image/')) { setError('Chỉ hỗ trợ file ảnh!'); return; }

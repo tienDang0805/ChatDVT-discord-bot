@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Upload, Scan, AlertTriangle, FileText, ArrowLeft, Code, Eye, File as FileIcon, CheckCircle2, Wand2, Star, Github, TrendingUp, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
@@ -7,6 +7,7 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { toast } from 'react-hot-toast';
 import { EditableCV, type CVData } from '../../../../shared/components/EditableCV';
 import { GeminiKeyInput, getStoredGeminiKey } from '../../../../shared/components/GeminiKeyInput';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 const htmlToMd = (html: string) => {
   if (!html) return '';
@@ -133,6 +134,10 @@ interface AnalysisResult {
 }
 
 export const CVReviewer = () => {
+  usePageMeta('AI Review & Viết Lại CV Chuyên Nghiệp', {
+    description: 'Upload CV để AI đánh giá chi tiết, chấm điểm ATS và viết lại CV chuyên nghiệp. Hỗ trợ PDF, Word và ảnh.',
+    keywords: 'review cv, đánh giá cv, viết cv, ats score, cv ai, cv chuyên nghiệp',
+  });
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -148,10 +153,6 @@ export const CVReviewer = () => {
   const [activeTab, setActiveTab] = useState<'preview' | 'raw'>('preview');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    document.title = "Khám Điền Thổ CV | devtiendang.blog";
-  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];

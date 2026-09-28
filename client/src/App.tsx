@@ -18,6 +18,7 @@ const DiscordPage = lazy(() => import('./site/pages/DiscordPage').then(m => ({ d
 const MePage = lazy(() => import('./site/pages/MePage').then(m => ({ default: m.MePage })));
 const BlogPage = lazy(() => import('./site/pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const BlogArticlePage = lazy(() => import('./site/pages/BlogArticlePage').then(m => ({ default: m.BlogArticlePage })));
+const NotFoundPage = lazy(() => import('./site/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 // Removed WeatherFAB from global imports
 const FoodWheel = lazy(() => import('./features/public/food-wheel/pages/FoodWheel'));
 const ExcuseGenerator = lazy(() => import('./features/public/excuse-generator/pages/ExcuseGenerator'));
@@ -230,6 +231,7 @@ function App() {
                 </Layout>
               </RequireAuth>
             } />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
         </ErrorBoundary>

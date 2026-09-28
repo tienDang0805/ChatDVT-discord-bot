@@ -862,18 +862,6 @@ export const PublicPortal = () => {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    document.title = "Trang Chủ | ChatDVT Portal";
-    
-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    if (!link) {
-      link = document.createElement('link');
-      link.rel = 'icon';
-      document.head.appendChild(link);
-    }
-    link.href = "/images/chibi-bear.jpg";
-  }, []);
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] text-slate-800 dark:text-slate-200 font-sans selection:bg-orange-500/30 transition-colors duration-300">
       <style>{`

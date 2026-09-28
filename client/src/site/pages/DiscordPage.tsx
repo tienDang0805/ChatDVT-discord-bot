@@ -18,6 +18,7 @@ export function DiscordPage() {
     description: 'ChatDVT là Discord bot mình làm cho nhóm 8D, gồm AI chat, hệ thống kinh tế, pet và mini game.',
     keywords: 'ChatDVT, Discord bot, Discord.js, Gemini, Prisma, Discord mini game',
     schema: 'software',
+    schemaName: 'ChatDVT',
   });
   usePageTracker('DiscordBot');
   return <SiteLayout>

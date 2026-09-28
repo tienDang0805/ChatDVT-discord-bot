@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 
 const SITE_URL = 'https://devtiendang.blog';
-const SITE_NAME = 'Tiến Đặng';
-const DEFAULT_DESCRIPTION = 'Portfolio của Đặng Văn Tiến, dev mobile React Native và Android/Kotlin. Dự án cá nhân, mobile utility, ChatDVT và những ghi chép lúc làm sản phẩm.';
+const SITE_NAME = 'Đặng Văn Tiến';
+const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'devtiendang.blog'];
+const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.';
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
   '/', '/playground', '/mobile', '/discord', '/me', '/blog',
   '/survivor-arena', '/quiz', '/chibi-sticker', '/mermaid-editor',
   '/mermaid-tutorial', '/cv-review', '/english', '/deeplink-tester',
   '/emulator-check', '/qr-generator', '/android-toolbox',
+  '/rn-learning-guide', '/pd-learning-guide',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
 
@@ -18,7 +20,10 @@ const AUTHOR = {
   name: 'Đặng Văn Tiến',
   alternateName: ['Tiến Đặng', 'Dang Van Tien', 'devtiendang'],
   url: `${SITE_URL}/me`,
+  image: `${SITE_URL}/images/tien-dang-profile.jpg`,
   jobTitle: 'Mobile Developer',
+  description: 'Mobile Developer chuyên React Native và Android/Kotlin, tác giả devtiendang.blog và ChatDVT.',
+  knowsAbout: ['React Native', 'Android', 'Kotlin', 'Mobile Development', 'Discord Bot', 'ChatDVT'],
   sameAs: [
     'https://github.com/tienDang0805',
     'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
@@ -77,6 +82,7 @@ interface PageMetaOptions {
   imageAlt?: string;
   type?: 'website' | 'article';
   schema?: PageSchema;
+  schemaName?: string;
   noIndex?: boolean;
   publishedTime?: string | null;
   modifiedTime?: string | null;
@@ -89,13 +95,18 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
   const imageAlt = typeof options === 'object' ? options?.imageAlt : undefined;
   const type = typeof options === 'object' ? options?.type : undefined;
   const schema = typeof options === 'object' ? options?.schema : undefined;
+  const schemaName = typeof options === 'object' ? options?.schemaName : undefined;
   const noIndex = typeof options === 'object' ? options?.noIndex : undefined;
   const publishedTime = typeof options === 'object' ? options?.publishedTime : undefined;
   const modifiedTime = typeof options === 'object' ? options?.modifiedTime : undefined;
 
   useEffect(() => {
     const prev = document.title;
-    const fullTitle = /Tiến Đặng|Đặng Văn Tiến|devtiendang/i.test(title) ? title : `${title} | ${SITE_NAME}`;
+    const normalizedTitle = title
+      .replace(/^Tiến Đặng\s*—/, `${SITE_NAME} —`)
+      .replace(/\s*\|\s*(ChatDVT|Tiến Đặng|devtiendang\.blog)$/i, ` | ${SITE_NAME}`)
+      .replace(/\s*—\s*(ChatDVT|Tiến Đặng)$/i, ` | ${SITE_NAME}`);
+    const fullTitle = /Đặng Văn Tiến/i.test(normalizedTitle) ? normalizedTitle : `${normalizedTitle} | ${SITE_NAME}`;
     const resolvedDescription = desc || DEFAULT_DESCRIPTION;
     const resolvedImage = resolveImageUrl(image);
     const resolvedImageAlt = imageAlt || `${fullTitle} — devtiendang.blog`;
@@ -103,7 +114,8 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     const shouldNoIndex = noIndex ?? !isIndexablePath(window.location.pathname);
     document.title = fullTitle;
 
-    const canonicalUrl = `${SITE_URL}${window.location.pathname}`;
+    const normalizedPath = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
+    const canonicalUrl = `${SITE_URL}${normalizedPath}`;
     setCanonical(canonicalUrl);
 
     setMetaTag('description', resolvedDescription, true);
@@ -143,22 +155,31 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     const pageSchema = schema || 'webapp';
     const base = {
       '@context': 'https://schema.org',
+      '@id': `${canonicalUrl}#page`,
       name: fullTitle,
       description: resolvedDescription,
       url: canonicalUrl,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      inLanguage: 'vi-VN',
     };
     const structuredData = pageSchema === 'profile'
       ? { ...base, '@type': 'ProfilePage', mainEntity: AUTHOR }
       : pageSchema === 'website'
-        ? { ...base, '@type': 'WebSite', author: AUTHOR }
+        ? {
+          '@context': 'https://schema.org',
+          '@graph': [
+            { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: SITE_NAME, alternateName: SITE_ALTERNATE_NAMES, description: resolvedDescription, inLanguage: 'vi-VN', publisher: { '@id': AUTHOR['@id'] } },
+            AUTHOR,
+          ],
+        }
         : pageSchema === 'collection'
           ? { ...base, '@type': 'CollectionPage', author: AUTHOR }
           : pageSchema === 'software'
-            ? { ...base, '@type': 'SoftwareApplication', applicationCategory: 'EntertainmentApplication', operatingSystem: 'Discord', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, author: AUTHOR }
+            ? { ...base, '@type': 'SoftwareApplication', name: schemaName || fullTitle, applicationCategory: 'EntertainmentApplication', operatingSystem: 'Discord', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, creator: AUTHOR }
             : pageSchema === 'blog'
-              ? { ...base, '@type': 'Blog', author: AUTHOR }
+              ? { ...base, '@type': 'Blog', author: AUTHOR, publisher: AUTHOR }
               : pageSchema === 'article'
-                ? { ...base, '@type': 'BlogPosting', headline: fullTitle, image: resolvedImage, datePublished: publishedTime || undefined, dateModified: modifiedTime || publishedTime || undefined, mainEntityOfPage: canonicalUrl, author: AUTHOR }
+                ? { ...base, '@type': 'BlogPosting', headline: fullTitle, image: resolvedImage, datePublished: publishedTime || undefined, dateModified: modifiedTime || publishedTime || undefined, mainEntityOfPage: canonicalUrl, author: AUTHOR, publisher: AUTHOR }
                 : { ...base, '@type': 'WebApplication', applicationCategory: 'UtilitiesApplication', operatingSystem: 'All', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, author: AUTHOR };
 
     let jsonLd = document.querySelector<HTMLScriptElement>('#page-structured-data');
@@ -173,5 +194,5 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     return () => {
       document.title = prev;
     };
-  }, [title, desc, keywords, image, imageAlt, type, schema, noIndex, publishedTime, modifiedTime]);
+  }, [title, desc, keywords, image, imageAlt, type, schema, schemaName, noIndex, publishedTime, modifiedTime]);
 };

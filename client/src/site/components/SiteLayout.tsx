@@ -28,7 +28,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
   return <div className="site-root">
     <header className="site-header">
       <div className="site-container site-header__inner">
-        <Link to="/" className="site-wordmark" aria-label="Tiến Đặng home"><span>Tiến Đặng</span><i>.</i></Link>
+        <Link to="/" className="site-wordmark" aria-label="Trang chủ Đặng Văn Tiến"><span>Đặng Văn Tiến</span><i>.</i></Link>
         <nav className="site-nav" aria-label="Primary navigation">
           {nav.map(item => <Link key={item.href} to={item.href} className={pathname === item.href || (item.href === '/blog' && pathname.startsWith('/blog/')) ? 'is-active' : ''}>{item.label}</Link>)}
         </nav>
@@ -41,7 +41,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
     </header>
 
     {open && <div className="site-mobile-nav" role="dialog" aria-modal="true">
-      <div className="site-mobile-nav__top"><span className="site-wordmark"><span>Tiến Đặng</span><i>.</i></span><button className="site-icon-button" onClick={() => setOpen(false)} aria-label="Đóng menu"><X size={20} /></button></div>
+      <div className="site-mobile-nav__top"><span className="site-wordmark"><span>Đặng Văn Tiến</span><i>.</i></span><button className="site-icon-button" onClick={() => setOpen(false)} aria-label="Đóng menu"><X size={20} /></button></div>
       <nav>{nav.map((item, index) => <Link key={item.href} to={item.href}><small>0{index + 1}</small>{item.label}</Link>)}</nav>
       <p>Mobile Developer · React Native · Android/Kotlin</p>
     </div>}
@@ -49,7 +49,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
     <main>{children}</main>
     <footer className="site-footer">
       <div className="site-container site-footer__grid">
-        <div><span className="site-wordmark"><span>Tiến Đặng</span><i>.</i></span><p>Mobile Developer — React Native và Android/Kotlin.</p></div>
+        <div><span className="site-wordmark"><span>Đặng Văn Tiến</span><i>.</i></span><p>Mobile Developer — React Native và Android/Kotlin.</p></div>
         <div className="site-footer__links"><Link to="/playground">Playground</Link><Link to="/mobile">Mobile</Link><Link to="/discord">Discord Bot</Link><Link to="/blog">Blog</Link><Link to="/me">Me</Link></div>
         <div className="site-footer__meta">© 2026 · TP. Hồ Chí Minh<br />React · TypeScript</div>
       </div>

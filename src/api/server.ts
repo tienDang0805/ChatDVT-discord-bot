@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -16,6 +17,12 @@ import { setupMonopolySocket } from './monopoly/MonopolyRoom';
 
 const app = express();
 app.set('trust proxy', true);
+app.use((req, res, next) => {
+  if (req.hostname.toLowerCase() === 'www.devtiendang.blog') {
+    return res.redirect(301, `https://devtiendang.blog${req.originalUrl}`);
+  }
+  next();
+});
 app.use(cors());
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
@@ -465,11 +472,30 @@ const CLIENT_BUILD_PATH = path.join(__dirname, '../../client/dist');
 
 app.use(createSeoRoutes());
 
-app.use(express.static(CLIENT_BUILD_PATH));
+app.get('/profile', (_req, res) => res.redirect(301, '/me'));
+app.get('/chatDVT', (_req, res) => res.redirect(301, '/discord'));
 
-app.get('/ping', (req, res) => {
-  res.sendFile(path.join(CLIENT_BUILD_PATH, 'ping', 'index.html'));
+app.use((req, res, next) => {
+  if ((req.method === 'GET' || req.method === 'HEAD') && req.path.length > 1 && req.path.endsWith('/')) {
+    const canonicalPath = req.path.replace(/\/+$/, '');
+    const queryIndex = req.originalUrl.indexOf('?');
+    const query = queryIndex >= 0 ? req.originalUrl.slice(queryIndex) : '';
+    return res.redirect(301, `${canonicalPath}${query}`);
+  }
+  next();
 });
+
+app.get('*', (req, res, next) => {
+  const relativePath = req.path.replace(/^\/+|\/+$/g, '');
+  if (!relativePath || path.extname(relativePath)) return next();
+
+  const prerenderedHtml = path.join(CLIENT_BUILD_PATH, relativePath, 'index.html');
+  if (!fs.existsSync(prerenderedHtml)) return next();
+
+  return res.sendFile(prerenderedHtml);
+});
+
+app.use(express.static(CLIENT_BUILD_PATH, { redirect: false }));
 
 app.get('*', createSeoFallbackHandler(CLIENT_BUILD_PATH));
 

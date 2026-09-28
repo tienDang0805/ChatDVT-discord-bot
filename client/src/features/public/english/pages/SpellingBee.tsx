@@ -4,6 +4,7 @@ import { Volume2, RotateCcw, Trophy, CheckCircle2, XCircle, ArrowRight, Headphon
 import { addXP, getStats, XP_VALUES } from '../utils/gamification';
 import vocabData from '../data/english-vocab.json';
 import { playTTS } from '../utils/tts';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 type GameState = 'ready' | 'playing' | 'finished';
 type Difficulty = 'easy' | 'medium' | 'hard';
@@ -39,6 +40,10 @@ const shuffleArray = <T,>(arr: T[]): T[] => {
 const ROUNDS = 10;
 
 export const SpellingBee = () => {
+  usePageMeta('Spelling Bee — Thi Đánh Vần Tiếng Anh', {
+    description: 'Thi đánh vần tiếng Anh kiểu Spelling Bee, luyện chính tả từ cơ bản đến nâng cao.',
+    keywords: 'spelling bee, đánh vần tiếng anh, english spelling, luyện chính tả',
+  });
   const [state, setState] = useState<GameState>('ready');
   const [words, setWords] = useState<SpellingWord[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -51,7 +56,6 @@ export const SpellingBee = () => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    document.title = 'Spelling Bee | English Hub';
     setBestScore(getStats().bestSpellingBee || 0);
   }, []);
 

@@ -4,6 +4,7 @@ import { Share2, RotateCcw, Volume2, HelpCircle } from 'lucide-react';
 import { getDailyPuzzleWord, addXP, getStats, XP_VALUES } from '../utils/gamification';
 import toast from 'react-hot-toast';
 import { playTTS } from '../utils/tts';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 type CellStatus = 'correct' | 'present' | 'absent' | 'empty' | 'active';
 
@@ -32,6 +33,10 @@ const savePuzzleState = (state: any) => {
 };
 
 export const DailyPuzzle = () => {
+  usePageMeta('Daily Puzzle — Câu Đố Tiếng Anh Mỗi Ngày', {
+    description: 'Câu đố tiếng Anh mỗi ngày, rèn luyện tư duy ngôn ngữ và từ vựng.',
+    keywords: 'daily puzzle, câu đố tiếng anh, english puzzle, word game',
+  });
   const puzzle = getDailyPuzzleWord();
   const wordLength = puzzle.word.length;
   const today = Math.floor(Date.now() / 86400000);
@@ -46,7 +51,6 @@ export const DailyPuzzle = () => {
   const [usedLetters, setUsedLetters] = useState<Record<string, CellStatus>>({});
 
   useEffect(() => {
-    document.title = 'Daily Word Puzzle | English Hub';
     const saved = getPuzzleState();
     if (saved && saved.day === today) {
       setGuesses(saved.guesses || []);

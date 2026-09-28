@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Play, RotateCcw, Smartphone, Tablet, Monitor, Copy, Trash2, Maximize2, Minimize2, Sun, Moon, Wifi, Battery, Signal, ChevronDown, Terminal, X as XIcon, AlertTriangle, Info, Bug } from 'lucide-react';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 interface DebugLog {
   id: number;
@@ -115,6 +116,10 @@ ${trimmed}
 };
 
 export const EmulatorCheck = () => {
+  usePageMeta('WebView Simulator — Chạy thử HTML trên khung mobile', {
+    description: 'Dán HTML, CSS và JavaScript để chạy thử trong khung WebView mobile, đổi kích thước thiết bị và xem debug console.',
+    keywords: 'WebView simulator, mobile WebView, HTML preview, React Native WebView, debug console',
+  });
   const [code, setCode] = useState(EXAMPLE_SCRIPT);
   const [selectedDevice, setSelectedDevice] = useState<DevicePreset>(DEVICES[0]);
   const [isLandscape, setIsLandscape] = useState(false);
@@ -152,10 +157,6 @@ export const EmulatorCheck = () => {
     window.addEventListener('resize', calculateScale);
     return () => window.removeEventListener('resize', calculateScale);
   }, [calculateScale]);
-
-  useEffect(() => {
-    document.title = 'WebView Simulator | Tiến Đặng';
-  }, []);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {

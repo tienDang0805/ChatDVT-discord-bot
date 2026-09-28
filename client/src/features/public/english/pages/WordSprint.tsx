@@ -3,6 +3,7 @@ import { PageShell } from '../../../../shared/components/PageShell';
 import { Play, RotateCcw, Trophy, Flame, Timer, Zap } from 'lucide-react';
 import { addXP, getStats, XP_VALUES } from '../utils/gamification';
 import vocabData from '../data/english-vocab.json';
+import { usePageMeta } from '../../../../shared/hooks/usePageMeta';
 
 type GameState = 'ready' | 'playing' | 'finished';
 
@@ -25,6 +26,10 @@ const shuffleArray = <T,>(arr: T[]): T[] => {
 };
 
 export const WordSprint = () => {
+  usePageMeta('Word Sprint — Chạy Đua Từ Vựng | English Hub', {
+    description: 'Chạy đua từ vựng tiếng Anh, test tốc độ nhận biết từ trong thời gian giới hạn.',
+    keywords: 'word sprint, vocabulary game, english word game, tốc độ từ vựng',
+  });
   const [state, setState] = useState<GameState>('ready');
   const [timeLeft, setTimeLeft] = useState(60);
   const [words, setWords] = useState<WordItem[]>([]);
@@ -41,7 +46,6 @@ export const WordSprint = () => {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
 
   useEffect(() => {
-    document.title = 'Word Sprint | English Hub';
     const stats = getStats();
     setBestScore(stats.bestWordSprint || 0);
   }, []);

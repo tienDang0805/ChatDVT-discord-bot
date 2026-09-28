@@ -9,8 +9,8 @@ import { featuredProjects, utilityItems } from '../content/siteData';
 const mobileTools = utilityItems.filter(item => item.kind === 'mobile');
 
 export function HomePage() {
-  usePageMeta('Tiến Đặng — Mobile Developer React Native & Android', {
-    description: 'Portfolio của Đặng Văn Tiến, dev mobile React Native và Android/Kotlin tại TP.HCM. Dự án cá nhân, mobile utility, ChatDVT và những ghi chép lúc làm sản phẩm.',
+  usePageMeta('Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', {
+    description: 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.',
     keywords: 'Đặng Văn Tiến, Tiến Đặng, Mobile Developer, React Native, Android, Kotlin, devtiendang',
     schema: 'website',
   });
@@ -20,9 +20,9 @@ export function HomePage() {
     <section className="site-container site-hero">
       <div className="home-hero__layout">
         <div className="site-hero__content">
-          <p className="site-kicker">Đặng Văn Tiến</p>
-          <h1>Mobile Developer.</h1>
-          <p className="site-hero__copy">Mình là dev mobile React Native và Android/Kotlin. Đây là trang mình chủ yếu vibe code.</p>
+          <p className="site-kicker">React Native · Android/Kotlin</p>
+          <h1>Đặng Văn Tiến — Mobile Developer.</h1>
+          <p className="site-hero__copy">Mình làm ứng dụng mobile, viết blog về quá trình làm sản phẩm và phát triển Discord bot ChatDVT.</p>
           <div className="site-hero__actions">
             <Link to="/mobile" className="site-button site-button--primary"><Smartphone size={17} /> Công cụ mobile <ArrowRight size={16} /></Link>
             <Link to="/playground" className="site-button"><Gamepad2 size={17} /> Playground</Link>
