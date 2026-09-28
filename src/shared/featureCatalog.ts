@@ -33,7 +33,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'chatdvt', path: '/discord', title: 'ChatDVT',
-    description: 'Discord bot gồm AI chat, hệ thống kinh tế, pet và mini game dành cho cộng đồng 8D.',
+    description: 'Discord AI chatbot hỗ trợ hội thoại, phân tích media, tóm tắt và các mini game ngắn.',
     section: 'community', visibility: 'featured', status: 'stable', indexable: true,
     tags: ['Discord.js', 'Gemini', 'Prisma'], surfaces: ['home', 'projects'], homeRank: 2, featuredRank: 2,
   },

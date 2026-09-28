@@ -72,7 +72,7 @@ export function HomePage() {
     </section>
 
     <section className="site-container" style={{ paddingBottom: 96 }}>
-      <div className="discord-band"><div><h2>ChatDVT Discord Bot</h2><p>AI chat, hệ thống kinh tế, pet và mini game dành cho Discord.</p></div><Link to="/discord" className="site-button"><Bot size={18} /> Xem chi tiết</Link></div>
+      <div className="discord-band"><div><h2>ChatDVT Discord Bot</h2><p>AI chat, phân tích ảnh/video, tóm tắt hội thoại và mini game dành cho Discord.</p></div><Link to="/discord" className="site-button"><Bot size={18} /> Xem chi tiết</Link></div>
     </section>
   </SiteLayout>;
 }

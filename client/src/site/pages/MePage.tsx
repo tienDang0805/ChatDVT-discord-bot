@@ -53,7 +53,7 @@ export function MePage() {
         <div className="me-projects">
           <article className="me-project me-project--bot">
             <BotAvatar className="bot-avatar--small" />
-            <div><h3>ChatDVT</h3><p>Discord bot gồm AI chat, hệ thống kinh tế, pet và mini game.</p><div className="me-project__links"><Link to="/discord">Chi tiết</Link><a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">Source <ExternalLink size={12} /></a><a href={INVITE_URL} target="_blank" rel="noreferrer">Invite <ExternalLink size={12} /></a></div></div>
+            <div><h3>ChatDVT</h3><p>Discord AI chatbot hỗ trợ phân tích media, tóm tắt và các mini game ngắn.</p><div className="me-project__links"><Link to="/discord">Chi tiết</Link><a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">Source <ExternalLink size={12} /></a><a href={INVITE_URL} target="_blank" rel="noreferrer">Invite <ExternalLink size={12} /></a></div></div>
           </article>
           <Link to="/deeplink-tester" className="me-project"><div><h3>Deep Link Tester</h3><p>Soạn URI, tạo QR và lệnh ADB/Simctl cho iOS và Android.</p></div><b>↗</b></Link>
           <Link to="/survivor-arena" className="me-project"><div><h3>Survivor Arena 8D</h3><p>Game auto-shooter mình làm để thử game loop, canvas và điều khiển cảm ứng.</p></div><b>↗</b></Link>
