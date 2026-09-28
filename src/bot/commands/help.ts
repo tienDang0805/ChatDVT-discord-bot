@@ -1,45 +1,105 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import {
+  APIEmbedField,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from 'discord.js';
+import { ADMIN_ID } from '../../config/constants';
+import { isCommandDisabled } from '../../config/command-flags';
 
 export const data = new SlashCommandBuilder()
   .setName('help')
-  .setDescription('Mở sổ tay hướng dẫn')
-  .addStringOption(option => 
-      option.setName('category')
-          .setDescription('Chuyên mục cấu hình sách hướng dẫn (vd: pet)')
-          .addChoices({ name: 'Hệ thống Sinh Vật (Pet RPG)', value: 'pet' })
-          .setRequired(false)
-  );
+  .setDescription('Xem hướng dẫn sử dụng ChatDVT');
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  const category = interaction.options.getString('category');
+  const fields: APIEmbedField[] = [
+    {
+      name: '💬 Trò chuyện với AI',
+      value: [
+        '• Mention `@ChatDVT` kèm câu hỏi để bắt đầu trò chuyện.',
+        '• Có thể gửi kèm **một ảnh hoặc video** để bot phân tích.',
+        '• Khi reply tin nhắn của bot, hãy giữ bật mention để bot nhận được yêu cầu.',
+      ].join('\n'),
+      inline: false,
+    },
+    {
+      name: '🧰 Tiện ích',
+      value: [
+        '`/help` — mở hướng dẫn này.',
+        '`/identity menu` — mở menu chỉnh nickname và chữ ký dùng với AI.',
+        '`/identity view user:@người_dùng` — xem danh tính của một thành viên.',
+        '`/sum [limit]` — tóm tắt 5–100 tin nhắn gần đây; mặc định 50.',
+      ].join('\n'),
+      inline: false,
+    },
+  ];
 
-  if (category === 'pet') {
-      const embed = new EmbedBuilder()
-          .setTitle('📖 Sổ Tay Hướng Dẫn: Sinh Vật Huyền Bí')
-          .setDescription('Chào mừng bạn đến với hệ thống Pet RPG (Gene-Sys). Dưới đây là các lệnh bạn có thể sử dụng được chia theo danh mục:')
-          .setColor(0x00A0FF)
-          .addFields(
-              { name: '🐣 TÂN THỦ & CƠ BẢN', value: '`> /pet start:` Ấp trứng sinh vật từ AI (1 lần/ngày).\n`> /pet list:` Xem cấp độ, EXP, lực chiến và chỉ số sinh vật.\n`> /pet daily_free:` 🎁 Rút thẻ Gacha sinh vật ngẫu nhiên miễn phí (1 lần/ngày).\n`> /pet release:` Phóng sinh thú cưng hiện tại.\n`> /daily:` Nhận quà, xu và EXP mỗi ngày.\n`> /inventory:` Xem kho đồ và số dư xu.\n`> /status:` Xem tổng quan tài khoản và sinh vật.', inline: false },
-              { name: '⚔️ CHIẾN ĐẤU & PHIÊU LƯU', value: '`> /journey:` Du ngoạn tìm vàng, EXP và săn trứng hiếm (Hồi chiêu 4h).\n`> /farm:` Cày cuốc quái vật tĩnh nhận EXP và tiền xu.\n`> /grind:` 🔄 Tự động du ngoạn liên tục + dùng Bình Thể Lực đến khi hết.\n`> /expedition status:` Xem tiến độ Viễn Chinh 50 ải.\n`> /expedition fight:` Chiến đấu ải hiện tại trong Viễn Chinh.\n`> /tower:` Leo tháp vô tận thử thách lực chiến.\n`> /pk <@user>:` PvP lật bài theo lượt với người chơi khác.', inline: false },
-              { name: '🛒 CỬA HÀNG & NÂNG CẤP', value: '`> /shop:` Cửa hàng vật phẩm (Đá EXP, Đá thuộc tính, Bình chiến đấu, Đá tiến hóa).\n`> /buy <id_item> [sl]:` Mua vật phẩm từ cửa hàng.\n`> /sell <id_item> [sl]:` Bán vật phẩm lấy lại xu.\n`> /use <id_item> [sl]:` Dùng vật phẩm (Đá EXP, đá thuộc tính, ấp trứng...).\n`> /train <coin>:` Tự động dùng xu mua & nạp EXP cho sinh vật.\n`> /pet evolve:` Đột phá tiến hóa sinh vật (Cần Đá Tiến Hóa + đạt cấp yêu cầu).', inline: false },
-              { name: '🎰 HỆ THỐNG NHÂN PHẨM', value: 'Trứng sinh vật **KHÔNG bán trong shop**. Mọi trứng đều đến từ:\n• `/pet start` — Ấp trứng hàng ngày (tỉ lệ ngẫu nhiên).\n• `/pet daily_free` — Gacha miễn phí 1 lần/ngày.\n• `/journey` — Phiêu lưu có tỉ lệ rớt trứng xịn.\n• `/farm` — Cày cuốc có cơ hội nhận trứng.\n• Sự kiện đặc biệt từ Admin.', inline: false },
-              { name: '🏆 VINH DANH & XẾP HẠNG', value: '`> /rank [type]:` Xem bảng xếp hạng toàn server (Power, Level, Tower, Coin).\n`> /claim_rank:` Nhận thưởng dựa trên vị trí top server cuối tuần.', inline: false }
-          )
-          .setFooter({ text: 'Dự án Gene-Sys: Mở khóa sức mạnh AI — Tất cả là nhân phẩm 🍀' });
+  const gameSections: string[] = [];
 
-      await interaction.reply({ embeds: [embed] });
-      return;
+  if (!isCommandDisabled('quiz')) {
+    gameSections.push(
+      '**Quiz AI**',
+      '`/quiz setup` — mở form tạo quiz: 3–10 câu, chủ đề, độ khó, giọng văn và thời gian mỗi câu.',
+      '`/quiz cancel` — người tạo hủy quiz đang chạy.'
+    );
+  }
+
+  if (!isCommandDisabled('wordle')) {
+    gameSections.push(
+      '**Wordle**',
+      '`/wordle setup` — mở form tạo Wordle: 3–10 từ, chủ đề, độ khó và số lượt đoán.',
+      '`/wordle cancel` — người tạo hủy Wordle đang chạy.'
+    );
+  }
+
+  if (!isCommandDisabled('code')) {
+    gameSections.push(
+      '**Code Challenge**',
+      '`/code start [questions] [topic] [difficulty] [time]` — bắt đầu 3–10 câu; 10–60 giây mỗi câu.',
+      '`/code cancel` — người tạo hủy game đang chạy.',
+      '`/code leaderboard` — xem top 10 của server.',
+      '`/code stats` — xem thống kê cá nhân.'
+    );
+  }
+
+  if (gameSections.length > 0) {
+    fields.push({
+      name: '🎮 Game đang mở',
+      value: gameSections.join('\n'),
+      inline: false,
+    });
+  }
+
+  const isServerAdmin = interaction.memberPermissions?.has(PermissionFlagsBits.Administrator) ?? false;
+  if (isServerAdmin && !isCommandDisabled('setting')) {
+    const adminLines = [
+      '`/setting view` — xem persona hiện tại của bot trong server.',
+      '`/setting edit` — chỉnh persona của bot.',
+      '`/setting reset` — đưa persona về cấu hình mặc định.',
+    ];
+
+    if (interaction.user.id === ADMIN_ID && !isCommandDisabled('setapikey')) {
+      adminLines.push(
+        '`/setapikey set` — lưu Gemini API key cho server.',
+        '`/setapikey view` — xem key đang lưu ở dạng che bớt.',
+        '`/setapikey remove` — xóa key riêng và quay về key mặc định.'
+      );
+    }
+
+    fields.push({
+      name: '🛡️ Quản trị',
+      value: adminLines.join('\n'),
+      inline: false,
+    });
   }
 
   const embed = new EmbedBuilder()
-      .setTitle('📖 Sổ Tay Hệ Thống Chung')
-      .setDescription('Dưới đây là một số hướng dẫn chung. Dùng lệnh `/help category:pet` để xem chi tiết mảng RPG.')
-      .setColor(0xFFFFFF)
-      .addFields(
-          { name: '💡 Hỏi/Đáp qua Chat', value: 'Chỉ cần **Ping / Reply** tới Bot hoặc chat có chứa tên Bot (nếu được hỗ trợ), AI sẽ tự động trả lời.' },
-          { name: '📊 Control Dashboard', value: 'Website cung cấp bảng hệ thống theo dõi và cấu hình toàn hệ thống dành riêng cho Admin.' },
-          { name: '🔮 /identity', value: 'Đăng ký Nickname và Chữ Ký ảo cho tài khoản.' },
-      );
+    .setTitle('🤖 ChatDVT — AI Chat Bot')
+    .setColor(0x5865F2)
+    .setDescription('Hỏi AI bằng mention, dùng tiện ích theo ngữ cảnh và chơi các game ngắn ngay trong Discord.')
+    .addFields(fields)
+    .setFooter({ text: 'Help chỉ hiển thị những tính năng đang được mở cho bạn.' });
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [embed], ephemeral: true });
 }

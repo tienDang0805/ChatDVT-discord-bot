@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import cron from 'node-cron';
 import { NasaService } from '../services/nasa';
+import { isCommandDisabled } from '../../config/command-flags';
 
 let lastAnnouncedWeek = -1;
 
@@ -54,10 +55,12 @@ async function checkFridayAnnouncement(client: Client) {
 export async function handleReady(client: Client) {
     client.user?.setActivity('Nần ná na na anh Đặng Văn Tiến ,....', { type: ActivityType.Listening });
 
-    setInterval(() => checkFridayAnnouncement(client), 60 * 1000);
+    if (!isCommandDisabled('claim_rank')) {
+        setInterval(() => checkFridayAnnouncement(client), 60 * 1000);
+    }
 
     // Lập lịch báo thức Vũ trụ mỗi 8h sáng
-    cron.schedule('0 8 * * *', async () => {
+    if (!isCommandDisabled('nasa')) cron.schedule('0 8 * * *', async () => {
         const channelId = process.env.DISCORD_CHANNEL_ID;
         if (!channelId) return;
         

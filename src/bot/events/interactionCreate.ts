@@ -7,10 +7,18 @@ import { expeditionService } from '../services/expedition';
 import { codeChallengeService } from '../services/code-challenge';
 import { wordleService } from '../services/wordle';
 import { prisma } from '../../database/prisma';
+import { isCommandDisabled } from '../../config/command-flags';
 
 export async function handleInteraction(interaction: Interaction) {
   try {
       if (interaction.isChatInputCommand()) {
+          if (isCommandDisabled(interaction.commandName)) {
+              await interaction.reply({
+                  content: '⏸️ Tính năng này đang được tạm đóng để tinh gọn ChatDVT.',
+                  ephemeral: true,
+              });
+              return;
+          }
           const command = (interaction.client as any).commands.get(interaction.commandName);
           if (command) {
               await command.execute(interaction);
@@ -20,6 +28,19 @@ export async function handleInteraction(interaction: Interaction) {
 
       if (interaction.isButton()) {
           const customId = interaction.customId;
+
+          if ((customId.startsWith('egg_') || customId.startsWith('free_pet_')) && isCommandDisabled('pet')) {
+              await interaction.reply({ content: '⏸️ Hệ thống Pet đang được tạm đóng.', ephemeral: true });
+              return;
+          }
+          if (customId === 'expedition_next' && isCommandDisabled('expedition')) {
+              await interaction.reply({ content: '⏸️ Hệ thống Viễn Chinh đang được tạm đóng.', ephemeral: true });
+              return;
+          }
+          if (customId.startsWith('ctw_answer_') && isCommandDisabled('ctw')) {
+              await interaction.reply({ content: '⏸️ Game này đang được tạm đóng.', ephemeral: true });
+              return;
+          }
 
           // --- Pet Egg Picking ---
           if (customId.startsWith('egg_pick_')) {

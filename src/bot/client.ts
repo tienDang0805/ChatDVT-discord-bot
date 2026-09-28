@@ -4,6 +4,7 @@ import path from 'path';
 import { handleInteraction } from './events/interactionCreate';
 import { messageCreate } from './events/messageCreate';
 import { handleReady } from './events/ready';
+import { isCommandDisabled } from '../config/command-flags';
 
 export class BotClient extends Client {
   public commands: Collection<string, any>;
@@ -33,7 +34,9 @@ export class BotClient extends Client {
               const command = await import(filePath);
               
               if ('data' in command && 'execute' in command) {
-                  this.commands.set(command.data.name, command);
+                  const commandName = command.data.name as string;
+                  if (isCommandDisabled(commandName)) continue;
+                  this.commands.set(commandName, command);
                   // console.log(`[Command] Loaded ${command.data.name}`);
               } else {
                   console.warn(`[Command] Warning: The command at ${filePath} is missing "data" or "execute" property.`);
