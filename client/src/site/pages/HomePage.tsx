@@ -4,9 +4,9 @@ import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { BotAvatar } from '../components/BotAvatar';
 import { ArrowLink, SectionHeading, SiteLayout } from '../components/SiteLayout';
-import { featuredProjects, utilityItems } from '../content/siteData';
+import { featuredProjects, mobileItems } from '../content/siteData';
 
-const mobileTools = utilityItems.filter(item => item.kind === 'mobile');
+const mobileTools = mobileItems.filter(item => item.id !== 'rn-guide');
 
 export function HomePage() {
   usePageMeta('Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', {
@@ -25,7 +25,7 @@ export function HomePage() {
           <p className="site-hero__copy">Mình làm ứng dụng mobile, viết blog về quá trình làm sản phẩm và phát triển Discord bot ChatDVT.</p>
           <div className="site-hero__actions">
             <Link to="/mobile" className="site-button site-button--primary"><Smartphone size={17} /> Công cụ mobile <ArrowRight size={16} /></Link>
-            <Link to="/playground" className="site-button"><Gamepad2 size={17} /> Playground</Link>
+            <Link to="/playground" className="site-button"><Gamepad2 size={17} /> Projects & Lab</Link>
           </div>
         </div>
         <aside className="home-hero__note"><span>Đang nghịch</span><strong>ChatDVT, mấy tool mobile và blog này.</strong><p>Rảnh thì code tiếp.</p><i>devtiendang.blog / 2026</i></aside>
@@ -39,12 +39,12 @@ export function HomePage() {
           {featuredProjects.map((project, index) => <Link key={project.title} to={project.href} className="work-row">
             <span className="work-row__index">0{index + 1}</span>
             <div className="work-row__copy"><small>{project.eyebrow}</small><h3>{project.title}</h3><p>{project.description}</p><div className="site-tags">{project.tags.map(tag => <span key={tag}>{tag}</span>)}</div></div>
-            <div className={`work-row__visual${project.kind === 'discord' ? ' work-row__visual--discord' : project.kind === 'arena' ? ' work-row__visual--arena' : ''}`}>
-              {project.kind === 'discord'
+            <div className={`work-row__visual${project.visual === 'discord' ? ' work-row__visual--discord' : project.visual === 'arena' ? ' work-row__visual--arena' : ' work-row__visual--mobile'}`}>
+              {project.visual === 'discord'
                 ? <><BotAvatar className="bot-avatar--project" /><strong>Chat DVT</strong><span>Discord Bot</span></>
-                : project.kind === 'arena'
+                : project.visual === 'arena'
                   ? <><Swords size={62} strokeWidth={1.3} /><strong>50 waves · 8D Arena</strong></>
-                  : <img src={project.image} alt="" loading="lazy" />}
+                  : <><Smartphone size={62} strokeWidth={1.3} /><strong>BUILD · TEST · DEBUG</strong><span>React Native & Android</span></>}
             </div>
           </Link>)}
         </div>

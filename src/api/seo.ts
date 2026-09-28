@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { prisma } from '../database/prisma';
+import { isFeatureIndexable } from '../shared/featureCatalog';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
@@ -26,15 +27,13 @@ const AUTHOR_SCHEMA = {
   ],
 };
 const INDEXABLE_PATHS = new Set([
-  '/', '/playground', '/mobile', '/discord', '/me', '/blog',
-  '/blog/chatdvt-phan-1', '/survivor-arena', '/quiz', '/chibi-sticker',
-  '/mermaid-editor', '/mermaid-tutorial', '/cv-review', '/english',
+  '/', '/playground', '/me', '/blog', '/blog/chatdvt-phan-1',
+  '/mermaid-tutorial',
   '/english/chat', '/english/flashcard', '/english/challenge',
   '/english/dictionary', '/english/daily-puzzle', '/english/word-sprint',
   '/english/spelling-bee', '/english/course', '/english/writing',
   '/english/dictation', '/english/scramble', '/english/word-match',
-  '/english/idiom-quest', '/english/context-clues', '/deeplink-tester',
-  '/emulator-check', '/qr-generator', '/android-toolbox', '/rn-learning-guide', '/pd-learning-guide',
+  '/english/idiom-quest', '/english/context-clues',
 ]);
 
 interface RouteMeta {
@@ -64,9 +63,9 @@ const ROUTE_META: Record<string, RouteMeta> = {
     changefreq: 'weekly',
   },
   '/playground': {
-    title: 'Playground — Game và project nhỏ | Tiến Đặng',
-    description: 'Một vài game, demo AI và project web mình làm để thử ý tưởng, gồm Survivor Arena 8D, Web Quiz AI và Chibi Sticker.',
-    keywords: 'Tiến Đặng playground, Survivor Arena 8D, Web Quiz AI, Chibi Sticker, web game, side project',
+    title: 'Projects & Lab — Sản phẩm và công cụ | Đặng Văn Tiến',
+    description: 'Các sản phẩm nổi bật, công cụ cho developer, dự án AI, learning app và web game do Đặng Văn Tiến xây dựng.',
+    keywords: 'Đặng Văn Tiến projects, mobile developer tools, ChatDVT, web app, AI lab, side project',
     pageType: 'collection',
     priority: 0.9,
     changefreq: 'weekly',
@@ -557,6 +556,8 @@ function normalizePortfolioTitle(title: string): string {
 }
 
 function isIndexableRoute(route: string, meta: RouteMeta): boolean {
+  const featureIndexability = isFeatureIndexable(route);
+  if (featureIndexability !== undefined) return featureIndexability;
   return meta.indexable ?? INDEXABLE_PATHS.has(route);
 }
 

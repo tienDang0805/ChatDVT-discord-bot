@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
@@ -6,11 +7,7 @@ const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'devtiendang.blog'];
 const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, tác giả blog cá nhân và Discord bot ChatDVT.';
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
-  '/', '/playground', '/mobile', '/discord', '/me', '/blog',
-  '/survivor-arena', '/quiz', '/chibi-sticker', '/mermaid-editor',
-  '/mermaid-tutorial', '/cv-review', '/english', '/deeplink-tester',
-  '/emulator-check', '/qr-generator', '/android-toolbox',
-  '/rn-learning-guide', '/pd-learning-guide',
+  '/', '/playground', '/me', '/blog', '/mermaid-tutorial',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
 
@@ -69,6 +66,8 @@ function resolveImageUrl(image?: string): string {
 
 function isIndexablePath(pathname: string): boolean {
   const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
+  const featureIndexability = isFeatureIndexable(normalizedPath);
+  if (featureIndexability !== undefined) return featureIndexability;
   return INDEXABLE_PATHS.has(normalizedPath)
     || INDEXABLE_PREFIXES.some((prefix) => normalizedPath.startsWith(prefix));
 }
