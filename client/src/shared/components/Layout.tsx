@@ -44,18 +44,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     fetchBotInfo();
   }, []);
 
-  // Update Favicon and Title dynamically based on Bot Info
+  // Keep the site-wide TD favicon; only the admin page title follows bot info.
   useEffect(() => {
-    if (botInfo?.avatar) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = botInfo.avatar;
-    }
-    
     if (botInfo?.globalName || botInfo?.username) {
         document.title = `${botInfo.globalName || botInfo.username} | ChatDVT`;
     }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chatdvt-v4';
+const CACHE_NAME = 'devtiendang-v5';
 const PRECACHE_URLS = [
   '/',
   '/index.html'
