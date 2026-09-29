@@ -8,6 +8,7 @@ import {
   MessageCircle,
   RotateCcw,
   Save,
+  Settings2,
 } from 'lucide-react';
 import api from '../../../../shared/api';
 
@@ -23,6 +24,9 @@ export const FacebookChatPrompt = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [saveError, setSaveError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [isSettingUpProfile, setIsSettingUpProfile] = useState(false);
+  const [profileStatus, setProfileStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [profileError, setProfileError] = useState('');
 
   const fetchPrompt = useCallback(async () => {
     setIsLoading(true);
@@ -87,6 +91,23 @@ export const FacebookChatPrompt = () => {
     setSaveError('');
   };
 
+  const handleSetupProfile = async () => {
+    setIsSettingUpProfile(true);
+    setProfileStatus('idle');
+    setProfileError('');
+    try {
+      await api.post('/facebook/setup-profile');
+      setProfileStatus('success');
+      window.setTimeout(() => setProfileStatus('idle'), 5000);
+    } catch (error: any) {
+      console.error('Failed to configure Messenger profile:', error);
+      setProfileError(error.response?.data?.error || 'Không cấu hình được menu Messenger.');
+      setProfileStatus('error');
+    } finally {
+      setIsSettingUpProfile(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
@@ -135,6 +156,18 @@ export const FacebookChatPrompt = () => {
               <CheckCircle2 size={16} /> Đã lưu và áp dụng
             </span>
           )}
+          {profileStatus === 'success' && (
+            <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-500">
+              <CheckCircle2 size={16} /> Đã cấu hình menu
+            </span>
+          )}
+          <button
+            onClick={handleSetupProfile}
+            disabled={isSettingUpProfile}
+            className="flex items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-2.5 text-sm font-medium text-blue-600 transition-all hover:bg-blue-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Settings2 size={14} /> {isSettingUpProfile ? 'Đang cấu hình...' : 'Cấu hình menu FB'}
+          </button>
           <button
             onClick={handleReset}
             disabled={!hasChanges}
@@ -156,6 +189,13 @@ export const FacebookChatPrompt = () => {
         <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-red-500">
           <AlertCircle size={17} className="mt-0.5 shrink-0" />
           <span>{isTooLong ? `Prompt vượt giới hạn ${MAX_PROMPT_LENGTH.toLocaleString('vi-VN')} ký tự.` : saveError}</span>
+        </div>
+      )}
+
+      {profileStatus === 'error' && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm text-red-500">
+          <AlertCircle size={17} className="mt-0.5 shrink-0" />
+          <span>{profileError}</span>
         </div>
       )}
 
@@ -214,6 +254,8 @@ export const FacebookChatPrompt = () => {
           <li>• Bot tự dùng lịch sử 10 lượt gần nhất, bật trạng thái đang nhập và gửi từng bong bóng có độ trễ tự nhiên.</li>
           <li>• Output là JSON array gồm 1–3 phần tử. Tin thường dùng chuỗi; CTA dùng object có <code>text</code> và <code>button</code>.</li>
           <li>• Nút chỉ nhận URL HTTPS thuộc <code>devtiendang.blog</code>. Link website nằm trong câu thường sẽ tự được tách thành bong bóng riêng.</li>
+          <li>• Bấm <strong>Cấu hình menu FB</strong> một lần sau deploy để đăng ký lời chào, nút Bắt đầu và menu Chơi Quiz với Meta.</li>
+          <li>• Người dùng có thể bắt đầu Quiz bằng menu, nút nhanh hoặc nhắn <code>quiz</code>; session tồn tại 30 phút.</li>
           <li>• Messenger không render Markdown; nên yêu cầu câu ngắn, plain text và chỉ giới thiệu devtiendang.blog khi đúng ngữ cảnh.</li>
           <li>• Để trống bị chặn vì bot không còn chứa system prompt mặc định trong source code.</li>
         </ul>
