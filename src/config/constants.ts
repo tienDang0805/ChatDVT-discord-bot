@@ -21,6 +21,19 @@ export const GEMINI_CHAT_CONFIG = {
   }
 };
 
+export const WEB_CHAT_MODEL_FALLBACKS: readonly string[] = [
+  "gemini-3.5-flash-lite",
+  "gemini-3.1-flash-lite",
+  "gemma-4-26b-a4b-it",
+];
+
+export const WEB_CHAT_GENERATION_CONFIG = {
+  temperature: 0.9,
+  topP: 0.95,
+  topK: 64,
+  maxOutputTokens: 1024,
+};
+
 export const GEMINI_LOGIC_CONFIG = {
   modelName: "gemini-3.1-flash-lite",
   generationConfig: {
