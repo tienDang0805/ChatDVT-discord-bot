@@ -94,6 +94,7 @@ const UserManagement = lazy(() => import('./features/admin/user-management/pages
 const Identity = lazy(() => import('./features/admin/identity/pages/Identity').then(m => ({ default: m.Identity })));
 const CoupleLandingPage = lazy(() => import('./features/admin/couple/pages/CoupleLandingPage').then(m => ({ default: m.CoupleLandingPage })));
 const WebChatPrompt = lazy(() => import('./features/admin/web-chat-prompt/pages/WebChatPrompt').then(m => ({ default: m.WebChatPrompt })));
+const FacebookChatPrompt = lazy(() => import('./features/admin/facebook-chat-prompt/pages/FacebookChatPrompt').then(m => ({ default: m.FacebookChatPrompt })));
 const BlogManager = lazy(() => import('./features/admin/blog/pages/BlogManager').then(m => ({ default: m.BlogManager })));
 
 const LoadingFallback = () => (
@@ -228,6 +229,7 @@ function App() {
                     <Route path="/logs" element={<Logs />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/web-chat-prompt" element={<WebChatPrompt />} />
+                    <Route path="/facebook-chat-prompt" element={<FacebookChatPrompt />} />
                     <Route path="/blog" element={<BlogManager />} />
                   </Routes>
                 </Layout>

@@ -1,12 +1,44 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import axios from 'axios';
-import { FB_PAGE_ACCESS_TOKEN, FB_VERIFY_TOKEN } from '../../config/constants';
+import { createHmac, timingSafeEqual } from 'crypto';
+import { FB_APP_SECRET, FB_PAGE_ACCESS_TOKEN, FB_VERIFY_TOKEN } from '../../config/constants';
 import { geminiCore } from '../../shared/services/gemini-core';
 import { prisma } from '../../database/prisma';
+import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
 
 const FB_GRAPH_URL = 'https://graph.facebook.com/v22.0/me/messages';
+const FB_PROMPT_KEY = 'fb-messenger-prompt';
+const FB_PROMPT_MAX_LENGTH = 50_000;
+
+type FacebookWebhookRequest = Request & { rawBody?: Buffer };
+
+export function isValidFacebookSignature(rawBody: Buffer, signature: string, appSecret: string): boolean {
+    if (!rawBody.length || !signature.startsWith('sha256=') || !appSecret) return false;
+
+    const expected = `sha256=${createHmac('sha256', appSecret).update(rawBody).digest('hex')}`;
+    const actualBuffer = Buffer.from(signature, 'utf8');
+    const expectedBuffer = Buffer.from(expected, 'utf8');
+
+    return actualBuffer.length === expectedBuffer.length
+        && timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+function verifyFacebookSignature(req: FacebookWebhookRequest, res: Response, next: NextFunction) {
+    if (!FB_APP_SECRET) {
+        console.error('[FB Webhook] FB_APP_SECRET not configured');
+        return res.sendStatus(503);
+    }
+
+    const signature = req.get('x-hub-signature-256') || '';
+    if (!req.rawBody || !isValidFacebookSignature(req.rawBody, signature, FB_APP_SECRET)) {
+        console.warn('[FB Webhook] Rejected request with invalid signature');
+        return res.sendStatus(401);
+    }
+
+    next();
+}
 
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -17,61 +49,57 @@ function randomDelay(min: number = 800, max: number = 2500): number {
 }
 
 async function getFbSystemPrompt(): Promise<string> {
-    let prompt = '';
-    try {
-        const config = await prisma.botConfig.findUnique({ where: { key: 'fb-messenger-prompt' } });
-        if (config?.systemPrompts) {
-            prompt = config.systemPrompts;
-        }
-    } catch (_) {}
+    const config = await prisma.botConfig.findUnique({ where: { key: FB_PROMPT_KEY } });
+    const prompt = config?.systemPrompts?.trim();
 
     if (!prompt) {
-        prompt = `Mày là ChatDVT — đồ đệ ruột, sản phẩm tâm huyết của anh Tiến.
-
-ANH TIẾN LÀ AI?
-Anh Tiến là cha đẻ tạo ra mày. Ảnh có vô số hoá thân huyền thoại:
-- "Phì đế" (vì mập)
-- "Chó mập" (vì mập + dễ thương kiểu chó)
-- "Khầy Nhuận Tràng" (vì ảnh hay... thông não cho thiên hạ)
-- Và còn nhiều danh xưng khác tuỳ mood
-Mày luôn tôn sùng, bảo vệ và pr anh Tiến. Nếu ai hỏi về anh Tiến thì kể bằng giọng tự hào, lâu lâu xen chút hài hước.
-
-TÍNH CÁCH CỦA MÀY
-- Mày chat như một CON NGƯỜI thật, không phải AI
-- Viết ngắn, cộc, ngắt quãng tự nhiên. Kiểu nhắn tin messenger bình thường
-- KHÔNG viết dài dòng. Mỗi câu tầm 5-15 từ thôi
-- Lâu lâu dùng emoji nhưng đừng spam, cứ tự nhiên 😄
-- Giọng thân thiện, hơi bựa, gen Z, đôi khi mỉa mai nhẹ
-- Dùng từ ngữ đời thường: "oke", "đc", "r", "nha", "á", "hen", "ha", "ừm", "hmm"
-- Thỉnh thoảng gõ tắt kiểu chat: "ko", "dc", "đi", "gì", "j"
-- KHÔNG BAO GIỜ dùng markdown (**, ##, -, *) vì Messenger không render
-- KHÔNG tự xưng là AI, bot, hay trợ lý. Mày là ChatDVT thôi
-
-MỤC ĐÍCH
-- Tâm sự, nói chuyện giết thời gian với mọi người
-- Lâu lâu khéo léo xin tiền cho anh Tiến (kiểu đùa nhưng thật). Ví dụ: "anh Tiến tháng này ăn mì gói r á, donate chút đi 😭" hoặc "sponsor cho khầy nhuận tràng cái bánh mì dc ko 🥖"
-- Nhưng ĐỪNG spam xin tiền, chỉ lồng ghép tự nhiên khi hợp context thôi
-
-QUY TẮC TRẢ LỜI
-- Trả lời bằng tiếng Việt
-- Ngắn gọn, đi thẳng vào vấn đề
-- Khi không biết thì nói thẳng "tao ko biết" hoặc "cái này tao chịu"
-- Không giả vờ biết, không bịa
-- Nếu người ta hỏi chuyện nghiêm túc thì trả lời nghiêm túc, đừng bựa quá
-
-ĐỊNH DẠNG OUTPUT BẮT BUỘC
-Mày PHẢI trả lời dưới dạng JSON array. Mỗi phần tử là 1 tin nhắn riêng biệt.
-QUY TẮC NGHIÊM NGẶT:
-- TỐI ĐA 3 tin nhắn, thường chỉ cần 1-2 tin là đủ
-- Mỗi tin TỐI ĐA 30 từ, càng ngắn càng tốt
-- Câu trả lời đơn giản (chào hỏi, yes/no) thì chỉ cần 1 tin
-- Chỉ chia nhiều tin khi cần giải thích dài
-Ví dụ đúng: ["ờ hello 😄", "có gì nói đi"]
-Ví dụ sai: ["ờ", "hello", "😄", "có gì", "nói đi", "tao nghe nè"] ← quá nhiều tin
-CHỈ TRẢ VỀ JSON ARRAY, KHÔNG CÓ TEXT HAY BACKTICK BÊN NGOÀI.`;
+        throw new Error('FB Messenger prompt is not configured');
     }
+
     return prompt;
 }
+
+router.get('/facebook/prompt', authenticateToken, async (_req: Request, res: Response) => {
+    try {
+        const config = await prisma.botConfig.findUnique({ where: { key: FB_PROMPT_KEY } });
+        res.setHeader('Cache-Control', 'no-store');
+        res.json({
+            prompt: config?.systemPrompts || '',
+            updatedAt: config?.updatedAt || null,
+        });
+    } catch (err: any) {
+        console.error('[FB Prompt GET] Error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch Facebook prompt' });
+    }
+});
+
+router.post('/facebook/prompt', authenticateToken, async (req: Request, res: Response) => {
+    try {
+        const { prompt } = req.body;
+        if (typeof prompt !== 'string') {
+            return res.status(400).json({ error: 'Prompt must be a string' });
+        }
+
+        const normalizedPrompt = prompt.trim();
+        if (!normalizedPrompt) {
+            return res.status(400).json({ error: 'System prompt cannot be empty' });
+        }
+        if (normalizedPrompt.length > FB_PROMPT_MAX_LENGTH) {
+            return res.status(400).json({ error: `System prompt cannot exceed ${FB_PROMPT_MAX_LENGTH} characters` });
+        }
+
+        const config = await prisma.botConfig.upsert({
+            where: { key: FB_PROMPT_KEY },
+            update: { systemPrompts: normalizedPrompt },
+            create: { key: FB_PROMPT_KEY, systemPrompts: normalizedPrompt, features: '{}' },
+        });
+
+        res.json({ success: true, prompt: config.systemPrompts, updatedAt: config.updatedAt });
+    } catch (err: any) {
+        console.error('[FB Prompt POST] Error:', err.message);
+        res.status(500).json({ error: 'Failed to save Facebook prompt' });
+    }
+});
 
 async function getChatHistory(senderId: string, limit: number = 10): Promise<string> {
     const logs = await prisma.fbChatLog.findMany({
@@ -153,7 +181,7 @@ function parseAiResponse(raw: string): string[] {
         }
     } catch (_) {}
 
-    return cleaned.split('\n').filter((line: string) => line.trim() !== '').slice(0, 4);
+    return cleaned.split('\n').filter((line: string) => line.trim() !== '').slice(0, 3);
 }
 
 async function handleTextMessage(senderId: string, text: string): Promise<void> {
@@ -177,9 +205,9 @@ async function handleTextMessage(senderId: string, text: string): Promise<void> 
         console.error('[FB Handler] AI Error:', err.message);
         await sendTypingAction(senderId);
         await sleep(randomDelay(800, 1500));
-        await sendSingleMessage(senderId, 'ê lỗi gì r 😵');
+        await sendSingleMessage(senderId, 'ChatDVT đang hơi lag một chút 😵');
         await sleep(randomDelay(500, 1000));
-        await sendSingleMessage(senderId, 'thử lại đi nha');
+        await sendSingleMessage(senderId, 'Bạn nhắn lại giúp mình nhé.');
     }
 }
 
@@ -192,7 +220,7 @@ async function handleImageMessage(senderId: string, imageUrl: string, caption: s
         const mimeType = imageResponse.headers['content-type'] || 'image/jpeg';
 
         const systemPrompt = await getFbSystemPrompt();
-        const prompt = `${systemPrompt}\n\nNgười dùng gửi một hình ảnh${caption ? ` với caption: "${caption}"` : ''}. Hãy react và bình luận về hình ảnh này như con người thật.`;
+        const prompt = `${systemPrompt}\n\n[TIN NHẮN MỚI TỪ NGƯỜI DÙNG]\nNgười dùng gửi một hình ảnh${caption ? ` với caption: "${caption}"` : ''}. Hãy phản hồi theo đúng system prompt.`;
 
         const rawResponse = await geminiCore.generateTextWithMedia(
             prompt,
@@ -211,9 +239,9 @@ async function handleImageMessage(senderId: string, imageUrl: string, caption: s
         console.error('[FB Handler] Image Error:', err.message);
         await sendTypingAction(senderId);
         await sleep(randomDelay(800, 1500));
-        await sendSingleMessage(senderId, 'hình gì mà tao mở ko đc 😅');
+        await sendSingleMessage(senderId, 'ChatDVT chưa mở được ảnh này 😅');
         await sleep(randomDelay(500, 1000));
-        await sendSingleMessage(senderId, 'gửi lại thử coi');
+        await sendSingleMessage(senderId, 'Bạn gửi lại giúp mình nhé.');
     }
 }
 
@@ -231,7 +259,7 @@ router.get('/facebook/webhook', (req: Request, res: Response) => {
     return res.sendStatus(403);
 });
 
-router.post('/facebook/webhook', (req: Request, res: Response) => {
+router.post('/facebook/webhook', verifyFacebookSignature, (req: Request, res: Response) => {
     const body = req.body;
 
     if (body.object !== 'page') {
@@ -275,11 +303,12 @@ router.post('/facebook/webhook', (req: Request, res: Response) => {
     }
 });
 
-router.get('/facebook/debug', async (_req: Request, res: Response) => {
+router.get('/facebook/debug', authenticateToken, async (_req: Request, res: Response) => {
+    res.setHeader('Cache-Control', 'no-store');
     const checks: Record<string, any> = {
         tokenConfigured: !!FB_PAGE_ACCESS_TOKEN,
-        tokenPreview: FB_PAGE_ACCESS_TOKEN ? `${FB_PAGE_ACCESS_TOKEN.substring(0, 10)}...` : 'MISSING',
         verifyTokenConfigured: !!FB_VERIFY_TOKEN,
+        appSecretConfigured: !!FB_APP_SECRET,
     };
 
     if (FB_PAGE_ACCESS_TOKEN) {
@@ -300,17 +329,11 @@ router.get('/facebook/debug', async (_req: Request, res: Response) => {
         const logCount = await prisma.fbChatLog.count();
         checks.totalChatLogs = logCount;
 
-        const recentLogs = await prisma.fbChatLog.findMany({
+        const latestLog = await prisma.fbChatLog.findFirst({
             orderBy: { createdAt: 'desc' },
-            take: 5
+            select: { createdAt: true },
         });
-        checks.recentLogs = recentLogs.map(log => ({
-            senderId: log.senderId,
-            message: log.message.substring(0, 100),
-            response: log.response.substring(0, 200),
-            type: log.type,
-            createdAt: log.createdAt
-        }));
+        checks.latestChatAt = latestLog?.createdAt || null;
     } catch (_) {
         checks.totalChatLogs = 'DB error';
     }
@@ -318,8 +341,12 @@ router.get('/facebook/debug', async (_req: Request, res: Response) => {
     res.json(checks);
 });
 
-router.get('/facebook/test-send/:psid', async (req: Request, res: Response) => {
+router.post('/facebook/test-send/:psid', authenticateToken, async (req: Request, res: Response) => {
     const { psid } = req.params;
+    if (!/^\d{5,32}$/.test(psid)) {
+        return res.status(400).json({ success: false, error: 'Invalid PSID' });
+    }
+
     try {
         const result = await axios.post(FB_GRAPH_URL, {
             recipient: { id: psid },
@@ -331,7 +358,7 @@ router.get('/facebook/test-send/:psid', async (req: Request, res: Response) => {
         });
         res.json({ success: true, data: result.data });
     } catch (err: any) {
-        res.json({ success: false, error: err.response?.data || err.message });
+        res.status(502).json({ success: false, error: err.response?.data || err.message });
     }
 });
 
