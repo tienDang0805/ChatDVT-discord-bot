@@ -117,6 +117,104 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
     section: 'ai', visibility: 'public', status: 'beta', indexable: false,
     tags: ['Food', 'AI'], requirements: ['AI'], surfaces: ['projects'],
   },
+  {
+    id: 'chatdvt-chat', path: '/chat', title: 'ChatDVT Chat',
+    description: 'Chat trực tiếp với ChatDVT để hỏi về Tiến, website, công cụ và các project đang public.',
+    section: 'community', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['ChatDVT', 'AI', 'Assistant'], requirements: ['AI'],
+  },
+  {
+    id: 'mermaid-tutorial', path: '/mermaid-tutorial', title: 'Mermaid Tutorial',
+    description: 'Hướng dẫn Mermaid từ cú pháp cơ bản đến flowchart, sequence, class và các loại diagram phổ biến.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['Mermaid', 'Diagram', 'Guide'],
+  },
+
+  // English Hub sub-features: public routes discoverable through /english.
+  {
+    id: 'english-course', path: '/english/course', title: 'English Course Map',
+    description: 'Lộ trình học tiếng Anh theo unit, từ nền tảng đến các bài luyện có cấu trúc.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Course', 'Learning'], requirements: ['Một số bài cần AI'],
+  },
+  {
+    id: 'english-chat', path: '/english/chat', title: 'English AI Chat',
+    description: 'Luyện hội thoại tiếng Anh với AI theo ngữ cảnh và nhận phản hồi trong lúc chat.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Conversation', 'AI'], requirements: ['AI'],
+  },
+  {
+    id: 'english-flashcard', path: '/english/flashcard', title: 'English Flashcard',
+    description: 'Ôn từ vựng bằng flashcard và lịch lặp lại ngắt quãng.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Vocabulary', 'SRS'],
+  },
+  {
+    id: 'english-challenge', path: '/english/challenge', title: 'English Daily Challenge',
+    description: 'Thử thách tiếng Anh hằng ngày với bài luyện ngắn và chấm kết quả.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Challenge', 'AI'], requirements: ['AI'],
+  },
+  {
+    id: 'english-dictionary', path: '/english/dictionary', title: 'English Dictionary',
+    description: 'Tra từ, nghĩa, cách dùng và ví dụ tiếng Anh ngay trong English Hub.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Dictionary', 'Vocabulary'],
+  },
+  {
+    id: 'english-daily-puzzle', path: '/english/daily-puzzle', title: 'English Daily Puzzle',
+    description: 'Câu đố tiếng Anh mỗi ngày để luyện từ vựng và tư duy ngôn ngữ.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Puzzle', 'Vocabulary'],
+  },
+  {
+    id: 'english-word-sprint', path: '/english/word-sprint', title: 'Word Sprint',
+    description: 'Trò chơi tốc độ nhận biết từ vựng tiếng Anh trong thời gian giới hạn.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Vocabulary', 'Game'],
+  },
+  {
+    id: 'english-spelling-bee', path: '/english/spelling-bee', title: 'Spelling Bee',
+    description: 'Luyện nghe và đánh vần tiếng Anh từ cơ bản đến nâng cao.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Spelling', 'Listening'],
+  },
+  {
+    id: 'english-writing', path: '/english/writing', title: 'English Writing Lab',
+    description: 'Luyện viết tiếng Anh với AI chấm, sửa và góp ý nội dung.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Writing', 'AI'], requirements: ['AI'],
+  },
+  {
+    id: 'english-dictation', path: '/english/dictation', title: 'English Dictation Lab',
+    description: 'Luyện nghe chép để cải thiện listening và spelling cùng lúc.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Dictation', 'Listening'],
+  },
+  {
+    id: 'english-scramble', path: '/english/scramble', title: 'Sentence Scramble',
+    description: 'Sắp xếp các thành phần bị xáo trộn để luyện cấu trúc câu và ngữ pháp.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Grammar', 'Game'],
+  },
+  {
+    id: 'english-word-match', path: '/english/word-match', title: 'Word Match',
+    description: 'Nối từ tiếng Anh với nghĩa tương ứng để ôn từ vựng.',
+    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    tags: ['English', 'Vocabulary', 'Game'],
+  },
+  {
+    id: 'english-idiom-quest', path: '/english/idiom-quest', title: 'Idiom Quest',
+    description: 'Khám phá và luyện thành ngữ tiếng Anh qua trò chơi tương tác.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Idioms', 'Game'], requirements: ['AI'],
+  },
+  {
+    id: 'english-context-clues', path: '/english/context-clues', title: 'Context Clues',
+    description: 'Luyện đoán nghĩa của từ dựa trên ngữ cảnh và khả năng đọc hiểu.',
+    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    tags: ['English', 'Reading', 'Vocabulary'], requirements: ['AI'],
+  },
 
   // Mobile suite details: public and indexed, but listed inside /mobile only.
   {
