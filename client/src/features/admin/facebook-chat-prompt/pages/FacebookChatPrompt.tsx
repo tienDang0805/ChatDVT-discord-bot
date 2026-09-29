@@ -212,7 +212,8 @@ export const FacebookChatPrompt = () => {
           <li>• Prompt này chỉ áp dụng cho Facebook Messenger; Web Chat và Discord không bị ảnh hưởng.</li>
           <li>• Backend lấy prompt trực tiếp từ đây và áp dụng ngay, không cần restart server.</li>
           <li>• Bot tự dùng lịch sử 10 lượt gần nhất, bật trạng thái đang nhập và gửi từng bong bóng có độ trễ tự nhiên.</li>
-          <li>• Prompt phải yêu cầu output là JSON array gồm 1–3 chuỗi, ví dụ: <code>[&quot;Chào bạn 👋&quot;, &quot;Bạn muốn xem tính năng nào?&quot;]</code>.</li>
+          <li>• Output là JSON array gồm 1–3 phần tử. Tin thường dùng chuỗi; CTA dùng object có <code>text</code> và <code>button</code>.</li>
+          <li>• Nút chỉ nhận URL HTTPS thuộc <code>devtiendang.blog</code>. Link website nằm trong câu thường sẽ tự được tách thành bong bóng riêng.</li>
           <li>• Messenger không render Markdown; nên yêu cầu câu ngắn, plain text và chỉ giới thiệu devtiendang.blog khi đúng ngữ cảnh.</li>
           <li>• Để trống bị chặn vì bot không còn chứa system prompt mặc định trong source code.</li>
         </ul>

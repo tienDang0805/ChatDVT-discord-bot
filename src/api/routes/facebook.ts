@@ -11,8 +11,14 @@ const router = Router();
 const FB_GRAPH_URL = 'https://graph.facebook.com/v22.0/me/messages';
 const FB_PROMPT_KEY = 'fb-messenger-prompt';
 const FB_PROMPT_MAX_LENGTH = 50_000;
+const FB_MAX_OUTGOING_MESSAGES = 3;
+const FB_BUTTON_TEXT_MAX_LENGTH = 640;
+const FB_BUTTON_TITLE_MAX_LENGTH = 20;
+const TRUSTED_LINK_HOSTS = new Set(['devtiendang.blog', 'www.devtiendang.blog']);
 
 type FacebookWebhookRequest = Request & { rawBody?: Buffer };
+type FacebookButton = { title: string; url: string };
+type FacebookOutgoingMessage = { text: string; button?: FacebookButton };
 
 export function isValidFacebookSignature(rawBody: Buffer, signature: string, appSecret: string): boolean {
     if (!rawBody.length || !signature.startsWith('sha256=') || !appSecret) return false;
@@ -132,6 +138,40 @@ async function sendSingleMessage(recipientId: string, text: string): Promise<voi
     }
 }
 
+async function sendButtonMessage(recipientId: string, message: FacebookOutgoingMessage): Promise<void> {
+    if (!message.button) {
+        await sendSingleMessage(recipientId, message.text);
+        return;
+    }
+
+    try {
+        await axios.post(FB_GRAPH_URL, {
+            recipient: { id: recipientId },
+            message: {
+                attachment: {
+                    type: 'template',
+                    payload: {
+                        template_type: 'button',
+                        text: message.text.slice(0, FB_BUTTON_TEXT_MAX_LENGTH),
+                        buttons: [{
+                            type: 'web_url',
+                            url: message.button.url,
+                            title: message.button.title.slice(0, FB_BUTTON_TITLE_MAX_LENGTH),
+                        }],
+                    },
+                },
+            },
+            messaging_type: 'RESPONSE',
+        }, {
+            params: { access_token: FB_PAGE_ACCESS_TOKEN },
+            timeout: 10000,
+        });
+    } catch (err: any) {
+        console.error('[FB Button Send] Error:', err.response?.data || err.message);
+        await sendSingleMessage(recipientId, `${message.text}\n${message.button.url}`);
+    }
+}
+
 async function sendTypingAction(recipientId: string): Promise<void> {
     try {
         await axios.post(FB_GRAPH_URL, {
@@ -144,18 +184,22 @@ async function sendTypingAction(recipientId: string): Promise<void> {
     } catch (_) {}
 }
 
-async function sendHumanLikeMessages(recipientId: string, messages: string[]): Promise<void> {
+async function sendHumanLikeMessages(recipientId: string, messages: FacebookOutgoingMessage[]): Promise<void> {
     for (let i = 0; i < messages.length; i++) {
-        const msg = messages[i].trim();
-        if (!msg) continue;
+        const message = messages[i];
+        if (!message.text.trim()) continue;
 
         await sendTypingAction(recipientId);
 
-        const typingDelay = Math.min(msg.length * 40, 3000);
+        const typingDelay = Math.min(message.text.length * 40, 3000);
         const jitter = randomDelay(300, 800);
         await sleep(typingDelay + jitter);
 
-        await sendSingleMessage(recipientId, msg);
+        if (message.button) {
+            await sendButtonMessage(recipientId, message);
+        } else {
+            await sendSingleMessage(recipientId, message.text);
+        }
 
         if (i < messages.length - 1) {
             await sleep(randomDelay(500, 1500));
@@ -163,7 +207,93 @@ async function sendHumanLikeMessages(recipientId: string, messages: string[]): P
     }
 }
 
-function parseAiResponse(raw: string): string[] {
+function normalizeTrustedWebsiteUrl(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+
+    try {
+        const url = new URL(value.trim());
+        if (url.protocol !== 'https:' || !TRUSTED_LINK_HOSTS.has(url.hostname.toLowerCase())) {
+            return null;
+        }
+        return url.toString();
+    } catch (_) {
+        return null;
+    }
+}
+
+function normalizeAiMessage(item: unknown): FacebookOutgoingMessage | null {
+    if (typeof item === 'string') {
+        const text = item.trim();
+        return text ? { text } : null;
+    }
+    if (!item || typeof item !== 'object') return null;
+
+    const record = item as Record<string, unknown>;
+    const textValue = typeof record.text === 'string' ? record.text : record.message;
+    if (typeof textValue !== 'string' || !textValue.trim()) return null;
+
+    const message: FacebookOutgoingMessage = { text: textValue.trim() };
+    if (record.button && typeof record.button === 'object') {
+        const rawButton = record.button as Record<string, unknown>;
+        const url = normalizeTrustedWebsiteUrl(rawButton.url);
+        const title = typeof rawButton.title === 'string' ? rawButton.title.trim() : '';
+        if (url) {
+            message.button = {
+                title: (title || 'Mở trang').slice(0, FB_BUTTON_TITLE_MAX_LENGTH),
+                url,
+            };
+        }
+    }
+
+    return message;
+}
+
+function splitTrustedLinks(message: FacebookOutgoingMessage): FacebookOutgoingMessage[] {
+    if (message.button) return [message];
+
+    const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+    const matches = Array.from(message.text.matchAll(urlPattern));
+    if (matches.length === 0) return [message];
+
+    const output: FacebookOutgoingMessage[] = [];
+    let cursor = 0;
+    let foundTrustedLink = false;
+
+    for (const match of matches) {
+        const rawUrl = match[0];
+        const cleanUrl = rawUrl.replace(/[),.;!?]+$/g, '');
+        const trustedUrl = normalizeTrustedWebsiteUrl(cleanUrl);
+        if (!trustedUrl || match.index === undefined) continue;
+
+        foundTrustedLink = true;
+        const before = message.text.slice(cursor, match.index).trim();
+        if (before) output.push({ text: before });
+        output.push({ text: trustedUrl });
+        cursor = match.index + rawUrl.length;
+    }
+
+    if (!foundTrustedLink) return [message];
+
+    const after = message.text.slice(cursor).trim();
+    if (after) output.push({ text: after });
+    return output;
+}
+
+function limitOutgoingMessages(messages: FacebookOutgoingMessage[]): FacebookOutgoingMessage[] {
+    if (messages.length <= FB_MAX_OUTGOING_MESSAGES) return messages;
+
+    const lastCallToAction = [...messages].reverse().find(message =>
+        Boolean(message.button) || Boolean(normalizeTrustedWebsiteUrl(message.text))
+    );
+    if (!lastCallToAction) return messages.slice(0, FB_MAX_OUTGOING_MESSAGES);
+
+    const leadingMessages = messages
+        .filter(message => message !== lastCallToAction)
+        .slice(0, FB_MAX_OUTGOING_MESSAGES - 1);
+    return [...leadingMessages, lastCallToAction];
+}
+
+function parseAiResponse(raw: string): FacebookOutgoingMessage[] {
     let cleaned = raw.trim();
     if (cleaned.startsWith('```json')) {
         cleaned = cleaned.replace(/^```json\n?/, '').replace(/\n?```$/, '');
@@ -174,14 +304,27 @@ function parseAiResponse(raw: string): string[] {
     try {
         const parsed = JSON.parse(cleaned);
         if (Array.isArray(parsed)) {
-            const strings = parsed
-                .map((item: any) => typeof item === 'string' ? item : item?.message || item?.text || '')
-                .filter((s: string) => s.trim() !== '');
-            if (strings.length > 0) return strings.slice(0, 3);
+            const messages = parsed
+                .map(normalizeAiMessage)
+                .filter((message): message is FacebookOutgoingMessage => message !== null)
+                .flatMap(splitTrustedLinks);
+            if (messages.length > 0) return limitOutgoingMessages(messages);
         }
     } catch (_) {}
 
-    return cleaned.split('\n').filter((line: string) => line.trim() !== '').slice(0, 3);
+    const fallbackMessages = cleaned
+        .split('\n')
+        .map(normalizeAiMessage)
+        .filter((message): message is FacebookOutgoingMessage => message !== null)
+        .flatMap(splitTrustedLinks);
+    return limitOutgoingMessages(fallbackMessages);
+}
+
+function formatMessagesForHistory(messages: FacebookOutgoingMessage[]): string {
+    return messages.map(message => {
+        if (!message.button) return message.text;
+        return `${message.text} [${message.button.title}: ${message.button.url}]`;
+    }).join(' | ');
 }
 
 async function handleTextMessage(senderId: string, text: string): Promise<void> {
@@ -195,9 +338,10 @@ async function handleTextMessage(senderId: string, text: string): Promise<void> 
 
         const rawResponse = await geminiCore.generateText(fullPrompt, 'global');
         const messages = parseAiResponse(rawResponse);
+        if (messages.length === 0) throw new Error('AI returned no sendable Facebook messages');
 
         await prisma.fbChatLog.create({
-            data: { senderId, message: text, response: messages.join(' | '), type: 'text' }
+            data: { senderId, message: text, response: formatMessagesForHistory(messages), type: 'text' }
         });
 
         await sendHumanLikeMessages(senderId, messages);
@@ -229,9 +373,10 @@ async function handleImageMessage(senderId: string, imageUrl: string, caption: s
         );
 
         const messages = parseAiResponse(rawResponse);
+        if (messages.length === 0) throw new Error('AI returned no sendable Facebook messages');
 
         await prisma.fbChatLog.create({
-            data: { senderId, message: `[IMAGE] ${caption || 'No caption'}`, response: messages.join(' | '), type: 'image' }
+            data: { senderId, message: `[IMAGE] ${caption || 'No caption'}`, response: formatMessagesForHistory(messages), type: 'image' }
         });
 
         await sendHumanLikeMessages(senderId, messages);
