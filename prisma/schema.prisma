@@ -272,6 +272,23 @@ model FbQuizSession {
   @@index([updatedAt])
 }
 
+model DiscordMemberActivity {
+  id             Int       @id @default(autoincrement())
+  guildId        String
+  userId         String
+  messageCount   Int       @default(0)
+  linkCount      Int       @default(0)
+  mediaCount     Int       @default(0)
+  firstTrackedAt DateTime  @default(now())
+  lastMessageAt  DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([guildId, userId])
+  @@index([guildId, messageCount])
+  @@index([guildId, linkCount])
+  @@index([guildId, mediaCount])
+}
+
 model BlogPost {
   id             Int       @id @default(autoincrement())
   title          String

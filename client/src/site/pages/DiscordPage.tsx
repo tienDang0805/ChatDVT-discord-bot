@@ -38,7 +38,7 @@ const capabilities = [
   {
     icon: Gamepad2,
     title: 'Mini game gọn, dễ vào',
-    text: 'Chơi Quiz, Wordle hoặc Code Challenge ngay trong Discord, không cần cài thêm ứng dụng.',
+    text: 'Chơi Quiz, Wordle, Code Challenge hoặc so đạo hạnh trên bảng Cường Giả ngay trong Discord.',
   },
 ];
 
@@ -68,6 +68,9 @@ const commandGroups = [
       { syntax: '/identity menu', text: 'Mở menu tạo và quản lý identity cá nhân.' },
       { syntax: '/identity view user:@thành_viên', text: 'Xem identity của bạn hoặc một thành viên.' },
       { syntax: '/sum [limit]', text: 'Tóm tắt 5–100 tin nhắn gần nhất; mặc định là 50.' },
+      { syntax: '/cuonggia bang', text: 'Xem top 10 cường giả dựa trên thâm niên, hoạt động và role.' },
+      { syntax: '/cuonggia hoso [thanhvien]', text: 'Soi cảnh giới và các chỉ số của một thành viên.' },
+      { syntax: '/cuonggia cach-tinh', text: 'Xem công thức tính điểm minh bạch.' },
     ],
   },
   {

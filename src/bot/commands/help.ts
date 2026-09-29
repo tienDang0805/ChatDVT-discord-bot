@@ -35,6 +35,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     },
   ];
 
+  if (!isCommandDisabled('cuonggia')) {
+    fields.push({
+      name: '⚔️ Bảng xếp hạng Cường Giả',
+      value: [
+        '`/cuonggia bang` — xem top 10 toàn server.',
+        '`/cuonggia hoso [thanhvien]` — xem thâm niên, hoạt động, role, điểm và cảnh giới.',
+        '`/cuonggia cach-tinh` — xem công thức tính điểm minh bạch.',
+      ].join('\n'),
+      inline: false,
+    });
+  }
+
   const gameSections: string[] = [];
 
   if (!isCommandDisabled('quiz')) {

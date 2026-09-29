@@ -4,11 +4,18 @@ import { geminiService } from '../services/gemini';
 import { prisma } from '../../database/prisma';
 import { LoggerService } from '../services/logger';
 import { ADMIN_ID } from '../../config/constants';
+import { cuongGiaService } from '../services/cuong-gia';
 
 const IGNORE_PREFIXES = ['!', '/', '-'];
 
 export const messageCreate = async (message: Message) => {
   if (message.author.bot) return;
+
+  if (message.guild) {
+    void cuongGiaService.trackMessage(message).catch((error) => {
+      console.error('[CuongGia] Failed to track message activity:', error);
+    });
+  }
 
   // --- LEGACY LOGIC RESTORATION ---
   const lowerContent = message.content.toLowerCase();
