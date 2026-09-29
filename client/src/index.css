@@ -193,8 +193,12 @@
 .home-note:hover { border-color: var(--site-orange); }
 
 .discord-band { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; padding: 38px 42px; border-radius: var(--site-radius); color: white; background: #5865f2; }
+.discord-band__eyebrow { display: block; margin-bottom: 9px; color: rgba(255,255,255,.7); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .discord-band h2 { margin: 0; font-size: clamp(28px, 3vw, 36px); font-weight: 600; line-height: 1.18; letter-spacing: -.015em; }
 .discord-band p { max-width: 620px; margin: 10px 0 0; color: rgba(255,255,255,.78); font-size: 14px; line-height: 1.6; }
+.discord-band__facebook { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 18px; color: rgba(255,255,255,.72); font-size: 12px; }
+.discord-band__facebook a { color: white; font-weight: 700; text-underline-offset: 3px; }
+.discord-band__facebook a:hover { text-decoration-thickness: 2px; }
 .discord-band .site-button { border-color: white; color: #414dcc; background: white; }
 .discord-band__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
 .discord-band .site-button--ghost { color: white; background: transparent; }

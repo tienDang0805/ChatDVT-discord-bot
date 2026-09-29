@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Gamepad2, MessageCircle, Smartphone, Swords } from 'lucide-react';
+import { ArrowRight, Bot, Facebook, Gamepad2, MessageCircle, Smartphone, Swords } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
@@ -72,7 +72,22 @@ export function HomePage() {
     </section>
 
     <section className="site-container" style={{ paddingBottom: 96 }}>
-      <div className="discord-band"><div><h2>Gặp ChatDVT</h2><p>Chat trực tiếp trên web để khám phá các dự án, hoặc thêm bot vào Discord để dùng cùng server.</p></div><div className="discord-band__actions"><Link to="/chat" className="site-button"><MessageCircle size={18} /> Chat ngay</Link><Link to="/discord" className="site-button site-button--ghost"><Bot size={18} /> Discord bot</Link></div></div>
+      <div className="discord-band">
+        <div>
+          <span className="discord-band__eyebrow">Sản phẩm chính · Discord</span>
+          <h2>Gặp ChatDVT trên Discord.</h2>
+          <p>Thêm bot vào server để chat, phân tích nội dung và chơi mini game; hoặc thử nhanh ChatDVT ngay trên web.</p>
+          <div className="discord-band__facebook">
+            <Facebook size={16} aria-hidden="true" />
+            <span>ChatDVT cũng có một góc nhỏ trên Facebook.</span>
+            <a href="https://www.facebook.com/profile.php?id=859132933958046" target="_blank" rel="noreferrer">Ghé fanpage ↗</a>
+          </div>
+        </div>
+        <div className="discord-band__actions">
+          <Link to="/discord" className="site-button"><Bot size={18} /> Khám phá Discord bot</Link>
+          <Link to="/chat" className="site-button site-button--ghost"><MessageCircle size={18} /> Chat trên web</Link>
+        </div>
+      </div>
     </section>
   </SiteLayout>;
 }
