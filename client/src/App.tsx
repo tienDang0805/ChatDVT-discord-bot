@@ -15,6 +15,7 @@ const HomePage = lazy(() => import('./site/pages/HomePage').then(m => ({ default
 const PlaygroundPage = lazy(() => import('./site/pages/PlaygroundPage').then(m => ({ default: m.PlaygroundPage })));
 const MobilePage = lazy(() => import('./site/pages/MobilePage').then(m => ({ default: m.MobilePage })));
 const DiscordPage = lazy(() => import('./site/pages/DiscordPage').then(m => ({ default: m.DiscordPage })));
+const ChatDVTChatPage = lazy(() => import('./site/pages/ChatDVTChatPage').then(m => ({ default: m.ChatDVTChatPage })));
 const MePage = lazy(() => import('./site/pages/MePage').then(m => ({ default: m.MePage })));
 const BlogPage = lazy(() => import('./site/pages/BlogPage').then(m => ({ default: m.BlogPage })));
 const BlogArticlePage = lazy(() => import('./site/pages/BlogArticlePage').then(m => ({ default: m.BlogArticlePage })));
@@ -147,6 +148,7 @@ function App() {
             <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/mobile" element={<MobilePage />} />
             <Route path="/discord" element={<DiscordPage />} />
+            <Route path="/chat" element={<ChatDVTChatPage />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogArticlePage />} />
             <Route path="/me" element={<MePage />} />

@@ -1,60 +1,36 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
-import { X, Send, Trash2, Bot, User, ChevronDown } from 'lucide-react';
-import axios from 'axios';
+import { Link, useLocation } from 'react-router-dom';
+import { X, Send, Trash2, Bot, User, ChevronDown, Maximize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getStoredGeminiKey } from './GeminiKeyInput';
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: number;
-}
-
-interface BotInfo {
-  avatar: string;
-  globalName?: string;
-  username?: string;
-}
-
-const STORAGE_KEY = 'web_chat_history';
-const MAX_HISTORY = 50;
-
-const loadHistory = (): ChatMessage[] => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(-MAX_HISTORY) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveHistory = (messages: ChatMessage[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_HISTORY)));
-};
+import { sendWebChatMessage } from '../api';
+import { useBotInfo } from '../hooks/useBotInfo';
+import {
+  clearWebChatHistory,
+  loadWebChatHistory,
+  saveWebChatHistory,
+  WEB_CHAT_HISTORY_EVENT,
+  type WebChatMessage,
+} from '../utils/webChat';
 
 export const ChatWidget = () => {
   const location = useLocation();
-  if (
+  const isHidden =
+    location.pathname === '/chat' ||
     location.pathname.includes('monopoly') ||
+    location.pathname.startsWith('/tutien') ||
     (typeof document !== 'undefined' && (
       document.body.classList.contains('hide-chat-widget') ||
       document.getElementById('monopoly-game-root') !== null
-    ))
-  ) {
-    return null;
-  }
+    ));
 
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>(loadHistory);
+  const [messages, setMessages] = useState<WebChatMessage[]>(loadWebChatHistory);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
-  const [botInfo, setBotInfo] = useState<BotInfo>({ avatar: '', globalName: 'chatDVT' });
+  const botInfo = useBotInfo();
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -62,11 +38,12 @@ export const ChatWidget = () => {
   const isAtBottomRef = useRef(true);
 
   useEffect(() => {
-    axios.get('/api/bot-info')
-      .then(res => {
-        if (res.data) setBotInfo(res.data);
-      })
-      .catch(() => {});
+    const syncHistory = (event: Event) => {
+      const customEvent = event as CustomEvent<WebChatMessage[]>;
+      setMessages(customEvent.detail || loadWebChatHistory());
+    };
+    window.addEventListener(WEB_CHAT_HISTORY_EVENT, syncHistory);
+    return () => window.removeEventListener(WEB_CHAT_HISTORY_EVENT, syncHistory);
   }, []);
 
   const scrollToBottom = useCallback(() => {
@@ -126,7 +103,7 @@ export const ChatWidget = () => {
     const text = input.trim();
     if (!text || isLoading) return;
 
-    const userMsg: ChatMessage = {
+    const userMsg: WebChatMessage = {
       id: `u_${Date.now()}`,
       role: 'user',
       content: text,
@@ -135,7 +112,7 @@ export const ChatWidget = () => {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    saveHistory(updatedMessages);
+    saveWebChatHistory(updatedMessages);
     setInput('');
     resetTextarea();
     setIsLoading(true);
@@ -149,34 +126,35 @@ export const ChatWidget = () => {
           content: m.content,
         }));
 
-      const res = await axios.post('/api/web-chat', {
+      const res = await sendWebChatMessage({
         message: text,
         history: historyForApi.slice(0, -1),
         geminiApiKey: getStoredGeminiKey(),
       });
 
-      const botMsg: ChatMessage = {
+      const botMsg: WebChatMessage = {
         id: `b_${Date.now()}`,
         role: 'assistant',
-        content: res.data.response || 'Không có phản hồi.',
+        content: res.response || 'Không có phản hồi.',
         timestamp: Date.now(),
       };
 
       const finalMessages = [...updatedMessages, botMsg];
       setMessages(finalMessages);
-      saveHistory(finalMessages);
+      saveWebChatHistory(finalMessages);
 
       if (!isOpen) setHasNewMessage(true);
-    } catch (err: any) {
-      const errorMsg: ChatMessage = {
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      const errorMsg: WebChatMessage = {
         id: `e_${Date.now()}`,
         role: 'assistant',
-        content: err.response?.data?.error || 'Lỗi kết nối, thử lại nhé!',
+        content: error.response?.data?.error || 'Lỗi kết nối, thử lại nhé!',
         timestamp: Date.now(),
       };
       const finalMessages = [...updatedMessages, errorMsg];
       setMessages(finalMessages);
-      saveHistory(finalMessages);
+      saveWebChatHistory(finalMessages);
     } finally {
       setIsLoading(false);
     }
@@ -193,11 +171,11 @@ export const ChatWidget = () => {
     if (messages.length === 0) return;
     if (!window.confirm('Xoá toàn bộ lịch sử chat?')) return;
     setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
+    clearWebChatHistory();
   };
 
-  const botName = botInfo.globalName || botInfo.username || 'chatDVT';
-  const botAvatar = botInfo.avatar;
+  const botName = botInfo?.globalName || botInfo?.username || 'ChatDVT';
+  const botAvatar = botInfo?.avatar || '';
 
   const quickQuestions = [
     'Khoá học AI Training là gì? Giá bao nhiêu?',
@@ -207,7 +185,7 @@ export const ChatWidget = () => {
     'Donate ở đâu?',
   ];
 
-  if (window.location.pathname.startsWith('/tutien')) return null;
+  if (isHidden) return null;
 
   return (
     <>
@@ -262,6 +240,14 @@ export const ChatWidget = () => {
                 </div>
               </div>
               <div className="relative flex items-center gap-0.5 z-10">
+                <Link
+                  to="/chat"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
+                  title="Mở trang ChatDVT Chat"
+                  aria-label="Mở trang ChatDVT Chat"
+                >
+                  <Maximize2 size={14} />
+                </Link>
                 <button
                   onClick={clearHistory}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
@@ -272,6 +258,7 @@ export const ChatWidget = () => {
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
+                  aria-label="Đóng chat"
                 >
                   <X size={18} />
                 </button>
@@ -388,6 +375,7 @@ export const ChatWidget = () => {
               <button
                 onClick={scrollToBottom}
                 className="absolute bottom-[72px] left-1/2 -translate-x-1/2 z-20 w-8 h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center shadow-lg text-slate-500 hover:text-orange-500 transition-colors"
+                aria-label="Cuộn xuống tin nhắn mới nhất"
               >
                 <ChevronDown size={16} />
               </button>
@@ -411,6 +399,7 @@ export const ChatWidget = () => {
                   onClick={sendMessage}
                   disabled={!input.trim() || isLoading}
                   className="p-2.5 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-700 dark:disabled:to-slate-800 text-white rounded-xl transition-all active:scale-90 disabled:cursor-not-allowed shrink-0 shadow-sm shadow-orange-500/20 disabled:shadow-none"
+                  aria-label="Gửi tin nhắn"
                 >
                   <Send size={16} />
                 </button>
@@ -436,6 +425,7 @@ export const ChatWidget = () => {
           <button
             onClick={() => setIsOpen(true)}
             className="relative w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 overflow-hidden group widget-btn-ring"
+            aria-label="Mở ChatDVT"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-500" />
             {botAvatar ? (

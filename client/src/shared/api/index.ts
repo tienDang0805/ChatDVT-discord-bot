@@ -112,6 +112,18 @@ export const resetChatHistory = async (guildId: string) => (await api.delete(`/p
 export const getGeminiApiKey = async (guildId: string = 'global') => (await api.get(`/gemini-api-key?guildId=${guildId}`)).data;
 export const updateGeminiApiKey = async (data: { apiKey: string }, guildId: string = 'global') => (await api.post('/gemini-api-key', { ...data, guildId })).data;
 
+// --- PUBLIC WEB CHAT ---
+export interface WebChatHistoryItem {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+export const sendWebChatMessage = async (data: {
+    message: string;
+    history: WebChatHistoryItem[];
+    geminiApiKey?: string;
+}): Promise<{ response: string }> => (await api.post('/web-chat', data)).data;
+
 // --- BLOG ---
 export const getPublishedBlogPosts = async (): Promise<BlogPostSummary[]> =>
     (await api.get('/blog/posts')).data;

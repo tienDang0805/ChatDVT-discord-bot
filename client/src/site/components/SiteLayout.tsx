@@ -7,11 +7,12 @@ const nav = [
   { label: 'Mobile', href: '/mobile' },
   { label: 'Projects & Lab', href: '/playground' },
   { label: 'ChatDVT', href: '/discord' },
+  { label: 'Chat AI', href: '/chat' },
   { label: 'Blog', href: '/blog' },
   { label: 'About', href: '/me' },
 ];
 
-export function SiteLayout({ children }: { children: React.ReactNode }) {
+export function SiteLayout({ children, hideFooter = false }: { children: React.ReactNode; hideFooter?: boolean }) {
   const { pathname } = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
@@ -47,13 +48,13 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
     </div>}
 
     <main>{children}</main>
-    <footer className="site-footer">
+    {!hideFooter && <footer className="site-footer">
       <div className="site-container site-footer__grid">
         <div><span className="site-wordmark"><span>Đặng Văn Tiến</span><i>.</i></span><p>Mobile Developer — React Native và Android/Kotlin.</p></div>
-        <div className="site-footer__links"><Link to="/mobile">Mobile</Link><Link to="/playground">Projects & Lab</Link><Link to="/discord">ChatDVT</Link><Link to="/blog">Blog</Link><Link to="/me">About</Link></div>
+        <div className="site-footer__links"><Link to="/mobile">Mobile</Link><Link to="/playground">Projects & Lab</Link><Link to="/discord">ChatDVT</Link><Link to="/chat">Chat AI</Link><Link to="/blog">Blog</Link><Link to="/me">About</Link></div>
         <div className="site-footer__meta">© 2026 · TP. Hồ Chí Minh<br />React · TypeScript</div>
       </div>
-    </footer>
+    </footer>}
   </div>;
 }
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Gamepad2, Smartphone, Swords } from 'lucide-react';
+import { ArrowRight, Bot, Gamepad2, MessageCircle, Smartphone, Swords } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
@@ -72,7 +72,7 @@ export function HomePage() {
     </section>
 
     <section className="site-container" style={{ paddingBottom: 96 }}>
-      <div className="discord-band"><div><h2>ChatDVT Discord Bot</h2><p>AI chat, phân tích ảnh/video, tóm tắt hội thoại và mini game dành cho Discord.</p></div><Link to="/discord" className="site-button"><Bot size={18} /> Xem chi tiết</Link></div>
+      <div className="discord-band"><div><h2>Gặp ChatDVT</h2><p>Chat trực tiếp trên web để khám phá các dự án, hoặc thêm bot vào Discord để dùng cùng server.</p></div><div className="discord-band__actions"><Link to="/chat" className="site-button"><MessageCircle size={18} /> Chat ngay</Link><Link to="/discord" className="site-button site-button--ghost"><Bot size={18} /> Discord bot</Link></div></div>
     </section>
   </SiteLayout>;
 }

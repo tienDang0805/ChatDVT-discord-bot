@@ -1,4 +1,4 @@
-import { useBotInfo } from '../hooks/useBotInfo';
+import { useBotInfo } from '../../shared/hooks/useBotInfo';
 
 export function BotAvatar({ className = '' }: { className?: string }) {
   const botInfo = useBotInfo();

@@ -27,7 +27,7 @@ const AUTHOR_SCHEMA = {
   ],
 };
 const INDEXABLE_PATHS = new Set([
-  '/', '/playground', '/me', '/blog', '/blog/chatdvt-phan-1',
+  '/', '/playground', '/me', '/blog', '/blog/chatdvt-phan-1', '/chat',
   '/mermaid-tutorial',
   '/english/chat', '/english/flashcard', '/english/challenge',
   '/english/dictionary', '/english/daily-puzzle', '/english/word-sprint',
@@ -87,6 +87,16 @@ const ROUTE_META: Record<string, RouteMeta> = {
     pageType: 'software',
     lastmod: '2026-09-29',
     priority: 0.8,
+    changefreq: 'weekly',
+  },
+  '/chat': {
+    title: 'ChatDVT Chat — Trò chuyện trực tiếp với AI | Đặng Văn Tiến',
+    description: 'Chat trực tiếp với ChatDVT để khám phá website, công cụ, dự án và những sản phẩm do Đặng Văn Tiến xây dựng.',
+    keywords: 'ChatDVT Chat, ChatDVT AI, chat AI tiếng Việt, trợ lý AI, devtiendang',
+    schemaName: 'ChatDVT Chat',
+    pageType: 'webapp',
+    lastmod: '2026-09-29',
+    priority: 0.9,
     changefreq: 'weekly',
   },
   '/me': {

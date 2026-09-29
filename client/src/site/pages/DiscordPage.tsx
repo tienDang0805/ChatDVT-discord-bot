@@ -119,6 +119,7 @@ export function DiscordPage() {
         <h1>ChatDVT — AI chatbot cho Discord</h1>
         <p>AI chatbot cho Discord: mention để hỏi, gửi ảnh hoặc video để phân tích, tóm tắt hội thoại và chơi mini game cùng server.</p>
         <div className="site-hero__actions">
+          <Link className="site-button site-button--primary" to="/chat"><MessageCircle size={18} /> Chat trên web</Link>
           <a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> Thêm vào server</a>
           <a className="site-button" href={SOURCE_URL} target="_blank" rel="noreferrer"><Github size={18} /> Source code</a>
         </div>
@@ -192,8 +193,8 @@ export function DiscordPage() {
 
     <section className="discord-cta">
       <div className="site-container discord-cta__inner">
-        <div><small>SẴN SÀNG THỬ?</small><h2>Đưa ChatDVT vào server của bạn.</h2><p>Thêm bot, mention một câu hỏi và bắt đầu ngay.</p></div>
-        <a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> Thêm ChatDVT</a>
+        <div><small>SẴN SÀNG THỬ?</small><h2>Nói chuyện với ChatDVT ngay.</h2><p>Chat trực tiếp trên web hoặc thêm bot vào server Discord của bạn.</p></div>
+        <Link className="site-button site-button--primary" to="/chat"><MessageCircle size={18} /> Mở ChatDVT Chat</Link>
       </div>
     </section>
   </SiteLayout>;
