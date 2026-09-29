@@ -309,11 +309,15 @@ app.post('/api/web-chat/prompt', authenticateToken, async (req, res) => {
         if (typeof prompt !== 'string') {
             return res.status(400).json({ error: 'Prompt must be a string' });
         }
+        const normalizedPrompt = prompt.trim();
+        if (!normalizedPrompt) {
+            return res.status(400).json({ error: 'System prompt cannot be empty' });
+        }
 
         await prisma.botConfig.upsert({
             where: { key: 'web-chat-prompt' },
-            update: { systemPrompts: prompt },
-            create: { key: 'web-chat-prompt', systemPrompts: prompt, features: '{}' }
+            update: { systemPrompts: normalizedPrompt },
+            create: { key: 'web-chat-prompt', systemPrompts: normalizedPrompt, features: '{}' }
         });
 
         res.json({ success: true });

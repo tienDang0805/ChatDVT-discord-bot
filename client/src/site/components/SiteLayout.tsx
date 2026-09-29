@@ -6,10 +6,10 @@ import { useTheme } from '../../shared/contexts/ThemeContext';
 const nav = [
   { label: 'Mobile', href: '/mobile' },
   { label: 'Projects & Lab', href: '/playground' },
-  { label: 'ChatDVT', href: '/discord' },
-  { label: 'Chat AI', href: '/chat' },
+  { label: 'Discord Bot', href: '/discord' },
+  { label: 'AI Chat', href: '/chat' },
   { label: 'Blog', href: '/blog' },
-  { label: 'About', href: '/me' },
+  { label: 'About Me', href: '/me' },
 ];
 
 export function SiteLayout({ children, hideFooter = false }: { children: React.ReactNode; hideFooter?: boolean }) {
@@ -51,7 +51,7 @@ export function SiteLayout({ children, hideFooter = false }: { children: React.R
     {!hideFooter && <footer className="site-footer">
       <div className="site-container site-footer__grid">
         <div><span className="site-wordmark"><span>Đặng Văn Tiến</span><i>.</i></span><p>Mobile Developer — React Native và Android/Kotlin.</p></div>
-        <div className="site-footer__links"><Link to="/mobile">Mobile</Link><Link to="/playground">Projects & Lab</Link><Link to="/discord">ChatDVT</Link><Link to="/chat">Chat AI</Link><Link to="/blog">Blog</Link><Link to="/me">About</Link></div>
+        <div className="site-footer__links">{nav.map(item => <Link key={item.href} to={item.href}>{item.label}</Link>)}</div>
         <div className="site-footer__meta">© 2026 · TP. Hồ Chí Minh<br />React · TypeScript</div>
       </div>
     </footer>}
