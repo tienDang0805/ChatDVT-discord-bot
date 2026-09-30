@@ -1,4 +1,4 @@
-import { ArrowRight, Bot, Facebook, Gamepad2, MessageCircle, Smartphone, Swords } from 'lucide-react';
+import { ArrowRight, Bot, Boxes, Facebook, Gamepad2, MessageCircle, Smartphone, Swords } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
@@ -40,7 +40,8 @@ export function HomePage() {
           <h1>{t('home.title')}</h1>
           <p className="site-hero__copy">{t('home.intro')}</p>
           <div className="site-hero__actions">
-            <Link to={pathFor('/mobile')} className="site-button site-button--primary"><Smartphone size={17} /> {t('home.mobileTools')} <ArrowRight size={16} /></Link>
+            <Link to={pathFor('/ecosystem')} className="site-button site-button--primary"><Boxes size={17} /> {t('home.ecosystem')} <ArrowRight size={16} /></Link>
+            <Link to={pathFor('/mobile')} className="site-button"><Smartphone size={17} /> {t('home.mobileTools')}</Link>
             <Link to={pathFor('/playground')} className="site-button"><Gamepad2 size={17} /> Projects & Lab</Link>
           </div>
         </div>

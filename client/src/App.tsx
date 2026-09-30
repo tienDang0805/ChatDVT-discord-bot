@@ -12,6 +12,7 @@ const _p = new URLSearchParams(window.location.search);
 const isDiscordActivity = _p.has('frame_id') || _p.has('instance_id');
 
 const HomePage = lazy(() => import('./site/pages/HomePage').then(m => ({ default: m.HomePage })));
+const EcosystemPage = lazy(() => import('./site/pages/EcosystemPage').then(m => ({ default: m.EcosystemPage })));
 const PlaygroundPage = lazy(() => import('./site/pages/PlaygroundPage').then(m => ({ default: m.PlaygroundPage })));
 const MobilePage = lazy(() => import('./site/pages/MobilePage').then(m => ({ default: m.MobilePage })));
 const DiscordPage = lazy(() => import('./site/pages/DiscordPage').then(m => ({ default: m.DiscordPage })));
@@ -147,6 +148,8 @@ function App() {
           <Routes>
             <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <HomePage />} />
             <Route path="/en" element={<HomePage />} />
+            <Route path="/ecosystem" element={<EcosystemPage />} />
+            <Route path="/en/ecosystem" element={<EcosystemPage />} />
             <Route path="/playground" element={<PlaygroundPage />} />
             <Route path="/en/playground" element={<PlaygroundPage />} />
             <Route path="/mobile" element={<MobilePage />} />

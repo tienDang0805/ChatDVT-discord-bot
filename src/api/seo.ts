@@ -27,7 +27,7 @@ const AUTHOR_SCHEMA = {
   ],
 };
 const INDEXABLE_PATHS = new Set([
-  '/', '/playground', '/me', '/blog', '/blog/chatdvt-phan-1', '/chat',
+  '/', '/ecosystem', '/playground', '/me', '/blog', '/blog/chatdvt-phan-1', '/chat',
   '/mermaid-tutorial',
   '/english/chat', '/english/flashcard', '/english/challenge',
   '/english/dictionary', '/english/daily-puzzle', '/english/word-sprint',
@@ -61,6 +61,16 @@ const ROUTE_META: Record<string, RouteMeta> = {
     pageType: 'website',
     lastmod: '2026-09-29',
     priority: 1.0,
+    changefreq: 'weekly',
+  },
+  '/ecosystem': {
+    title: 'Hệ sinh thái ChatDVT — AI, công cụ, học tập và trò chơi',
+    description: 'Khám phá hệ sinh thái ChatDVT gồm AI chatbot trên Discord và web, công cụ developer, English Hub, game và trải nghiệm cộng đồng.',
+    keywords: 'ChatDVT, hệ sinh thái ChatDVT, AI chatbot, Discord AI bot, công cụ developer, English Hub, web game',
+    schemaName: 'Hệ sinh thái ChatDVT',
+    pageType: 'collection',
+    lastmod: '2026-09-30',
+    priority: 0.9,
     changefreq: 'weekly',
   },
   '/playground': {
@@ -555,6 +565,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
 
 const EN_ROUTE_META: Record<string, RouteMeta> = {
   '/': { title: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', description: 'Đặng Văn Tiến is a Mobile Developer specializing in React Native and Android/Kotlin, and the creator of devtiendang.blog and ChatDVT.', pageType: 'website', priority: 1, changefreq: 'weekly' },
+  '/ecosystem': { title: 'The ChatDVT Ecosystem — AI, tools, learning and games', description: 'Explore the ChatDVT ecosystem: an AI chatbot for Discord and the web, developer tools, English learning, games and community experiences.', schemaName: 'The ChatDVT Ecosystem', pageType: 'collection', lastmod: '2026-09-30', priority: 0.9, changefreq: 'weekly' },
   '/playground': { title: 'Projects & Lab — Products and developer tools', description: 'Selected products, developer tools, AI experiments, learning apps and web games built by Đặng Văn Tiến.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
   '/mobile': { title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
   '/discord': { title: 'ChatDVT — AI chatbot and mini games for Discord', description: 'Explore ChatDVT, an AI Discord bot with conversation, media analysis, summaries and mini games.', schemaName: 'ChatDVT', pageType: 'software', priority: 0.8, changefreq: 'weekly' },

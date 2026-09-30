@@ -9,10 +9,10 @@ const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog']
 const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.';
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
-  '/', '/playground', '/me', '/blog', '/mermaid-tutorial',
+  '/', '/ecosystem', '/playground', '/me', '/blog', '/mermaid-tutorial',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
-const LOCALIZED_PATHS = new Set(['/', '/playground', '/mobile', '/discord', '/chat', '/me']);
+const LOCALIZED_PATHS = new Set(['/', '/ecosystem', '/playground', '/mobile', '/discord', '/chat', '/me']);
 
 const AUTHOR = {
   '@type': 'Person',

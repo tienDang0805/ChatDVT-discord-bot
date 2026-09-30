@@ -15,7 +15,7 @@ export const resources = {
         metaTitle: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT',
         metaDescription: 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
         title: 'Đặng Văn Tiến — Mobile Developer.', intro: 'Mình làm ứng dụng mobile, viết blog về quá trình làm sản phẩm và phát triển Discord bot ChatDVT.',
-        mobileTools: 'Công cụ mobile', tinkering: 'Đang nghịch', tinkeringText: 'ChatDVT, mấy tool mobile và blog này.', freeTime: 'Rảnh thì code tiếp.',
+        ecosystem: 'Khám phá hệ sinh thái', mobileTools: 'Công cụ mobile', tinkering: 'Đang nghịch', tinkeringText: 'ChatDVT, mấy tool mobile và blog này.', freeTime: 'Rảnh thì code tiếp.',
         projects: 'Dự án', personalInfo: 'Thông tin cá nhân', tools: 'Công cụ mobile', viewAll: 'Xem tất cả',
         latest: 'Bài mới', visitBlog: 'Vào blog', read: 'Đọc bài ↗', mainProduct: 'Sản phẩm chính · Discord',
         meet: 'Gặp ChatDVT trên Discord.', meetCopy: 'Thêm bot vào server để chat, phân tích nội dung và chơi mini game; hoặc thử nhanh ChatDVT ngay trên web.',
@@ -68,7 +68,7 @@ export const resources = {
       home: {
         metaTitle: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', metaDescription: 'Đặng Văn Tiến is a Mobile Developer specializing in React Native and Android/Kotlin in Ho Chi Minh City, and the creator of devtiendang.blog and ChatDVT.',
         title: 'Đặng Văn Tiến — Mobile Developer.', intro: 'I build mobile apps, write about making products, and develop the ChatDVT Discord bot.',
-        mobileTools: 'Mobile tools', tinkering: 'Currently building', tinkeringText: 'ChatDVT, mobile tools, and this blog.', freeTime: 'More code whenever inspiration strikes.',
+        ecosystem: 'Explore the ecosystem', mobileTools: 'Mobile tools', tinkering: 'Currently building', tinkeringText: 'ChatDVT, mobile tools, and this blog.', freeTime: 'More code whenever inspiration strikes.',
         projects: 'Projects', personalInfo: 'About me', tools: 'Mobile tools', viewAll: 'View all', latest: 'Latest post', visitBlog: 'Visit blog', read: 'Read article ↗',
         mainProduct: 'Main product · Discord', meet: 'Meet ChatDVT on Discord.', meetCopy: 'Add the bot to your server to chat, analyze content and play mini games, or try ChatDVT directly on the web.',
         facebook: 'ChatDVT also has a small corner on Facebook.', fanpage: 'Visit fanpage ↗', exploreBot: 'Explore Discord bot', webChat: 'Chat on the web',
