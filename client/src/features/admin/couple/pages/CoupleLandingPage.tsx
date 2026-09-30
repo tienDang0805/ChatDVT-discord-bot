@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Trophy, User, CalendarHeart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../../shared/i18n/LanguageContext';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -18,6 +20,8 @@ interface CoupleData {
 }
 
 export function CoupleLandingPage() {
+  const { t } = useTranslation('admin');
+  const { locale } = useLanguage();
   const [topCouples, setTopCouples] = useState<CoupleData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,9 +82,9 @@ export function CoupleLandingPage() {
         className="z-10 text-center mb-12"
       >
         <h1 className="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600 mb-4 drop-shadow-sm">
-          Sảnh Đường Tình Yêu
+          {t('couples.title')}
         </h1>
-        <p className="text-xl text-rose-700 font-medium">Nơi tôn vinh những tình yêu đẹp nhất server 💕</p>
+        <p className="text-xl text-rose-700 font-medium">{t('couples.subtitle')}</p>
       </motion.div>
 
       <div className="z-10 w-full max-w-4xl">
@@ -88,7 +92,7 @@ export function CoupleLandingPage() {
           
           <div className="flex items-center justify-center space-x-3 mb-8">
             <Trophy className="text-amber-500" size={32} />
-            <h2 className="text-3xl font-bold text-gray-800">Bảng Vàng Uyên Ương</h2>
+            <h2 className="text-3xl font-bold text-gray-800">{t('couples.ranking')}</h2>
             <Trophy className="text-amber-500" size={32} />
           </div>
 
@@ -99,7 +103,7 @@ export function CoupleLandingPage() {
           ) : topCouples.length === 0 ? (
             <div className="text-center py-16 text-gray-500 text-lg">
               <Heart className="mx-auto mb-4 text-gray-300" size={48} />
-              Chưa có cặp đôi nào lọt vào bảng vàng. Hãy là người đầu tiên!
+              {t('couples.empty')}
             </div>
           ) : (
             <div className="space-y-6">
@@ -132,17 +136,17 @@ export function CoupleLandingPage() {
                       </h3>
                       <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                         {couple.status === 'married' ? (
-                          <span className="text-amber-600 font-extrabold flex items-center gap-1 drop-shadow-sm">💍 Vợ Chồng</span>
+                          <span className="text-amber-600 font-extrabold flex items-center gap-1 drop-shadow-sm">{t('couples.married')}</span>
                         ) : (
-                          <span className="text-blue-500 font-semibold">💑 Đang hẹn hò</span>
+                          <span className="text-blue-500 font-semibold">{t('couples.dating')}</span>
                         )}
                         {couple.marriedAt && (
                           <span className="flex items-center gap-1 ml-2 text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
-                            <CalendarHeart size={12} /> {new Date(couple.marriedAt).toLocaleDateString()}
+                            <CalendarHeart size={12} /> {new Date(couple.marriedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'vi-VN')}
                           </span>
                         )}
                         {couple.poopCount > 0 && (
-                          <span className="flex items-center gap-1 ml-2 text-xs bg-amber-900/80 text-white px-2 py-0.5 rounded-full shadow-sm" title={`Đã rặn ra ${couple.poopCount} cục cứt`}>
+                          <span className="flex items-center gap-1 ml-2 text-xs bg-amber-900/80 text-white px-2 py-0.5 rounded-full shadow-sm" title={locale === 'en' ? `${couple.poopCount} poops produced` : `Đã rặn ra ${couple.poopCount} cục cứt`}>
                             💩 x {couple.poopCount}
                           </span>
                         )}
@@ -152,7 +156,7 @@ export function CoupleLandingPage() {
 
                   <div className="w-full sm:w-1/3 text-right">
                     <div className="flex justify-between text-xs font-semibold text-rose-600 mb-1 px-1">
-                      <span>Tình cảm</span>
+                      <span>{t('couples.affection')}</span>
                       <span>{couple.affection} / 1000</span>
                     </div>
                     <div className="w-full bg-rose-100 rounded-full h-3.5 overflow-hidden border border-rose-200 shadow-inner">
@@ -173,7 +177,7 @@ export function CoupleLandingPage() {
         </div>
 
         <div className="text-center">
-          <p className="text-rose-600/80 font-medium text-sm">Sử dụng lệnh `/couple propose` trong Discord để bắt đầu tìm kiếm nửa kia của bạn!</p>
+          <p className="text-rose-600/80 font-medium text-sm">{t('couples.hint')}</p>
         </div>
       </div>
     </div>

@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
+import { useLanguage } from '../i18n/LanguageContext';
+import { stripLocalePrefix } from '../i18n';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
@@ -10,6 +12,7 @@ const INDEXABLE_PATHS = new Set([
   '/', '/playground', '/me', '/blog', '/mermaid-tutorial',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
+const LOCALIZED_PATHS = new Set(['/', '/playground', '/mobile', '/discord', '/chat', '/me']);
 
 const AUTHOR = {
   '@type': 'Person',
@@ -51,6 +54,21 @@ function setCanonical(url: string): void {
   link.href = url;
 }
 
+function setAlternate(hreflang: string, href: string): void {
+  let link = document.querySelector<HTMLLinkElement>(`link[rel="alternate"][hreflang="${hreflang}"]`);
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'alternate';
+    link.hreflang = hreflang;
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+
+function clearAlternates(): void {
+  document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((link) => link.remove());
+}
+
 function removeMetaTag(property: string, isName = false): void {
   const selector = isName
     ? `meta[name="${property}"]`
@@ -65,7 +83,7 @@ function resolveImageUrl(image?: string): string {
 }
 
 function isIndexablePath(pathname: string): boolean {
-  const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
+  const normalizedPath = stripLocalePrefix(pathname === '/' ? '/' : pathname.replace(/\/+$/, ''));
   const featureIndexability = isFeatureIndexable(normalizedPath);
   if (featureIndexability !== undefined) return featureIndexability;
   return INDEXABLE_PATHS.has(normalizedPath)
@@ -88,6 +106,7 @@ interface PageMetaOptions {
 }
 
 export const usePageMeta = (title: string, options?: string | PageMetaOptions) => {
+  const { locale } = useLanguage();
   const desc = typeof options === 'string' ? options : options?.description;
   const keywords = typeof options === 'object' ? options?.keywords : undefined;
   const image = typeof options === 'object' ? options?.image : undefined;
@@ -110,12 +129,22 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     const resolvedImage = resolveImageUrl(image);
     const resolvedImageAlt = imageAlt || `${fullTitle} — devtiendang.blog`;
     const resolvedType = type || (schema === 'article' ? 'article' : 'website');
-    const shouldNoIndex = noIndex ?? !isIndexablePath(window.location.pathname);
+    const normalizedPath = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
+    const basePath = stripLocalePrefix(normalizedPath);
+    const isEnglishBlog = locale === 'en' && (basePath === '/blog' || basePath.startsWith('/blog/'));
+    const shouldNoIndex = noIndex ?? (isEnglishBlog || !isIndexablePath(window.location.pathname));
     document.title = fullTitle;
 
-    const normalizedPath = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
     const canonicalUrl = `${SITE_URL}${normalizedPath}`;
     setCanonical(canonicalUrl);
+    const supportsLocale = LOCALIZED_PATHS.has(basePath);
+    if (supportsLocale) {
+      setAlternate('vi', `${SITE_URL}${basePath}`);
+      setAlternate('en', `${SITE_URL}${basePath === '/' ? '/en' : `/en${basePath}`}`);
+      setAlternate('x-default', `${SITE_URL}${basePath}`);
+    } else {
+      clearAlternates();
+    }
 
     setMetaTag('description', resolvedDescription, true);
     setMetaTag('robots', shouldNoIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large', true);
@@ -124,7 +153,7 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     setMetaTag('og:url', canonicalUrl);
     setMetaTag('og:type', resolvedType);
     setMetaTag('og:site_name', SITE_NAME);
-    setMetaTag('og:locale', 'vi_VN');
+    setMetaTag('og:locale', locale === 'en' ? 'en_US' : 'vi_VN');
     setMetaTag('og:image', resolvedImage);
     setMetaTag('og:image:alt', resolvedImageAlt);
     setMetaTag('twitter:card', 'summary_large_image', true);
@@ -159,7 +188,7 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
       description: resolvedDescription,
       url: canonicalUrl,
       isPartOf: { '@id': `${SITE_URL}/#website` },
-      inLanguage: 'vi-VN',
+      inLanguage: locale === 'en' ? 'en-US' : 'vi-VN',
     };
     const structuredData = pageSchema === 'profile'
       ? { ...base, '@type': 'ProfilePage', mainEntity: AUTHOR }
@@ -167,7 +196,7 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
         ? {
           '@context': 'https://schema.org',
           '@graph': [
-            { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: SITE_NAME, alternateName: SITE_ALTERNATE_NAMES, description: resolvedDescription, inLanguage: 'vi-VN', publisher: { '@id': AUTHOR['@id'] } },
+            { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: SITE_NAME, alternateName: SITE_ALTERNATE_NAMES, description: resolvedDescription, inLanguage: locale === 'en' ? 'en-US' : 'vi-VN', publisher: { '@id': AUTHOR['@id'] } },
             AUTHOR,
           ],
         }
@@ -207,5 +236,5 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     return () => {
       document.title = prev;
     };
-  }, [title, desc, keywords, image, imageAlt, type, schema, schemaName, noIndex, publishedTime, modifiedTime]);
+  }, [title, desc, keywords, image, imageAlt, type, schema, schemaName, noIndex, publishedTime, modifiedTime, locale]);
 };

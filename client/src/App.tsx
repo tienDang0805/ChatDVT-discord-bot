@@ -146,13 +146,21 @@ function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <HomePage />} />
+            <Route path="/en" element={<HomePage />} />
             <Route path="/playground" element={<PlaygroundPage />} />
+            <Route path="/en/playground" element={<PlaygroundPage />} />
             <Route path="/mobile" element={<MobilePage />} />
+            <Route path="/en/mobile" element={<MobilePage />} />
             <Route path="/discord" element={<DiscordPage />} />
+            <Route path="/en/discord" element={<DiscordPage />} />
             <Route path="/chat" element={<ChatDVTChatPage />} />
+            <Route path="/en/chat" element={<ChatDVTChatPage />} />
             <Route path="/blog" element={<BlogPage />} />
+            <Route path="/en/blog" element={<BlogPage />} />
             <Route path="/blog/:slug" element={<BlogArticlePage />} />
+            <Route path="/en/blog/:slug" element={<BlogArticlePage />} />
             <Route path="/me" element={<MePage />} />
+            <Route path="/en/me" element={<MePage />} />
             <Route path="/chatDVT" element={<Navigate to="/discord" replace />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
@@ -200,6 +208,7 @@ function App() {
             <Route path="/english/idiom-quest" element={<IdiomQuest />} />
             <Route path="/english/context-clues" element={<ContextClues />} />
             <Route path="/profile" element={<Navigate to="/me" replace />} />
+            <Route path="/en/profile" element={<Navigate to="/en/me" replace />} />
 
             <Route path="/petlandingpage" element={<PetLandingPage />} />
             <Route path="/tutien" element={<TuTienGame />} />

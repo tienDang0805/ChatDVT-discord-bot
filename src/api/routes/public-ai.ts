@@ -1332,6 +1332,7 @@ const WEB_CHAT_MESSAGE_MAX_CHARS = 4000;
 router.post('/web-chat', async (req, res) => {
     try {
         const { message, history, geminiApiKey } = req.body;
+        const locale: 'vi' | 'en' = req.body.locale === 'en' ? 'en' : 'vi';
         if (!message || typeof message !== 'string' || message.trim() === '') {
             return res.status(400).json({ error: 'Message is required' });
         }
@@ -1341,15 +1342,22 @@ router.post('/web-chat', async (req, res) => {
 
         let systemPromptText: string;
         try {
-            const promptConfig = await prisma.botConfig.findUnique({ where: { key: 'web-chat-prompt' } });
-            const configuredPrompt = promptConfig?.systemPrompts?.trim();
+            const promptKeys = locale === 'en'
+                ? ['web-chat-prompt-en']
+                : ['web-chat-prompt-vi', 'web-chat-prompt'];
+            const promptConfigs = await prisma.botConfig.findMany({ where: { key: { in: promptKeys } } });
+            const byKey = new Map(promptConfigs.map((config) => [config.key, config.systemPrompts.trim()]));
+            const configuredPrompt = promptKeys.map((key) => byKey.get(key)).find(Boolean);
             if (!configuredPrompt) {
-                return res.status(503).json({ error: 'ChatDVT chưa được cấu hình system prompt trong Admin.' });
+                return res.status(503).json({
+                    error: locale === 'en' ? 'ChatDVT has no English system prompt configured yet.' : 'ChatDVT chưa được cấu hình system prompt tiếng Việt trong Admin.',
+                    code: 'WEB_CHAT_PROMPT_MISSING',
+                });
             }
             systemPromptText = configuredPrompt;
         } catch (e) {
             console.error('[WebChat] Failed to load prompt config.', e);
-            return res.status(503).json({ error: 'Không thể tải cấu hình ChatDVT lúc này.' });
+            return res.status(503).json({ error: locale === 'en' ? 'Unable to load the ChatDVT configuration right now.' : 'Không thể tải cấu hình ChatDVT lúc này.' });
         }
         const historyItems = Array.isArray(history) ? history : [];
         const rawHistory: WebChatHistoryMessage[] = historyItems
@@ -1390,7 +1398,8 @@ router.post('/web-chat', async (req, res) => {
     } catch (err: any) {
         console.error('[WebChat] FULL ERROR:', err);
         console.error('[WebChat] Stack:', err.stack);
-        res.status(500).json({ error: 'AI đang bận, thử lại sau nhé!' });
+        const locale = req.body?.locale === 'en' ? 'en' : 'vi';
+        res.status(500).json({ error: locale === 'en' ? 'The AI is busy. Please try again later.' : 'AI đang bận, thử lại sau nhé!' });
     }
 });
 

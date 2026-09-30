@@ -553,6 +553,15 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
 };
 
+const EN_ROUTE_META: Record<string, RouteMeta> = {
+  '/': { title: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', description: 'Đặng Văn Tiến is a Mobile Developer specializing in React Native and Android/Kotlin, and the creator of devtiendang.blog and ChatDVT.', pageType: 'website', priority: 1, changefreq: 'weekly' },
+  '/playground': { title: 'Projects & Lab — Products and developer tools', description: 'Selected products, developer tools, AI experiments, learning apps and web games built by Đặng Văn Tiến.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
+  '/mobile': { title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
+  '/discord': { title: 'ChatDVT — AI chatbot and mini games for Discord', description: 'Explore ChatDVT, an AI Discord bot with conversation, media analysis, summaries and mini games.', schemaName: 'ChatDVT', pageType: 'software', priority: 0.8, changefreq: 'weekly' },
+  '/chat': { title: 'ChatDVT Chat — Talk directly with AI', description: 'Chat with ChatDVT to explore the website, tools and projects built by Đặng Văn Tiến.', schemaName: 'ChatDVT Chat', pageType: 'webapp', priority: 0.9, changefreq: 'weekly' },
+  '/me': { title: 'Đặng Văn Tiến — React Native & Android Developer', description: 'Meet Đặng Văn Tiến, a Mobile Developer in Ho Chi Minh City working with React Native and Android/Kotlin.', pageType: 'profile', priority: 0.8, changefreq: 'monthly' },
+};
+
 function normalizePathname(pathname: string): string {
   if (!pathname || pathname === '/') return '/';
   return pathname.replace(/\/+$/, '') || '/';
@@ -576,6 +585,13 @@ function isIndexableRoute(route: string, meta: RouteMeta): boolean {
 
 export function getRouteMeta(pathname: string): RouteMeta | null {
   const normalizedPath = normalizePathname(pathname);
+  const isEnglish = normalizedPath === '/en' || normalizedPath.startsWith('/en/');
+  const localePath = isEnglish ? (normalizedPath === '/en' ? '/' : normalizedPath.slice(3)) : normalizedPath;
+  if (isEnglish) {
+    const english = EN_ROUTE_META[localePath];
+    if (!english) return null;
+    return { ...english, title: normalizePortfolioTitle(english.title), indexable: english.indexable ?? true };
+  }
   const exact = ROUTE_META[normalizedPath];
   if (exact) return {
     ...exact,
@@ -596,9 +612,11 @@ export function getRouteMeta(pathname: string): RouteMeta | null {
 }
 
 export function getIndexableRoutePaths(): string[] {
-  return Object.entries(ROUTE_META)
+  const vietnamese = Object.entries(ROUTE_META)
     .filter(([route, meta]) => isIndexableRoute(route, meta))
     .map(([route]) => route);
+  const english = Object.keys(EN_ROUTE_META).map((route) => route === '/' ? '/en' : `/en${route}`);
+  return [...vietnamese, ...english];
 }
 
 interface SitemapEntry {
@@ -620,6 +638,12 @@ export function generateSitemapXml(additionalEntries: SitemapEntry[] = []): stri
   Object.entries(ROUTE_META)
     .filter(([route, meta]) => isIndexableRoute(route, meta))
     .forEach(([route, meta]) => entries.set(route, { path: route, lastmod: meta.lastmod }));
+  Object.entries(EN_ROUTE_META)
+    .filter(([, meta]) => meta.indexable !== false)
+    .forEach(([route, meta]) => {
+      const englishPath = route === '/' ? '/en' : `/en${route}`;
+      entries.set(englishPath, { path: englishPath, lastmod: meta.lastmod });
+    });
   additionalEntries.forEach((entry) => entries.set(normalizePathname(entry.path), entry));
 
   const urls = Array.from(entries.values())
@@ -650,7 +674,7 @@ function upsertHeadTag(html: string, pattern: RegExp, tag: string): string {
   return html.replace('</head>', `    ${tag}\n  </head>`);
 }
 
-function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: string) {
+function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: string, locale: 'vi' | 'en') {
   const base = {
     '@context': 'https://schema.org',
     '@id': `${canonicalUrl}#page`,
@@ -658,7 +682,7 @@ function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: str
     description: meta.description,
     url: canonicalUrl,
     isPartOf: { '@id': `${SITE_URL}/#website` },
-    inLanguage: 'vi-VN',
+    inLanguage: locale === 'en' ? 'en-US' : 'vi-VN',
   };
 
   switch (meta.pageType || 'webapp') {
@@ -673,7 +697,7 @@ function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: str
             name: SITE_NAME,
             alternateName: SITE_ALTERNATE_NAMES,
             description: meta.description,
-            inLanguage: 'vi-VN',
+            inLanguage: locale === 'en' ? 'en-US' : 'vi-VN',
             publisher: { '@id': AUTHOR_SCHEMA['@id'] },
           },
           AUTHOR_SCHEMA,
@@ -727,6 +751,7 @@ function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: str
 
 export function injectSeoMeta(html: string, pathname: string, overrideMeta?: RouteMeta): string {
   const normalizedPath = normalizePathname(pathname);
+  const locale: 'vi' | 'en' = normalizedPath === '/en' || normalizedPath.startsWith('/en/') ? 'en' : 'vi';
   const meta = overrideMeta || getRouteMeta(normalizedPath);
   if (!meta) return html;
 
@@ -740,6 +765,8 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
     : 'index, follow, max-image-preview:large';
 
   let result = html;
+
+  result = result.replace(/<html lang="[^"]*">/, `<html lang="${locale}">`);
 
   result = result.replace(
     /<title>[^<]*<\/title>/,
@@ -795,10 +822,18 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
   result = upsertHeadTag(result, /<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="${robots}" />`);
   result = upsertHeadTag(result, /<meta property="og:type" content="[^"]*"\s*\/?>/, `<meta property="og:type" content="${meta.ogType || (meta.pageType === 'article' ? 'article' : 'website')}" />`);
   result = upsertHeadTag(result, /<meta property="og:site_name" content="[^"]*"\s*\/?>/, `<meta property="og:site_name" content="${SITE_NAME}" />`);
-  result = upsertHeadTag(result, /<meta property="og:locale" content="[^"]*"\s*\/?>/, '<meta property="og:locale" content="vi_VN" />');
+  result = upsertHeadTag(result, /<meta property="og:locale" content="[^"]*"\s*\/?>/, `<meta property="og:locale" content="${locale === 'en' ? 'en_US' : 'vi_VN'}" />`);
   result = upsertHeadTag(result, /<meta property="og:image:alt" content="[^"]*"\s*\/?>/, `<meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />`);
   result = upsertHeadTag(result, /<meta name="twitter:image:alt" content="[^"]*"\s*\/?>/, `<meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />`);
   result = upsertHeadTag(result, /<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${canonicalUrl}" />`);
+  const basePath = locale === 'en' ? (normalizedPath === '/en' ? '/' : normalizedPath.slice(3)) : normalizedPath;
+  if (EN_ROUTE_META[basePath]) {
+    const viUrl = `${SITE_URL}${basePath}`;
+    const enUrl = `${SITE_URL}${basePath === '/' ? '/en' : `/en${basePath}`}`;
+    result = upsertHeadTag(result, /<link rel="alternate" hreflang="vi" href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="vi" href="${viUrl}" />`);
+    result = upsertHeadTag(result, /<link rel="alternate" hreflang="en" href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="en" href="${enUrl}" />`);
+    result = upsertHeadTag(result, /<link rel="alternate" hreflang="x-default" href="[^"]*"\s*\/?>/, `<link rel="alternate" hreflang="x-default" href="${viUrl}" />`);
+  }
 
   if (meta.keywords) {
     result = upsertHeadTag(result, /<meta name="keywords" content="[^"]*"\s*\/?>/, `<meta name="keywords" content="${escapeHtml(meta.keywords)}" />`);
@@ -816,7 +851,7 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
     }
   }
 
-  const structuredData = buildStructuredData(meta, canonicalUrl, ogImage);
+  const structuredData = buildStructuredData(meta, canonicalUrl, ogImage, locale);
   result = result.replace(/\s*<script id="page-structured-data" type="application\/ld\+json">[\s\S]*?<\/script>/, '');
 
   const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · Mobile Developer · devtiendang.blog</p></div></noscript>`;

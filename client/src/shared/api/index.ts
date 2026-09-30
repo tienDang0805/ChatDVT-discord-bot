@@ -121,6 +121,7 @@ export interface WebChatHistoryItem {
 export const sendWebChatMessage = async (data: {
     message: string;
     history: WebChatHistoryItem[];
+    locale: 'vi' | 'en';
     geminiApiKey?: string;
 }): Promise<{ response: string }> => (await api.post('/web-chat', data)).data;
 

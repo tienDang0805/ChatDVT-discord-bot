@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getGuilds, getGuildChannels, sendControlMessage, leaveGuild } from '../../../../shared/api';
 import { Megaphone, Trash2, Send, AlertTriangle, MessageSquare, Image as ImageIcon, CheckCircle, Clock, Bot, Paperclip, X, File as FileIcon } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { useTranslation } from 'react-i18next';
 
 export const ControlCenter = () => {
+    const { t } = useTranslation('admin');
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState('');
     const [channels, setChannels] = useState<any[]>([]);
@@ -169,9 +171,9 @@ export const ControlCenter = () => {
         <div className="space-y-6 md:space-y-8 pb-12 w-full max-w-[100vw] overflow-x-hidden">
             <div className="px-2 md:px-0">
                 <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-3">
-                    <Megaphone className="text-emerald-400" /> Server Control Panel
+                    <Megaphone className="text-emerald-400" /> {t('pages.control')}
                 </h2>
-                <p className="text-slate-500 dark:text-slate-400 mt-2">Direct interaction, announcements and control over your servers.</p>
+                <p className="text-slate-500 dark:text-slate-400 mt-2">{t('pages.controlDesc')}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">

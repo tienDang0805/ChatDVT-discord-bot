@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, resetEggCooldown, resetGameData } from '../../../../shared/api';
 import { Users, Coins, ShieldAlert, X, Shield, Search, Zap, Heart, Info, Sparkles, RotateCcw, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const UserManagement = () => {
+    const { t, i18n } = useTranslation('admin');
+    const isEn = i18n.resolvedLanguage === 'en';
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -28,27 +31,27 @@ export const UserManagement = () => {
     };
 
     const handleResetCooldown = async (userId: string) => {
-        if (!confirm('Xác nhận reset cooldown ấp trứng cho user này?')) return;
+        if (!confirm(isEn ? "Reset this user's egg-hatching cooldown?" : 'Xác nhận reset cooldown ấp trứng cho user này?')) return;
         try {
             setActionLoading(true);
             await resetEggCooldown(userId);
-            alert('✅ Đã reset cooldown thành công!');
+            alert(isEn ? '✅ Cooldown reset successfully!' : '✅ Đã reset cooldown thành công!');
         } catch (error: any) {
-            alert(error?.response?.data?.error || 'Có lỗi xảy ra khi reset cooldown.');
+            alert(error?.response?.data?.error || (isEn ? 'An error occurred while resetting the cooldown.' : 'Có lỗi xảy ra khi reset cooldown.'));
         } finally {
             setActionLoading(false);
         }
     };
 
     const handleResetGame = async (userId: string) => {
-        if (!confirm('⚠️ Xác nhận RESET TOÀN BỘ GAME DATA cho user này?\n(Pet, Inventory, Cooldown, Expedition sẽ bị xóa. Tài khoản và xu được giữ nguyên)')) return;
+        if (!confirm(isEn ? "⚠️ Reset ALL GAME DATA for this user?\n(Pets, inventory, cooldown, and expeditions will be deleted. The account and coins are retained.)" : '⚠️ Xác nhận RESET TOÀN BỘ GAME DATA cho user này?\n(Pet, Inventory, Cooldown, Expedition sẽ bị xóa. Tài khoản và xu được giữ nguyên)')) return;
         try {
             setActionLoading(true);
             const result = await resetGameData(userId);
             alert('✅ ' + result.message);
             fetchUsers();
         } catch (error: any) {
-            alert(error?.response?.data?.error || 'Có lỗi xảy ra khi reset game.');
+            alert(error?.response?.data?.error || (isEn ? 'An error occurred while resetting the game.' : 'Có lỗi xảy ra khi reset game.'));
         } finally {
             setActionLoading(false);
         }
@@ -64,16 +67,16 @@ export const UserManagement = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent flex items-center gap-3">
-                        <Users className="text-blue-400" /> Quản Lý Người Chơi
+                        <Users className="text-blue-400" /> {t('pages.users')}
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">Theo dõi tài sản, số lượng Pet và thao tác toàn quyền trên tài khoản.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">{t('pages.usersDesc')}</p>
                 </div>
                 
                 <div className="relative w-full md:w-64 focus-within:w-full md:focus-within:w-80 transition-all">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input 
                         type="text" 
-                        placeholder="Tìm nickname hoặc ID..." 
+                        placeholder={isEn ? 'Search nickname or ID...' : 'Tìm nickname hoặc ID...'}
                         className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2 pl-10 pr-4 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -91,9 +94,9 @@ export const UserManagement = () => {
                         <table className="w-full text-left border-collapse min-w-[800px]">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">
-                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">Người Chơi</th>
-                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">Tài Sản</th>
-                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">Quản lý Thú Cưng</th>
+                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">{isEn ? 'Player' : 'Người Chơi'}</th>
+                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">{isEn ? 'Assets' : 'Tài Sản'}</th>
+                                    <th className="p-4 font-bold border-b border-slate-200 dark:border-slate-800">{isEn ? 'Pet Management' : 'Quản lý Thú Cưng'}</th>
                                     <th className="p-4 relative border-b border-slate-200 dark:border-slate-800"><span className="sr-only">Actions</span></th>
                                 </tr>
                             </thead>
@@ -144,16 +147,16 @@ export const UserManagement = () => {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <span className="text-xs text-slate-400 italic">Chưa sở hữu Pet</span>
+                                                <span className="text-xs text-slate-400 italic">{isEn ? 'No pets owned' : 'Chưa sở hữu Pet'}</span>
                                             )}
                                         </td>
                                         <td className="p-4 text-right space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button 
                                                 onClick={() => setSelectedUser(user)}
                                                 className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-500/30 inline-flex items-center gap-2 text-sm font-medium"
-                                                title="Xem Chi Tiết"
+                                                title={isEn ? 'View details' : 'Xem Chi Tiết'}
                                             >
-                                                <Info size={16} /> Chi Tiết
+                                                <Info size={16} /> {isEn ? 'Details' : 'Chi Tiết'}
                                             </button>
                                         </td>
                                     </tr>
@@ -161,7 +164,7 @@ export const UserManagement = () => {
                                 {filteredUsers.length === 0 && (
                                      <tr>
                                          <td colSpan={4} className="p-8 text-center text-slate-500">
-                                            Không tìm thấy User nào phù hợp.
+                                            {isEn ? 'No matching users found.' : 'Không tìm thấy User nào phù hợp.'}
                                          </td>
                                      </tr>
                                 )}
@@ -195,9 +198,9 @@ export const UserManagement = () => {
                              </div>
 
                              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm mb-6">
-                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Tài Chính & Kinh Tế</h3>
+                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{isEn ? 'Finance & Economy' : 'Tài Chính & Kinh Tế'}</h3>
                                  <div className="flex justify-between items-center mb-4">
-                                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Số dư hiện tại</span>
+                                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{isEn ? 'Current balance' : 'Số dư hiện tại'}</span>
                                      <div className="flex items-center gap-1.5 text-yellow-600 dark:text-yellow-500 font-black text-xl">
                                          <Coins size={20} /> {selectedUser.money.toLocaleString()}
                                      </div>
@@ -205,14 +208,14 @@ export const UserManagement = () => {
                              </div>
 
                              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Thao Tác Admin</h3>
+                                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{isEn ? 'Admin Actions' : 'Thao Tác Admin'}</h3>
                                  <button
                                      onClick={() => handleResetCooldown(selectedUser.userId)}
                                      disabled={actionLoading}
                                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all text-sm font-bold disabled:opacity-50"
                                  >
                                      <RotateCcw size={16} className={actionLoading ? 'animate-spin' : ''} />
-                                     {actionLoading ? 'Đang xử lý...' : 'Reset Cooldown Ấp Trứng'}
+                                     {actionLoading ? (isEn ? 'Processing...' : 'Đang xử lý...') : (isEn ? 'Reset Hatching Cooldown' : 'Reset Cooldown Ấp Trứng')}
                                  </button>
                                  <button
                                      onClick={() => handleResetGame(selectedUser.userId)}
@@ -220,7 +223,7 @@ export const UserManagement = () => {
                                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mt-3 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-xl border border-red-500/20 hover:border-red-500/40 transition-all text-sm font-bold disabled:opacity-50"
                                  >
                                      <Trash2 size={16} />
-                                     {actionLoading ? 'Đang xử lý...' : 'Reset Toàn Bộ Game Data'}
+                                     {actionLoading ? (isEn ? 'Processing...' : 'Đang xử lý...') : (isEn ? 'Reset All Game Data' : 'Reset Toàn Bộ Game Data')}
                                  </button>
                              </div>
                          </div>
@@ -228,13 +231,13 @@ export const UserManagement = () => {
                          {/* Right Side: Pets Display */}
                          <div className="w-full md:w-2/3 p-6 md:p-8 bg-white dark:bg-slate-900">
                              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                 <Sparkles className="text-yellow-500" /> Bộ Sưu Tập Sinh Vật ({selectedUser.pets.length})
+                                 <Sparkles className="text-yellow-500" /> {isEn ? 'Creature Collection' : 'Bộ Sưu Tập Sinh Vật'} ({selectedUser.pets.length})
                              </h3>
                              
                              {selectedUser.pets.length === 0 ? (
                                  <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/30 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
                                      <ShieldAlert size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-4" />
-                                     <p className="text-slate-500">Người chơi này chưa ấp nở bất kỳ sinh vật nào.</p>
+                                     <p className="text-slate-500">{isEn ? 'This player has not hatched any creatures yet.' : 'Người chơi này chưa ấp nở bất kỳ sinh vật nào.'}</p>
                                  </div>
                              ) : (
                                  <div className="grid grid-cols-1 gap-4">

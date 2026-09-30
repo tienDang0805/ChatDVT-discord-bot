@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus, Trash2, ChevronDown, ChevronRight, FileText, Maximize, Minimize } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
+import { useTranslation } from 'react-i18next';
 
 // --- DATA TYPES ---
 export type TreeNodeData = {
@@ -69,6 +70,8 @@ interface TreeNodeProps {
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, onAddChild }) => {
+    const { i18n } = useTranslation();
+    const isEn = i18n.resolvedLanguage === 'en';
     const hasChildren = node.children.length > 0;
     
     // Auto-resize textarea
@@ -104,21 +107,21 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                                value={node.label}
                                onChange={(e) => onUpdate(node.id, { label: e.target.value })}
                                className="flex-1 bg-transparent text-[14px] font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none placeholder:text-slate-400 dark:placeholder-slate-600 tracking-wide uppercase"
-                               placeholder="TÊN KHỐI (VD: ROOT)"
+                               placeholder={isEn ? 'BLOCK NAME (E.G. ROOT)' : 'TÊN KHỐI (VD: ROOT)'}
                            />
                            
                            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity">
                                <button 
                                    onClick={() => onAddChild(node.id)}
                                    className="flex items-center gap-1 px-2 py-1 text-xs font-semibold text-primary hover:text-white bg-primary/10 hover:bg-primary/80 rounded transition-colors"
-                                   title="Tạo Khối Con (Ấp trong Khối này)"
+                                   title={isEn ? 'Create a child block inside this block' : 'Tạo Khối Con (Ấp trong Khối này)'}
                                >
-                                   <Plus size={12} /> Khối Con
+                                   <Plus size={12} /> {isEn ? 'Child Block' : 'Khối Con'}
                                </button>
                                <button 
                                    onClick={() => onDelete(node.id)}
                                    className="p-1.5 text-slate-500 hover:text-red-500 dark:hover:text-white bg-slate-200 dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-500 rounded transition-colors"
-                                   title="Xóa cả dòng họ khối này"
+                                   title={isEn ? 'Delete this block and its descendants' : 'Xóa cả dòng họ khối này'}
                                >
                                    <Trash2 size={13} />
                                </button>
@@ -133,7 +136,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, depth, onUpdate, onDelete, on
                                     onChange={handleTextareaInput}
                                     minRows={2}
                                     className="w-full bg-transparent text-slate-700 dark:text-slate-300 font-sans text-[15px] leading-7 p-3 focus:outline-none resize-none overflow-hidden"
-                                    placeholder={hasChildren ? "Mô tả ngắn của khối cha (Ít dùng)..." : "Nội dung văn bản Prompt..."}
+                                    placeholder={hasChildren ? (isEn ? 'Short description for the parent block (rarely used)...' : 'Mô tả ngắn của khối cha (Ít dùng)...') : (isEn ? 'Prompt text content...' : 'Nội dung văn bản Prompt...')}
                                     spellCheck={false}
                                 />
                            </div>
@@ -167,6 +170,8 @@ interface TreeEditorProps {
 }
 
 export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange }) => {
+    const { i18n } = useTranslation();
+    const isEn = i18n.resolvedLanguage === 'en';
     const [nodes, setNodes] = useState<TreeNodeData[]>([]);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const internalChangeRef = useRef(false);
@@ -275,7 +280,7 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
                  </div>
                  <div className="flex gap-2">
                      <button onClick={handleAddRoot} className="flex items-center gap-2 px-4 py-2 bg-primary/90 hover:bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-all">
-                         <Plus size={16} /> Thêm Khối Gốc
+                         <Plus size={16} /> {isEn ? 'Add Root Block' : 'Thêm Khối Gốc'}
                      </button>
                      <button 
                          onClick={() => setIsFullscreen(!isFullscreen)} 
@@ -291,7 +296,7 @@ export const TreeEditor: React.FC<TreeEditorProps> = ({ initialJson, onChange })
             <div className={`p-6 overflow-y-auto custom-scrollbar flex-1 ${isFullscreen ? 'px-[15%] pt-10' : ''}`}>
                  {nodes.length === 0 ? (
                       <div className="text-center py-20 text-slate-500 font-mono italic">
-                           Thư mục Trống. Hãy Thêm Khối Gốc...
+                           {isEn ? 'This tree is empty. Add a root block...' : 'Thư mục Trống. Hãy Thêm Khối Gốc...'}
                       </div>
                  ) : (
                       nodes.map(node => (

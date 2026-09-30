@@ -5,8 +5,11 @@ import toast from 'react-hot-toast';
 import { Save, RefreshCw, AlertCircle, CheckCircle2, Server, Terminal, MessageSquare, Gamepad2, BrainCircuit, FileJson, Copy, ClipboardPaste, Globe, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { TreeEditor } from '../../tree-editor/pages/TreeEditor';
+import { useTranslation } from 'react-i18next';
 
 export const Prompts = () => {
+    const { t, i18n } = useTranslation('admin');
+    const isEn = i18n.resolvedLanguage === 'en';
     const [config, setConfig] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -84,10 +87,10 @@ export const Prompts = () => {
         try {
             setSaving(true);
             await updatePrompts({ systemPrompts: config }, selectedGuild);
-            setSuccess(`Đã lưu cấu hình Prompts cho ${selectedGuild === 'global' ? 'Global Default' : 'Máy chủ hiện tại'}!`);
+            setSuccess(isEn ? `Prompts saved for ${selectedGuild === 'global' ? 'the global default' : 'the current server'}!` : `Đã lưu cấu hình Prompts cho ${selectedGuild === 'global' ? 'Global Default' : 'Máy chủ hiện tại'}!`);
             setTimeout(() => setSuccess(''), 3000);
         } catch (err) {
-            setError('Thất bại khi lưu cấu hình.');
+            setError(isEn ? 'Unable to save the configuration.' : 'Thất bại khi lưu cấu hình.');
             setTimeout(() => setError(''), 3000);
         } finally {
             setSaving(false);
@@ -99,9 +102,9 @@ export const Prompts = () => {
             const currentData = config?.[activeTab];
             const jsonStr = JSON.stringify(currentData || {}, null, 2);
             await navigator.clipboard.writeText(jsonStr);
-            toast.success('Đã copy Prompt hiện tại vào Clipboard!');
+            toast.success(isEn ? 'Current prompt copied to the clipboard!' : 'Đã copy Prompt hiện tại vào Clipboard!');
         } catch (err) {
-             toast.error('Lỗi khi copy!');
+             toast.error(isEn ? 'Copy failed!' : 'Lỗi khi copy!');
         }
     };
 
@@ -110,32 +113,32 @@ export const Prompts = () => {
             const text = await navigator.clipboard.readText();
             const pastedJson = JSON.parse(text);
             handleUpdateFlow(pastedJson);
-            toast.success('Đã dán (Paste) thành công vào Tree Editor!');
+            toast.success(isEn ? 'Pasted successfully into the Tree Editor!' : 'Đã dán (Paste) thành công vào Tree Editor!');
         } catch (err) {
-            toast.error('Dữ liệu Clipboard không phải là JSON hợp lệ!');
+            toast.error(isEn ? 'Clipboard data is not valid JSON!' : 'Dữ liệu Clipboard không phải là JSON hợp lệ!');
         }
     };
 
     const handleSyncToGlobal = async () => {
-        if (!window.confirm("Bê cấu hình của Tab này đè lên Global Default? Tương lai mọi Máy chủ sẽ xài format mới này!")) return;
+        if (!window.confirm(isEn ? 'Replace the global default with this tab configuration? Future servers will use this format.' : 'Bê cấu hình của Tab này đè lên Global Default? Tương lai mọi Máy chủ sẽ xài format mới này!')) return;
         try {
             const currentData = config?.[activeTab];
             const globalPayload = { [activeTab]: currentData };
             await updatePrompts({ systemPrompts: globalPayload }, 'global');
-            toast.success(`Đã đồng bộ [${activeTab}] lên Global!`);
+            toast.success(isEn ? `[${activeTab}] synced to Global!` : `Đã đồng bộ [${activeTab}] lên Global!`);
         } catch (err) {
-            toast.error("Lỗi khi đồng bộ Global.");
+            toast.error(isEn ? 'Unable to sync the global configuration.' : 'Lỗi khi đồng bộ Global.');
         }
     };
 
     const handleResetMemory = async () => {
-        if (!window.confirm(`⚠️ CẢNH BÁO: Hành động này sẽ Tẩy Lão Toàn Bộ (Xóa Lịch Sử Chat) của Bot ở Cụm Server hiện tại.\n\nBạn có chắc chắn muốn cho Bot quên hết chuyện quá khứ?`)) return;
+        if (!window.confirm(isEn ? '⚠️ WARNING: This will delete the entire bot chat history for the current server.\n\nAre you sure you want the bot to forget everything?' : `⚠️ CẢNH BÁO: Hành động này sẽ Tẩy Lão Toàn Bộ (Xóa Lịch Sử Chat) của Bot ở Cụm Server hiện tại.\n\nBạn có chắc chắn muốn cho Bot quên hết chuyện quá khứ?`)) return;
         try {
             setSaving(true);
             await resetChatHistory(selectedGuild);
-            toast.success('Đã tẩy não Bot thành công! Mọi ký ức đã bị xoá sổ.');
+            toast.success(isEn ? 'Bot memory cleared successfully.' : 'Đã tẩy não Bot thành công! Mọi ký ức đã bị xoá sổ.');
         } catch (err) {
-            toast.error('Có lỗi xảy ra khi tẩy não Bot.');
+            toast.error(isEn ? 'Unable to clear the bot memory.' : 'Có lỗi xảy ra khi tẩy não Bot.');
         } finally {
             setSaving(false);
         }
@@ -158,30 +161,30 @@ export const Prompts = () => {
     const promptCategories = [
         { 
             id: 'core', 
-            label: 'Hệ Thống Lõi', 
+            label: isEn ? 'Core System' : 'Hệ Thống Lõi',
             icon: BrainCircuit,
             items: [
-                { key: 'global', label: 'Tương Tác Chính (Global)', desc: 'Tính cách gốc và quy tắc giao tiếp của Bot.' }
+                { key: 'global', label: isEn ? 'Main Interaction (Global)' : 'Tương Tác Chính (Global)', desc: isEn ? "The bot's core personality and communication rules." : 'Tính cách gốc và quy tắc giao tiếp của Bot.' }
             ]
         },
         { 
             id: 'minigames', 
-            label: 'Trò Chơi (Minigames)', 
+            label: isEn ? 'Games (Minigames)' : 'Trò Chơi (Minigames)',
             icon: Gamepad2,
             items: [
-                { key: 'quiz', label: 'Trắc Nghiệm (Quiz)', desc: 'Nhân cách MC dẫn chương trình Quiz.' },
-                { key: 'catchTheWord', label: 'Đuổi Hình Bắt Chữ', desc: 'Nhân cách MC Đuổi Hình Bắt Chữ.' },
-                { key: 'pkGame', label: 'PK Đại Chiến', desc: 'Nhân cách Trọng tài thi đấu PK.' },
+                { key: 'quiz', label: isEn ? 'Quiz' : 'Trắc Nghiệm (Quiz)', desc: isEn ? 'Host persona for the Quiz game.' : 'Nhân cách MC dẫn chương trình Quiz.' },
+                { key: 'catchTheWord', label: isEn ? 'Picture Word Game' : 'Đuổi Hình Bắt Chữ', desc: isEn ? 'Host persona for the picture word game.' : 'Nhân cách MC Đuổi Hình Bắt Chữ.' },
+                { key: 'pkGame', label: isEn ? 'PK Battle' : 'PK Đại Chiến', desc: isEn ? 'Referee persona for PK battles.' : 'Nhân cách Trọng tài thi đấu PK.' },
             ]
         },
         { 
             id: 'features', 
-            label: 'Tính Năng Bổ Trợ', 
+            label: isEn ? 'Supporting Features' : 'Tính Năng Bổ Trợ',
             icon: MessageSquare,
             items: [
-                { key: 'pet', label: 'Hệ thống Thú Cưng', desc: 'Bản sắc giao tiếp khi tương tác Pet.' },
-                { key: 'imageAnalysis', label: 'Phân tích Ảnh (Vision)', desc: 'Cách bot mô tả khi thấy ảnh.' },
-                { key: 'videoAnalysis', label: 'Phân tích Video', desc: 'Cách bot tóm tắt khi xem video.' },
+                { key: 'pet', label: isEn ? 'Pet System' : 'Hệ thống Thú Cưng', desc: isEn ? 'Communication style used for pet interactions.' : 'Bản sắc giao tiếp khi tương tác Pet.' },
+                { key: 'imageAnalysis', label: isEn ? 'Image Analysis (Vision)' : 'Phân tích Ảnh (Vision)', desc: isEn ? 'How the bot describes images.' : 'Cách bot mô tả khi thấy ảnh.' },
+                { key: 'videoAnalysis', label: isEn ? 'Video Analysis' : 'Phân tích Video', desc: isEn ? 'How the bot summarizes videos.' : 'Cách bot tóm tắt khi xem video.' },
             ]
         }
     ];
@@ -210,7 +213,7 @@ export const Prompts = () => {
                         <Terminal className="text-primary" size={28} />
                         Prompt Studio
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-2">IDE Controller điều chỉnh hệ thống tư duy của Gemini.</p>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">{t('pages.promptsDesc')}</p>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 z-10 w-full xl:w-auto">
@@ -224,7 +227,7 @@ export const Prompts = () => {
                             onChange={handleServerChange}
                             className="bg-transparent border-none text-foreground text-sm font-medium focus:ring-0 w-full min-w-[200px] cursor-pointer"
                         >
-                            <option value="global" className="bg-background dark:bg-surface">🌐 Global Core (Mặc định)</option>
+                            <option value="global" className="bg-background dark:bg-surface">🌐 Global Core ({isEn ? 'Default' : 'Mặc định'})</option>
                             {guilds.map(g => (
                                 <option key={g.id} value={g.id} className="bg-background dark:bg-surface">🏠 {g.name}</option>
                             ))}
@@ -268,7 +271,7 @@ export const Prompts = () => {
                         <button 
                             onClick={() => fetchPrompts(selectedGuild)} 
                             className="p-2.5 text-slate-500 hover:text-slate-900 bg-slate-200 hover:bg-slate-300 border border-slate-300 dark:text-slate-400 dark:hover:text-foreground dark:bg-slate-800/50 dark:hover:bg-slate-700 dark:border-slate-700/50 rounded-xl transition-colors"
-                            title="Tải Lại Data"
+                            title={isEn ? 'Reload data' : 'Tải Lại Data'}
                         >
                             <RefreshCw size={18} className={clsx(loading && "animate-spin")} />
                         </button>
@@ -279,9 +282,9 @@ export const Prompts = () => {
                                 onClick={handleResetMemory}
                                 disabled={saving}
                                 className="flex items-center gap-2 px-3 py-2 bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500 hover:bg-red-100 hover:border-red-300 dark:hover:text-white dark:border-red-500/20 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 whitespace-nowrap"
-                                title="Xóa toàn bộ Lịch sử Chat ở Server này"
+                                title={isEn ? 'Delete all chat history for this server' : 'Xóa toàn bộ Lịch sử Chat ở Server này'}
                             >
-                                <Trash2 size={16} /> Reset Não
+                                <Trash2 size={16} /> {isEn ? 'Clear Memory' : 'Reset Não'}
                             </button>
                         )}
 
@@ -291,7 +294,7 @@ export const Prompts = () => {
                             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-xl text-sm font-medium transition-all shadow-[0_0_15px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_20px_rgba(var(--primary-rgb),0.5)] active:scale-95 disabled:opacity-50 whitespace-nowrap"
                         >
                             <Save size={18} />
-                            {saving ? 'Compile...' : 'Lưu Thay Đổi'}
+                            {saving ? 'Compile...' : (isEn ? 'Save Changes' : 'Lưu Thay Đổi')}
                         </button>
                     </div>
                 </div>
@@ -337,7 +340,7 @@ export const Prompts = () => {
                                             <span className="truncate">{item.label}</span>
                                             {/* Indicator for configured override on Server */}
                                             {hasCustomData && !isActive && (
-                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Chứa cấu hình ghi đè" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" title={isEn ? 'Contains an override' : 'Chứa cấu hình ghi đè'} />
                                             )}
                                             {isActive && (
                                                 <div className="w-1.5 h-4 bg-primary rounded-full shadow-[0_0_8px_rgba(var(--primary-rgb),1)]" />
@@ -367,7 +370,7 @@ export const Prompts = () => {
                                 <button
                                     onClick={handleSyncToGlobal}
                                     className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-colors rounded-lg text-xs font-medium border border-indigo-500/20 mr-2"
-                                    title="Lưu cấu hình Tab này vào hệ thống Global (Mặc định cho mọi bot mới)"
+                                    title={isEn ? 'Save this tab to Global as the default for new bots' : 'Lưu cấu hình Tab này vào hệ thống Global (Mặc định cho mọi bot mới)'}
                                 >
                                     <Globe size={14} /> Use as Global
                                 </button>
@@ -376,7 +379,7 @@ export const Prompts = () => {
                                 <button
                                     onClick={handleCopyPrompt}
                                     className="p-1.5 text-slate-500 hover:text-emerald-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-emerald-400 rounded-md dark:hover:bg-slate-700/50 transition-colors"
-                                    title="Copy khối Prompt này"
+                                    title={isEn ? 'Copy this prompt block' : 'Copy khối Prompt này'}
                                 >
                                     <Copy size={14} />
                                 </button>
@@ -384,7 +387,7 @@ export const Prompts = () => {
                                 <button
                                     onClick={handlePastePrompt}
                                     className="p-1.5 text-slate-500 hover:text-amber-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:text-amber-400 rounded-md dark:hover:bg-slate-700/50 transition-colors"
-                                    title="Paste (Dán) khối Prompt"
+                                    title={isEn ? 'Paste a prompt block' : 'Paste (Dán) khối Prompt'}
                                 >
                                     <ClipboardPaste size={14} />
                                 </button>
@@ -400,7 +403,7 @@ export const Prompts = () => {
                          </div>
                          {selectedGuild !== 'global' && !config?.[activeTab] && (
                              <span className="px-2 py-1 bg-amber-500/10 text-amber-500 text-xs rounded-md border border-amber-500/20 font-medium">
-                                 Đang dùng Global Mặc Định
+                                 {isEn ? 'Using Global Default' : 'Đang dùng Global Mặc Định'}
                              </span>
                          )}
                     </div>

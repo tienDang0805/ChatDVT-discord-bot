@@ -13,11 +13,15 @@ import {
   WEB_CHAT_HISTORY_EVENT,
   type WebChatMessage,
 } from '../utils/webChat';
+import { useLanguage } from '../i18n/LanguageContext';
+import { Trans, useTranslation } from 'react-i18next';
 
 export const ChatWidget = () => {
   const location = useLocation();
+  const { locale, pathFor } = useLanguage();
+  const { t } = useTranslation('chat');
   const isHidden =
-    location.pathname === '/chat' ||
+    location.pathname === '/chat' || location.pathname === '/en/chat' ||
     location.pathname.includes('monopoly') ||
     location.pathname.startsWith('/tutien') ||
     (typeof document !== 'undefined' && (
@@ -26,7 +30,7 @@ export const ChatWidget = () => {
     ));
 
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<WebChatMessage[]>(loadWebChatHistory);
+  const [messages, setMessages] = useState<WebChatMessage[]>(() => loadWebChatHistory(locale));
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
@@ -40,11 +44,16 @@ export const ChatWidget = () => {
   useEffect(() => {
     const syncHistory = (event: Event) => {
       const customEvent = event as CustomEvent<WebChatMessage[]>;
-      setMessages(customEvent.detail || loadWebChatHistory());
+      setMessages(customEvent.detail || loadWebChatHistory(locale));
     };
     window.addEventListener(WEB_CHAT_HISTORY_EVENT, syncHistory);
     return () => window.removeEventListener(WEB_CHAT_HISTORY_EVENT, syncHistory);
-  }, []);
+  }, [locale]);
+
+  useEffect(() => {
+    setMessages(loadWebChatHistory(locale));
+    setInput('');
+  }, [locale]);
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -112,7 +121,7 @@ export const ChatWidget = () => {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
-    saveWebChatHistory(updatedMessages);
+    saveWebChatHistory(updatedMessages, locale);
     setInput('');
     resetTextarea();
     setIsLoading(true);
@@ -129,19 +138,20 @@ export const ChatWidget = () => {
       const res = await sendWebChatMessage({
         message: text,
         history: historyForApi.slice(0, -1),
+        locale,
         geminiApiKey: getStoredGeminiKey(),
       });
 
       const botMsg: WebChatMessage = {
         id: `b_${Date.now()}`,
         role: 'assistant',
-        content: res.response || 'Không có phản hồi.',
+        content: res.response || t('noResponse'),
         timestamp: Date.now(),
       };
 
       const finalMessages = [...updatedMessages, botMsg];
       setMessages(finalMessages);
-      saveWebChatHistory(finalMessages);
+      saveWebChatHistory(finalMessages, locale);
 
       if (!isOpen) setHasNewMessage(true);
     } catch (err: unknown) {
@@ -149,16 +159,16 @@ export const ChatWidget = () => {
       const errorMsg: WebChatMessage = {
         id: `e_${Date.now()}`,
         role: 'assistant',
-        content: error.response?.data?.error || 'Lỗi kết nối, thử lại nhé!',
+        content: error.response?.data?.error || t('connectionError'),
         timestamp: Date.now(),
       };
       const finalMessages = [...updatedMessages, errorMsg];
       setMessages(finalMessages);
-      saveWebChatHistory(finalMessages);
+      saveWebChatHistory(finalMessages, locale);
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, messages, isOpen, resetTextarea]);
+  }, [input, isLoading, locale, messages, isOpen, resetTextarea, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
@@ -169,21 +179,15 @@ export const ChatWidget = () => {
 
   const clearHistory = () => {
     if (messages.length === 0) return;
-    if (!window.confirm('Xoá toàn bộ lịch sử chat?')) return;
+    if (!window.confirm(t('clearConfirm'))) return;
     setMessages([]);
-    clearWebChatHistory();
+    clearWebChatHistory(locale);
   };
 
   const botName = botInfo?.globalName || botInfo?.username || 'ChatDVT';
   const botAvatar = botInfo?.avatar || '';
 
-  const quickQuestions = [
-    'Khoá học AI Training là gì? Giá bao nhiêu?',
-    'Giới thiệu về trang web này đi!',
-    'Web này có những tính năng gì?',
-    'Ai tạo ra mày vậy?',
-    'Donate ở đâu?',
-  ];
+  const quickQuestions = [t('prompt1'), t('prompt2'), t('prompt3'), t('prompt4')];
 
   if (isHidden) return null;
 
@@ -236,29 +240,29 @@ export const ChatWidget = () => {
                     {botName}
                     <span className="text-[8px] font-black bg-white/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider">AI</span>
                   </h3>
-                  <p className="text-[10px] text-white/70 font-medium">trợ lý của anh Tiến • online</p>
+                  <p className="text-[10px] text-white/70 font-medium">{t('subtitle')}</p>
                 </div>
               </div>
               <div className="relative flex items-center gap-0.5 z-10">
                 <Link
-                  to="/chat"
+                  to={pathFor('/chat')}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
-                  title="Mở trang ChatDVT Chat"
-                  aria-label="Mở trang ChatDVT Chat"
+                  title={t('open')}
+                  aria-label={t('open')}
                 >
                   <Maximize2 size={14} />
                 </Link>
                 <button
                   onClick={clearHistory}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
-                  title="Xóa lịch sử"
+                  title={t('clear')}
                 >
                   <Trash2 size={14} />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors text-white/80 hover:text-white"
-                  aria-label="Đóng chat"
+                  aria-label={t('close')}
                 >
                   <X size={18} />
                 </button>
@@ -284,13 +288,13 @@ export const ChatWidget = () => {
                       </div>
                     )}
                   </div>
-                  <p className="text-sm font-bold text-slate-800 dark:text-white">Chào mày! 👋🔥</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">{t('greeting')}</p>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-[260px]">
-                    Tao là <span className="text-orange-500 font-bold">{botName}</span>, đàn em anh Tiến. Hỏi gì thì bắn phá đi!
+                    <Trans ns="chat" i18nKey="widgetIntro" values={{ name: botName }} components={{ strong: <strong className="text-orange-500 font-bold" /> }} />
                   </p>
 
                   <div className="mt-5 w-full space-y-2">
-                    <p className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold">Gợi ý nhanh</p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold">{t('quick')}</p>
                     {quickQuestions.map((q, i) => (
                       <button
                         key={i}
@@ -375,7 +379,7 @@ export const ChatWidget = () => {
               <button
                 onClick={scrollToBottom}
                 className="absolute bottom-[72px] left-1/2 -translate-x-1/2 z-20 w-8 h-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center shadow-lg text-slate-500 hover:text-orange-500 transition-colors"
-                aria-label="Cuộn xuống tin nhắn mới nhất"
+                aria-label={t('scroll')}
               >
                 <ChevronDown size={16} />
               </button>
@@ -390,7 +394,7 @@ export const ChatWidget = () => {
                   onKeyDown={handleKeyDown}
                   onCompositionStart={() => setIsComposing(true)}
                   onCompositionEnd={() => setIsComposing(false)}
-                  placeholder="Hỏi gì đi mày ơi..."
+                  placeholder={t('placeholder')}
                   rows={1}
                   className="flex-1 bg-slate-100 dark:bg-[#1c2536] border border-slate-200 dark:border-slate-700/60 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all resize-none max-h-24 overflow-y-auto"
                   style={{ minHeight: '40px' }}
@@ -399,7 +403,7 @@ export const ChatWidget = () => {
                   onClick={sendMessage}
                   disabled={!input.trim() || isLoading}
                   className="p-2.5 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-700 dark:disabled:to-slate-800 text-white rounded-xl transition-all active:scale-90 disabled:cursor-not-allowed shrink-0 shadow-sm shadow-orange-500/20 disabled:shadow-none"
-                  aria-label="Gửi tin nhắn"
+                  aria-label={t('send')}
                 >
                   <Send size={16} />
                 </button>
@@ -419,13 +423,13 @@ export const ChatWidget = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Chat với tao nè!</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{t('widgetCta')}</span>
           </div>
 
           <button
             onClick={() => setIsOpen(true)}
             className="relative w-14 h-14 rounded-full flex items-center justify-center text-white shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 overflow-hidden group widget-btn-ring"
-            aria-label="Mở ChatDVT"
+            aria-label={t('open')}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-amber-500" />
             {botAvatar ? (

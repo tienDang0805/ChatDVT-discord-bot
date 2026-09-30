@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { getLogs, getGuilds } from '../../../../shared/api';
 import { Search, Filter, ChevronLeft, ChevronRight, Server } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../../shared/i18n/LanguageContext';
 
 export const Logs = () => {
+    const { t } = useTranslation('admin');
+    const { locale } = useLanguage();
     const [logs, setLogs] = useState<any[]>([]);
     const [guilds, setGuilds] = useState<any[]>([]);
     const [selectedGuild, setSelectedGuild] = useState('global');
@@ -52,9 +56,9 @@ export const Logs = () => {
                 <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
                         <Filter className="text-primary" size={24} />
-                        History Logs
+                        {t('logs.title')}
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm">View interaction history between users and the bot.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">{t('logs.subtitle')}</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -66,7 +70,7 @@ export const Logs = () => {
                             value={selectedGuild}
                             onChange={(e) => setSelectedGuild(e.target.value)}
                         >
-                            <option value="global">🌐 All Servers</option>
+                            <option value="global">{t('logs.allServers')}</option>
                             {guilds.map((g: any) => (
                                 <option key={g.id} value={g.id}>{g.name}</option>
                             ))}
@@ -81,7 +85,7 @@ export const Logs = () => {
                         <input 
                             type="text" 
                             className="bg-background border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 outline-none placeholder:text-slate-400 dark:placeholder-slate-500 min-w-[240px]" 
-                            placeholder="Search content or user..." 
+                            placeholder={t('logs.search')}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -94,17 +98,13 @@ export const Logs = () => {
                     <table className="w-full text-left text-sm">
                         <thead className="bg-slate-50 dark:bg-surface/90 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700/50">
                             <tr>
-                                <th className="p-4 font-medium">Type</th>
-                                <th className="p-4 font-medium">User</th>
-                                <th className="p-4 font-medium">Prompt</th>
-                                <th className="p-4 font-medium">Response</th>
-                                <th className="p-4 font-medium">Time</th>
+                                <th className="p-4 font-medium">{t('logs.type')}</th><th className="p-4 font-medium">{t('logs.user')}</th><th className="p-4 font-medium">{t('logs.prompt')}</th><th className="p-4 font-medium">{t('logs.response')}</th><th className="p-4 font-medium">{t('logs.time')}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50">
                             {loading ? (
                                 <tr>
-                                    <td colSpan={5} className="p-12 text-center text-slate-500 dark:text-slate-400">Loading history...</td>
+                                    <td colSpan={5} className="p-12 text-center text-slate-500 dark:text-slate-400">{t('logs.loading')}</td>
                                 </tr>
                             ) : logs.length > 0 ? (
                                 logs.map((log) => (
@@ -136,13 +136,13 @@ export const Logs = () => {
                                             </div>
                                         </td>
                                         <td className="p-4 text-slate-500 whitespace-nowrap text-xs">
-                                            {new Date(log.createdAt).toLocaleString()}
+                                            {new Date(log.createdAt).toLocaleString(locale === 'en' ? 'en-US' : 'vi-VN')}
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="p-12 text-center text-slate-500">No logs found matching your filters.</td>
+                                    <td colSpan={5} className="p-12 text-center text-slate-500">{t('logs.empty')}</td>
                                 </tr>
                             )}
                         </tbody>
@@ -153,7 +153,7 @@ export const Logs = () => {
                 {!loading && logs.length > 0 && (
                     <div className="flex items-center justify-between p-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-surface/80">
                         <div className="text-sm text-slate-500 dark:text-slate-400">
-                            Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span>
+                            {t('logs.page', { page, total: totalPages })}
                         </div>
                         <div className="flex gap-2">
                             <button 

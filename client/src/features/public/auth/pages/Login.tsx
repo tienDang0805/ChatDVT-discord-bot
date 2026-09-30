@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Lock, Shield, ArrowRight, AlertCircle, Terminal } from 'lucide-react';
 import { api } from '../../../../shared/api'; // Need to export api instance from index.ts or create loginApi
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from '../../../../shared/components/LanguageSwitcher';
 
 export const Login = () => {
   const [username, setUsername] = useState('');
@@ -11,6 +13,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/admin';
+  const { t } = useTranslation('common');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +30,14 @@ export const Login = () => {
         navigate(from, { replace: true });
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Access Denied. Intruder detected.');
+      setError(err.response?.data?.error || t('login.denied'));
     }
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden font-mono">
+      <div className="absolute right-4 top-4 z-20"><LanguageSwitcher /></div>
       {/* Background Matrix-like effect (Simplified CSS) */}
       <div className="absolute inset-0 bg-[url('https://media.giphy.com/media/U3qYN8S0j3bpK/giphy.gif')] opacity-10 bg-cover bg-center pointer-events-none"></div>
       
@@ -45,10 +49,10 @@ export const Login = () => {
         </div>
 
         <h2 className="text-2xl font-bold text-center text-white mb-2 tracking-wider">
-          SYSTEM ACCESS
+          {t('login.title')}
         </h2>
         <p className="text-center text-emerald-500/60 text-xs mb-8 uppercase tracking-widest">
-          Secured Gateway // EvoVerse Core
+          {t('login.subtitle')}
         </p>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -60,7 +64,7 @@ export const Login = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full bg-black/50 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-emerald-400 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
-                placeholder="USERNAME"
+                placeholder={t('login.username')}
               />
             </div>
           </div>
@@ -73,7 +77,7 @@ export const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-black/50 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-emerald-400 placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
-                placeholder="PASSWORD"
+                placeholder={t('login.password')}
               />
             </div>
           </div>
@@ -90,12 +94,12 @@ export const Login = () => {
             disabled={loading}
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed group"
           >
-            {loading ? 'AUTHENTICATING...' : <><span className="tracking-widest">LOGIN</span> <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /> </>}
+            {loading ? t('login.submitting') : <><span className="tracking-widest">{t('login.submit')}</span> <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" /> </>}
           </button>
         </form>
 
         <div className="mt-8 text-center text-[10px] text-slate-600">
-           RESTRICTED AREA. UNAUTHORIZED ACCESS WILL BE LOGGED.
+           {t('login.restricted')}
         </div>
       </div>
     </div>

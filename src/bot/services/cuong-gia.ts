@@ -1,8 +1,30 @@
-import { Guild, GuildMember, Message } from 'discord.js';
+import { Guild, GuildMember, Message, SnowflakeUtil } from 'discord.js';
 import { prisma } from '../../database/prisma';
 
 const URL_PATTERN = /https?:\/\/[^\s<]+/gi;
-const MEDIA_EXTENSION_PATTERN = /\.(?:avif|gif|jpe?g|png|webp|mp4|mov|webm|mp3|wav|ogg|m4a)(?:\?|$)/i;
+const SEARCH_RETRY_LIMIT = 8;
+
+interface DiscordMessageSearchResponse {
+  code?: number;
+  retry_after?: number;
+  total_results?: number;
+  doing_deep_historical_index?: boolean;
+}
+
+export interface HistoricalSyncProgress {
+  processed: number;
+  total: number;
+  synced: number;
+  failed: number;
+  currentMember: string;
+}
+
+export interface HistoricalSyncResult {
+  total: number;
+  synced: number;
+  failed: number;
+  durationMs: number;
+}
 
 export interface MemberActivitySnapshot {
   messageCount: number;
@@ -10,6 +32,7 @@ export interface MemberActivitySnapshot {
   mediaCount: number;
   firstTrackedAt: Date | null;
   lastMessageAt: Date | null;
+  historicalSyncedAt: Date | null;
 }
 
 export interface CuongGiaEntry {
@@ -27,6 +50,7 @@ export interface CuongGiaEntry {
 export interface GuildRankingResult {
   entries: CuongGiaEntry[];
   memberCount: number;
+  syncedMemberCount: number;
   fetchedAllMembers: boolean;
 }
 
@@ -45,20 +69,11 @@ const REALMS = [
 ];
 
 function countLinks(content: string): number {
-  return content.match(URL_PATTERN)?.length ?? 0;
+  return content.match(URL_PATTERN) ? 1 : 0;
 }
 
 function countMedia(message: Message): number {
-  const attachmentCount = message.attachments.filter((attachment) => {
-    if (attachment.contentType?.startsWith('image/') ||
-        attachment.contentType?.startsWith('video/') ||
-        attachment.contentType?.startsWith('audio/')) {
-      return true;
-    }
-    return MEDIA_EXTENSION_PATTERN.test(attachment.name ?? attachment.url);
-  }).size;
-
-  return attachmentCount + message.stickers.size;
+  return message.attachments.size > 0 ? 1 : 0;
 }
 
 function getRealm(points: number): string {
@@ -72,7 +87,48 @@ function emptyActivity(): MemberActivitySnapshot {
     mediaCount: 0,
     firstTrackedAt: null,
     lastMessageAt: null,
+    historicalSyncedAt: null,
   };
+}
+
+function toActivitySnapshot(activity: {
+  messageCount: number;
+  linkCount: number;
+  mediaCount: number;
+  historicalMessageCount: number;
+  historicalLinkCount: number;
+  historicalMediaCount: number;
+  historicalSyncedAt: Date | null;
+  firstTrackedAt: Date;
+  lastMessageAt: Date | null;
+}): MemberActivitySnapshot {
+  return {
+    messageCount: activity.historicalMessageCount + activity.messageCount,
+    linkCount: activity.historicalLinkCount + activity.linkCount,
+    mediaCount: activity.historicalMediaCount + activity.mediaCount,
+    historicalSyncedAt: activity.historicalSyncedAt,
+    firstTrackedAt: activity.firstTrackedAt,
+    lastMessageAt: activity.lastMessageAt,
+  };
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isFatalSearchError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const apiError = error as Error & {
+    status?: number;
+    code?: number;
+    rawError?: { code?: number };
+  };
+  const discordCode = apiError.code ?? apiError.rawError?.code;
+  return apiError.status === 401 ||
+    apiError.status === 403 ||
+    discordCode === 50_001 ||
+    discordCode === 50_013 ||
+    error.message.includes('still indexing');
 }
 
 export function calculateMemberPower(
@@ -118,6 +174,8 @@ export function formatTenure(totalDays: number): string {
 }
 
 class CuongGiaService {
+  private readonly syncingGuilds = new Set<string>();
+
   async trackMessage(message: Message): Promise<void> {
     if (!message.guild || message.author.bot) return;
 
@@ -150,6 +208,143 @@ class CuongGiaService {
     });
   }
 
+  isHistoricalSyncRunning(guildId: string): boolean {
+    return this.syncingGuilds.has(guildId);
+  }
+
+  private async searchHistoricalCount(
+    guild: Guild,
+    userId: string,
+    maxMessageId: string,
+    has?: 'link' | 'file',
+  ): Promise<number> {
+    const route = `/guilds/${guild.id}/messages/search` as `/${string}`;
+
+    for (let attempt = 0; attempt < SEARCH_RETRY_LIMIT; attempt += 1) {
+      const query = new URLSearchParams();
+      query.set('limit', '1');
+      query.set('author_id', userId);
+      query.set('max_id', maxMessageId);
+      query.set('include_nsfw', 'true');
+      if (has) query.set('has', has);
+
+      const response = await guild.client.rest.get(route, { query }) as DiscordMessageSearchResponse;
+      if (typeof response.total_results === 'number') {
+        return Math.max(0, response.total_results);
+      }
+
+      if (response.code !== 110000 && !response.doing_deep_historical_index) {
+        throw new Error('Discord search did not return total_results');
+      }
+
+      const retrySeconds = Math.min(15, Math.max(1, Number(response.retry_after) || 2));
+      await delay(retrySeconds * 1000);
+    }
+
+    throw new Error('Discord is still indexing this server; try the sync again later');
+  }
+
+  async syncHistoricalActivity(
+    guild: Guild,
+    onProgress?: (progress: HistoricalSyncProgress) => Promise<void> | void,
+  ): Promise<HistoricalSyncResult> {
+    if (this.syncingGuilds.has(guild.id)) {
+      throw new Error('SYNC_ALREADY_RUNNING');
+    }
+
+    this.syncingGuilds.add(guild.id);
+    const startedAt = new Date();
+
+    try {
+      await guild.members.fetch();
+      const members = Array.from(guild.members.cache.values()).filter((member) => !member.user.bot);
+      const activitiesAtStart = await prisma.discordMemberActivity.findMany({
+        where: { guildId: guild.id },
+      });
+      const startByUser = new Map(activitiesAtStart.map((activity) => [activity.userId, activity]));
+      const maxMessageId = SnowflakeUtil.generate({ timestamp: startedAt.getTime() }).toString();
+      let synced = 0;
+      let failed = 0;
+      const emitProgress = async (progress: HistoricalSyncProgress) => {
+        try {
+          await onProgress?.(progress);
+        } catch (error) {
+          console.warn(`[CuongGia] Could not update sync progress for guild ${guild.id}:`, error);
+        }
+      };
+
+      await emitProgress({ processed: 0, total: members.length, synced, failed, currentMember: '' });
+
+      for (let index = 0; index < members.length; index += 1) {
+        const member = members[index];
+        try {
+          const [historicalMessageCount, historicalLinkCount, historicalMediaCount] = await Promise.all([
+            this.searchHistoricalCount(guild, member.id, maxMessageId),
+            this.searchHistoricalCount(guild, member.id, maxMessageId, 'link'),
+            this.searchHistoricalCount(guild, member.id, maxMessageId, 'file'),
+          ]);
+          const startActivity = startByUser.get(member.id);
+
+          await prisma.$transaction(async (tx) => {
+            const current = await tx.discordMemberActivity.findUnique({
+              where: { guildId_userId: { guildId: guild.id, userId: member.id } },
+            });
+            const messageDelta = Math.max(0, (current?.messageCount ?? 0) - (startActivity?.messageCount ?? 0));
+            const linkDelta = Math.max(0, (current?.linkCount ?? 0) - (startActivity?.linkCount ?? 0));
+            const mediaDelta = Math.max(0, (current?.mediaCount ?? 0) - (startActivity?.mediaCount ?? 0));
+
+            await tx.discordMemberActivity.upsert({
+              where: { guildId_userId: { guildId: guild.id, userId: member.id } },
+              create: {
+                guildId: guild.id,
+                userId: member.id,
+                messageCount: messageDelta,
+                linkCount: linkDelta,
+                mediaCount: mediaDelta,
+                historicalMessageCount,
+                historicalLinkCount,
+                historicalMediaCount,
+                historicalSyncedAt: startedAt,
+              },
+              update: {
+                messageCount: messageDelta,
+                linkCount: linkDelta,
+                mediaCount: mediaDelta,
+                historicalMessageCount,
+                historicalLinkCount,
+                historicalMediaCount,
+                historicalSyncedAt: startedAt,
+              },
+            });
+          });
+
+          synced += 1;
+        } catch (error) {
+          if (isFatalSearchError(error)) throw error;
+          failed += 1;
+          console.error(`[CuongGia] Historical sync failed for ${member.id} in ${guild.id}:`, error);
+        }
+
+        await emitProgress({
+          processed: index + 1,
+          total: members.length,
+          synced,
+          failed,
+          currentMember: member.displayName,
+        });
+      }
+
+      return {
+        total: members.length,
+        synced,
+        failed,
+        durationMs: Date.now() - startedAt.getTime(),
+      };
+    } finally {
+      this.syncingGuilds.delete(guild.id);
+    }
+  }
+
   async getGuildRanking(guild: Guild): Promise<GuildRankingResult> {
     let fetchedAllMembers = true;
     try {
@@ -163,7 +358,7 @@ class CuongGiaService {
       where: { guildId: guild.id },
     });
     const activityByUser = new Map<string, MemberActivitySnapshot>(
-      activities.map((activity) => [activity.userId, activity]),
+      activities.map((activity) => [activity.userId, toActivitySnapshot(activity)]),
     );
 
     const entries = Array.from(guild.members.cache.values())
@@ -178,6 +373,7 @@ class CuongGiaService {
     return {
       entries,
       memberCount: entries.length,
+      syncedMemberCount: entries.filter((entry) => entry.activity.historicalSyncedAt !== null).length,
       fetchedAllMembers,
     };
   }
@@ -192,7 +388,7 @@ class CuongGiaService {
       },
     });
 
-    return calculateMemberPower(member, activity ?? emptyActivity());
+    return calculateMemberPower(member, activity ? toActivitySnapshot(activity) : emptyActivity());
   }
 }
 

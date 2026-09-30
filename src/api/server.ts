@@ -301,6 +301,52 @@ import pingSosRoutes from './routes/ping-sos';
 app.use('/api', pingSosRoutes);
 
 // Web Chat Prompt Config (Admin - protected)
+const WEB_CHAT_PROMPT_KEYS = {
+    vi: 'web-chat-prompt-vi',
+    en: 'web-chat-prompt-en',
+} as const;
+
+app.get('/api/web-chat/prompts', authenticateToken, async (_req, res) => {
+    try {
+        const configs = await prisma.botConfig.findMany({
+            where: { key: { in: ['web-chat-prompt', WEB_CHAT_PROMPT_KEYS.vi, WEB_CHAT_PROMPT_KEYS.en] } },
+        });
+        const byKey = new Map(configs.map((config) => [config.key, config.systemPrompts]));
+        res.json({
+            prompts: {
+                vi: byKey.get(WEB_CHAT_PROMPT_KEYS.vi) || byKey.get('web-chat-prompt') || '',
+                en: byKey.get(WEB_CHAT_PROMPT_KEYS.en) || '',
+            },
+        });
+    } catch (err: any) {
+        console.error('[WebChat Prompts GET] Error:', err.message);
+        res.status(500).json({ error: 'Failed to fetch prompts' });
+    }
+});
+
+app.post('/api/web-chat/prompts/:locale', authenticateToken, async (req, res) => {
+    try {
+        const locale = req.params.locale;
+        if (locale !== 'vi' && locale !== 'en') {
+            return res.status(400).json({ error: 'Unsupported locale' });
+        }
+        const { prompt } = req.body;
+        if (typeof prompt !== 'string' || !prompt.trim()) {
+            return res.status(400).json({ error: 'System prompt cannot be empty' });
+        }
+        const normalizedPrompt = prompt.trim();
+        await prisma.botConfig.upsert({
+            where: { key: WEB_CHAT_PROMPT_KEYS[locale] },
+            update: { systemPrompts: normalizedPrompt },
+            create: { key: WEB_CHAT_PROMPT_KEYS[locale], systemPrompts: normalizedPrompt, features: '{}' },
+        });
+        res.json({ success: true, locale, prompt: normalizedPrompt });
+    } catch (err: any) {
+        console.error('[WebChat Prompts POST] Error:', err.message);
+        res.status(500).json({ error: 'Failed to save prompt' });
+    }
+});
+
 app.get('/api/web-chat/prompt', authenticateToken, async (req, res) => {
     try {
         const config = await prisma.botConfig.findUnique({ where: { key: 'web-chat-prompt' } });

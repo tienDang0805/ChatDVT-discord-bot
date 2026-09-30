@@ -99,6 +99,10 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       );
     }
 
+    if (!isCommandDisabled('cuonggia')) {
+      adminLines.push('`/cuonggia dongbo` — lấy thống kê tin/link/media lịch sử từ Discord Search API.');
+    }
+
     fields.push({
       name: '🛡️ Quản trị',
       value: adminLines.join('\n'),

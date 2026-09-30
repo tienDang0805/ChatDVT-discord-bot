@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Activity, Users, MessageSquare, Zap } from 'lucide-react';
 import { getDashboardStats, getGuilds, getTopUsers } from '../../../../shared/api';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../../../shared/i18n/LanguageContext';
 const StatCard = ({ title, value, icon: Icon, color }: any) => (
   <div className="bg-surface/80 p-6 rounded-3xl border border-slate-200 dark:border-white/5 relative overflow-hidden group ring-1 ring-black/5">
     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -22,6 +24,8 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
 );
 
 export const Dashboard = () => {
+  const { t } = useTranslation('admin');
+  const { locale } = useLanguage();
   const [stats, setStats] = useState<any>({ totalUsers: 0, messagesToday: 0, avgResponseTime: "0s", uptime: 0 });
   const [guilds, setGuilds] = useState<any[]>([]);
   const [topUsers, setTopUsers] = useState<any[]>([]);
@@ -57,17 +61,17 @@ export const Dashboard = () => {
     <div className="space-y-6 md:space-y-8 pb-8">
       <div className="px-2 md:px-0">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-slate-500 dark:to-slate-400 bg-clip-text text-transparent">
-          System Overview
+          {t('dashboard.title')}
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">Real-time metrics from your bot instance.</p>
+        <p className="text-slate-500 dark:text-slate-400 mt-2">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Hero Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Users" value={stats.totalUsers} icon={Users} color="blue" />
-        <StatCard title="Messages Today" value={stats.messagesToday} icon={MessageSquare} color="emerald" />
-        <StatCard title="Active Servers" value={guilds.length} icon={Zap} color="amber" />
-        <StatCard title="Uptime" value={formatUptime(stats.uptime)} icon={Activity} color="violet" />
+        <StatCard title={t('dashboard.totalUsers')} value={stats.totalUsers} icon={Users} color="blue" />
+        <StatCard title={t('dashboard.messagesToday')} value={stats.messagesToday} icon={MessageSquare} color="emerald" />
+        <StatCard title={t('dashboard.activeServers')} value={guilds.length} icon={Zap} color="amber" />
+        <StatCard title={t('dashboard.uptime')} value={formatUptime(stats.uptime)} icon={Activity} color="violet" />
       </div>
 
 
@@ -75,8 +79,8 @@ export const Dashboard = () => {
           {/* Connected Servers */}
           <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
             <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700/50 flex justify-between items-center">
-              <h3 className="font-bold text-lg text-foreground">Connected Servers</h3>
-              <span className="text-xs px-2 py-1 rounded bg-primary/10 text-primary dark:bg-primary/20">{guilds.length} Active</span>
+              <h3 className="font-bold text-lg text-foreground">{t('dashboard.servers')}</h3>
+              <span className="text-xs px-2 py-1 rounded bg-primary/10 text-primary dark:bg-primary/20">{guilds.length} {t('dashboard.active')}</span>
             </div>
             <div className="p-4 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
                {guilds.map((guild) => (
@@ -90,18 +94,18 @@ export const Dashboard = () => {
                        )}
                        <div>
                            <h4 className="font-medium text-foreground">{guild.name}</h4>
-                           <p className="text-xs text-slate-500 dark:text-slate-400">{guild.memberCount} members</p>
+                           <p className="text-xs text-slate-500 dark:text-slate-400">{guild.memberCount} {t('dashboard.members')}</p>
                        </div>
                    </div>
                ))}
-               {guilds.length === 0 && <p className="text-slate-500 text-center py-4">No servers connected.</p>}
+               {guilds.length === 0 && <p className="text-slate-500 text-center py-4">{t('dashboard.noServers')}</p>}
             </div>
           </div>
 
           {/* Top Users */}
           <div className="bg-surface/80 rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden ring-1 ring-black/5">
             <div className="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700/50">
-              <h3 className="font-bold text-lg text-emerald-600 dark:text-emerald-400">Top Active Users</h3>
+              <h3 className="font-bold text-lg text-emerald-600 dark:text-emerald-400">{t('dashboard.topUsers')}</h3>
             </div>
             <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                 {topUsers.map((user, index) => (
@@ -112,12 +116,12 @@ export const Dashboard = () => {
                             </span>
                             <div>
                                 <h4 className="font-medium text-foreground">{user.username || `User ${user._id.slice(0, 5)}...`}</h4>
-                                <p className="text-xs text-slate-500">Last active: {new Date(user.lastActive).toLocaleDateString()}</p>
+                                <p className="text-xs text-slate-500">{t('dashboard.lastActive')}: {new Date(user.lastActive).toLocaleDateString(locale === 'en' ? 'en-US' : 'vi-VN')}</p>
                             </div>
                         </div>
                         <div className="text-right">
                             <span className="text-emerald-600 dark:text-emerald-400 font-bold">{user.count}</span>
-                            <p className="text-xs text-slate-500">msgs</p>
+                            <p className="text-xs text-slate-500">{t('dashboard.messages')}</p>
                         </div>
                     </div>
                 ))}

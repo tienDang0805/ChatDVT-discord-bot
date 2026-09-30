@@ -2,6 +2,7 @@ import {
   ChatInputCommandInteraction,
   EmbedBuilder,
   GuildMember,
+  PermissionFlagsBits,
   SlashCommandBuilder,
 } from 'discord.js';
 import { cuongGiaService, CuongGiaEntry, formatTenure } from '../services/cuong-gia';
@@ -32,6 +33,11 @@ export const data = new SlashCommandBuilder()
     subcommand
       .setName('cach-tinh')
       .setDescription('Xem công thức tính điểm cường giả'),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName('dongbo')
+      .setDescription('Admin đồng bộ thống kê tin nhắn lịch sử từ Discord'),
   );
 
 function formatNumber(value: number): string {
@@ -63,13 +69,13 @@ function buildFormulaEmbed(): EmbedBuilder {
       '',
       '• **Thâm niên:** `2 điểm/ngày`, tối đa 10 năm.',
       '• **Tin nhắn:** `1 điểm/tin`.',
-      '• **Link:** thêm `3 điểm/link`.',
-      '• **Media:** thêm `5 điểm/ảnh, video, audio hoặc sticker`.',
+      '• **Link:** thêm `3 điểm/tin có link`.',
+      '• **Media:** thêm `5 điểm/tin có tệp đính kèm`.',
       '• **Role:** `120 × số role + 12 × vị trí role cao nhất`, nhưng bị chặn ở `1.500 điểm` để admin không auto vô địch.',
       '',
       '**Cảnh giới:** Phàm Nhân → Luyện Khí → Trúc Cơ → Kim Đan → Nguyên Anh → Hóa Thần → Luyện Hư → Hợp Thể → Đại Thừa → Độ Kiếp → Tiên Đế.',
       '',
-      '⚠️ Discord cho bot đọc ngày gia nhập và role hiện tại, nhưng không mở số liệu lịch sử trong Mod View. Vì vậy tin/link/media chỉ được tính từ khi tính năng này được deploy.',
+      'Admin có thể dùng `/cuonggia dongbo` để lấy baseline lịch sử qua Discord Search API; sau đó bot tiếp tục cộng realtime.',
     ].join('\n'))
     .setFooter({ text: 'BXH chỉ để giải trí — spam để farm điểm vẫn là phàm nhân trong lòng mọi người.' });
 }
@@ -88,11 +94,18 @@ async function showLeaderboard(interaction: ChatInputCommandInteraction): Promis
           `└ ⚡ **${formatNumber(entry.totalPoints)}** | ⏳ ${formatTenure(entry.tenureDays)} | 💬 ${formatNumber(entry.activity.messageCount)}`,
         ].join('\n')).join('\n')
       : 'Chưa tìm thấy thành viên nào để lập bảng.')
-    .addFields({
-      name: '📊 Đã luận kiếm',
-      value: `**${formatNumber(result.memberCount)}** thành viên không phải bot`,
-      inline: true,
-    })
+    .addFields(
+      {
+        name: '📊 Đã luận kiếm',
+        value: `**${formatNumber(result.memberCount)}** thành viên không phải bot`,
+        inline: true,
+      },
+      {
+        name: '🗃️ Đã đồng bộ lịch sử',
+        value: `**${formatNumber(result.syncedMemberCount)}/${formatNumber(result.memberCount)}** thành viên`,
+        inline: true,
+      },
+    )
     .setTimestamp();
 
   const currentIndex = result.entries.findIndex((entry) => entry.member.id === interaction.user.id);
@@ -126,6 +139,13 @@ async function showProfile(interaction: ChatInputCommandInteraction): Promise<vo
         year: 'numeric',
       })
     : 'chưa có tin nhắn được ghi nhận';
+  const historicalSyncedAt = entry.activity.historicalSyncedAt?.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   const roleNames = member.roles.cache
     .filter((role) => role.id !== guild.id && !role.managed)
     .sort((a, b) => b.position - a.position)
@@ -160,10 +180,71 @@ async function showProfile(interaction: ChatInputCommandInteraction): Promise<vo
         inline: false,
       },
     )
-    .setFooter({ text: `Theo dõi hoạt động từ: ${trackedSince}` })
+    .setFooter({
+      text: historicalSyncedAt
+        ? `Lịch sử đã đồng bộ: ${historicalSyncedAt} • Realtime vẫn tiếp tục được cộng`
+        : `Chưa đồng bộ lịch sử • Theo dõi realtime từ: ${trackedSince}`,
+    })
     .setTimestamp();
 
   await interaction.editReply({ embeds: [embed] });
+}
+
+async function syncHistory(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+    await interaction.reply({
+      content: '❌ Chỉ người có quyền **Manage Server** mới được đồng bộ lịch sử.',
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const guild = interaction.guild!;
+  if (cuongGiaService.isHistoricalSyncRunning(guild.id)) {
+    await interaction.reply({ content: '⏳ Server đang có một lượt đồng bộ chạy rồi.', ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+  await interaction.editReply([
+    '🔍 **Bắt đầu đồng bộ lịch sử Cường Giả**',
+    'Discord sẽ tự điều tiết rate limit. Đừng chạy lại lệnh cho tới khi lượt này hoàn tất.',
+  ].join('\n'));
+
+  let lastProgressUpdate = 0;
+  try {
+    const result = await cuongGiaService.syncHistoricalActivity(guild, async (progress) => {
+      const now = Date.now();
+      if (progress.processed !== progress.total && progress.processed !== 0 && now - lastProgressUpdate < 4_000) {
+        return;
+      }
+      lastProgressUpdate = now;
+      const percent = progress.total > 0 ? Math.round((progress.processed / progress.total) * 100) : 100;
+      await interaction.editReply([
+        '🔍 **Đang đồng bộ lịch sử Cường Giả**',
+        `Tiến độ: **${progress.processed}/${progress.total} (${percent}%)**`,
+        `✅ Thành công: ${progress.synced} • ❌ Lỗi: ${progress.failed}`,
+        progress.currentMember ? `Đang xử lý: **${progress.currentMember}**` : 'Đang tải danh sách thành viên…',
+      ].join('\n'));
+    });
+
+    const durationSeconds = Math.max(1, Math.round(result.durationMs / 1000));
+    await interaction.editReply([
+      '✅ **Đồng bộ lịch sử hoàn tất**',
+      `Thành công: **${result.synced}/${result.total}** thành viên • Lỗi: **${result.failed}**`,
+      `Thời gian: **${durationSeconds} giây**`,
+      'Dùng `/cuonggia bang` để xem bảng mới.',
+    ].join('\n'));
+  } catch (error) {
+    console.error('[CuongGia] Guild historical sync failed:', error);
+    let message = 'Không thể đồng bộ. Kiểm tra **Message Content Intent**, quyền **Read Message History**, rồi thử lại.';
+    if (error instanceof Error && error.message === 'SYNC_ALREADY_RUNNING') {
+      message = 'Server đang có một lượt đồng bộ chạy rồi.';
+    } else if (error instanceof Error && error.message.includes('still indexing')) {
+      message = 'Discord vẫn đang tạo chỉ mục lịch sử cho server. Đợi vài phút rồi chạy `/cuonggia dongbo` lại.';
+    }
+    await interaction.editReply(`❌ ${message}`);
+  }
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -175,6 +256,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
   if (subcommand === 'cach-tinh') {
     await interaction.reply({ embeds: [buildFormulaEmbed()], ephemeral: true });
+    return;
+  }
+
+  if (subcommand === 'dongbo') {
+    await syncHistory(interaction);
     return;
   }
 

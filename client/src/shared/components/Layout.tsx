@@ -5,6 +5,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import api from '../api';
 import { useTheme } from '../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const NavItem = ({ to, icon: Icon, label, onClick }: { to: string; icon: any; label: string; onClick?: () => void }) => {
   const location = useLocation();
@@ -31,6 +33,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   const [botInfo, setBotInfo] = useState<any>(null);
   const { theme, toggleTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useTranslation(['admin', 'common']);
 
   useEffect(() => {
     const fetchBotInfo = async () => {
@@ -124,29 +127,31 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         <nav className="min-h-0 flex-1 space-y-2 mt-4 md:mt-0 overflow-y-auto overscroll-contain pr-1">
-          <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/prompts" icon={ScrollText} label="Prompts" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/users" icon={Bot} label="User Management" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/pets" icon={Bot} label="Pet Hub" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/couple" icon={Heart} label="Hệ thống Cặp Đôi" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/quiz" icon={BrainCircuit} label="Web Quiz (Public)" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/identity" icon={ScrollText} label="User Identity" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/control" icon={LayoutDashboard} label="Control Center" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/logs" icon={ScrollText} label="Chat Logs" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/settings" icon={Settings} label="Identity & Config" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/web-chat-prompt" icon={MessageCircle} label="Web Chat Prompt" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/facebook-chat-prompt" icon={Facebook} label="FB Chat Prompt" onClick={() => setIsMobileMenuOpen(false)} />
-          <NavItem to="/admin/blog" icon={Newspaper} label="Blog" onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin" icon={LayoutDashboard} label={t('nav.dashboard')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/prompts" icon={ScrollText} label={t('nav.prompts')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/users" icon={Bot} label={t('nav.users')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/pets" icon={Bot} label={t('nav.pets')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/couple" icon={Heart} label={t('nav.couples')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/quiz" icon={BrainCircuit} label={t('nav.quiz')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/identity" icon={ScrollText} label={t('nav.identity')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/control" icon={LayoutDashboard} label={t('nav.control')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/logs" icon={ScrollText} label={t('nav.logs')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/settings" icon={Settings} label={t('nav.settings')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/web-chat-prompt" icon={MessageCircle} label={t('nav.webPrompt')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/facebook-chat-prompt" icon={Facebook} label={t('nav.facebookPrompt')} onClick={() => setIsMobileMenuOpen(false)} />
+          <NavItem to="/admin/blog" icon={Newspaper} label={t('nav.blog')} onClick={() => setIsMobileMenuOpen(false)} />
 
           {/* Spacer */}
           <div className="flex-1" />
+
+          <LanguageSwitcher />
 
           <button 
             onClick={toggleTheme}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-primary/10 hover:text-primary dark:text-slate-400 transition-all w-full text-left mt-auto mb-2 group"
           >
             {theme === 'dark' ? <Sun size={20} className="group-hover:rotate-90 transition-transform duration-500" /> : <Moon size={20} className="group-hover:-rotate-12 transition-transform duration-500" />}
-            <span className="font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            <span className="font-medium">{theme === 'dark' ? t('lightMode', { ns: 'common' }) : t('darkMode', { ns: 'common' })}</span>
           </button>
 
           <button 
@@ -157,7 +162,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition-all w-full text-left"
           >
             <LogOut size={20} />
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t('logout', { ns: 'common' })}</span>
           </button>
         </nav>
 
@@ -165,7 +170,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="text-xs text-slate-500">
             v2.0.0 (Hybrid)
             <br />
-            Status: <span className="text-emerald-500 dark:text-emerald-400">Online</span>
+            {t('status')}: <span className="text-emerald-500 dark:text-emerald-400">{t('online')}</span>
           </div>
         </div>
       </aside>

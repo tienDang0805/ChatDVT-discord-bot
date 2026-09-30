@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Save, AlertCircle, CheckCircle2, Bot, Server, Key, Eye, EyeOff } from 'lucide-react';
 import api from '../../../../shared/api';
+import { useTranslation } from 'react-i18next';
 
 export const Settings = () => {
+    const { t, i18n } = useTranslation('admin');
+    const isEn = i18n.resolvedLanguage === 'en';
     const [persona, setPersona] = useState({
         identity: '',
         purpose: '',
@@ -88,10 +91,10 @@ export const Settings = () => {
                 await api.post('/features', { disablePetImage });
             }
             
-            showMessage('success', `Đã lưu cấu hình Tâm Trí & API Key cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
+            showMessage('success', isEn ? `Persona and API key saved for ${selectedGuild === 'global' ? 'all servers' : 'this server'}!` : `Đã lưu cấu hình Tâm Trí & API Key cho ${selectedGuild === 'global' ? 'Tất cả Server' : 'Server này'}!`);
         } catch (error) {
             console.error("Failed to save data:", error);
-            showMessage('error', 'Có lỗi xảy ra khi lưu cấu hình.');
+            showMessage('error', isEn ? 'An error occurred while saving the configuration.' : 'Có lỗi xảy ra khi lưu cấu hình.');
         } finally {
             setLoading(false);
         }
@@ -121,8 +124,8 @@ export const Settings = () => {
                         <Bot size={28} />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Bot Persona (Nhân Cách AI)</h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1">Thiết lập tính cách, mục đích và giọng điệu chung cho Bot.</p>
+                        <h1 className="text-2xl font-bold text-foreground tracking-tight">{t('pages.settings')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('pages.settingsDesc')}</p>
                     </div>
                 </div>
 
@@ -132,7 +135,7 @@ export const Settings = () => {
                     className="bg-accent hover:bg-accent/90 text-foreground px-6 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-accent/25 hover:shadow-accent/40 active:scale-95 flex items-center gap-2 disabled:opacity-50"
                 >
                     <Save size={18} />
-                    {loading ? 'Đang lưu...' : 'Lưu Thay Đổi'}
+                    {loading ? t('common:saving') : t('common:save')}
                 </button>
             </div>
 
@@ -142,13 +145,13 @@ export const Settings = () => {
                      <Server size={24} />
                  </div>
                  <div className="flex-1">
-                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chọn Máy Chủ Để Áp Dụng (Per-Server)</label>
+                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{isEn ? 'Select a server to configure (per-server)' : 'Chọn Máy Chủ Để Áp Dụng (Per-Server)'}</label>
                      <select 
                          value={selectedGuild}
                          onChange={(e) => setSelectedGuild(e.target.value)}
                          className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                      >
-                         <option value="global">🌍 Dùng Chung (Global - Mặc định)</option>
+                         <option value="global">🌍 {isEn ? 'Shared (Global default)' : 'Dùng Chung (Global - Mặc định)'}</option>
                          {guilds.map((g: any) => (
                              <option key={g.id} value={g.id}>🏠 {g.name}</option>
                          ))}
@@ -177,8 +180,8 @@ export const Settings = () => {
                         <h2 className="text-lg font-semibold text-foreground">Gemini API Key</h2>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
                             {selectedGuild === 'global' 
-                                ? 'Key AI dùng chung cho toàn bộ hệ thống (Mặc định).' 
-                                : 'Key AI tách biệt và độc lập cho Server này (Ưu tiên dùng thay thế Key Global).'}
+                                ? (isEn ? 'The default AI key shared across the system.' : 'Key AI dùng chung cho toàn bộ hệ thống (Mặc định).')
+                                : (isEn ? 'A private AI key for this server, used before the global key.' : 'Key AI tách biệt và độc lập cho Server này (Ưu tiên dùng thay thế Key Global).')}
                         </p>
                     </div>
                 </div>
@@ -187,7 +190,7 @@ export const Settings = () => {
                         type={showApiKey ? 'text' : 'password'}
                         value={apiKey}
                         onChange={(e) => setApiKey(e.target.value)}
-                        placeholder="Nhập API Key API (Bắt đầu với AIza... Hoặc bỏ trống để dùng Mặc định)"
+                        placeholder={isEn ? 'Enter an API key (starts with AIza...), or leave empty to use the default' : 'Nhập API Key API (Bắt đầu với AIza... Hoặc bỏ trống để dùng Mặc định)'}
                         className="w-full bg-background border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-3.5 text-foreground font-mono placeholder:font-sans focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-colors pr-12 text-sm"
                     />
                     <button
@@ -202,34 +205,34 @@ export const Settings = () => {
 
             <div className="bg-surface/80 p-8 rounded-3xl border border-slate-200 dark:border-white/5 space-y-6 ring-1 ring-black/5 hover:shadow-[0_0_30px_rgba(var(--color-primary),0.05)] transition-shadow duration-500">
                  {renderTextarea(
-                     "1. Danh tính (Bot là ai?)", 
+                     isEn ? '1. Identity (Who is the bot?)' : '1. Danh tính (Bot là ai?)',
                      "identity", 
-                     "Ví dụ: Tôi là một trợ lý AI thông minh...", 
-                     "Xác định vai trò cốt lõi của bot trong hệ thống."
+                     isEn ? 'Example: I am an intelligent AI assistant...' : 'Ví dụ: Tôi là một trợ lý AI thông minh...',
+                     isEn ? "Define the bot's core role in the system." : 'Xác định vai trò cốt lõi của bot trong hệ thống.'
                  )}
                  {renderTextarea(
-                     "2. Mục đích (Bot làm gì?)", 
+                     isEn ? '2. Purpose (What does the bot do?)' : '2. Mục đích (Bot làm gì?)',
                      "purpose", 
-                     "Ví dụ: Giúp đỡ mọi người giải trí, quản lý server...", 
-                     "Những công việc và nhiệm vụ chính bot sẽ thực hiện."
+                     isEn ? 'Example: Help people have fun and manage the server...' : 'Ví dụ: Giúp đỡ mọi người giải trí, quản lý server...',
+                     isEn ? 'The main jobs and tasks the bot will perform.' : 'Những công việc và nhiệm vụ chính bot sẽ thực hiện.'
                  )}
                  {renderTextarea(
-                     "3. Sở thích (Bot thích gì?)", 
+                     isEn ? '3. Interests (What does the bot like?)' : '3. Sở thích (Bot thích gì?)',
                      "hobbies", 
-                     "Ví dụ: Thích đọc sách, nghe nhạc, nói chuyện phiếm...", 
-                     "Làm cho bot giống người hơn thông qua sở thích."
+                     isEn ? 'Example: Reading, music, and casual conversation...' : 'Ví dụ: Thích đọc sách, nghe nhạc, nói chuyện phiếm...',
+                     isEn ? 'Make the bot feel more human through its interests.' : 'Làm cho bot giống người hơn thông qua sở thích.'
                  )}
                  {renderTextarea(
-                     "4. Tính cách (Hành vi)", 
+                     isEn ? '4. Personality (Behavior)' : '4. Tính cách (Hành vi)',
                      "personality", 
-                     "Ví dụ: Vui vẻ, thân thiện, đôi khi châm biếm...", 
-                     "Quy định cách phản ứng và cảm xúc của bot."
+                     isEn ? 'Example: Cheerful, friendly, and occasionally sarcastic...' : 'Ví dụ: Vui vẻ, thân thiện, đôi khi châm biếm...',
+                     isEn ? 'Control how the bot reacts and expresses emotion.' : 'Quy định cách phản ứng và cảm xúc của bot.'
                  )}
                  {renderTextarea(
-                 "5. Giọng văn (Giao tiếp)", 
+                 isEn ? '5. Writing style (Communication)' : '5. Giọng văn (Giao tiếp)',
                      "writing_style", 
-                     "Ví dụ: Dùng nhiều emoji, câu ngắn gọn, xưng hô 'mình/bạn'...", 
-                     "Quy chuẩn về phong cách ngôn ngữ khi trả lời tin nhắn."
+                     isEn ? 'Example: Use emojis, concise sentences, and a friendly voice...' : "Ví dụ: Dùng nhiều emoji, câu ngắn gọn, xưng hô 'mình/bạn'...",
+                     isEn ? 'Set the language style used in message responses.' : 'Quy chuẩn về phong cách ngôn ngữ khi trả lời tin nhắn.'
                  )}
             </div>
             
@@ -242,14 +245,14 @@ export const Settings = () => {
                          </div>
                          <div>
                              <h2 className="text-xl font-bold text-foreground">Global Feature Toggles</h2>
-                             <p className="text-slate-500 dark:text-slate-400 text-sm">Bật / Tắt tính năng cho toàn hệ thống.</p>
+                             <p className="text-slate-500 dark:text-slate-400 text-sm">{isEn ? 'Enable or disable features across the entire system.' : 'Bật / Tắt tính năng cho toàn hệ thống.'}</p>
                          </div>
                     </div>
                     
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-white/5">
                         <div className="flex-1 pr-4">
-                            <h3 className="font-semibold text-foreground text-md">🚫 Tắt chức năng Sinh Ảnh Pet (Imagen)</h3>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Khi bật công tắc này, AI sẽ tạm thời ngừng gọi API Imagen 4 (tránh hao tốn credit/tiền phí). Pet mới nở sẽ dùng ảnh mặc định. Stats và Info vẫn tạo bằng Gemini như thường.</p>
+                            <h3 className="font-semibold text-foreground text-md">🚫 {isEn ? 'Disable pet image generation (Imagen)' : 'Tắt chức năng Sinh Ảnh Pet (Imagen)'}</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{isEn ? 'When enabled, the AI stops calling Imagen 4 to save credits and cost. Newly hatched pets use the default image; stats and descriptions are still generated by Gemini.' : 'Khi bật công tắc này, AI sẽ tạm thời ngừng gọi API Imagen 4 (tránh hao tốn credit/tiền phí). Pet mới nở sẽ dùng ảnh mặc định. Stats và Info vẫn tạo bằng Gemini như thường.'}</p>
                         </div>
                         <button
                             onClick={() => setDisablePetImage(!disablePetImage)}
@@ -272,7 +275,7 @@ export const Settings = () => {
                     <AlertCircle size={20} /> Dangerous Zone
                 </h3>
                 <button className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 dark:border-red-500/50 dark:text-red-500 dark:hover:bg-red-500/10 rounded-lg text-sm font-medium transition-colors">
-                    Reset Factory (Sẽ gọi lệnh xóa DB - Chưa hỗ trợ)
+                    {isEn ? 'Factory reset (database deletion — not supported yet)' : 'Reset Factory (Sẽ gọi lệnh xóa DB - Chưa hỗ trợ)'}
                 </button>
             </div>
         </div>

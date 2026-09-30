@@ -273,15 +273,19 @@ model FbQuizSession {
 }
 
 model DiscordMemberActivity {
-  id             Int       @id @default(autoincrement())
-  guildId        String
-  userId         String
-  messageCount   Int       @default(0)
-  linkCount      Int       @default(0)
-  mediaCount     Int       @default(0)
-  firstTrackedAt DateTime  @default(now())
-  lastMessageAt  DateTime?
-  updatedAt      DateTime  @updatedAt
+  id                     Int       @id @default(autoincrement())
+  guildId                String
+  userId                 String
+  messageCount           Int       @default(0)
+  linkCount              Int       @default(0)
+  mediaCount             Int       @default(0)
+  historicalMessageCount Int       @default(0)
+  historicalLinkCount    Int       @default(0)
+  historicalMediaCount   Int       @default(0)
+  historicalSyncedAt     DateTime?
+  firstTrackedAt         DateTime  @default(now())
+  lastMessageAt          DateTime?
+  updatedAt              DateTime  @updatedAt
 
   @@unique([guildId, userId])
   @@index([guildId, messageCount])

@@ -5,9 +5,11 @@ export interface WebChatMessage {
   timestamp: number;
 }
 
-export const WEB_CHAT_STORAGE_KEY = 'web_chat_history';
 export const WEB_CHAT_HISTORY_EVENT = 'web-chat-history-updated';
 export const WEB_CHAT_MAX_HISTORY = 50;
+export type WebChatLocale = 'vi' | 'en';
+
+const storageKey = (locale: WebChatLocale) => `web_chat_history_${locale}`;
 
 function isWebChatMessage(value: unknown): value is WebChatMessage {
   if (!value || typeof value !== 'object') return false;
@@ -20,9 +22,9 @@ function isWebChatMessage(value: unknown): value is WebChatMessage {
   );
 }
 
-export function loadWebChatHistory(): WebChatMessage[] {
+export function loadWebChatHistory(locale: WebChatLocale = 'vi'): WebChatMessage[] {
   try {
-    const raw = localStorage.getItem(WEB_CHAT_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(locale)) || (locale === 'vi' ? localStorage.getItem('web_chat_history') : null);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed)
@@ -33,16 +35,16 @@ export function loadWebChatHistory(): WebChatMessage[] {
   }
 }
 
-export function saveWebChatHistory(messages: WebChatMessage[]) {
+export function saveWebChatHistory(messages: WebChatMessage[], locale: WebChatLocale = 'vi') {
   const limitedMessages = messages.slice(-WEB_CHAT_MAX_HISTORY);
-  localStorage.setItem(WEB_CHAT_STORAGE_KEY, JSON.stringify(limitedMessages));
+  localStorage.setItem(storageKey(locale), JSON.stringify(limitedMessages));
   window.dispatchEvent(new CustomEvent<WebChatMessage[]>(WEB_CHAT_HISTORY_EVENT, {
     detail: limitedMessages,
   }));
 }
 
-export function clearWebChatHistory() {
-  localStorage.removeItem(WEB_CHAT_STORAGE_KEY);
+export function clearWebChatHistory(locale: WebChatLocale = 'vi') {
+  localStorage.removeItem(storageKey(locale));
   window.dispatchEvent(new CustomEvent<WebChatMessage[]>(WEB_CHAT_HISTORY_EVENT, {
     detail: [],
   }));

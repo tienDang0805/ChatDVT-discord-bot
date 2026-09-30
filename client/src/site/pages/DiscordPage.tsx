@@ -15,6 +15,7 @@ import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { BotAvatar } from '../components/BotAvatar';
 import { SectionHeading, SiteLayout } from '../components/SiteLayout';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
 
 const INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot';
 const SOURCE_URL = 'https://github.com/tienDang0805/ChatDVT-discord-bot';
@@ -42,6 +43,13 @@ const capabilities = [
   },
 ];
 
+const capabilitiesEn = [
+  { icon: MessageCircle, title: 'Chat inside any channel', text: 'Mention @ChatDVT and ask a question. The bot keeps context so the conversation stays coherent.' },
+  { icon: Image, title: 'Understand images and video', text: 'Attach an image or video with your question and the bot can describe, analyze, and explain it.' },
+  { icon: FileText, title: 'Summarize and remember', text: 'Summarize recent messages, create an identity, and view AI profiles for members in your server.' },
+  { icon: Gamepad2, title: 'Quick, approachable mini games', text: 'Play Quiz, Wordle, Code Challenge, or compare cultivation rankings directly in Discord.' },
+];
+
 const steps = [
   {
     title: 'Thêm ChatDVT',
@@ -55,6 +63,12 @@ const steps = [
     title: 'Khám phá bằng /help',
     text: 'Dùng /help để xem các lệnh đang hoạt động, hoặc mở ngay một mini game cho cả kênh.',
   },
+];
+
+const stepsEn = [
+  { title: 'Add ChatDVT', text: 'Invite the bot and grant permission to read and send messages and use slash commands.' },
+  { title: 'Mention it to begin', text: 'Type @ChatDVT with your question. For images or videos, explain what you want the bot to analyze.' },
+  { title: 'Explore with /help', text: 'Use /help to see every active command, or start a mini game for the whole channel.' },
 ];
 
 const commandGroups = [
@@ -101,14 +115,69 @@ const commandGroups = [
       { syntax: '/setapikey set', text: 'Lưu API key dùng riêng cho server.' },
       { syntax: '/setapikey view', text: 'Kiểm tra trạng thái API key hiện tại.' },
       { syntax: '/setapikey remove', text: 'Gỡ API key khỏi cấu hình server.' },
+      { syntax: '/cuonggia dongbo', text: 'Đồng bộ thống kê tin nhắn lịch sử; yêu cầu quyền Manage Server.' },
+    ],
+  },
+];
+
+const commandGroupsEn = [
+  {
+    icon: BrainCircuit,
+    eyebrow: 'CHAT & UTILITIES',
+    title: 'Ask, summarize, and create profiles',
+    description: 'Commands for AI chat and contextual information in your server.',
+    commands: [
+      { syntax: '/help', text: 'See the current list of available commands.' },
+      { syntax: '/identity menu', text: 'Open the menu for creating and managing your identity.' },
+      { syntax: '/identity view user:@member', text: "View your own or another member's identity." },
+      { syntax: '/sum [limit]', text: 'Summarize the latest 5–100 messages; the default is 50.' },
+      { syntax: '/cuonggia bang', text: 'View the top 10 cultivators based on tenure, activity, and roles.' },
+      { syntax: '/cuonggia hoso [thanhvien]', text: "Inspect a member's cultivation realm and stats." },
+      { syntax: '/cuonggia cach-tinh', text: 'View the transparent scoring formula.' },
+    ],
+  },
+  {
+    icon: Gamepad2,
+    eyebrow: 'MINI GAMES',
+    title: 'Short games for the whole channel',
+    description: 'Easy to start, quick to finish, and no complicated system to learn.',
+    commands: [
+      { syntax: '/quiz setup', text: 'Create and configure a quiz before playing.' },
+      { syntax: '/quiz cancel', text: 'Cancel the quiz running in the channel.' },
+      { syntax: '/wordle setup', text: 'Start a Wordle game.' },
+      { syntax: '/wordle cancel', text: 'Cancel the current Wordle game.' },
+      { syntax: '/code start [questions] [topic] [difficulty] [time]', text: 'Create a Code Challenge with a topic, difficulty, and time limit.' },
+      { syntax: '/code cancel', text: 'Cancel the current Code Challenge.' },
+      { syntax: '/code leaderboard', text: 'View the Code Challenge leaderboard.' },
+      { syntax: '/code stats', text: 'View your Code Challenge statistics.' },
+    ],
+  },
+  {
+    icon: Settings,
+    eyebrow: 'FOR ADMINS',
+    title: 'Configure the bot for your server',
+    description: 'Administration commands available only to members with the appropriate permissions.',
+    commands: [
+      { syntax: '/setting view', text: "View the server's current AI configuration." },
+      { syntax: '/setting edit', text: "Edit the bot's prompt and response settings." },
+      { syntax: '/setting reset', text: 'Restore the default bot configuration.' },
+      { syntax: '/setapikey set', text: 'Save a private API key for this server.' },
+      { syntax: '/setapikey view', text: 'Check the current API key status.' },
+      { syntax: '/setapikey remove', text: "Remove the API key from the server's configuration." },
+      { syntax: '/cuonggia dongbo', text: 'Sync historical message statistics; requires Manage Server permission.' },
     ],
   },
 ];
 
 export function DiscordPage() {
-  usePageMeta('ChatDVT — AI Chatbot & Mini Game cho Discord | Đặng Văn Tiến', {
-    description: 'ChatDVT là AI chatbot cho Discord do Đặng Văn Tiến phát triển: chat bằng mention, phân tích ảnh/video, tóm tắt hội thoại và chơi mini game.',
-    keywords: 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
+  const { locale, pathFor } = useLanguage();
+  const isEn = locale === 'en';
+  const pageCapabilities = isEn ? capabilitiesEn : capabilities;
+  const pageSteps = isEn ? stepsEn : steps;
+  const pageCommandGroups = isEn ? commandGroupsEn : commandGroups;
+  usePageMeta(isEn ? 'ChatDVT — AI Chatbot & Mini Games for Discord | Đặng Văn Tiến' : 'ChatDVT — AI Chatbot & Mini Game cho Discord | Đặng Văn Tiến', {
+    description: isEn ? 'ChatDVT is an AI chatbot for Discord built by Đặng Văn Tiến, with mention-based chat, image and video analysis, conversation summaries, and mini games.' : 'ChatDVT là AI chatbot cho Discord do Đặng Văn Tiến phát triển: chat bằng mention, phân tích ảnh/video, tóm tắt hội thoại và chơi mini game.',
+    keywords: isEn ? 'ChatDVT, Chat DVT, Đặng Văn Tiến, Discord AI bot, Discord chatbot, Gemini bot, Discord mini games' : 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
     schema: 'software',
     schemaName: 'ChatDVT',
   });
@@ -119,25 +188,25 @@ export function DiscordPage() {
       <div className="site-container discord-hero__content">
         <BotAvatar className="discord-avatar" />
         <p className="site-kicker">Discord AI Bot</p>
-        <h1>ChatDVT — AI chatbot cho Discord</h1>
-        <p>AI chatbot cho Discord: mention để hỏi, gửi ảnh hoặc video để phân tích, tóm tắt hội thoại và chơi mini game cùng server.</p>
+        <h1>{isEn ? 'ChatDVT — an AI chatbot for Discord' : 'ChatDVT — AI chatbot cho Discord'}</h1>
+        <p>{isEn ? 'Mention it to ask questions, attach images or videos for analysis, summarize conversations, and play mini games with your server.' : 'AI chatbot cho Discord: mention để hỏi, gửi ảnh hoặc video để phân tích, tóm tắt hội thoại và chơi mini game cùng server.'}</p>
         <div className="site-hero__actions">
-          <Link className="site-button site-button--primary" to="/chat"><MessageCircle size={18} /> Chat trên web</Link>
-          <a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> Thêm vào server</a>
+          <Link className="site-button site-button--primary" to={pathFor('/chat')}><MessageCircle size={18} /> {isEn ? 'Chat on the web' : 'Chat trên web'}</Link>
+          <a className="site-button site-button--primary" href={INVITE_URL} target="_blank" rel="noreferrer"><Bot size={18} /> {isEn ? 'Add to server' : 'Thêm vào server'}</a>
           <a className="site-button" href={SOURCE_URL} target="_blank" rel="noreferrer"><Github size={18} /> Source code</a>
         </div>
-        <div className="discord-hero__facts" aria-label="Thông tin nhanh về ChatDVT">
-          <span><Sparkles size={14} /> AI chat bằng mention</span>
-          <span><ShieldCheck size={14} /> Cấu hình riêng theo server</span>
-          <span><Gamepad2 size={14} /> 3 mini game</span>
+        <div className="discord-hero__facts" aria-label={isEn ? 'ChatDVT highlights' : 'Thông tin nhanh về ChatDVT'}>
+          <span><Sparkles size={14} /> {isEn ? 'Mention-based AI chat' : 'AI chat bằng mention'}</span>
+          <span><ShieldCheck size={14} /> {isEn ? 'Per-server configuration' : 'Cấu hình riêng theo server'}</span>
+          <span><Gamepad2 size={14} /> 3 {isEn ? 'mini games' : 'mini game'}</span>
         </div>
       </div>
     </section>
 
     <section className="site-container site-section">
-      <SectionHeading eyebrow="TỔNG QUAN" title="Bot làm được gì?" />
+      <SectionHeading eyebrow={isEn ? 'OVERVIEW' : 'TỔNG QUAN'} title={isEn ? 'What can the bot do?' : 'Bot làm được gì?'} />
       <div className="capability-grid">
-        {capabilities.map(item => <article className="capability" key={item.title}>
+        {pageCapabilities.map(item => <article className="capability" key={item.title}>
           <item.icon size={23} />
           <h3>{item.title}</h3>
           <p>{item.text}</p>
@@ -147,9 +216,9 @@ export function DiscordPage() {
 
     <section className="discord-guide">
       <div className="site-container site-section">
-        <SectionHeading eyebrow="BẮT ĐẦU" title="Dùng ChatDVT trong 3 bước" />
+        <SectionHeading eyebrow={isEn ? 'GET STARTED' : 'BẮT ĐẦU'} title={isEn ? 'Use ChatDVT in three steps' : 'Dùng ChatDVT trong 3 bước'} />
         <ol className="discord-steps">
-          {steps.map((step, index) => <li className="discord-step" key={step.title}>
+          {pageSteps.map((step, index) => <li className="discord-step" key={step.title}>
             <span>0{index + 1}</span>
             <h3>{step.title}</h3>
             <p>{step.text}</p>
@@ -158,18 +227,18 @@ export function DiscordPage() {
         <div className="discord-mention-example">
           <BotAvatar className="bot-avatar--small" />
           <div>
-            <small>Ví dụ nhanh</small>
-            <p><strong>@ChatDVT</strong> Tóm tắt giúp mình 30 tin nhắn gần nhất và nêu các việc cần làm.</p>
+            <small>{isEn ? 'Quick example' : 'Ví dụ nhanh'}</small>
+            <p><strong>@ChatDVT</strong> {isEn ? 'Summarize the latest 30 messages and list the action items.' : 'Tóm tắt giúp mình 30 tin nhắn gần nhất và nêu các việc cần làm.'}</p>
           </div>
         </div>
       </div>
     </section>
 
     <section className="site-container site-section discord-commands">
-      <SectionHeading eyebrow="SLASH COMMAND" title="Các lệnh đang mở" />
-      <p className="discord-commands__intro">Gõ <code>/</code> trong Discord để chọn lệnh. Danh sách dưới đây chỉ gồm các tính năng đang phát hành công khai; <code>/help</code> luôn là nguồn cập nhật mới nhất.</p>
+      <SectionHeading eyebrow="SLASH COMMAND" title={isEn ? 'Available commands' : 'Các lệnh đang mở'} />
+      <p className="discord-commands__intro">{isEn ? <>Type <code>/</code> in Discord to select a command. This list only includes publicly available features; <code>/help</code> is always the most up-to-date source.</> : <>Gõ <code>/</code> trong Discord để chọn lệnh. Danh sách dưới đây chỉ gồm các tính năng đang phát hành công khai; <code>/help</code> luôn là nguồn cập nhật mới nhất.</>}</p>
       <div className="discord-command-groups">
-        {commandGroups.map(group => <article className="discord-command-group" key={group.eyebrow}>
+        {pageCommandGroups.map(group => <article className="discord-command-group" key={group.eyebrow}>
           <div className="discord-command-group__intro">
             <group.icon size={22} />
             <small>{group.eyebrow}</small>
@@ -189,15 +258,15 @@ export function DiscordPage() {
     <section className="site-container discord-dashboard">
       <div className="currently-strip">
         <small>Dashboard</small>
-        <p>Quản trị prompt, API key và thiết lập ChatDVT cho server của bạn.</p>
-        <Link to="/login" className="arrow-link"><span>Mở dashboard</span><b>↗</b></Link>
+        <p>{isEn ? 'Manage prompts, API keys, and ChatDVT settings for your server.' : 'Quản trị prompt, API key và thiết lập ChatDVT cho server của bạn.'}</p>
+        <Link to="/login" className="arrow-link"><span>{isEn ? 'Open dashboard' : 'Mở dashboard'}</span><b>↗</b></Link>
       </div>
     </section>
 
     <section className="discord-cta">
       <div className="site-container discord-cta__inner">
-        <div><small>SẴN SÀNG THỬ?</small><h2>Nói chuyện với ChatDVT ngay.</h2><p>Chat trực tiếp trên web hoặc thêm bot vào server Discord của bạn.</p></div>
-        <Link className="site-button site-button--primary" to="/chat"><MessageCircle size={18} /> Mở ChatDVT Chat</Link>
+        <div><small>{isEn ? 'READY TO TRY IT?' : 'SẴN SÀNG THỬ?'}</small><h2>{isEn ? 'Talk to ChatDVT now.' : 'Nói chuyện với ChatDVT ngay.'}</h2><p>{isEn ? 'Chat directly on the web or add the bot to your Discord server.' : 'Chat trực tiếp trên web hoặc thêm bot vào server Discord của bạn.'}</p></div>
+        <Link className="site-button site-button--primary" to={pathFor('/chat')}><MessageCircle size={18} /> {isEn ? 'Open ChatDVT Chat' : 'Mở ChatDVT Chat'}</Link>
       </div>
     </section>
   </SiteLayout>;

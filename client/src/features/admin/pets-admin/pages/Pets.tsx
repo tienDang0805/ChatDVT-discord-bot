@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getPets, deletePet, getInventory } from '../../../../shared/api';
 import { Trash2, ShieldAlert, Sparkles, AlertCircle, Info, X, Coins, Zap, Shield, Heart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const Pets = () => {
+    const { t, i18n } = useTranslation('admin');
+    const isEn = i18n.resolvedLanguage === 'en';
     const [pets, setPets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedPet, setSelectedPet] = useState<any>(null);
@@ -42,19 +45,19 @@ export const Pets = () => {
     }, []);
 
     const handleDelete = async (petId: number, petName: string) => {
-        if (window.confirm(`⚠️ Nguy hiểm: Bạn có chắc chắn muốn XÓA VĨNH VIỄN sinh vật "${petName}" khỏi cơ sở dữ liệu? Hành động này không thể hoàn tác!`)) {
+        if (window.confirm(isEn ? `⚠️ Danger: Permanently delete "${petName}" from the database? This cannot be undone.` : `⚠️ Nguy hiểm: Bạn có chắc chắn muốn XÓA VĨNH VIỄN sinh vật "${petName}" khỏi cơ sở dữ liệu? Hành động này không thể hoàn tác!`)) {
             try {
                 await deletePet(petId);
                 setPets(prev => prev.filter(p => p.id !== petId));
             } catch (error) {
                 console.error("Failed to delete pet", error);
-                alert("Lỗi khi xóa pet. Xem console.");
+                alert(isEn ? 'Unable to delete the pet. Check the console.' : 'Lỗi khi xóa pet. Xem console.');
             }
         }
     };
 
     if (loading) {
-        return <div className="p-8 text-center text-slate-500 animate-pulse">Đang tải dữ liệu sinh vật...</div>;
+        return <div className="p-8 text-center text-slate-500 animate-pulse">{isEn ? 'Loading creature data...' : 'Đang tải dữ liệu sinh vật...'}</div>;
     }
 
     return (
@@ -62,20 +65,20 @@ export const Pets = () => {
             <div className="flex justify-between items-center">
                 <div>
                      <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <Sparkles className="text-purple-500" /> Quản Lý Sinh Vật (Pet)
+                        <Sparkles className="text-purple-500" /> {t('pages.pets')}
                      </h1>
-                     <p className="text-slate-500 mt-1">Quản lý và giám sát tất cả sinh vật đang được nuôi dưỡng bởi user.</p>
+                     <p className="text-slate-500 mt-1">{t('pages.petsDesc')}</p>
                 </div>
                 <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2">
-                    Tổng cộng: {pets.length} Pet
+                    {isEn ? 'Total' : 'Tổng cộng'}: {pets.length} Pet
                 </div>
             </div>
 
             {pets.length === 0 ? (
                  <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700">
                      <AlertCircle className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-                     <h3 className="text-lg font-medium text-slate-900 dark:text-white">Chưa có Sinh Vật Nào</h3>
-                     <p className="text-slate-500">Chưa có người dùng nào ấp trứng sinh vật.</p>
+                     <h3 className="text-lg font-medium text-slate-900 dark:text-white">{isEn ? 'No Creatures Yet' : 'Chưa có Sinh Vật Nào'}</h3>
+                     <p className="text-slate-500">{isEn ? 'No user has hatched a creature yet.' : 'Chưa có người dùng nào ấp trứng sinh vật.'}</p>
                  </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -95,7 +98,7 @@ export const Pets = () => {
                                             {pet.rarity}
                                         </span>
                                         <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold border border-white/10 uppercase tracking-wider">
-                                            Hệ {pet.element}
+                                            {isEn ? 'Element' : 'Hệ'} {pet.element}
                                         </span>
                                     </div>
                                     
@@ -105,13 +108,13 @@ export const Pets = () => {
                                              onClick={() => openPetModal(pet)}
                                              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl flex justify-center items-center gap-2 text-sm font-bold shadow-lg"
                                          >
-                                             <Info size={16} /> Xem Chi Tiết
+                                             <Info size={16} /> {isEn ? 'View Details' : 'Xem Chi Tiết'}
                                          </button>
                                          <button 
                                              onClick={() => handleDelete(pet.id, pet.name)}
                                              className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl flex justify-center items-center gap-2 text-sm font-bold shadow-lg"
                                          >
-                                             <Trash2 size={16} /> Tịch thu / Xóa
+                                             <Trash2 size={16} /> {isEn ? 'Confiscate / Delete' : 'Tịch thu / Xóa'}
                                          </button>
                                      </div>
                                 </div>
@@ -141,7 +144,7 @@ export const Pets = () => {
                                     </div>
                                     <div className="mt-auto space-y-4">
                                         <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-700/50">
-                                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-700 pb-2">Chủ Sở Hữu</div>
+                                             <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-700 pb-2">{isEn ? 'Owner' : 'Chủ Sở Hữu'}</div>
                                              <div className="flex items-center gap-3">
                                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white font-bold shadow-sm">
                                                      {pet.ownerNickname?.charAt(0) || '?'}
@@ -199,13 +202,13 @@ export const Pets = () => {
                                         {selectedPet.rarity}
                                     </span>
                                     <span className="bg-black/60 text-white px-3 py-1 text-xs font-bold uppercase rounded-lg backdrop-blur-md">
-                                        Hệ {selectedPet.element}
+                                        {isEn ? 'Element' : 'Hệ'} {selectedPet.element}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">Thông tin Chủ Sở Hữu</h4>
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">{isEn ? 'Owner Information' : 'Thông tin Chủ Sở Hữu'}</h4>
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-sm">
                                         {selectedPet.ownerNickname?.charAt(0) || '?'}
@@ -218,7 +221,7 @@ export const Pets = () => {
                                 
                                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl border border-yellow-100 dark:border-yellow-900/30 flex justify-between items-center mb-4">
                                     <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-500 font-bold">
-                                        <Coins size={18} /> Số dư:
+                                        <Coins size={18} /> {isEn ? 'Balance:' : 'Số dư:'}
                                     </div>
                                     <span className="text-lg font-black text-yellow-600 dark:text-yellow-400">{inventoryInfo.money}</span>
                                 </div>
@@ -239,8 +242,8 @@ export const Pets = () => {
                             <div className="mb-6 pr-12">
                                 <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">{selectedPet.name}</h2>
                                 <div className="flex items-center gap-3 text-sm font-bold">
-                                    <span className="text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-lg">Cấp {selectedPet.level}</span>
-                                    <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-lg">Tiến hóa Bậc {selectedPet.evolutionStage}</span>
+                                    <span className="text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-lg">{isEn ? 'Level' : 'Cấp'} {selectedPet.level}</span>
+                                    <span className="text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 px-3 py-1 rounded-lg">{isEn ? 'Evolution Stage' : 'Tiến hóa Bậc'} {selectedPet.evolutionStage}</span>
                                     <span className="text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-lg">EXP: {selectedPet.exp}</span>
                                 </div>
                             </div>
@@ -259,15 +262,15 @@ export const Pets = () => {
                                                 <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.hp || 0}</div>
                                             </div>
                                             <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-100 dark:border-orange-900/20">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500 mb-1 lg:mb-2 uppercase tracking-wide"><Zap size={14} /> Sát Thương</div>
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-orange-500 mb-1 lg:mb-2 uppercase tracking-wide"><Zap size={14} /> {isEn ? 'Damage' : 'Sát Thương'}</div>
                                                 <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.atk || 0}</div>
                                             </div>
                                             <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/20">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-500 mb-1 lg:mb-2 uppercase tracking-wide"><Shield size={14} /> Phòng Thủ</div>
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-blue-500 mb-1 lg:mb-2 uppercase tracking-wide"><Shield size={14} /> {isEn ? 'Defense' : 'Phòng Thủ'}</div>
                                                 <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.def || 0}</div>
                                             </div>
                                             <div className="bg-emerald-50 dark:bg-emerald-900/10 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/20">
-                                                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500 mb-1 lg:mb-2 uppercase tracking-wide"><Sparkles size={14} /> Tốc Độ</div>
+                                                <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-500 mb-1 lg:mb-2 uppercase tracking-wide"><Sparkles size={14} /> {isEn ? 'Speed' : 'Tốc Độ'}</div>
                                                 <div className="text-2xl font-black text-slate-900 dark:text-white">{stats.spd || 0}</div>
                                             </div>
                                         </>
@@ -277,7 +280,7 @@ export const Pets = () => {
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">⚔️ Kỹ Năng Đang Có</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">⚔️ {isEn ? 'Current Skills' : 'Kỹ Năng Đang Có'}</h3>
                                     <div className="space-y-3">
                                         {JSON.parse(selectedPet.skills || '[]').map((skill: any, idx: number) => (
                                             <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
@@ -292,7 +295,7 @@ export const Pets = () => {
                                 </div>
                                 
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">🧬 Nội Tại Thừa Kế</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">🧬 {isEn ? 'Inherited Traits' : 'Nội Tại Thừa Kế'}</h3>
                                     <div className="space-y-3">
                                         {JSON.parse(selectedPet.traits || '[]').map((trait: any, idx: number) => (
                                             <div key={idx} className="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
