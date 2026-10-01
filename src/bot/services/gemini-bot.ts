@@ -335,37 +335,67 @@ class GeminiBotService {
   }
 
   // --- Search Tool ---
-  public async chatWithSearch(userId: string, username: string, query: string, guildId: string = 'global'): Promise<{ success: boolean; response: string; error?: string }> {
+  public async chatWithSearch(
+      userId: string,
+      username: string,
+      query: string,
+      guildId: string = 'global'
+  ): Promise<{
+      success: boolean;
+      response: string;
+      sources?: Array<{ title: string; uri: string }>;
+      error?: string;
+  }> {
       try {
            const systemInstruction = await this.getSystemPrompt(guildId, userId);
-           
+
+           // Keep search context scoped to the current user. Guild-wide history can
+           // leak another member's prompt or a previous malformed tool response.
            const logs = await prisma.chatLog.findMany({
-               where: { guildId },
+               where: { guildId, userId },
                orderBy: { createdAt: 'desc' },
-               take: 20
-           });
-           
-           const history: any[] = [];
-           logs.reverse().forEach(log => {
-                if (log.content) {
-                    const userPrefix = log.username ? `[${log.username}]: ` : "";
-                    history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
-                }
-                if (log.response) history.push({ role: 'model', parts: [{ text: log.response }] });
+               take: 8
            });
 
-           const searchModel = await geminiCore.getModel(guildId, 'search');
-           
-           const chat = searchModel.startChat({
-               history: history as any,
-               systemInstruction: {
-                 role: 'system',
-                 parts: [{ text: systemInstruction }]
-               }
-           });
-           
-           const result = await retryWithBackoff(() => chat.sendMessage([{ text: query }]));
-           const responseText = result.response.text();
+           const recentContext = logs
+               .reverse()
+               .flatMap(log => {
+                   const entries: string[] = [];
+                   if (log.content) entries.push(`Người dùng: ${log.content}`);
+                   if (log.response && !/^\s*\/tool\b/i.test(log.response)) {
+                       entries.push(`Trợ lý: ${log.response}`);
+                   }
+                   return entries;
+               })
+               .join('\n');
+
+           const prompt = `${systemInstruction}
+
+Bạn đang thực hiện một yêu cầu tìm kiếm Google cho người dùng Discord tên ${username}.
+${recentContext ? `Ngữ cảnh gần đây của riêng người dùng này:\n${recentContext}\n` : ''}
+Yêu cầu hiện tại: ${query}
+
+Hãy dùng Google Search để kiểm tra thông tin và trả lời câu hỏi hiện tại. Chỉ trả về câu trả lời cuối cùng dành cho người dùng. Tuyệt đối không in cú pháp gọi công cụ, function call, JSON nội bộ hoặc chuỗi bắt đầu bằng /tool.`;
+
+           // Use the current @google/genai grounding API. The legacy SDK could
+           // serialize a Google Search tool call as visible text (for example /tool ...).
+           const result = await geminiCore.generateWithSearch(prompt, guildId);
+           const responseText = result.text.trim();
+
+           if (!responseText || /^\/tool\b/i.test(responseText)) {
+               throw new Error('Gemini returned an internal tool call instead of a final response');
+           }
+
+           const sources = result.sources
+               .map((source: any) => ({
+                   title: String(source?.web?.title || source?.web?.uri || '').trim(),
+                   uri: String(source?.web?.uri || '').trim(),
+               }))
+               .filter((source: { title: string; uri: string }) => source.uri)
+               .filter((source: { title: string; uri: string }, index: number, all: Array<{ title: string; uri: string }>) =>
+                   all.findIndex(item => item.uri === source.uri) === index
+               )
+               .slice(0, 5);
            
            await prisma.chatLog.create({
                data: {
@@ -373,7 +403,7 @@ class GeminiBotService {
                }
            });
 
-           return { success: true, response: responseText };
+           return { success: true, response: responseText, sources };
       } catch (error: any) {
           console.error("Search Error:", error);
           return { success: false, response: "", error: error.message };

@@ -23,6 +23,17 @@ function splitResponse(text: string): string[] {
   return chunks;
 }
 
+function formatSources(sources: Array<{ title: string; uri: string }>): string {
+  if (!sources.length) return '';
+
+  const lines = sources.slice(0, 3).map((source, index) => {
+    const title = source.title.replace(/[\r\n]/g, ' ').slice(0, 100) || `Nguồn ${index + 1}`;
+    return `${index + 1}. ${title} — <${source.uri}>`;
+  });
+
+  return `\n\n**Nguồn:**\n${lines.join('\n')}`;
+}
+
 export const data = new SlashCommandBuilder()
   .setName('search')
   .setDescription('Tìm thông tin mới nhất trên Google bằng Gemini')
@@ -62,13 +73,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
 
     if (!result.success || !result.response.trim()) {
-      await interaction.editReply(
-        `Không tìm được kết quả lúc này. ${result.error ? `Chi tiết: \`${result.error.slice(0, 300)}\`` : 'Thử lại sau nhé.'}`
-      );
+      await interaction.editReply('Không tìm được kết quả lúc này. Thử lại sau nhé.');
       return;
     }
 
-    const chunks = splitResponse(result.response);
+    const response = `${result.response}${formatSources(result.sources || [])}`;
+    const chunks = splitResponse(response);
     await interaction.editReply(chunks[0]);
 
     for (const chunk of chunks.slice(1)) {
