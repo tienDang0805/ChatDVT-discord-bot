@@ -29,6 +29,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         '`/help` — mở hướng dẫn này.',
         '`/identity menu` — mở menu chỉnh nickname và chữ ký dùng với AI.',
         '`/identity view user:@người_dùng` — xem danh tính của một thành viên.',
+        '`/search query:<câu hỏi>` — tìm thông tin mới nhất trên Google bằng Gemini.',
         '`/sum [limit]` — tóm tắt 5–100 tin nhắn gần đây; mặc định 50.',
       ].join('\n'),
       inline: false,
