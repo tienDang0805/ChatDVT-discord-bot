@@ -22,3 +22,19 @@
 .site-root .selected-chat .chatdvt-composer button:not(:disabled){background:var(--brand-accent);color:var(--accent-ink)}
 .site-root .selected-chat .chatdvt-composer:focus-within{border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
 .site-root .hybrid-view a:focus-visible,.site-root .hybrid-view button:focus-visible,.site-root .hybrid-view input:focus-visible,.site-root.site-hybrid .site-header a:focus-visible,.site-root.site-hybrid .site-header button:focus-visible,.site-root.site-hybrid .site-footer a:focus-visible{outline:3px solid var(--accent-border);outline-offset:4px}
+/* Chat Markdown links must remain visible above the layout B anchor reset. */
+.site-root .selected-chat .chatdvt-markdown a {
+  color: var(--accent-label);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: .2em;
+  overflow-wrap: anywhere;
+}
+.site-root .selected-chat .chatdvt-markdown a:hover,
+.site-root .selected-chat .chatdvt-markdown a:focus-visible {
+  color: var(--accent-label);
+  text-decoration-thickness: 2px;
+  background: color-mix(in srgb, var(--accent-label) 12%, transparent);
+  border-radius: 2px;
+}
