@@ -15,7 +15,7 @@
     "clientLint": {"exitCode": 2, "status": "existing configuration incompatibility", "description": "flat config rejects legacy --ext CLI option"},
     "legacyLintAttempt": {"exitCode": 2, "description": "no legacy config found; not a lint pass"},
     "skillCopy": {"sourceFiles": 191, "missingOrDifferent": 0, "omitted": [".last-update-check"], "skillSha256": "4317648da4431bbbb2e77a837804f8c23c494acfa8871134b2edbc40cd1e3cc5"},
-    "stagedSecretAudit": {"initialStagedFiles": 435, "findings": [], "description": "patterns plus comparison against current local credentials; binary images/history are not comprehensively scanned"},
+    "stagedSecretAudit": {"initialStagedFiles": 435, "finalSnapshotStagedFiles": 436, "finalSnapshotTextFiles": 202, "findings": [], "description": "patterns plus comparison against current local credentials; binary images/history are not comprehensively scanned"},
     "whitespace": {"handoffAuthoredFiles": "pass", "fullSnapshot": "warnings in byte-preserved upstream skill and pre-existing new prototype/frontend files"},
     "v2FinalInteractions": {"status": "not run; pending B Chat structural fix and comparison QA"}
   },

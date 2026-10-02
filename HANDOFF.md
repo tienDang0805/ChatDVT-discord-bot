@@ -6,7 +6,7 @@ Prepared 2026-10-02 (Asia/Ho_Chi_Minh). **The redesign is NOT finished or newly 
 
 - Repository: https://github.com/tienDang0805/ChatDVT-discord-bot
 - Resume branch: `codex/wip-frontend-redesign-handoff-2026-10-02`.
-- Code snapshot commit: to be recorded after the first handoff commit. Resume the branch tip, including the subsequent documentation commit, rather than `main`.
+- Code snapshot commit: `ca64af5d19c37e7c5b44a7c75501564cfafa5f16` (`WIP: preserve frontend redesign, research and cross-machine handoff`). Resume the branch tip, including the subsequent documentation commit, rather than `main`. The documentation-only follow-up records this immutable code snapshot SHA; its own hash cannot be embedded in itself. Resolve the complete handoff tip with `git rev-parse HEAD` after checkout.
 - Original base: `650c04a23600b9bc175f1d1a741d4f33e77699f4` (`main`, `update gehihi tool search`). After fetching origin, main had zero local-only and zero remote-only commits.
 - Latest code is in `/Users/qmacstore/Desktop/discord_gpt_bot`. `git worktree list --porcelain` showed only this checkout. No attached managed worktree.
 - Before handoff there were 10 modified tracked frontend files and untracked frontend components/content/styles/images plus `design-demos/`. They are preserved in this branch, not reset. Generated build directories and private local state remain untracked/ignored.
@@ -121,5 +121,15 @@ Before the first WIP push, fetched origin and authenticated read-only GitHub API
 - This checks visible repository configuration at handoff time, not undiscoverable external polling systems. Recheck before later pushes if repository settings change. Do not invoke the deploy workflow or use `db push --accept-data-loss` locally just because deploy currently does.
 
 ## Alternating machines
+
+Fresh checkout:
+
+```sh
+git clone --branch codex/wip-frontend-redesign-handoff-2026-10-02 https://github.com/tienDang0805/ChatDVT-discord-bot.git
+cd ChatDVT-discord-bot
+git rev-parse HEAD
+```
+
+Existing checkout: inspect `git status` and preserve any local work first, then `git fetch origin`. If the local WIP branch exists, `git switch codex/wip-frontend-redesign-handoff-2026-10-02`; otherwise `git switch --track origin/codex/wip-frontend-redesign-handoff-2026-10-02`. Finally `git pull --ff-only`.
 
 At the end of each session: update these docs, inspect secrets and CI triggers, commit on this WIP branch and push. On the other computer first inspect `git status`; if dirty, commit/push its work rather than overwrite it. Then `git fetch origin` and `git pull --ff-only` on the WIP branch. Stop on divergence and reconcile deliberately; no hard reset, forced push or main merge. Browser tabs, running servers and agent conversation state do not travel through Git; these files are the continuation record.
