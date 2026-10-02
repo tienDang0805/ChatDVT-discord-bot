@@ -1,0 +1,127 @@
+/* Integration of the owner's B + A selection; palette fields deliberately retain their contrast in both themes. */
+@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-latin-400-normal.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-vietnamese-400-normal.woff2') format('woff2');font-weight:400;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+1EA0-1EF9,U+20AB}
+@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-latin-700-normal.woff2') format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-vietnamese-700-normal.woff2') format('woff2');font-weight:700;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+1EA0-1EF9,U+20AB}
+.site-root.site-hybrid{--site-bg:#fffcf4;--site-surface:#fff9e9;--site-surface-2:#a9d7ed;--site-ink:#20251f;--site-muted:#586153;--site-line:#c7c7b9;--site-orange:#a64010;--site-orange-soft:#fff0da;--site-cool:#164bd4;--site-cool-soft:#dbe8ff;--site-header-height:94px}
+.dark .site-root.site-hybrid{--site-bg:#242821;--site-surface:#30362d;--site-surface-2:#3c4942;--site-ink:#fffcf4;--site-muted:#c2cebe;--site-line:#677160;--site-orange:#ffac61;--site-orange-soft:#493528;--site-cool:#b6d6ff;--site-cool-soft:#35414f}
+.site-hybrid .site-header{position:relative;border-bottom-color:var(--site-ink)}
+.site-hybrid .site-wordmark{font-size:30px;letter-spacing:-.06em}
+.site-hybrid .site-wordmark span{display:none}
+.site-hybrid .site-wordmark i{color:#c14a10}
+.site-hybrid .site-nav a{font-size:14px;font-weight:700;color:var(--site-ink)}
+.site-hybrid .site-nav a.is-active::after{width:100%;height:2px;left:0;border-radius:0;background:var(--site-ink)}
+.site-hybrid .site-footer{background:var(--site-bg);border-top-color:var(--site-ink)}
+.site-hybrid .site-footer .site-wordmark span{display:inline}
+.site-root .hybrid-view{min-width:0;overflow-wrap:break-word}
+.site-root .hybrid-view h1,.site-root .hybrid-view h2,.site-root .hybrid-view h3,.site-hybrid .selected-article h1{font-family:'Be Vietnam Pro',sans-serif}
+.site-root .hybrid-view .mascot-actor{width:var(--size,160px);height:var(--size,160px)}
+.site-root .hybrid-a,.site-root .hybrid-b{--paper:var(--site-bg);--ink:var(--site-ink);--line:var(--site-line);--rule:var(--site-line);--muted:var(--site-muted)}
+.site-root .hybrid-a{background:var(--paper);color:var(--ink)}
+.site-root .hybrid-view .guide-stage{color:var(--site-ink)}
+.site-root .hybrid-b .guide-stage{background:var(--site-surface)}
+.site-root .hybrid-view .guide-actions a{display:inline-flex;align-items:center;min-height:44px;padding:7px 14px;border:1px solid currentColor;border-radius:999px;font-size:12px;font-weight:700}
+.site-root .hybrid-a .guide-actions a{padding:7px 8px 7px 0;border:0;border-radius:0}
+.site-root .hybrid-view [data-quiet=true] [data-guide-text],.site-root .hybrid-view [data-quiet=true] [data-guide=suggest],.site-root .hybrid-view [data-quiet=true] [data-guide=next]{display:none}
+.site-root .hybrid-view .guide-speech{min-width:0;flex:1}
+.site-root .hybrid-view [data-tour-progress]{font-size:12px;line-height:1.5}
+.site-root .hybrid-a .home-guide{background:transparent;color:white;border:0;padding:12px 0 0;grid-column:1/-1}
+.site-root .hybrid-a .home-guide p{color:white}
+.site-root .hybrid-a .home-guide .eyebrow{color:#fff}
+.site-root .hybrid-a .home-guide [data-tour-progress]{margin-left:auto;white-space:nowrap}
+.site-root .hybrid-a .home-tien{width:var(--size);height:var(--size)}
+.site-root .hybrid-a .home-guide>.mascot-actor{flex-shrink:0}
+.site-root .hybrid-a .footer-guide{background:var(--site-surface);border-color:var(--site-line)}
+.site-root .hybrid-a .blog-count{font-size:12px;color:var(--site-muted);margin-bottom:18px}
+.site-root .hybrid-a .article-number{color:var(--blue)}
+.dark .site-root .selected-blog{--blue:var(--site-cool)}
+.dark .site-root .selected-blog .button.blue{color:#172b49}
+.dark .site-root .hybrid-a .home-writing{background:var(--site-cool-soft)}
+.dark .site-root .hybrid-a .home-writing h2 span{color:var(--site-cool)}
+.site-root .hybrid-a .blog-circle{color:#172b49}
+.site-root .hybrid-b .family-heads button{display:flex;align-items:center;justify-content:space-between;font-size:27px;font-weight:700;padding:25px 0;gap:12px;border:0;border-radius:0;text-align:left}
+.site-root .hybrid-b .family-heads button:not(:last-child){border-right:1px solid #718072;margin-right:25px;padding-right:25px}
+.site-root .hybrid-b .family-heads button[aria-pressed=true]{text-decoration:underline;text-underline-offset:8px}
+.site-root .hybrid-b .family-heads button span{font-size:12px;font-weight:400;letter-spacing:0}
+.site-root .hybrid-b .project-product h2{font-size:27px;line-height:1.15;letter-spacing:-.04em;margin:10px 0 14px}
+.site-root .hybrid-b .project-product.rich h2{font-size:43px}
+.site-root .hybrid-b .rich,.site-root .hybrid-b .band.blue,.site-root .hybrid-b .band.yellow,.site-root .hybrid-b .band.orange{color:#20251f;--ink:#20251f;--paper:#fffcf4}
+.site-root .hybrid-b .band.ink{background:#20251f;color:#fffcf4;--ink:#20251f;--paper:#fffcf4}
+.site-root .hybrid-b .rich .status{color:#20251f;background:#fffcf4;border-color:#6b7569}
+.site-root .hybrid-b .project-product:not(.rich) .product-art{background:var(--site-surface)}
+.site-root .hybrid-b .project-product:not(.rich) .requirements{color:var(--site-muted)}
+.site-root .hybrid-b .product-art>img{width:100%;height:auto;max-height:360px;object-fit:contain}
+.site-root .hybrid-b .rich .product-art>img{border-radius:10px}
+.site-root .hybrid-view .research-dialog{color:var(--site-ink);background:var(--site-bg);border-color:var(--site-line)}
+.site-root .hybrid-view .research-dialog button{color:var(--site-ink);background:var(--site-surface);border-color:var(--site-line)}
+.site-root .hybrid-view .research-dialog a{color:var(--site-bg);background:var(--site-ink);border-color:var(--site-ink)}
+.site-root .hybrid-view .research-dialog::backdrop{background:#10150fbb}
+.site-root .hybrid-b .product-proof{margin:0;border:1px solid var(--site-line);background:#20251f;color:#fffcf4;border-radius:16px;overflow:hidden}
+.site-root .hybrid-b .product-proof__label{padding:15px 20px;font-size:12px}
+.site-root .hybrid-b .product-proof__label small{font-size:12px;color:#e1e4d6}
+.site-root .hybrid-b .product-proof__image{display:block;position:relative;width:100%;padding:0;background:#20251f;border:0;border-radius:0}
+.site-root .hybrid-b .product-proof__image>img{width:100%;object-fit:contain;max-height:600px}
+.site-root .hybrid-b .product-proof__image>span{position:absolute;bottom:12px;right:12px;padding:8px 12px;background:#fffaf0;color:#20251f;border-radius:999px;font-size:12px}
+.site-root .hybrid-b .product-proof figcaption{color:#fffcf4;font-size:16px;padding:20px}
+.site-root .hybrid-b .product-proof figcaption strong{font-size:16px}
+.site-root .hybrid-b .product-proof figcaption p{margin:6px 0 0;color:#fffcf4}
+.site-root .hybrid-b .product-dialog{background:var(--site-bg);color:var(--site-ink)}
+.site-root .hybrid-b .capability-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:30px}
+.site-root .hybrid-b .command-row{grid-template-columns:minmax(150px,.8fr) minmax(0,1fr)}
+.site-root .hybrid-b .command-row code{overflow-wrap:anywhere}
+.site-root .hybrid-b .command-row p{margin:0}
+.site-root .hybrid-b .command-note{font-size:12px;line-height:1.8;margin:20px 0 0}
+.site-root .hybrid-b .getting-started ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:42px;padding:20px 0 30px 20px}
+.site-root .hybrid-b .getting-started li{padding-left:5px}
+.site-root .hybrid-b .getting-started h3{font-size:23px}
+.site-root .hybrid-b .getting-started p{font-size:16px;margin:16px 0 0}
+.site-hybrid .selected-article{max-width:760px;color:var(--site-ink)}
+.site-hybrid .selected-article h1{font-size:clamp(35px,4.4vw,60px);line-height:1.25}
+.site-hybrid .selected-article .blog-prose p{font-size:18px;line-height:1.9}
+.site-hybrid .selected-article .blog-prose blockquote{border-color:var(--site-cool);background:var(--site-cool-soft);border-radius:0}
+.site-hybrid .selected-article .blog-prose a{color:var(--site-cool)}
+.site-hybrid .selected-article .blog-back{min-height:44px}
+.site-hybrid .selected-article .blog-prose figure>div{font-size:16px}
+.site-hybrid .selected-article .blog-article__meta{font-size:13px}
+/* Real chat/API component keeps its behavior; only its layout and appearance change. */
+.site-root .selected-chat.chatdvt-page--tour{width:100%;max-width:1440px;margin:auto;grid-template-columns:340px minmax(0,1fr);gap:0;height:calc(100dvh - var(--site-header-height));min-height:0}
+.site-root .selected-chat .chatdvt-main{grid-column:2;grid-row:1;padding:0 40px;height:100%;min-height:0;background:var(--site-bg)}
+.site-root .selected-chat .chatdvt-directory{display:block;grid-column:1;grid-row:1;background:#a9d7ed;color:#20251f;padding:35px 30px;overflow-y:auto;border:0}
+.site-root .selected-chat .chatdvt-directory>h2{font-size:43px;line-height:1.15;margin-bottom:20px}
+.site-root .selected-chat .chatdvt-directory .site-kicker{color:#20251f;font-size:12px}
+.site-root .selected-chat .chat-guide{display:block;padding:0;background:transparent;color:#20251f;margin:15px 0 24px;border:0}
+.site-root .selected-chat .chat-guide>.mascot-actor{margin:auto}
+.site-root .selected-chat .chat-guide [data-tour-progress]{display:none}
+.site-root .selected-chat .chat-guide .eyebrow{display:none}
+.site-root .selected-chat .chat-guide .guide-actions{gap:6px}
+.site-root .selected-chat .chat-guide .guide-actions button,.site-root .selected-chat .chat-guide .guide-actions a{font-size:12px;padding:7px 11px}
+.site-root .selected-chat .chatdvt-directory>a{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #557e92;padding:12px 0;min-height:48px;color:#20251f}
+.site-root .selected-chat .chatdvt-directory>a span{display:none}
+.site-root .selected-chat .chatdvt-directory>a strong{color:#20251f}
+.site-root .selected-chat .chatdvt-directory-note{font-size:12px;line-height:1.8;color:#20251f;margin-top:20px}
+.site-root .selected-chat .chatdvt-chat-header{height:90px;min-height:90px;padding:0;flex-shrink:0;background:var(--site-bg)}
+.site-root .selected-chat .chatdvt-chat-identity h1{font-size:24px;line-height:1.4;margin:0}
+.site-root .selected-chat .chatdvt-chat-identity p{font-size:12px;margin:0;color:var(--site-muted)}
+.site-root .selected-chat .chatdvt-toolbar button{border:1px solid var(--site-line);background:var(--site-bg);color:var(--site-ink);border-radius:999px;font-size:12px;padding:8px 13px}
+.site-root .selected-chat .chatdvt-thread{min-height:0;padding-right:8px;flex:1;overflow:auto}
+.site-root .selected-chat .chatdvt-welcome{margin:0;padding:36px 0 24px;max-width:680px}
+.site-root .selected-chat .chatdvt-welcome h2{font-size:47px;line-height:1.15;font-weight:700;margin:12px 0 20px}
+.site-root .selected-chat .chatdvt-welcome__eyebrow{font-size:12px;color:var(--site-orange)}
+.site-root .selected-chat .chatdvt-suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.site-root .selected-chat .chatdvt-suggestions button{display:flex;align-items:center;min-height:68px;padding:12px 16px;text-align:left;border-radius:10px;font-size:14px;font-weight:400;background:var(--site-surface);color:var(--site-ink)}
+.site-root .selected-chat .chatdvt-message{padding:25px 0}
+.site-root .selected-chat .chatdvt-message__meta{color:var(--site-muted)}
+.site-root .selected-chat .chatdvt-message__meta strong{color:var(--site-ink)}
+.site-root .selected-chat .chatdvt-message__body>p{white-space:pre-wrap}
+.site-root .selected-chat .chatdvt-composer-wrap{padding:18px 0 max(14px,env(safe-area-inset-bottom));flex-shrink:0;background:var(--site-bg);border-color:var(--site-line)}
+.site-root .selected-chat .chatdvt-composer-wrap>label{font-family:'Be Vietnam Pro',sans-serif;font-size:12px;font-weight:700;margin-bottom:8px}
+.site-root .selected-chat .chatdvt-composer{padding:10px;border:2px solid var(--site-ink);border-radius:16px;background:var(--site-surface)}
+.site-root .selected-chat .chatdvt-composer textarea{min-height:60px;font-size:16px;color:var(--site-ink);background:transparent}
+.site-root .selected-chat .chatdvt-composer button{background:var(--site-ink);color:var(--site-bg);border-radius:999px;padding:0;width:44px;height:44px;flex-shrink:0}
+.site-root .selected-chat .chatdvt-composer-wrap>p{font-size:12px;line-height:1.8;color:var(--site-muted);margin:9px 0 0}
+.site-root .selected-chat .chatdvt-history h2{font-size:22px}
+.site-root .selected-chat .chatdvt-history{color:var(--site-ink);background:var(--site-bg)}
+.site-root .selected-chat .chatdvt-history button{color:var(--site-ink);background:var(--site-bg)}
+@media(max-width:1100px){.site-hybrid .site-nav{gap:15px}.site-hybrid .site-nav a{font-size:13px}.site-hybrid .site-header__inner{gap:16px}.site-root .hybrid-b .family-heads button{font-size:23px}.site-root .hybrid-b .family-heads button span{display:none}.site-root .hybrid-b .capability-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.site-root .selected-chat.chatdvt-page--tour{grid-template-columns:265px minmax(0,1fr)}.site-root .selected-chat .chatdvt-directory{padding:30px 20px}.site-root .selected-chat .chatdvt-directory>h2{font-size:36px}.site-root .selected-chat .chatdvt-main{padding:0 24px}.site-root .selected-chat .chatdvt-welcome h2{font-size:40px}}
+@media(max-width:900px){.site-hybrid .site-header__actions>.site-motion-control{display:none}}
+@media(max-width:700px){.site-root.site-hybrid{--site-header-height:74px}.site-hybrid .site-container{width:calc(100% - 40px)}.site-hybrid .site-header__inner{height:74px}.site-hybrid .site-header__actions>.motion-toggle{display:none}.site-hybrid .site-wordmark{font-size:27px}.site-root .hybrid-a .home-guide [data-tour-progress]{display:none}.site-root .hybrid-view .guide-actions a{padding:7px 10px}.site-root .hybrid-b .family-heads button{font-size:16px;padding:19px 0;min-width:0}.site-root .hybrid-b .family-heads button:not(:last-child){margin-right:12px;padding-right:12px}.site-root .hybrid-b .project-product h2{font-size:22px}.site-root .hybrid-b .project-product.rich h2{font-size:30px}.site-root .hybrid-b .capability-strip{grid-template-columns:1fr;gap:25px}.site-root .hybrid-b .command-row{grid-template-columns:1fr;gap:5px}.site-root .hybrid-b .getting-started ol{grid-template-columns:1fr;gap:22px}.site-root .hybrid-b .product-proof figcaption{padding:16px}.site-root .hybrid-b .product-proof__label{padding:12px 16px}.site-hybrid .selected-article{width:calc(100% - 44px);padding-top:30px}.site-hybrid .selected-article .blog-prose p{font-size:17px}.site-hybrid .selected-article .blog-article__header{padding-top:30px}.site-root .selected-chat.chatdvt-page--tour{display:flex;flex-direction:column;height:calc(100dvh - 74px);min-height:0;width:100%}.site-root .selected-chat .chatdvt-directory{order:-1;padding:12px 20px;flex:0 0 auto;overflow:visible}.site-root .selected-chat .chatdvt-directory>.site-kicker,.site-root .selected-chat .chatdvt-directory>h2,.site-root .selected-chat .chatdvt-directory>a,.site-root .selected-chat .chatdvt-directory-note{display:none}.site-root .selected-chat .chat-guide{display:flex;align-items:center;gap:12px;margin:0}.site-root .selected-chat .chat-guide>.mascot-actor{--size:65px!important;width:65px;height:65px;max-width:65px;margin:0}.site-root .selected-chat .chat-guide p{font-size:16px;line-height:1.5;max-height:48px;overflow:auto}.site-root .selected-chat .chat-guide [data-guide=next]{display:none}.site-root .selected-chat .chat-guide .guide-actions{flex-wrap:wrap;gap:5px;margin-top:4px}.site-root .selected-chat .chat-guide .guide-actions button{padding:5px 8px;min-height:44px}.site-root .selected-chat .chat-guide .guide-target{display:none}.site-root .selected-chat .chatdvt-main{padding:0 20px;flex:1;min-height:0;height:auto}.site-root .selected-chat .chatdvt-chat-header{height:68px;min-height:68px;gap:10px}.site-root .selected-chat .chatdvt-chat-identity h1{font-size:22px}.site-root .selected-chat .chatdvt-chat-identity>img{display:none}.site-root .selected-chat .chatdvt-toolbar button{padding:7px 10px}.site-root .selected-chat .chatdvt-toolbar .chatdvt-new-chat{width:44px;justify-content:center;padding:0}.site-root .selected-chat .chatdvt-welcome{padding:24px 0 16px}.site-root .selected-chat .chatdvt-welcome h2{font-size:32px;margin:12px 0}.site-root .selected-chat .chatdvt-welcome__copy{font-size:16px;line-height:1.65}.site-root .selected-chat .chatdvt-suggestions{gap:8px;margin-top:20px}.site-root .selected-chat .chatdvt-suggestions button{font-size:12px;padding:9px 12px;min-height:60px}.site-root .selected-chat .chatdvt-composer-wrap{padding-top:12px}.site-root .selected-chat .chatdvt-composer{padding:6px}.site-root .selected-chat .chatdvt-composer textarea{min-height:55px;padding:6px}.site-root .selected-chat .chatdvt-message{grid-template-columns:28px minmax(0,1fr);gap:10px}.site-root .selected-chat .chatdvt-message__avatar{width:28px;height:28px}}

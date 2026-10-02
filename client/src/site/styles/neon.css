@@ -1,0 +1,24 @@
+/* Selected-layout iteration: dark blue structure, cyan reserved for actions and state. */
+.site-root.site-hybrid{--brand-accent:#36f5ed;--accent-ink:#08232b;--accent-border:#008f95;--accent-label:#00686c;--brand-deep:#102547}
+.dark .site-root.site-hybrid{--accent-border:#36f5ed;--accent-label:#36f5ed}
+.site-root .hybrid-a .home-landscape,.site-root .hybrid-b .band.primary-stage{background:var(--brand-deep)}
+.site-root .hybrid-a .home-landscape .button.orange,.site-root .hybrid-b .primary-stage .button.ink,.site-root .hybrid-b .soft-stage .button.ink,.site-root .hybrid-b .empty .button.ink,.site-root .hybrid-a .button.blue,.site-root.site-hybrid .footer-email{background:var(--brand-accent);color:var(--accent-ink);border-color:var(--brand-accent)}
+.site-root .hybrid-b .primary-stage .button.discord-invite{border-color:#a5bad8;color:white}
+.site-root .hybrid-a .home-copy .under-link{border:1px solid #a5bad8;border-radius:999px;padding:12px 20px;text-decoration:none;min-height:52px;display:inline-flex;align-items:center;justify-content:center}
+.site-root .hybrid-a .home-copy .actions{gap:16px}
+.site-root .hybrid-b .filters button[aria-pressed=true]{background:var(--brand-accent);border-color:var(--accent-border);color:var(--accent-ink)}
+.site-root .hybrid-b .project-product .status,.site-root .hybrid-b .project-product.rich .status,.site-root.site-hybrid .footer-bot-label{background:var(--brand-accent);border-color:var(--accent-border);color:var(--accent-ink)}
+.site-root .hybrid-b .project-product .product-actions>a{color:var(--accent-label)}
+.site-root.site-hybrid .site-nav a.is-active::after{background:var(--accent-border)}
+.site-root.site-hybrid .site-header .site-brand:hover .brand-device{border-color:var(--brand-accent)}
+.site-root .hybrid-view .button:hover,.site-root.site-hybrid .footer-email:hover{border-color:var(--accent-border);box-shadow:0 0 0 2px var(--accent-border);transform:none}
+.site-root .hybrid-b .primary-stage .button:hover,.site-root .hybrid-a .home-landscape .button:hover{border-color:var(--brand-accent);box-shadow:0 0 0 2px var(--brand-accent)}
+.site-root .hybrid-a .home-copy .under-link:hover{border-color:var(--brand-accent);color:var(--brand-accent)}
+.site-root .hybrid-a .scene-sign:hover{outline:2px solid var(--brand-accent);outline-offset:3px}
+.site-root .hybrid-b .project-product:hover{border-color:var(--accent-border)}
+.site-root .hybrid-b .project-product button:hover,.site-root .hybrid-view .guide-actions button:hover,.site-root .hybrid-view .guide-actions a:hover,.site-root .chatdvt-suggestions button:hover,.site-root .chatdvt-history-toggle:hover,.site-root .chatdvt-new-chat:hover{border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
+.site-root .hybrid-view .guide-actions button[data-guide="suggest"]{border-color:var(--accent-border);color:var(--accent-label)}
+.site-root .hybrid-a .home-guide .guide-actions button[data-guide="suggest"]{color:var(--brand-accent);border-color:var(--brand-accent)}
+.site-root .selected-chat .chatdvt-composer button:not(:disabled){background:var(--brand-accent);color:var(--accent-ink)}
+.site-root .selected-chat .chatdvt-composer:focus-within{border-color:var(--accent-border);box-shadow:0 0 0 1px var(--accent-border)}
+.site-root .hybrid-view a:focus-visible,.site-root .hybrid-view button:focus-visible,.site-root .hybrid-view input:focus-visible,.site-root.site-hybrid .site-header a:focus-visible,.site-root.site-hybrid .site-header button:focus-visible,.site-root.site-hybrid .site-footer a:focus-visible{outline:3px solid var(--accent-border);outline-offset:4px}

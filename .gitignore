@@ -17,6 +17,18 @@ build/
 *.sqlite-wal
 *.sqlite-shm
 .agents/skills/huashu-design/.last-update-check
+
+# Local design research, screenshots and agent configuration
+/design-demos/
+/.agents/skills/
+/.codex/
+/HANDOFF.md
+/LOCAL_SETUP.md
+/SKILLS.md
+
+# Local logs and TypeScript build caches
+*.log
+*.tsbuildinfo
 .DS_Store
 .vscode/
 src/data/chatHistory.json

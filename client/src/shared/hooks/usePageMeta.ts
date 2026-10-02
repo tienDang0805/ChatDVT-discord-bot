@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
 import { useLanguage } from '../i18n/LanguageContext';
 import { stripLocalePrefix } from '../i18n';
@@ -107,6 +108,7 @@ interface PageMetaOptions {
 
 export const usePageMeta = (title: string, options?: string | PageMetaOptions) => {
   const { locale } = useLanguage();
+  const { pathname } = useLocation();
   const desc = typeof options === 'string' ? options : options?.description;
   const keywords = typeof options === 'object' ? options?.keywords : undefined;
   const image = typeof options === 'object' ? options?.image : undefined;
@@ -129,13 +131,15 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     const resolvedImage = resolveImageUrl(image);
     const resolvedImageAlt = imageAlt || `${fullTitle} — devtiendang.blog`;
     const resolvedType = type || (schema === 'article' ? 'article' : 'website');
-    const normalizedPath = window.location.pathname === '/' ? '/' : window.location.pathname.replace(/\/+$/, '');
+    const normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
     const basePath = stripLocalePrefix(normalizedPath);
     const isEnglishBlog = locale === 'en' && (basePath === '/blog' || basePath.startsWith('/blog/'));
-    const shouldNoIndex = noIndex ?? (isEnglishBlog || !isIndexablePath(window.location.pathname));
+    // The English blog shell still contains the original Vietnamese articles.
+    // A page-level noIndex:false must not accidentally index that duplicate.
+    const shouldNoIndex = isEnglishBlog || (noIndex ?? !isIndexablePath(pathname));
     document.title = fullTitle;
 
-    const canonicalUrl = `${SITE_URL}${normalizedPath}`;
+    const canonicalUrl = `${SITE_URL}${isEnglishBlog ? basePath : normalizedPath}`;
     setCanonical(canonicalUrl);
     const supportsLocale = LOCALIZED_PATHS.has(basePath);
     if (supportsLocale) {
@@ -188,7 +192,7 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
       description: resolvedDescription,
       url: canonicalUrl,
       isPartOf: { '@id': `${SITE_URL}/#website` },
-      inLanguage: locale === 'en' ? 'en-US' : 'vi-VN',
+      inLanguage: isEnglishBlog ? 'vi-VN' : locale === 'en' ? 'en-US' : 'vi-VN',
     };
     const structuredData = pageSchema === 'profile'
       ? { ...base, '@type': 'ProfilePage', mainEntity: AUTHOR }
@@ -209,11 +213,13 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
             name: schemaName || fullTitle,
             alternateName: schemaName === 'ChatDVT' ? ['Chat DVT', 'ChatDVT Discord Bot'] : undefined,
             applicationCategory: schemaName === 'ChatDVT' ? 'CommunicationApplication' : 'UtilitiesApplication',
-            operatingSystem: schemaName === 'ChatDVT' ? 'Discord' : 'All',
+            operatingSystem: schemaName === 'ChatDVT' ? 'Web, Discord' : 'All',
             image: resolvedImage,
             isAccessibleForFree: true,
             featureList: schemaName === 'ChatDVT'
-              ? ['AI chat bằng mention', 'Phân tích ảnh và video', 'Tóm tắt hội thoại', 'Mini game cho Discord']
+              ? (locale === 'en'
+                ? ['AI chat on the web and Discord', 'Website discovery guide', 'Image and video analysis', 'Conversation summaries', 'Discord mini games']
+                : ['AI chat trên web và Discord', 'Giới thiệu website', 'Phân tích ảnh và video', 'Tóm tắt hội thoại', 'Mini game cho Discord'])
               : undefined,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
             creator: AUTHOR,
@@ -236,5 +242,5 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
     return () => {
       document.title = prev;
     };
-  }, [title, desc, keywords, image, imageAlt, type, schema, schemaName, noIndex, publishedTime, modifiedTime, locale]);
+  }, [title, desc, keywords, image, imageAlt, type, schema, schemaName, noIndex, publishedTime, modifiedTime, locale, pathname]);
 };

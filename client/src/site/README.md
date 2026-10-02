@@ -1,38 +1,29 @@
 # Public portfolio frontend
 
-Seven main surfaces: Home, Mobile, Projects & Lab, Discord Bot, AI Chat, Blog, About Me. Blog article presentation is included. Direction 3: Human × Sidekick.
+The public site has Home, Playground, Discord Bot, AI Chat, Blog and Me routes. Tiến is a Mobile Developer; ChatDVT is his AI chat bot, introduces the website and is also available on Discord. Playground groups features into Mobile, Tool and Fun without changing their existing routes or visibility.
 
 ## Where to edit
 
-- `pages/`: page composition and page-specific UI. Routes stay in the existing app router.
-- `components/SiteLayout.tsx`: header, six navigation links, language/theme controls, accessible mobile menu, footer and common headings.
-- `components/IdentityPortrait.tsx`: human portrait with a small ChatDVT sidekick. Shared by Home and Me.
-- `components/ProductProof.tsx`: actual product screenshot with native modal viewing, Escape and focus restoration.
-- `content/profileData.ts`: company contributions, skill groups and contact details. Change profile copy here rather than in the JSX.
-- `content/discordProofs.ts`: screenshot filenames and bilingual captions.
-- `content/siteData.tsx`: adapts the existing shared feature catalog; it remains the source of truth for visibility, status and project links.
-- `styles/index.css`: imports layout/tokens, identity, collections, article, Discord and chat styles. `ecosystem.css` preserves the existing out-of-scope ecosystem page.
-- `public/images/chatdvt/`: supplied Discord screenshots. Portrait and mascot stay in their existing image locations.
+- `pages/`: page composition; route definitions remain in `src/App.tsx`.
+- `components/SiteLayout.tsx`: branding, navigation, language/theme controls, mobile menu and footer.
+- `components/Mascot.tsx`: original chibi sprite actions and motion preferences.
+- `components/DiscoveryGuide.tsx`: session-based ChatDVT discovery suggestions.
+- `components/FeatureArt.tsx`: feature illustrations from the chibi atlases.
+- `content/profileData.ts`: profile, contributions, skills and contact details.
+- `content/collection.ts`: Playground categories, adapting the shared feature catalog.
+- `styles/index.css`: stylesheet order. `brand.css` and `neon.css` provide the final navy/cyan palette.
+- `shared/hooks/usePageMeta.ts`: browser metadata, canonical URLs and structured data.
 
-## Boundaries
+The active fonts, images and mascots in `client/public/` are required build assets. Design studies, screenshots, agent skills and machine setup documents are local files excluded by the root `.gitignore`.
 
-Presentation tokens are scoped to `.site-root`; global `src/index.css` retains Tailwind/font initialization and the admin rich-text canvas. No tool/game/admin logic, server API, feature visibility or backend was changed. The chat page still uses the existing request, history, Gemini key, Markdown and IME behavior; an empty conversation now starts at the top of the welcome screen. Original blog content remains in its authored language.
+## Build and preview
 
-The temporary CV is not served publicly. Company work is summarized by generic project type and personal contributions; no client names, private screenshots or internal architecture are published.
+From the repository root, install dependencies with `npm ci`, then run `npm run build`. This validates the catalog, compiles the backend, builds the React client and generates SEO documents. Prisma Client must be generated during dependency installation; its generation does not apply database migrations.
 
-## Local preview
+For a frontend-only build, run `npm ci` and `npm run build` inside `client/`. Preview with `npm run preview -- --host 127.0.0.1 --port 4175`. Live chat and published Blog posts require the existing backend/API configuration. Never commit local `.env` files.
 
-From `client/`: `npm run build`, then `npm run preview -- --host 127.0.0.1 --port 4175 --strictPort`.
+## Behavior and SEO
 
-UI preview: http://127.0.0.1:4175/. Existing API configuration/backend is still needed for live AI replies. The standalone design reference remains at http://127.0.0.1:4174/direction-3-complete.html while its preview server is running.
+Chat retains the existing API, BYOK, history, Markdown and IME behavior. Blog uses published content in its authored language; untranslated English Blog routes are excluded from indexing and canonicalize to Vietnamese. Old Mobile URLs redirect in React to the localized Playground category. Tool, game, admin and backend behavior are outside this presentation change.
 
-## Verification
-
-Review artifacts, scripts and reports are in `design-demos/portfolio-redesign/`:
-
-- `verify-complete.mjs production`: eight pages (seven surfaces + article) at 1440, 768, 390 and 375px; font loading, one visible h1, broken images and document overflow.
-- `verify-interactions.mjs`: locale routing, real theme toggles, menu keyboard/focus, filters/search/archive, native gallery Escape/focus, company content and chat UI/history/error states. API responses are mocked; no Gemini request is sent.
-- `typecheck-site.mjs`: strict TypeScript diagnostics for site entry points and their dependencies, reported separately.
-
-The checked-in ESLint flat config refers to missing `typescript-eslint` and incompatible CLI flags. Verification therefore uses the already installed legacy ESLint plugins via `eslint-design.cjs`, without changing the app dependency/configuration files. The existing BlogArticle hook warning and unrelated full-app TypeScript errors are not repaired in this presentation-only task.
-
+Browser metadata has distinct Home/Me copy and identifies ChatDVT as a Web/Discord chat bot. Server metadata and sitemap generation live separately in `src/api/seo.ts`. Known server follow-ups are stale initial route copy, Mobile aliases in the sitemap without server redirects, and unknown nested paths inheriting indexable prefix metadata. The current prerender produces metadata and a noscript summary rather than full React SSR. Local browser checks do not verify live indexing, Search Console or production performance.

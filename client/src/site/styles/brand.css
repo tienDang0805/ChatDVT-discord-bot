@@ -1,0 +1,101 @@
+/* Selected-layout refinement: one cobalt identity, neutral surfaces, original chibi artwork. */
+.site-root.site-hybrid{--brand-primary:#164bd4;--brand-deep:#143483;--brand-on-primary:#fff;--brand-ice:#d4e2ff;--site-bg:#f8f9fc;--site-surface:#fff;--site-surface-2:#eaf0ff;--site-ink:#172b49;--site-muted:#52627a;--site-line:#cbd3e1;--site-cool:#164bd4;--site-cool-soft:#eaf0ff;--site-orange:var(--site-cool);--site-orange-soft:var(--site-cool-soft)}
+.dark .site-root.site-hybrid{--site-bg:#141b2a;--site-surface:#1d273b;--site-surface-2:#263652;--site-ink:#eef4ff;--site-muted:#bbc9df;--site-line:#526481;--site-cool:#abc8ff;--site-cool-soft:#263652;--site-orange:var(--site-cool);--site-orange-soft:var(--site-cool-soft)}
+.site-root .hybrid-a{--blue:var(--site-cool);--blue-deep:var(--brand-deep);--orange:var(--brand-ice)}
+.site-root .hybrid-b{--blue:var(--site-cool-soft);--yellow:var(--site-cool-soft);--orange:var(--site-cool-soft)}
+.site-hybrid .site-header{border-bottom:1px solid var(--site-line)}
+.site-hybrid .site-header__inner{gap:24px}
+.site-hybrid .site-nav{gap:20px}
+.site-hybrid .site-nav a.is-active{color:var(--site-cool)}
+.site-hybrid .site-nav a.is-active::after{background:var(--site-cool)}
+.site-brand{display:inline-flex;align-items:center;gap:11px;min-height:52px;color:var(--site-ink);text-decoration:none;flex-shrink:0}
+.brand-device{display:flex;align-items:center;justify-content:center;position:relative;width:38px;height:48px;border:2px solid var(--brand-primary);border-radius:9px;background:var(--brand-primary);color:white;font-size:12px;font-weight:700;letter-spacing:-.04em;flex-shrink:0;padding-bottom:3px}
+.brand-device i{position:absolute;bottom:5px;left:calc(50% - 7px);width:14px;height:2px;background:#fff;border-radius:1px}
+.brand-name{display:flex;flex-direction:column;gap:2px}
+.brand-name strong{font-size:19px;line-height:1.3;letter-spacing:-.045em}
+.brand-name small{font-size:12px;line-height:1.5;color:var(--site-muted);font-weight:400}
+.site-mobile-nav__top .site-brand{margin-right:auto}
+/* Tiến's profession is the first message; the companion remains smaller. */
+.site-root .hybrid-a .home-landscape{background:var(--brand-primary);color:var(--brand-on-primary)}
+.site-root .hybrid-a .home-copy h1 em{color:var(--brand-ice)}
+.site-root .hybrid-a .home-stack{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 26px}
+.site-root .hybrid-a .home-stack span{font-size:12px;font-weight:700;line-height:1.5;padding:7px 11px;border:1px solid #8aaaf1;border-radius:999px;color:white}
+.site-root .hybrid-a .home-landscape .button.orange{background:white;color:var(--brand-primary);border:1px solid white}
+.site-root .hybrid-a .scene-road{background:var(--brand-ice)}
+.site-root .hybrid-a .scene-sign{color:#172b49}
+.site-root .hybrid-a .scene-sign span{color:var(--brand-primary)}
+.site-root .hybrid-a .home-writing{background:var(--site-cool-soft)}
+.site-root .hybrid-a .home-writing h2 span{color:var(--site-cool)}
+.site-root .hybrid-a .blog-circle{background:var(--site-cool-soft);color:var(--site-ink)}
+.site-root .hybrid-a .button.blue{background:var(--site-cool);color:var(--site-bg)}
+/* Discord is a bot product page; Me is a professional profile. Same color family, distinct composition. */
+.site-root .hybrid-b .band.primary-stage{background:var(--brand-primary);color:var(--brand-on-primary);--ink:#fff;--paper:#fff}
+.site-root .hybrid-b .primary-stage h1 span{color:var(--brand-ice)}
+.site-root .hybrid-b .primary-stage .button.ink{background:white;color:var(--brand-primary);border-color:white}
+.site-root .hybrid-b .primary-stage .text-link{color:white}
+.site-root .hybrid-b .band.profile-stage,.site-root .hybrid-b .band.soft-stage{background:var(--site-cool-soft);color:var(--site-ink)}
+.site-root .hybrid-b .me-stage h1 span{color:var(--site-cool)}
+.site-root .hybrid-b .band.deep-stage{background:var(--brand-deep);color:white}
+.site-root .hybrid-b .skills-section dt{color:var(--brand-ice)}
+.site-root .hybrid-b .skills-section dl>div{border-color:#7891c0}
+.site-root .hybrid-b .soft-stage .button.ink,.site-root .hybrid-b .empty .button.ink{background:var(--site-cool);border-color:var(--site-cool);color:var(--site-bg)}
+.site-root .hybrid-b .contacts a{border-color:var(--site-cool);color:var(--site-cool)}
+.site-root .hybrid-view .guide-stage{background:var(--site-surface);border-color:var(--site-line);color:var(--site-ink)}
+.site-root .hybrid-a .home-guide{background:transparent;color:white}
+.site-root .hybrid-view .guide-target{color:var(--site-cool)}
+.site-root .hybrid-a .home-guide .guide-target{color:white}
+.site-root .hybrid-b .proof-intro h2{color:var(--site-ink)}
+/* One category control, a compact introduction and a guide that belongs to the collection. */
+.site-root .hybrid-b .play-opening{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:64px;align-items:center;padding:56px 7% 36px}
+.site-root .hybrid-b .play-opening>.guide-stage{padding:20px;border:1px solid var(--site-line);border-radius:20px;gap:14px;align-items:start}
+.site-root .hybrid-b .play-opening h1{font-size:clamp(42px,4.4vw,64px);line-height:1.15;color:var(--site-cool);margin-bottom:20px}
+.site-root .hybrid-b .play-opening .eyebrow{color:var(--site-muted);margin-bottom:18px}
+.site-root .hybrid-b .play-opening .lede{font-size:18px;line-height:1.75;margin:0;max-width:600px}
+.site-root .hybrid-b .play-guide>.mascot-actor{--size:76px!important}
+.site-root .hybrid-b .play-guide [data-tour-progress]{display:none}
+.site-root .hybrid-b .play-guide .guide-speech>.eyebrow{font-size:12px;color:var(--site-cool);margin:0 0 6px}
+.site-root .hybrid-b .play-guide .guide-actions{gap:6px;margin-top:8px}
+.site-root .hybrid-b .play-guide .guide-actions button,.site-root .hybrid-b .play-guide .guide-actions a{padding:7px 11px}
+.site-root .hybrid-b .collection-toolbar{padding-top:22px;padding-bottom:22px;border-color:var(--site-line)}
+.site-root .hybrid-b .filters button[aria-pressed=true]{background:var(--site-cool);border-color:var(--site-cool);color:var(--site-bg)}
+.site-root .hybrid-b .collection{padding-top:32px;gap:0 28px}
+.site-root .hybrid-b .project-product .product-top .eyebrow{color:var(--site-cool)}
+.site-root .hybrid-b .project-product.rich{background:var(--site-surface);color:var(--site-ink);--ink:var(--site-ink);--paper:var(--site-bg);border:1px solid var(--site-line);border-radius:20px;padding:28px 32px;min-height:0;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;margin:0 0 26px}
+.site-root .hybrid-b .project-product.rich h2{font-size:36px}
+.site-root .hybrid-b .project-product.rich.fun-product,.site-root .hybrid-b .project-product.rich.tools-product{background:var(--site-surface);color:var(--site-ink)}
+.site-root .hybrid-b .rich .product-body{order:0}
+.site-root .hybrid-b .rich .product-art{order:1;background:transparent;height:240px;margin:0;border-radius:12px}
+.site-root .hybrid-b .rich .product-art .feature-art{--art-size:220px;width:220px;max-width:100%}
+.site-root .hybrid-b .rich .product-art>img{width:100%;max-height:240px;object-fit:contain;border:1px solid #cbd3e1;background:white;border-radius:12px}
+.site-root .hybrid-b .project-product .product-art{background:var(--site-cool-soft)}
+.site-root .hybrid-b .rich .status{background:var(--site-bg);color:var(--site-ink);border-color:var(--site-line)}
+.site-root .hybrid-b .product-actions>a{color:var(--site-cool)}
+.site-root .hybrid-b .rich .requirements{color:var(--site-muted)}
+.site-root .hybrid-b .status{text-transform:capitalize}
+.site-root .hybrid-b .requirements{font-size:12px;line-height:1.8}
+/* Chat keeps the existing API/composer behavior; its directory uses the same neutral-blue surface. */
+.site-root .selected-chat .chatdvt-directory{background:var(--site-cool-soft);color:var(--site-ink)}
+.site-root .selected-chat .chat-guide{background:transparent;color:var(--site-ink)}
+.site-root .selected-chat .chatdvt-directory .site-kicker,.site-root .selected-chat .chatdvt-directory>a,.site-root .selected-chat .chatdvt-directory>a strong,.site-root .selected-chat .chatdvt-directory-note{color:var(--site-ink)}
+.site-root .selected-chat .chatdvt-directory>a{border-color:var(--site-line)}
+.site-root .selected-chat .chatdvt-welcome__eyebrow{color:var(--site-cool)}
+/* Footer makes the person, mobile work, and bot equally easy to identify and reach. */
+.site-hybrid .site-footer{background:var(--site-surface);border-top:1px solid var(--site-line);padding:48px 0 22px}
+.site-hybrid .footer-contact{display:flex;align-items:center;justify-content:space-between;gap:32px;padding-bottom:36px;margin-bottom:40px;border-bottom:1px solid var(--site-line)}
+.site-hybrid .footer-contact .site-kicker{font-size:12px;color:var(--site-cool);margin:0 0 12px}
+.site-hybrid .footer-contact h2{font-size:clamp(27px,2.6vw,36px);line-height:1.3;max-width:680px;margin:0}
+.site-hybrid .footer-email{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:12px 22px;border-radius:999px;background:var(--site-cool);color:var(--site-bg);font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
+.site-hybrid .site-footer__grid{display:grid;grid-template-columns:1.15fr .65fr 1fr 1fr;gap:40px;align-items:start}
+.site-hybrid .footer-profile h3{font-size:20px;letter-spacing:-.02em;margin:20px 0 10px}
+.site-root.site-hybrid .site-footer__grid>.footer-profile{display:block}
+.site-hybrid .footer-profile p,.site-hybrid .footer-bot p{font-size:16px;line-height:1.75;color:var(--site-muted);margin:0 0 12px}
+.site-hybrid .footer-column h3{font-size:16px;letter-spacing:0;margin:0 0 16px;font-weight:700}
+.site-hybrid .footer-column>a,.site-hybrid .footer-social a{display:flex;align-items:center;min-height:44px;font-size:14px;line-height:1.5;color:var(--site-ink);text-decoration:none}
+.site-hybrid .footer-column>a:hover,.site-hybrid .footer-social a:hover{color:var(--site-cool);text-decoration:underline;text-underline-offset:5px}
+.site-hybrid .footer-social{display:flex;gap:20px;flex-wrap:wrap}
+.site-hybrid .footer-bot-label{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;background:var(--site-cool-soft);color:var(--site-cool);font-size:12px;font-weight:700;line-height:1.5;margin:0 0 14px}
+.site-hybrid .site-footer__meta{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;border-top:1px solid var(--site-line);padding-top:22px;margin-top:36px;color:var(--site-muted);font-size:12px;line-height:1.8}
+@media(min-width:1700px){.site-root .hybrid-b .play-opening{padding-left:calc((100vw - 1440px)/2 + 100px);padding-right:calc((100vw - 1440px)/2 + 100px)}}
+@media(max-width:1160px){.site-hybrid .site-header__inner{gap:18px}.site-hybrid .site-nav{gap:16px}.site-root .hybrid-b .play-opening{gap:32px}.site-hybrid .site-footer__grid{gap:32px;grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.site-root .hybrid-b .play-opening{grid-template-columns:1fr;padding:40px 5% 24px;gap:26px}.site-root .hybrid-b .play-opening>.guide-stage{max-width:600px}.site-root .hybrid-b .project-product.rich{gap:28px;padding:26px}.site-hybrid .footer-contact{align-items:start}.site-hybrid .footer-email{white-space:normal;min-width:150px}}
+@media(max-width:700px){.site-hybrid .site-header__inner{gap:12px}.site-brand{gap:9px}.brand-name strong{font-size:17px}.brand-device{width:34px;height:44px}.site-mobile-nav__top .brand-name{display:none}.site-root .hybrid-a .home-stack{gap:6px;margin-bottom:24px}.site-root .hybrid-a .home-copy .actions{gap:20px}.site-root .hybrid-a .home-stack span{padding:6px 9px}.site-root .hybrid-b .play-opening{padding:32px 6% 18px;gap:24px}.site-root .hybrid-b .play-opening h1{font-size:42px;margin-bottom:16px}.site-root .hybrid-b .play-opening .lede{font-size:16px}.site-root .hybrid-b .play-opening>.guide-stage{padding:16px;gap:10px}.site-root .hybrid-b .play-guide>.mascot-actor{--size:58px!important;max-width:58px}.site-root .hybrid-b .play-guide .guide-actions button,.site-root .hybrid-b .play-guide .guide-actions a{padding:6px 9px}.site-root .hybrid-b .collection{padding-top:24px}.site-root .hybrid-b .project-product.rich{grid-template-columns:1fr;padding:22px;gap:20px;border-radius:18px;margin:0 0 24px}.site-root .hybrid-b .project-product.rich h2{font-size:30px}.site-root .hybrid-b .rich .product-art{height:180px;order:0}.site-root .hybrid-b .rich .product-body{order:1}.site-root .hybrid-b .rich .product-art .feature-art{--art-size:180px;width:180px}.site-root .hybrid-b .rich .product-art>img{max-height:180px}.site-hybrid .site-footer{padding-top:32px}.site-hybrid .footer-contact{display:block;padding-bottom:28px;margin-bottom:30px}.site-hybrid .footer-contact h2{font-size:27px}.site-hybrid .footer-email{margin-top:22px;min-width:0}.site-hybrid .site-footer__grid{display:grid;grid-template-columns:1fr;gap:32px}.site-hybrid .footer-column h3{margin-bottom:10px}.site-hybrid .site-footer__meta{display:block;margin-top:28px}.site-hybrid .site-footer__meta span{display:block;margin-top:8px}}
