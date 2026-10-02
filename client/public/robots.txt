@@ -3,6 +3,10 @@ Allow: /
 
 Disallow: /admin/
 Disallow: /api/
+# Public published articles are required to render the blog's searchable content.
+Allow: /api/blog/posts$
+Allow: /api/blog/posts?
+Allow: /api/blog/posts/
 Disallow: /login
 
 Sitemap: https://devtiendang.blog/sitemap.xml

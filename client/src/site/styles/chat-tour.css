@@ -1,0 +1,45 @@
+.site-root .chatdvt-page--tour{width:min(1160px,calc(100% - 80px));margin:auto;grid-template-columns:minmax(0,790px) 245px;gap:64px;height:calc(100dvh - var(--site-header-height));min-height:480px}
+.site-root .chatdvt-page--tour .chatdvt-main{min-width:0}
+.site-root .chatdvt-page--tour .chatdvt-chat-header{height:96px;padding:0;border-bottom:1px solid var(--site-line);background:transparent;gap:20px}
+.site-root .chatdvt-chat-identity{display:flex;gap:12px;align-items:center;min-width:0}
+.site-root .chatdvt-chat-identity>img{width:36px;height:36px;object-fit:cover;border-radius:50%}
+.site-root .chatdvt-chat-identity h1{font-size:19px;font-weight:700;line-height:1.4;letter-spacing:-.02em}
+.site-root .chatdvt-toolbar{display:flex;gap:12px;align-items:center}
+.site-root .chatdvt-history-toggle{font-size:14px;color:var(--site-cool);min-height:44px;padding:8px 12px}
+.site-root .chatdvt-page--tour .chatdvt-new-chat{border-radius:4px;min-height:44px;background:transparent}
+.site-root .chatdvt-new-chat:disabled{opacity:.5;cursor:default}
+.site-root .chatdvt-page--tour .chatdvt-welcome{display:block;width:100%;min-height:0;margin:0;padding:36px 0 24px;text-align:left;max-width:660px}
+.site-root .chatdvt-page--tour .chatdvt-welcome h2{font-family:'Be Vietnam Pro',sans-serif;font-size:25px;font-weight:500;letter-spacing:-.025em;margin:12px 0}
+.site-root .chatdvt-page--tour .chatdvt-welcome__copy{font-size:16px;color:var(--site-ink);line-height:1.85;max-width:600px}
+.site-root .chatdvt-page--tour .chatdvt-suggestions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 0}
+.site-root .chatdvt-page--tour .chatdvt-suggestions button{display:inline-flex;min-height:44px;padding:8px 13px;font-size:13px;border-radius:4px;border:1px solid var(--site-line);background:transparent}
+.site-root .chatdvt-page--tour .chatdvt-suggestions button:hover{transform:none;background:var(--site-surface-2)}
+.site-root .chatdvt-page--tour .chatdvt-suggestions button:disabled{opacity:.5;cursor:default}
+.site-root .chatdvt-page--tour .chatdvt-thread{padding-right:12px;scrollbar-gutter:stable;scroll-behavior:auto}
+.site-root .chatdvt-page--tour .chatdvt-messages{width:100%;padding:0 0 22px}
+.site-root .chatdvt-page--tour .chatdvt-message{padding:25px 0;font-size:16px}
+.site-root .chatdvt-page--tour .chatdvt-message__body>p,.site-root .chatdvt-page--tour .chatdvt-markdown{font-size:16px}
+.site-root .chatdvt-page--tour .chatdvt-composer-wrap{padding:20px 0 max(14px,env(safe-area-inset-bottom));background:var(--site-bg);border-top:1px solid var(--site-line)}
+.site-root .chatdvt-page--tour .chatdvt-composer-wrap>label{display:block;font-family:'Times New Roman',serif;font-size:27px;line-height:1.3;margin-bottom:12px}
+.site-root .chatdvt-page--tour .chatdvt-composer{width:100%;border-radius:12px;border:2px solid var(--site-line);padding:12px;background:var(--site-surface);box-shadow:none;align-items:flex-end}
+.site-root .chatdvt-page--tour .chatdvt-composer textarea{min-height:72px;font-size:16px;padding:8px}
+.site-root .chatdvt-page--tour .chatdvt-composer button{width:48px;height:48px;border-radius:4px;color:var(--site-bg)}
+.site-root .chatdvt-page--tour .chatdvt-composer-wrap>p{text-align:left;font-size:12px;line-height:1.6;margin-top:10px}
+.site-root .chatdvt-directory{padding-top:132px;font-size:14px}
+.site-root .chatdvt-directory>a{display:block;min-height:44px;padding:18px 0;border-bottom:1px solid var(--site-line)}
+.site-root .chatdvt-directory strong{display:block;font-size:14px;color:var(--site-cool);font-weight:600}
+.site-root .chatdvt-directory span{display:block;font-size:14px;line-height:1.8;margin-top:7px;color:var(--site-muted)}
+.site-root .chatdvt-directory .site-kicker{font-size:12px;margin-bottom:20px}
+.site-root .chatdvt-directory-note{font-size:12px;color:var(--site-muted);margin-top:32px;line-height:1.8}
+.site-root .chatdvt-history{position:fixed;inset:0 auto 0 0;margin:0;width:min(360px,calc(100vw - 30px));max-width:none;height:100dvh;max-height:100dvh;border:0;border-right:1px solid var(--site-line);padding:28px 24px;background:var(--site-surface-2);color:var(--site-ink);overflow:auto}
+.site-root .chatdvt-history[open]{display:flex;flex-direction:column}
+.site-root .chatdvt-history::backdrop{background:#172f4155}
+.site-root .chatdvt-history-title{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:25px}
+.site-root .chatdvt-history-title h2{font-size:18px;letter-spacing:-.02em}
+.site-root .chatdvt-history-list{padding-top:24px;overflow-wrap:anywhere}
+.site-root .chatdvt-history-list button{display:block;text-align:left;width:100%;min-height:48px;padding:12px 8px;border-bottom:1px solid var(--site-line)}
+.site-root .chatdvt-history-list button span{display:block;font-size:14px}
+.site-root .chatdvt-history-list button small,.site-root .chatdvt-history-note{font-size:12px;color:var(--site-muted)}
+.site-root .chatdvt-history-note{margin-top:24px}
+@media(max-width:1100px){.site-root .chatdvt-page--tour{grid-template-columns:minmax(0,1fr);max-width:850px;gap:0}.site-root .chatdvt-directory{display:none}}
+@media(max-width:760px){.site-root .chatdvt-page--tour{display:grid;width:calc(100% - 40px);height:calc(100dvh - var(--site-header-height));min-height:450px}.site-root .chatdvt-page--tour .chatdvt-chat-header{height:86px;gap:10px}.site-root .chatdvt-chat-identity>img{display:none}.site-root .chatdvt-chat-identity p{font-size:12px}.site-root .chatdvt-toolbar{gap:0}.site-root .chatdvt-toolbar .chatdvt-new-chat{width:44px;justify-content:center;padding:0;border:0}.site-root .chatdvt-toolbar .chatdvt-new-chat span{display:none}.site-root .chatdvt-history-toggle{padding:8px 5px;font-size:13px}.site-root .chatdvt-page--tour .chatdvt-welcome{padding-top:25px}.site-root .chatdvt-page--tour .chatdvt-welcome h2{font-size:23px}.site-root .chatdvt-page--tour .chatdvt-thread{padding-right:6px}.site-root .chatdvt-page--tour .chatdvt-composer-wrap{padding-top:14px}.site-root .chatdvt-page--tour .chatdvt-composer-wrap>label{font-size:24px}.site-root .chatdvt-page--tour .chatdvt-composer{padding:8px}.site-root .chatdvt-page--tour .chatdvt-composer textarea{min-height:60px;padding:5px}.site-root .chatdvt-page--tour .chatdvt-composer-wrap>p{font-size:12px}}

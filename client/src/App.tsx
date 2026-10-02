@@ -132,6 +132,9 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
 };
 
 function App() {
+  const { pathname } = useLocation();
+  const publicPath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
+  const isPortfolio = ['/', '/me', '/mobile', '/playground', '/discord', '/chat', '/blog'].includes(publicPath) || publicPath.startsWith('/blog/');
   return (
     <MusicPlayerProvider>
       <div className="min-h-screen">
@@ -142,7 +145,7 @@ function App() {
           style: { borderRadius: '12px', padding: '16px' }
         }} />
         <GlobalMusicPlayer />
-        {!isDiscordActivity && <ChatWidget />}
+        {!isDiscordActivity && !isPortfolio && <ChatWidget />}
         <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>

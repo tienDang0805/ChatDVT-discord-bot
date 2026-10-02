@@ -53,7 +53,7 @@ export function BlogArticlePage() {
   }
 
   return <SiteLayout>
-    <article className="site-container blog-article">
+    <article className="site-container blog-article selected-article">
       <Link to={pathFor('/blog')} className="blog-back"><ArrowLeft size={15} /> Blog</Link>
       <header className="blog-article__header">
         <p className="site-kicker">{post.slug === DEFAULT_BLOG_POST.slug ? 'ChatDVT · 01' : t('blog.notes')}</p>

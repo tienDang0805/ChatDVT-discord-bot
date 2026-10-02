@@ -1,0 +1,132 @@
+{
+  "character": "chatdvt",
+  "baseFrame": {
+    "width": 418,
+    "height": 418
+  },
+  "pageMascot": {
+    "directions": "directions.webp",
+    "reactions": "reactions.webp",
+    "grid": {
+      "rows": 3,
+      "cols": 3
+    },
+    "cellWidth": 418,
+    "cellHeight": 418
+  },
+  "animations": {
+    "idle": {
+      "file": "idle.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 4,
+      "fps": 4,
+      "loop": true,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Prototype idle assembled from existing reaction frames. Replace later if you want breathing/body motion."
+    },
+    "walk-right": {
+      "file": "walk-right.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Prototype bobbing walk. Container movement creates travel; replace with true leg-cycle art for production polish."
+    },
+    "walk-left": {
+      "file": "walk-left.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 4,
+      "fps": 8,
+      "loop": true,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Mirrored prototype walk. For Tiến this mirrors the coffee hand; replace with dedicated left-facing art if consistency matters."
+    },
+    "talk": {
+      "file": "talk.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 4,
+      "fps": 7,
+      "loop": true,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Prototype talk using facial reaction frames."
+    },
+    "jump": {
+      "file": "jump.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 5,
+      "fps": 10,
+      "loop": false,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Prototype jump frames. Prefer container y-motion plus a dedicated jump pose later."
+    },
+    "wave": {
+      "file": "wave.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 4,
+      "fps": 6,
+      "loop": false,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Expression-only wave placeholder; no true arm movement."
+    },
+    "point": {
+      "file": "point.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 2,
+      "fps": 4,
+      "loop": false,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Placeholder only; replace with a real pointing pose before final polish."
+    },
+    "tablet-show": {
+      "file": "tablet-show.webp",
+      "frameWidth": 418,
+      "frameHeight": 418,
+      "frames": 3,
+      "fps": 5,
+      "loop": false,
+      "anchor": {
+        "x": 209,
+        "y": 400
+      },
+      "status": "prototype-placeholder",
+      "note": "Uses proud/happy reaction frames as a tablet-show placeholder."
+    }
+  },
+  "prototypeWarning": "directions/reactions are the primary generated assets. Custom motion sheets are implementation placeholders created from them; replace walk/wave/point with dedicated art for production-quality limb animation."
+}

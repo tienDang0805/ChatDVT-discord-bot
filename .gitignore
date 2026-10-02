@@ -1,11 +1,34 @@
 # Node.js
 node_modules/
+.venv/
 npm-debug.log
 yarn-debug.log
 yarn-error.log
 dist/
 build/
 .env
+.env.*
+!.env.example
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+.agents/skills/huashu-design/.last-update-check
+
+# Local design research, screenshots and agent configuration
+/design-demos/
+/.agents/skills/
+/.codex/
+/HANDOFF.md
+/LOCAL_SETUP.md
+/SKILLS.md
+
+# Local logs and TypeScript build caches
+*.log
+*.tsbuildinfo
 .DS_Store
 .vscode/
 src/data/chatHistory.json

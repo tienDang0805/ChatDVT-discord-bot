@@ -1,0 +1,77 @@
+/* Shared presentation for the owner-selected chapter tour. Feature apps keep their own CSS. */
+.site-root.site-direction-b{--site-bg:#f8f7f2;--site-surface:#fffefa;--site-surface-2:#e3eff5;--site-ink:#20354a;--site-muted:#526579;--site-line:#b8c9d2;--site-orange:#234d69;--site-orange-soft:#e3eff5;--site-cool:#234d69;--site-cool-soft:#e3eff5;--site-header-height:94px}
+.dark .site-root.site-direction-b{--site-bg:#192734;--site-surface:#223443;--site-surface-2:#293e4e;--site-ink:#edf3f7;--site-muted:#bacbd7;--site-line:#516575;--site-orange:#b4d8ed;--site-orange-soft:#293e4e;--site-cool:#b4d8ed;--site-cool-soft:#293e4e}
+.site-root .tour-view{--paper:var(--site-bg);--ink:var(--site-ink);--muted:var(--site-muted);--blue:var(--site-surface-2);--line:var(--site-line);--strong:var(--site-cool);font-family:'Be Vietnam Pro',sans-serif;min-width:0}
+.site-root .tour-view h1,.site-root .tour-view h2{font-family:'Times New Roman',serif;font-weight:400}
+.site-root .tour-view h1 em{font-style:italic;color:var(--strong)}
+.site-root .tour-view .tour-capabilities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 40px;padding:30px 0 45px;border-bottom:1px solid var(--site-line)}
+.site-root .tour-view .tour-capabilities h3{margin:15px 0;font-size:20px}
+.site-root .tour-view .tour-capabilities p{font-size:16px}
+.site-root .tour-view .tour-product-exit{display:flex;gap:32px;justify-content:space-between;margin-top:45px;border-top:1px solid var(--site-line);padding-top:24px}
+.site-root .tour-view .speech{background:var(--site-surface)}
+.site-root .tour-view .speech:after{background:var(--site-surface)}
+.site-root .tour-view .project-feature,.site-root .tour-view .discord-opening-proof{background:var(--site-surface-2)}
+.site-root .tour-view .button.primary{color:var(--site-bg)}
+.site-root .tour-view .view{width:100%}
+.site-root .tour-view .story-scene,.site-root #discord-proof{scroll-margin-top:120px}
+.site-root .tour-view .chapter-rail{top:125px}
+.site-root .tour-view .profile-bottom dl{display:block}
+.site-root .tour-view .profile-bottom dl>div{display:grid;grid-template-columns:100px minmax(0,1fr)}
+.site-root .tour-view .project-list{min-width:0}
+.site-root .tour-view .lab-project>div{min-width:0}
+.site-root .tour-view .lab-project .eyebrow{overflow-wrap:anywhere}
+.site-root .tour-view .lab-project p{font-size:16px}
+.site-root .tour-view .archive-panel{margin-top:48px;padding:25px 0;border-top:1px solid var(--site-line);display:flex;gap:24px;justify-content:space-between;align-items:center;background:transparent}
+.site-root .tour-view .collection-caption{font-size:12px}
+.site-root .tour-view .proof-panel .product-proof{padding:0;border:0;background:transparent;box-shadow:none;min-width:0}
+.site-root .tour-view .proof-panel .product-proof__label,.site-root .tour-view .proof-panel figcaption{display:none}
+.site-root .tour-view .discord-opening-proof .product-proof{background:transparent;box-shadow:none;padding:0;border:0}
+.site-root .tour-view .discord-opening-proof .product-proof__label{display:none}
+.site-root .tour-view .discord-opening-proof figcaption{font-size:12px}
+.site-root .tour-view .discord-opening-proof figcaption strong{font-weight:400}
+.site-root .tour-view .discord-opening-proof figcaption p{display:none}
+.site-root .tour-view .discord-opening-proof img{max-height:460px;object-fit:contain;object-position:top}
+.site-root .tour-view .product-proof__image{border-radius:2px;display:block;width:100%;min-height:44px}
+.site-root .tour-view .product-proof__image img{border-radius:2px}
+.site-root .tour-view .product-proof__image>span{font-size:12px}
+.site-root .tour-view .discord-opening-proof figcaption strong{font-size:12px}
+.site-root .tour-view .command-row code{white-space:normal;overflow-wrap:anywhere}
+.site-root .tour-view .search input{background:var(--site-surface);color:var(--site-ink)}
+.site-root .tour-view .proof-panel{background:var(--site-surface-2)}
+.site-root .tour-view .category-tabs button,.site-root .tour-view .command-tabs button{color:var(--site-ink);border-color:var(--site-line)}
+.site-root .tour-view .category-tabs button[aria-pressed=true],.site-root .tour-view .command-tabs button[aria-pressed=true]{background:var(--site-ink);color:var(--site-bg)}
+.site-root .tour-view .project-open{text-align:right}
+.site-root .tour-view .chapter-copy p,.site-root .tour-view .cover-copy>p:not(.intro-line),.site-root .tour-view .lab-intro>p,.site-root .tour-view .bot-introduction>p{font-size:16px}
+.site-direction-b .site-header__inner{width:min(100% - 116px,1324px);gap:24px}
+.site-direction-b .site-nav{display:flex;gap:24px}
+.site-direction-b .site-menu-button{display:none}
+.site-direction-b .site-nav a{font-size:13px;color:var(--site-ink);border-bottom:2px solid transparent}
+.site-direction-b .site-nav a.is-active{border-color:var(--site-ink)}
+.site-direction-b .site-nav a.is-active::after{display:none}
+.site-direction-b .site-wordmark{font-size:25px;letter-spacing:-1.4px}
+.site-direction-b .site-wordmark>span{font-weight:400}
+.site-direction-b .site-wordmark i{color:var(--site-orange)}
+.site-direction-b .site-icon-button{border-radius:4px}
+.site-direction-b .site-languages,.site-direction-b .site-languages button{border-radius:4px}
+.site-motion-control{min-height:44px;font-size:12px;padding:6px 8px;color:var(--site-ink);border-bottom:1px solid var(--site-line);background:none;white-space:nowrap}
+.site-motion-control:disabled{cursor:default;opacity:1}
+.site-direction-b .site-button{border-radius:4px;font-size:14px}
+.site-direction-b .site-footer{padding-block:35px}
+.site-direction-b .site-footer__grid{grid-template-columns:1fr auto;gap:30px;align-items:center}
+.site-direction-b .site-footer__links{display:none}
+.site-direction-b .site-footer__meta{font-size:12px}
+.site-direction-b .site-footer__grid>div:first-child{display:flex;align-items:center;gap:30px;flex-wrap:wrap}
+.site-direction-b .site-footer__grid p{margin:0;font-size:12px}
+.site-direction-b .blog-article__header h1{font-family:'Times New Roman',serif;font-weight:400}
+.site-direction-b .blog-article{max-width:920px}
+.site-direction-b .blog-prose{font-size:17px}
+.site-direction-b .blog-article__meta{font-size:12px}
+.site-root .tour-view .tour-blog-intro{max-width:650px;font-size:16px;line-height:1.85;margin-top:24px}
+.mascot-actor{position:relative;width:var(--size,160px);height:var(--size,160px);flex:0 0 auto;max-width:100%;isolation:isolate;pointer-events:none;contain:layout paint}
+.mascot-sprite{position:absolute;inset:0;background-repeat:no-repeat;background-size:300% 300%;background-position:50% 50%;pointer-events:none}
+.mascot-actor[data-render-state=idle] .mascot-sprite{clip-path:inset(0 0 4% 0)}
+@media(max-width:1160px){.site-direction-b .site-nav{gap:15px}.site-direction-b .site-header .site-motion-control{display:none}.site-direction-b .site-header__inner{width:calc(100% - 48px)}}
+@media(max-width:1000px){.site-direction-b .site-nav{display:none}.site-direction-b .site-header__actions{margin-left:auto}.site-direction-b .site-menu-button{display:inline-flex}.site-direction-b .site-header__inner{height:78px}.site-root.site-direction-b{--site-header-height:78px}}
+@media(max-width:760px){.mascot-actor{width:min(var(--size,110px),120px);height:min(var(--size,110px),120px)}.site-root .tour-view .profile-bottom dl>div{display:block}.site-root .tour-view .archive-panel{display:block}.site-root .tour-view .archive-panel button{margin-top:18px}.site-root .tour-view .project-open{text-align:left}.site-direction-b .site-header__inner{width:calc(100% - 40px);gap:12px}.site-direction-b .site-header__actions{gap:4px}.site-direction-b .site-wordmark{font-size:22px}.site-direction-b .site-languages{border:0;padding:0}.site-direction-b .site-languages button{min-width:38px;min-height:44px}.site-direction-b .site-footer__grid{display:block}.site-direction-b .site-footer__meta{margin-top:15px}}
+@media(prefers-reduced-motion:reduce){.site-root .mascot-actor,.site-root .mascot-sprite{animation:none!important;transition:none!important}}
+@media(max-width:760px){.site-root .tour-view .tour-capabilities{grid-template-columns:1fr;gap:26px}.site-root .tour-view .tour-product-exit{display:block}}
