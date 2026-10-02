@@ -1,0 +1,145 @@
+<!doctype html>
+<!--
+  Human × Sidekick, refined after the user's selection.
+  Design reference only: the React implementation uses native components.
+  Homepage/Me are owned by Tiến. Discord is owned by ChatDVT, with creator credit.
+  Form comes from that changing relationship: person/product portraits swap prominence.
+  Real assets only. No invented metrics, testimonials, product claims or API calls.
+  Company work uses the user-approved CV summary: generic project names and personal
+  contributions only; no client identities, private UI or source code.
+  The bottom view selector is review chrome, not part of the eventual website.
+-->
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bản duyệt Human × Sidekick: Homepage, Me và ChatDVT Discord Bot.">
+  <title>Đặng Văn Tiến — Human × Sidekick</title>
+  <link rel="stylesheet" href="direction-3-refined.css">
+  <link rel="stylesheet" href="direction-3-experience.css">
+  <script src="direction-3-complete.js" defer></script>
+<link rel="stylesheet" href="direction-3-complete.css"></head>
+<body>
+  <a class="skip-link" href="#main">Bỏ qua điều hướng</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="wordmark" href="#home">Đặng Văn Tiến<span>.</span></a>
+      <button class="nav-toggle icon-button" type="button" aria-label="Mở điều hướng" aria-expanded="false" aria-controls="primary-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <nav class="site-nav" id="primary-nav" aria-label="Điều hướng chính">
+        <a href="#mobile" data-nav="mobile">Mobile</a>
+        <a href="#projects" data-nav="projects">Projects &amp; Lab</a>
+        <a href="#discord" data-nav="discord">Discord Bot</a>
+        <a href="#chat" data-nav="chat">AI Chat</a>
+        <a href="#blog" data-nav="blog">Blog</a>
+        <a href="#me" data-nav="me">Me</a>
+      </nav>
+      <div class="header-actions">
+        <a class="github-link" href="https://github.com/tienDang0805" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
+        <button class="theme-toggle icon-button" type="button" aria-label="Chuyển sang giao diện tối" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 13a8.5 8.5 0 0 1-9.5-9.5A8.5 8.5 0 1 0 20.5 13Z"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="page-view" data-view="home">
+      <section class="container person-hero" aria-labelledby="home-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot"></span> Mobile Software Engineer · TP. Hồ Chí Minh</p>
+          <h1 id="home-title">Mình là Tiến.<br>Mình thích <span class="warm-text">xây những<br>thứ dùng được.</span></h1>
+          <p class="hero-lead">Mình phát triển ứng dụng React Native, xây SDK Android và tích hợp native. Project cá nhân là nơi mình thử ý tưởng, học thêm và đưa chúng thành sản phẩm.</p>
+          <div class="actions"><a class="button primary" href="#projects">Xem sản phẩm <span aria-hidden="true">↗</span></a><a class="button secondary" href="#me">Tìm hiểu về mình <span aria-hidden="true">→</span></a></div>
+          <p class="hero-footnote">Đang làm việc tại <strong>South Telecom</strong> <span>·</span> 04/2023 — nay</p>
+        </div>
+        <div class="person-scene">
+          <div class="portrait-halo"><img class="person-photo" src="assets/tien-profile.jpg" alt="Đặng Văn Tiến" width="320" height="320"><span class="portrait-tag">The human behind the work.</span></div>
+          <a class="sidekick-note" href="#discord"><img src="assets/chatdvt-avatar.jpg" alt="" width="1024" height="1024"><span><small>MỘT SẢN PHẨM MÌNH XÂY</small><strong>ChatDVT <span aria-hidden="true">↗</span></strong></span></a>
+        </div>
+      </section>
+
+      <section class="container section" id="projects" aria-labelledby="work-title">
+        <div class="section-heading"><div><p class="eyebrow">Projects &amp; Lab</p><h2 id="work-title">Ý tưởng nhỏ.<br><span class="muted-heading">Sản phẩm thật.</span></h2></div><p>Một vài thứ mình đã xây, từ công cụ cho developer đến một người bạn AI trên Discord.</p></div>
+        <div class="work-pair">
+          <article class="work-feature product-work"><div class="work-copy"><p class="eyebrow">AI · Discord</p><div class="product-heading"><img src="assets/chatdvt-avatar.jpg" alt="" width="1024" height="1024"><h3>ChatDVT</h3></div><p>Trợ lý AI có cá tính: trò chuyện, hiểu nội dung và chơi quiz ngay trong cộng đồng.</p><a class="text-link" href="#discord">Gặp ChatDVT <span aria-hidden="true">↗</span></a></div><img class="work-proof" src="assets/chatdvt-quiz-running.png" alt="ChatDVT chạy quiz lập trình trong Discord" width="1554" height="968" loading="lazy"></article>
+          <article class="work-feature mobile-work"><p class="eyebrow">Mobile · Developer tools</p><h3>Mobile Developer<br>Toolkit.</h3><p>Những công cụ nhỏ để kiểm tra deep link, WebView và các phần việc mobile thường gặp.</p><div class="tool-chips"><span>Deep Link Tester</span><span>WebView Simulator</span><span>Android Device Toolbox</span></div><a class="text-link" href="#mobile">Khám phá Mobile <span aria-hidden="true">↗</span></a></article>
+        </div>
+        <div class="project-index"><span>CÒN TRONG LAB</span><p>Survivor Arena 8D <span>·</span> English Learning Hub <span>·</span> Mermaid Editor <span>·</span> Chibi Sticker AI</p></div>
+      </section>
+
+      <section class="container section practice-section" id="mobile" aria-labelledby="mobile-title"><div><p class="eyebrow">Mobile</p><h2 id="mobile-title">Mobile là<br><span class="warm-text">chuyên môn chính.</span></h2><p>Mình phát triển ứng dụng React Native và xử lý phần native Android bằng Kotlin. Bộ công cụ và ghi chú ở đây xuất phát từ những công việc đó.</p><a class="text-link" href="#me">Xem kinh nghiệm của mình <span aria-hidden="true">↗</span></a></div><ul class="editorial-list"><li><span>01</span><div><h3>Android Device Toolbox</h3><p>Công cụ dành cho công việc Android.</p></div></li><li><span>02</span><div><h3>Deep Link &amp; WebView</h3><p>Kiểm tra nhanh những luồng điều hướng mobile.</p></div></li><li><span>03</span><div><h3>React Native Guide</h3><p>Ghi chú và tài liệu về React Native.</p></div></li></ul></section>
+
+      <section class="container section journal-section" id="blog" aria-labelledby="blog-title"><div><p class="eyebrow">Blog · Build notes</p><h2 id="blog-title">Không chỉ sản phẩm.<br><span class="muted-heading">Còn cả hành trình.</span></h2></div><article class="journal-entry"><span class="journal-type">DEV STORY</span><h3>Hành trình làm ra ChatDVT:<br>Khi một Mobile Dev đi làm bot.</h3><p>Góc nhìn của người xây dựng đằng sau sản phẩm ChatDVT.</p><a class="text-link" href="#discord">Xem sản phẩm trong câu chuyện <span aria-hidden="true">↗</span></a><small>Đây là preview thiết kế Blog; chưa mở nội dung bài viết trong bản mẫu.</small></article></section>
+
+      <section class="container section assistant-section" id="chat" aria-labelledby="chat-title"><img src="assets/chatdvt-avatar.jpg" alt="Avatar ChatDVT" width="1024" height="1024" loading="lazy"><div><p class="eyebrow">AI Chat · Người bạn hỗ trợ</p><h2 id="chat-title">Muốn tìm hiểu thêm về mình?</h2><p>ChatDVT có thể giúp bạn khám phá project và tìm thông tin về Tiến. Bản mẫu này chỉ giới thiệu vai trò, chưa kết nối chat.</p><a class="text-link" href="#me">Xem hồ sơ Tiến <span aria-hidden="true">→</span></a></div></section>
+      <section class="container contact-section" aria-labelledby="home-contact-title"><p class="eyebrow">Me · Đặng Văn Tiến</p><h2 id="home-contact-title">Một cuộc trò chuyện.<br>Một cơ hội mới.</h2><div class="actions"><a class="button primary" href="mailto:dvtien0805@gmail.com">Trao đổi công việc <span aria-hidden="true">↗</span></a><a class="button secondary" href="#me">Xem hồ sơ của mình</a></div></section>
+    </div>
+
+    <div class="page-view" data-view="me" hidden>
+      <section class="container person-hero me-hero" aria-labelledby="me-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Me · Người đứng sau các sản phẩm</p>
+          <h1 id="me-title">Đặng Văn Tiến<span class="warm-text">.</span><br><span class="role-line">Mobile Software Engineer.</span></h1>
+          <p class="hero-lead">Mình xây ứng dụng mobile cho doanh nghiệp, tập trung vào React Native, Android và tích hợp native. Hiện mình làm việc tại South Telecom.</p>
+          <div class="skill-tags"><span>React Native</span><span>Android / Kotlin</span><span>Native &amp; SDK</span></div>
+          <div class="actions"><a class="button primary" href="mailto:dvtien0805@gmail.com">Trao đổi công việc <span aria-hidden="true">↗</span></a><a class="button secondary" href="https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/" target="_blank" rel="noreferrer">LinkedIn <span aria-hidden="true">↗</span></a></div>
+          <p class="hero-footnote">TP. Hồ Chí Minh <span>·</span> Kinh nghiệm từ 04/2023</p>
+          <a class="text-link experience-jump" href="#me/experience">Xem kinh nghiệm thực tế <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="person-scene"><div class="portrait-halo"><img class="person-photo" src="assets/tien-profile.jpg" alt="Đặng Văn Tiến — Mobile Software Engineer" width="320" height="320"><span class="portrait-tag">Đặng Văn Tiến · The builder.</span></div><a class="sidekick-note me-sidekick" href="#discord"><img src="assets/chatdvt-avatar.jpg" alt="" width="1024" height="1024"><span><small>NGƯỜI BẠN AI MÌNH XÂY</small><strong>ChatDVT <span aria-hidden="true">↗</span></strong></span></a></div>
+      </section>
+      <section class="container section experience-section" id="experience" aria-labelledby="experience-title">
+        <div>
+          <p class="eyebrow">Kinh nghiệm thực tế</p>
+          <h2 id="experience-title">Mobile trong<br><span class="warm-text">sản phẩm thực tế.</span></h2>
+          <p>Từ tính năng ứng dụng đến SDK dùng lại và kết nối native — đây là một vài phần việc mình đã đóng góp tại công ty.</p>
+          <dl class="skill-families" aria-label="Chuyên môn chính">
+            <div><dt>Mobile</dt><dd>React Native · Android SDK · Kotlin · Java</dd></div>
+            <div><dt>Native &amp; SDK</dt><dd>Native Modules · CameraX · ML Kit · TensorFlow Lite</dd></div>
+            <div><dt>Nền tảng hỗ trợ</dt><dd>TypeScript · REST API · Gradle · Maven</dd></div>
+          </dl>
+        </div>
+        <article class="experience-entry">
+          <div class="entry-meta"><span>04/2023 — NAY</span><span>TP. HỒ CHÍ MINH</span></div>
+          <h3>South Telecom</h3>
+          <p class="entry-role">Mobile Software Engineer</p>
+          <p class="company-summary">Phát triển và duy trì ứng dụng Android, React Native cho doanh nghiệp.</p>
+          <ul class="company-contributions" aria-label="Phần việc đã đóng góp tại công ty">
+            <li><h4>Ứng dụng CRM B2B</h4><p>Phát triển tính năng quản lý yêu cầu, nhắn tin, báo cáo và Android widget; xử lý lỗi vận hành.</p></li>
+            <li><h4>Mobile Analytics SDK</h4><p>Xây SDK ghi nhận hoạt động ứng dụng, hỗ trợ lưu dữ liệu offline và gửi lại khi có kết nối.</p></li>
+            <li><h4>Android Barcode Scanning SDK</h4><p>Tích hợp model từ đội AI thành SDK quét sản phẩm, mã vạch và nhận diện chữ.</p></li>
+            <li><h4>Nâng cấp ứng dụng React Native</h4><p>Nâng cấp ứng dụng cũ, cập nhật nền tảng và xử lý tương thích Android.</p></li>
+            <li><h4>Tích hợp robot với React Native</h4><p>Kết nối SDK Android để điều khiển robot và nhận trạng thái thiết bị.</p></li>
+          </ul>
+          <p class="company-disclosure">Dự án công ty · Chỉ giới thiệu phạm vi đóng góp.</p>
+        </article>
+      </section>
+      <section class="container section" aria-labelledby="me-work-title"><div class="section-heading"><div><p class="eyebrow">Ngoài công việc</p><h2 id="me-work-title">Những thứ<br><span class="warm-text">mình tự xây.</span></h2></div><p>Project cá nhân là nơi mình thử công nghệ mới, giải quyết vấn đề nhỏ và đưa ý tưởng vào thực tế.</p></div><div class="me-work-list"><a href="#mobile"><span class="work-number">01</span><div><h3>Mobile Developer Toolkit</h3><p>Tool và ghi chú phục vụ công việc mobile.</p></div><span aria-hidden="true">↗</span></a><a href="#discord"><img src="assets/chatdvt-avatar.jpg" alt="" width="1024" height="1024"><div><h3>ChatDVT</h3><p>Trợ lý AI trên web và Discord do mình xây dựng.</p></div><span aria-hidden="true">↗</span></a><a href="#projects"><span class="work-number">03</span><div><h3>Projects &amp; Lab</h3><p>Developer tools, AI lab, learning app và web game.</p></div><span aria-hidden="true">↗</span></a></div></section>
+      <section class="container contact-section" aria-labelledby="me-contact-title"><p class="eyebrow">Kết nối với Tiến</p><h2 id="me-contact-title">Bạn đang tìm<br>một Mobile Developer?</h2><p>Mình sẵn sàng trao đổi về công việc và những sản phẩm đã xây.</p><div class="actions"><a class="button primary" href="mailto:dvtien0805@gmail.com">dvtien0805@gmail.com <span aria-hidden="true">↗</span></a><a class="button secondary" href="https://github.com/tienDang0805" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a></div></section>
+    </div>
+
+    <div class="page-view" data-view="discord" hidden>
+      <section class="container bot-hero" aria-labelledby="discord-title">
+        <div class="bot-intro"><p class="eyebrow">Discord Bot · Một người bạn trong server</p><div class="bot-identity"><img src="assets/chatdvt-avatar.jpg" alt="Avatar ChatDVT" width="1024" height="1024"><span class="bot-label">AI ASSISTANT</span></div><h1 id="discord-title">Gặp <span class="cool-text">ChatDVT.</span></h1><p class="hero-lead">Trò chuyện, khám phá nội dung và chơi quiz — một trợ lý AI có cá tính, ngay trong Discord của bạn.</p><div class="actions"><a class="button primary" href="#discord/proof">Xem ChatDVT hoạt động <span aria-hidden="true">↓</span></a><a class="button secondary" href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">Source code <span aria-hidden="true">↗</span></a></div><a class="creator-credit" href="#me"><img src="assets/tien-profile.jpg" alt="" width="320" height="320"><span>Được xây dựng bởi <strong>Đặng Văn Tiến</strong></span><span aria-hidden="true">↗</span></a></div>
+        <figure class="bot-proof-hero"><div class="proof-topline"><span class="status-dot"></span> ChatDVT trong Discord <span>ẢNH THẬT</span></div><button class="proof-image-button" type="button" data-image="assets/chatdvt-quiz-running.png" data-caption="Racoon Quiz — câu hỏi và lựa chọn trả lời ngay trong Discord."><img src="assets/chatdvt-quiz-running.png" alt="Mở ảnh ChatDVT chạy quiz lập trình hướng đối tượng trong Discord" width="1554" height="968"><span class="image-hint">Xem ảnh đầy đủ ↗</span></button><figcaption><strong>Quiz ngay trong cuộc trò chuyện.</strong><span>Câu hỏi, thời gian trả lời và lựa chọn hiển thị trực tiếp trong channel.</span></figcaption></figure>
+      </section>
+      <section class="container section bot-capabilities" aria-labelledby="capabilities-title"><div><p class="eyebrow">ChatDVT làm được gì?</p><h2 id="capabilities-title">Hữu ích.<br><span class="cool-text">Và có cá tính.</span></h2></div><ul class="editorial-list"><li><span>01</span><div><h3>Trò chuyện theo ngữ cảnh</h3><p>Tiếp nối hội thoại, giải đáp câu hỏi và tương tác trong Discord.</p></div></li><li><span>02</span><div><h3>Ảnh, video &amp; tóm tắt</h3><p>Phân tích nội dung đa phương thức và tóm tắt cuộc trò chuyện.</p></div></li><li><span>03</span><div><h3>Personality &amp; mini game</h3><p>Cấu hình nhân cách, giọng điệu; chơi quiz cùng cộng đồng.</p></div></li></ul></section>
+      <section class="container section" id="proof" aria-labelledby="proof-title"><div class="section-heading"><div><p class="eyebrow">Giao diện thật · Không phải mockup Discord</p><h2 id="proof-title">Không chỉ nói.<br><span class="muted-heading">Đây là ChatDVT đang chạy.</span></h2></div><p>Ảnh chụp từ Discord của Tiến. Bấm vào từng ảnh để xem đầy đủ.</p></div><div class="proof-gallery"><figure class="gallery-wide"><button type="button" class="proof-image-button" data-image="assets/chatdvt-intro.png" data-caption="ChatDVT tự giới thiệu và phản hồi trong hội thoại Discord."><img src="assets/chatdvt-intro.png" alt="Mở ảnh ChatDVT tự giới thiệu trong Discord" width="1574" height="1036" loading="lazy"><span class="image-hint">Xem ảnh đầy đủ ↗</span></button><figcaption><strong>Một người bạn, một giọng điệu riêng.</strong><span>ChatDVT trong hội thoại thực tế.</span></figcaption></figure><figure><button type="button" class="proof-image-button" data-image="assets/chatdvt-personality.png" data-caption="Cấu hình nhân cách bot: danh tính, mục đích, sở thích, tính cách và giọng văn."><img src="assets/chatdvt-personality.png" alt="Mở ảnh cấu hình nhân cách ChatDVT" width="976" height="1458" loading="lazy"><span class="image-hint">Xem ảnh đầy đủ ↗</span></button><figcaption><strong>Personality do bạn định nghĩa.</strong><span>Danh tính, tính cách và giọng văn.</span></figcaption></figure><figure><button type="button" class="proof-image-button" data-image="assets/chatdvt-quiz-setup.png" data-caption="Thiết lập Racoon Quiz: chủ đề, số câu hỏi, thời gian, độ khó và giọng văn."><img src="assets/chatdvt-quiz-setup.png" alt="Mở ảnh thiết lập Racoon Quiz của ChatDVT" width="1018" height="1438" loading="lazy"><span class="image-hint">Xem ảnh đầy đủ ↗</span></button><figcaption><strong>Quiz theo chủ đề của bạn.</strong><span>Thiết lập câu hỏi và thời gian trả lời.</span></figcaption></figure><figure class="gallery-key"><button type="button" class="proof-image-button" data-image="assets/chatdvt-api-key.png" data-caption="Modal cấu hình Gemini API key trong Discord. Bản mẫu chỉ hiển thị ảnh, không thu thập key."><img src="assets/chatdvt-api-key.png" alt="Mở ảnh modal cấu hình Gemini API key" width="976" height="606" loading="lazy"><span class="image-hint">Xem ảnh đầy đủ ↗</span></button><figcaption><strong>Cấu hình ngay trong Discord.</strong><span>Ảnh minh hoạ luồng API key; bản mẫu không nhận dữ liệu.</span></figcaption></figure></div></section>
+      <section class="container creator-section"><img src="assets/tien-profile.jpg" alt="Đặng Văn Tiến" width="320" height="320" loading="lazy"><div><p class="eyebrow">Người xây dựng</p><h2>ChatDVT là sản phẩm.<br>Tiến là người đứng phía sau.</h2><p>Mình là Mobile Developer, xây ChatDVT như một project cá nhân để học và thử nghiệm AI trong sản phẩm thực tế.</p><a class="text-link" href="#me">Tìm hiểu về Tiến <span aria-hidden="true">↗</span></a></div></section>
+    </div>
+
+    <div class="page-view" data-view="mobile" hidden>
+      <section class="container collection-hero"><div><p class="eyebrow">Mobile · Công việc chính của Tiến</p><h1>Những công cụ nhỏ.<br><span class="warm-text">Cho việc mobile mỗi ngày.</span></h1><p class="hero-lead">Tool để test, debug và tài liệu mình dùng khi làm React Native, Android/Kotlin.</p><a href="#me/experience" class="text-link">Xem kinh nghiệm mobile của mình ↗</a></div><aside class="practice-note"><span>TRONG BỘ ĐỒ NGHỀ</span><h2>Build.<br>Test.<br>Debug.</h2><p>React Native · Android · Native SDK</p></aside></section>
+      <section class="container collection-section"><div class="section-heading"><div><p class="eyebrow">Bộ công cụ</p><h2>Làm nhanh hơn.<br>Kiểm tra rõ hơn.</h2></div><p>Các tool hiện có. Đợt này chỉ thay giao diện trang giới thiệu, không thay tính năng bên trong.</p></div><div class="tool-design-list"><article><span class="work-number">01</span><div><h3>Android Toolbox</h3><p>Kết nối thiết bị Android qua USB, kiểm tra app và log.</p><small>USB · Chrome</small></div><span>↗</span></article><article><span class="work-number">02</span><div><h3>Deep Link Tester</h3><p>Soạn URI, tạo QR và kiểm tra đường dẫn mở ứng dụng.</p><small>iOS · Android</small></div><span>↗</span></article><article><span class="work-number">03</span><div><h3>WebView Simulator</h3><p>Xem nhanh HTML, CSS và JavaScript trong khung mobile.</p><small>HTML · CSS · JS</small></div><span>↗</span></article><article><span class="work-number">04</span><div><h3>QR Generator</h3><p>Tạo mã QR với màu sắc và logo của bạn.</p><small>QR · Export</small></div><span>↗</span></article></div></section><section class="container guide-design"><p class="eyebrow">Tài liệu</p><h2>React Native Learning Guide</h2><p>Ghi chú về kiến trúc, kiểm thử và CI/CD.</p></section>
+    </div>
+    <div class="page-view" data-view="projects" hidden>
+      <section class="container collection-hero"><div><p class="eyebrow">Projects &amp; Lab · Ngoài công việc</p><h1>Có ý tưởng.<br><span class="warm-text">Mình thử làm.</span></h1><p class="hero-lead">Những sản phẩm cá nhân, developer tools, AI lab và web game mình xây để học bằng cách làm.</p></div><aside class="practice-note"><span>PERSONAL WORK</span><h2>Thử nghiệm.<br>Đưa vào dùng.<br>Rồi cải tiến.</h2><p>Không bao gồm mã nguồn dự án công ty.</p></aside></section>
+      <section class="container collection-section"><a class="project-design-feature" href="#mobile"><div><p class="eyebrow">Featured · Developer tools</p><h2>Mobile Developer Toolkit</h2><p>Android Toolbox, Deep Link Tester, WebView Simulator và QR Generator.</p><span class="text-link">Khám phá bộ công cụ ↗</span></div><div class="tool-pills"><span>Android Toolbox</span><span>Deep Link</span><span>WebView</span><span>QR</span></div></a><div class="section-heading"><div><p class="eyebrow">Selected work</p><h2>Tự xây. Tự khám phá.</h2></div></div><div class="project-design-grid"><a href="#discord"><img src="assets/chatdvt-avatar.jpg" alt="ChatDVT"><h3>ChatDVT</h3><p>Trợ lý AI trên Discord, hội thoại và mini game.</p><span>AI · Discord ↗</span></a><article><span class="work-number">02</span><h3>Survivor Arena</h3><p>Web game auto-shooter roguelike với hệ thống nâng cấp kỹ năng.</p><span>Game · Web</span></article><article><span class="work-number">03</span><h3>Mermaid Diagram Studio</h3><p>Công cụ vẽ sơ đồ phục vụ việc học và phát triển phần mềm.</p><span>Developer Tools</span></article></div><div class="section-heading"><div><p class="eyebrow">Khám phá thêm</p><h2>Lab &amp; thử nghiệm</h2></div><input class="design-search" aria-label="Tìm dự án trong bản mẫu" placeholder="Tìm dự án…"></div><div class="design-filters"><button class="is-active" data-filter="all">Tất cả</button><button data-filter="developer">Developer Tools</button><button data-filter="ai">AI Lab</button><button data-filter="game">Games</button></div><div class="project-design-grid design-results"><article data-category="developer"><h3>CV Builder</h3><p>Tạo và xem trước CV.</p></article><article data-category="ai"><h3>AI Quiz Generator</h3><p>Tạo quiz từ chủ đề bạn muốn học.</p></article><article data-category="game"><h3>Typing Duel</h3><p>Game luyện tốc độ gõ.</p></article></div><p class="design-empty" hidden>Không có dự án phù hợp.</p></section>
+    </div>
+    <div class="page-view" data-view="chat" hidden><section class="container design-chat"><aside><img src="assets/chatdvt-avatar.jpg" alt="ChatDVT"><h2>ChatDVT</h2><p>Người bạn AI trên web</p><button class="button secondary" id="demo-new-chat">Cuộc trò chuyện mới +</button><a href="#discord">Về ChatDVT ↗</a><a href="#me">Về người xây dựng ↗</a><small>BẢN THIẾT KẾ · Chưa gọi API</small></aside><div class="design-chat-main"><header><strong>ChatDVT Chat</strong><span>AI ASSISTANT</span></header><div class="design-chat-welcome"><img src="assets/chatdvt-avatar.jpg" alt=""><p class="eyebrow">ChatDVT · AI Assistant</p><h1>Chào bạn.<br>Hôm nay mình giúp gì?</h1><p>Hỏi về Tiến, khám phá các project hoặc cùng mình tìm hiểu một ý tưởng.</p><div class="design-prompts"><button data-prompt="Tiến làm gì?">Tiến làm gì? ↗</button><button data-prompt="Khám phá ChatDVT">Khám phá ChatDVT ↗</button><button data-prompt="Công cụ mobile">Công cụ mobile ↗</button><button data-prompt="Học React Native">Học React Native ↗</button></div></div><form class="design-composer"><input aria-label="Tin nhắn trong bản thiết kế" placeholder="Nhắn cho ChatDVT…"><button aria-label="Xem trạng thái mẫu">↑</button></form><p class="design-chat-status" aria-live="polite">Bản duyệt giao diện. Bản React sẽ giữ API và lịch sử chat hiện có.</p></div></section></div>
+    <div class="page-view" data-view="blog" hidden><section class="container collection-hero"><div><p class="eyebrow">Blog · Viết để nhớ</p><h1>Chuyện làm nghề.<br><span class="warm-text">Và những thứ mình tự xây.</span></h1><p class="hero-lead">Ghi lại những điều mình học khi làm mobile, xây ChatDVT và thử các project cá nhân.</p></div><aside class="blog-author-note"><img src="assets/tien-profile.jpg" alt="Đặng Văn Tiến"><div><strong>Đặng Văn Tiến</strong><p>Mobile Software Engineer</p><a href="#me" class="text-link">Về người viết ↗</a></div></aside></section><section class="container collection-section"><p class="eyebrow">Bài viết đã đăng · 01</p><article class="blog-design-article"><div class="entry-meta"><span>CHATDVT · PHẦN 1</span><span>9 PHÚT ĐỌC</span></div><h2>Vì sao một Mobile Dev lại đi làm bot?<br>Chuyện về ChatDVT.</h2><p>ChatDVT không bắt đầu từ một ý tưởng startup hay một project để làm đẹp CV. Nó bắt đầu từ một lần mình dỗi mấy ông đồng nghiệp.</p><div class="entry-meta"><span>23.09.2026</span><a href="http://127.0.0.1:4175/blog/chatdvt-phan-1">Đọc bài viết trên bản React ↗</a></div></article></section></div>
+  </main>
+
+  <footer class="container site-footer"><a class="wordmark" href="#home">Đặng Văn Tiến<span>.</span></a><p>Mobile Software Engineer · React Native &amp; Android/Kotlin</p><a href="mailto:dvtien0805@gmail.com">Liên hệ <span aria-hidden="true">↗</span></a></footer>
+  <nav class="review-switcher" aria-label="Chuyển trang trong bản duyệt"><span>BẢN DUYỆT · 7 TRANG</span><a href="#home" data-preview="home">Homepage</a><a href="#me" data-preview="me">Me</a><a href="#discord" data-preview="discord">Discord Bot</a><a href="#mobile" data-preview="mobile">Mobile</a><a href="#projects" data-preview="projects">Projects</a><a href="#chat" data-preview="chat">AI Chat</a><a href="#blog" data-preview="blog">Blog</a></nav>
+  <dialog class="image-dialog" aria-labelledby="image-caption"><button class="dialog-close icon-button" type="button" aria-label="Đóng ảnh">×</button><img alt="" src="assets/chatdvt-quiz-running.png"><p id="image-caption"></p></dialog>
+</body>
+</html>

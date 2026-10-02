@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Archive, Smartphone } from 'lucide-react';
+import { Archive } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { SiteLayout } from '../components/SiteLayout';
 import { archiveItems, projectItems, type SiteItem } from '../content/siteData';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../shared/i18n/LanguageContext';
 
 type ProjectFilter = 'all' | 'developer' | 'ai' | 'learning' | 'game';
 
@@ -22,12 +23,13 @@ function matches(item: SiteItem, tab: ProjectFilter, query: string): boolean {
 }
 
 function ProjectCard({ item, index }: { item: SiteItem; index: number }) {
-  return <Link to={item.href} className="experiment-card">
+  const { pathFor } = useLanguage();
+  return <Link to={item.id === 'chatdvt' ? pathFor('/discord') : item.href} className="experiment-card">
     <div className="experiment-card__top">
       <span className="experiment-card__icon"><item.icon size={20} /></span>
       <span className="experiment-card__index">{String(index + 1).padStart(2, '0')}</span>
     </div>
-    <h3>{item.title}</h3>
+    {item.id === 'chatdvt' && <img className="experiment-card__bot" src="/images/chibi/chatdvt.jpg" alt="" width={68} height={68} />}<h3>{item.title}</h3>
     <p>{item.description}</p>
     <div className="site-tags site-tags--status">
       <span className={item.status === 'stable' ? 'is-stable' : 'is-beta'}>{item.status === 'stable' ? 'Stable' : 'Beta'}</span>
@@ -39,6 +41,8 @@ function ProjectCard({ item, index }: { item: SiteItem; index: number }) {
 
 export function PlaygroundPage() {
   const { t } = useTranslation('site');
+  const { locale, pathFor } = useLanguage();
+  const en = locale === 'en';
   const tabs: Array<{ label: string; value: ProjectFilter }> = [
     { label: t('playground.all'), value: 'all' }, { label: 'Developer Tools', value: 'developer' }, { label: 'AI Lab', value: 'ai' }, { label: 'Learning & Productivity', value: 'learning' }, { label: 'Games', value: 'game' },
   ];
@@ -73,13 +77,13 @@ export function PlaygroundPage() {
     <section className="page-hero">
       <div className="site-container page-hero__grid"><div>
         <p className="site-kicker">Projects & Lab</p>
-        <h1>{t('playground.title')}</h1>
+        <h1>{en ? 'An idea.' : 'Có ý tưởng.'}<br /><em>{en ? 'I try building it.' : 'Mình thử làm.'}</em></h1>
         <p className="page-hero__aside">{t('playground.intro')}</p>
-      </div></div>
+      </div><aside className="practice-note"><small>PERSONAL WORK</small><h2>{en ? <>Experiment.<br />Use it.<br />Improve.</> : <>Thử nghiệm.<br />Đưa vào dùng.<br />Rồi cải tiến.</>}</h2><p>{en ? 'Personal projects, separate from company work.' : 'Project cá nhân, tách biệt với công việc công ty.'}</p></aside></div>
     </section>
 
     <section className="site-container site-section">
-      <Link to={spotlight.href} className="playground-spotlight">
+      <Link to={spotlight.id === 'mobile-toolkit' ? pathFor('/mobile') : spotlight.href} className="playground-spotlight">
         <div className="playground-spotlight__copy">
           <small>Featured · {spotlight.status}</small>
           <h2>{spotlight.title}</h2>
@@ -87,7 +91,7 @@ export function PlaygroundPage() {
           <div className="site-tags">{spotlight.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
           <span className="playground-spotlight__link">{t('playground.explore')} <b>↗</b></span>
         </div>
-        <div className="playground-spotlight__visual"><span>BUILD · TEST · DEBUG</span><Smartphone size={92} strokeWidth={1.25} /><strong>MOBILE DEV KIT</strong></div>
+        <div className="playground-spotlight__visual"><span>BUILD · TEST · DEBUG</span><div className="tool-pills"><span>Android Toolbox</span><span>Deep Link</span><span>WebView</span><span>QR Generator</span></div><strong>React Native & Android</strong></div>
       </Link>
 
       <div className="projects-section-heading">
@@ -101,7 +105,7 @@ export function PlaygroundPage() {
         <div><small>PUBLIC PROJECTS</small><h2>{t('playground.more')}</h2></div><p>{t('playground.moreDesc')}</p>
       </div>
       <div className="filter-bar">
-        <div className="filter-tabs">{tabs.map((item) => <button key={item.value} className={tab === item.value ? 'is-active' : ''} onClick={() => setTab(item.value)}>{item.label}</button>)}</div>
+        <div className="filter-tabs">{tabs.map((item) => <button type="button" aria-pressed={tab === item.value} key={item.value} className={tab === item.value ? 'is-active' : ''} onClick={() => setTab(item.value)}>{item.label}</button>)}</div>
         <input className="site-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t('playground.search')} aria-label={t('playground.search')} />
       </div>
       <div className="experiment-grid">
@@ -111,7 +115,7 @@ export function PlaygroundPage() {
 
       <div className="archive-panel">
         <div><small>ARCHIVE</small><h2>{t('playground.archive')}</h2><p>{t('playground.archiveDesc')}</p></div>
-        <button className="site-button" onClick={() => setShowArchive((value) => !value)} aria-expanded={showArchive}>
+        <button type="button" className="site-button" onClick={() => setShowArchive((value) => !value)} aria-expanded={showArchive}>
           <Archive size={17} /> {showArchive ? t('playground.hideArchive') : t('playground.showArchive', { count: archiveItems.length })}
         </button>
       </div>
@@ -119,7 +123,7 @@ export function PlaygroundPage() {
         <div className="experiment-grid experiment-grid--archive">
           {visibleArchive.map((item, index) => <ProjectCard key={item.id} item={item} index={index} />)}
         </div>
-        {visibleArchive.length === 0 && <div className="projects-empty">Archive không có mục phù hợp với bộ lọc.</div>}
+        {visibleArchive.length === 0 && <div className="projects-empty">{en ? 'No archived projects match these filters.' : 'Archive không có mục phù hợp với bộ lọc.'}</div>}
       </>}
     </section>
   </SiteLayout>;

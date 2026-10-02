@@ -41,9 +41,9 @@ export function BlogPage() {
     <section className="page-hero blog-hero">
       <div className="site-container page-hero__grid"><div>
         <p className="site-kicker">Blog</p>
-        <h1>{t('blog.title')}</h1>
+        <h1>{locale === 'en' ? 'Notes from work.' : 'Chuyện làm nghề.'}<br /><em>{locale === 'en' ? 'And the things I build.' : 'Và những thứ mình tự xây.'}</em></h1>
         <p className="page-hero__aside">{t('blog.intro')}</p>
-      </div></div>
+      </div><aside className="blog-author-note"><img src="/images/tien-dang-profile.jpg" alt="Đặng Văn Tiến" width={96} height={96}/><div><strong>Đặng Văn Tiến</strong><p>Mobile Software Engineer</p><Link to={pathFor('/me')} className="arrow-link"><span>{locale === 'en' ? 'About the author' : 'Về người viết'}</span><b>↗</b></Link></div></aside></div>
     </section>
 
     <section className="site-container blog-index">

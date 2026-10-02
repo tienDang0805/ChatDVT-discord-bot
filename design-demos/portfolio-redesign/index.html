@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đặng Văn Tiến × ChatDVT — So sánh 3 hướng</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f0e8; color: #17181d; font: 16px/1.6 system-ui, sans-serif; }
+    main { max-width: 1600px; margin: auto; padding: 40px 32px 64px; }
+    h1 { margin: 12px 0; font-size: clamp(30px, 4vw, 52px); line-height: 1.15; letter-spacing: -.035em; }
+    h2 { margin: 0 0 8px; font-size: 22px; line-height: 1.3; }
+    p { margin: 0 0 16px; max-width: 75ch; text-wrap: pretty; }
+    .eyebrow { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 36px; }
+    article { min-width: 0; border-top: 2px solid #17181d; padding-top: 16px; }
+    .preview { display: block; border: 1px solid #d0c9bc; margin: 20px 0; }
+    img { display: block; width: 100%; height: auto; }
+    .number { display: block; margin-bottom: 10px; font: 12px/1.5 monospace; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    a { color: inherit; }
+    .actions a { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px; border: 1px solid #17181d; text-decoration: none; }
+    .actions a:first-child { background: #17181d; color: #f4f0e8; }
+    a:focus-visible { outline: 3px solid #5865f2; outline-offset: 4px; }
+    footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #c9c2b5; }
+    .reference { font-size: 14px; }
+    .approved-banner { margin: 28px 0; padding: 24px; border-radius: 24px; background: #e7f0ed; }
+    .approved-banner a { display: inline-flex; align-items: center; min-height: 44px; margin: 8px 8px 0 0; padding: 8px 18px; border-radius: 999px; background: #17181d; color: #f4f0e8; text-decoration: none; }
+    @media(max-width: 1000px) { .grid { grid-template-columns: 1fr; } main { padding: 24px 20px 48px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <span class="eyebrow">Portfolio direction study · 01.10.2026</span>
+    <h1>Đặng Văn Tiến × ChatDVT</h1>
+    <p>Đặng Văn Tiến là thương hiệu chính. ChatDVT là sản phẩm tiêu biểu chứng minh khả năng xây và vận hành sản phẩm. Ba bản dùng chung nội dung và hình ảnh thật, dành cho recruiter.</p>
+    <p>Phạm vi: Homepage cùng định hướng cho Mobile, Projects &amp; Lab, Discord Bot, AI Chat, Blog và About Me. Đây là prototype để chọn thiết kế; các feature bên trong chưa được triển khai lại.</p>
+    <section class="approved-banner" aria-label="Bản duyệt mới nhất"><h2>Đã chọn hướng 3 · Bản mới mềm hơn</h2><p>Homepage/Me lấy Tiến làm trung tâm; Discord Bot lấy ChatDVT làm nhân vật chính. Ba bản đầu được giữ lại bên dưới để đối chiếu.</p><a href="direction-3-refined.html#home">Homepage</a><a href="direction-3-refined.html#me">Me</a><a href="direction-3-refined.html#discord">Discord Bot</a></section>
+    <div class="grid">
+      <article>
+        <span class="number">01 / CINEMATIC SIGNAL</span>
+        <h2>Đậm chất kỹ thuật</h2>
+        <p>Nền tối, tên lớn và ảnh ChatDVT hoạt động ngay ở màn hình đầu. Tín hiệu hội thoại nối người tạo với sản phẩm.</p>
+        <a class="preview" href="direction-1-cinematic-signal.html" target="_blank" rel="noopener"><img src="screenshots/direction-1-desktop.png" alt="Hướng 1: Cinematic Signal, portfolio nền tối với bằng chứng ChatDVT"></a>
+        <div class="actions"><a href="direction-1-cinematic-signal.html" target="_blank" rel="noopener">Mở prototype</a><a href="screenshots/direction-1-mobile.png" target="_blank" rel="noopener">Ảnh mobile</a></div>
+        <p class="reference">Huashu: hướng #8 trong thư viện web, diễn giải thành tín hiệu hội thoại.</p>
+      </article>
+      <article>
+        <span class="number">02 / RECRUITER LEDGER</span>
+        <h2>Hồ sơ dễ đọc</h2>
+        <p>Thông tin Tiến ở cột trái; chuyên môn, project và ảnh sản phẩm ở cột phải. Nhịp đọc rõ, giúp recruiter kiểm tra từng lớp bằng chứng.</p>
+        <a class="preview" href="direction-2-recruiter-ledger.html" target="_blank" rel="noopener"><img src="screenshots/direction-2-desktop.png" alt="Hướng 2: Recruiter Ledger, hồ sơ cố định bên trái và bằng chứng bên phải"></a>
+        <div class="actions"><a href="direction-2-recruiter-ledger.html" target="_blank" rel="noopener">Mở prototype</a><a href="screenshots/direction-2-mobile.png" target="_blank" rel="noopener">Ảnh mobile</a></div>
+        <p class="reference">Tham chiếu cách tổ chức thông tin: <a href="https://brittanychiang.com/" target="_blank" rel="noopener">Brittany Chiang</a>.</p>
+      </article>
+      <article>
+        <span class="number">03 / HUMAN × SIDEKICK</span>
+        <h2>Nhận diện cả người và sản phẩm</h2>
+        <p>Chân dung Tiến và avatar ChatDVT thành cặp nhận diện. Màu vàng cam và cyan lấy từ mascot, bố cục như một ấn phẩm cá nhân.</p>
+        <a class="preview" href="direction-3-human-sidekick.html" target="_blank" rel="noopener"><img src="screenshots/direction-3-desktop.png" alt="Hướng 3: Human × Sidekick, chân dung Đặng Văn Tiến và mascot ChatDVT"></a>
+        <div class="actions"><a href="direction-3-human-sidekick.html" target="_blank" rel="noopener">Mở prototype</a><a href="screenshots/direction-3-mobile.png" target="_blank" rel="noopener">Ảnh mobile</a></div>
+        <p class="reference">Tham chiếu tư duy xây hệ nhận diện: <a href="https://wearecollins.com/" target="_blank" rel="noopener">COLLINS</a>.</p>
+      </article>
+    </div>
+    <footer>
+      <p>Hướng 3 đã được chọn. Vòng hiện tại là bản duyệt chi tiết Homepage, Me và Discord Bot; frontend production vẫn chưa chỉnh sửa.</p>
+      <p><a href="design-spec.md">Design brief</a> · <a href="brand-spec.md">Brand &amp; asset spec</a></p>
+    </footer>
+  </main>
+</body>
+</html>

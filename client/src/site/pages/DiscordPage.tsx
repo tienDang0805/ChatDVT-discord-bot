@@ -14,6 +14,8 @@ import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { BotAvatar } from '../components/BotAvatar';
+import { ProductProof } from '../components/ProductProof';
+import { discordProofs } from '../content/discordProofs';
 import { SectionHeading, SiteLayout } from '../components/SiteLayout';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 
@@ -185,10 +187,10 @@ export function DiscordPage() {
 
   return <SiteLayout>
     <section className="discord-hero">
-      <div className="site-container discord-hero__content">
+      <div className="site-container discord-hero__grid"><div className="discord-hero__content">
         <BotAvatar className="discord-avatar" />
         <p className="site-kicker">Discord AI Bot</p>
-        <h1>{isEn ? 'ChatDVT — an AI chatbot for Discord' : 'ChatDVT — AI chatbot cho Discord'}</h1>
+        <h1>{isEn ? 'Meet ' : 'Gặp '}<em>ChatDVT.</em></h1>
         <p>{isEn ? 'Mention it to ask questions, attach images or videos for analysis, summarize conversations, and play mini games with your server.' : 'AI chatbot cho Discord: mention để hỏi, gửi ảnh hoặc video để phân tích, tóm tắt hội thoại và chơi mini game cùng server.'}</p>
         <div className="site-hero__actions">
           <Link className="site-button site-button--primary" to={pathFor('/chat')}><MessageCircle size={18} /> {isEn ? 'Chat on the web' : 'Chat trên web'}</Link>
@@ -200,7 +202,14 @@ export function DiscordPage() {
           <span><ShieldCheck size={14} /> {isEn ? 'Per-server configuration' : 'Cấu hình riêng theo server'}</span>
           <span><Gamepad2 size={14} /> 3 {isEn ? 'mini games' : 'mini game'}</span>
         </div>
-      </div>
+        <Link to={pathFor('/me')} className="creator-credit"><img src="/images/tien-dang-profile.jpg" alt="" width={36} height={36}/><span>{isEn ? 'Built by ' : 'Được xây dựng bởi '}<strong>Đặng Văn Tiến</strong></span><span>↗</span></Link>
+      </div><ProductProof compact /></div>
+    </section>
+
+    <section className="site-container site-section">
+      <SectionHeading eyebrow={isEn ? 'ACTUAL SCREENSHOTS' : 'GIAO DIỆN THẬT'} title={isEn ? 'Not just words. Here it is.' : 'Không chỉ nói. Đây là ChatDVT.'} />
+      <p className="proof-intro">{isEn ? 'Screenshots shared by Tiến. Click to view each image in full.' : 'Ảnh chụp từ Discord của Tiến. Bấm vào từng ảnh để xem đầy đủ.'}</p>
+      <div className="discord-proof-gallery">{discordProofs.slice(1).map((proof,index) => <ProductProof key={proof.file} index={index+1} />)}</div>
     </section>
 
     <section className="site-container site-section">

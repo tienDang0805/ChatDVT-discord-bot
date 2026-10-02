@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tiến — Một mạch tò mò</title><link rel="stylesheet" href="b.css">
+</head>
+<!-- Direction study B. Assumptions: recruiters need proof first, personality follows real
+work. Form seed: one continuous thread from mobile work into side projects and writing.
+This is one of three direction drafts, awaiting the owner's selection; no production edits.
+Genuine supplied images and local fonts; no invented company UI, metrics or biography.
+The chat response is an explicitly labelled local layout demo. -->
+<body>
+<a class="skip" href="#main">Đến nội dung</a>
+<header class="site-header">
+  <a class="wordmark" href="#home" aria-label="Trang chủ Tiến">tiến<span class="wordmark-dot">.</span></a>
+  <button class="menu-button" aria-expanded="false" aria-controls="navigation">Menu <span>+</span></button>
+  <nav id="navigation" aria-label="Điều hướng chính">
+    <a href="http://127.0.0.1:4175/mobile">Mobile</a><a href="#playground" data-route="playground">Projects & Lab</a><a href="http://127.0.0.1:4175/discord">Discord Bot</a><a href="#chat" data-route="chat">AI Chat</a><a href="http://127.0.0.1:4175/blog">Blog</a><a href="#me" data-route="me">About Me</a>
+  </nav>
+</header>
+<main id="main" tabindex="-1">
+<section class="view home-view" data-view="home">
+  <div class="home-intro">
+    <div class="hello"><span>Chào bạn, mình là</span><img src="../assets/tien-profile.jpg" width="76" height="76" alt="Đặng Văn Tiến"><strong>Tiến.</strong></div>
+    <h1>Viết code cho màn hình nhỏ.<br><span>Giữ chỗ cho ý tưởng lớn.</span></h1>
+    <p class="intro-copy">Mobile Software Engineer tại TP. Hồ Chí Minh.<br>Mình làm React Native, Android — và vài thứ ngoài giờ.</p>
+    <div class="intro-links"><a class="filled-link" href="#me">Làm quen với mình <span>↗</span></a><a class="text-link" href="mailto:dvtien0805@gmail.com">Gửi mình một email <span>↗</span></a></div>
+    <div class="intro-caption"><span>THEO MẠCH TÒ MÒ</span><div class="thread-navigation" aria-label="Khám phá câu chuyện"><button data-jump="home-work">Làm mobile</button><span>—</span><button data-jump="home-experiments">Thử ý tưởng</button><span>—</span><button data-jump="home-writing">Kể lại</button></div></div>
+  </div>
+  <div class="story">
+    <section class="chapter" id="home-work">
+      <div class="chapter-marker"><span>LÀM</span><p>Ban ngày</p></div>
+      <div class="chapter-content">
+        <p class="eyebrow">SOUTH TELECOM · 04.2023 — HIỆN TẠI</p>
+        <h2>Một ứng dụng tốt phải chạy tốt.<br>Kể cả ở những đoạn khó thấy.</h2>
+        <p>Mình phát triển ứng dụng B2B CRM, từ ticket, nhắn tin và báo cáo đến Android widget. Phần việc còn lại là sửa lỗi production và giữ ứng dụng hoạt động qua những lần nâng cấp.</p>
+        <div class="work-lines"><p><strong>Ở phía giao diện</strong><span>React Native · TypeScript · REST API</span></p><p><strong>Ở phía native</strong><span>SDK, camera, tương thích Android và kết nối thiết bị</span></p></div>
+        <a class="text-link" href="#me">Xem mình đóng góp những gì <span>↗</span></a>
+        <p class="bridge">Những bài toán trong công việc thường để lại một câu hỏi:<br><strong>“Nếu có một công cụ nhỏ cho việc này thì sao?”</strong></p>
+      </div>
+    </section>
+    <section class="chapter experiment-chapter" id="home-experiments">
+      <div class="chapter-marker"><span>THỬ</span><p>Ngoài giờ</p></div>
+      <div class="chapter-content">
+        <p class="eyebrow">TỪ CÂU HỎI ĐẾN THỨ CÓ THỂ DÙNG</p>
+        <h2>Thế là mình thử làm.</h2>
+        <p>Đôi khi là công cụ test deep link. Đôi khi là một bot Discord để nói chuyện, tóm tắt và chơi quiz cùng mọi người. ChatDVT là một trong những thử nghiệm đã đi xa hơn câu hỏi ban đầu.</p>
+        <div class="evidence-tabs" aria-label="Xem bằng chứng project"><button class="active" data-evidence="chatdvt" aria-pressed="true">Một lượt quiz</button><span>hoặc</span><button data-evidence="deeplink" aria-pressed="false">Một lần test deep link</button></div>
+        <figure class="evidence"><img id="home-evidence-image" src="../assets/chatdvt-quiz-running.png" alt="Ảnh thật: ChatDVT đang chạy quiz lập trình hướng đối tượng trên Discord"><figcaption><img id="home-evidence-avatar" src="../assets/chatdvt-avatar.jpg" width="38" height="38" alt="ChatDVT"><span id="home-evidence-caption"><strong>ChatDVT, một project của Tiến.</strong><br>Một lượt quiz thật trong Discord.</span><a id="home-evidence-link" href="#playground" aria-label="Khám phá project">↗</a></figcaption></figure>
+        <a class="text-link" href="#playground">Ghé Projects & Lab <span>↗</span></a>
+        <p class="bridge">Làm xong một thứ chưa phải hết chuyện.<br><strong>Mình còn muốn kể lại vì sao đã bắt đầu.</strong></p>
+      </div>
+    </section>
+    <section class="chapter writing-chapter" id="home-writing">
+      <div class="chapter-marker"><span>KỂ</span><p>Viết lại</p></div>
+      <div class="chapter-content">
+        <p class="eyebrow">23.09.2026 · 9 PHÚT ĐỌC</p>
+        <a class="article-heading" href="http://127.0.0.1:4175/blog/chatdvt-phan-1"><h2>Vì sao một Mobile Dev<br>lại đi làm bot?</h2><span>↗</span></a>
+        <p class="article-subtitle">Chuyện về ChatDVT · Phần 1</p>
+        <p>Không bắt đầu từ một ý tưởng startup hay một dòng để trang trí CV. Câu chuyện bắt đầu từ việc mình thấy khó chịu với đồng nghiệp — rồi đi làm một con bot.</p>
+        <a class="text-link" href="http://127.0.0.1:4175/blog/chatdvt-phan-1">Đọc câu chuyện <span>↗</span></a>
+      </div>
+    </section>
+  </div>
+  <div class="contact-end"><p>Còn câu chuyện của bạn?</p><h2>Mình nghe đây.</h2><a href="mailto:dvtien0805@gmail.com">dvtien0805@gmail.com <span>↗</span></a></div>
+</section>
+<section class="view me-view" data-view="me" hidden>
+  <div class="me-opening page-width">
+    <div class="me-greeting"><img src="../assets/tien-profile.jpg" width="68" height="68" alt="Đặng Văn Tiến"><p>Đặng Văn Tiến<br><span>Mobile Software Engineer · TP. Hồ Chí Minh</span></p></div>
+    <p class="eyebrow">MỘT CHÚT VỀ NGƯỜI VIẾT CODE</p>
+    <h1>Mình thường ở<br><span>đoạn giao nhau.</span></h1>
+    <div class="intersection"><span>Giao diện</span><i>↔</i><span>Native</span><i>↔</i><span>Thiết bị</span></div>
+    <p class="me-lead">Từ một thao tác trên màn hình đến dữ liệu trả về từ SDK: đó là phần công việc mình đang làm với React Native và Android.</p>
+    <p class="career-line">Software Engineering tại <strong>PTIT, 2017–2022</strong><span> → </span>Mobile Software Engineer tại <strong>South Telecom, 04.2023–nay</strong></p>
+  </div>
+  <div class="contribution-wrap">
+    <div class="page-width contribution-intro"><p class="eyebrow">TRONG CÔNG VIỆC</p><h2>Năm bài toán.<br>Một cách nhìn từ ứng dụng xuống native.</h2><p>Các đóng góp ở mức tổng quan, không gồm thông tin khách hàng hoặc chi tiết hệ thống nội bộ.</p></div>
+    <div class="contributions page-width">
+      <article><span class="contribution-number">01</span><div><h3>Đưa nghiệp vụ vào ứng dụng</h3><p>Phát triển tính năng B2B CRM cho ticket, nhắn tin và báo cáo; bổ sung Android widget và sửa lỗi production.</p><p class="tools">React Native · TypeScript · REST API</p></div><span class="contribution-kind">Ứng dụng</span></article>
+      <article><span class="contribution-number">02</span><div><h3>Giữ dữ liệu khi mạng gián đoạn</h3><p>Xây dựng Mobile Analytics SDK với cơ chế lưu đệm offline và retry để gửi dữ liệu khi kết nối trở lại.</p><p class="tools">Android SDK · Kotlin · Java</p></div><span class="contribution-kind">Dữ liệu</span></article>
+      <article><span class="contribution-number">03</span><div><h3>Để camera hiểu được sản phẩm</h3><p>Tích hợp model do team AI cung cấp vào Android Barcode Scanning SDK cho quét sản phẩm, barcode và OCR.</p><p class="tools">CameraX · ML Kit · TensorFlow Lite</p></div><span class="contribution-kind">Camera</span></article>
+      <article><span class="contribution-number">04</span><div><h3>Giữ ứng dụng cũ đi tiếp</h3><p>Nâng cấp các ứng dụng React Native legacy và xử lý những vấn đề tương thích Android.</p><p class="tools">React Native · Gradle · Maven</p></div><span class="contribution-kind">Bảo trì</span></article>
+      <article><span class="contribution-number">05</span><div><h3>Nối màn hình với robot</h3><p>Bridge Android SDK sang React Native để điều khiển robot và nhận trạng thái thiết bị.</p><p class="tools">Native Modules · Android SDK · Kotlin</p></div><span class="contribution-kind">Thiết bị</span></article>
+    </div>
+  </div>
+  <div class="me-after page-width"><h2>Ngoài giờ, mình vẫn tò mò.</h2><p>ChatDVT và những công cụ mobile là nơi mình tiếp tục thử những ý tưởng nhỏ. Có thứ để dùng, có thứ để học, có thứ để kể lại.</p><div class="sidekick"><img src="../assets/chatdvt-avatar.jpg" width="52" height="52" alt="ChatDVT"><div><strong>Gặp project của mình</strong><a class="text-link" href="#playground">Projects & Lab <span>↗</span></a></div></div></div>
+  <div class="contact-end"><p>Nói chuyện công việc, hoặc một ý tưởng nhỏ.</p><h2>Cứ nhắn mình.</h2><a href="mailto:dvtien0805@gmail.com">dvtien0805@gmail.com <span>↗</span></a></div>
+</section>
+<section class="view playground-view" data-view="playground" hidden>
+  <div class="lab-heading page-width"><p class="eyebrow">PROJECTS & LAB</p><h1>Mở một ý tưởng.<br><span>Xem nó đi tới đâu.</span></h1><p>Một vài project của mình: công cụ cho công việc hằng ngày,<br>bot cho Discord và các thử nghiệm trên trình duyệt.</p></div>
+  <div class="lab-space page-width">
+    <aside class="lab-index" aria-label="Khám phá project"><div class="filter-row" aria-label="Lọc project"><button class="active" data-filter="all">Tất cả</button><button data-filter="mobile">Mobile</button><button data-filter="tools">Công cụ</button><button data-filter="bot">Bot</button></div><div id="experiment-list"></div><div class="mobile-project-selector"><label for="project-select">Chọn một project</label><select id="project-select"></select></div><p class="index-foot">Chọn một project để xem<br>nó làm gì và vì sao có mặt ở đây.</p></aside>
+    <div class="selected-experiment" id="selected-experiment" aria-live="polite"></div>
+  </div>
+  <div class="lab-bottom page-width"><h2>Từ mobile, rồi rẽ thêm vài nhánh.</h2><p>Mobile Developer Toolkit là bộ công cụ mình dành cho việc test Android, deep link, WebView và QR. Với các thử nghiệm khác, hãy xem yêu cầu sử dụng trước khi mở.</p><a class="text-link" href="http://127.0.0.1:4175/mobile">Đi tới bộ công cụ mobile <span>↗</span></a></div>
+</section>
+<section class="view chat-view" data-view="chat" hidden>
+  <div class="chat-shell">
+    <aside class="chat-history" id="chat-history"><div class="history-title"><strong>Cuộc trò chuyện</strong><button id="history-close" aria-label="Đóng lịch sử">×</button></div><button class="new-chat" id="new-chat">+ Trò chuyện mới</button><div id="history-list"><p>Chưa có cuộc trò chuyện.<br>Bắt đầu từ một câu hỏi nhé.</p></div><a href="#playground" class="history-about"><img src="../assets/chatdvt-avatar.jpg" width="36" height="36" alt=""><span>ChatDVT<br><small>Một project của Tiến ↗</small></span></a></aside>
+    <div class="conversation"><div class="conversation-top"><button id="history-toggle" aria-expanded="false" aria-controls="chat-history">Lịch sử</button><strong>ChatDVT <span>/ AI Chat</span></strong><span class="demo-label">BẢN MẪU GIAO DIỆN</span></div>
+      <div class="conversation-scroll" id="conversation-scroll"><div class="chat-empty" id="chat-empty"><img src="../assets/chatdvt-avatar.jpg" width="88" height="88" alt="ChatDVT"><p class="eyebrow">CHÀO BẠN, MÌNH LÀ CHATDVT</p><h1>Chuyện gì đang<br>ở trong đầu bạn?</h1><p>Có thể bắt đầu từ Tiến, công cụ mobile<br>hoặc một project bạn vừa thấy.</p><div class="suggestions"><button data-prompt="Tiến làm những gì với Android?">Tiến làm gì với Android? <span>↗</span></button><button data-prompt="Có công cụ nào để test deep link?">Mình muốn test deep link <span>↗</span></button><button data-prompt="ChatDVT bắt đầu như thế nào?">Kể mình nghe về ChatDVT <span>↗</span></button></div></div><div id="messages" aria-live="polite"></div></div>
+      <form class="composer" id="chat-form"><label class="sr-only" for="chat-input">Tin nhắn cho ChatDVT</label><div class="composer-input"><textarea id="chat-input" rows="1" placeholder="Viết một câu hỏi…"></textarea><button type="submit" aria-label="Gửi tin nhắn">↑</button></div><p>Minh hoạ bố cục hội thoại. Tin nhắn ở đây không được gửi tới AI.</p></form>
+    </div>
+  </div>
+</section>
+</main>
+<footer class="site-footer"><a href="#home" class="wordmark">tiến<span class="wordmark-dot">.</span></a><span>Code, thử, rồi kể lại.</span><div><a href="https://github.com/tienDang0805">GitHub ↗</a><a href="https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/">LinkedIn ↗</a><a href="mailto:dvtien0805@gmail.com">Email ↗</a></div></footer>
+<script src="b.js"></script>
+</body></html>

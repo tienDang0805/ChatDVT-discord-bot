@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-02",
+  "branch": "codex/wip-frontend-redesign-handoff-2026-10-02",
+  "baseCommit": "650c04a23600b9bc175f1d1a741d4f33e77699f4",
+  "originalCheckout": "/Users/qmacstore/Desktop/discord_gpt_bot",
+  "worktrees": 1,
+  "originalMainAhead": 0,
+  "originalMainBehind": 0,
+  "node": "24.14.1",
+  "npm": "11.11.0",
+  "checks": {
+    "rootBuild": {"exitCode": 0, "catalogEntries": 61, "indexableEntries": 33, "prerenderedRoutes": 44, "warnings": ["stale Browserslist", "chunks larger than 500KB"]},
+    "siteTypes": {"exitCode": 0, "siteEntryFiles": 17, "siteErrors": 0, "dependencyDiagnostics": [{"file": "client/src/shared/api/index.ts", "code": 6133, "description": "unused state parameter"}]},
+    "v2JavaScriptSyntax": {"a": "pass", "b": "pass", "c": "pass"},
+    "clientLint": {"exitCode": 2, "status": "existing configuration incompatibility", "description": "flat config rejects legacy --ext CLI option"},
+    "legacyLintAttempt": {"exitCode": 2, "description": "no legacy config found; not a lint pass"},
+    "skillCopy": {"sourceFiles": 191, "missingOrDifferent": 0, "omitted": [".last-update-check"], "skillSha256": "4317648da4431bbbb2e77a837804f8c23c494acfa8871134b2edbc40cd1e3cc5"},
+    "stagedSecretAudit": {"initialStagedFiles": 435, "findings": [], "description": "patterns plus comparison against current local credentials; binary images/history are not comprehensively scanned"},
+    "whitespace": {"handoffAuthoredFiles": "pass", "fullSnapshot": "warnings in byte-preserved upstream skill and pre-existing new prototype/frontend files"},
+    "v2FinalInteractions": {"status": "not run; pending B Chat structural fix and comparison QA"}
+  },
+  "prePushDeployGate": {
+    "githubRepositoryReadStatus": 200,
+    "githubWebhookListStatus": 200,
+    "webhookCount": 0,
+    "hasPages": false,
+    "pagesReadStatus": 404,
+    "githubWorkflowCount": 1,
+    "workflow": ".github/workflows/deploy.yml",
+    "trigger": "push branches main only",
+    "wipMatchesDeployTrigger": false,
+    "workflowChanged": false,
+    "visibleGithubDeploymentCount": 0,
+    "scope": "repository-visible configuration at handoff time, not undiscoverable external polling"
+  },
+  "privateFilesExcluded": [".env", "prisma/bot.db", "SQLite WAL/SHM/journal companions", "private CV PDF", "ignored scratch and legacy backups"],
+  "designStatus": "WIP; user selection required; not completed or deployed"
+}

@@ -1,0 +1,56 @@
+{
+  "checks": {
+    "humanOwnsHome": true,
+    "menuOpensAndFocuses": true,
+    "menuFocusTrapped": true,
+    "menuEscapeRestoresFocus": true,
+    "languageSwitchRoutes": true,
+    "englishRoute/": true,
+    "darkToggle/": true,
+    "englishRoute/mobile": true,
+    "darkToggle/mobile": true,
+    "englishRoute/playground": true,
+    "darkToggle/playground": true,
+    "englishRoute/discord": true,
+    "darkToggle/discord": true,
+    "englishRoute/chat": true,
+    "darkToggle/chat": true,
+    "englishRoute/blog": true,
+    "darkToggle/blog": true,
+    "englishRoute/me": true,
+    "darkToggle/me": true,
+    "projectSearchEmpty": true,
+    "projectCategoryFilter": true,
+    "archiveExpands": true,
+    "productOwnsDiscord": true,
+    "galleryOpens": true,
+    "galleryEscapeRestoresFocus": true,
+    "fiveCompanyContributions": true,
+    "threeSkillFamilies": true,
+    "noConfidentialClientNames": true,
+    "blogApiFallback": true,
+    "chatEmptyScrollAtTop": true,
+    "shiftEnterDoesNotSend": true,
+    "chatPayloadPreserved": true,
+    "chatMarkdownRenders": true,
+    "chatHistoryRestores": true,
+    "chatErrorHandled": true,
+    "chatNewConversationClears": true,
+    "chatWelcomeVisibleOnMobile": true,
+    "noRuntimeExceptions": true
+  },
+  "exceptions": [],
+  "chatRequests": [
+    {
+      "locale": "vi",
+      "message": "UI verification message",
+      "historyLength": 0
+    },
+    {
+      "locale": "vi",
+      "message": "Controlled error test",
+      "historyLength": 2
+    }
+  ],
+  "apiMode": "Mocked API responses only. No live Gemini request."
+}
