@@ -14,7 +14,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname === '/login' || location.pathname === '/admin' || location.pathname.startsWith('/admin/');
-  const [adminLocale, setAdminLocale] = useState<AppLocale>(() => localStorage.getItem(APP_LANGUAGE_KEY) === 'en' ? 'en' : 'vi');
+  const [adminLocale, setAdminLocale] = useState<AppLocale>(() => typeof localStorage !== 'undefined' && localStorage.getItem(APP_LANGUAGE_KEY) === 'en' ? 'en' : 'vi');
   const locale = isAdmin ? adminLocale : localeFromPath(location.pathname);
 
   useEffect(() => {

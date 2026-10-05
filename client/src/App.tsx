@@ -1,12 +1,6 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { MusicPlayerProvider } from './shared/contexts/MusicPlayerContext';
-import GlobalMusicPlayer from './shared/components/GlobalMusicPlayer';
-import { ChatWidget } from './shared/components/ChatWidget';
-import { ErrorBoundary } from './shared/components/ErrorBoundary';
-import { OfflineBanner } from './shared/components/OfflineBanner';
-import { NavigationProgress } from './shared/components/NavigationProgress';
-import { Toaster } from 'react-hot-toast';
+import { AppShell } from './shared/components/AppShell';
 import { SiteLoadingFallback } from './site/components/SiteLoadingFallback';
 import { siteLoadingView } from './site/components/siteLoadingView';
 
@@ -133,43 +127,37 @@ const RequireAuth = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
-function App() {
+function App({ initialPage }: { initialPage?: { pathname: string; Component: ComponentType } }) {
   const { pathname } = useLocation();
+  function publicPage(Fallback: ComponentType) {
+    const Page = initialPage?.pathname === pathname ? initialPage.Component : Fallback;
+    return <Page />;
+  }
   const publicPath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
   const isPortfolio = ['/', '/me', '/mobile', '/playground', '/discord', '/chat', '/blog'].includes(publicPath) || publicPath.startsWith('/blog/');
   const loadingView = isDiscordActivity && pathname === '/' ? null : siteLoadingView(pathname);
   return (
-    <MusicPlayerProvider>
-      <div className="min-h-screen">
-        <OfflineBanner />
-        <NavigationProgress />
-        <Toaster position="top-right" toastOptions={{ 
-          className: 'dark:bg-slate-800 dark:text-white',
-          style: { borderRadius: '12px', padding: '16px' }
-        }} />
-        <GlobalMusicPlayer />
-        {!isDiscordActivity && !isPortfolio && <ChatWidget />}
-        <ErrorBoundary>
+    <AppShell chatWidget={!isDiscordActivity && !isPortfolio}>
         <Suspense fallback={loadingView ? <SiteLoadingFallback view={loadingView} /> : <FeatureLoadingFallback />}>
           <Routes>
-            <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <HomePage />} />
-            <Route path="/en" element={<HomePage />} />
+            <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : publicPage(HomePage)} />
+            <Route path="/en" element={publicPage(HomePage)} />
             <Route path="/ecosystem" element={<EcosystemPage />} />
             <Route path="/en/ecosystem" element={<EcosystemPage />} />
-            <Route path="/playground" element={<PlaygroundPage />} />
-            <Route path="/en/playground" element={<PlaygroundPage />} />
+            <Route path="/playground" element={publicPage(PlaygroundPage)} />
+            <Route path="/en/playground" element={publicPage(PlaygroundPage)} />
             <Route path="/mobile" element={<MobilePage />} />
             <Route path="/en/mobile" element={<MobilePage />} />
-            <Route path="/discord" element={<DiscordPage />} />
-            <Route path="/en/discord" element={<DiscordPage />} />
-            <Route path="/chat" element={<ChatDVTChatPage />} />
-            <Route path="/en/chat" element={<ChatDVTChatPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/en/blog" element={<BlogPage />} />
-            <Route path="/blog/:slug" element={<BlogArticlePage />} />
-            <Route path="/en/blog/:slug" element={<BlogArticlePage />} />
-            <Route path="/me" element={<MePage />} />
-            <Route path="/en/me" element={<MePage />} />
+            <Route path="/discord" element={publicPage(DiscordPage)} />
+            <Route path="/en/discord" element={publicPage(DiscordPage)} />
+            <Route path="/chat" element={publicPage(ChatDVTChatPage)} />
+            <Route path="/en/chat" element={publicPage(ChatDVTChatPage)} />
+            <Route path="/blog" element={publicPage(BlogPage)} />
+            <Route path="/en/blog" element={publicPage(BlogPage)} />
+            <Route path="/blog/:slug" element={publicPage(BlogArticlePage)} />
+            <Route path="/en/blog/:slug" element={publicPage(BlogArticlePage)} />
+            <Route path="/me" element={publicPage(MePage)} />
+            <Route path="/en/me" element={publicPage(MePage)} />
             <Route path="/chatDVT" element={<Navigate to="/discord" replace />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
@@ -256,10 +244,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
-        </ErrorBoundary>
-      </div>
-      {/* WeatherFAB moved to PublicPortal */}
-    </MusicPlayerProvider>
+    </AppShell>
   );
 }
 

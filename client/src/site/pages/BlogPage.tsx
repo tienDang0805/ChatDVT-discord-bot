@@ -1,3 +1,4 @@
+import { usePublicPageData } from '../../shared/contexts/PublicPageData';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getPublishedBlogPosts } from '../../shared/api';
@@ -13,7 +14,7 @@ import { DiscoveryGuide } from '../components/DiscoveryGuide';
 
 function formatDate(value: string | null, locale: 'vi' | 'en', draft: string): string {
   if (!value) return draft;
-  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' })
     .format(new Date(value))
     .replaceAll('/', '.');
 }
@@ -21,7 +22,9 @@ function formatDate(value: string | null, locale: 'vi' | 'en', draft: string): s
 export function BlogPage() {
   const { t } = useTranslation('site');
   const { locale, pathFor } = useLanguage();
-  const [posts, setPosts] = useState<BlogPostSummary[]>([DEFAULT_BLOG_POST]);
+  const initialData = usePublicPageData();
+  const initialPosts = initialData?.posts;
+  const [posts, setPosts] = useState<BlogPostSummary[]>(initialPosts || [DEFAULT_BLOG_POST]);
   usePageMeta('Blog về mobile, bot và side project | Tiến Đặng', {
     description: 'Mấy bài mình viết lại trong lúc làm mobile, ChatDVT và các project cá nhân.',
     keywords: 'blog mobile developer, React Native, Android, ChatDVT, Discord bot, side project, Tiến Đặng',
@@ -35,7 +38,7 @@ export function BlogPage() {
         const hasDefaultPost = data.some((post) => post.slug === DEFAULT_BLOG_POST.slug);
         setPosts(hasDefaultPost ? data : [...data, DEFAULT_BLOG_POST]);
       })
-      .catch(() => setPosts([DEFAULT_BLOG_POST]));
+      .catch(() => { /* Keep the server-rendered list during a temporary API failure. */ });
   }, []);
 
   return <SiteLayout><section className="hybrid-view hybrid-a selected-blog"><div className="page-shell">

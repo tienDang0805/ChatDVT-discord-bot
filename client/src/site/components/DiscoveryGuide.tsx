@@ -21,12 +21,13 @@ function save(key: string, value: unknown) { try { sessionStorage.setItem(key, J
 
 export function DiscoveryGuide({ page, items, context = '', className = '', size = 90 }: { page: Page; items?: SiteItem[]; context?: string; className?: string; size?: number }) {
   const { locale, pathFor } = useLanguage(), en = locale === 'en';
-  const [quiet, setQuiet] = useState(() => read('portfolio-guide-quiet', false));
+  const [quiet, setQuiet] = useState(false);
   const [visited, setVisited] = useState<string[]>([]);
   const [suggestion, setSuggestion] = useState(0);
   const [choice, setChoice] = useState<{ text: string; href: string; title: string } | null>(null);
   const [talking, setTalking] = useState(false);
   useEffect(() => {
+    setQuiet(read('portfolio-guide-quiet', false));
     const old = read<string[]>('portfolio-guide-visited', []);
     const next = [...new Set([...old.filter(value => pages.includes(value as Page)), page])];
     setVisited(next); save('portfolio-guide-visited', next);

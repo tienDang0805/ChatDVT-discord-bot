@@ -13,3 +13,14 @@
 @import './brand.css';
 @import './neon.css';
 @import './loading.css';
+
+.site-hydration-retry {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  color: #fff;
+  background: #9a3412;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}

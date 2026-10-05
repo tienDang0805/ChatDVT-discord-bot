@@ -43,7 +43,7 @@ export function ChatDVTChatPage() {
   usePageTracker('ChatDVTChat');
 
   const botInfo = useBotInfo();
-  const [messages, setMessages] = useState<WebChatMessage[]>(() => loadWebChatHistory(locale));
+  const [messages, setMessages] = useState<WebChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isComposing, setIsComposing] = useState(false);

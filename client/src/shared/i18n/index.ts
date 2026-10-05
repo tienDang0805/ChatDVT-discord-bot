@@ -20,7 +20,7 @@ export function localizePath(path: string, locale: AppLocale): string {
   return locale === 'en' ? (clean === '/' ? '/en' : `/en${clean}`) : clean;
 }
 
-const initialLocale = localeFromPath(window.location.pathname);
+const initialLocale = localeFromPath(typeof window === 'undefined' ? '/' : window.location.pathname);
 
 void i18n.use(initReactI18next).init({
   resources,
@@ -32,6 +32,6 @@ void i18n.use(initReactI18next).init({
   react: { useSuspense: false },
 });
 
-document.documentElement.lang = initialLocale;
+if (typeof document !== 'undefined') document.documentElement.lang = initialLocale;
 
 export default i18n;

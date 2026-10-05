@@ -1,5 +1,5 @@
+import { readClientTemplate } from './public-renderer';
 import { Request, Response, Router } from 'express';
-import fs from 'fs';
 import path from 'path';
 import { prisma } from '../database/prisma';
 import { isFeatureIndexable } from '../shared/featureCatalog';
@@ -36,7 +36,7 @@ const INDEXABLE_PATHS = new Set([
   '/english/idiom-quest', '/english/context-clues',
 ]);
 
-interface RouteMeta {
+export interface RouteMeta {
   title: string;
   description: string;
   keywords?: string;
@@ -82,6 +82,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     changefreq: 'weekly',
   },
   '/mobile': {
+    indexable: false,
     title: 'Mobile Utility — React Native & Android | Tiến Đặng',
     description: 'Các công cụ mình dùng khi làm mobile: kiểm tra deep link, WebView, tạo QR, cùng tài liệu React Native và Android/Kotlin.',
     keywords: 'mobile utility, React Native, Android, Kotlin, deep link tester, WebView simulator, QR generator',
@@ -567,7 +568,7 @@ const EN_ROUTE_META: Record<string, RouteMeta> = {
   '/': { title: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', description: 'Đặng Văn Tiến is a Mobile Developer specializing in React Native and Android/Kotlin, and the creator of devtiendang.blog and ChatDVT.', pageType: 'website', priority: 1, changefreq: 'weekly' },
   '/ecosystem': { title: 'The ChatDVT Ecosystem — AI, tools, learning and games', description: 'Explore the ChatDVT ecosystem: an AI chatbot for Discord and the web, developer tools, English learning, games and community experiences.', schemaName: 'The ChatDVT Ecosystem', pageType: 'collection', lastmod: '2026-09-30', priority: 0.9, changefreq: 'weekly' },
   '/playground': { title: 'Projects & Lab — Products and developer tools', description: 'Selected products, developer tools, AI experiments, learning apps and web games built by Đặng Văn Tiến.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
-  '/mobile': { title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
+  '/mobile': { indexable: false, title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
   '/discord': { title: 'ChatDVT — AI chatbot and mini games for Discord', description: 'Explore ChatDVT, an AI Discord bot with conversation, media analysis, summaries and mini games.', schemaName: 'ChatDVT', pageType: 'software', priority: 0.8, changefreq: 'weekly' },
   '/chat': { title: 'ChatDVT Chat — Talk directly with AI', description: 'Chat with ChatDVT to explore the website, tools and projects built by Đặng Văn Tiến.', schemaName: 'ChatDVT Chat', pageType: 'webapp', priority: 0.9, changefreq: 'weekly' },
   '/me': { title: 'Đặng Văn Tiến — React Native & Android Developer', description: 'Meet Đặng Văn Tiến, a Mobile Developer in Ho Chi Minh City working with React Native and Android/Kotlin.', pageType: 'profile', priority: 0.8, changefreq: 'monthly' },
@@ -589,6 +590,7 @@ function normalizePortfolioTitle(title: string): string {
 }
 
 function isIndexableRoute(route: string, meta: RouteMeta): boolean {
+  if (meta.indexable === false) return false;
   const featureIndexability = isFeatureIndexable(route);
   if (featureIndexability !== undefined) return featureIndexability;
   return meta.indexable ?? INDEXABLE_PATHS.has(route);
@@ -626,7 +628,7 @@ export function getIndexableRoutePaths(): string[] {
   const vietnamese = Object.entries(ROUTE_META)
     .filter(([route, meta]) => isIndexableRoute(route, meta))
     .map(([route]) => route);
-  const english = Object.keys(EN_ROUTE_META).map((route) => route === '/' ? '/en' : `/en${route}`);
+  const english = Object.entries(EN_ROUTE_META).filter(([, meta]) => meta.indexable !== false).map(([route]) => route === '/' ? '/en' : `/en${route}`);
   return [...vietnamese, ...english];
 }
 
@@ -681,8 +683,8 @@ function escapeHtml(str: string): string {
 }
 
 function upsertHeadTag(html: string, pattern: RegExp, tag: string): string {
-  if (pattern.test(html)) return html.replace(pattern, tag);
-  return html.replace('</head>', `    ${tag}\n  </head>`);
+  if (pattern.test(html)) return html.replace(pattern, () => tag);
+  return html.replace('</head>', () => `    ${tag}\n  </head>`);
 }
 
 function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: string, locale: 'vi' | 'en') {
@@ -768,7 +770,9 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
 
   const safeTitle = escapeHtml(meta.title);
   const safeDesc = escapeHtml(meta.description);
-  const canonicalUrl = `${SITE_URL}${normalizedPath === '/' ? '/' : normalizedPath}`;
+  const isEnglishBlog = locale === 'en' && (normalizedPath === '/en/blog' || normalizedPath.startsWith('/en/blog/'));
+  const canonicalPath = isEnglishBlog ? normalizedPath.slice(3) : normalizedPath;
+  const canonicalUrl = `${SITE_URL}${canonicalPath}`;
   const ogImage = meta.image || DEFAULT_OG_IMAGE;
   const imageAlt = meta.imageAlt || `${meta.title} — devtiendang.blog`;
   const robots = meta.indexable === false
@@ -777,46 +781,46 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
 
   let result = html;
 
-  result = result.replace(/<html lang="[^"]*">/, `<html lang="${locale}">`);
+  result = result.replace(/<html lang="[^"]*">/, () => `<html lang="${locale}">`);
 
   result = result.replace(
     /<title>[^<]*<\/title>/,
-    `<title>${safeTitle}</title>`
+    () => `<title>${safeTitle}</title>`
   );
 
   result = result.replace(
     /<meta name="description" content="[^"]*"/,
-    `<meta name="description" content="${safeDesc}"`
+    () => `<meta name="description" content="${safeDesc}"`
   );
 
   result = result.replace(
     /<meta property="og:title" content="[^"]*"/,
-    `<meta property="og:title" content="${safeTitle}"`
+    () => `<meta property="og:title" content="${safeTitle}"`
   );
 
   result = result.replace(
     /<meta property="og:description" content="[^"]*"/,
-    `<meta property="og:description" content="${safeDesc}"`
+    () => `<meta property="og:description" content="${safeDesc}"`
   );
 
   result = result.replace(
     /<meta property="og:url" content="[^"]*"/,
-    `<meta property="og:url" content="${canonicalUrl}"`
+    () => `<meta property="og:url" content="${canonicalUrl}"`
   );
 
   result = result.replace(
     /<meta property="og:image" content="[^"]*"/,
-    `<meta property="og:image" content="${ogImage}"`
+    () => `<meta property="og:image" content="${ogImage}"`
   );
 
   result = result.replace(
     /<meta name="twitter:title" content="[^"]*"/,
-    `<meta name="twitter:title" content="${safeTitle}"`
+    () => `<meta name="twitter:title" content="${safeTitle}"`
   );
 
   result = result.replace(
     /<meta name="twitter:description" content="[^"]*"/,
-    `<meta name="twitter:description" content="${safeDesc}"`
+    () => `<meta name="twitter:description" content="${safeDesc}"`
   );
 
   result = upsertHeadTag(
@@ -827,7 +831,7 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
 
   result = result.replace(
     /<meta name="twitter:image" content="[^"]*"/,
-    `<meta name="twitter:image" content="${ogImage}"`
+    () => `<meta name="twitter:image" content="${ogImage}"`
   );
 
   result = upsertHeadTag(result, /<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="${robots}" />`);
@@ -855,20 +859,20 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
   result = result.replace(/\s*<meta property="article:(published_time|modified_time)" content="[^"]*"\s*\/?>/g, '');
   if (meta.pageType === 'article') {
     if (meta.publishedTime) {
-      result = result.replace('</head>', `    <meta property="article:published_time" content="${escapeHtml(meta.publishedTime)}" />\n  </head>`);
+      result = result.replace('</head>', () => `    <meta property="article:published_time" content="${escapeHtml(meta.publishedTime || '')}" />\n  </head>`);
     }
     if (meta.modifiedTime || meta.publishedTime) {
-      result = result.replace('</head>', `    <meta property="article:modified_time" content="${escapeHtml(meta.modifiedTime || meta.publishedTime || '')}" />\n  </head>`);
+      result = result.replace('</head>', () => `    <meta property="article:modified_time" content="${escapeHtml(meta.modifiedTime || meta.publishedTime || '')}" />\n  </head>`);
     }
   }
 
-  const structuredData = buildStructuredData(meta, canonicalUrl, ogImage, locale);
+  const structuredData = buildStructuredData(meta, canonicalUrl, ogImage, isEnglishBlog ? 'vi' : locale);
   result = result.replace(/\s*<script id="page-structured-data" type="application\/ld\+json">[\s\S]*?<\/script>/, '');
 
   const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · Mobile Developer · devtiendang.blog</p></div></noscript>`;
-  result = result.replace('</head>', `    <script id="page-structured-data" type="application/ld+json">${JSON.stringify(structuredData)}</script>\n  </head>`);
+  result = result.replace('</head>', () => `    <script id="page-structured-data" type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>\n  </head>`);
 
-  result = result.replace('<div id="root"></div>', `<div id="root"></div>\n    ${noscriptBlock}`);
+  result = result.replace('<div id="root"></div>', () => `<div id="root"></div>\n    ${noscriptBlock}`);
 
   return result;
 }
@@ -904,7 +908,7 @@ export function createSeoFallbackHandler(clientBuildPath: string) {
 
   let indexHtmlTemplate = '';
   try {
-    indexHtmlTemplate = fs.readFileSync(indexHtmlPath, 'utf-8');
+    indexHtmlTemplate = readClientTemplate(clientBuildPath);
   } catch {
     console.warn('[SEO] index.html not found at build path, meta injection disabled.');
   }

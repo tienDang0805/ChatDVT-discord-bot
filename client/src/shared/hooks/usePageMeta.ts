@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { PageMetaCollector } from '../contexts/PageMetaCollector';
+import { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -106,6 +107,15 @@ interface PageMetaOptions {
   modifiedTime?: string | null;
 }
 
+function documentTitle(title: string): string {
+  const normalizedTitle = title
+    .replace(/^Tiến Đặng\s*—/, `${SITE_NAME} —`)
+    .replace(/\s*\|\s*(ChatDVT|Tiến Đặng|devtiendang\.blog)$/i, ` | ${SITE_NAME}`)
+    .replace(/\s*—\s*(ChatDVT|Tiến Đặng)$/i, ` | ${SITE_NAME}`);
+  const fullTitle = /Đặng Văn Tiến/i.test(normalizedTitle) ? normalizedTitle : `${normalizedTitle} | ${SITE_NAME}`;
+  return fullTitle;
+}
+
 export const usePageMeta = (title: string, options?: string | PageMetaOptions) => {
   const { locale } = useLanguage();
   const { pathname } = useLocation();
@@ -120,13 +130,21 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
   const publishedTime = typeof options === 'object' ? options?.publishedTime : undefined;
   const modifiedTime = typeof options === 'object' ? options?.modifiedTime : undefined;
 
+  const collectMeta = useContext(PageMetaCollector);
+  if (collectMeta) {
+    const basePath = stripLocalePrefix(pathname);
+    collectMeta({
+      title: documentTitle(title), description: desc || DEFAULT_DESCRIPTION,
+      keywords, image: resolveImageUrl(image), imageAlt, schemaName,
+      pageType: schema || 'webapp', ogType: type || (schema === 'article' ? 'article' : 'website'),
+      indexable: !(locale === 'en' && (basePath === '/blog' || basePath.startsWith('/blog/'))) && !(noIndex ?? !isIndexablePath(pathname)),
+      publishedTime: publishedTime || undefined, modifiedTime: modifiedTime || undefined,
+    });
+  }
+
   useEffect(() => {
     const prev = document.title;
-    const normalizedTitle = title
-      .replace(/^Tiến Đặng\s*—/, `${SITE_NAME} —`)
-      .replace(/\s*\|\s*(ChatDVT|Tiến Đặng|devtiendang\.blog)$/i, ` | ${SITE_NAME}`)
-      .replace(/\s*—\s*(ChatDVT|Tiến Đặng)$/i, ` | ${SITE_NAME}`);
-    const fullTitle = /Đặng Văn Tiến/i.test(normalizedTitle) ? normalizedTitle : `${normalizedTitle} | ${SITE_NAME}`;
+    const fullTitle = documentTitle(title);
     const resolvedDescription = desc || DEFAULT_DESCRIPTION;
     const resolvedImage = resolveImageUrl(image);
     const resolvedImageAlt = imageAlt || `${fullTitle} — devtiendang.blog`;

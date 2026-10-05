@@ -1,3 +1,4 @@
+import { usePublicPageData } from '../../shared/contexts/PublicPageData';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Clock } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
@@ -14,7 +15,7 @@ import { useLanguage } from '../../shared/i18n/LanguageContext';
 
 function formatDate(value: string | null, locale: 'vi' | 'en'): string {
   if (!value) return '';
-  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  return new Intl.DateTimeFormat(locale === 'en' ? 'en-US' : 'vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Ho_Chi_Minh' })
     .format(new Date(value))
     .replaceAll('/', '.');
 }
@@ -23,9 +24,11 @@ export function BlogArticlePage() {
   const { t } = useTranslation('site');
   const { locale, pathFor } = useLanguage();
   const { slug = '' } = useParams();
+  const initialData = usePublicPageData();
+  const initialPost = initialData?.pathname.replace(/^\/en(?=\/|$)/, '') === `/blog/${slug}` ? initialData.post : undefined;
   const fallback = slug === DEFAULT_BLOG_POST.slug ? DEFAULT_BLOG_POST : null;
-  const [post, setPost] = useState<BlogPost | null>(fallback);
-  const [loading, setLoading] = useState(true);
+  const [post, setPost] = useState<BlogPost | null>(initialPost === undefined ? fallback : initialPost);
+  const [loading, setLoading] = useState(initialPost === undefined);
   const safeContent = useMemo(() => post ? sanitizeBlogHtml(post.content) : '', [post]);
   usePageMeta(post?.title || 'Bài viết — Tiến Đặng', {
     description: post?.excerpt || 'Bài viết trên devtiendang.blog.',
@@ -41,7 +44,7 @@ export function BlogArticlePage() {
     setLoading(true);
     getPublishedBlogPost(slug)
       .then(setPost)
-      .catch(() => setPost(fallback))
+      .catch(() => { if (initialPost === undefined) setPost(fallback); })
       .finally(() => setLoading(false));
   }, [slug]);
 

@@ -37,14 +37,14 @@ interface MusicPlayerContextType {
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
 
 export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
-  const [secretCode, setSecretCodeState] = useState<string | null>(() => localStorage.getItem('music_secret_code'));
+  const [secretCode, setSecretCodeState] = useState<string | null>(() => typeof localStorage === 'undefined' ? null : localStorage.getItem('music_secret_code'));
   const [queue, setQueue] = useState<Song[]>([]);
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
   const [isLooping, setIsLooping] = useState(false);
   const [volume, setVolumeState] = useState<number>(() => {
-    const saved = localStorage.getItem('music_volume');
+    const saved = typeof localStorage === 'undefined' ? null : localStorage.getItem('music_volume');
     return saved !== null ? Number(saved) : 100;
   });
   const [currentTime, setCurrentTime] = useState(0);

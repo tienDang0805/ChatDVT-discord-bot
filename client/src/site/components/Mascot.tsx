@@ -11,11 +11,13 @@ const Motion = createContext({ enabled: false, reduced: false, paused: false, to
 const PAUSE_KEY = 'portfolio-motion-paused';
 
 export function MascotMotion({ children }: { children: ReactNode }) {
-  const [reduced, setReduced] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [paused, setPaused] = useState(() => { try { return sessionStorage.getItem(PAUSE_KEY) === '1'; } catch { return false; } });
+  const [reduced, setReduced] = useState(false);
+  const [paused, setPaused] = useState(false);
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');
     const sync = () => setReduced(media.matches);
+    sync();
+    try { setPaused(sessionStorage.getItem(PAUSE_KEY) === '1'); } catch { /* Optional preference. */ }
     media.addEventListener('change', sync);
     return () => media.removeEventListener('change', sync);
   }, []);
@@ -40,7 +42,7 @@ export function Mascot({ character, size = 160, action = 'idle', className = '' 
   const sprite = useRef<HTMLSpanElement>(null);
   const [meta, setMeta] = useState<Metadata | null>(null);
   const [visible, setVisible] = useState(false);
-  const [foreground, setForeground] = useState(!document.hidden);
+  const [foreground, setForeground] = useState(true);
   const base = `/mascots/${character}/`;
   useEffect(() => {
     let alive = true;

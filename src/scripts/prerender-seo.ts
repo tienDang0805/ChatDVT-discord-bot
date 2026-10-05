@@ -1,44 +1,27 @@
 import fs from 'fs';
 import path from 'path';
 import { generateSitemapXml, getIndexableRoutePaths, injectSeoMeta } from '../api/seo';
+import { loadPublicRenderer, renderPublicHtml, RENDERER_DIRECTORY } from '../api/public-renderer';
 
 const CLIENT_DIST = path.join(__dirname, '../../client/dist');
-
-const PRERENDER_ROUTES = getIndexableRoutePaths();
-
-function prerender(): void {
-  const indexHtmlPath = path.join(CLIENT_DIST, 'index.html');
-
-  if (!fs.existsSync(indexHtmlPath)) {
-    console.error('❌ client/dist/index.html not found. Run `npm run build-client` first.');
-    process.exit(1);
-  }
-
-  const baseHtml = fs.readFileSync(indexHtmlPath, 'utf-8');
-  let created = 0;
-
-  for (const route of PRERENDER_ROUTES) {
-    if (route === '/') continue;
-
-    const dirPath = path.join(CLIENT_DIST, route);
-    const filePath = path.join(dirPath, 'index.html');
-
-    if (fs.existsSync(filePath)) continue;
-
-    const injectedHtml = injectSeoMeta(baseHtml, route);
-
-    fs.mkdirSync(dirPath, { recursive: true });
-    fs.writeFileSync(filePath, injectedHtml, 'utf-8');
-    created++;
-  }
-
-  const rootHtml = injectSeoMeta(baseHtml, '/');
-  fs.writeFileSync(indexHtmlPath, rootHtml, 'utf-8');
-
-  const sitemapPath = path.join(CLIENT_DIST, 'sitemap.xml');
-  fs.writeFileSync(sitemapPath, generateSitemapXml(), 'utf-8');
-
-  console.log(`✅ Pre-rendered ${created} routes + root index.html + sitemap.xml`);
+const indexHtmlPath = path.join(CLIENT_DIST, 'index.html');
+if (!fs.existsSync(indexHtmlPath)) throw new Error('Build the client before prerendering.');
+const shellPath = path.join(RENDERER_DIRECTORY, 'app-shell.html');
+// Keep the empty SPA template separate so fallback routes never inherit Home content.
+const builtHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+const baseHtml = builtHtml.includes('data-ssr="true"') ? fs.readFileSync(shellPath, 'utf8') : builtHtml;
+fs.mkdirSync(RENDERER_DIRECTORY, { recursive: true });
+fs.writeFileSync(shellPath, baseHtml);
+const renderer = loadPublicRenderer();
+let rendered = 0;
+for (const route of getIndexableRoutePaths()) {
+  // Blog data changes without deployments; Express renders these routes at request time.
+  if (/^\/(en\/)?blog(?:\/|$)/.test(route)) continue;
+  const html = renderer.canRenderPage(route) ? renderPublicHtml(baseHtml, route) : injectSeoMeta(baseHtml, route);
+  const target = path.join(CLIENT_DIST, route, 'index.html');
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, html);
+  if (renderer.canRenderPage(route)) rendered++;
 }
-
-prerender();
+fs.writeFileSync(path.join(CLIENT_DIST, 'sitemap.xml'), generateSitemapXml());
+console.log(`Rendered content for ${rendered} public routes; generated metadata and sitemap for remaining routes.`);

@@ -1,3 +1,4 @@
+import { createPublicPageHandler } from './public-renderer';
 import express from 'express';
 import path from 'path';
 import cors from 'cors';
@@ -544,6 +545,13 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get(['/mobile', '/en/mobile'], (req, res) => {
+  const params = new URLSearchParams(req.originalUrl.split('?')[1] || '');
+  params.set('category', 'mobile');
+  res.redirect(301, `${req.path.startsWith('/en/') ? '/en' : ''}/playground?${params}`);
+});
+
+app.get('*', createPublicPageHandler(CLIENT_BUILD_PATH));
 app.use(createClientFilesRouter(CLIENT_BUILD_PATH));
 
 app.get('*', createSeoFallbackHandler(CLIENT_BUILD_PATH));
