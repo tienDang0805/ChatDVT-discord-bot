@@ -1,0 +1,56 @@
+/* Placeholders reuse the actual page grids, breakpoints and site theme tokens. */
+.site-skeleton { pointer-events: none; --skeleton-fill: color-mix(in srgb, currentColor 13%, transparent); }
+.site-skeleton-block { display: block; flex-shrink: 0; width: 100%; max-width: 100%; height: 14px; border-radius: 6px; background: var(--skeleton-fill); animation: site-skeleton-pulse 1.6s ease-in-out infinite; }
+.site-skeleton-copy { display: grid; gap: 12px; margin: 22px 0 28px; max-width: 600px; }
+.site-root .site-skeleton-heading { display: grid; gap: .16em; margin-block: 20px; }
+.site-skeleton-heading .site-skeleton-block { height: .92em; }
+.site-skeleton-subtitle { height: 30px; width: 80%; margin: 18px 0; }
+.site-skeleton-actions { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+.site-skeleton-pill { width: 160px; height: 50px; border-radius: 999px; }
+.site-skeleton-tag { width: 115px; height: 34px; border-radius: 999px; }
+.site-skeleton-art { min-height: 160px; height: 100%; border-radius: 16px; }
+.site-skeleton-figure { width: 185px; height: 185px; border-radius: 40%; margin: auto; }
+.site-root .site-skeleton .home-tien { --size: 290px; border-radius: 40%; }
+.site-root .site-skeleton .scene-sign { width: 190px; }
+.site-skeleton .scene-sign .site-skeleton-copy { margin: 4px 0; }
+.site-skeleton-guide { min-height: 112px; align-items: center; }
+.site-skeleton-guide > div { min-width: 0; flex: 1; }
+.site-skeleton-guide .site-skeleton-copy { margin: 0; }
+.site-skeleton-guide .site-skeleton-copy > :nth-child(n+3) { display: none; }
+.site-skeleton-guide .site-skeleton-actions { margin-top: 14px; gap: 8px; }
+.site-skeleton-guide .site-skeleton-pill { width: 125px; height: 44px; }
+.site-skeleton-avatar { width: 76px; height: 76px; border-radius: 50%; }
+.site-root .site-skeleton-portrait { width: 300px; height: 300px; border-radius: 50%; margin-bottom: 20px; }
+.site-skeleton-bot { width: 360px; max-width: 100%; height: 360px; border-radius: 40%; justify-self: center; }
+.site-skeleton .collection-toolbar .filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.site-skeleton .filters .site-skeleton-pill { width: 96px; height: 44px; }
+.site-skeleton-field { height: 68px; border-radius: 12px; }
+.site-skeleton .search-label { min-width: 0; width: 260px; max-width: 100%; }
+.site-skeleton .search-label .site-skeleton-field { height: 44px; }
+.site-skeleton .portrait-wrap > .site-skeleton-block:last-child { margin-inline: auto; }
+.site-skeleton-prose { padding-top: 24px; }
+.site-skeleton-prose .site-skeleton-copy { max-width: none; }
+.site-skeleton-chat-avatar { width: 36px; height: 36px; border-radius: 50%; }
+.site-skeleton .chatdvt-chat-identity > div { width: 220px; max-width: 100%; }
+.site-skeleton .chatdvt-chat-identity .site-skeleton-subtitle { height: 24px; margin: 0 0 8px; }
+.site-skeleton .chatdvt-composer-wrap > .site-skeleton-subtitle { width: 35%; }
+.site-skeleton .chatdvt-composer-wrap > .site-skeleton-block:last-child { margin-top: 12px; }
+.site-skeleton .chatdvt-directory .site-skeleton-heading { font-size: 43px; }
+.site-skeleton-suggestion { height: 68px; border-radius: 10px; }
+.site-skeleton-directory-link { padding: 17px 0; border-top: 1px solid var(--site-line); }
+@keyframes site-skeleton-pulse { 50% { opacity: .45; } }
+@media (max-width: 1160px) { .site-root .site-skeleton-portrait { width: 250px; height: 250px; } }
+@media (max-width: 700px) {
+  .site-root .site-skeleton-portrait { width: 220px; height: 220px; }
+  .site-skeleton-bot { width: 250px; height: 250px; }
+  .site-skeleton .chatdvt-chat-identity > div { width: 160px; }
+  .site-skeleton .chatdvt-toolbar .site-skeleton-pill { width: 44px; height: 44px; }
+  .site-skeleton .site-skeleton-chat-avatar, .site-skeleton .site-skeleton-directory-link { display: none; }
+  .site-root .site-skeleton .chat-guide { min-height: 0; }
+  .site-skeleton .chat-guide > .site-skeleton-avatar { width: 65px; height: 65px; }
+  .site-skeleton-guide:not(.chat-guide) .site-skeleton-copy > :nth-child(n+3) { display: block; }
+  .site-skeleton .chat-guide .site-skeleton-actions > :nth-child(2) { display: none; }
+  .site-skeleton .search-label { width: 100%; }
+  .site-skeleton-pill { width: 140px; }
+}
+@media (prefers-reduced-motion: reduce) { .site-skeleton-block { animation: none; } }

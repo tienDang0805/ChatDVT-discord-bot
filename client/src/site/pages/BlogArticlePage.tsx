@@ -8,6 +8,7 @@ import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import type { BlogPost } from '../../shared/types/blog';
 import { sanitizeBlogHtml } from '../../shared/utils/sanitizeBlogHtml';
 import { SiteLayout } from '../components/SiteLayout';
+import { BlogArticleSkeleton } from '../components/SiteLoadingFallback';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 
@@ -45,7 +46,7 @@ export function BlogArticlePage() {
   }, [slug]);
 
   if (loading && !post) {
-    return <SiteLayout><div className="site-container blog-state">{t('blog.loading')}</div></SiteLayout>;
+    return <SiteLayout><div className="site-skeleton"><p role="status" className="sr-only">{t('blog.loading')}</p><div aria-hidden="true" aria-busy="true"><BlogArticleSkeleton /></div></div></SiteLayout>;
   }
 
   if (!post) {

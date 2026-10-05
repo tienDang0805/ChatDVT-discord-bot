@@ -7,6 +7,8 @@ import { ErrorBoundary } from './shared/components/ErrorBoundary';
 import { OfflineBanner } from './shared/components/OfflineBanner';
 import { NavigationProgress } from './shared/components/NavigationProgress';
 import { Toaster } from 'react-hot-toast';
+import { SiteLoadingFallback } from './site/components/SiteLoadingFallback';
+import { siteLoadingView } from './site/components/siteLoadingView';
 
 const _p = new URLSearchParams(window.location.search);
 const isDiscordActivity = _p.has('frame_id') || _p.has('instance_id');
@@ -98,7 +100,7 @@ const WebChatPrompt = lazy(() => import('./features/admin/web-chat-prompt/pages/
 const FacebookChatPrompt = lazy(() => import('./features/admin/facebook-chat-prompt/pages/FacebookChatPrompt').then(m => ({ default: m.FacebookChatPrompt })));
 const BlogManager = lazy(() => import('./features/admin/blog/pages/BlogManager').then(m => ({ default: m.BlogManager })));
 
-const LoadingFallback = () => (
+const FeatureLoadingFallback = () => (
   <div className="min-h-screen bg-slate-50 dark:bg-[#0d1117] transition-colors">
     <div className="max-w-4xl mx-auto px-4 md:px-8 py-6 md:py-14">
       <div className="flex items-center gap-3 mb-8 md:mb-10">
@@ -135,6 +137,7 @@ function App() {
   const { pathname } = useLocation();
   const publicPath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
   const isPortfolio = ['/', '/me', '/mobile', '/playground', '/discord', '/chat', '/blog'].includes(publicPath) || publicPath.startsWith('/blog/');
+  const loadingView = isDiscordActivity && pathname === '/' ? null : siteLoadingView(pathname);
   return (
     <MusicPlayerProvider>
       <div className="min-h-screen">
@@ -147,7 +150,7 @@ function App() {
         <GlobalMusicPlayer />
         {!isDiscordActivity && !isPortfolio && <ChatWidget />}
         <ErrorBoundary>
-        <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={loadingView ? <SiteLoadingFallback view={loadingView} /> : <FeatureLoadingFallback />}>
           <Routes>
             <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : <HomePage />} />
             <Route path="/en" element={<HomePage />} />
