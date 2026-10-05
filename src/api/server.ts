@@ -1,9 +1,9 @@
 import express from 'express';
-import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { createSeoRoutes, createSeoFallbackHandler } from './seo';
+import { createClientFilesRouter, preventResponseCaching } from './client-files';
 import axios from 'axios';
 
 import { prisma } from '../database/prisma';
@@ -17,6 +17,7 @@ import { setupMonopolySocket } from './monopoly/MonopolyRoom';
 
 const app = express();
 app.set('trust proxy', true);
+app.use(preventResponseCaching);
 app.use((req, res, next) => {
   if (req.hostname.toLowerCase() === 'www.devtiendang.blog') {
     return res.redirect(301, `https://devtiendang.blog${req.originalUrl}`);
@@ -543,19 +544,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('*', (req, res, next) => {
-  const relativePath = req.path.replace(/^\/+|\/+$/g, '');
-  if (!relativePath || path.extname(relativePath)) return next();
-
-  const prerenderedHtml = path.join(CLIENT_BUILD_PATH, relativePath, 'index.html');
-  if (!fs.existsSync(prerenderedHtml)) return next();
-
-  return res.sendFile(prerenderedHtml);
-});
-
-app.use(express.static(CLIENT_BUILD_PATH, { redirect: false }));
+app.use(createClientFilesRouter(CLIENT_BUILD_PATH));
 
 app.get('*', createSeoFallbackHandler(CLIENT_BUILD_PATH));
+
+app.use((error: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!res.headersSent) res.set('Cache-Control', 'private, no-store');
+  next(error);
+});
 
 export const startApiServer = () => { 
   server.listen(PORT, () => {

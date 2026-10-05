@@ -973,6 +973,7 @@ export function createSeoFallbackHandler(clientBuildPath: string) {
 
     const injectedHtml = injectSeoMeta(indexHtmlTemplate, normalizedPath, meta);
     res.set('Content-Type', 'text/html');
+    res.set('Cache-Control', responseStatus >= 400 ? 'no-store' : 'no-cache, max-age=0, must-revalidate');
     if (meta.indexable === false) {
       res.set('X-Robots-Tag', 'noindex, nofollow');
     }
