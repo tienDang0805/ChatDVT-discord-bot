@@ -2,6 +2,8 @@ import { PageMetaCollector } from '../contexts/PageMetaCollector';
 import { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
+import { AUTHOR_SCHEMA as AUTHOR, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL } from '../../../../src/shared/siteIdentity';
+import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../../../../src/shared/desktopApps';
 import { useLanguage } from '../i18n/LanguageContext';
 import { stripLocalePrefix } from '../i18n';
 
@@ -11,27 +13,11 @@ const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog']
 const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.';
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
-  '/', '/ecosystem', '/playground', '/me', '/blog', '/mermaid-tutorial',
+  '/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/me', '/blog', '/mermaid-tutorial',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
-const LOCALIZED_PATHS = new Set(['/', '/ecosystem', '/playground', '/mobile', '/discord', '/chat', '/me']);
+const LOCALIZED_PATHS = new Set(['/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/mobile', '/discord', '/chat', '/me']);
 
-const AUTHOR = {
-  '@type': 'Person',
-  '@id': `${SITE_URL}/me#person`,
-  name: 'Đặng Văn Tiến',
-  alternateName: ['Tiến Đặng', 'Tien Dang', 'Dang Van Tien', 'devtiendang'],
-  url: `${SITE_URL}/me`,
-  image: `${SITE_URL}/images/tien-dang-profile.jpg`,
-  jobTitle: 'Mobile Developer',
-  description: 'Mobile Developer chuyên React Native và Android/Kotlin, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
-  knowsAbout: ['React Native', 'Android', 'Kotlin', 'Mobile Development', 'Discord Bot', 'ChatDVT'],
-  sameAs: [
-    'https://github.com/tienDang0805',
-    'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
-    'https://www.facebook.com/dvtien8599',
-  ],
-};
 
 function setMetaTag(property: string, content: string, isName = false): void {
   const selector = isName
@@ -228,25 +214,26 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
           ? {
             ...base,
             '@type': 'SoftwareApplication',
+            '@id': schemaName === 'ChatDVT' ? CHATDVT_ENTITY_ID : base['@id'],
             name: schemaName || fullTitle,
             alternateName: schemaName === 'ChatDVT' ? ['Chat DVT', 'ChatDVT Discord Bot'] : undefined,
+            sameAs: schemaName === 'ChatDVT' ? [CHATDVT_SOURCE_URL] : undefined,
             applicationCategory: schemaName === 'ChatDVT' ? 'CommunicationApplication' : 'UtilitiesApplication',
             operatingSystem: schemaName === 'ChatDVT' ? 'Web, Discord' : 'All',
             image: resolvedImage,
             isAccessibleForFree: true,
             featureList: schemaName === 'ChatDVT'
-              ? (locale === 'en'
-                ? ['AI chat on the web and Discord', 'Website discovery guide', 'Image and video analysis', 'Conversation summaries', 'Discord mini games']
-                : ['AI chat trên web và Discord', 'Giới thiệu website', 'Phân tích ảnh và video', 'Tóm tắt hội thoại', 'Mini game cho Discord'])
+              ? CHATDVT_FEATURES[locale]
               : undefined,
             offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' },
             creator: AUTHOR,
+            ...(schemaName === WALLPAPER_APP.name ? wallpaperSoftwareProperties(locale) : {}),
           }
             : pageSchema === 'blog'
               ? { ...base, '@type': 'Blog', author: AUTHOR, publisher: AUTHOR }
               : pageSchema === 'article'
                 ? { ...base, '@type': 'BlogPosting', headline: fullTitle, image: resolvedImage, datePublished: publishedTime || undefined, dateModified: modifiedTime || publishedTime || undefined, mainEntityOfPage: canonicalUrl, author: AUTHOR, publisher: AUTHOR }
-                : { ...base, '@type': 'WebApplication', applicationCategory: 'UtilitiesApplication', operatingSystem: 'All', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, author: AUTHOR };
+                : { ...base, '@type': 'WebApplication', name: schemaName || fullTitle, applicationCategory: schemaName === 'ChatDVT Chat' ? 'CommunicationApplication' : 'UtilitiesApplication', operatingSystem: 'All', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, author: AUTHOR };
 
     let jsonLd = document.querySelector<HTMLScriptElement>('#page-structured-data');
     if (!jsonLd) {

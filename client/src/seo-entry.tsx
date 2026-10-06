@@ -14,6 +14,8 @@ import { PublicPageDataContext, type PublicPageData } from './shared/contexts/Pu
 import { HomePage } from './site/pages/HomePage';
 import { MePage } from './site/pages/MePage';
 import { PlaygroundPage } from './site/pages/PlaygroundPage';
+import { AppsPage } from './site/pages/AppsPage';
+import { WallpaperAppPage } from './site/pages/WallpaperAppPage';
 import { DiscordPage } from './site/pages/DiscordPage';
 import { ChatDVTChatPage } from './site/pages/ChatDVTChatPage';
 import { BlogPage } from './site/pages/BlogPage';
@@ -22,6 +24,7 @@ export { DEFAULT_BLOG_POST } from './shared/data/defaultBlogPost';
 
 const pages = {
   '/': HomePage, '/me': MePage, '/playground': PlaygroundPage,
+  '/apps': AppsPage, '/apps/td-wallpaperengine': WallpaperAppPage,
   '/discord': DiscordPage, '/chat': ChatDVTChatPage, '/blog': BlogPage,
 };
 

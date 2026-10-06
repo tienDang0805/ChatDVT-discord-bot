@@ -5,6 +5,8 @@ const loaders = {
   '/': () => import('./site/pages/HomePage').then(module => module.HomePage),
   '/me': () => import('./site/pages/MePage').then(module => module.MePage),
   '/playground': () => import('./site/pages/PlaygroundPage').then(module => module.PlaygroundPage),
+  '/apps': () => import('./site/pages/AppsPage').then(module => module.AppsPage),
+  '/apps/td-wallpaperengine': () => import('./site/pages/WallpaperAppPage').then(module => module.WallpaperAppPage),
   '/discord': () => import('./site/pages/DiscordPage').then(module => module.DiscordPage),
   '/chat': () => import('./site/pages/ChatDVTChatPage').then(module => module.ChatDVTChatPage),
   '/blog': () => import('./site/pages/BlogPage').then(module => module.BlogPage),

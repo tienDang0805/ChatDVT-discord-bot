@@ -13,6 +13,7 @@
 @import './brand.css';
 @import './neon.css';
 @import './loading.css';
+@import './apps.css';
 
 .site-hydration-retry {
   display: block;

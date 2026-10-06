@@ -45,7 +45,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'english', path: '/english', title: 'English Learning Hub',
-    description: 'Course map, flashcard, dictation, writing và hội thoại AI trong một learning hub.',
+    description: 'Học tiếng Anh theo bài, ôn flashcard, luyện nghe, viết và chat với AI.',
     section: 'learning', visibility: 'featured', status: 'beta', indexable: true,
     tags: ['Learning', 'AI', 'Local data'], requirements: ['Một số bài cần AI'], surfaces: ['projects'], featuredRank: 4,
   },
@@ -57,7 +57,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'chibi', path: '/chibi-sticker', title: 'Chibi Sticker AI',
-    description: 'Biến ảnh thành bộ sticker chibi với nhiều style và pose.',
+    description: 'Tạo sticker chibi từ ảnh, chọn kiểu vẽ và tư thế.',
     section: 'ai', visibility: 'featured', status: 'beta', indexable: true,
     tags: ['Image', 'AI'], requirements: ['AI'], surfaces: ['projects'], featuredRank: 6,
   },
@@ -71,13 +71,13 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'quiz', path: '/quiz', title: 'Web Quiz AI',
-    description: 'Tạo phòng quiz real-time và sinh câu hỏi theo chủ đề.',
+    description: 'Tạo phòng quiz để chơi cùng nhau, AI ra câu hỏi theo chủ đề.',
     section: 'game', visibility: 'public', status: 'beta', indexable: true,
     tags: ['Multiplayer', 'AI'], requirements: ['Gemini key'], surfaces: ['projects'],
   },
   {
     id: 'note', path: '/note-daily', title: 'Note Daily',
-    description: 'Ghi chú hằng ngày với calendar view và streak, dữ liệu lưu tại thiết bị.',
+    description: 'Ghi chú hằng ngày, xem lại trên lịch và theo dõi số ngày viết liên tiếp. Dữ liệu lưu trên thiết bị.',
     section: 'productivity', visibility: 'public', status: 'stable', indexable: true,
     tags: ['Notes', 'Local-first'], requirements: ['Local data'], surfaces: ['projects'],
   },
@@ -95,7 +95,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'burnout', path: '/burnout-check', title: 'Burnout Check',
-    description: 'Self-check ngắn để nhìn lại mức độ quá tải; không thay thế tư vấn y khoa.',
+    description: 'Một bài tự đánh giá ngắn về mức độ quá tải, không thay thế tư vấn y khoa.',
     section: 'productivity', visibility: 'public', status: 'beta', indexable: false,
     tags: ['Wellbeing', 'AI'], requirements: ['Không phải chẩn đoán y tế'], surfaces: ['projects'],
   },
@@ -113,7 +113,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   },
   {
     id: 'food', path: '/food-wheel', title: 'Food Wheel',
-    description: 'Gợi ý món ăn và tạo một vòng quay chọn món vui vẻ.',
+    description: 'AI gợi ý món ăn, vòng quay giúp chọn khi chưa biết ăn gì.',
     section: 'ai', visibility: 'public', status: 'beta', indexable: false,
     tags: ['Food', 'AI'], requirements: ['AI'], surfaces: ['projects'],
   },

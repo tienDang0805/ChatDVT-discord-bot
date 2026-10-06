@@ -81,7 +81,11 @@ function EcosystemSkeleton() {
   return <div className="ecosystem-page"><section className="site-container ecosystem-hero"><div className="ecosystem-hero__copy"><p className="ecosystem-kicker"><Block width="50%" /></p><Heading /><Copy lines={4} /><Actions /></div><div className="ecosystem-orbit"><Block className="site-skeleton-bot" /></div></section><section className="ecosystem-proof">{[0, 1, 2, 3].map(i => <div className="ecosystem-proof__item" key={i}><Copy lines={2} /></div>)}</section></div>;
 }
 
-const skeletons = { home: HomeSkeleton, playground: PlaygroundSkeleton, me: MeSkeleton, discord: DiscordSkeleton, blog: BlogSkeleton, article: BlogArticleSkeleton, chat: ChatSkeleton, ecosystem: EcosystemSkeleton };
+function AppsSkeleton() {
+  return <section className="site-container apps-page"><p className="site-kicker"><Block width="20%" /></p><Heading lines={1} /><Copy lines={2} /><Actions /><div className="wallpaper-preview"><Block className="site-skeleton-art" /></div></section>;
+}
+
+const skeletons = { home: HomeSkeleton, playground: PlaygroundSkeleton, apps: AppsSkeleton, me: MeSkeleton, discord: DiscordSkeleton, blog: BlogSkeleton, article: BlogArticleSkeleton, chat: ChatSkeleton, ecosystem: EcosystemSkeleton };
 
 // Eagerly imported by App: the current site shell/CSS must exist before lazy pages load.
 export function SiteLoadingFallback({ view }: { view: SiteLoadingView }) {

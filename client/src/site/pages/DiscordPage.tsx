@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { Mascot } from '../components/Mascot';
-import { DiscoveryGuide } from '../components/DiscoveryGuide';
 import { ProductProof } from '../components/ProductProof';
 import { SiteLayout } from '../components/SiteLayout';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
@@ -15,12 +14,12 @@ const SOURCE_URL = 'https://github.com/tienDang0805/ChatDVT-discord-bot';
 const capabilities = [
   {
     icon: MessageCircle,
-    title: 'Chat ngay trong kênh',
-    text: 'Mention @ChatDVT rồi đặt câu hỏi. Bot giữ ngữ cảnh để cuộc trò chuyện không bị đứt đoạn.',
+    title: 'Chat trong channel',
+    text: 'Mention @ChatDVT rồi đặt câu hỏi. Bot dùng các tin nhắn trước đó làm ngữ cảnh.',
   },
   {
     icon: Image,
-    title: 'Hiểu ảnh và video',
+    title: 'Phân tích ảnh và video',
     text: 'Đính kèm ảnh hoặc video cùng câu hỏi để bot mô tả, phân tích và giải thích nội dung.',
   },
   {
@@ -30,7 +29,7 @@ const capabilities = [
   },
   {
     icon: Gamepad2,
-    title: 'Mini game gọn, dễ vào',
+    title: 'Mini game trên Discord',
     text: 'Chơi Quiz, Wordle, Code Challenge hoặc so đạo hạnh trên bảng Cường Giả ngay trong Discord.',
   },
 ];
@@ -52,8 +51,8 @@ const steps = [
     text: 'Gõ @ChatDVT kèm câu hỏi. Nếu gửi ảnh hoặc video, hãy nói rõ điều bạn muốn bot phân tích.',
   },
   {
-    title: 'Khám phá bằng /help',
-    text: 'Dùng /help để xem các lệnh đang hoạt động, hoặc mở ngay một mini game cho cả kênh.',
+    title: 'Xem lệnh bằng /help',
+    text: 'Dùng /help để xem các lệnh đang hoạt động, hoặc chọn mini game cho cả channel.',
   },
 ];
 
@@ -67,23 +66,23 @@ const commandGroups = [
   {
     icon: BrainCircuit,
     eyebrow: 'CHAT & TIỆN ÍCH',
-    title: 'Hỏi, tóm tắt, tạo hồ sơ',
-    description: 'Các lệnh hỗ trợ phần chat AI và ngữ cảnh trong server.',
+    title: 'Chat, tóm tắt, hồ sơ',
+    description: 'Lệnh chat AI, tóm tắt tin nhắn và xem hồ sơ thành viên.',
     commands: [
-      { syntax: '/help', text: 'Xem đúng danh sách lệnh hiện đang mở.' },
+      { syntax: '/help', text: 'Xem danh sách lệnh đang dùng được.' },
       { syntax: '/identity menu', text: 'Mở menu tạo và quản lý identity cá nhân.' },
       { syntax: '/identity view user:@thành_viên', text: 'Xem identity của bạn hoặc một thành viên.' },
       { syntax: '/sum [limit]', text: 'Tóm tắt 5–100 tin nhắn gần nhất; mặc định là 50.' },
       { syntax: '/cuonggia bang', text: 'Xem top 10 cường giả dựa trên thâm niên, hoạt động và role.' },
-      { syntax: '/cuonggia hoso [thanhvien]', text: 'Soi cảnh giới và các chỉ số của một thành viên.' },
-      { syntax: '/cuonggia cach-tinh', text: 'Xem công thức tính điểm minh bạch.' },
+      { syntax: '/cuonggia hoso [thanhvien]', text: 'Xem cảnh giới và chỉ số của một thành viên.' },
+      { syntax: '/cuonggia cach-tinh', text: 'Xem cách tính điểm.' },
     ],
   },
   {
     icon: Gamepad2,
     eyebrow: 'MINI GAME',
     title: 'Game ngắn cho cả kênh',
-    description: 'Dễ bắt đầu, kết thúc nhanh và không cần học hệ thống phức tạp.',
+    description: 'Quiz, Wordle và Code Challenge chơi ngay trong Discord.',
     commands: [
       { syntax: '/quiz setup', text: 'Tạo một ván quiz và chọn cấu hình trước khi chơi.' },
       { syntax: '/quiz cancel', text: 'Hủy ván quiz đang chạy trong kênh.' },
@@ -98,7 +97,7 @@ const commandGroups = [
   {
     icon: Settings,
     eyebrow: 'DÀNH CHO ADMIN',
-    title: 'Cấu hình bot theo server',
+    title: 'Cấu hình cho từng server',
     description: 'Nhóm lệnh quản trị chỉ dành cho người có quyền phù hợp.',
     commands: [
       { syntax: '/setting view', text: 'Xem cấu hình AI hiện tại của server.' },
@@ -168,7 +167,7 @@ export function DiscordPage() {
   const pageSteps = isEn ? stepsEn : steps;
   const pageCommandGroups = isEn ? commandGroupsEn : commandGroups;
   usePageMeta(isEn ? 'ChatDVT — Tiến’s AI Chat Bot on Web & Discord' : 'ChatDVT — AI Chat Bot của Tiến trên Web & Discord', {
-    description: isEn ? 'Meet ChatDVT, Tiến’s AI chat bot: chat and discover this website, or join on Discord for conversations, media analysis and mini games.' : 'Gặp ChatDVT, AI chat bot của Tiến: trò chuyện và khám phá website, hoặc gặp trên Discord để chat, phân tích media và chơi mini game.',
+    description: isEn ? 'ChatDVT is an AI chatbot for Discord and the web, developed by Đặng Văn Tiến after a joke in the 8D group. Conversations, media analysis and mini games.' : 'ChatDVT là chatbot AI trên Discord và web do Đặng Văn Tiến phát triển, bắt đầu từ một trò đùa của nhóm 8D. Chat, phân tích media, tóm tắt và mini game.',
     keywords: isEn ? 'ChatDVT, Chat DVT, Đặng Văn Tiến, Discord AI bot, Discord chatbot, Gemini bot, Discord mini games' : 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
     schema: 'software',
     schemaName: 'ChatDVT',
@@ -184,21 +183,22 @@ export function DiscordPage() {
     ['A personality for your server', 'Admins can adjust the prompt and response settings for their server.', '/setting edit'],
   ] : [
     ['Một ván quiz cho cả kênh', 'Tạo ván chơi bằng /quiz setup. Câu hỏi và lựa chọn xuất hiện ngay trong Discord, để mọi người cùng tham gia.', '/quiz setup'],
-    ['Một lời mention để bắt đầu', 'Mention @ChatDVT kèm câu hỏi ngay trong kênh. Bot giữ ngữ cảnh trong cuộc trò chuyện.', '@ChatDVT'],
-    ['Một cá tính theo server', 'Admin có thể chỉnh prompt và thiết lập phản hồi của bot theo server.', '/setting edit'],
+    ['Mention để chat', 'Mention @ChatDVT kèm câu hỏi ngay trong kênh. Bot giữ ngữ cảnh trong cuộc trò chuyện.', '@ChatDVT'],
+    ['Tính cách theo server', 'Admin có thể chỉnh prompt và thiết lập phản hồi của bot theo server.', '/setting edit'],
   ];
   const group = pageCommandGroups[commandIndex];
   return <SiteLayout><section className="hybrid-view hybrid-b selected-discord">
-    <div className="discord-stage band primary-stage"><div><p className="eyebrow">{isEn ? 'TIẾN’S AI CHAT BOT / WEB & DISCORD' : 'AI CHAT BOT CỦA TIẾN / WEB & DISCORD'}</p><h1>ChatDVT<br /><span>AI chat bot.</span></h1><p className="lede">{isEn ? 'Hi, I’m Tiến’s AI chat bot. I chat with you and introduce this website. I’m on Discord too, where we can chat, share media and play quizzes together.' : 'Mình là AI chat bot của Tiến, ở đây để trò chuyện và giới thiệu website này. Mình cũng có mặt trên Discord, cùng bạn chat, xem media và chơi quiz.'}</p><div className="button-row"><Link className="button ink" to={pathFor('/chat')}>{isEn ? 'Chat now' : 'Chat ngay'} ↗</Link><a className="button discord-invite" href={INVITE_URL} target="_blank" rel="noreferrer">{isEn ? 'Add to Discord' : 'Thêm vào Discord'} ↗</a><a className="text-link" href="#discord-proof">{isEn ? 'See me on Discord' : 'Xem mình trên Discord'} ↓</a></div></div><Mascot character="chatdvt" size={360} action="tablet-show" /></div>
-    <div id="discord-proof" className="proof-section"><div className="proof-intro"><p className="eyebrow">{isEn ? 'SEE THE BOT IN ACTION' : 'NHÌN BOT HOẠT ĐỘNG'}</p><h2>{isEn ? <>Real conversations.<br />Real screenshots.</> : <>Chuyện thật.<br />Ảnh thật.</>}</h2><p>{isEn ? 'ChatDVT inside a Discord channel.' : 'Đây là ChatDVT trong kênh Discord.'}</p><div className="proof-tabs" role="tablist" aria-label={isEn ? 'Product evidence' : 'Ảnh ChatDVT'}>{['Quiz', isEn ? 'Conversation' : 'Hội thoại', isEn ? 'Personality' : 'Cá tính'].map((title, index) => <button key={title} ref={el => { tabs.current[index] = el; }} type="button" role="tab" id={'proof-tab-' + index} aria-selected={proofIndex === index} aria-controls="proof-panel" tabIndex={proofIndex === index ? 0 : -1} onClick={() => setProofIndex(index)} onKeyDown={event => {
+    <div className="discord-stage band primary-stage"><div><p className="eyebrow">{isEn ? 'TIẾN’S AI CHAT BOT / WEB & DISCORD' : 'CHATDVT / DISCORD & WEB'}</p><h1>ChatDVT<br /><span>AI chat bot.</span></h1><p className="lede">{isEn ? 'ChatDVT is an AI chatbot developed by Đặng Văn Tiến. It started with a joke in our 8D group, became a Telegram bot, then moved to Discord. Today you can chat on the web or use media analysis, summaries and mini games on Discord.' : 'Mình làm ChatDVT từ một trò đùa của nhóm 8D. Ban đầu bot chạy trên Telegram, sau đó chuyển sang Discord. Bot có chat AI, phân tích ảnh/video, tóm tắt tin nhắn và mini game. Giờ có thêm bản chat trên web.'}</p><div className="button-row"><Link className="button ink" to={pathFor('/chat')}>{isEn ? 'Chat now' : 'Chat ngay'} ↗</Link><a className="button discord-invite" href={INVITE_URL} target="_blank" rel="noreferrer">{isEn ? 'Add to Discord' : 'Thêm vào Discord'} ↗</a><a className="text-link" href="#discord-proof">{isEn ? 'See me on Discord' : 'Xem bot hoạt động'} ↓</a></div></div><Mascot character="chatdvt" size={360} action="tablet-show" /></div>
+    <div id="discord-proof" className="proof-section"><div className="proof-intro"><p className="eyebrow">{isEn ? 'SEE THE BOT IN ACTION' : 'CHATDVT TRONG DISCORD'}</p><h2>{isEn ? <>Real conversations.<br />Real screenshots.</> : <>Bot đang chạy.<br />Ảnh từ Discord.</>}</h2><p>{isEn ? 'ChatDVT inside a Discord channel.' : 'Ảnh chụp ChatDVT đang chat và chơi quiz trong channel.'}</p><div className="proof-tabs" role="tablist" aria-label={isEn ? 'Product evidence' : 'Ảnh ChatDVT'}>{['Quiz', isEn ? 'Conversation' : 'Hội thoại', isEn ? 'Personality' : 'Tính cách'].map((title, index) => <button key={title} ref={el => { tabs.current[index] = el; }} type="button" role="tab" id={'proof-tab-' + index} aria-selected={proofIndex === index} aria-controls="proof-panel" tabIndex={proofIndex === index ? 0 : -1} onClick={() => setProofIndex(index)} onKeyDown={event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? 2 : (index + (event.key === 'ArrowRight' ? 1 : -1) + 3) % 3;
       setProofIndex(next); tabs.current[next]?.focus();
     }}>{title}</button>)}</div><p>{proofCopy[proofIndex][1]}</p><code>{proofCopy[proofIndex][2]}</code></div><div id="proof-panel" role="tabpanel" aria-labelledby={'proof-tab-' + proofIndex} tabIndex={0}><ProductProof key={proofIndex} index={proofIndex} /></div></div>
     <div className="capability-strip">{pageCapabilities.map(item => <article key={item.title}><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>
-    <div className="commands"><div><p className="eyebrow">{isEn ? 'START WITH A COMMAND' : 'BẮT ĐẦU BẰNG MỘT LỆNH'}</p><h2>{isEn ? 'What do you want to do?' : 'Muốn làm gì?'}</h2><p>{isEn ? 'Settings and command access depend on your server.' : 'Thiết lập và quyền dùng lệnh phụ thuộc server.'}</p><div className="filters command-tabs" aria-label={isEn ? 'Command groups' : 'Nhóm lệnh'}>{pageCommandGroups.map((item, index) => <button key={item.eyebrow} type="button" data-command-group={index} aria-pressed={index === commandIndex} onClick={() => setCommandIndex(index)}>{index === 0 ? (isEn ? 'Chat & utilities' : 'Chat & tiện ích') : index === 1 ? 'Mini game' : 'Admin'}</button>)}</div></div><div id="command-list" aria-live="polite">{group.commands.map(command => <div className="command-row" key={command.syntax}><code>{command.syntax}</code><p>{command.text}</p></div>)}<p className="command-note">{isEn ? 'Type / in Discord to select a command. /help has the current list.' : 'Gõ / trong Discord để chọn lệnh. /help có danh sách đang dùng.'}</p></div></div>
-    <section className="getting-started band soft-stage"><p className="eyebrow">{isEn ? 'GET STARTED IN DISCORD' : 'BẮT ĐẦU TRONG DISCORD'}</p><h2>{isEn ? 'Say its name.' : 'Gọi tên là có mặt.'}</h2><ol>{pageSteps.map(step => <li key={step.title}><h3>{step.title}</h3><p>{step.text}</p></li>)}</ol><div className="button-row"><a className="button ink" href={INVITE_URL} target="_blank" rel="noreferrer">{isEn ? 'Add to a server' : 'Thêm vào server'} ↗</a><a className="text-link" href={SOURCE_URL} target="_blank" rel="noreferrer">GitHub ↗</a><Link className="text-link" to="/login">{isEn ? 'Server dashboard' : 'Dashboard cho server'} ↗</Link><Link className="text-link" to={pathFor('/me')}>{isEn ? 'Meet Tiến' : 'Gặp Tiến'} ↗</Link></div></section>
-    <DiscoveryGuide page="discord" className="slim-guide" size={100} />
+    <div className="commands"><div><p className="eyebrow">{isEn ? 'START WITH A COMMAND' : 'BẮT ĐẦU BẰNG MỘT LỆNH'}</p><h2>{isEn ? 'What do you want to do?' : 'Muốn làm gì?'}</h2><p>{isEn ? 'The bot uses TypeScript and Discord.js, with Google Gemini for AI. Settings and command access depend on your server.' : 'Bot viết bằng TypeScript và Discord.js, dùng Google Gemini cho phần AI. Cấu hình và quyền dùng lệnh tùy từng server.'}</p><div className="filters command-tabs" aria-label={isEn ? 'Command groups' : 'Nhóm lệnh'}>{pageCommandGroups.map((item, index) => <button key={item.eyebrow} type="button" data-command-group={index} aria-pressed={index === commandIndex} onClick={() => setCommandIndex(index)}>{index === 0 ? (isEn ? 'Chat & utilities' : 'Chat & tiện ích') : index === 1 ? 'Mini game' : 'Admin'}</button>)}</div></div><div id="command-list" aria-live="polite">{group.commands.map(command => <div className="command-row" key={command.syntax}><code>{command.syntax}</code><p>{command.text}</p></div>)}<p className="command-note">{isEn ? 'Type / in Discord to select a command. /help has the current list.' : 'Gõ / trong Discord để chọn lệnh. /help có danh sách đang dùng.'}</p></div></div>
+    <section className="getting-started band soft-stage"><p className="eyebrow">{isEn ? 'GET STARTED IN DISCORD' : 'BẮT ĐẦU TRONG DISCORD'}</p><h2>{isEn ? 'Say its name.' : 'Thêm bot rồi mention.'}</h2><ol>{pageSteps.map(step => <li key={step.title}><h3>{step.title}</h3><p>{step.text}</p></li>)}</ol><div className="button-row"><a className="button ink" href={INVITE_URL} target="_blank" rel="noreferrer">{isEn ? 'Add to a server' : 'Thêm vào server'} ↗</a><a className="text-link" href={SOURCE_URL} target="_blank" rel="noreferrer">GitHub ↗</a><Link className="text-link" to="/login">{isEn ? 'Server dashboard' : 'Dashboard cho server'} ↗</Link><Link className="text-link" to={pathFor('/me')}>{isEn ? 'Meet Tiến' : 'Về Tiến'} ↗</Link></div></section>
+    <p className="page-shell"><Link className="underlined" to={pathFor('/blog/chatdvt-phan-1')}>{isEn ? 'Read the origin story of ChatDVT (Vietnamese)' : 'Vì sao mình làm ChatDVT?'} ↗</Link></p>
+
   </section></SiteLayout>;
 }

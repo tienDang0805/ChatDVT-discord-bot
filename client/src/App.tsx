@@ -10,6 +10,8 @@ const isDiscordActivity = _p.has('frame_id') || _p.has('instance_id');
 const HomePage = lazy(() => import('./site/pages/HomePage').then(m => ({ default: m.HomePage })));
 const EcosystemPage = lazy(() => import('./site/pages/EcosystemPage').then(m => ({ default: m.EcosystemPage })));
 const PlaygroundPage = lazy(() => import('./site/pages/PlaygroundPage').then(m => ({ default: m.PlaygroundPage })));
+const AppsPage = lazy(() => import('./site/pages/AppsPage').then(m => ({ default: m.AppsPage })));
+const WallpaperAppPage = lazy(() => import('./site/pages/WallpaperAppPage').then(m => ({ default: m.WallpaperAppPage })));
 const MobilePage = lazy(() => import('./site/pages/MobilePage').then(m => ({ default: m.MobilePage })));
 const DiscordPage = lazy(() => import('./site/pages/DiscordPage').then(m => ({ default: m.DiscordPage })));
 const ChatDVTChatPage = lazy(() => import('./site/pages/ChatDVTChatPage').then(m => ({ default: m.ChatDVTChatPage })));
@@ -133,11 +135,9 @@ function App({ initialPage }: { initialPage?: { pathname: string; Component: Com
     const Page = initialPage?.pathname === pathname ? initialPage.Component : Fallback;
     return <Page />;
   }
-  const publicPath = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
-  const isPortfolio = ['/', '/me', '/mobile', '/playground', '/discord', '/chat', '/blog'].includes(publicPath) || publicPath.startsWith('/blog/');
   const loadingView = isDiscordActivity && pathname === '/' ? null : siteLoadingView(pathname);
   return (
-    <AppShell chatWidget={!isDiscordActivity && !isPortfolio}>
+    <AppShell>
         <Suspense fallback={loadingView ? <SiteLoadingFallback view={loadingView} /> : <FeatureLoadingFallback />}>
           <Routes>
             <Route path="/" element={isDiscordActivity ? <DiscordActivityHub /> : publicPage(HomePage)} />
@@ -146,6 +146,10 @@ function App({ initialPage }: { initialPage?: { pathname: string; Component: Com
             <Route path="/en/ecosystem" element={<EcosystemPage />} />
             <Route path="/playground" element={publicPage(PlaygroundPage)} />
             <Route path="/en/playground" element={publicPage(PlaygroundPage)} />
+            <Route path="/apps" element={publicPage(AppsPage)} />
+            <Route path="/en/apps" element={publicPage(AppsPage)} />
+            <Route path="/apps/td-wallpaperengine" element={publicPage(WallpaperAppPage)} />
+            <Route path="/en/apps/td-wallpaperengine" element={publicPage(WallpaperAppPage)} />
             <Route path="/mobile" element={<MobilePage />} />
             <Route path="/en/mobile" element={<MobilePage />} />
             <Route path="/discord" element={publicPage(DiscordPage)} />

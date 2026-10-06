@@ -23,6 +23,7 @@ test('public VI/EN pages contain visible content without executing JavaScript', 
       const html = renderPublicHtml(template, localized);
       assert.match(rootContent(html), /<main id="site-main"/);
       assert.match(rootContent(html), /<h1[ >]/);
+      assert.doesNotMatch(rootContent(html), /data-guide=|data-tour-progress|guide-speech|chat-widget-container/);
       assert.match(rootContent(html), /href="\/(en\/)?me"/);
       assert.doesNotMatch(html, /<noscript>|template data-msg|Ối! Có lỗi xảy ra/);
       assert.match(html, new RegExp(`<html class="dark" lang="${localized.startsWith('/en') ? 'en' : 'vi'}"`));
@@ -34,6 +35,86 @@ test('public VI/EN pages contain visible content without executing JavaScript', 
   assert.match(vi, /Về Đặng Văn Tiến — Kỹ sư/);
   assert.match(renderPublicHtml(template, '/en/me'), /About Đặng Văn Tiến — React Native/);
   assert.doesNotMatch(generateSitemapXml(), /<loc>https:\/\/devtiendang.blog\/(en\/)?mobile<\/loc>/);
+});
+
+test('public identity and ChatDVT history remain readable and agree with structured data', () => {
+  function schema(html) {
+    return JSON.parse(html.match(/<script id="page-structured-data" type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  }
+  for (const prefix of ['', '/en']) {
+    const home = renderPublicHtml(template, prefix || '/');
+    const about = renderPublicHtml(template, `${prefix}/me`);
+    const bot = renderPublicHtml(template, `${prefix}/discord`);
+    for (const fact of ['Đặng Văn Tiến', 'South Telecom', 'PTIT', '2017–2022', '8D', 'ChatDVT', 'Discord.js', 'Google Gemini']) {
+      assert.ok(rootContent(about).includes(fact), `Visible profile is missing ${fact}`);
+    }
+    assert.match(rootContent(home), /Mobile Developer/);
+    assert.match(rootContent(home), /React Native/);
+    for (const html of [home, about]) assert.match(html, /name="robots" content="index, follow/);
+    assert.match(rootContent(bot), /Đặng Văn Tiến/);
+    assert.match(rootContent(bot), /8D/);
+    assert.match(rootContent(bot), /Telegram/);
+    assert.match(rootContent(bot), /href="\/(en\/)?blog\/chatdvt-phan-1"/);
+    const person = schema(about).mainEntity;
+    assert.equal(person.worksFor.name, 'South Telecom');
+    assert.equal(person.alumniOf.name, 'PTIT HCM');
+    for (const name of ['Tiến Đặng', 'Tien Dang', 'Dang Van Tien', 'devtiendang']) assert.ok(person.alternateName.includes(name));
+    assert.match(person.homeLocation.name, /Hồ Chí Minh/);
+    assert.deepEqual(schema(home)['@graph'].find(node => node['@type'] === 'Person'), person);
+    assert.deepEqual(schema(bot).creator, person);
+    assert.equal(schema(bot).name, 'ChatDVT');
+    assert.equal(schema(bot)['@id'], 'https://devtiendang.blog/discord#chatdvt');
+    assert.ok(schema(bot).sameAs.includes('https://github.com/tienDang0805/ChatDVT-discord-bot'));
+    assert.doesNotMatch(schema(bot).featureList.join(' '), /discovery guide|Giới thiệu website/);
+    assert.match(schema(bot).featureList[0], prefix ? /web and Discord/ : /web và Discord/);
+    for (const topic of ['Mobile App Development', 'React Native', 'Android', 'Kotlin', 'Discord.js', 'Google Gemini']) assert.ok(person.knowsAbout.includes(topic));
+    const chat = schema(renderPublicHtml(template, `${prefix}/chat`));
+    assert.equal(chat.name, 'ChatDVT Chat');
+    assert.equal(chat.applicationCategory, 'CommunicationApplication');
+    assert.deepEqual(chat.author, person);
+    assert.match(schema(bot).description, /8D/);
+    const sitemap = generateSitemapXml();
+    for (const route of [prefix || '/', `${prefix}/me`, `${prefix}/discord`]) {
+      assert.ok(sitemap.includes(`<loc>https://devtiendang.blog${route}</loc>\n    <lastmod>2026-10-06</lastmod>`));
+    }
+  }
+});
+
+test('desktop app pages expose localized content, Windows downloads and product identity without JavaScript', () => {
+  const source = 'https://github.com/tienDang0805/TD_WallpaperEngine';
+  const sitemap = generateSitemapXml();
+  for (const prefix of ['', '/en']) {
+    const listPath = `${prefix}/apps`, appPath = `${listPath}/td-wallpaperengine`;
+    const list = renderPublicHtml(template, listPath), app = renderPublicHtml(template, appPath);
+    assert.match(rootContent(list), /TD-WallpaperEngine/);
+    assert.ok(rootContent(list).includes(`href="${appPath}"`));
+    assert.match(rootContent(app), /Windows 10 \/ 11/);
+    assert.match(rootContent(app), /C# · .NET 10 · WPF · mpv/);
+    assert.ok(rootContent(app).includes(`href="${source}/releases/latest"`));
+    assert.ok(rootContent(app).includes(`href="${source}"`));
+    assert.match(rootContent(app), prefix ? /Images and videos, right on your desktop/ : /Ảnh và video làm hình nền desktop/);
+    assert.match(rootContent(app), /href="#download"/);
+    assert.match(rootContent(app), /id="download"/);
+    assert.ok(rootContent(app).includes(`aria-current="page" class="is-active" href="${listPath}"`));
+    for (const [route, html] of [[listPath, list], [appPath, app]]) {
+      assert.match(html, /name="robots" content="index, follow/);
+      assert.ok(html.includes(`rel="canonical" href="https://devtiendang.blog${route}"`));
+      assert.ok(sitemap.includes(`<loc>https://devtiendang.blog${route}</loc>`));
+      assert.ok(html.includes(`hreflang="en" href="https://devtiendang.blog/en${route.replace(/^\/en/, '')}"`));
+    }
+    const schema = JSON.parse(app.match(/<script id="page-structured-data" type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+    assert.equal(schema['@type'], 'SoftwareApplication');
+    assert.equal(schema.name, 'TD-WallpaperEngine');
+    assert.equal(schema['@id'], 'https://devtiendang.blog/apps/td-wallpaperengine#software');
+    assert.equal(schema.operatingSystem, 'Windows 10, Windows 11 (64-bit)');
+    assert.equal(schema.applicationCategory, 'DesktopEnhancementApplication');
+    assert.equal(schema.creator['@id'], 'https://devtiendang.blog/me#person');
+    assert.equal(schema.downloadUrl, `${source}/releases/latest`);
+    assert.equal(schema.featureList.length, 6);
+    assert.ok(schema.sameAs.includes(source));
+    assert.ok(schema.image.startsWith('https://devtiendang.blog/images/apps/'));
+    assert.equal(schema.aggregateRating, undefined);
+  }
 });
 
 test('SSR article sanitization and embedded JSON cannot introduce executable HTML', () => {
@@ -88,7 +169,7 @@ test('HTTP public renderer reads published blog data, protects errors and preser
   const server = await new Promise(resolve => { const instance = app.listen(0, '127.0.0.1', () => resolve(instance)); });
   t.after(() => new Promise(resolve => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}`;
-  for (const route of ['/', '/en', '/me', '/en/me', '/playground', '/en/playground', '/discord', '/en/discord', '/chat', '/en/chat', '/blog', '/blog/published-example', '/blog/chatdvt-phan-1']) {
+  for (const route of ['/', '/en', '/me', '/en/me', '/playground', '/en/playground', '/apps', '/en/apps', '/apps/td-wallpaperengine', '/en/apps/td-wallpaperengine', '/discord', '/en/discord', '/chat', '/en/chat', '/blog', '/blog/published-example', '/blog/chatdvt-phan-1']) {
     const response = await fetch(base + route);
     assert.equal(response.status, 200, route);
     assert.equal(response.headers.get('cache-control'), 'no-cache, max-age=0, must-revalidate');

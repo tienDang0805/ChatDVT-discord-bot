@@ -10,7 +10,6 @@ import { SiteLayout } from '../components/SiteLayout';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { Mascot } from '../components/Mascot';
-import { DiscoveryGuide } from '../components/DiscoveryGuide';
 
 function formatDate(value: string | null, locale: 'vi' | 'en', draft: string): string {
   if (!value) return draft;
@@ -42,9 +41,9 @@ export function BlogPage() {
   }, []);
 
   return <SiteLayout><section className="hybrid-view hybrid-a selected-blog"><div className="page-shell">
-    <div className="page-opening blog-opening"><div><p className="eyebrow">BLOG / {locale === 'en' ? 'TIẾN’S NOTES' : 'GHI CHÉP CỦA TIẾN'}</p><h1>{locale === 'en' ? <>Code done.<br /><em>A story to tell.</em></> : <>Code xong.<br /><em>Kể một chút.</em></>}</h1><p>{locale === 'en' ? 'Things I learned and stories behind a side project.' : 'Những điều mình học và những chuyện phía sau một side project.'}</p></div><div className="blog-circle story-scene"><Mascot character="tien" size={185} action="coffee" /><span>{locale === 'en' ? 'A real story to start with.' : 'Một chuyện thật để bắt đầu.'}</span></div></div>
+    <div className="page-opening blog-opening"><div><p className="eyebrow">BLOG / {locale === 'en' ? 'TIẾN’S NOTES' : 'GHI CHÉP CỦA TIẾN'}</p><h1>{locale === 'en' ? <>Code done.<br /><em>A story to tell.</em></> : <>Code xong.<br /><em>Kể một chút.</em></>}</h1><p>{locale === 'en' ? 'Things I learned and stories behind a side project.' : 'Mấy thứ mình học được khi làm app, làm bot và tự mò side project.'}</p></div><div className="blog-circle story-scene"><Mascot character="tien" size={185} action="coffee" /><span>{locale === 'en' ? 'A real story to start with.' : 'Ghi lại cho khỏi quên.'}</span></div></div>
     <p className="blog-count">{t('blog.posts', { count: posts.length })}{locale === 'en' && ' · Articles keep their authored language.'}</p>
     {posts.map((post, index) => <article className="blog-feature" key={post.slug}><div className="article-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}<span>{post.slug === DEFAULT_BLOG_POST.slug ? <>CHATDVT<br />{locale === 'en' ? 'PART 1' : 'PHẦN 1'}</> : (locale === 'en' ? 'NOTES' : 'GHI CHÉP')}</span></div><div className="blog-feature-copy"><p className="eyebrow"><time dateTime={post.publishedAt || undefined}>{formatDate(post.publishedAt, locale, t('blog.draft'))}</time> · {t('blog.minuteRead', { count: post.readingMinutes })}</p><h2><Link to={pathFor('/blog/' + post.slug)}>{post.title}</Link></h2><p>{post.excerpt}</p><Link className="button blue" to={pathFor('/blog/' + post.slug)}>{t('blog.read')} ↗</Link></div></article>)}
-    <DiscoveryGuide page="blog" className="footer-guide" size={95} />
+
   </div></section></SiteLayout>;
 }

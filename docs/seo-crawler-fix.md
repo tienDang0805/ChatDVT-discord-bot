@@ -1,5 +1,17 @@
 # HTML công khai và crawler
 
+## Kiểm tra nhận diện ngày 06/10/2026
+
+Kiểm tra HTTP công khai của Home, Me (VI/EN), Discord và bài `/blog/chatdvt-phan-1`: HTTP 200, HTML có nội dung thật, robots `index, follow`, canonical đúng, Cloudflare `DYNAMIC`. Robots và sitemap trả 200. `www` chuyển về domain chính; `/profile/` chuyển về `/me`. Đây là kiểm tra truy cập từ công cụ chẩn đoán, không xác nhận trạng thái trong chỉ mục Google hoặc request thực tế của Gemini.
+
+Bản sửa copy tập trung ở Playground, Discord, AI Chat, Blog và Me; các màn hình bên trong tool/game giữ nguyên. Gỡ guide ChatDVT và khung chat nổi dùng chung, giữ nhân vật ở Discord, AI Chat và phần side project của Me. Home giữ giới thiệu Mobile Developer ở trên và một mục riêng về ChatDVT ở dưới; đây là giới thiệu side project, không phải guide dẫn đường.
+
+Me ghi rõ South Telecom, TP.HCM. Sau Tech stack là mục Học vấn riêng: PTITHCM, Kỹ thuật phần mềm, 2017–2022; tiếp theo là side project ChatDVT. Chuyện nhóm 8D vẫn nằm trong Discord, side project của Me và bài blog. Discord/Me có thông tin TypeScript, Discord.js và Google Gemini. Dùng chung Person JSON-LD cho server và client (`worksFor`, `alumniOf`, `homeLocation`, `sameAs`), với tên gọi Đặng Văn Tiến, Tiến Đặng, Tien Dang, Dang Van Tien và devtiendang. Đây là dữ liệu nhận diện, không phải bảo đảm xếp hạng cho từng câu tìm kiếm. Sitemap cập nhật lastmod cho trang vừa sửa; không đổi ngày xuất bản bài cũ.
+
+Sau deploy, kiểm tra **bản đã lập chỉ mục** của Home, Me và Discord trong Search Console: ngày crawl gần nhất, Google-selected canonical và lý do nếu URL không được index. Kiểm tra live là một bước khác, không xác nhận URL đã được lập chỉ mục. Nếu chưa có trên Google, căn cứ lý do cụ thể trước khi sửa tiếp. Kết quả `site:` không đầy đủ; Gemini không nhắc một thông tin không chứng minh Google đã bỏ index. Không có cam kết về thứ hạng hoặc câu trả lời của Gemini.
+
+Nguồn Google: [giới hạn của site:](https://developers.google.com/search/docs/monitor-debug/search-operators/all-search-site), [kiểm tra URL](https://support.google.com/webmasters/answer/9012289?hl=en).
+
 ## Bản sửa này làm gì
 
 Home, Me, Playground, Discord và Chat (VI/EN) dùng cùng component React để tạo HTML có nội dung thật. React hydrate HTML đó trong trình duyệt sau khi đã tải component mở đầu. Nếu chunk mở đầu lỗi, giữ nội dung HTML và hiện nút tải lại phần tương tác. Bước build tạo HTML tĩnh cho 10 URL này; Express cũng render chúng để hỗ trợ query của Playground và Discord Activity.

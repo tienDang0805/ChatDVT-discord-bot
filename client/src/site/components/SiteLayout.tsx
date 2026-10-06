@@ -27,9 +27,12 @@ export function SiteLayout({ children, hideFooter = false }: { children: React.R
   const { locale, pathFor } = useLanguage();
   const nav = [
     { label: 'Playground', href: '/playground' },
+    { label: locale === 'en' ? 'Apps' : 'Ứng dụng', href: '/apps' },
     { label: t('nav.discord'), href: '/discord' }, { label: t('nav.chat'), href: '/chat' },
     { label: t('nav.blog'), href: '/blog' }, { label: 'Me', href: '/me' },
   ];
+  const isActive = (href: string) => pathname === pathFor(href)
+    || (['/blog', '/apps'].includes(href) && pathname.startsWith(pathFor(`${href}/`)));
 
   useEffect(() => {
     setOpen(false);
@@ -63,7 +66,7 @@ export function SiteLayout({ children, hideFooter = false }: { children: React.R
       <div className="site-container site-header__inner">
         <Link to={pathFor('/')} className="site-brand" aria-label={t('a11y.home')}><SiteBrand /></Link>
         <nav className="site-nav" aria-label={t('a11y.primaryNav')}>
-          {nav.map(item => <Link key={item.href} to={pathFor(item.href)} aria-current={pathname === pathFor(item.href) || (item.href === '/blog' && pathname.startsWith(pathFor('/blog/'))) ? 'page' : undefined} className={pathname === pathFor(item.href) || (item.href === '/blog' && pathname.startsWith(pathFor('/blog/'))) ? 'is-active' : ''}>{item.label}</Link>)}
+          {nav.map(item => <Link key={item.href} to={pathFor(item.href)} aria-current={isActive(item.href) ? 'page' : undefined} className={isActive(item.href) ? 'is-active' : ''}>{item.label}</Link>)}
         </nav>
         <div className="site-header__actions">
           <MotionControl />
@@ -87,10 +90,10 @@ export function SiteLayout({ children, hideFooter = false }: { children: React.R
         <div className="footer-contact"><div><p className="site-kicker">{locale === 'en' ? 'LET’S TALK' : 'LIÊN HỆ TIẾN'}</p><h2>{locale === 'en' ? 'Have a mobile project in mind?' : 'Có chuyện về mobile muốn trao đổi?'}</h2></div><a className="footer-email" href={'mailto:' + profile.email}>{locale === 'en' ? 'Send me an email' : 'Gửi email cho mình'} ↗</a></div>
         <div className="site-footer__grid">
           <div className="footer-profile"><Link className="site-brand" to={pathFor('/')} aria-label={t('a11y.home')}><SiteBrand /></Link><h3>Đặng Văn Tiến</h3><p>Mobile Software Engineer<br />React Native · Android · Kotlin<br />{locale === 'en' ? 'Ho Chi Minh City' : 'TP. Hồ Chí Minh'}</p><div className="footer-social"><a href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a><a href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a></div></div>
-          <div className="footer-column"><h3>{locale === 'en' ? 'Explore' : 'Khám phá'}</h3><Link to={pathFor('/')}>{locale === 'en' ? 'Home' : 'Trang chủ'}</Link>{nav.map(item => <Link key={item.href} to={pathFor(item.href)}>{item.label}</Link>)}</div>
-          <div className="footer-column"><h3>{locale === 'en' ? 'Explore Playground' : 'Khám phá Playground'}</h3><Link to={pathFor('/playground?category=mobile')}>{locale === 'en' ? 'Mobile experiments' : 'Thử nghiệm Mobile'} ↗</Link><Link to={pathFor('/playground?category=tools')}>{locale === 'en' ? 'Try a tool' : 'Nghịch một tool'} ↗</Link><Link to={pathFor('/playground?category=fun')}>{locale === 'en' ? 'Games & fun' : 'Game & giải trí'} ↗</Link><Link to="/deeplink-tester">Deep Link Tester</Link><Link to="/qr-generator">QR Generator</Link></div>
-          <div className="footer-column footer-bot"><h3>ChatDVT</h3><span className="footer-bot-label">AI CHAT BOT · WEB & DISCORD</span><p>{locale === 'en' ? 'Tiến’s AI chat bot. Here to chat and introduce this website, and available on Discord too.' : 'AI chat bot của Tiến. Trò chuyện, giới thiệu website này và cũng có mặt trên Discord.'}</p><Link to={pathFor('/chat')}>{locale === 'en' ? 'Chat now' : 'Chat ngay'} ↗</Link><Link to={pathFor('/discord')}>{locale === 'en' ? 'ChatDVT on Discord' : 'ChatDVT trên Discord'} ↗</Link><a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">{locale === 'en' ? 'Source code' : 'Mã nguồn'} ↗</a></div>
-        </div><div className="site-footer__meta">© 2026 Đặng Văn Tiến<span>{locale === 'en' ? 'Mobile work, side projects and stories about ChatDVT.' : 'Công việc mobile, side project và chuyện về ChatDVT.'}</span></div>
+          <div className="footer-column"><h3>{locale === 'en' ? 'Pages' : 'Các trang'}</h3><Link to={pathFor('/')}>{locale === 'en' ? 'Home' : 'Trang chủ'}</Link>{nav.map(item => <Link key={item.href} to={pathFor(item.href)}>{item.label}</Link>)}</div>
+          <div className="footer-column"><h3>{locale === 'en' ? 'Playground' : 'Playground'}</h3><Link to={pathFor('/playground?category=mobile')}>{locale === 'en' ? 'Mobile experiments' : 'Tool mobile'} ↗</Link><Link to={pathFor('/playground?category=tools')}>{locale === 'en' ? 'Try a tool' : 'Tool cho công việc'} ↗</Link><Link to={pathFor('/playground?category=fun')}>{locale === 'en' ? 'Games & fun' : 'Game & giải trí'} ↗</Link><Link to="/deeplink-tester">Deep Link Tester</Link><Link to="/qr-generator">QR Generator</Link></div>
+          <div className="footer-column footer-bot"><h3>{locale === 'en' ? 'Links' : 'Liên kết'}</h3><span className="footer-bot-label">SIDE PROJECTS · SOURCE CODE</span><p>{locale === 'en' ? 'A few side projects and their source code.' : 'Mấy project mình làm ngoài giờ và source code.'}</p><Link to={pathFor('/chat')}>{locale === 'en' ? 'Chat now' : 'Chat ngay'} ↗</Link><Link to={pathFor('/discord')}>{locale === 'en' ? 'Discord Bot' : 'Discord Bot'} ↗</Link><a href="https://github.com/tienDang0805/ChatDVT-discord-bot" target="_blank" rel="noreferrer">{locale === 'en' ? 'Source code' : 'Mã nguồn'} ↗</a></div>
+        </div><div className="site-footer__meta">© 2026 Đặng Văn Tiến<span>{locale === 'en' ? 'devtiendang.blog — my personal website, where I keep things I build and find interesting.' : 'devtiendang.blog Web site cá nhân nơi lưu trữ những gì mình làm và thấy hay'}</span></div>
       </div>
     </footer>}
   </div></MascotMotion>;
