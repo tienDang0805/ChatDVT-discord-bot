@@ -1,6 +1,6 @@
 export const profile = {
   name: 'Đặng Văn Tiến',
-  role: 'Mobile Software Engineer',
+  role: 'Mobile Engineer',
   company: 'South Telecom',
   period: '04/2023',
   email: 'dvtien0805@gmail.com',
@@ -19,4 +19,3 @@ export const skillFamilies = [
   { title: 'Native & SDK', items: 'Native Modules · CameraX · ML Kit · TensorFlow Lite' },
   { title: 'Tooling', items: 'TypeScript · REST API · Gradle · Maven' },
 ];
-
