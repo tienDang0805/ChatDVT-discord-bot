@@ -5,6 +5,7 @@ import { prisma } from '../database/prisma';
 import { isFeatureIndexable } from '../shared/featureCatalog';
 import { AUTHOR_SCHEMA, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL } from '../shared/siteIdentity';
 import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../shared/desktopApps';
+import { CHATDVT_META, CHATDVT_HISTORY_PATH, CHATDVT_HISTORY_DESCRIPTION, CHATDVT_ARTICLE_SUBJECT } from '../shared/chatdvt';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
@@ -89,12 +90,12 @@ const ROUTE_META: Record<string, RouteMeta> = {
     changefreq: 'weekly',
   },
   '/discord': {
-    title: 'ChatDVT — AI Chatbot & Mini Game cho Discord | Đặng Văn Tiến',
-    description: 'ChatDVT là chatbot AI trên Discord và web do Đặng Văn Tiến phát triển, bắt đầu từ một trò đùa của nhóm 8D. Chat, phân tích media, tóm tắt và mini game.',
+    title: `${CHATDVT_META.vi.title} | Đặng Văn Tiến`,
+    description: CHATDVT_META.vi.description,
     keywords: 'ChatDVT, Chat DVT, Đặng Văn Tiến, Tiến Đặng, Discord AI bot, Discord chatbot, Gemini bot, Discord mini game',
     schemaName: 'ChatDVT',
     pageType: 'software',
-    lastmod: '2026-10-06',
+    lastmod: '2026-10-09',
     priority: 0.8,
     changefreq: 'weekly',
   },
@@ -113,7 +114,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     description: 'Đặng Văn Tiến là Mobile Developer tại South Telecom ở TP.HCM, làm React Native và Android/Kotlin, cựu sinh viên PTIT HCM (2017–2022) và là người làm bot ChatDVT.',
     keywords: 'Đặng Văn Tiến, Tiến Đặng, Tien Dang, mobile developer, React Native developer, Android developer, Kotlin developer',
     pageType: 'profile',
-    lastmod: '2026-10-06',
+    lastmod: '2026-10-09',
     priority: 0.8,
     changefreq: 'monthly',
   },
@@ -128,7 +129,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
   '/blog/chatdvt-phan-1': {
     title: 'Vì sao một Mobile Dev lại đi làm bot? — ChatDVT Phần 1 | Tiến Đặng',
-    description: 'ChatDVT bắt đầu từ một trò troll trong group Telegram, rồi đi qua Apps Script, Gemini, Discord.js và những căn nhà cloud đầu tiên.',
+    description: CHATDVT_HISTORY_DESCRIPTION,
     keywords: 'ChatDVT, Telegram bot, Discord bot, Gemini, Google Apps Script, Node.js, cloud',
     pageType: 'article',
     ogType: 'article',
@@ -570,9 +571,9 @@ const EN_ROUTE_META: Record<string, RouteMeta> = {
   '/ecosystem': { title: 'The ChatDVT Ecosystem — AI, tools, learning and games', description: 'Explore the ChatDVT ecosystem: an AI chatbot for Discord and the web, developer tools, English learning, games and community experiences.', schemaName: 'The ChatDVT Ecosystem', pageType: 'collection', lastmod: '2026-09-30', priority: 0.9, changefreq: 'weekly' },
   '/playground': { title: 'Projects & Lab — Products and developer tools', description: 'Selected products, developer tools, AI experiments, learning apps and web games built by Đặng Văn Tiến.', pageType: 'collection', lastmod: '2026-10-06', priority: 0.9, changefreq: 'weekly' },
   '/mobile': { indexable: false, title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
-  '/discord': { title: 'ChatDVT — AI chatbot and mini games for Discord', description: 'ChatDVT is an AI chatbot for Discord and the web, developed by Đặng Văn Tiến after a joke in the 8D group. Conversations, media analysis and mini games.', schemaName: 'ChatDVT', pageType: 'software', lastmod: '2026-10-06', priority: 0.8, changefreq: 'weekly' },
+  '/discord': { title: `${CHATDVT_META.en.title} | Đặng Văn Tiến`, description: CHATDVT_META.en.description, schemaName: 'ChatDVT', pageType: 'software', lastmod: '2026-10-09', priority: 0.8, changefreq: 'weekly' },
   '/chat': { title: 'ChatDVT Chat — Talk directly with AI', description: 'Chat with ChatDVT, an AI bot built by Đặng Văn Tiến using Google Gemini. Ask about Tiến and his projects, or have a conversation on the web.', schemaName: 'ChatDVT Chat', pageType: 'webapp', lastmod: '2026-10-06', priority: 0.9, changefreq: 'weekly' },
-  '/me': { title: 'Đặng Văn Tiến — React Native & Android Developer', description: 'Đặng Văn Tiến is a Mobile Developer at South Telecom in Ho Chi Minh City, a PTIT Ho Chi Minh City alumnus (2017–2022), working on React Native, Android/Kotlin and ChatDVT.', pageType: 'profile', lastmod: '2026-10-06', priority: 0.8, changefreq: 'monthly' },
+  '/me': { title: 'Đặng Văn Tiến — React Native & Android Developer', description: 'Đặng Văn Tiến is a Mobile Developer at South Telecom in Ho Chi Minh City, a PTIT Ho Chi Minh City alumnus (2017–2022), working on React Native, Android/Kotlin and ChatDVT.', pageType: 'profile', lastmod: '2026-10-09', priority: 0.8, changefreq: 'monthly' },
 };
 
 function normalizePathname(pathname: string): string {
@@ -753,6 +754,7 @@ function buildStructuredData(meta: RouteMeta, canonicalUrl: string, ogImage: str
         dateModified: meta.modifiedTime || meta.publishedTime,
         author: AUTHOR_SCHEMA,
         publisher: AUTHOR_SCHEMA,
+        ...(canonicalUrl === `${SITE_URL}${CHATDVT_HISTORY_PATH}` ? { about: CHATDVT_ARTICLE_SUBJECT } : {}),
       };
     default:
       return {

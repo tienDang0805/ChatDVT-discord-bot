@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
 import { AUTHOR_SCHEMA as AUTHOR, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL } from '../../../../src/shared/siteIdentity';
 import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../../../../src/shared/desktopApps';
+import { CHATDVT_HISTORY_PATH, CHATDVT_ARTICLE_SUBJECT } from '../../../../src/shared/chatdvt';
 import { useLanguage } from '../i18n/LanguageContext';
 import { stripLocalePrefix } from '../i18n';
 
@@ -232,7 +233,7 @@ export const usePageMeta = (title: string, options?: string | PageMetaOptions) =
             : pageSchema === 'blog'
               ? { ...base, '@type': 'Blog', author: AUTHOR, publisher: AUTHOR }
               : pageSchema === 'article'
-                ? { ...base, '@type': 'BlogPosting', headline: fullTitle, image: resolvedImage, datePublished: publishedTime || undefined, dateModified: modifiedTime || publishedTime || undefined, mainEntityOfPage: canonicalUrl, author: AUTHOR, publisher: AUTHOR }
+                ? { ...base, '@type': 'BlogPosting', headline: fullTitle, image: resolvedImage, datePublished: publishedTime || undefined, dateModified: modifiedTime || publishedTime || undefined, mainEntityOfPage: canonicalUrl, author: AUTHOR, publisher: AUTHOR, ...(basePath === CHATDVT_HISTORY_PATH ? { about: CHATDVT_ARTICLE_SUBJECT } : {}) }
                 : { ...base, '@type': 'WebApplication', name: schemaName || fullTitle, applicationCategory: schemaName === 'ChatDVT Chat' ? 'CommunicationApplication' : 'UtilitiesApplication', operatingSystem: 'All', offers: { '@type': 'Offer', price: '0', priceCurrency: 'VND' }, author: AUTHOR };
 
     let jsonLd = document.querySelector<HTMLScriptElement>('#page-structured-data');

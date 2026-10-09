@@ -9,7 +9,7 @@ import { MascotMotion, MotionControl } from './Mascot';
 import { profile } from '../content/profileData';
 
 function SiteBrand() {
-  return <><span className="brand-device" aria-hidden="true">DVT<i /></span><span className="brand-name"><strong>devtiendang</strong><small>Mobile Developer</small></span></>;
+  return <><span className="brand-device" aria-hidden="true">DVT<i /></span><span className="brand-name"><strong>devtiendang</strong><small>{profile.role}</small></span></>;
 }
 
 function SiteLanguages() {
@@ -17,7 +17,7 @@ function SiteLanguages() {
   return <div className="site-languages" aria-label="Language / Ngôn ngữ">{(['vi','en'] as const).map(value => <button key={value} type="button" aria-pressed={locale === value} onClick={() => changeLocale(value)}>{value.toUpperCase()}</button>)}</div>;
 }
 
-export function SiteLayout({ children, hideFooter = false }: { children: React.ReactNode; hideFooter?: boolean }) {
+export function SiteLayout({ children, hideFooter = false, hideFooterContact = false }: { children: React.ReactNode; hideFooter?: boolean; hideFooterContact?: boolean }) {
   const { pathname, hash } = useLocation();
   const { theme, toggleTheme } = useTheme();
   const [open, setOpen] = useState(false);
@@ -80,14 +80,14 @@ export function SiteLayout({ children, hideFooter = false }: { children: React.R
     {open && <div ref={menu} id="site-mobile-nav" className="site-mobile-nav" role="dialog" aria-modal="true" aria-label={t('a11y.primaryNav')}>
       <div className="site-mobile-nav__top"><span className="site-brand"><SiteBrand /></span><SiteLanguages /><button className="site-icon-button" onClick={() => { setOpen(false); menuTrigger.current?.focus(); }} aria-label={t('a11y.closeMenu')}><X size={20} /></button></div>
       <nav>{nav.map((item, index) => <Link key={item.href} to={pathFor(item.href)}><small>0{index + 1}</small>{item.label}</Link>)}</nav>
-      <p>Mobile Developer · React Native · Android/Kotlin</p>
+      <p>{profile.role} · React Native · Android/Kotlin</p>
       <MotionControl />
     </div>}
 
     <main id="site-main" tabIndex={-1}>{children}</main>
     {!hideFooter && <footer className="site-footer">
       <div className="site-container">
-        <div className="footer-contact"><div><p className="site-kicker">{locale === 'en' ? 'LET’S TALK' : 'LIÊN HỆ TIẾN'}</p><h2>{locale === 'en' ? 'Have a mobile project in mind?' : 'Có chuyện về mobile muốn trao đổi?'}</h2></div><a className="footer-email" href={'mailto:' + profile.email}>{locale === 'en' ? 'Send me an email' : 'Gửi email cho mình'} ↗</a></div>
+        {!hideFooterContact && <div className="footer-contact"><div><p className="site-kicker">{locale === 'en' ? 'LET’S TALK' : 'LIÊN HỆ TIẾN'}</p><h2>{locale === 'en' ? 'Have a mobile project in mind?' : 'Có chuyện về mobile muốn trao đổi?'}</h2></div><a className="footer-email" href={'mailto:' + profile.email}>{locale === 'en' ? 'Send me an email' : 'Gửi email cho mình'} ↗</a></div>}
         <div className="site-footer__grid">
           <div className="footer-profile"><Link className="site-brand" to={pathFor('/')} aria-label={t('a11y.home')}><SiteBrand /></Link><h3>Đặng Văn Tiến</h3><p>{profile.role}<br />React Native · Android · Kotlin<br />{locale === 'en' ? 'Ho Chi Minh City' : 'TP. Hồ Chí Minh'}</p><div className="footer-social"><a href={profile.github} target="_blank" rel="noreferrer">GitHub ↗</a><a href={profile.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a></div></div>
           <div className="footer-column"><h3>{locale === 'en' ? 'Pages' : 'Các trang'}</h3><Link to={pathFor('/')}>{locale === 'en' ? 'Home' : 'Trang chủ'}</Link>{nav.map(item => <Link key={item.href} to={pathFor(item.href)}>{item.label}</Link>)}</div>

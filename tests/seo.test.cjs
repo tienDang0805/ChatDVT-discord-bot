@@ -45,10 +45,10 @@ test('public identity and ChatDVT history remain readable and agree with structu
     const home = renderPublicHtml(template, prefix || '/');
     const about = renderPublicHtml(template, `${prefix}/me`);
     const bot = renderPublicHtml(template, `${prefix}/discord`);
-    for (const fact of ['Đặng Văn Tiến', 'South Telecom', 'PTIT', '2017–2022', '8D', 'ChatDVT', 'Discord.js', 'Google Gemini']) {
+    for (const fact of ['Đặng Văn Tiến', 'South Telecom', '2023', 'Android Barcode Scanning SDK', 'CameraX', 'React Native', 'Woni Service Robot', 'Vikki Bank', 'ChatDVT', 'Node.js']) {
       assert.ok(rootContent(about).includes(fact), `Visible profile is missing ${fact}`);
     }
-    assert.match(rootContent(home), /Mobile Developer/);
+    assert.match(rootContent(home), /Mobile Software Engineer/);
     assert.match(rootContent(home), /React Native/);
     for (const html of [home, about]) assert.match(html, /name="robots" content="index, follow/);
     assert.match(rootContent(bot), /Đặng Văn Tiến/);
@@ -75,9 +75,53 @@ test('public identity and ChatDVT history remain readable and agree with structu
     assert.match(schema(bot).description, /8D/);
     const sitemap = generateSitemapXml();
     for (const route of [prefix || '/', `${prefix}/me`, `${prefix}/discord`]) {
-      assert.ok(sitemap.includes(`<loc>https://devtiendang.blog${route}</loc>\n    <lastmod>2026-10-06</lastmod>`));
+      const lastmod = route.endsWith('/me') || route.endsWith('/discord') ? '2026-10-09' : '2026-10-06';
+      assert.ok(sitemap.includes(`<loc>https://devtiendang.blog${route}</loc>\n    <lastmod>${lastmod}</lastmod>`));
     }
   }
+});
+
+test('ChatDVT has a linked product and history identity while Home remains a personal portfolio', () => {
+  const schema = html => JSON.parse(html.match(/<script id="page-structured-data" type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
+  for (const prefix of ['', '/en']) {
+    const home = renderPublicHtml(template, prefix || '/');
+    assert.match(home, /<title>Đặng Văn Tiến — Mobile Developer<\/title>/);
+    assert.equal(schema(home)['@graph'].find(node => node['@type'] === 'WebSite').name, 'Đặng Văn Tiến');
+
+    const product = renderPublicHtml(template, `${prefix}/discord`);
+    const introduction = rootContent(product).match(/<p class="lede">([\s\S]*?)<\/p>/)[1];
+    for (const fact of ['ChatDVT', 'Đặng Văn Tiến', '8D', 'Telegram', 'Discord']) assert.ok(introduction.includes(fact));
+    assert.ok(introduction.includes(`href="${prefix}/me"`));
+    assert.doesNotMatch(rootContent(product), /class="discord-origin/);
+    assert.ok(rootContent(product).includes(`href="${prefix}/blog/chatdvt-phan-1"`));
+
+    const articlePath = `${prefix}/blog/chatdvt-phan-1`;
+    // A narrative CMS excerpt must not replace the agreed history summary.
+    const post = { ...renderer.DEFAULT_BLOG_POST, excerpt: 'A narrative excerpt from the CMS.' };
+    const article = renderPublicHtml(template, articlePath, { pathname: articlePath, post });
+    const description = article.match(/<meta name="description" content="([^"]*)"/)[1];
+    for (const fact of ['ChatDVT', 'Đặng Văn Tiến', '8D', 'Telegram', 'Google Apps Script', 'Gemini', 'Discord.js']) assert.ok(description.includes(fact));
+    assert.equal(schema(article).about['@id'], schema(product)['@id']);
+    assert.equal(schema(article).author['@id'], schema(product).creator['@id']);
+    assert.equal(schema(article).datePublished, post.publishedAt);
+    assert.equal(schema(article).dateModified, post.updatedAt);
+    assert.ok(rootContent(article).includes(`href="${prefix}/discord"`));
+    assert.ok(rootContent(article).includes(`href="${prefix}/me"`));
+    assert.match(article, /rel="canonical" href="https:\/\/devtiendang.blog\/blog\/chatdvt-phan-1"/);
+    assert.match(article, prefix ? /name="robots" content="noindex, nofollow/ : /name="robots" content="index, follow/);
+
+    const about = rootContent(renderPublicHtml(template, `${prefix}/me`));
+    const sideProject = about.match(/<section class="me-side[\s\S]*?<\/section>/)[0];
+    assert.ok(sideProject.includes(`href="${prefix}/discord"`));
+    assert.ok(sideProject.includes(`href="${articlePath}"`));
+    for (const fact of ['8D', 'Telegram', 'Discord']) assert.ok(sideProject.includes(fact));
+  }
+  const pathname = '/blog/unrelated-post';
+  const post = { ...renderer.DEFAULT_BLOG_POST, slug: 'unrelated-post', title: 'Another project', excerpt: 'Its own description.' };
+  const article = renderPublicHtml(template, pathname, { pathname, post });
+  assert.match(article, /name="description" content="Its own description\."/);
+  assert.equal(schema(article).about, undefined);
+  assert.doesNotMatch(rootContent(article).match(/<footer class="blog-article__footer">([\s\S]*?)<\/footer>/)[1], /Xem ChatDVT/);
 });
 
 test('desktop app pages expose localized content, Windows downloads and product identity without JavaScript', () => {

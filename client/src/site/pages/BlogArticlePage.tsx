@@ -12,6 +12,7 @@ import { SiteLayout } from '../components/SiteLayout';
 import { BlogArticleSkeleton } from '../components/SiteLoadingFallback';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { CHATDVT_HISTORY_PATH, CHATDVT_HISTORY_DESCRIPTION } from '../../../../src/shared/chatdvt';
 
 function formatDate(value: string | null, locale: 'vi' | 'en'): string {
   if (!value) return '';
@@ -30,8 +31,9 @@ export function BlogArticlePage() {
   const [post, setPost] = useState<BlogPost | null>(initialPost === undefined ? fallback : initialPost);
   const [loading, setLoading] = useState(initialPost === undefined);
   const safeContent = useMemo(() => post ? sanitizeBlogHtml(post.content) : '', [post]);
+  const isChatDvtHistory = !!post && `/blog/${post.slug}` === CHATDVT_HISTORY_PATH;
   usePageMeta(post?.title || 'Bài viết — Tiến Đặng', {
-    description: post?.excerpt || 'Bài viết trên devtiendang.blog.',
+    description: isChatDvtHistory ? CHATDVT_HISTORY_DESCRIPTION : post?.excerpt || 'Bài viết trên devtiendang.blog.',
     type: 'article',
     schema: 'article',
     noIndex: !post && !loading,
@@ -65,7 +67,7 @@ export function BlogArticlePage() {
         <div className="blog-article__meta"><time dateTime={post.publishedAt || undefined}>{formatDate(post.publishedAt, locale)}</time><span><Clock size={14} /> {t('blog.minuteRead', { count: post.readingMinutes })}</span></div>
       </header>
       <div className="blog-prose" dangerouslySetInnerHTML={{ __html: safeContent }} />
-      <footer className="blog-article__footer"><span>{post.slug === DEFAULT_BLOG_POST.slug ? 'ChatDVT · 01' : 'devtiendang.blog'}</span><Link to={pathFor('/blog')}>{t('blog.more')}</Link></footer>
+      <footer className="blog-article__footer"><span>{isChatDvtHistory ? 'ChatDVT · 01' : 'devtiendang.blog'}</span>{isChatDvtHistory && <><Link to={pathFor('/discord')}>{locale === 'en' ? 'Explore ChatDVT' : 'Xem ChatDVT'} ↗</Link><Link to={pathFor('/me')}>Đặng Văn Tiến ↗</Link></>}<Link to={pathFor('/blog')}>{t('blog.more')}</Link></footer>
     </article>
   </SiteLayout>;
 }

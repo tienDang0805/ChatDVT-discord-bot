@@ -1,6 +1,6 @@
 # Public portfolio frontend
 
-The public site has Home, Playground, Apps, Discord Bot, AI Chat, Blog and Me routes. Tiến is a Mobile Developer; ChatDVT is his Discord/Web AI bot and a side project in Me. The session guide and shared floating chat are no longer mounted. Playground groups features into Mobile, Tool and Fun without changing their existing routes or visibility.
+The public site has Home, Playground, Apps, Discord Bot, AI Chat, Blog and Me routes. Tiến's visible profession is Mobile Software Engineer; existing Mobile Developer search metadata is preserved. ChatDVT is his Discord/Web AI bot and a side project in Me. The session guide and shared floating chat are no longer mounted. Playground groups features into Mobile, Tool and Fun without changing their existing routes or visibility.
 
 ## Where to edit
 
@@ -12,6 +12,7 @@ The public site has Home, Playground, Apps, Discord Bot, AI Chat, Blog and Me ro
 - `content/collection.ts`: Playground categories, adapting the shared feature catalog.
 - `src/shared/desktopApps.ts` (repository root): TD-WallpaperEngine product facts, release version, URLs and localized features shared by the UI and metadata. `/apps` lists desktop software; `/apps/td-wallpaperengine` is the product page, with equivalent `/en` routes.
 - `styles/index.css`: stylesheet order. `brand.css` and `neon.css` provide the final navy/cyan palette.
+- `styles/me.css`: approved Navy Cards profile with the genuine portrait, three work cards, skills, side-project prose and contact. `SiteLayout` can hide its footer contact pitch when Me supplies its own contact section.
 - `shared/hooks/usePageMeta.ts`: browser metadata, canonical URLs and structured data.
 
 The active fonts, images and mascots in `client/public/` are required build assets. Design studies, screenshots, agent skills and machine setup documents are local files excluded by the root `.gitignore`.
@@ -26,8 +27,10 @@ For a frontend-only build, run `npm ci` and `npm run build` inside `client/`. Pr
 
 Chat retains the existing API, BYOK, history, Markdown and IME behavior. Blog uses published content in its authored language; untranslated English Blog routes are excluded from indexing and canonicalize to Vietnamese. Old Mobile URLs redirect in React to the localized Playground category. Tool, game, admin and backend behavior are outside this presentation change.
 
-Home keeps a short Mobile Developer introduction; Me holds work and education details. Person JSON-LD is shared between the server and browser through `src/shared/siteIdentity.ts`. Name aliases are metadata rather than repeated search phrases in visible copy.
+Home keeps a short professional introduction; Me holds the selected detailed work examples and personal portrait. Person JSON-LD is shared between the server and browser through `src/shared/siteIdentity.ts`. Existing browser/server SEO and Person data are unchanged by the visible profession update. Name aliases are metadata rather than repeated search phrases in visible copy.
 
 Core public pages have full React SSR and hydrate in the browser. Blog lists and published articles are rendered from the database by Express. Mobile aliases redirect to Playground and are excluded from the sitemap. Server metadata and sitemap generation live in `src/api/seo.ts`. Local browser checks do not verify live indexing, Search Console or production performance.
+
+ChatDVT stays a side project of the personal portfolio. Its main product page is `/discord`; `src/shared/chatdvt.ts` supplies the product metadata and the origin article's SEO summary to both server and browser. The original article body and publication dates remain authored content. Its BlogPosting identifies ChatDVT as the subject and Đặng Văn Tiến as author, with visible links between Me, the product and the story. This SEO update does not change Home or its metadata.
 
 App screenshots in `client/public/images/apps/` come from `tienDang0805/TD_WallpaperEngine/docs/images`. Download links use the latest GitHub release page rather than a version-specific installer filename. The demo link opens the README's `#demo` section to show the GIF, instead of downloading a video. When updating the showcased app version, update `desktopApps.ts` and screenshots together. The site never runs installers or calls GitHub during page rendering.

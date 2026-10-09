@@ -10,11 +10,11 @@ export const resources = {
     site: {
       nav: { mobile: 'Mobile', projects: 'Projects & Lab', discord: 'Discord Bot', chat: 'AI Chat', blog: 'Blog', about: 'About Me' },
       a11y: { home: 'Trang chủ Đặng Văn Tiến', primaryNav: 'Điều hướng chính', changeTheme: 'Đổi giao diện', openMenu: 'Mở menu', closeMenu: 'Đóng menu' },
-      footer: { role: 'Mobile Developer — React Native và Android/Kotlin.' },
+      footer: { role: 'Mobile Software Engineer — React Native và Android/Kotlin.' },
       home: {
         metaTitle: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT',
         metaDescription: 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.',
-        title: 'Đặng Văn Tiến — Mobile Developer.', intro: 'Mình làm ứng dụng mobile, viết blog về quá trình làm sản phẩm và phát triển Discord bot ChatDVT.',
+        title: 'Đặng Văn Tiến — Mobile Software Engineer.', intro: 'Mình làm ứng dụng mobile, viết blog về quá trình làm sản phẩm và phát triển Discord bot ChatDVT.',
         ecosystem: 'Khám phá hệ sinh thái', mobileTools: 'Công cụ mobile', tinkering: 'Đang nghịch', tinkeringText: 'ChatDVT, mấy tool mobile và blog này.', freeTime: 'Rảnh thì code tiếp.',
         projects: 'Dự án', personalInfo: 'Thông tin cá nhân', tools: 'Công cụ mobile', viewAll: 'Xem tất cả',
         latest: 'Bài mới', visitBlog: 'Vào blog', read: 'Đọc bài ↗', mainProduct: 'Sản phẩm chính · Discord',
@@ -23,7 +23,7 @@ export const resources = {
       },
       notFound: { title: 'Không tìm thấy trang', copy: 'Đường dẫn này không tồn tại hoặc đã được chuyển.', action: 'Về trang chủ' },
       mobile: { intro: 'Android Toolbox, deep link, WebView, QR và ghi chú React Native mình gom lại để dùng hằng ngày.', quick: 'Công cụ test nhanh', quickDesc: 'Mấy thứ mình hay cần khi làm React Native, Android và iOS.', docs: 'Tài liệu', guideDesc: 'Ghi chú học và làm React Native, tách riêng khỏi các tài liệu không liên quan đến mobile.' },
-      playground: { title: 'Sản phẩm, công cụ và những thử nghiệm đáng giữ lại.', intro: 'Danh mục được chọn lọc theo mức độ hoàn thiện. Các thử nghiệm cũ vẫn còn trong Archive nhưng không làm loãng sản phẩm chính.', explore: 'Khám phá bộ công cụ', selected: 'Dự án nổi bật', selectedDesc: 'Những sản phẩm thể hiện rõ nhất hướng Mobile Developer, ChatDVT và product engineering.', more: 'Khám phá thêm', moreDesc: 'Các công cụ đang dùng được; mục Beta có thể phụ thuộc AI, API hoặc dịch vụ real-time.', all: 'Tất cả', search: 'Tìm theo tên, công nghệ...', empty: 'Không tìm thấy project phù hợp.', archive: 'Experiment cũ vẫn còn hoạt động', archiveDesc: 'Các demo vui hoặc project cần thêm context được gom riêng tại đây.', showArchive: 'Xem Archive ({{count}})', hideArchive: 'Ẩn Archive' },
+      playground: { title: 'Sản phẩm, công cụ và những thử nghiệm đáng giữ lại.', intro: 'Danh mục được chọn lọc theo mức độ hoàn thiện. Các thử nghiệm cũ vẫn còn trong Archive nhưng không làm loãng sản phẩm chính.', explore: 'Khám phá bộ công cụ', selected: 'Dự án nổi bật', selectedDesc: 'Những sản phẩm thể hiện rõ nhất hướng Mobile Software Engineer, ChatDVT và product engineering.', more: 'Khám phá thêm', moreDesc: 'Các công cụ đang dùng được; mục Beta có thể phụ thuộc AI, API hoặc dịch vụ real-time.', all: 'Tất cả', search: 'Tìm theo tên, công nghệ...', empty: 'Không tìm thấy project phù hợp.', archive: 'Experiment cũ vẫn còn hoạt động', archiveDesc: 'Các demo vui hoặc project cần thêm context được gom riêng tại đây.', showArchive: 'Xem Archive ({{count}})', hideArchive: 'Ẩn Archive' },
       blog: { loading: 'Đang tải bài viết...', notFound: 'Không tìm thấy bài viết', back: 'Quay lại Blog', notes: 'Ghi chép', minuteRead: '{{count}} phút đọc', more: 'Xem các bài khác', title: 'Viết lại cho khỏi quên', intro: 'Chuyện làm app, làm bot và mấy lần tự mò rồi vỡ ra được một thứ gì đó.', posts: '{{count}} bài viết', read: 'Đọc bài', draft: 'Bản nháp' },
     },
     admin: {
@@ -64,10 +64,10 @@ export const resources = {
     site: {
       nav: { mobile: 'Mobile', projects: 'Projects & Lab', discord: 'Discord Bot', chat: 'AI Chat', blog: 'Blog', about: 'About Me' },
       a11y: { home: 'Đặng Văn Tiến home', primaryNav: 'Primary navigation', changeTheme: 'Change theme', openMenu: 'Open menu', closeMenu: 'Close menu' },
-      footer: { role: 'Mobile Developer — React Native and Android/Kotlin.' },
+      footer: { role: 'Mobile Software Engineer — React Native and Android/Kotlin.' },
       home: {
         metaTitle: 'Đặng Văn Tiến — Mobile Developer, Blog & ChatDVT', metaDescription: 'Đặng Văn Tiến is a Mobile Developer specializing in React Native and Android/Kotlin in Ho Chi Minh City, and the creator of devtiendang.blog and ChatDVT.',
-        title: 'Đặng Văn Tiến — Mobile Developer.', intro: 'I build mobile apps, write about making products, and develop the ChatDVT Discord bot.',
+        title: 'Đặng Văn Tiến — Mobile Software Engineer.', intro: 'I build mobile apps, write about making products, and develop the ChatDVT Discord bot.',
         ecosystem: 'Explore the ecosystem', mobileTools: 'Mobile tools', tinkering: 'Currently building', tinkeringText: 'ChatDVT, mobile tools, and this blog.', freeTime: 'More code whenever inspiration strikes.',
         projects: 'Projects', personalInfo: 'About me', tools: 'Mobile tools', viewAll: 'View all', latest: 'Latest post', visitBlog: 'Visit blog', read: 'Read article ↗',
         mainProduct: 'Main product · Discord', meet: 'Meet ChatDVT on Discord.', meetCopy: 'Add the bot to your server to chat, analyze content and play mini games, or try ChatDVT directly on the web.',

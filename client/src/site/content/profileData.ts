@@ -1,6 +1,6 @@
 export const profile = {
   name: 'Đặng Văn Tiến',
-  role: 'Mobile Engineer',
+  role: 'Mobile Software Engineer',
   company: 'South Telecom',
   period: '04/2023',
   email: 'dvtien0805@gmail.com',
@@ -8,14 +8,30 @@ export const profile = {
   linkedin: 'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
 };
 export const contributions = [
-  { title: ['Ứng dụng CRM B2B', 'B2B CRM applications'], description: ['Làm tính năng quản lý yêu cầu, nhắn tin, báo cáo và Android widget; sửa lỗi trên bản đang chạy.', 'Developed ticketing, messaging, reporting and Android widgets; resolved production issues.'] },
-  { title: ['Mobile Analytics SDK', 'Mobile Analytics SDK'], description: ['Làm SDK ghi nhận hoạt động trong app, lưu dữ liệu khi offline và gửi lại khi có mạng.', 'Built an application analytics SDK with offline buffering and retries when connectivity returns.'] },
-  { title: ['Android Barcode Scanning SDK', 'Android Barcode Scanning SDK'], description: ['Tích hợp model của team AI vào SDK quét sản phẩm, mã vạch và nhận diện chữ.', 'Integrated models supplied by the AI team into an SDK for product scanning, barcodes and OCR.'] },
-  { title: ['Nâng cấp ứng dụng React Native', 'React Native modernization'], description: ['Nâng cấp app React Native cũ, cập nhật thư viện và xử lý lỗi tương thích Android.', 'Upgraded legacy applications and platform dependencies, addressing Android compatibility.'] },
-  { title: ['Tích hợp robot với React Native', 'React Native robot integration'], description: ['Kết nối SDK Android để điều khiển robot và nhận trạng thái thiết bị.', 'Bridged an Android SDK to control robots and receive device status in React Native.'] },
+  {
+    title: ['Android Barcode Scanning SDK', 'Android Barcode Scanning SDK'], category: 'Android · SDK',
+    description: [
+      'Từng phát triển một SDK Android từ bản thử nghiệm ban đầu, sử dụng CameraX, TensorFlow Lite và ML Kit để nhận diện nhiều hộp sản phẩm cùng các barcode trong ảnh. Sau đó đóng gói thành thư viện để team khác tích hợp qua Maven.',
+      'Developed an Android SDK from an initial prototype, using CameraX, TensorFlow Lite and ML Kit to recognize multiple product boxes and their barcodes in an image. Packaged it as a library for other teams to integrate through Maven.',
+    ], tags: ['CameraX', 'ML Kit', 'Maven'],
+  },
+  {
+    title: ['React Native & Mobile Systems', 'React Native & Mobile Systems'], category: 'Mobile · Systems',
+    description: [
+      'Phát triển và bảo trì ứng dụng CRM B2B, làm analytics SDK hỗ trợ lưu dữ liệu offline, và nâng cấp ứng dụng React Native cũ lên phiên bản mới. Công việc còn liên quan đến API, database và hệ thống quản lý bản cập nhật ứng dụng.',
+      'Developed and maintained B2B CRM applications, built an analytics SDK with offline storage, and upgraded legacy React Native applications. The work also involved APIs, databases and systems for managing application updates.',
+    ], tags: ['React Native', 'API', 'Database'],
+  },
+  {
+    title: ['Woni Service Robot', 'Woni Service Robot'], category: 'Android · Integration',
+    description: [
+      'Tham gia phát triển ứng dụng React Native chạy trên robot Android, đọc và debug SDK Java của vendor, sửa các vấn đề tích hợp và trực tiếp triển khai tại Vikki Bank. Có những lúc phải vừa debug robot thật, vừa hỗ trợ khách hàng và hướng dẫn team vận hành.',
+      'Helped develop a React Native application running on an Android robot, read and debugged the vendor’s Java SDK, resolved integration issues and deployed it onsite at Vikki Bank. At times, this meant debugging the physical robot while supporting customers and guiding the operations team.',
+    ], tags: ['React Native', 'Java SDK', 'Android'],
+  },
 ];
 export const skillFamilies = [
-  { title: 'Mobile', items: 'React Native · Android SDK · Kotlin · Java' },
-  { title: 'Native & SDK', items: 'Native Modules · CameraX · ML Kit · TensorFlow Lite' },
-  { title: 'Tooling', items: 'TypeScript · REST API · Gradle · Maven' },
+  { title: 'Mobile', items: 'Kotlin, Java, React Native, TypeScript' },
+  { title: 'Android & SDK', items: 'CameraX, TensorFlow Lite, ML Kit, Native Modules, Gradle, Maven' },
+  { title: 'Backend & Tools', items: 'Node.js, Express, REST API, MySQL, Git' },
 ];

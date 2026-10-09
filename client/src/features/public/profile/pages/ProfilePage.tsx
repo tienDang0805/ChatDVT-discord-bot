@@ -59,7 +59,7 @@ export const ProfilePage = () => {
   }, []);
 
   return (
-    <PageShell title="Đặng Văn Tiến" subtitle="Mobile Developer • Side-project bằng vibe code" maxWidth="3xl">
+    <PageShell title="Đặng Văn Tiến" subtitle="Mobile Software Engineer • Side-project bằng vibe code" maxWidth="3xl">
 
       <div className="flex flex-col items-center text-center -mt-2">
         <div className="relative mb-5">
