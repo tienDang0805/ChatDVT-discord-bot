@@ -23,99 +23,107 @@ export interface FeatureDefinition {
  * Canonical catalogue for public discovery and SEO. A route can stay available
  * without being promoted or indexed by setting it to archive/unlisted/private.
  */
+// Playground entries were paused on 2026-10-12. Restore metadata using
+// HIDDEN_PLAYGROUND_FEATURES.md when a feature is ready to publish again.
 export const FEATURE_CATALOG: FeatureDefinition[] = [
+  {
+    id: 'cicd', path: '/cicd-visualizer', title: 'CI/CD Visualizer',
+    description: 'Import hoặc paste YAML GitHub Actions để khám phá workflow, jobs và từng bước trên sơ đồ tương tác.',
+    section: 'developer', visibility: 'public', status: 'beta', indexable: false,
+    tags: ['GitHub Actions', 'YAML', 'Workflow'], requirements: ['Xử lý trong trình duyệt'], surfaces: ['projects'],
+  },
   {
     id: 'mobile-toolkit', path: '/mobile', title: 'Mobile Developer Toolkit',
     description: 'Bộ công cụ test Android, deep link, WebView, QR và tài liệu React Native dùng trong công việc hằng ngày.',
-    section: 'developer', visibility: 'featured', status: 'stable', indexable: true,
+    section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['React Native', 'Android', 'Debug'], requirements: ['Một số tool cần Chrome desktop'],
-    surfaces: ['home', 'projects'], homeRank: 1, featuredRank: 1,
+    surfaces: [], homeRank: 1, featuredRank: 1,
   },
   {
     id: 'chatdvt', path: '/discord', title: 'ChatDVT',
     description: 'Discord AI chatbot hỗ trợ hội thoại, phân tích media, tóm tắt và các mini game ngắn.',
     section: 'community', visibility: 'featured', status: 'stable', indexable: true,
-    tags: ['Discord.js', 'Gemini', 'Prisma'], surfaces: ['home', 'projects'], homeRank: 2, featuredRank: 2,
+    tags: ['Discord.js', 'Gemini', 'Prisma'], surfaces: ['home'], homeRank: 2, featuredRank: 2,
   },
   {
     id: 'survivor', path: '/survivor-arena', title: 'Survivor Arena 8D',
     description: 'Auto-shooter roguelike gồm 50 đợt, boss và hệ thống nâng cấp kỹ năng.',
-    section: 'game', visibility: 'featured', status: 'stable', indexable: true,
-    tags: ['Canvas', 'Game loop', 'Touch'], surfaces: ['home', 'projects'], homeRank: 3, featuredRank: 3,
+    section: 'game', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['Canvas', 'Game loop', 'Touch'], surfaces: [], homeRank: 3, featuredRank: 3,
   },
   {
     id: 'english', path: '/english', title: 'English Learning Hub',
     description: 'Học tiếng Anh theo bài, ôn flashcard, luyện nghe, viết và chat với AI.',
-    section: 'learning', visibility: 'featured', status: 'beta', indexable: true,
-    tags: ['Learning', 'AI', 'Local data'], requirements: ['Một số bài cần AI'], surfaces: ['projects'], featuredRank: 4,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Learning', 'AI', 'Local data'], requirements: ['Một số bài cần AI'], surfaces: [], featuredRank: 4,
   },
   {
     id: 'mermaid', path: '/mermaid-editor', title: 'Mermaid Editor',
     description: 'Soạn, preview, chỉnh style và export flowchart hoặc diagram ngay trên trình duyệt.',
-    section: 'developer', visibility: 'featured', status: 'stable', indexable: true,
-    tags: ['Diagram', 'Docs', 'Local'], surfaces: ['projects'], featuredRank: 5,
+    section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['Diagram', 'Docs', 'Local'], surfaces: [], featuredRank: 5,
   },
   {
     id: 'chibi', path: '/chibi-sticker', title: 'Chibi Sticker AI',
     description: 'Tạo sticker chibi từ ảnh, chọn kiểu vẽ và tư thế.',
-    section: 'ai', visibility: 'featured', status: 'beta', indexable: true,
-    tags: ['Image', 'AI'], requirements: ['AI'], surfaces: ['projects'], featuredRank: 6,
+    section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Image', 'AI'], requirements: ['AI'], surfaces: [], featuredRank: 6,
   },
 
-  // Public projects
+  // Paused Playground projects: keep routes and implementations for future development.
   {
     id: 'cv', path: '/cv-review', title: 'CV Reviewer',
     description: 'Đánh giá CV, chấm điểm ATS và hỗ trợ viết lại nội dung bằng AI.',
-    section: 'ai', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Career', 'AI'], requirements: ['Upload file'], surfaces: ['projects'],
+    section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Career', 'AI'], requirements: ['Upload file'], surfaces: [],
   },
   {
     id: 'quiz', path: '/quiz', title: 'Web Quiz AI',
     description: 'Tạo phòng quiz để chơi cùng nhau, AI ra câu hỏi theo chủ đề.',
-    section: 'game', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Multiplayer', 'AI'], requirements: ['Gemini key'], surfaces: ['projects'],
+    section: 'game', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Multiplayer', 'AI'], requirements: ['Gemini key'], surfaces: [],
   },
   {
     id: 'note', path: '/note-daily', title: 'Note Daily',
     description: 'Ghi chú hằng ngày, xem lại trên lịch và theo dõi số ngày viết liên tiếp. Dữ liệu lưu trên thiết bị.',
-    section: 'productivity', visibility: 'public', status: 'stable', indexable: true,
-    tags: ['Notes', 'Local-first'], requirements: ['Local data'], surfaces: ['projects'],
+    section: 'productivity', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['Notes', 'Local-first'], requirements: ['Local data'], surfaces: [],
   },
   {
     id: 'detox', path: '/digital-detox', title: 'Digital Detox',
     description: 'Theo dõi thử thách giảm sử dụng mạng xã hội trong 30 ngày.',
-    section: 'productivity', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Habit', 'Local data'], surfaces: ['projects'],
+    section: 'productivity', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Habit', 'Local data'], surfaces: [],
   },
   {
     id: 'duel', path: '/tech-duel', title: 'So Kèo Công Nghệ',
     description: 'So sánh hai công nghệ và tóm tắt ưu, nhược điểm theo nhu cầu sử dụng.',
-    section: 'developer', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Research', 'AI'], requirements: ['AI'], surfaces: ['projects'],
+    section: 'developer', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Research', 'AI'], requirements: ['AI'], surfaces: [],
   },
   {
     id: 'burnout', path: '/burnout-check', title: 'Burnout Check',
     description: 'Một bài tự đánh giá ngắn về mức độ quá tải, không thay thế tư vấn y khoa.',
-    section: 'productivity', visibility: 'public', status: 'beta', indexable: false,
-    tags: ['Wellbeing', 'AI'], requirements: ['Không phải chẩn đoán y tế'], surfaces: ['projects'],
+    section: 'productivity', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Wellbeing', 'AI'], requirements: ['Không phải chẩn đoán y tế'], surfaces: [],
   },
   {
     id: 'poe2', path: '/poe2-trade-link', title: 'PoE2 Trade Link',
     description: 'Biến mô tả item thành query và link trade có cấu trúc.',
-    section: 'developer', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Parser', 'PoE2'], requirements: ['AI'], surfaces: ['projects'],
+    section: 'developer', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Parser', 'PoE2'], requirements: ['AI'], surfaces: [],
   },
   {
     id: 'poem', path: '/poem-generator', title: 'Poem Generator',
     description: 'Tạo thơ theo chủ đề, giọng điệu và thể thơ được chọn.',
-    section: 'ai', visibility: 'public', status: 'beta', indexable: false,
-    tags: ['Writing', 'AI'], requirements: ['AI'], surfaces: ['projects'],
+    section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Writing', 'AI'], requirements: ['AI'], surfaces: [],
   },
   {
     id: 'food', path: '/food-wheel', title: 'Food Wheel',
     description: 'AI gợi ý món ăn, vòng quay giúp chọn khi chưa biết ăn gì.',
-    section: 'ai', visibility: 'public', status: 'beta', indexable: false,
-    tags: ['Food', 'AI'], requirements: ['AI'], surfaces: ['projects'],
+    section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Food', 'AI'], requirements: ['AI'], surfaces: [],
   },
   {
     id: 'chatdvt-chat', path: '/chat', title: 'ChatDVT Chat',
@@ -126,144 +134,144 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   {
     id: 'mermaid-tutorial', path: '/mermaid-tutorial', title: 'Mermaid Tutorial',
     description: 'Hướng dẫn Mermaid từ cú pháp cơ bản đến flowchart, sequence, class và các loại diagram phổ biến.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['Mermaid', 'Diagram', 'Guide'],
   },
 
-  // English Hub sub-features: public routes discoverable through /english.
+  // Paused English Hub sub-features; direct routes remain available.
   {
     id: 'english-course', path: '/english/course', title: 'English Course Map',
     description: 'Lộ trình học tiếng Anh theo unit, từ nền tảng đến các bài luyện có cấu trúc.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Course', 'Learning'], requirements: ['Một số bài cần AI'],
   },
   {
     id: 'english-chat', path: '/english/chat', title: 'English AI Chat',
     description: 'Luyện hội thoại tiếng Anh với AI theo ngữ cảnh và nhận phản hồi trong lúc chat.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Conversation', 'AI'], requirements: ['AI'],
   },
   {
     id: 'english-flashcard', path: '/english/flashcard', title: 'English Flashcard',
     description: 'Ôn từ vựng bằng flashcard và lịch lặp lại ngắt quãng.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Vocabulary', 'SRS'],
   },
   {
     id: 'english-challenge', path: '/english/challenge', title: 'English Daily Challenge',
     description: 'Thử thách tiếng Anh hằng ngày với bài luyện ngắn và chấm kết quả.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Challenge', 'AI'], requirements: ['AI'],
   },
   {
     id: 'english-dictionary', path: '/english/dictionary', title: 'English Dictionary',
     description: 'Tra từ, nghĩa, cách dùng và ví dụ tiếng Anh ngay trong English Hub.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Dictionary', 'Vocabulary'],
   },
   {
     id: 'english-daily-puzzle', path: '/english/daily-puzzle', title: 'English Daily Puzzle',
     description: 'Câu đố tiếng Anh mỗi ngày để luyện từ vựng và tư duy ngôn ngữ.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Puzzle', 'Vocabulary'],
   },
   {
     id: 'english-word-sprint', path: '/english/word-sprint', title: 'Word Sprint',
     description: 'Trò chơi tốc độ nhận biết từ vựng tiếng Anh trong thời gian giới hạn.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Vocabulary', 'Game'],
   },
   {
     id: 'english-spelling-bee', path: '/english/spelling-bee', title: 'Spelling Bee',
     description: 'Luyện nghe và đánh vần tiếng Anh từ cơ bản đến nâng cao.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Spelling', 'Listening'],
   },
   {
     id: 'english-writing', path: '/english/writing', title: 'English Writing Lab',
     description: 'Luyện viết tiếng Anh với AI chấm, sửa và góp ý nội dung.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Writing', 'AI'], requirements: ['AI'],
   },
   {
     id: 'english-dictation', path: '/english/dictation', title: 'English Dictation Lab',
     description: 'Luyện nghe chép để cải thiện listening và spelling cùng lúc.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Dictation', 'Listening'],
   },
   {
     id: 'english-scramble', path: '/english/scramble', title: 'Sentence Scramble',
     description: 'Sắp xếp các thành phần bị xáo trộn để luyện cấu trúc câu và ngữ pháp.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Grammar', 'Game'],
   },
   {
     id: 'english-word-match', path: '/english/word-match', title: 'Word Match',
     description: 'Nối từ tiếng Anh với nghĩa tương ứng để ôn từ vựng.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
     tags: ['English', 'Vocabulary', 'Game'],
   },
   {
     id: 'english-idiom-quest', path: '/english/idiom-quest', title: 'Idiom Quest',
     description: 'Khám phá và luyện thành ngữ tiếng Anh qua trò chơi tương tác.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Idioms', 'Game'], requirements: ['AI'],
   },
   {
     id: 'english-context-clues', path: '/english/context-clues', title: 'Context Clues',
     description: 'Luyện đoán nghĩa của từ dựa trên ngữ cảnh và khả năng đọc hiểu.',
-    section: 'learning', visibility: 'public', status: 'beta', indexable: true,
+    section: 'learning', visibility: 'unlisted', status: 'beta', indexable: false,
     tags: ['English', 'Reading', 'Vocabulary'], requirements: ['AI'],
   },
 
-  // Mobile suite details: public and indexed, but listed inside /mobile only.
+  // Paused Mobile suite details; restore surfaces and indexability when publishing.
   {
     id: 'android-toolbox', path: '/android-toolbox', title: 'Android Device Toolbox',
     description: 'Kết nối Android qua USB để điều khiển app, test permission, chụp màn hình và lấy log.',
-    section: 'developer', visibility: 'public', status: 'beta', indexable: true,
-    tags: ['Android', 'WebUSB', 'Debug'], requirements: ['Chrome/Edge desktop', 'USB required'], surfaces: ['mobile'],
+    section: 'developer', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Android', 'WebUSB', 'Debug'], requirements: ['Chrome/Edge desktop', 'USB required'], surfaces: [],
   },
   {
     id: 'deeplink', path: '/deeplink-tester', title: 'Deep Link Tester',
     description: 'Soạn và kiểm tra URI, tạo QR hoặc lệnh mở app trên iOS và Android.',
-    section: 'developer', visibility: 'public', status: 'stable', indexable: true,
-    tags: ['iOS', 'Android', 'Deep link'], surfaces: ['mobile'],
+    section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['iOS', 'Android', 'Deep link'], surfaces: [],
   },
   {
     id: 'webview', path: '/emulator-check', title: 'WebView Simulator',
     description: 'Dán HTML, CSS và JavaScript để xem nhanh trong khung thiết bị mobile.',
-    section: 'developer', visibility: 'public', status: 'stable', indexable: true,
-    tags: ['WebView', 'Debug'], requirements: ['Local only'], surfaces: ['mobile'],
+    section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['WebView', 'Debug'], requirements: ['Local only'], surfaces: [],
   },
   {
     id: 'qr', path: '/qr-generator', title: 'QR Generator',
     description: 'Tạo mã QR có logo và màu riêng, sau đó tải xuống thành ảnh.',
-    section: 'developer', visibility: 'public', status: 'stable', indexable: true,
-    tags: ['QR', 'Testing'], requirements: ['Local only'], surfaces: ['mobile'],
+    section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['QR', 'Testing'], requirements: ['Local only'], surfaces: [],
   },
   {
     id: 'rn-guide', path: '/rn-learning-guide', title: 'React Native Guide',
     description: 'Roadmap thực chiến từ JavaScript/TypeScript đến architecture, testing và CI/CD.',
-    section: 'learning', visibility: 'public', status: 'stable', indexable: true,
-    tags: ['React Native', 'Guide'], surfaces: ['mobile'],
+    section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false,
+    tags: ['React Native', 'Guide'], surfaces: [],
   },
 
-  // Archive: still usable by direct URL, but deliberately de-emphasised and noindexed.
-  { id: 'excuse', path: '/excuse-generator', title: 'Excuse Generator', description: 'Tạo lý do xin nghỉ và email mẫu bằng AI.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Writing', 'AI'] },
-  { id: 'handsome', path: '/handsome', title: 'Handsome Analyzer', description: 'Demo AI nhận xét ảnh chân dung theo hướng giải trí.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Image', 'AI'] },
-  { id: 'numerology', path: '/numerology', title: 'Numerology AI', description: 'Phân tích thần số học theo dữ liệu người dùng nhập.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
-  { id: 'gender-quiz', path: '/gender-quiz', title: 'Personality Quiz AI', description: 'Quiz giải trí và phân tích phong cách bằng AI.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Quiz', 'AI'] },
-  { id: 'astrology', path: '/astrology', title: 'Astrology AI', description: 'Demo phân tích cung hoàng đạo bằng AI.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
-  { id: 'tarot', path: '/tarot', title: 'Tarot AI', description: 'Rút và giải nghĩa bài Tarot theo hướng giải trí.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
-  { id: 'magic-ball', path: '/magic-ball', title: 'Magic Ball AI', description: 'Hỏi đáp ngẫu nhiên theo phong cách quả cầu pha lê.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
-  { id: 'face-reader', path: '/face-reader', title: 'Face Reader AI', description: 'Demo giải trí phân tích ảnh khuôn mặt bằng AI.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Image', 'AI'] },
-  { id: 'dream', path: '/dream-interpreter', title: 'Dream Interpreter', description: 'Diễn giải nội dung giấc mơ bằng AI.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
-  { id: 'deep-status', path: '/deep-status', title: 'Deep Status', description: 'Tạo caption và status theo nhiều phong cách.', section: 'ai', visibility: 'archive', status: 'beta', indexable: false, tags: ['Writing', 'AI'] },
-  { id: 'music', path: '/music', title: 'Music Station', description: 'Music player và playlist cá nhân bằng secret code.', section: 'other', visibility: 'archive', status: 'beta', indexable: false, tags: ['Music', 'Playlist'] },
-  { id: 'flappy', path: '/flappy-bird', title: 'Flappy Bird 8D', description: 'Mini game Flappy Bird thử nghiệm trên trình duyệt.', section: 'game', visibility: 'archive', status: 'stable', indexable: false, tags: ['Game', 'Arcade'] },
-  { id: 'chicken', path: '/chicken-game', title: 'Chicken Game', description: 'Mini game gà con giải trí trên trình duyệt.', section: 'game', visibility: 'archive', status: 'stable', indexable: false, tags: ['Game', 'Arcade'] },
-  { id: 'cost', path: '/cost-study', title: 'Cost-effectiveness Study', description: 'Nghiên cứu chi phí – hiệu quả trong điều trị phù hoàng điểm.', section: 'other', visibility: 'archive', status: 'stable', indexable: false, tags: ['Research', 'Healthcare'] },
-  { id: 'pd-guide', path: '/pd-learning-guide', title: 'Physical Design Guide', description: 'Tài liệu nền tảng từ floorplan đến timing closure và signoff.', section: 'learning', visibility: 'archive', status: 'stable', indexable: false, tags: ['VLSI', 'Guide'] },
+  // Former Archive entries: hidden from discovery, still usable by direct URL.
+  { id: 'excuse', path: '/excuse-generator', title: 'Excuse Generator', description: 'Tạo lý do xin nghỉ và email mẫu bằng AI.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Writing', 'AI'] },
+  { id: 'handsome', path: '/handsome', title: 'Handsome Analyzer', description: 'Demo AI nhận xét ảnh chân dung theo hướng giải trí.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Image', 'AI'] },
+  { id: 'numerology', path: '/numerology', title: 'Numerology AI', description: 'Phân tích thần số học theo dữ liệu người dùng nhập.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
+  { id: 'gender-quiz', path: '/gender-quiz', title: 'Personality Quiz AI', description: 'Quiz giải trí và phân tích phong cách bằng AI.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Quiz', 'AI'] },
+  { id: 'astrology', path: '/astrology', title: 'Astrology AI', description: 'Demo phân tích cung hoàng đạo bằng AI.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
+  { id: 'tarot', path: '/tarot', title: 'Tarot AI', description: 'Rút và giải nghĩa bài Tarot theo hướng giải trí.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
+  { id: 'magic-ball', path: '/magic-ball', title: 'Magic Ball AI', description: 'Hỏi đáp ngẫu nhiên theo phong cách quả cầu pha lê.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
+  { id: 'face-reader', path: '/face-reader', title: 'Face Reader AI', description: 'Demo giải trí phân tích ảnh khuôn mặt bằng AI.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Image', 'AI'] },
+  { id: 'dream', path: '/dream-interpreter', title: 'Dream Interpreter', description: 'Diễn giải nội dung giấc mơ bằng AI.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Mystic', 'AI'] },
+  { id: 'deep-status', path: '/deep-status', title: 'Deep Status', description: 'Tạo caption và status theo nhiều phong cách.', section: 'ai', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Writing', 'AI'] },
+  { id: 'music', path: '/music', title: 'Music Station', description: 'Music player và playlist cá nhân bằng secret code.', section: 'other', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['Music', 'Playlist'] },
+  { id: 'flappy', path: '/flappy-bird', title: 'Flappy Bird 8D', description: 'Mini game Flappy Bird thử nghiệm trên trình duyệt.', section: 'game', visibility: 'unlisted', status: 'stable', indexable: false, tags: ['Game', 'Arcade'] },
+  { id: 'chicken', path: '/chicken-game', title: 'Chicken Game', description: 'Mini game gà con giải trí trên trình duyệt.', section: 'game', visibility: 'unlisted', status: 'stable', indexable: false, tags: ['Game', 'Arcade'] },
+  { id: 'cost', path: '/cost-study', title: 'Cost-effectiveness Study', description: 'Nghiên cứu chi phí – hiệu quả trong điều trị phù hoàng điểm.', section: 'other', visibility: 'unlisted', status: 'stable', indexable: false, tags: ['Research', 'Healthcare'] },
+  { id: 'pd-guide', path: '/pd-learning-guide', title: 'Physical Design Guide', description: 'Tài liệu nền tảng từ floorplan đến timing closure và signoff.', section: 'learning', visibility: 'unlisted', status: 'stable', indexable: false, tags: ['VLSI', 'Guide'] },
 
   // Community/private context: available only when someone has the direct URL.
   { id: 'pixel-agents', path: '/pixel-agents', title: 'Pixel Agents 8D', description: 'Phòng chat pixel art real-time dành cho cộng đồng 8D.', section: 'community', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['8D', 'Realtime'] },
@@ -280,7 +288,9 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
 
 export function findFeatureByPath(pathname: string): FeatureDefinition | undefined {
   const normalized = pathname === '/' ? '/' : pathname.replace(/\/+$/, '');
-  return FEATURE_CATALOG.find((feature) => feature.path === normalized);
+  return FEATURE_CATALOG.find((feature) => feature.path === normalized)
+    || FEATURE_CATALOG.filter((feature) => normalized.startsWith(`${feature.path}/`))
+      .sort((a, b) => b.path.length - a.path.length)[0];
 }
 
 export function isFeatureIndexable(pathname: string): boolean | undefined {

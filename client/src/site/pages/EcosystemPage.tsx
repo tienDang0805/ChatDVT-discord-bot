@@ -21,6 +21,7 @@ import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { BotAvatar } from '../components/BotAvatar';
 import { SiteLayout } from '../components/SiteLayout';
+import { collectionItems } from '../content/collection';
 
 const INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot';
 
@@ -188,17 +189,17 @@ export function EcosystemPage() {
             </div>
           </article>
 
-          <Link className="ecosystem-product" to="/english">
+          {collectionItems.some(item => item.id === 'english') && <Link className="ecosystem-product" to="/english">
             <div className="ecosystem-product__top"><span><GraduationCap size={22} /></span><small>{text.learn}</small></div>
             <h3>{text.englishTitle}</h3><p>{text.englishText}</p>
             <div className="ecosystem-product__stamp">A → Z</div>
-          </Link>
+          </Link>}
 
-          <Link className="ecosystem-product" to="/survivor-arena">
+          {collectionItems.some(item => item.id === 'survivor') && <Link className="ecosystem-product" to="/survivor-arena">
             <div className="ecosystem-product__top"><span><Swords size={22} /></span><small>{text.play}</small></div>
             <h3>{text.gameTitle}</h3><p>{text.gameText}</p>
             <div className="ecosystem-product__stamp ecosystem-product__stamp--game">{text.waves}</div>
-          </Link>
+          </Link>}
         </div>
       </section>
 

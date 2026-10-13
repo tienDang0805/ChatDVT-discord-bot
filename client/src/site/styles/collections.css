@@ -105,3 +105,14 @@
   .blog-card__meta { font-size: 11px; }
   .blog-card > p { font-size: 15px; }
 }
+
+/* CI/CD's technical illustration uses the same portal surfaces and accents. */
+.site-root .hybrid-view .feature-art.art-cicd { background: var(--site-surface-2); color: var(--site-ink); display: flex; flex-direction: column; justify-content: center; padding: 14px; width: 100%; height: 240px; background-image: none; clip-path: none; }
+.site-root .art-cicd svg { width: 100%; max-height: 240px; }
+.site-root .art-cicd::before, .site-root .art-cicd::after { display: none; }
+.site-root .cicd-art-group { fill: var(--site-surface); stroke: var(--site-line); }
+.site-root .cicd-art-card { fill: var(--site-surface-2); stroke: var(--site-line); }
+.site-root .cicd-art-line, .site-root .cicd-art-symbol { stroke: var(--accent-label); }
+.site-root .cicd-art-heading { font: 600 10px 'Be Vietnam Pro', sans-serif; fill: var(--site-muted); letter-spacing: 1px; }
+.site-root .cicd-art-caption { font: 600 8px 'Be Vietnam Pro', sans-serif; fill: var(--site-ink); text-anchor: middle; }
+.site-root .cicd-art-label { text-align: center; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: var(--site-muted); }

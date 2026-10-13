@@ -9,7 +9,7 @@ export function categoryOf(item: SiteItem): Exclude<CollectionCategory, 'all'> {
   if (['chibi', 'survivor', 'quiz', 'food', 'poem'].includes(item.id) || item.section === 'game') return 'fun';
   return 'tools';
 }
-const priority = ['deeplink', 'android-toolbox', 'webview', 'qr', 'rn-guide', 'mermaid', 'chatdvt', 'cv', 'note', 'detox', 'duel', 'burnout', 'poe2', 'english', 'survivor', 'chibi', 'quiz', 'food', 'poem'];
+const priority = ['cicd', 'deeplink', 'android-toolbox', 'webview', 'qr', 'rn-guide', 'mermaid', 'chatdvt', 'cv', 'note', 'detox', 'duel', 'burnout', 'poe2', 'english', 'survivor', 'chibi', 'quiz', 'food', 'poem'];
 const promoted = [...projectItems, ...mobileItems].filter(item => item.id !== 'mobile-toolkit' && (item.visibility === 'featured' || item.visibility === 'public'));
 export const collectionItems = [...new Map(promoted.map(item => [item.id, item])).values()].sort((a, b) => {
   const rank = (id: string) => priority.includes(id) ? priority.indexOf(id) : 99;
@@ -20,6 +20,7 @@ export const categoryNames = {
   all: ['Tất cả', 'All'], mobile: ['Mobile', 'Mobile'], tools: ['Tool', 'Tools'], fun: ['Giải trí', 'Fun'],
 };
 const descriptions: Record<string, string> = {
+  cicd: 'Import or paste GitHub Actions YAML to explore workflows, jobs and every step in an interactive diagram.',
   'android-toolbox': 'Connect an Android device over USB to control apps, test permissions, capture screenshots and inspect logs.',
   deeplink: 'Build and test URIs, generate QR codes and app-opening commands for iOS and Android.',
   chatdvt: 'A Discord AI chatbot for conversations, media analysis, summaries and mini games.',

@@ -1,0 +1,131 @@
+name: Deploy to Alibaba VM
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # --- BUILD ON GITHUB RUNNER (FASTER) ---
+      - name: Install Dependencies & Build
+        run: |
+          npm install
+          npm run build # Builds backend, browser assets, and the public HTML renderer
+          npm run test:cache
+          npm run test:seo
+
+      # --- REMOVE NODE_MODULES (To save transfer time) ---
+      # We will install PROD dependencies on server
+      - name: Cleanup dev dependencies
+        run: rm -rf node_modules client/node_modules
+
+      # --- GENERATE .env FILE LOCALLY ---
+      - name: Generate .env File locally
+        run: |
+          node -e "
+            const fs = require('fs');
+            const keys = [
+              'DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID', 'APIKEY_WEATHER', 
+              'GEMINI_API_KEY', 'GOOGLE_TTS_API_KEY', 'MONGODB_URI', 
+              'DISCORD_CHANNEL_ID', 'SYSTEM_PROMPT', 'BEAUTY_CHANNEL_ID', 
+              'BEAUTY_INTERVAL_MINUTES', 'ADMIN_ID', 'AUTO_REPLY_PROMPT', 
+              'PORT', 'ADMIN_USERNAME', 'ADMIN_PASSWORD', 'JWT_SECRET', 'DATABASE_URL',
+              'NASA_API_KEY', 'DiscrodTrackingWebhook',
+              'FB_PAGE_ACCESS_TOKEN', 'FB_VERIFY_TOKEN', 'FB_APP_SECRET',
+              'DISCORD_CLIENT_SECRET', 'VITE_DISCORD_CLIENT_ID'
+            ];
+            let content = '';
+            for (const key of keys) {
+              if (process.env[key]) {
+                content += key + '=' + JSON.stringify(process.env[key]) + '\\n';
+              }
+            }
+            fs.writeFileSync('.env', content);
+          "
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          GUILD_ID: ${{ secrets.GUILD_ID }}
+          APIKEY_WEATHER: ${{ secrets.APIKEY_WEATHER }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          SYSTEM_PROMPT: ${{ secrets.SYSTEM_PROMPT }}
+          BEAUTY_CHANNEL_ID: ${{ secrets.BEAUTY_CHANNEL_ID }}
+          BEAUTY_INTERVAL_MINUTES: ${{ secrets.BEAUTY_INTERVAL_MINUTES }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
+          AUTO_REPLY_PROMPT: ${{ secrets.AUTO_REPLY_PROMPT }}
+          PORT: ${{ secrets.PORT }}
+          NASA_API_KEY: ${{ secrets.NASA_API_KEY }}
+          ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DiscrodTrackingWebhook: ${{ secrets.DiscrodTrackingWebhook }}
+          FB_PAGE_ACCESS_TOKEN: ${{ secrets.FB_PAGE_ACCESS_TOKEN }}
+          FB_VERIFY_TOKEN: ${{ secrets.FB_VERIFY_TOKEN }}
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+          VITE_DISCORD_CLIENT_ID: ${{ secrets.VITE_DISCORD_CLIENT_ID }}
+
+      # --- DEPLOY FILES VIA SCP ---
+      - name: Copy Files to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          # Copy built artifacts and necessary files + .env
+          source: "dist/,client/dist/,package.json,package-lock.json,prisma/,.env"
+          target: "/var/www/ChatDVT-discord-bot"
+          strip_components: 0
+
+      # --- SSH TO SERVER (Runtime Setup) ---
+      - name: SSH Remote Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: 22
+          script: |
+            # 1. Environment Setup
+            export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+            [ -s "$HOME/.nvm/nvm.sh" ] && source "$HOME/.nvm/nvm.sh"
+
+            # Auto-install Node/PM2 if missing (Safety check)
+            if ! command -v node &> /dev/null; then
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+                sudo npm install -g pm2
+            fi
+
+            # 2. Go to project folder
+            cd /var/www/ChatDVT-discord-bot
+
+            # 4. Install Output Dependencies (Only Production)
+            npm install --production
+
+            # 5. Database Logic (Prisma)
+            # Ensure SQLite database directory has correct permissions (without sudo to avoid password prompt hang)
+            chmod -R 777 prisma/ || true
+
+            # --- 5. Generate Prisma Client (Force version to match package.json) ---
+            npx prisma@5.22.0 generate
+            npx prisma@5.22.0 db push --accept-data-loss
+
+            # 6. Restart App (Force update environment variables)
+            pm2 restart discord-bot --update-env || pm2 start dist/index.js --name "discord-bot"
+            pm2 save

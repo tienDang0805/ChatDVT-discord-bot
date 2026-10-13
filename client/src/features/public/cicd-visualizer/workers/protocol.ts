@@ -1,0 +1,3 @@
+import type { AnalysisResult, GraphMode, GraphProjection, SourceDocument, Workflow } from '../core/types';
+export type WorkerRequest = { type: 'ANALYZE'; requestId: number; document: SourceDocument } | { type: 'LAYOUT'; requestId: number; documentId: string; revision: number; viewRevision: number; workflow: Workflow; mode: GraphMode; expanded: string[] };
+export type WorkerResponse = { type: 'ANALYSIS_RESULT'; requestId: number; documentId: string; revision: number; result: AnalysisResult } | { type: 'LAYOUT_RESULT'; requestId: number; documentId: string; revision: number; viewRevision: number; graph: GraphProjection } | { type: 'OPERATION_ERROR'; requestId: number; code: string };

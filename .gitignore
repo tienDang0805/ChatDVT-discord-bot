@@ -49,3 +49,7 @@ client/public/hbd/
 
 # Local Monopoly economy design report
 MONOPOLY_ECONOMY_REVIEW.md
+#plan 
+/plans
+CI_CD_VISUALIZER_PLAN.md
+HIDDEN_PLAYGROUND_FEATURES.md

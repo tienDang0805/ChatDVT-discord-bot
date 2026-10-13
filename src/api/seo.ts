@@ -41,6 +41,7 @@ export interface RouteMeta {
 }
 
 const ROUTE_META: Record<string, RouteMeta> = {
+  '/cicd-visualizer': { title: 'CI/CD Visualizer', description: 'Import hoặc paste YAML GitHub Actions để khám phá jobs, steps và quan hệ phụ thuộc trên sơ đồ tương tác ngay trong trình duyệt.', pageType: 'webapp', indexable: false, lastmod: '2026-10-13' },
   '/apps': {
     title: 'Ứng dụng & phần mềm | Đặng Văn Tiến',
     description: 'Các app và phần mềm Đặng Văn Tiến tự làm. TD-WallpaperEngine cho Windows, kèm ảnh giao diện, bản tải và source code.',
@@ -565,6 +566,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
 };
 
 const EN_ROUTE_META: Record<string, RouteMeta> = {
+  '/cicd-visualizer': { title: 'CI/CD Visualizer', description: 'Import or paste GitHub Actions YAML and explore jobs, steps and dependencies in an interactive diagram in your browser.', pageType: 'webapp', indexable: false, lastmod: '2026-10-13' },
   '/apps': { title: 'Apps & software', description: 'Apps and software built by Đặng Văn Tiến. TD-WallpaperEngine for Windows, with screenshots, downloads and source code.', pageType: 'collection', lastmod: WALLPAPER_APP.updatedAt, changefreq: 'monthly' },
   [WALLPAPER_APP.path]: { title: 'TD-WallpaperEngine — Image & video wallpapers for Windows', description: WALLPAPER_APP.description.en, image: `${SITE_URL}${WALLPAPER_APP.image}`, schemaName: WALLPAPER_APP.name, pageType: 'software', lastmod: WALLPAPER_APP.updatedAt, changefreq: 'monthly' },
   '/': { title: 'Đặng Văn Tiến — Mobile Developer', description: 'Đặng Văn Tiến is a Mobile Developer in Ho Chi Minh City, working with React Native and Android/Kotlin. Notes, tools, games and side projects.', pageType: 'website', lastmod: '2026-10-06', priority: 1, changefreq: 'weekly' },

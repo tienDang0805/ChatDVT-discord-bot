@@ -20,6 +20,7 @@ const BlogPage = lazy(() => import('./site/pages/BlogPage').then(m => ({ default
 const BlogArticlePage = lazy(() => import('./site/pages/BlogArticlePage').then(m => ({ default: m.BlogArticlePage })));
 const NotFoundPage = lazy(() => import('./site/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 // Removed WeatherFAB from global imports
+const CicdVisualizer = lazy(() => import('./features/public/cicd-visualizer/pages/CicdVisualizer').then(m => ({ default: m.CicdVisualizer })));
 const FoodWheel = lazy(() => import('./features/public/food-wheel/pages/FoodWheel'));
 const ExcuseGenerator = lazy(() => import('./features/public/excuse-generator/pages/ExcuseGenerator'));
 const HandsomeAnalyzer = lazy(() => import('./features/public/handsome-analyzer/pages/HandsomeAnalyzer').then(m => ({ default: m.HandsomeAnalyzer })));
@@ -163,6 +164,8 @@ function App({ initialPage }: { initialPage?: { pathname: string; Component: Com
             <Route path="/me" element={publicPage(MePage)} />
             <Route path="/en/me" element={publicPage(MePage)} />
             <Route path="/chatDVT" element={<Navigate to="/discord" replace />} />
+            <Route path="/cicd-visualizer" element={<CicdVisualizer />} />
+            <Route path="/en/cicd-visualizer" element={<CicdVisualizer />} />
             <Route path="/food-wheel" element={<FoodWheel />} />
             <Route path="/excuse-generator" element={<ExcuseGenerator />} />
             <Route path="/handsome" element={<HandsomeAnalyzer />} />

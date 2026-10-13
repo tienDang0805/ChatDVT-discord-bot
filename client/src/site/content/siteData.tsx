@@ -30,6 +30,7 @@ export interface SiteItem {
 }
 
 const iconById: Record<string, LucideIcon> = {
+  cicd: GitBranch,
   'mobile-toolkit': Smartphone,
   chatdvt: Bot,
   survivor: Swords,

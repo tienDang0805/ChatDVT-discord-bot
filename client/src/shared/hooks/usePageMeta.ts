@@ -17,7 +17,7 @@ const INDEXABLE_PATHS = new Set([
   '/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/me', '/blog', '/mermaid-tutorial',
 ]);
 const INDEXABLE_PREFIXES = ['/blog/', '/english/'];
-const LOCALIZED_PATHS = new Set(['/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/mobile', '/discord', '/chat', '/me']);
+const LOCALIZED_PATHS = new Set(['/', '/ecosystem', '/playground', '/cicd-visualizer', '/apps', WALLPAPER_APP.path, '/mobile', '/discord', '/chat', '/me']);
 
 
 function setMetaTag(property: string, content: string, isName = false): void {

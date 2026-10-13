@@ -1,6 +1,6 @@
 # Public portfolio frontend
 
-The public site has Home, Playground, Apps, Discord Bot, AI Chat, Blog and Me routes. Tiến's visible profession is Mobile Software Engineer; existing Mobile Developer search metadata is preserved. ChatDVT is his Discord/Web AI bot and a side project in Me. The session guide and shared floating chat are no longer mounted. Playground groups features into Mobile, Tool and Fun without changing their existing routes or visibility.
+The public site has Home, Playground, Apps, Discord Bot, AI Chat, Blog and Me routes. Tiến's visible profession is Mobile Software Engineer; existing Mobile Developer search metadata is preserved. ChatDVT is his Discord/Web AI bot and a side project in Me. The session guide and shared floating chat are no longer mounted. Playground groups features into Mobile, Tool and Fun with all existing tools, games and Archive entries currently hidden from public discovery. Routes remain available for development; restoration metadata lives in `HIDDEN_PLAYGROUND_FEATURES.md`.
 
 ## Where to edit
 

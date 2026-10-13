@@ -8,7 +8,7 @@ const express = require('express');
 const { prisma } = require('../src/database/prisma');
 const { createPublicPageHandler, renderPublicHtml } = require('../src/api/public-renderer');
 const { createClientFilesRouter, preventResponseCaching } = require('../src/api/client-files');
-const { createSeoFallbackHandler, generateSitemapXml } = require('../src/api/seo');
+const { createSeoFallbackHandler, generateSitemapXml, injectSeoMeta } = require('../src/api/seo');
 const renderer = require('../dist/seo/renderer.cjs');
 const template = fs.readFileSync(path.join(__dirname, '../client/index.html'), 'utf8');
 
@@ -34,7 +34,12 @@ test('public VI/EN pages contain visible content without executing JavaScript', 
   assert.match(en, /About Đặng Văn Tiến — React Native/);
   assert.match(vi, /Về Đặng Văn Tiến — Kỹ sư/);
   assert.match(renderPublicHtml(template, '/en/me'), /About Đặng Văn Tiến — React Native/);
-  assert.doesNotMatch(generateSitemapXml(), /<loc>https:\/\/devtiendang.blog\/(en\/)?mobile<\/loc>/);
+  assert.doesNotMatch(generateSitemapXml(), /<loc>https:\/\/devtiendang.blog\/(en\/)?(?:mobile|cicd-visualizer)<\/loc>/);
+  for (const route of ['/cicd-visualizer', '/en/cicd-visualizer']) {
+    const html = injectSeoMeta(template, route);
+    assert.match(html, /CI\/CD Visualizer/);
+    assert.match(html, /name="robots" content="noindex, nofollow"/);
+  }
 });
 
 test('public identity and ChatDVT history remain readable and agree with structured data', () => {
@@ -238,8 +243,14 @@ test('HTTP public renderer reads published blog data, protects errors and preser
   }
   const filtered = await fetch(base + '/playground?category=mobile');
   const filteredHtml = rootContent(await filtered.text());
-  assert.match(filteredHtml, /data-filter="mobile" aria-pressed="true"/);
-  assert.doesNotMatch(filteredHtml, /data-project-card="true" data-category="fun"/);
+  assert.match(filteredHtml, /Không tìm thấy tool hoặc game phù hợp/);
+  assert.doesNotMatch(filteredHtml, /data-project-card|id="b-archive"/);
+  const playgroundHtml = rootContent(await (await fetch(base + '/playground')).text());
+  assert.match(playgroundHtml, /data-id="cicd"/);
+  assert.match(playgroundHtml, /href="\/cicd-visualizer"/);
+  assert.equal((playgroundHtml.match(/data-project-card/g) || []).length, 1);
+  const enPlaygroundHtml = rootContent(await (await fetch(base + '/en/playground')).text());
+  assert.match(enPlaygroundHtml, /href="\/en\/cicd-visualizer"/);
   for (const route of ['/qr-generator', '/?frame_id=test']) {
     const response = await fetch(base + route);
     assert.equal(response.status, 200);

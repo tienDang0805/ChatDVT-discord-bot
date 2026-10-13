@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.cicd-tests.tsbuildinfo"
+  },
+  "include": [
+    "src/features/public/cicd-visualizer/tests/**/*.ts"
+  ],
+  "exclude": []
+}
