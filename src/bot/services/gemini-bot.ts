@@ -200,6 +200,106 @@ class GeminiBotService {
           return "Xin lỗi, tôi đang gặp sự cố kết nối với não bộ.";
       }
   }
+
+  private decodeTextBuffer(buffer: Buffer): string {
+      if (buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xfe) {
+          return buffer.subarray(2).toString('utf16le');
+      }
+      if (buffer.length >= 2 && buffer[0] === 0xfe && buffer[1] === 0xff) {
+          const copy = Buffer.from(buffer.subarray(2));
+          copy.swap16();
+          return copy.toString('utf16le');
+      }
+      return buffer.toString('utf-8').replace(/^\uFEFF/, '');
+  }
+
+  public async TextFileToTextAI(
+      guildId: string,
+      userId: string,
+      username: string,
+      files: Array<{ name: string; url: string }>,
+      caption: string = "",
+      message?: any
+  ): Promise<string> {
+      try {
+          const MAX_FILE_CHARS = 100000;
+          const loadedFiles: Array<{ name: string; content: string }> = [];
+
+          for (const file of files) {
+              const response = await axios.get(file.url, { responseType: 'arraybuffer', timeout: 15000 });
+              const rawText = this.decodeTextBuffer(Buffer.from(response.data)).trim();
+              const truncatedText = rawText.length > MAX_FILE_CHARS
+                  ? `${rawText.slice(0, MAX_FILE_CHARS)}\n[...Nội dung đã được cắt bớt do vượt quá giới hạn độ dài...]`
+                  : rawText;
+              loadedFiles.push({
+                  name: file.name || 'file.txt',
+                  content: truncatedText || '[File trống]'
+              });
+          }
+
+          const systemInstruction = await this.getSystemPrompt(guildId, userId);
+          const logs = await prisma.chatLog.findMany({
+              where: { guildId },
+              orderBy: { createdAt: 'desc' },
+              take: 20
+          });
+
+          const history: any[] = [];
+          logs.reverse().forEach(log => {
+              if (log.content) {
+                  const userPrefix = log.username ? `[${log.username}]: ` : "";
+                  history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
+              }
+              if (log.response) {
+                  history.push({ role: 'model', parts: [{ text: log.response }] });
+              }
+          });
+
+          const userInstruction = caption.trim() || "Hãy đọc và phân tích nội dung file văn bản đính kèm dưới đây.";
+          const formattedFiles = loadedFiles
+              .map(f => `--- BẮT ĐẦU FILE: ${f.name} ---\n${f.content}\n--- KẾT THÚC FILE: ${f.name} ---`)
+              .join('\n\n');
+          const fullPrompt = `${userInstruction}\n\n${formattedFiles}`;
+
+          const model = await geminiCore.getModel(guildId, 'chat');
+          const chatSession = model.startChat({
+              history: history as any,
+              systemInstruction: {
+                  role: 'system',
+                  parts: [{ text: systemInstruction }]
+              },
+          });
+
+          const result = await retryWithBackoff(() => chatSession.sendMessage([{ text: fullPrompt }]));
+          const responseText = result.response.text();
+
+          let cleanResponse = responseText;
+          if (message && message.channel) {
+              cleanResponse = cleanContent(responseText, message.channel);
+          }
+
+          const fileNames = loadedFiles.map(f => f.name).join(', ');
+          const preview = loadedFiles[0]?.content.slice(0, 1000) || '';
+          const logContent = `[FILE: ${fileNames}] ${userInstruction}\n${preview}`.trim();
+
+          await prisma.chatLog.create({
+              data: {
+                  guildId,
+                  userId,
+                  username,
+                  content: logContent,
+                  response: cleanResponse,
+                  type: 'chat'
+              }
+          });
+
+          return cleanResponse;
+      } catch (error: any) {
+          await LoggerService.error("Text File Analysis Error", error);
+          if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
+          return `Xin lỗi, tôi gặp lỗi khi đọc file văn bản: ${error.message}`;
+      }
+  }
   
   // --- Vision (Image Analysis) ---
   public async ImageToTextAI(guildId: string, userId: string, imageUrl: string, caption: string = ""): Promise<string> {
@@ -478,6 +578,7 @@ export const geminiService = {
     getSystemPrompt: geminiBotService.getSystemPrompt.bind(geminiBotService),
     generateResponse: geminiBotService.generateResponse.bind(geminiBotService),
     generateAutoReply: geminiBotService.generateAutoReply.bind(geminiBotService),
+    TextFileToTextAI: geminiBotService.TextFileToTextAI.bind(geminiBotService),
     ImageToTextAI: geminiBotService.ImageToTextAI.bind(geminiBotService),
     VideoToTextAI: geminiBotService.VideoToTextAI.bind(geminiBotService),
     AudioToTextAI: geminiBotService.AudioToTextAI.bind(geminiBotService),

@@ -1,4 +1,4 @@
-import { Events, Message, ChannelType } from 'discord.js';
+import { Events, Message, ChannelType, Attachment } from 'discord.js';
 import { bot } from '../client';
 import { geminiService } from '../services/gemini';
 import { prisma } from '../../database/prisma';
@@ -7,6 +7,35 @@ import { ADMIN_ID } from '../../config/constants';
 import { cuongGiaService } from '../services/cuong-gia';
 
 const IGNORE_PREFIXES = ['!', '/', '-'];
+const TEXT_FILE_REGEX = /\.(txt|md|csv|json|log|xml|yaml|yml|ini|conf|cfg|js|ts|jsx|tsx|py|java|c|cpp|h|cs|go|rs|php|rb|html|htm|css|scss|sql|sh|bat|ps1|env|toml)$/i;
+const IMAGE_FILE_REGEX = /\.(png|jpe?g|gif|webp)$/i;
+const VIDEO_FILE_REGEX = /\.(mp4|webm|mov)$/i;
+
+function getAttachmentFileName(attachment: Attachment): string {
+  return (attachment.name || attachment.url.split('?')[0] || '').toLowerCase();
+}
+
+function isImageAttachment(attachment: Attachment): boolean {
+  const contentType = (attachment.contentType || '').toLowerCase();
+  return contentType.startsWith('image/') || IMAGE_FILE_REGEX.test(getAttachmentFileName(attachment));
+}
+
+function isVideoAttachment(attachment: Attachment): boolean {
+  const contentType = (attachment.contentType || '').toLowerCase();
+  return contentType.startsWith('video/') || VIDEO_FILE_REGEX.test(getAttachmentFileName(attachment));
+}
+
+function isTextAttachment(attachment: Attachment): boolean {
+  const contentType = (attachment.contentType || '').toLowerCase();
+  return (
+    contentType.startsWith('text/') ||
+    contentType.includes('json') ||
+    contentType.includes('xml') ||
+    contentType.includes('javascript') ||
+    contentType.includes('csv') ||
+    TEXT_FILE_REGEX.test(getAttachmentFileName(attachment))
+  );
+}
 
 export const messageCreate = async (message: Message) => {
   if (message.author.bot) return;
@@ -63,7 +92,16 @@ export const messageCreate = async (message: Message) => {
   }
 
   let cleanContent = message.content.replace(/<@!?\d+>/g, '').trim();
-  if (!cleanContent) return;
+
+  let attachments = Array.from(message.attachments.values());
+  if (attachments.length === 0 && message.reference?.messageId) {
+      const referencedMessage = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+      if (referencedMessage && referencedMessage.attachments.size > 0) {
+          attachments = Array.from(referencedMessage.attachments.values());
+      }
+  }
+
+  if (!cleanContent && attachments.length === 0) return;
 
   if (message.channel && message.channel.type === ChannelType.GuildText) {
        await message.channel.sendTyping();
@@ -71,48 +109,46 @@ export const messageCreate = async (message: Message) => {
        await (message.channel as any).sendTyping();
   }
 
-
-
   try {
-    // 1. Get Guild Config (Optional check, mainly for active modules if we implemented them)
-    // const config = await prisma.guildConfig.findUnique({ where: { guildId: message.guild.id } });
-    
-    // 2. Identify Request Type
     let responseText = '';
-    const attachment = message.attachments.first();
+    const textAttachments = attachments.filter(isTextAttachment);
+    const imageAttachment = attachments.find(isImageAttachment);
+    const videoAttachment = attachments.find(isVideoAttachment);
 
-    if (attachment) {
-      if (attachment.contentType?.startsWith('image/')) {
-        responseText = await geminiService.ImageToTextAI(
-            message.guild.id, 
-            message.author.id, 
-            attachment.url, 
-            cleanContent
-        );
-      } else if (attachment.contentType?.startsWith('video/') || attachment.contentType === 'application/octet-stream') {
-         responseText = await geminiService.VideoToTextAI(
-            message.guild.id, 
-            message.author.id, 
-            attachment.url, 
-            cleanContent
-        );
-      } else {
-          responseText = await geminiService.generateResponse(
-            message.guild.id, 
-            message.author.id, 
-            message.author.username, 
-            cleanContent,
-            message
-          );
-      }
+    if (textAttachments.length > 0) {
+      responseText = await geminiService.TextFileToTextAI(
+          message.guild.id,
+          message.author.id,
+          message.author.username,
+          textAttachments.map(att => ({
+            name: att.name || 'file.txt',
+            url: att.url
+          })),
+          cleanContent,
+          message
+      );
+    } else if (imageAttachment) {
+      responseText = await geminiService.ImageToTextAI(
+          message.guild.id, 
+          message.author.id, 
+          imageAttachment.url, 
+          cleanContent
+      );
+    } else if (videoAttachment) {
+      responseText = await geminiService.VideoToTextAI(
+          message.guild.id, 
+          message.author.id, 
+          videoAttachment.url, 
+          cleanContent
+      );
     } else {
-        responseText = await geminiService.generateResponse(
-            message.guild.id, 
-            message.author.id, 
-            message.author.username, 
-            cleanContent,
-            message
-        );
+      responseText = await geminiService.generateResponse(
+          message.guild.id, 
+          message.author.id, 
+          message.author.username, 
+          cleanContent,
+          message
+      );
     }
 
     // 3. Send Response
