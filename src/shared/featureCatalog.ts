@@ -276,6 +276,7 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
   // Community/private context: available only when someone has the direct URL.
   { id: 'pixel-agents', path: '/pixel-agents', title: 'Pixel Agents 8D', description: 'Phòng chat pixel art real-time dành cho cộng đồng 8D.', section: 'community', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['8D', 'Realtime'] },
   { id: 'monopoly', path: '/monopoly', title: 'Monopoly 8D', description: 'Mini game Monopoly dành cho nhóm 8D.', section: 'community', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['8D', 'Game'] },
+  { id: 'aram-mayhem', path: '/aram-mayhem', title: 'ARAM Mayhem 8D', description: 'Mini game LoL ARAM Mayhem 2D Pixel chọn lõi Hextech.', section: 'game', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['8D', 'Game', 'Pixel'] },
   { id: 'love8d', path: '/love8d', title: 'Love8D', description: 'Trang kỷ niệm riêng của cộng đồng 8D.', section: 'community', visibility: 'unlisted', status: 'stable', indexable: false, tags: ['8D'] },
   { id: 'tutien', path: '/tutien', title: 'Tu Tiên 8D', description: 'Idle RPG và hệ thống tu luyện dành cho cộng đồng.', section: 'community', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['8D', 'RPG'] },
   { id: 'pet', path: '/petlandingpage', title: 'ChatDVT Pet System', description: 'Landing page thử nghiệm cho hệ thống pet của ChatDVT.', section: 'community', visibility: 'unlisted', status: 'beta', indexable: false, tags: ['ChatDVT', 'Pet'] },
