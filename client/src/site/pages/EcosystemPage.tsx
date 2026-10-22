@@ -20,6 +20,7 @@ import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { BotAvatar } from '../components/BotAvatar';
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { SiteLayout } from '../components/SiteLayout';
 import { collectionItems } from '../content/collection';
 
@@ -30,8 +31,8 @@ const copy = {
     metaTitle: 'Hệ sinh thái ChatDVT — AI, công cụ, học tập và trò chơi',
     metaDescription: 'Khám phá hệ sinh thái ChatDVT gồm AI chatbot trên Discord và web, công cụ developer, English Hub, game và trải nghiệm cộng đồng.',
     kicker: 'The ChatDVT ecosystem',
-    titleLead: 'Một AI.',
-    titleAccent: 'Nhiều thế giới.',
+    titleLead: 'ChatDVT.',
+    titleAccent: 'Bot & side projects.',
     intro: 'ChatDVT kết nối trò chuyện AI, công cụ dành cho developer, học tập và game cộng đồng trong một hệ sinh thái mang cá tính riêng — bắt đầu trên Discord, mở rộng trên web.',
     explore: 'Khám phá hệ sinh thái',
     addDiscord: 'Thêm vào Discord',
@@ -44,13 +45,13 @@ const copy = {
       ['Liên tục thử nghiệm', 'Sản phẩm thật, cập nhật thật'],
     ],
     featured: 'Featured worlds',
-    sectionTitle: 'Không phải một đống công cụ. Là những trải nghiệm có liên kết.',
+    sectionTitle: 'Chat, công cụ, học tập và game.',
     sectionIntro: 'Mỗi sản phẩm có thể đứng độc lập, nhưng tất cả cùng mang chung một giọng nói, một tinh thần và một điểm bắt đầu: ChatDVT.',
     flagship: 'Flagship · Discord + Web',
     chatTitle: 'ChatDVT AI',
     chatText: 'Trò chuyện tự nhiên, hiểu ngữ cảnh, phân tích hình ảnh, tóm tắt hội thoại và đồng hành cùng cộng đồng ngay nơi họ đang hoạt động.',
     chatLink: 'Bắt đầu trò chuyện',
-    botStatus: 'online · sẵn sàng hỗ trợ',
+    botStatus: 'đoạn chat minh họa',
     botMessage: 'Tao có thể giúp mày khám phá toàn bộ hệ sinh thái này — từ tool mobile đến English Hub.',
     userMessage: 'Cho tao xem thứ hay nhất đi.',
     learn: 'Learn',
@@ -77,8 +78,8 @@ const copy = {
     metaTitle: 'The ChatDVT Ecosystem — AI, tools, learning and games',
     metaDescription: 'Explore the ChatDVT ecosystem: an AI chatbot for Discord and the web, developer tools, English learning, games and community experiences.',
     kicker: 'The ChatDVT ecosystem',
-    titleLead: 'One AI.',
-    titleAccent: 'Many worlds.',
+    titleLead: 'ChatDVT.',
+    titleAccent: 'Bot & side projects.',
     intro: 'ChatDVT connects AI conversation, developer tools, learning and community games in one distinct ecosystem — starting on Discord and expanding across the web.',
     explore: 'Explore the ecosystem',
     addDiscord: 'Add to Discord',
@@ -91,13 +92,13 @@ const copy = {
       ['Always experimenting', 'Real products, real updates'],
     ],
     featured: 'Featured worlds',
-    sectionTitle: 'Not a pile of tools. A set of connected experiences.',
+    sectionTitle: 'Chat, tools, learning and games.',
     sectionIntro: 'Each product can stand on its own, but they share one voice, one spirit and one starting point: ChatDVT.',
     flagship: 'Flagship · Discord + Web',
     chatTitle: 'ChatDVT AI',
     chatText: 'Natural conversation, contextual understanding, image analysis, summaries and a community companion where people already spend time.',
     chatLink: 'Start chatting',
-    botStatus: 'online · ready to help',
+    botStatus: 'example conversation',
     botMessage: 'I can guide you through the entire ecosystem — from mobile tools to the English Hub.',
     userMessage: 'Show me the best place to start.',
     learn: 'Learn',
@@ -139,7 +140,7 @@ export function EcosystemPage() {
       <section className="site-container ecosystem-hero">
         <div className="ecosystem-hero__copy">
           <p className="ecosystem-kicker">{text.kicker}</p>
-          <h1>{text.titleLead}<br /><em>{text.titleAccent}</em></h1>
+          <AnimatedHeadline id="ecosystem-title" lines={[text.titleLead, text.titleAccent]} className="page-title" />
           <p className="ecosystem-hero__intro">{text.intro}</p>
           <div className="ecosystem-hero__actions">
             <a className="ecosystem-button ecosystem-button--primary" href="#featured">{text.explore}<ArrowDownRight size={17} /></a>

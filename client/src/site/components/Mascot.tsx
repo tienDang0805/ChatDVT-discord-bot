@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { Pause, Waves } from 'lucide-react';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 
 type Character = 'tien' | 'chatdvt';
@@ -11,6 +12,7 @@ const Motion = createContext({ enabled: false, reduced: false, paused: false, to
 const PAUSE_KEY = 'portfolio-motion-paused';
 
 export function MascotMotion({ children }: { children: ReactNode }) {
+  const [ready, setReady] = useState(false);
   const [reduced, setReduced] = useState(false);
   const [paused, setPaused] = useState(false);
   useEffect(() => {
@@ -18,21 +20,25 @@ export function MascotMotion({ children }: { children: ReactNode }) {
     const sync = () => setReduced(media.matches);
     sync();
     try { setPaused(sessionStorage.getItem(PAUSE_KEY) === '1'); } catch { /* Optional preference. */ }
+    setReady(true);
     media.addEventListener('change', sync);
     return () => media.removeEventListener('change', sync);
   }, []);
   function toggle() {
     setPaused(value => { const next = !value; try { sessionStorage.setItem(PAUSE_KEY, next ? '1' : '0'); } catch { /* Storage is optional. */ } return next; });
   }
-  return <Motion.Provider value={{ enabled: !paused && !reduced, reduced, paused, toggle }}>{children}</Motion.Provider>;
+  return <Motion.Provider value={{ enabled: ready && !paused && !reduced, reduced, paused, toggle }}>{children}</Motion.Provider>;
 }
+
+export function useSiteMotion() { return useContext(Motion); }
 
 export function MotionControl() {
   const { enabled, reduced, toggle } = useContext(Motion);
   const { locale } = useLanguage();
   const en = locale === 'en';
-  return <button type="button" className="site-motion-control" aria-pressed={!enabled} disabled={reduced} onClick={toggle}>
-    {reduced ? (en ? 'Motion reduced by your device' : 'Chuyển động đã giảm theo máy') : enabled ? (en ? 'Reduce motion' : 'Giảm chuyển động') : (en ? 'Enable motion' : 'Bật chuyển động')}
+  const label = reduced ? (en ? 'Motion reduced by your device' : 'Chuyển động đã giảm theo máy') : enabled ? (en ? 'Reduce motion' : 'Giảm chuyển động') : (en ? 'Enable motion' : 'Bật chuyển động');
+  return <button type="button" className="site-motion-control" aria-label={label} title={label} aria-pressed={!enabled} disabled={reduced} onClick={toggle}>
+    {enabled ? <Waves size={17} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}<span className="motion-label">{label}</span>
   </button>;
 }
 

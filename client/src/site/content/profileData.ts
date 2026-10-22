@@ -1,6 +1,6 @@
 export const profile = {
   name: 'Đặng Văn Tiến',
-  role: 'Mobile Software Engineer',
+  role: 'Mobile Developer',
   company: 'South Telecom',
   period: '04/2023',
   email: 'dvtien0805@gmail.com',
@@ -9,11 +9,11 @@ export const profile = {
 };
 export const contributions = [
   {
-    title: ['Android Barcode Scanning SDK', 'Android Barcode Scanning SDK'], category: 'Android · SDK',
+    title: ['Multi-barcode & Multi-box SDK', 'Multi-barcode & Multi-box SDK'], category: 'Android · On-device AI',
     description: [
-      'Từng phát triển một SDK Android từ bản thử nghiệm ban đầu, sử dụng CameraX, TensorFlow Lite và ML Kit để nhận diện nhiều hộp sản phẩm cùng các barcode trong ảnh. Sau đó đóng gói thành thư viện để team khác tích hợp qua Maven.',
-      'Developed an Android SDK from an initial prototype, using CameraX, TensorFlow Lite and ML Kit to recognize multiple product boxes and their barcodes in an image. Packaged it as a library for other teams to integrate through Maven.',
-    ], tags: ['CameraX', 'ML Kit', 'Maven'],
+      'Từng phát triển một SDK Android bằng Kotlin từ bản thử nghiệm ban đầu, sử dụng CameraX, model TensorFlow Lite và ML Kit để nhận diện nhiều hộp sản phẩm cùng nhiều barcode trong một ảnh. Sau đó đóng gói thành thư viện để team khác tích hợp qua Maven.',
+      'Developed an Android SDK in Kotlin from an initial prototype, using CameraX, a TensorFlow Lite model and ML Kit to recognize multiple product boxes and multiple barcodes in one image. Packaged it as a library for other teams to integrate through Maven.',
+    ], tags: ['Kotlin', 'TensorFlow Lite', 'ML Kit', 'CameraX', 'Maven'],
   },
   {
     title: ['React Native & Mobile Systems', 'React Native & Mobile Systems'], category: 'Mobile · Systems',
@@ -23,11 +23,11 @@ export const contributions = [
     ], tags: ['React Native', 'API', 'Database'],
   },
   {
-    title: ['Woni Service Robot', 'Woni Service Robot'], category: 'Android · Integration',
+    title: ['Robot App & SDK Integration', 'Robot App & SDK Integration'], category: 'Android · Robot',
     description: [
-      'Tham gia phát triển ứng dụng React Native chạy trên robot Android, đọc và debug SDK Java của vendor, sửa các vấn đề tích hợp và trực tiếp triển khai tại Vikki Bank. Có những lúc phải vừa debug robot thật, vừa hỗ trợ khách hàng và hướng dẫn team vận hành.',
-      'Helped develop a React Native application running on an Android robot, read and debugged the vendor’s Java SDK, resolved integration issues and deployed it onsite at Vikki Bank. At times, this meant debugging the physical robot while supporting customers and guiding the operations team.',
-    ], tags: ['React Native', 'Java SDK', 'Android'],
+      'Phát triển giao diện ứng dụng robot bằng React Native, làm bridge kết nối UI với Android/Java để gọi SDK của nhà sản xuất robot. Công việc gồm đọc tài liệu và debug SDK, xử lý các vấn đề tích hợp, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.',
+      'Developed the robot application UI in React Native and an Android/Java bridge to call the robot manufacturer’s SDK. The work included reading and debugging the SDK, resolving integration issues, deploying for customers, user training and operational support.',
+    ], tags: ['React Native UI', 'Android / Java', 'Native Bridge', 'Vendor SDK'],
   },
 ];
 export const skillFamilies = [

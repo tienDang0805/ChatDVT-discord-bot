@@ -27,16 +27,17 @@ function loadBotInfo(): Promise<BotInfo | null> {
   return pendingRequest;
 }
 
-export function useBotInfo() {
+export function useBotInfo(enabled = true) {
   const [botInfo, setBotInfo] = useState<BotInfo | null>(cachedBotInfo);
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     loadBotInfo().then(info => {
       if (active && info) setBotInfo(info);
     });
     return () => { active = false; };
-  }, []);
+  }, [enabled]);
 
   return botInfo;
 }

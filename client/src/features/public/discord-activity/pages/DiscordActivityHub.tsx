@@ -11,7 +11,7 @@ interface DiscordUser {
   avatar: string | null;
 }
 
-type ActiveGame = 'menu' | 'survivor' | 'flappy' | 'monopoly';
+type ActiveGame = 'menu' | 'survivor' | 'flappy' | 'monopoly' | 'aram';
 
 const SurvivorArena = lazy(() =>
   import('../../survivor-arena/pages/SurvivorArena').then(m => ({ default: m.SurvivorArena }))
@@ -21,6 +21,9 @@ const FlappyBirdActivity = lazy(() =>
 );
 const MonopolyGame = lazy(() =>
   import('../../monopoly/pages/MonopolyGame').then(m => ({ default: m.MonopolyGame }))
+);
+const AramMayhem = lazy(() =>
+  import('../../aram-mayhem/pages/AramMayhem').then(m => ({ default: m.AramMayhem }))
 );
 
 const isRunningInDiscord = (): boolean => {
@@ -75,6 +78,17 @@ const GAMES: {
     border: 'border-rose-500/40 hover:border-rose-400/70',
     glow: 'hover:shadow-[0_0_40px_rgba(244,63,94,0.3)]',
     tags: ['2-4 Players', 'Turn-based', 'Đắk Nông VIP'],
+  },
+  {
+    id: 'aram',
+    title: 'ARAM Mayhem 8D',
+    subtitle: 'LoL 2D Pixel Chọn Lõi',
+    description: 'Vực Gió Hú phiên bản 2D Pixel! Chọn Đấng Yasuo 0/10, bốc Lõi Hextech siêu bựa, nháy Thông Thạo 7 và phá Nhà Chính!',
+    icon: '❄️',
+    gradient: 'from-sky-600/30 via-indigo-600/20 to-fuchsia-700/30',
+    border: 'border-sky-500/40 hover:border-sky-400/70',
+    glow: 'hover:shadow-[0_0_40px_rgba(56,189,248,0.3)]',
+    tags: ['Chọn Lõi', '2D Pixel', 'Yasuo 0/10'],
   },
 ];
 
@@ -233,6 +247,17 @@ export const DiscordActivityHub = () => {
         <Suspense fallback={<GameHubLoading />}>
           <MonopolyGame onBackToMenu={backToMenu} />
         </Suspense>
+      </div>
+    );
+  }
+
+  if (activeGame === 'aram') {
+    return (
+      <div className="relative min-h-screen">
+        <Suspense fallback={<GameHubLoading />}>
+          <AramMayhem onBackToMenu={backToMenu} />
+        </Suspense>
+        <BackToMenuPill onClick={backToMenu} />
       </div>
     );
   }
@@ -410,6 +435,15 @@ function WebGameHub({
     return (
       <Suspense fallback={<GameHubLoading />}>
         <MonopolyGame onBackToMenu={onBack} />
+      </Suspense>
+    );
+  }
+
+  if (activeGame === 'aram') {
+    return (
+      <Suspense fallback={<GameHubLoading />}>
+        <AramMayhem onBackToMenu={onBack} />
+        <BackToMenuPill onClick={onBack} />
       </Suspense>
     );
   }

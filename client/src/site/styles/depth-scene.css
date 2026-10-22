@@ -1,0 +1,50 @@
+/* A fixed glass stack, rather than a second set of content cards. */
+.site-root.site-layered { position: relative; isolation: isolate; }
+.site-depth-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: layout paint; --scene-reveal: 1; }
+.scene-atmosphere { position: absolute; inset: 0; background: radial-gradient(ellipse at 85% 45%, color-mix(in srgb, var(--page-accent), transparent 94%), transparent 54%), radial-gradient(ellipse at 85% 90%, color-mix(in srgb, var(--label-purple), transparent 97%), transparent 50%); }
+.scene-perspective { position: absolute; width: 860px; height: 850px; right: max(-180px, calc((100vw - 1640px) / 2)); top: calc(50% - 370px); perspective: 1600px; opacity: calc(var(--scene-reveal) * .53); }
+.dark .scene-perspective { opacity: calc(var(--scene-reveal) * .78); }
+.scene-float { position: absolute; inset: 0; transform-style: preserve-3d; }
+.scene-camera { position: absolute; top: 180px; left: 150px; width: 550px; height: 345px; transform-style: preserve-3d; transform: rotateX(53deg) rotateY(-9deg) rotateZ(-29deg); }
+.scene-glass { --glass-color: var(--label-mint); position: absolute; inset: 0; border: 1px solid color-mix(in srgb, var(--glass-color), transparent 29%); border-radius: 19px; padding: 21px 24px 16px; color: var(--glass-color); background: linear-gradient(125deg, color-mix(in srgb, var(--glass-color), var(--site-bg) 85%), color-mix(in srgb, var(--glass-color), var(--site-bg) 95%) 58%, color-mix(in srgb, var(--glass-color), transparent 90%)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--glass-color), transparent 45%), 0 3px 0 color-mix(in srgb, var(--glass-color), transparent 55%), 0 5px 0 color-mix(in srgb, var(--glass-color), transparent 83%), 0 15px 40px -30px var(--glass-color); backface-visibility: hidden; }
+.scene-glass::before { content: ''; position: absolute; inset: 6px; border: 1px solid color-mix(in srgb, var(--glass-color), transparent 82%); border-radius: 13px; background: linear-gradient(135deg, color-mix(in srgb, var(--glass-color), transparent 96%), transparent 45%); }
+.scene-glass--1 { --glass-color: var(--label-blue); }
+.scene-glass--2 { --glass-color: var(--label-purple); }
+.scene-glass--3 { --glass-color: var(--label-amber); }
+.scene-glass--4 { --glass-color: var(--label-rose); }
+.scene-glass[data-active=true] { border-color: var(--glass-color); }
+.scene-glass-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid color-mix(in srgb, var(--glass-color), transparent 76%); padding: 0 0 15px; font: 10px/1.6 var(--layered-mono); letter-spacing: .08em; }
+.scene-glass-header > span { display: flex; align-items: center; gap: 10px; }
+.scene-glass-header i { width: 6px; height: 6px; border: 1px solid currentColor; border-radius: 2px; }
+.scene-glass-header small { font: inherit; opacity: .6; }
+.scene-surface { display: block; width: 100%; height: 224px; margin-block: 9px 5px; stroke: currentColor; stroke-width: 1; opacity: .64; }
+.scene-surface text { fill: currentColor; stroke: none; font: 12px var(--layered-mono); }
+.scene-surface .scene-fill { fill: color-mix(in srgb, var(--glass-color), transparent 83%); }
+.scene-surface .scene-solid { fill: color-mix(in srgb, var(--glass-color), var(--site-bg) 92%); }
+.scene-glass-footer { display: flex; align-items: center; gap: 5px; border-top: 1px solid color-mix(in srgb, var(--glass-color), transparent 82%); padding-top: 12px; font: 9px/1.6 var(--layered-mono); letter-spacing: .07em; opacity: .7; }
+.scene-glass-footer > span { margin-right: auto; }
+.scene-glass-footer i { width: 13px; height: 3px; border-radius: 1px; background: currentColor; opacity: .5; }
+.scene-foundation { position: absolute; inset: -20px; border-radius: 20px; border: 1px solid color-mix(in srgb, var(--label-blue), transparent 70%); background-image: linear-gradient(color-mix(in srgb, var(--label-blue), transparent 88%) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--label-blue), transparent 88%) 1px, transparent 1px); background-size: 32px 32px; transform: translateZ(-370px); }
+.scene-reading-shade { position: absolute; inset: 0; background: linear-gradient(90deg, var(--site-bg) 16%, color-mix(in srgb, var(--site-bg), transparent 10%) 35%, color-mix(in srgb, var(--site-bg), transparent 68%) 64%, transparent 85%); }
+.scene-dust { position: absolute; inset: 0; color: var(--page-accent); }
+.scene-dust > i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: currentColor; opacity: .17; box-shadow: 0 0 7px currentColor; }
+.site-depth-scene[data-motion=on][data-visible=true] .scene-float { animation: scene-breathe 13s ease-in-out infinite; }
+.site-depth-scene[data-motion=on][data-visible=true] .scene-dust > i { animation: scene-dust 17s ease-in-out infinite; }
+.site-depth-scene[data-visible=false] :is(.scene-float, .scene-dust > i) { animation-play-state: paused; }
+@keyframes scene-breathe { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(0, -9px, 0); } }
+@keyframes scene-dust { 0%, 100% { transform: translateY(7px); opacity: .08; } 50% { transform: translateY(-16px); opacity: .3; } }
+.site-depth-scene--quiet .scene-perspective, .dark .site-depth-scene--quiet .scene-perspective { opacity: calc(var(--scene-reveal) * .18); }
+.site-depth-scene--quiet .scene-atmosphere { opacity: .4; }
+.site-depth-scene--quiet .scene-dust { display: none; }
+.site-root.site-layered :is(.selected-playground, .selected-discord, .selected-blog) { background: transparent; }
+.site-layered #site-main::before { display: none; }
+.site-root.site-layered .site-footer { position: relative; z-index: 1; }
+@media (min-width: 1800px) { .scene-perspective { transform: scale(1.12); transform-origin: 55% 50%; } }
+@media (max-width: 1000px) { .scene-perspective { right: -280px; transform: scale(.9); transform-origin: right center; } .scene-reading-shade { background: linear-gradient(90deg, var(--site-bg) 12%, color-mix(in srgb, var(--site-bg), transparent 17%) 45%, transparent); } }
+@media (max-width: 740px) {
+  .scene-perspective { right: -390px; top: calc(50% - 320px); transform: scale(.72); transform-origin: right center; opacity: calc(var(--scene-reveal) * .25); }
+  .dark .scene-perspective { opacity: calc(var(--scene-reveal) * .36); }
+  .scene-reading-shade { background: linear-gradient(90deg, var(--site-bg) 5%, color-mix(in srgb, var(--site-bg), transparent 18%) 45%, color-mix(in srgb, var(--site-bg), transparent 80%)); }
+  .scene-dust { opacity: .5; }
+  .site-depth-scene--quiet .scene-perspective, .dark .site-depth-scene--quiet .scene-perspective { opacity: .1; }
+}

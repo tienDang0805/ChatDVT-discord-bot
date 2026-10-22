@@ -3,6 +3,7 @@ import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { SiteLayout } from '../components/SiteLayout';
+import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { Mascot } from '../components/Mascot';
 import { profile, contributions, skillFamilies } from '../content/profileData';
 import { CHATDVT_HISTORY_PATH } from '../../../../src/shared/chatdvt';
@@ -17,8 +18,8 @@ export function MePage() {
     <section className="me-hero me-wrap" aria-labelledby="me-heading"><div className="me-hero-grid">
       <div className="me-hero-copy">
         <p className="me-eyebrow">{en ? 'ABOUT ME' : 'VỀ MÌNH'}</p>
-        <h1 id="me-heading">{en ? 'Hi, I’m Tiến.' : 'Chào, mình là Tiến.'}</h1>
-        <p className="me-role">{profile.role}<span>Android &amp; React Native</span></p>
+        <AnimatedHeadline id="me-heading" lines={en ? ["Hi, I’m", "Tiến."] : ["Chào, mình", "là Tiến."]} className="page-title" />
+        <p className="me-role">{profile.role}<span>{en ? "at Southtelecom" : "tại Southtelecom"}</span></p>
         <p>{en ? 'I’ve been developing mobile applications since 2023, mainly with React Native and native Android. My work ranges from enterprise applications and SDK integrations to resolving issues on real devices.' : 'Mình làm lập trình ứng dụng di động từ năm 2023, chủ yếu với React Native và Android native. Công việc trải từ phát triển ứng dụng doanh nghiệp, tích hợp SDK đến xử lý các vấn đề trên thiết bị thật.'}</p>
         <p>{en ? 'I enjoy work that involves understanding how a system works, tracing problems and finding a way to solve them.' : 'Mình thích những công việc phải tìm hiểu cách một hệ thống hoạt động, lần theo lỗi và tìm cách giải quyết.'}</p>
         <div className="me-hero-actions"><a className="me-button me-button-primary" href="#contact">{en ? 'Get in touch' : 'Liên hệ với mình'} <span className="me-arrow" aria-hidden="true">↗</span></a><a className="me-text-link" href={profile.github} target="_blank" rel="noreferrer">GitHub <span className="me-arrow" aria-hidden="true">↗</span></a></div>

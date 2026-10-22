@@ -43,11 +43,14 @@ export function BlogArticlePage() {
   usePageTracker(`BlogArticle:${slug}`);
 
   useEffect(() => {
+    let alive = true;
+    setPost(initialPost === undefined ? fallback : initialPost);
     setLoading(true);
     getPublishedBlogPost(slug)
-      .then(setPost)
-      .catch(() => { if (initialPost === undefined) setPost(fallback); })
-      .finally(() => setLoading(false));
+      .then(value => { if (alive) setPost(value); })
+      .catch(() => { if (alive && initialPost === undefined) setPost(fallback); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
   }, [slug]);
 
   if (loading && !post) {

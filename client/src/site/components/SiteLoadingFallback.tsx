@@ -24,43 +24,34 @@ function Guide({ className = '' }: { className?: string }) {
 }
 
 function HomeSkeleton() {
-  return <section className="hybrid-view hybrid-a selected-home">
-    <div className="home-landscape">
-      <div className="home-copy"><p className="eyebrow light"><Block width="65%" /></p><Heading /><Copy lines={4} /><div className="home-stack"><Block className="site-skeleton-tag" /><Block className="site-skeleton-tag" /><Block className="site-skeleton-tag" /></div><Actions /></div>
-      <div className="discovery-scene story-scene"><Block className="home-tien site-skeleton-figure" /><div className="scene-sign mobile-sign"><Copy lines={2} /></div><div className="scene-sign fun-sign"><Copy lines={2} /></div><div className="scene-sign tools-sign"><Copy lines={2} /></div></div>
-      <Guide className="home-guide" />
-    </div>
-    <div className="home-follow page-shell"><div className="section-intro"><Block width="55%" /><Heading level={2} /><Copy /></div><div className="home-paths">{[0, 1].map(i => <div className="home-path" key={i}><Block className="site-skeleton-art" /><div><Block className="site-skeleton-subtitle" /><Copy /></div></div>)}</div></div>
-  </section>;
+  return <div className="layered-home"><section className="lh-hero layered-container">
+    <div className="lh-intro"><Block width="65%" /><Heading /><Copy lines={4} /><Actions /></div>
+    <div className="mobile-stack"><Block width="60%" /><div className="site-skeleton-stack">{[0, 1, 2, 3].map(i => <Block key={i} />)}</div><Block width="80%" /></div>
+  </section><div className="lh-baseline layered-container"><Block width="70%" /></div></div>;
+}
+
+function IntroSkeleton({ art = false }: { art?: boolean }) {
+  return <header className={'page-intro' + (art ? ' page-intro--with-art' : '')}><div className="page-intro-copy"><p className="page-eyebrow"><Block width="40%" /></p><Heading /><Copy lines={2} /></div>{art && <div className="page-intro-art"><Block className="site-skeleton-bot" /></div>}</header>;
 }
 
 function PlaygroundSkeleton() {
   return <section className="hybrid-view hybrid-b selected-playground">
-    <div className="play-opening"><div><p className="eyebrow"><Block width="45%" /></p><Heading lines={1} /><Copy lines={2} /></div><Guide className="play-guide" /></div>
+    <div className="site-container"><IntroSkeleton /></div>
     <div className="collection-toolbar"><div className="filters">{[0, 1, 2, 3].map(i => <Block key={i} className="site-skeleton-pill" />)}</div><div className="search-label"><Block className="site-skeleton-field" /></div></div>
-    <div className="collection">{[0, 1, 2].map(i => <article key={i} className={`project-product${i === 0 ? ' rich' : ''}`}><div className="product-body"><Block width="40%" /><Block className="site-skeleton-subtitle" /><Copy /><Actions /></div><div className="product-art"><Block className="site-skeleton-art" /></div></article>)}</div>
+    <div className="collection"><article className="project-product rich"><div className="product-body"><Block width="40%" /><Block className="site-skeleton-subtitle" /><Copy /><Actions /></div><div className="product-art"><Block className="site-skeleton-art" /></div></article></div>
   </section>;
 }
 
 function MeSkeleton() {
-  return <section className="hybrid-view hybrid-b selected-me">
-    <div className="me-stage band profile-stage"><div className="portrait-wrap"><Block className="site-skeleton-portrait" /><Block width="60%" /></div><div><p className="eyebrow"><Block width="45%" /></p><Heading /><Copy lines={2} /><Actions /></div></div>
-    <div className="work-section"><div className="work-heading"><Block width="40%" /><Block className="site-skeleton-subtitle" /><Copy lines={2} /></div><ol className="contribution-list">{[0, 1, 2].map(i => <li key={i}><Block className="site-skeleton-subtitle" /><Copy lines={2} /></li>)}</ol></div>
-  </section>;
+  return <div className="me-profile"><section className="me-hero me-wrap"><div className="me-hero-grid"><div className="me-hero-copy"><p className="me-eyebrow"><Block width="25%" /></p><Heading /><Copy lines={4} /><Actions /></div><aside className="me-facts"><Block className="site-skeleton-portrait" /><Copy lines={5} /></aside></div></section><section className="me-work me-wrap"><div className="me-work-grid">{[0, 1, 2].map(i => <article className="me-work-card" key={i}><Block className="site-skeleton-subtitle" /><Copy lines={4} /></article>)}</div></section></div>;
 }
 
 function DiscordSkeleton() {
-  return <section className="hybrid-view hybrid-b selected-discord">
-    <div className="discord-stage band primary-stage"><div><p className="eyebrow"><Block width="70%" /></p><Heading /><Copy lines={4} /><Actions /></div><Block className="site-skeleton-bot" /></div>
-    <div className="proof-intro page-shell"><Block width="25%" /><Block className="site-skeleton-subtitle" /><Copy lines={2} /></div>
-  </section>;
+  return <section className="hybrid-view hybrid-b selected-discord"><div className="site-container"><IntroSkeleton art /><Actions /></div><div className="proof-intro page-shell"><Block width="25%" /><Block className="site-skeleton-subtitle" /><Copy lines={2} /></div></section>;
 }
 
 function BlogSkeleton() {
-  return <section className="hybrid-view hybrid-a selected-blog"><div className="page-shell">
-    <div className="page-opening blog-opening"><div><p className="eyebrow"><Block width="55%" /></p><Heading /><Copy lines={2} /></div><div className="blog-circle story-scene"><Block className="site-skeleton-figure" /></div></div>
-    <Block width="15%" /><article className="blog-feature"><div className="article-number"><Block className="site-skeleton-art" /></div><div className="blog-feature-copy"><Block width="40%" /><Block className="site-skeleton-subtitle" /><Copy /><Actions /></div></article>
-  </div></section>;
+  return <section className="hybrid-view hybrid-a selected-blog"><div className="page-shell"><IntroSkeleton art /><Block width="15%" /><article className="blog-feature"><div className="article-number"><Block className="site-skeleton-art" /></div><div className="blog-feature-copy"><Block width="40%" /><Block className="site-skeleton-subtitle" /><Copy /><Actions /></div></article></div></section>;
 }
 
 export function BlogArticleSkeleton() {
@@ -82,7 +73,7 @@ function EcosystemSkeleton() {
 }
 
 function AppsSkeleton() {
-  return <section className="site-container apps-page"><p className="site-kicker"><Block width="20%" /></p><Heading lines={1} /><Copy lines={2} /><Actions /><div className="wallpaper-preview"><Block className="site-skeleton-art" /></div></section>;
+  return <section className="site-container apps-page"><IntroSkeleton /><article className="apps-featured"><div className="apps-featured-image"><Block className="site-skeleton-art" /></div><div className="apps-featured-copy"><Block className="site-skeleton-subtitle" /><Copy lines={4} /><Actions /></div></article></section>;
 }
 
 const skeletons = { home: HomeSkeleton, playground: PlaygroundSkeleton, apps: AppsSkeleton, me: MeSkeleton, discord: DiscordSkeleton, blog: BlogSkeleton, article: BlogArticleSkeleton, chat: ChatSkeleton, ecosystem: EcosystemSkeleton };

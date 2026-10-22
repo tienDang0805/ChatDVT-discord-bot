@@ -33,6 +33,7 @@ const FlappyBirdActivity = lazy(() => import('./features/public/flappy-bird/page
 const SurvivorArena = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArena').then(m => ({ default: m.SurvivorArena })));
 const SurvivorArenaActivity = lazy(() => import('./features/public/survivor-arena/pages/SurvivorArenaActivity').then(m => ({ default: m.SurvivorArenaActivity })));
 const MonopolyGame = lazy(() => import('./features/public/monopoly/pages/MonopolyGame').then(m => ({ default: m.MonopolyGame })));
+const AramMayhem = lazy(() => import('./features/public/aram-mayhem/pages/AramMayhem').then(m => ({ default: m.AramMayhem })));
 const DiscordActivityHub = lazy(() => import('./features/public/discord-activity/pages/DiscordActivityHub').then(m => ({ default: m.DiscordActivityHub })));
 const NumerologyPage = lazy(() => import('./features/public/numerology/pages/NumerologyPage').then(m => ({ default: m.NumerologyPage })));
 const GenderQuizPage = lazy(() => import('./features/public/gender-quiz/pages/GenderQuizPage').then(m => ({ default: m.GenderQuizPage })));
@@ -178,6 +179,7 @@ function App({ initialPage }: { initialPage?: { pathname: string; Component: Com
             <Route path="/survivor-arena" element={<SurvivorArena />} />
             <Route path="/survivor-arena-activity" element={<SurvivorArenaActivity />} />
             <Route path="/monopoly" element={<MonopolyGame />} />
+            <Route path="/aram-mayhem" element={<AramMayhem />} />
             <Route path="/activity" element={<DiscordActivityHub />} />
             <Route path="/numerology" element={<NumerologyPage />} />
             <Route path="/gender-quiz" element={<GenderQuizPage />} />

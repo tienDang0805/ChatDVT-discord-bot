@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { X, Send, Trash2, Bot, User, ChevronDown, Maximize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -16,7 +17,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { Trans, useTranslation } from 'react-i18next';
 
-export const ChatWidget = () => {
+export const ChatWidget = ({ guide = false, renderMascot }: { guide?: boolean; renderMascot?: (action: 'wave' | 'idle' | 'talk') => ReactNode }) => {
   const location = useLocation();
   const { locale, pathFor } = useLanguage();
   const { t } = useTranslation('chat');
@@ -30,16 +31,25 @@ export const ChatWidget = () => {
     ));
 
   const [isOpen, setIsOpen] = useState(false);
+  const [guideAction, setGuideAction] = useState<'wave' | 'idle' | 'talk'>('wave');
   const [messages, setMessages] = useState<WebChatMessage[]>(() => loadWebChatHistory(locale));
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
-  const botInfo = useBotInfo();
+  const botInfo = useBotInfo(!guide);
   const [showScrollBtn, setShowScrollBtn] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const guidePanel = useRef<HTMLElement>(null);
   const isAtBottomRef = useRef(true);
+  const requestVersion = useRef(0);
+  const sending = useRef(false);
+  const opener = useRef<HTMLElement | null>(null);
+  const closeGuide = useCallback(() => {
+    setIsOpen(false);
+    opener.current?.focus({ preventScroll: true });
+  }, []);
 
   useEffect(() => {
     const syncHistory = (event: Event) => {
@@ -51,8 +61,12 @@ export const ChatWidget = () => {
   }, [locale]);
 
   useEffect(() => {
+    requestVersion.current += 1;
+    sending.current = false;
+    setIsLoading(false);
     setMessages(loadWebChatHistory(locale));
     setInput('');
+    return () => { requestVersion.current += 1; };
   }, [locale]);
 
   const scrollToBottom = useCallback(() => {
@@ -78,15 +92,21 @@ export const ChatWidget = () => {
   useEffect(() => {
     if (isOpen) {
       setHasNewMessage(false);
-      setTimeout(() => {
-        inputRef.current?.focus();
+      const timer = setTimeout(() => {
+        if (guide) guidePanel.current?.focus({ preventScroll: true });
+        else inputRef.current?.focus();
         scrollToBottom();
       }, 150);
+      return () => clearTimeout(timer);
     }
-  }, [isOpen, scrollToBottom]);
+  }, [isOpen, scrollToBottom, guide]);
 
   useEffect(() => {
-    const handleOpenChat = () => setIsOpen(true);
+    const handleOpenChat = () => {
+      opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      setGuideAction('wave');
+      setIsOpen(true);
+    };
     window.addEventListener('open-chat-widget', handleOpenChat);
     return () => window.removeEventListener('open-chat-widget', handleOpenChat);
   }, []);
@@ -94,11 +114,11 @@ export const ChatWidget = () => {
   useEffect(() => {
     if (!isOpen) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsOpen(false);
+      if (e.key === 'Escape') closeGuide();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [isOpen]);
+  }, [isOpen, closeGuide]);
 
   const resetTextarea = useCallback(() => {
     if (inputRef.current) {
@@ -110,7 +130,9 @@ export const ChatWidget = () => {
 
   const sendMessage = useCallback(async () => {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || sending.current) return;
+    sending.current = true;
+    const version = ++requestVersion.current;
 
     const userMsg: WebChatMessage = {
       id: `u_${Date.now()}`,
@@ -125,6 +147,7 @@ export const ChatWidget = () => {
     setInput('');
     resetTextarea();
     setIsLoading(true);
+    setGuideAction('idle');
 
     try {
       const historyForApi = updatedMessages
@@ -141,6 +164,7 @@ export const ChatWidget = () => {
         locale,
         geminiApiKey: getStoredGeminiKey(),
       });
+      if (version !== requestVersion.current) return;
 
       const botMsg: WebChatMessage = {
         id: `b_${Date.now()}`,
@@ -152,9 +176,11 @@ export const ChatWidget = () => {
       const finalMessages = [...updatedMessages, botMsg];
       setMessages(finalMessages);
       saveWebChatHistory(finalMessages, locale);
+      setGuideAction('talk');
 
       if (!isOpen) setHasNewMessage(true);
     } catch (err: unknown) {
+      if (version !== requestVersion.current) return;
       const error = err as { response?: { data?: { error?: string } } };
       const errorMsg: WebChatMessage = {
         id: `e_${Date.now()}`,
@@ -166,12 +192,12 @@ export const ChatWidget = () => {
       setMessages(finalMessages);
       saveWebChatHistory(finalMessages, locale);
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) { setIsLoading(false); sending.current = false; }
     }
   }, [input, isLoading, locale, messages, isOpen, resetTextarea, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
+    if (e.key === 'Enter' && !e.shiftKey && !isComposing && !e.nativeEvent.isComposing && e.keyCode !== 229) {
       e.preventDefault();
       sendMessage();
     }
@@ -190,6 +216,22 @@ export const ChatWidget = () => {
   const quickQuestions = [t('prompt1'), t('prompt2'), t('prompt3'), t('prompt4')];
 
   if (isHidden) return null;
+
+  if (guide) return isOpen ? (
+    <aside ref={guidePanel} tabIndex={-1} id="chatdvt-guide" className="chatdvt-companion" role="dialog" aria-modal="false" aria-labelledby="chatdvt-guide-title">
+      <div className="chatdvt-pet-stage"><p className="chatdvt-pet-bubble">{isLoading ? (locale === 'en' ? 'Let me think…' : 'Để mình nghĩ một chút…') : guideAction === 'talk' ? (locale === 'en' ? 'Here’s what I found ↓' : 'Mình trả lời ở dưới nhé ↓') : (locale === 'en' ? 'Hi! Where shall we go?' : 'Chào bạn! Mình đi đâu nhé?')}<span>ChatDVT · {locale === 'en' ? 'your site companion' : 'bạn đồng hành của bạn'}</span></p><div className="chatdvt-pet" key={guideAction}>{renderMascot ? renderMascot(guideAction) : <Bot size={72} />}</div></div>
+      <div className="chatdvt-guide chatdvt-guide--compact">
+      <header className="chatdvt-guide-header"><div><h2 id="chatdvt-guide-title">ChatDVT <span>AI</span></h2><p>{locale === 'en' ? 'Ask me or pick a place below' : 'Hỏi mình, hoặc chọn một nơi bên dưới'}</p></div><Link to={pathFor('/chat')} aria-label={locale === 'en' ? 'Open the full chat' : 'Mở trang chat đầy đủ'}><Maximize2 size={14} /></Link><button type="button" onClick={closeGuide} aria-label={locale === 'en' ? 'Close ChatDVT guide' : 'Đóng hướng dẫn ChatDVT'}><X size={17} /></button></header>
+      <nav className="chatdvt-destinations" aria-label={locale === 'en' ? 'Suggested destinations' : 'Gợi ý khám phá'}><Link to={pathFor('/#contact')} onClick={() => setIsOpen(false)}>Contact <span>↗</span></Link><Link to={pathFor('/playground')} onClick={() => setIsOpen(false)}>Playground <span>↗</span></Link><Link to={pathFor('/me')} onClick={() => setIsOpen(false)}>{locale === 'en' ? 'About Tiến' : 'Về Tiến Đặng'} <span>↗</span></Link></nav>
+      <div ref={scrollRef} className="chatdvt-guide-messages" onScroll={handleScroll} role="log" aria-label={locale === 'en' ? 'Conversation with ChatDVT' : 'Hội thoại với ChatDVT'} aria-live="polite" aria-relevant="additions text">
+        {messages.length === 0 && <div className="chatdvt-guide-welcome"><p>{locale === 'en' ? 'I can introduce Tiến, show you around the projects or help you find your way.' : 'Mình có thể giới thiệu về Tiến, các dự án hoặc giúp bạn tìm đúng nơi cần đến.'}</p><button type="button" className="chatdvt-question" onClick={() => { setInput(locale === 'en' ? 'Introduce Tiến and this website' : 'Giới thiệu Tiến và website này'); inputRef.current?.focus(); }}>{locale === 'en' ? 'Introduce this website' : 'Giới thiệu website này'} <span>↗</span></button></div>}
+        {messages.map(message => <div key={message.id} className={'chatdvt-guide-message is-' + message.role + (message.id.startsWith('e_') ? ' is-error' : '')}><small>{message.role === 'user' ? (locale === 'en' ? 'YOU' : 'BẠN') : 'CHATDVT'}</small><div>{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children} ↗</a> }}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></div>)}
+        {isLoading && <p className="chatdvt-guide-loading" role="status">{locale === 'en' ? 'ChatDVT is thinking…' : 'ChatDVT đang suy nghĩ…'}</p>}
+      </div>
+      <form className="chatdvt-guide-compose" onSubmit={event => { event.preventDefault(); void sendMessage(); }}><div><textarea ref={inputRef} value={input} onChange={event => setInput(event.target.value)} onKeyDown={handleKeyDown} onCompositionStart={() => setIsComposing(true)} onCompositionEnd={() => setIsComposing(false)} placeholder={locale === 'en' ? 'Ask ChatDVT…' : 'Hỏi ChatDVT…'} aria-label={locale === 'en' ? 'Message ChatDVT' : 'Tin nhắn cho ChatDVT'} rows={1} maxLength={4000} /><button type="submit" disabled={isLoading || !input.trim()} aria-label={locale === 'en' ? 'Send message' : 'Gửi tin nhắn'}><Send size={15} /></button></div><p><Link to={pathFor('/chat')}>{locale === 'en' ? 'Full chat & API key settings ↗' : 'Chat đầy đủ & cài đặt API key ↗'}</Link></p></form>
+      </div>
+    </aside>
+  ) : null;
 
   return (
     <>

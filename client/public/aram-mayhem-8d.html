@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARAM Mayhem 8D - Chọn Lõi Hextech (2D Pixel LoL)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #060911;
+      color: #f1f5f9;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+    }
+    .wrap { width: 100%; max-width: 960px; }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #38bdf8, #f59e0b, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hud-pills { display: flex; flex-wrap: wrap; gap: 8px; font-size: 12px; font-weight: 800; }
+    .pill { padding: 5px 10px; border-radius: 8px; background: #1e293b; }
+    .pill.blue { color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); }
+    .pill.gold { color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
+    .pill.red { color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    .btn {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 13px;
+      font-weight: 800;
+      font-size: 12px;
+      transition: transform 0.1s;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn-purple { background: #9333ea; color: #fff; }
+    .btn-orange { background: #f97316; color: #fff; }
+    .btn-slate { background: #1e293b; color: #cbd5e1; border: 1px solid #334155; }
+    .champ-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 700px) { .champ-bar { grid-template-columns: repeat(2, 1fr); } }
+    .champ-card {
+      background: #0f172a;
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .champ-card.active {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.12);
+    }
+    .champ-name { font-size: 13px; font-weight: 900; color: #fff; }
+    .champ-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+    .stage {
+      position: relative;
+      width: 100%;
+      border: 2px solid #334155;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #06101e;
+    }
+    canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; cursor: crosshair; }
+    .banner {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f59e0b;
+      color: #090d16;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      display: none;
+      z-index: 15;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    }
+    .modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(6, 9, 17, 0.92);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 20;
+    }
+    .aug-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 780px;
+      margin-top: 12px;
+    }
+    @media (max-width: 700px) { .aug-grid { grid-template-columns: 1fr; } }
+    .aug-card {
+      background: linear-gradient(180deg, #1e1b4b, #0f172a);
+      border: 2px solid #c084fc;
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.15s;
+    }
+    .aug-card:hover { transform: translateY(-3px); border-color: #facc15; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 10px;
+    }
+    .skill-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .aug-list {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+    .aug-tag {
+      background: rgba(168, 85, 247, 0.18);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #e9d5ff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <div class="title">⚔️ ARAM MAYHEM 8D - CHỌN LÕI HEXTECH</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Click lên cầu hoặc bấm Phím Mũi Tên để chạy • Q W E R tung chiêu • D Cầu Tuyết • F Tốc Biến • T Nháy M7</div>
+      </div>
+      <div class="hud-pills">
+        <div class="pill blue" id="blueStatus">XANH: 2 Trụ • 100%</div>
+        <div class="pill gold" id="kdaStatus">Lv 1 • KDA 0/0/0</div>
+        <div class="pill red" id="redStatus">ĐỎ: 2 Trụ • 100%</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-purple" id="btnRollAug">🎲 Bốc Lõi Mayhem</button>
+        <button class="btn btn-orange" id="btnAuto">🤖 Auto: TẮT</button>
+        <button class="btn btn-slate" id="btnReset">🔄 Chơi Lại</button>
+      </div>
+    </div>
+
+    <div class="champ-bar" id="champBar"></div>
+
+    <div class="stage">
+      <canvas id="gameCanvas" width="920" height="500"></canvas>
+      <div class="banner" id="banner"></div>
+      <div class="modal" id="augModal">
+        <div style="color:#c084fc;font-size:12px;font-weight:900;letter-spacing:1px;">⚡ LÕI CÔNG NGHỆ ARAM MAYHEM ⚡</div>
+        <div style="font-size:22px;font-weight:900;color:#fff;margin-top:4px;">CHỌN 1 LÕI TROLL BỰA ĐỂ ĐỘT BIẾN</div>
+        <div class="aug-grid" id="augGrid"></div>
+        <button class="btn btn-orange" id="btnRerollModal" style="margin-top:14px;">🔀 Đổi Lõi Khác</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="skill-row" id="skillButtons"></div>
+      <div class="skill-row">
+        <button class="btn btn-slate" id="btnSnow">⛄ [D] Cầu Tuyết</button>
+        <button class="btn btn-slate" id="btnFlash">✨ [F] Tốc Biến</button>
+        <button class="btn btn-purple" id="btnM7">👑 [T] Nháy M7</button>
+      </div>
+    </div>
+
+    <div class="aug-list" id="augList"></div>
+  </div>
+
+  <script>
+    const WORLD_W = 2200;
+    const BRIDGE_TOP = 110;
+    const BRIDGE_BOT = 390;
+    const W = 920;
+    const H = 500;
+
+    const CHATS = [
+      'Ez game anh em ơi!',
+      'Jungle diff nặng quá!',
+      '0/10 mới bật nội tại!',
+      'Tắt máy đi ngủ đi!',
+      'Lag 999ms vãi chưởng!',
+      'Gánh còng cả lưng!',
+      'Lõi này ảo ma Canada!',
+      'Pentakill pha ke!'
+    ];
+
+    const CHAMPS = [
+      {
+        id: 'yasuo', name: 'Đấng Yasuo 0/10', sub: 'Chết tăng +25% Dame', color: '#38bdf8', accent: '#0284c7', hp: 980, dmg: 48, speed: 3.6, range: 135,
+        skills: ['Q: Bão Kiếm', 'W: Tường Gió M7', 'E: Lướt Trụ', 'R: Trăn Trối'],
+        sprite: ['..1111..','.111111.','..2332..','.114411.','11144113','..1111.3','..2..2.3','.22..22.']
+      },
+      {
+        id: 'blitz', name: 'Blitz Bàn Tay Vàng', sub: 'Kéo cả thế giới', color: '#facc15', accent: '#ca8a04', hp: 1350, dmg: 42, speed: 3.2, range: 120,
+        skills: ['Q: Kéo Hỏa Tiễn', 'W: Tăng Tốc', 'E: Đấm Móc', 'R: Điện Từ Trường'],
+        sprite: ['..1111..','.131131.','11111111','12111121','11144111','.111111.','.22..22.','222..222']
+      },
+      {
+        id: 'teemo', name: 'Teemo Chúa Quỷ', sub: 'Rải nấm nổ banh cầu', color: '#4ade80', accent: '#16a34a', hp: 900, dmg: 45, speed: 3.9, range: 250,
+        skills: ['Q: Phi Tiêu Mù', 'W: Chạy Lạch Bạch', 'E: Độc 3 Tia', 'R: Nấm Hạt Nhân'],
+        sprite: ['.44..44.','.111111.','.132231.','..2222..','.114411.','.111111.','..2..2..','.22..22.']
+      },
+      {
+        id: 'garen', name: 'Garen Chong Chóng', sub: 'Xoay kiếm bất tử', color: '#60a5fa', accent: '#f59e0b', hp: 1420, dmg: 46, speed: 3.4, range: 125,
+        skills: ['Q: Bổ Củi', 'W: Giáp Vàng', 'E: Chong Chóng', 'R: Công Lý Demacia'],
+        sprite: ['...44...','..2332..','44111144','41144114','.1144113','.1111113','..2222.3','.22..22.']
+      },
+      {
+        id: 'lux', name: 'Lux Spam Laser', sub: 'Cầu vồng xuyên bản đồ', color: '#f472b6', accent: '#ec4899', hp: 880, dmg: 52, speed: 3.5, range: 280,
+        skills: ['Q: Khóa Ánh Sáng', 'W: Khiên Ảo Ma', 'E: Quả Cầu Nổ', 'R: Đại Bác Cầu Vồng'],
+        sprite: ['..4444..','.423324.','.422224.','..1441..','.1144113','.1111113','..2..2..','.22..22.']
+      }
+    ];
+
+    const AUGMENTS = [
+      { id: 'yasuo_010', icon: '💀', name: 'Nội Tại 0/10 Sớm', desc: 'Cộng ngay +10 Chết vào KDA! Đổi lại +120% Sát Thương và bắn 3 tia!' },
+      { id: 'urf_mode', icon: '⚡', name: 'Súng Liên Thanh URF', desc: 'Giảm 60% hồi chiêu toàn bộ kỹ năng và +40% Tốc chạy!' },
+      { id: 'auto_laser', icon: '🌈', name: 'Đại Bác Cầu Vồng Tự Động', desc: 'Mỗi 3.5 giây tự động bắn 1 tia Laser Cầu Vồng xuyên suốt cầu ARAM!' },
+      { id: 'mastery_burn', icon: '👑', name: 'Thông Thạo 7 Tâm Lý Chiến', desc: 'Tự động nháy M7 đốt máu toàn bộ kẻ địch xung quanh!' },
+      { id: 'long_hook', icon: '🪝', name: 'Bàn Tay Dài 3 Mét', desc: 'Mỗi 3 giây tự phóng Bàn Tay Hỏa Tiễn kéo kẻ địch về đấm!' },
+      { id: 'giant_heart', icon: '🗿', name: 'Trái Tim Khổng Nhân 8D', desc: 'Tăng +1000 Máu tối đa và phóng to kích thước tướng khổng lồ!' },
+      { id: 'poop_shroom', icon: '🍄', name: 'Ỉa Nấm Mọi Nơi', desc: 'Mỗi 1.8 giây tự động rải 1 quả Nấm Độc Hạt Nhân dưới chân!' },
+      { id: 'mega_snowball', icon: '⛄', name: 'Cầu Tuyết Siêu To Khổng Lồ', desc: 'Mỗi 3.5 giây tự lăn 1 quả Cầu Tuyết Poro khổng lồ dọc cầu!' },
+      { id: 'blame_jungle', icon: '🤬', name: 'Thánh Đổ Thừa: Tại Rừng!', desc: 'Khi bị đánh sẽ chửi "Jungle diff!" và bắn 8 quả cầu lửa ra xung quanh!' },
+      { id: 'vamp_lord', icon: '🧛', name: 'Hút Máu Ma Cà Rồng', desc: 'Hồi máu bằng 28% sát thương gây ra và tăng +50% tốc đánh!' },
+      { id: 'walking_turret', icon: '🗼', name: 'Pháo Đài Di Động', desc: 'Gắn pháo Trụ Bảo Vệ trên đầu tự động bắn kẻ địch gần nhất!' },
+      { id: 'spin_blade', icon: '🌀', name: 'Vòng Kiếm Chong Chóng', desc: 'Tạo 4 thanh kiếm xoay vĩnh viễn quanh người chém mọi kẻ địch!' }
+    ];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let audioCtx = null;
+
+    function beep(freq, dur, type = 'square', endFreq = null) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + dur);
+        g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        o.stop(audioCtx.currentTime + dur);
+      } catch (e) {}
+    }
+
+    const state = {
+      champ: CHAMPS[0],
+      units: [],
+      projectiles: [],
+      particles: [],
+      floatTexts: [],
+      relics: [],
+      keys: new Set(),
+      targetX: null,
+      targetY: null,
+      cameraX: 0,
+      frame: 0,
+      nextId: 1,
+      augments: new Set(),
+      pickedList: [],
+      level: 1,
+      xp: 0,
+      nextXp: 90,
+      kills: 0,
+      deaths: 0,
+      assists: 0,
+      cds: [0, 0, 0, 0, 0, 0],
+      maxCds: [2.2, 6, 3.2, 9, 4.5, 7],
+      markedId: null,
+      paused: false,
+      auto: false,
+      blameCd: 0
+    };
+
+    function showBanner(msg) {
+      const el = document.getElementById('banner');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { if (el.textContent === msg) el.style.display = 'none'; }, 2200);
+    }
+
+    function renderChampBar() {
+      const bar = document.getElementById('champBar');
+      bar.innerHTML = '';
+      CHAMPS.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'champ-card' + (state.champ.id === c.id ? ' active' : '');
+        div.innerHTML = `<div class="champ-name">${c.name}</div><div class="champ-sub">${c.sub}</div>`;
+        div.onclick = () => { state.champ = c; renderChampBar(); initGame(); };
+        bar.appendChild(div);
+      });
+    }
+
+    function renderSkills() {
+      const row = document.getElementById('skillButtons');
+      row.innerHTML = '';
+      state.champ.skills.forEach((sk, idx) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-orange';
+        b.textContent = sk;
+        b.onclick = () => useSkill(idx);
+        row.appendChild(b);
+      });
+    }
+
+    function openAugmentModal() {
+      state.paused = true;
+      const modal = document.getElementById('augModal');
+      const grid = document.getElementById('augGrid');
+      grid.innerHTML = '';
+      const pool = [...AUGMENTS];
+      for (let i = 0; i < 3; i++) {
+        const pick = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+        const card = document.createElement('div');
+        card.className = 'aug-card';
+        card.innerHTML = `<div style="font-size:28px;margin-bottom:6px;">${pick.icon}</div><div style="font-weight:900;font-size:15px;color:#fff;margin-bottom:6px;">${pick.name}</div><div style="font-size:12px;color:#cbd5e1;line-height:1.4;">${pick.desc}</div>`;
+        card.onclick = () => selectAugment(pick);
+        grid.appendChild(card);
+      }
+      modal.style.display = 'flex';
+      beep(523, 0.15, 'triangle', 1046);
+    }
+
+    function selectAugment(aug) {
+      state.augments.add(aug.id);
+      state.pickedList.push(aug);
+      document.getElementById('augModal').style.display = 'none';
+      state.paused = false;
+      const p = state.units.find(u => u.kind === 'player');
+      if (p) {
+        if (aug.id === 'yasuo_010') { state.deaths += 10; p.dmg = Math.round(p.dmg * 2.2); }
+        if (aug.id === 'urf_mode') { p.speed += 1.4; }
+        if (aug.id === 'giant_heart') { p.maxHp += 1000; p.hp = p.maxHp; p.scale = Math.min(2.2, p.scale + 0.55); p.radius += 6; }
+        if (aug.id === 'vamp_lord') { p.maxAtkCd = Math.max(10, Math.floor(p.maxAtkCd * 0.65)); }
+      }
+      const listEl = document.getElementById('augList');
+      listEl.innerHTML = state.pickedList.map(a => `<span class="aug-tag">${a.icon} ${a.name}</span>`).join('');
+      showBanner('ĐÃ CHỌN LÕI: ' + aug.name.toUpperCase());
+      beep(659, 0.2, 'sine', 1318);
+    }
+
+    function initGame() {
+      const c = state.champ;
+      state.units = [];
+      state.projectiles = [];
+      state.particles = [];
+      state.floatTexts = [];
+      state.augments = new Set();
+      state.pickedList = [];
+      state.level = 1;
+      state.xp = 0;
+      state.nextXp = 90;
+      state.kills = 0;
+      state.deaths = 0;
+      state.assists = 0;
+      state.frame = 0;
+      document.getElementById('augList').innerHTML = '';
+
+      state.units.push({
+        id: state.nextId++, team: 'blue', kind: 'player', name: c.name, champId: c.id,
+        x: 260, y: 250, radius: 20, hp: c.hp, maxHp: c.hp, dmg: c.dmg, speed: c.speed, range: c.range,
+        atkCd: 0, maxAtkCd: 24, color: c.color, dead: false, respawn: 0, stun: 0, shield: 0, scale: 1, facing: 1,
+        aiCd: 0, m7: 0, chat: 'Vào việc anh em ơi!', chatT: 100
+      });
+
+      state.units.push({
+        id: state.nextId++, team: 'blue', kind: 'nexus', name: 'Nhà Chính Xanh',
+        x: 150, y: 250, radius: 36, hp: 3200, maxHp: 3200, dmg: 0, speed: 0, range: 0,
+        atkCd: 0, maxAtkCd: 60, color: '#0ea5e9', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1.4, facing: 1, aiCd: 0, m7: 0, chat: '', chatT: 0
+      });
+
+      [520, 880].forEach(tx => {
+        state.units.push({
+          id: state.nextId++, team: 'blue', kind: 'turret', name: 'Trụ Xanh',
+          x: tx, y: 250, radius: 26, hp: 1850, maxHp: 1850, dmg: 50, speed: 0, range: 265,
+          atkCd: 0, maxAtkCd: 42, color: '#38bdf8', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1.2, facing: 1, aiCd: 0, m7: 0, chat: '', chatT: 0
+        });
+      });
+
+      state.units.push({
+        id: state.nextId++, team: 'red', kind: 'nexus', name: 'Nhà Chính Đỏ',
+        x: WORLD_W - 150, y: 250, radius: 36, hp: 2900, maxHp: 2900, dmg: 0, speed: 0, range: 0,
+        atkCd: 0, maxAtkCd: 60, color: '#ef4444', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1.4, facing: -1, aiCd: 0, m7: 0, chat: '', chatT: 0
+      });
+
+      [WORLD_W - 880, WORLD_W - 520].forEach(tx => {
+        state.units.push({
+          id: state.nextId++, team: 'red', kind: 'turret', name: 'Trụ Đỏ',
+          x: tx, y: 250, radius: 26, hp: 1700, maxHp: 1700, dmg: 44, speed: 0, range: 260,
+          atkCd: 0, maxAtkCd: 45, color: '#f87171', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1.2, facing: -1, aiCd: 0, m7: 0, chat: '', chatT: 0
+        });
+      });
+
+      ['Yuumi Bấm Bằng Chân', 'Jinx Bắn Chim'].forEach((nm, i) => {
+        const d = CHAMPS[(i + 2) % CHAMPS.length];
+        state.units.push({
+          id: state.nextId++, team: 'blue', kind: 'champ', name: nm, champId: d.id,
+          x: 240, y: 180 + i * 120, radius: 18, hp: 850, maxHp: 850, dmg: 34, speed: 2.8, range: d.range,
+          atkCd: 0, maxAtkCd: 35, color: '#38bdf8', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1, facing: 1, aiCd: 60, m7: 0, chat: '', chatT: 0
+        });
+      });
+
+      ['Master Yi Chặt Chém', 'Zed Múa Bóng Hụt', 'Malphite Không Làm Gì'].forEach((nm, i) => {
+        const d = CHAMPS[(i + 1) % CHAMPS.length];
+        state.units.push({
+          id: state.nextId++, team: 'red', kind: 'champ', name: nm, champId: d.id,
+          x: WORLD_W - 300 - i * 40, y: 175 + i * 70, radius: 19, hp: 820, maxHp: 820, dmg: 32, speed: 2.75, range: d.range,
+          atkCd: 0, maxAtkCd: 38, color: '#f43f5e', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1, facing: -1, aiCd: 70, m7: 0, chat: '', chatT: 0
+        });
+      });
+
+      state.relics = [
+        { x: 740, y: 155, active: true, timer: 0, box: false },
+        { x: 1100, y: 250, active: true, timer: 0, box: true },
+        { x: 1460, y: 345, active: true, timer: 0, box: false }
+      ];
+
+      renderSkills();
+      openAugmentModal();
+    }
+
+    function useSkill(slot) {
+      if (state.paused) return;
+      const p = state.units.find(u => u.kind === 'player');
+      if (!p || p.dead || state.cds[slot] > 0) return;
+      const cdr = state.augments.has('urf_mode') ? 0.4 : 1;
+      const foes = state.units.filter(u => u.team === 'red' && !u.dead);
+      let nearest = null;
+      let best = Infinity;
+      foes.forEach(f => {
+        const d = Math.hypot(f.x - p.x, f.y - p.y);
+        if (d < best) { best = d; nearest = f; }
+      });
+      const ang = nearest ? Math.atan2(nearest.y - p.y, nearest.x - p.x) : (p.facing > 0 ? 0 : Math.PI);
+
+      if (slot === 4) {
+        if (state.markedId) {
+          const t = state.units.find(u => u.id === state.markedId && !u.dead);
+          state.markedId = null;
+          if (t) {
+            p.x = t.x - p.facing * 20;
+            p.y = t.y;
+            t.hp -= p.dmg * 2.2;
+            state.cds[4] = state.maxCds[4] * cdr;
+            beep(520, 0.12, 'sawtooth', 880);
+            return;
+          }
+        }
+        state.projectiles.push({
+          id: state.nextId++, team: 'blue', kind: 'snowball', x: p.x, y: p.y,
+          vx: Math.cos(ang) * 11, vy: Math.sin(ang) * 11, radius: 14, dmg: p.dmg * 1.6,
+          color: '#e0f2fe', life: 65, maxLife: 65, pierce: false, stun: 20, hits: new Set()
+        });
+        state.cds[4] = state.maxCds[4] * cdr;
+        beep(440, 0.12);
+        return;
+      }
+
+      if (slot === 5) {
+        p.x = Math.max(90, Math.min(WORLD_W - 90, p.x + Math.cos(ang) * 185));
+        p.y = Math.max(BRIDGE_TOP + 22, Math.min(BRIDGE_BOT - 22, p.y + Math.sin(ang) * 185));
+        p.m7 = 100;
+        p.chat = 'Tốc biến outplay!';
+        p.chatT = 90;
+        state.cds[5] = state.maxCds[5] * cdr;
+        beep(784, 0.15, 'triangle', 1174);
+        return;
+      }
+
+      state.cds[slot] = state.maxCds[slot] * cdr;
+      beep(440, 0.14, 'sawtooth', 760);
+      const cid = state.champ.id;
+
+      if (slot === 0) {
+        state.projectiles.push({
+          id: state.nextId++, team: 'blue', kind: cid === 'blitz' ? 'hook' : 'tornado',
+          x: p.x, y: p.y, vx: Math.cos(ang) * 10.5, vy: Math.sin(ang) * 10.5,
+          radius: 20, dmg: p.dmg * 2.4, color: p.color, life: 48, maxLife: 48,
+          pierce: cid !== 'blitz', stun: 35, ox: p.x, oy: p.y, hits: new Set()
+        });
+      } else if (slot === 1) {
+        p.shield += 300;
+        p.hp = Math.min(p.maxHp, p.hp + 200);
+        p.m7 = 110;
+        p.chat = CHATS[Math.floor(Math.random() * CHATS.length)];
+        p.chatT = 90;
+      } else if (slot === 2) {
+        if (nearest && best < 360 && (cid === 'yasuo' || cid === 'garen' || cid === 'blitz')) {
+          p.x = nearest.x - p.facing * 22;
+          p.y = nearest.y;
+        }
+        foes.forEach(f => {
+          if (Math.hypot(f.x - p.x, f.y - p.y) < 155) f.hp -= p.dmg * 2.4;
+        });
+      } else if (slot === 3) {
+        p.m7 = 140;
+        p.chat = cid === 'lux' ? 'CẦU VỒNG TỐI THƯỢNG!' : 'ULTI HỦY DIỆT!!';
+        p.chatT = 100;
+        state.projectiles.push({
+          id: state.nextId++, team: 'blue', kind: cid === 'lux' ? 'laser' : 'justice',
+          x: nearest ? nearest.x : p.x + p.facing * 120, y: nearest ? nearest.y : p.y,
+          vx: p.facing, vy: 0, radius: cid === 'lux' ? 40 : 120, dmg: p.dmg * 4.5,
+          color: p.color, life: 28, maxLife: 28, pierce: true, stun: 40, hits: new Set()
+        });
+      }
+    }
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
+      state.keys.add(k);
+      if (k === 'q') useSkill(0);
+      if (k === 'w') useSkill(1);
+      if (k === 'e') useSkill(2);
+      if (k === 'r') useSkill(3);
+      if (k === 'd') useSkill(4);
+      if (k === 'f') useSkill(5);
+      if (k === 't') {
+        const p = state.units.find(u => u.kind === 'player');
+        if (p) { p.m7 = 130; p.chat = CHATS[Math.floor(Math.random() * CHATS.length)]; p.chatT = 100; beep(659, 0.18, 'triangle', 1046); }
+      }
+    });
+    window.addEventListener('keyup', e => state.keys.delete(e.key.toLowerCase()));
+
+    canvas.addEventListener('click', e => {
+      const r = canvas.getBoundingClientRect();
+      state.targetX = ((e.clientX - r.left) * (W / r.width)) + state.cameraX;
+      state.targetY = (e.clientY - r.top) * (H / r.height);
+    });
+
+    document.getElementById('btnRollAug').onclick = openAugmentModal;
+    document.getElementById('btnRerollModal').onclick = openAugmentModal;
+    document.getElementById('btnAuto').onclick = e => {
+      state.auto = !state.auto;
+      e.target.textContent = state.auto ? '🤖 Auto: BẬT' : '🤖 Auto: TẮT';
+    };
+    document.getElementById('btnReset').onclick = initGame;
+    document.getElementById('btnSnow').onclick = () => useSkill(4);
+    document.getElementById('btnFlash').onclick = () => useSkill(5);
+    document.getElementById('btnM7').onclick = () => {
+      const p = state.units.find(u => u.kind === 'player');
+      if (p) { p.m7 = 130; p.chat = CHATS[Math.floor(Math.random() * CHATS.length)]; p.chatT = 100; beep(659, 0.18, 'triangle', 1046); }
+    };
+
+    function drawSprite(matrix, cx, cy, scale, c1, c2, flip) {
+      const s = Math.max(2, Math.round(3.5 * scale));
+      const sx = cx - 4 * s;
+      const sy = cy - 4 * s;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const ch = matrix[r][flip ? 7 - c : c];
+          if (ch === '.') continue;
+          ctx.fillStyle = ch === '1' ? c1 : ch === '2' ? '#fde68a' : ch === '3' ? '#f8fafc' : c2;
+          ctx.fillRect(sx + c * s, sy + r * s, s, s);
+        }
+      }
+    }
+
+    function step() {
+      if (!state.paused) {
+        state.frame++;
+        if (state.blameCd > 0) state.blameCd--;
+        for (let i = 0; i < state.cds.length; i++) {
+          if (state.cds[i] > 0) state.cds[i] = Math.max(0, state.cds[i] - 1 / 60);
+        }
+
+        if (state.frame === 20 || state.frame % 320 === 0) {
+          for (let i = 0; i < 3; i++) {
+            state.units.push({
+              id: state.nextId++, team: 'blue', kind: 'minion', name: 'Lính',
+              x: 220 - i * 30, y: 200 + i * 48, radius: 12, hp: 280, maxHp: 280, dmg: 18, speed: 1.9, range: 85,
+              atkCd: 0, maxAtkCd: 42, color: '#60a5fa', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1, facing: 1, aiCd: 0, m7: 0, chat: '', chatT: 0
+            });
+            state.units.push({
+              id: state.nextId++, team: 'red', kind: 'minion', name: 'Lính',
+              x: WORLD_W - 220 + i * 30, y: 200 + i * 48, radius: 12, hp: 250, maxHp: 250, dmg: 15, speed: 1.85, range: 85,
+              atkCd: 0, maxAtkCd: 44, color: '#fb7185', dead: false, respawn: 0, stun: 0, shield: 0, scale: 1, facing: -1, aiCd: 0, m7: 0, chat: '', chatT: 0
+            });
+          }
+        }
+
+        const p = state.units.find(u => u.kind === 'player');
+        if (p) {
+          if (p.dead) {
+            p.respawn--;
+            if (p.respawn <= 0) { p.dead = false; p.hp = p.maxHp; p.x = 240; p.y = 250; }
+          } else {
+            if (state.augments.has('poop_shroom') && state.frame % 105 === 0) {
+              state.projectiles.push({
+                id: state.nextId++, team: 'blue', kind: 'shroom', x: p.x, y: p.y, vx: 0, vy: 0,
+                radius: 20, dmg: p.dmg * 2.5, color: '#4ade80', life: 420, maxLife: 420, pierce: true, stun: 25, hits: new Set()
+              });
+            }
+            if (state.augments.has('auto_laser') && state.frame % 200 === 0) {
+              state.projectiles.push({
+                id: state.nextId++, team: 'blue', kind: 'laser', x: p.x, y: p.y, vx: p.facing, vy: 0,
+                radius: 36, dmg: p.dmg * 3.2, color: '#f472b6', life: 24, maxLife: 24, pierce: true, stun: 20, hits: new Set()
+              });
+            }
+            if (state.augments.has('mega_snowball') && state.frame % 210 === 0) {
+              state.projectiles.push({
+                id: state.nextId++, team: 'blue', kind: 'snowball', x: p.x, y: p.y, vx: p.facing * 8.5, vy: 0,
+                radius: 36, dmg: p.dmg * 2.8, color: '#e0f2fe', life: 140, maxLife: 140, pierce: true, stun: 25, hits: new Set()
+              });
+            }
+            if (state.augments.has('mastery_burn') && state.frame % 85 === 0) {
+              p.m7 = 65;
+              state.units.forEach(u => {
+                if (u.team === 'red' && !u.dead && Math.hypot(u.x - p.x, u.y - p.y) < 260) u.hp -= p.dmg * 1.3;
+              });
+            }
+            if (state.augments.has('long_hook') && state.frame % 175 === 0) {
+              const t = state.units.find(u => u.team === 'red' && !u.dead && u.kind !== 'turret' && u.kind !== 'nexus' && Math.abs(u.x - p.x) < 500);
+              if (t) {
+                const a = Math.atan2(t.y - p.y, t.x - p.x);
+                state.projectiles.push({
+                  id: state.nextId++, team: 'blue', kind: 'hook', x: p.x, y: p.y, vx: Math.cos(a) * 13, vy: Math.sin(a) * 13,
+                  radius: 17, dmg: p.dmg * 2, color: '#facc15', life: 45, maxLife: 45, pierce: false, stun: 35, ox: p.x, oy: p.y, hits: new Set()
+                });
+              }
+            }
+            if (state.augments.has('spin_blade') && state.frame % 18 === 0) {
+              state.units.forEach(u => {
+                if (u.team === 'red' && !u.dead && Math.hypot(u.x - p.x, u.y - p.y) < 115) u.hp -= p.dmg * 0.65;
+              });
+            }
+
+            let dx = 0, dy = 0;
+            if (state.keys.has('arrowleft')) dx -= 1;
+            if (state.keys.has('arrowright')) dx += 1;
+            if (state.keys.has('arrowup')) dy -= 1;
+            if (state.keys.has('arrowdown')) dy += 1;
+
+            if (dx !== 0 || dy !== 0) {
+              state.targetX = null; state.targetY = null;
+            } else if (state.targetX !== null && state.targetY !== null) {
+              const dist = Math.hypot(state.targetX - p.x, state.targetY - p.y);
+              if (dist > 8) { dx = (state.targetX - p.x) / dist; dy = (state.targetY - p.y) / dist; }
+              else { state.targetX = null; state.targetY = null; }
+            } else if (state.auto) {
+              const red = state.units.filter(u => u.team === 'red' && !u.dead).sort((a,b) => Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y))[0];
+              if (red) {
+                const d = Math.hypot(red.x - p.x, red.y - p.y);
+                if (d > p.range * 0.85) { dx = Math.sign(red.x - p.x); dy = Math.sign(red.y - p.y) * 0.5; }
+                if (d < 340) {
+                  const s = [0,1,2,3].find(k => state.cds[k] <= 0);
+                  if (s !== undefined) useSkill(s);
+                }
+              }
+            }
+
+            if (dx !== 0 || dy !== 0) {
+              const l = Math.hypot(dx, dy) || 1;
+              p.x += (dx / l) * p.speed;
+              p.y += (dy / l) * p.speed;
+              if (dx !== 0) p.facing = dx > 0 ? 1 : -1;
+            }
+            p.x = Math.max(80, Math.min(WORLD_W - 80, p.x));
+            p.y = Math.max(BRIDGE_TOP + 20, Math.min(BRIDGE_BOT - 20, p.y));
+          }
+        }
+
+        state.units.forEach(u => {
+          if (u.chatT > 0) u.chatT--;
+          if (u.m7 > 0) u.m7--;
+          if (u.stun > 0) { u.stun--; return; }
+          if (u.dead) {
+            if (u.kind === 'champ') {
+              u.respawn--;
+              if (u.respawn <= 0) { u.dead = false; u.hp = u.maxHp; u.x = u.team === 'blue' ? 230 : WORLD_W - 230; }
+            }
+            return;
+          }
+          const foes = state.units.filter(f => f.team !== u.team && !f.dead);
+          let target = null, minD = Infinity;
+          foes.forEach(f => { const d = Math.hypot(f.x - u.x, f.y - u.y); if (d < minD) { minD = d; target = f; } });
+
+          if (u.kind !== 'player' && u.kind !== 'turret' && u.kind !== 'nexus' && target) {
+            u.facing = target.x >= u.x ? 1 : -1;
+            if (minD > u.range) {
+              const a = Math.atan2(target.y - u.y, target.x - u.x);
+              u.x += Math.cos(a) * u.speed;
+              u.y = Math.max(BRIDGE_TOP + 22, Math.min(BRIDGE_BOT - 22, u.y + Math.sin(a) * u.speed));
+            }
+          }
+          if (u.atkCd > 0) u.atkCd--;
+          if (target && minD <= u.range + target.radius && u.atkCd <= 0 && u.dmg > 0) {
+            u.atkCd = u.maxAtkCd;
+            const a = Math.atan2(target.y - u.y, target.x - u.x);
+            const shots = (u.kind === 'player' && state.augments.has('yasuo_010')) ? 3 : 1;
+            for (let s = 0; s < shots; s++) {
+              const sp = shots === 1 ? 0 : (s - 1) * 0.18;
+              state.projectiles.push({
+                id: state.nextId++, team: u.team, kind: 'basic', x: u.x, y: u.y,
+                vx: Math.cos(a + sp) * 9.5, vy: Math.sin(a + sp) * 9.5, radius: 6, dmg: u.dmg,
+                color: u.team === 'blue' ? '#38bdf8' : '#f43f5e', life: 38, maxLife: 38, pierce: false, stun: 0, hits: new Set()
+              });
+            }
+          }
+        });
+
+        for (let i = state.projectiles.length - 1; i >= 0; i--) {
+          const pr = state.projectiles[i];
+          if (pr.kind !== 'laser' && pr.kind !== 'justice' && pr.kind !== 'shroom') {
+            pr.x += pr.vx; pr.y += pr.vy;
+          }
+          pr.life--;
+          for (const u of state.units) {
+            if (u.team === pr.team || u.dead || pr.hits.has(u.id)) continue;
+            const hit = pr.kind === 'laser'
+              ? ((pr.vx > 0 ? u.x >= pr.x : u.x <= pr.x) && Math.abs(u.y - pr.y) <= pr.radius + u.radius)
+              : (Math.hypot(u.x - pr.x, u.y - pr.y) <= pr.radius + u.radius);
+            if (hit) {
+              pr.hits.add(u.id);
+              u.hp -= pr.dmg;
+              if (pr.kind === 'hook' && pr.ox !== undefined && u.kind !== 'turret' && u.kind !== 'nexus') {
+                u.x = pr.ox + 35; u.y = pr.oy;
+              }
+              if (pr.kind === 'snowball' && pr.team === 'blue') state.markedId = u.id;
+              if (pr.team === 'blue' && p && !p.dead && state.augments.has('vamp_lord')) {
+                p.hp = Math.min(p.maxHp, p.hp + pr.dmg * 0.28);
+              }
+              if (u.kind === 'player' && state.augments.has('blame_jungle') && state.blameCd <= 0) {
+                state.blameCd = 45;
+                u.chat = 'TẠI RỪNG!!'; u.chatT = 65;
+                for (let k = 0; k < 8; k++) {
+                  const a = (Math.PI * 2 * k) / 8;
+                  state.projectiles.push({
+                    id: state.nextId++, team: 'blue', kind: 'basic', x: u.x, y: u.y,
+                    vx: Math.cos(a) * 8, vy: Math.sin(a) * 8, radius: 10, dmg: u.dmg * 1.4,
+                    color: '#fb923c', life: 35, maxLife: 35, pierce: false, stun: 0, hits: new Set()
+                  });
+                }
+              }
+              if (!pr.pierce || pr.kind === 'shroom') { pr.life = 0; break; }
+            }
+          }
+          if (pr.life <= 0) state.projectiles.splice(i, 1);
+        }
+
+        for (let i = state.units.length - 1; i >= 0; i--) {
+          const u = state.units[i];
+          if (!u.dead && u.hp <= 0) {
+            u.hp = 0; u.dead = true;
+            if (u.kind === 'nexus') {
+              showBanner(u.team === 'red' ? '🏆 CHIẾN THẮNG! NỔ NHÀ CHÍNH ĐỎ!' : '💀 THUA CUỘC!');
+              setTimeout(initGame, 2800);
+              return;
+            } else if (u.kind === 'player') {
+              state.deaths++;
+              u.respawn = state.champ.id === 'yasuo' ? 90 : 180;
+              if (state.champ.id === 'yasuo') u.dmg = Math.round(u.dmg * 1.25);
+            } else if (u.kind === 'champ') {
+              u.respawn = 200;
+              if (u.team === 'red') {
+                state.kills++; state.xp += 65;
+                showBanner('🔥 HẠ GỤC TƯỚNG ĐỊCH! 🔥');
+              }
+            } else {
+              if (u.team === 'red') state.xp += u.kind === 'turret' ? 120 : 22;
+              state.units.splice(i, 1);
+            }
+            if (state.xp >= state.nextXp) {
+              state.xp -= state.nextXp;
+              state.level++;
+              state.nextXp = Math.round(state.nextXp * 1.25);
+              if (state.level % 2 === 1) openAugmentModal();
+            }
+          }
+        }
+
+        if (p && !p.dead) {
+          state.relics.forEach(r => {
+            if (!r.active) { r.timer--; if (r.timer <= 0) r.active = true; }
+            else if (Math.hypot(p.x - r.x, p.y - r.y) < p.radius + 20) {
+              r.active = false; r.timer = 450;
+              p.hp = Math.min(p.maxHp, p.hp + 300);
+              if (r.box) openAugmentModal();
+            }
+          });
+          const targetCam = Math.max(0, Math.min(WORLD_W - W, p.x - W * 0.38));
+          state.cameraX += (targetCam - state.cameraX) * 0.12;
+        }
+
+        if (state.frame % 10 === 0) {
+          const bn = state.units.find(u => u.kind === 'nexus' && u.team === 'blue');
+          const rn = state.units.find(u => u.kind === 'nexus' && u.team === 'red');
+          const bt = state.units.filter(u => u.kind === 'turret' && u.team === 'blue').length;
+          const rt = state.units.filter(u => u.kind === 'turret' && u.team === 'red').length;
+          document.getElementById('blueStatus').textContent = `XANH: ${bt} Trụ • ${bn ? Math.round(bn.hp / bn.maxHp * 100) : 0}%`;
+          document.getElementById('redStatus').textContent = `ĐỎ: ${rt} Trụ • ${rn ? Math.round(rn.hp / rn.maxHp * 100) : 0}%`;
+          document.getElementById('kdaStatus').textContent = `Lv ${state.level} • KDA ${state.kills}/${state.deaths}/${state.assists}`;
+        }
+      }
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#06101e';
+      ctx.fillRect(0, 0, W, H);
+      ctx.save();
+      ctx.translate(-state.cameraX, 0);
+
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(40, BRIDGE_TOP, WORLD_W - 80, BRIDGE_BOT - BRIDGE_TOP);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(40, BRIDGE_TOP, WORLD_W - 80, 14);
+      ctx.fillRect(40, BRIDGE_BOT - 14, WORLD_W - 80, 14);
+
+      state.relics.forEach(r => {
+        if (!r.active) return;
+        ctx.fillStyle = r.box ? '#a855f7' : '#22c55e';
+        ctx.fillRect(r.x - 12, r.y - 12, 24, 24);
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(r.x - 6, r.y - 6, 12, 12);
+      });
+
+      state.projectiles.forEach(pr => {
+        if (pr.kind === 'laser') {
+          ctx.fillStyle = '#ec4899';
+          const lx = pr.vx > 0 ? pr.x : 0;
+          const lw = pr.vx > 0 ? WORLD_W - pr.x : pr.x;
+          ctx.fillRect(lx, pr.y - pr.radius, lw, pr.radius * 2);
+        } else {
+          ctx.fillStyle = pr.color;
+          ctx.fillRect(pr.x - pr.radius, pr.y - pr.radius, pr.radius * 2, pr.radius * 2);
+        }
+      });
+
+      state.units.forEach(u => {
+        if (u.dead) return;
+        if (u.kind === 'nexus') {
+          ctx.fillStyle = u.team === 'blue' ? '#0284c7' : '#dc2626';
+          ctx.fillRect(u.x - 32, u.y - 32, 64, 64);
+        } else if (u.kind === 'turret') {
+          ctx.fillStyle = u.color;
+          ctx.fillRect(u.x - 18, u.y - 28, 36, 52);
+        } else if (u.kind === 'minion') {
+          ctx.fillStyle = u.color;
+          ctx.fillRect(u.x - 9, u.y - 9, 18, 18);
+        } else {
+          const d = CHAMPS.find(c => c.id === u.champId) || CHAMPS[0];
+          drawSprite(d.sprite, u.x, u.y, u.scale, u.team === 'blue' ? d.color : '#f43f5e', d.accent, u.facing < 0);
+        }
+        const bw = u.kind === 'minion' ? 24 : 46;
+        const bx = u.x - bw / 2;
+        const by = u.y - u.radius * u.scale - 15;
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(bx - 1, by - 1, bw + 2, 7);
+        ctx.fillStyle = u.kind === 'player' ? '#22c55e' : u.team === 'blue' ? '#38bdf8' : '#ef4444';
+        ctx.fillRect(bx, by, Math.max(0, (u.hp / u.maxHp) * bw), 5);
+
+        if (u.m7 > 0) {
+          ctx.fillStyle = '#facc15';
+          ctx.fillRect(u.x - 12, by - 24, 24, 16);
+          ctx.fillStyle = '#000';
+          ctx.font = 'bold 9px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('M7', u.x, by - 13);
+        }
+        if (u.chatT > 0 && u.chat) {
+          ctx.fillStyle = '#fef08a';
+          ctx.font = 'bold 11px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(u.chat, u.x, by - 28);
+        }
+      });
+
+      ctx.restore();
+      requestAnimationFrame(step);
+    }
+
+    renderChampBar();
+    initGame();
+    requestAnimationFrame(step);
+  </script>
+</body>
+</html>

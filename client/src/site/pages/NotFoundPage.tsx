@@ -7,9 +7,9 @@ import { useLanguage } from '../../shared/i18n/LanguageContext';
 
 export function NotFoundPage() {
   const { t } = useTranslation('site');
-  const { pathFor } = useLanguage();
+  const { locale, pathFor } = useLanguage();
   usePageMeta(t('notFound.title'), {
-    description: 'Trang bạn đang tìm không tồn tại trên devtiendang.blog.',
+    description: locale === 'en' ? 'This page could not be found on devtiendang.blog.' : 'Trang bạn đang tìm không tồn tại trên devtiendang.blog.',
     noIndex: true,
   });
 

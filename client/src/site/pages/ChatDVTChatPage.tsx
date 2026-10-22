@@ -14,7 +14,7 @@ import {
   WEB_CHAT_HISTORY_EVENT,
   type WebChatMessage,
 } from '../../shared/utils/webChat';
-import { Mascot } from '../components/Mascot';
+import { Mascot, useSiteMotion } from '../components/Mascot';
 import { SiteLayout } from '../components/SiteLayout';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { useTranslation } from 'react-i18next';
@@ -25,7 +25,8 @@ function getRequestError(error: unknown, fallback: string) {
   return requestError.response?.data?.error || fallback;
 }
 
-export function ChatDVTChatPage() {
+function ChatContent() {
+  const { enabled } = useSiteMotion();
   const { locale, pathFor } = useLanguage();
   const { t } = useTranslation('chat');
   const quickPrompts = [
@@ -58,14 +59,14 @@ export function ChatDVTChatPage() {
   const botName = botInfo?.globalName || botInfo?.username || 'ChatDVT';
   const botAvatar = botInfo?.avatar || '/images/chibi/chatdvt.jpg';
 
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+  const scrollToBottom = useCallback(() => {
     window.requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({
         top: scrollRef.current.scrollHeight,
-        behavior,
+        behavior: enabled ? 'smooth' : 'auto',
       });
     });
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     inputRef.current?.focus({ preventScroll: true });
@@ -179,7 +180,7 @@ export function ChatDVTChatPage() {
     }
   };
 
-  return <SiteLayout hideFooter>
+  return <>
     <section className="chatdvt-page chatdvt-page--tour hybrid-view hybrid-b selected-chat">
       <div className="chatdvt-main">
         <header className="chatdvt-chat-header"><div className="chatdvt-chat-identity"><img src={botAvatar} alt="" width={36} height={36} /><div><h1>ChatDVT</h1><p>{locale === 'en' ? 'Tiến’s AI chat bot · Web & Discord' : 'AI chat bot của Tiến · Web & Discord'}</p></div></div><div className="chatdvt-toolbar"><button type="button" className="chatdvt-history-toggle" ref={historyTrigger} aria-expanded={historyOpen} aria-controls="chat-history" aria-haspopup="dialog" onClick={() => { historyDialog.current?.showModal(); setHistoryOpen(true); }}>{locale === 'en' ? 'History' : 'Lịch sử'} ↗</button><button type="button" className="chatdvt-new-chat" aria-label={t('page.newChat')} onClick={startNewChat} disabled={isLoading}><MessageSquarePlus size={17} /><span>{t('page.newChat')}</span></button></div></header>
@@ -193,7 +194,11 @@ export function ChatDVTChatPage() {
       <aside className="chatdvt-directory" aria-label={locale === 'en' ? 'Related pages' : 'Nội dung liên quan'}><p className="site-kicker">AI CHAT / CHATDVT</p><h2>{locale === 'en' ? <>What would you<br />like to know?</> : <>Bạn muốn<br />biết gì?</>}</h2><Mascot character="chatdvt" size={155} action="tablet-show" /><Link to={pathFor('/playground')}><strong>Playground ↗</strong><span>{locale === 'en' ? 'Tools, games and experiments.' : 'Tool, game và các thử nghiệm.'}</span></Link><Link to={pathFor('/me')}><strong>{locale === 'en' ? 'About Tiến' : 'Về Tiến'} ↗</strong><span>{locale === 'en' ? 'Mobile, native and the work I do.' : 'Công việc, học vấn và side project của mình.'}</span></Link><Link to={pathFor('/discord')}><strong>Discord Bot ↗</strong><span>{locale === 'en' ? 'Meet ChatDVT in Discord.' : 'Gặp ChatDVT trong Discord.'}</span></Link><Link to={pathFor('/blog')}><strong>Blog ↗</strong><span>{locale === 'en' ? 'Notes on mobile development, bots and side projects.' : 'Ghi chép về mobile, bot và side project.'}</span></Link><p className="chatdvt-directory-note">{t('page.privacy')}</p></aside>
       <dialog id="chat-history" ref={historyDialog} className="chatdvt-history" aria-labelledby="chat-history-title" onClick={event => { if (event.target === event.currentTarget) historyDialog.current?.close(); }} onClose={() => { setHistoryOpen(false); historyTrigger.current?.focus({ preventScroll: true }); }}><div className="chatdvt-history-title"><h2 id="chat-history-title">{locale === 'en' ? 'This conversation' : 'Cuộc trò chuyện'}</h2><button type="button" className="site-icon-button" aria-label={locale === 'en' ? 'Close history' : 'Đóng lịch sử'} onClick={() => historyDialog.current?.close()}><X size={20} /></button></div><button type="button" className="chatdvt-new-chat" disabled={isLoading} onClick={() => { if (startNewChat()) historyDialog.current?.close(); }}>{t('page.newChat')}</button><div className="chatdvt-history-list">{messages.length === 0 ? <p>{locale === 'en' ? 'No saved messages yet.' : 'Chưa có tin nhắn được lưu.'}</p> : messages.map(message => <button type="button" key={message.id} onClick={() => { historyDialog.current?.close(); document.getElementById('message-' + message.id)?.scrollIntoView({ block: 'center', behavior: 'auto' }); }}><small>{message.role === 'user' ? t('page.you') : botName}</small><span>{message.content.slice(0, 120)}</span></button>)}</div><p className="chatdvt-history-note">{t('page.privacy')}</p></dialog>
     </section>
-  </SiteLayout>;
+  </>;
+}
+
+export function ChatDVTChatPage() {
+  return <SiteLayout hideFooter><ChatContent /></SiteLayout>;
 }
 
 export default ChatDVTChatPage;
