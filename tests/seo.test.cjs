@@ -18,11 +18,12 @@ function rootContent(html) {
 
 // These assertions inspect the visible React output, not merely metadata or noscript.
 test('public VI/EN pages contain visible content without executing JavaScript', () => {
-  for (const route of ['/', '/me', '/playground', '/discord', '/chat']) {
+  for (const route of ['/', '/me', '/playground', '/apps', '/apps/td-wallpaperengine', '/discord', '/chat', '/blog']) {
     for (const localized of [route, route === '/' ? '/en' : `/en${route}`]) {
       const html = renderPublicHtml(template, localized);
       assert.match(rootContent(html), /<main id="site-main"/);
       assert.match(rootContent(html), /<h1[ >]/);
+      assert.equal((rootContent(html).match(/<h1(?:\s|>)/g) || []).length, 1, `${localized} must expose one main heading`);
       assert.doesNotMatch(rootContent(html), /data-guide=|data-tour-progress|guide-speech|chat-widget-container/);
       assert.match(rootContent(html), /href="\/(en\/)?me"/);
       assert.doesNotMatch(html, /<noscript>|template data-msg|Ối! Có lỗi xảy ra/);
@@ -50,11 +51,15 @@ test('public identity and ChatDVT history remain readable and agree with structu
     const home = renderPublicHtml(template, prefix || '/');
     const about = renderPublicHtml(template, `${prefix}/me`);
     const bot = renderPublicHtml(template, `${prefix}/discord`);
-    for (const fact of ['Đặng Văn Tiến', 'South Telecom', '2023', 'Android Barcode Scanning SDK', 'CameraX', 'React Native', 'Woni Service Robot', 'Vikki Bank', 'ChatDVT', 'Node.js']) {
+    for (const fact of ['Đặng Văn Tiến', 'South Telecom', '2023', 'Multi-barcode &amp; Multi-box SDK', 'Kotlin', 'TensorFlow Lite', 'CameraX', 'React Native', 'Robot App &amp; SDK Integration', 'Android/Java', 'ChatDVT', 'Node.js']) {
       assert.ok(rootContent(about).includes(fact), `Visible profile is missing ${fact}`);
     }
-    assert.match(rootContent(home), /Mobile Software Engineer/);
+    assert.doesNotMatch(rootContent(about), /Woni|Vikki/);
+    assert.match(rootContent(home), /Mobile Developer/);
     assert.match(rootContent(home), /React Native/);
+    for (const fact of ['discord.js', 'Gemini API', 'AWS EC2', 'Antigravity', 'Codex']) {
+      assert.ok(rootContent(home).includes(fact), `Homepage is missing ${fact}`);
+    }
     for (const html of [home, about]) assert.match(html, /name="robots" content="index, follow/);
     assert.match(rootContent(bot), /Đặng Văn Tiến/);
     assert.match(rootContent(bot), /8D/);
@@ -94,7 +99,8 @@ test('ChatDVT has a linked product and history identity while Home remains a per
     assert.equal(schema(home)['@graph'].find(node => node['@type'] === 'WebSite').name, 'Đặng Văn Tiến');
 
     const product = renderPublicHtml(template, `${prefix}/discord`);
-    const introduction = rootContent(product).match(/<p class="lede">([\s\S]*?)<\/p>/)[1];
+    const introduction = rootContent(product).match(/<div class="page-intro-description">([\s\S]*?)<\/div>/)?.[1];
+    assert.ok(introduction, 'The product introduction must remain visible in SSR');
     for (const fact of ['ChatDVT', 'Đặng Văn Tiến', '8D', 'Telegram', 'Discord']) assert.ok(introduction.includes(fact));
     assert.ok(introduction.includes(`href="${prefix}/me"`));
     assert.doesNotMatch(rootContent(product), /class="discord-origin/);
