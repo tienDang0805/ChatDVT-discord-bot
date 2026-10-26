@@ -13,9 +13,10 @@
 .layered-home .lh-section h2 .agentic-tool--codex { color: var(--label-mint); }
 .agentic-tool-divider { color: var(--site-muted); font-weight: 400; }
 .site-root .agentic-section h2 { font-size: clamp(30px, 3.3vw, 46px); }
-.lh-expertise > div:nth-child(1) { --expertise-accent: var(--label-blue); }
-.lh-expertise > div:nth-child(2) { --expertise-accent: var(--label-mint); }
-.lh-expertise > div:nth-child(3) { --expertise-accent: var(--label-amber); }
+.lh-expertise > div:nth-child(1) { --expertise-accent: var(--label-purple); }
+.lh-expertise > div:nth-child(2) { --expertise-accent: var(--label-blue); }
+.lh-expertise > div:nth-child(3) { --expertise-accent: var(--label-mint); }
+.lh-expertise > div:nth-child(4) { --expertise-accent: var(--label-amber); }
 .lh-expertise > div > span, .lh-expertise > div > strong, .lh-expertise > div:hover strong { color: var(--expertise-accent); }
 .lh-work-card--0 { --card-accent: var(--label-mint); }
 .lh-work-card--1 { --card-accent: var(--label-blue); }

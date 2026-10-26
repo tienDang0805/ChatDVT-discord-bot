@@ -27,7 +27,7 @@
 
 /* The technology strip is now a clear summary of the work, with a separate location. */
 .layered-home .lh-baseline { padding-block: 28px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 40px; }
-.lh-baseline .lh-expertise { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 28px; }
+.lh-baseline .lh-expertise { display: grid; grid-template-columns: .85fr 1fr 1.2fr 1fr; gap: 28px; }
 .lh-expertise > div { display: flex; flex-direction: column; gap: 9px; border-right: 1px solid var(--site-line); padding-right: 20px; }
 .lh-expertise > div:last-child { border-right: 0; }
 .lh-expertise > div > span { font: 9px/1.6 var(--layered-mono); color: var(--site-cool); letter-spacing: .055em; }
@@ -153,8 +153,9 @@
   .lh-hero .mobile-stack { padding-top: 43px; }
   .layered-home .stack-insight { min-height: 155px; }
   .layered-home .lh-baseline { grid-template-columns: 1fr; gap: 24px; padding-block: 25px; }
-  .lh-baseline .lh-expertise { grid-template-columns: 1fr 1.2fr 1fr; gap: 9px; }
+  .lh-baseline .lh-expertise { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
   .lh-expertise > div { gap: 8px; padding-right: 8px; }
+  .lh-expertise > div:nth-child(2n) { border-right: 0; padding-right: 0; }
   .lh-expertise strong { font-size: clamp(12px, 3.4vw, 19px); letter-spacing: -.055em; }
   .lh-expertise > div > span { font-size: 7px; letter-spacing: 0; }
   .lh-baseline .lh-location { padding-top: 17px; border-top: 1px solid var(--site-line); width: 100%; }
