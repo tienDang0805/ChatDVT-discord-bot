@@ -1,6 +1,6 @@
 import { usePublicPageData } from '../../shared/contexts/PublicPageData';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { getPublishedBlogPost } from '../../shared/api';
 import { DEFAULT_BLOG_POST } from '../../shared/data/defaultBlogPost';
@@ -61,16 +61,43 @@ export function BlogArticlePage() {
     return <SiteLayout><div className="site-container blog-state"><p className="site-kicker">404</p><h1>{t('blog.notFound')}</h1><Link to={pathFor('/blog')}>{t('blog.back')}</Link></div></SiteLayout>;
   }
 
+  const publishedDate = formatDate(post.publishedAt, locale);
+
   return <SiteLayout>
     <article className="site-container blog-article selected-article">
-      <Link to={pathFor('/blog')} className="blog-back"><ArrowLeft size={15} /> Blog</Link>
       <header className="blog-article__header">
-        <p className="site-kicker">{post.slug === DEFAULT_BLOG_POST.slug ? 'ChatDVT · 01' : t('blog.notes')}</p>
+        <p className="site-kicker blog-article__eyebrow">
+          <Link to={pathFor('/blog')}>BLOG</Link>
+          <span aria-hidden="true">/</span>
+          <span>{post.slug === DEFAULT_BLOG_POST.slug ? 'CHATDVT · 01' : t('blog.notes')}</span>
+        </p>
         <h1>{post.title}</h1>
-        <div className="blog-article__meta"><time dateTime={post.publishedAt || undefined}>{formatDate(post.publishedAt, locale)}</time><span><Clock size={14} /> {t('blog.minuteRead', { count: post.readingMinutes })}</span></div>
+        <div className="blog-article__meta">
+          <Link to={pathFor('/me')} className="blog-article__author">
+            <img src="/images/tien-dang-profile.jpg" alt="Đặng Văn Tiến" width={38} height={38} loading="eager" decoding="async" />
+            <div>
+              <strong>Đặng Văn Tiến</strong>
+              <span>Mobile Developer</span>
+            </div>
+          </Link>
+          <div className="blog-article__stats">
+            {publishedDate && <time dateTime={post.publishedAt || undefined}>{publishedDate}</time>}
+            {publishedDate && <span aria-hidden="true">·</span>}
+            <span><Clock size={13} /> {t('blog.minuteRead', { count: post.readingMinutes })}</span>
+          </div>
+        </div>
       </header>
       <div className="blog-prose" dangerouslySetInnerHTML={{ __html: safeContent }} />
-      <footer className="blog-article__footer"><span>{isChatDvtHistory ? 'ChatDVT · 01' : 'devtiendang.blog'}</span>{isChatDvtHistory && <><Link to={pathFor('/discord')}>{locale === 'en' ? 'Explore ChatDVT' : 'Xem ChatDVT'} ↗</Link><Link to={pathFor('/me')}>Đặng Văn Tiến ↗</Link></>}<Link to={pathFor('/blog')}>{t('blog.more')}</Link></footer>
+      <footer className="blog-article__footer">
+        <span>{isChatDvtHistory ? 'ChatDVT · 01' : 'devtiendang.blog'}</span>
+        <div className="blog-article__footer-links">
+          {isChatDvtHistory && <>
+            <Link to={pathFor('/discord')}>{locale === 'en' ? 'Explore ChatDVT' : 'Xem ChatDVT'} ↗</Link>
+            <Link to={pathFor('/me')}>Đặng Văn Tiến ↗</Link>
+          </>}
+          <Link className="blog-article__more" to={pathFor('/blog')}>{t('blog.more')} ↗</Link>
+        </div>
+      </footer>
     </article>
   </SiteLayout>;
 }

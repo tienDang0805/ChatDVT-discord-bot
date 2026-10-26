@@ -55,7 +55,7 @@ function BlogSkeleton() {
 }
 
 export function BlogArticleSkeleton() {
-  return <article className="site-container blog-article selected-article"><Block width="12%" /><header className="blog-article__header"><p className="site-kicker"><Block width="25%" /></p><Heading /><Block width="40%" /></header><div className="blog-prose site-skeleton-prose"><Copy lines={5} /><Copy lines={4} /><Block className="site-skeleton-subtitle" /><Copy lines={5} /></div></article>;
+  return <article className="site-container blog-article selected-article"><header className="blog-article__header"><p className="site-kicker"><Block width="25%" /></p><Heading /><Block width="40%" /></header><div className="blog-prose site-skeleton-prose"><Copy lines={5} /><Copy lines={4} /><Block className="site-skeleton-subtitle" /><Copy lines={5} /></div></article>;
 }
 
 function ChatSkeleton() {

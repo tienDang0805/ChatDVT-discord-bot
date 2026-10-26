@@ -130,12 +130,16 @@
 .site-root.site-layered .selected-blog .blog-feature-copy > p:not(.eyebrow) { font-size: 15px; line-height: 1.85; color: var(--site-muted); }
 .site-root.site-layered .selected-blog .blog-feature h2 a { transition: color .25s; }
 .site-root.site-layered .selected-blog .blog-feature h2 a:hover { color: var(--page-accent); }
-.site-root.site-layered .blog-article { width: min(800px, calc(100% - 96px)); padding-block: 46px 80px; }
-.site-root.site-layered .blog-article__header { padding-block: 34px; }
-.site-root.site-layered .blog-article__header h1 { font: 600 clamp(32px, 3.4vw, 48px)/1.4 'Be Vietnam Pro', sans-serif; letter-spacing: -.045em; text-wrap: pretty; }
-.site-root.site-layered .blog-article__meta { font: 11px/1.8 var(--layered-mono); }
-.site-root.site-layered .blog-prose :is(pre, img, figure img) { border-radius: 8px; }
-.site-root.site-layered .blog-prose blockquote { background: var(--site-surface); border-color: var(--page-accent); border-radius: 0 8px 8px 0; }
+.site-root.site-layered .blog-article { width: min(760px, calc(100% - 96px)); padding-block: 52px 88px; }
+.site-root.site-layered .blog-article__header { padding-block: 0 32px; }
+.site-root.site-layered .blog-article__header h1 { font: 700 clamp(32px, 3.4vw, 46px)/1.28 'Be Vietnam Pro', sans-serif; letter-spacing: -.04em; text-wrap: pretty; }
+.site-root.site-layered .blog-article__author:hover strong, .site-root.site-layered .blog-article__footer a:hover { color: var(--page-accent); }
+.site-root.site-layered .blog-article__more:hover { border-color: var(--page-accent); }
+.site-root.site-layered .blog-article__author span, .site-root.site-layered .blog-article__stats, .site-root.site-layered .blog-article__footer > span { font-family: var(--layered-mono); }
+.site-root.site-layered .blog-prose :is(pre, img, figure img) { border-radius: 10px; }
+.site-root.site-layered .blog-prose :not(pre) > code { font-family: var(--layered-mono); color: var(--page-accent); background: var(--site-surface-2); border-color: var(--site-line); }
+.site-root.site-layered .blog-prose li::marker { color: var(--page-accent); }
+.site-root.site-layered .blog-prose blockquote { background: var(--site-surface); border-color: var(--page-accent); border-radius: 0 10px 10px 0; }
 .site-root.site-layered .blog-prose a { color: var(--page-accent); }
 .site-root.site-layered .blog-prose :is(h2, h3) { scroll-margin-top: 100px; }
 .site-root.site-layered .blog-prose table { display: block; max-width: 100%; overflow-x: auto; }
