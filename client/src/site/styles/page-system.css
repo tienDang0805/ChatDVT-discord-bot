@@ -101,6 +101,9 @@
 .site-root.site-layered .me-profile .me-tech-column:nth-child(1) { border-color: var(--label-blue); }
 .site-root.site-layered .me-profile .me-tech-column:nth-child(2) { border-color: var(--label-amber); }
 .site-root.site-layered .me-profile .me-tech-column:nth-child(3) { border-color: var(--label-purple); }
+.site-root.site-layered .me-profile .me-edu-card { background: var(--site-surface); border-color: var(--site-line); border-radius: 10px; transition: border-color .3s, transform .4s var(--layered-ease); }
+.site-root.site-layered .me-profile .me-edu-card:hover { border-color: color-mix(in srgb, var(--page-accent), transparent 55%); }
+.site-root.site-layered .me-profile .me-edu-degree { color: var(--page-accent); }
 .site-root.site-layered .me-profile .me-contact p { color: var(--site-muted); }
 .site-root.site-layered .me-profile .me-contact .me-button-secondary { color: var(--site-ink); border-color: var(--site-line); }
 .site-root.site-layered :is(.me-contact, #experience, #discord-proof) { scroll-margin-top: 100px; }

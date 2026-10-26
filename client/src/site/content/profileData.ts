@@ -6,6 +6,24 @@ export const profile = {
   email: 'dvtien0805@gmail.com',
   github: 'https://github.com/tienDang0805',
   linkedin: 'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
+  education: {
+    shortSchool: 'PTIT HCM',
+    school: [
+      'Học viện Công nghệ Bưu chính Viễn thông — Cơ sở TP.HCM (PTIT HCM)',
+      'Posts and Telecommunications Institute of Technology — Ho Chi Minh City Campus (PTIT HCM)',
+    ],
+    degree: [
+      'Kỹ sư ngành Kỹ thuật phần mềm (Software Engineering)',
+      'Bachelor of Engineering in Software Engineering',
+    ],
+    period: '2017 — 2022',
+    location: ['TP. Hồ Chí Minh', 'Ho Chi Minh City'],
+    description: [
+      'Đào tạo chính quy ngành Kỹ thuật phần mềm: nền tảng cấu trúc dữ liệu & giải thuật, lập trình hướng đối tượng, cơ sở dữ liệu, phát triển phần mềm hướng dịch vụ (REST API, Docker, CI/CD) và phát triển ứng dụng Mobile / Web.',
+      'Full-time engineering program in Software Engineering, covering data structures and algorithms, object-oriented programming, databases, service-oriented software development (REST APIs, Docker, CI/CD) and mobile/web application development.',
+    ],
+    tags: ['Software Engineering', 'Mobile & Web', 'REST API', 'Docker & CI/CD'],
+  },
 };
 export const contributions = [
   {

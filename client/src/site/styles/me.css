@@ -65,3 +65,13 @@
 @media(prefers-reduced-motion:reduce){.me-profile *{scroll-behavior:auto;transition:none}}
 @media(max-width:800px){.site-root .me-profile .me-side-heading{flex-direction:row;align-items:center;justify-content:space-between}.site-root .me-profile .me-side-heading>.mascot-actor{width:120px;height:120px}}
 @media(max-width:600px){.site-root .me-profile .me-side-heading{gap:16px}.site-root .me-profile .me-side-heading>.mascot-actor{width:100px;height:100px}}
+
+.site-root .me-profile .me-edu{padding:0 0 64px;scroll-margin-top:100px}
+.site-root .me-profile .me-edu-card{position:relative;background:var(--surface);border:1px solid var(--soft-rule);border-radius:10px;padding:28px 30px;display:flex;flex-direction:column}
+.site-root .me-profile .me-edu-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;font:11px/1.6 var(--layered-mono)}
+.site-root .me-profile .me-edu-badge{color:var(--label-amber,var(--accent));font-weight:700;letter-spacing:.08em}
+.site-root .me-profile .me-edu-period{color:var(--muted)}
+.site-root .me-profile .me-edu-card h3{font-size:22px;letter-spacing:-.035em;line-height:1.4;margin:0 0 6px;color:var(--ink)}
+.site-root .me-profile .me-edu-degree{font-size:15px;font-weight:600;color:var(--accent);margin:0 0 14px;line-height:1.6}
+.site-root .me-profile .me-edu-desc{font-size:15px;line-height:1.85;color:var(--muted);margin:0;max-width:780px}
+@media(max-width:600px){.site-root .me-profile .me-edu{padding-bottom:44px}.site-root .me-profile .me-edu-card{padding:22px}.site-root .me-profile .me-edu-card h3{font-size:19px}}
