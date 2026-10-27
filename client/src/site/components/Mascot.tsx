@@ -67,8 +67,12 @@ export function Mascot({ character, size = 160, action = 'idle', className = '' 
     const el = actor.current, art = sprite.current;
     if (!el || !art) return;
     const grid = meta?.pageMascot.grid || { rows: 3, cols: 3 };
-    let interval: number | undefined, alive = true, playing = false;
+    let interval: number | undefined, gazeFrame = 0, alive = true, playing = false;
+    let lastCol = -1, lastRow = -1;
     function idle(col = Math.floor(grid.cols / 2), row = Math.floor(grid.rows / 2)) {
+      if (el!.dataset.renderState === 'idle' && col === lastCol && row === lastRow) return;
+      lastCol = col;
+      lastRow = row;
       art!.style.backgroundImage = `url('${base + (meta?.pageMascot.directions || 'directions.webp')}')`;
       art!.style.backgroundSize = `${grid.cols * 100}% ${grid.rows * 100}%`;
       art!.style.backgroundPosition = `${col * 100 / (grid.cols - 1)}% ${row * 100 / (grid.rows - 1)}%`;
@@ -96,14 +100,22 @@ export function Mascot({ character, size = 160, action = 'idle', className = '' 
       image.src = base + strip.file;
     }
     const fine = matchMedia('(pointer: fine)');
-    function gaze(event: PointerEvent) {
-      if (!moving || !fine.matches || playing) return;
-      const r = el!.getBoundingClientRect(), dx = event.clientX - r.left - r.width / 2, dy = event.clientY - r.top - r.height / 2;
+    let pointerX = 0, pointerY = 0;
+    function applyGaze() {
+      gazeFrame = 0;
+      if (!alive || !moving || !fine.matches || playing) return;
+      const r = el!.getBoundingClientRect(), dx = pointerX - r.left - r.width / 2, dy = pointerY - r.top - r.height / 2;
       idle(1 + (Math.abs(dx) > r.width * .35 ? Math.sign(dx) : 0), 1 + (Math.abs(dy) > r.height * .35 ? Math.sign(dy) : 0));
     }
-    const center = () => { if (!playing) idle(); };
+    function gaze(event: PointerEvent) {
+      if (!moving || !fine.matches || playing) return;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (!gazeFrame) gazeFrame = window.requestAnimationFrame(applyGaze);
+    }
+    const center = () => { if (gazeFrame) { window.cancelAnimationFrame(gazeFrame); gazeFrame = 0; } if (!playing) idle(); };
     if (moving) { window.addEventListener('pointermove', gaze, { passive: true }); document.addEventListener('pointerleave', center); }
-    return () => { alive = false; window.clearInterval(interval); window.removeEventListener('pointermove', gaze); document.removeEventListener('pointerleave', center); };
+    return () => { alive = false; window.clearInterval(interval); if (gazeFrame) window.cancelAnimationFrame(gazeFrame); window.removeEventListener('pointermove', gaze); document.removeEventListener('pointerleave', center); };
   }, [action, base, enabled, foreground, meta, visible]);
   return <div ref={actor} className={'mascot-actor ' + className} data-character={character} data-render-state="idle" role="img" aria-label={character === 'tien' ? 'Mascot Tiến' : 'Mascot ChatDVT'} style={{ '--size': `${size}px` } as CSSProperties}>
     <span ref={sprite} className="mascot-sprite" style={{ backgroundImage: `url('${base}directions.webp')` }} />

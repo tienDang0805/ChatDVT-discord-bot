@@ -141,9 +141,12 @@ function ChatContent() {
         content: result.response || t('page.noResponse'),
         timestamp: Date.now(),
       };
-      const completedMessages = [...nextMessages, assistantMessage];
-      setMessages(completedMessages);
-      saveWebChatHistory(completedMessages, locale);
+      setMessages(prev => {
+        const base = prev.some(m => m.id === userMessage.id) ? prev : [...prev, userMessage];
+        const completedMessages = [...base, assistantMessage];
+        saveWebChatHistory(completedMessages, locale);
+        return completedMessages;
+      });
     } catch (error: unknown) {
       if (requestVersion.current !== version) return;
       const errorMessage: WebChatMessage = {
@@ -152,9 +155,12 @@ function ChatContent() {
         content: getRequestError(error, t('page.connectionError')),
         timestamp: Date.now(),
       };
-      const completedMessages = [...nextMessages, errorMessage];
-      setMessages(completedMessages);
-      saveWebChatHistory(completedMessages, locale);
+      setMessages(prev => {
+        const base = prev.some(m => m.id === userMessage.id) ? prev : [...prev, userMessage];
+        const completedMessages = [...base, errorMessage];
+        saveWebChatHistory(completedMessages, locale);
+        return completedMessages;
+      });
     } finally {
       if (requestVersion.current === version) {
         setIsLoading(false);

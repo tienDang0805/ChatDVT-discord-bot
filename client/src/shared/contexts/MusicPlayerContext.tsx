@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { createContext, useContext, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import YouTube from 'react-youtube';
 import type { YouTubeProps } from 'react-youtube';
@@ -52,6 +52,15 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
   
   const playerRef = useRef<any>(null);
   const isHandlingEnd = useRef(false);
+  const endTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (endTimeoutRef.current) clearTimeout(endTimeoutRef.current);
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    };
+  }, []);
   
   // To avoid Stale Closures in react-youtube event callbacks
   const stateRefs = useRef({ queue, isShuffling, isLooping, currentSongIndex });
@@ -154,7 +163,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     } else {
       nextSong();
     }
-    setTimeout(() => { isHandlingEnd.current = false; }, 2000);
+    if (endTimeoutRef.current) clearTimeout(endTimeoutRef.current);
+    endTimeoutRef.current = setTimeout(() => { isHandlingEnd.current = false; }, 2000);
   };
 
   useEffect(() => {
@@ -188,10 +198,12 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        const currentTime = player.getCurrentTime();
-        const duration = player.getDuration();
-        setCurrentTime(currentTime || 0);
-        setDuration(duration || 0);
+        const nextTime = player.getCurrentTime() || 0;
+        const nextDuration = player.getDuration() || 0;
+        setCurrentTime(prev => (Math.floor(prev) !== Math.floor(nextTime) ? nextTime : prev));
+        setDuration(prev => (Math.floor(prev) !== Math.floor(nextDuration) ? nextDuration : prev));
+        const currentTime = nextTime;
+        const duration = nextDuration;
         if (duration > 0 && currentTime >= duration - 0.5) {
           handleSongEnd();
         }
@@ -225,7 +237,8 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
 
   const onPlayerError = () => {
     console.error("YouTube Player Error. Skipping to next song...");
-    setTimeout(nextSong, 2000);
+    if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+    errorTimeoutRef.current = setTimeout(nextSong, 2000);
   };
 
   const opts: YouTubeProps['opts'] = {
@@ -238,19 +251,22 @@ export const MusicPlayerProvider = ({ children }: { children: ReactNode }) => {
     },
   };
 
+  const contextValue = useMemo(() => ({
+    secretCode, setSecretCode,
+    queue, setQueue,
+    currentSongIndex, playSong, nextSong, prevSong,
+    isPlaying, togglePlay, currentSong,
+    volume, setVolume,
+    isShuffling, toggleShuffle,
+    isLooping, toggleLoop,
+    currentTime, duration, seekTo
+  }), [
+    secretCode, queue, currentSongIndex, isPlaying, currentSong,
+    volume, isShuffling, isLooping, currentTime, duration
+  ]);
+
   return (
-    <MusicPlayerContext.Provider
-      value={{
-        secretCode, setSecretCode,
-        queue, setQueue,
-        currentSongIndex, playSong, nextSong, prevSong,
-        isPlaying, togglePlay, currentSong,
-        volume, setVolume,
-        isShuffling, toggleShuffle,
-        isLooping, toggleLoop,
-        currentTime, duration, seekTo
-      }}
-    >
+    <MusicPlayerContext.Provider value={contextValue}>
       {children}
       {currentSong && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '1px', height: '1px', opacity: 0, pointerEvents: 'none', zIndex: -999 }}>

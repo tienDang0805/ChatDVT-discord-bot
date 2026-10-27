@@ -55,9 +55,16 @@ export function ScrollLayerBackdrop({ page = 'home', path = '/' }: { page?: stri
       planes.current.forEach((plane, i) => {
         if (!plane) return;
         const distance = i - progress;
+        if (distance < -1) {
+          if (plane.style.opacity !== '0') {
+            plane.style.opacity = '0';
+            plane.dataset.active = 'false';
+          }
+          return;
+        }
         const peel = clamp(-distance), eased = peel * peel * (3 - 2 * peel);
         plane.style.transform = `translate3d(${eased * 660}px,${-eased * 430}px,${-Math.max(0, distance) * 83 + eased * 260}px) rotateZ(${eased * 15}deg) rotateX(${-eased * 9}deg)`;
-        plane.style.opacity = String(distance < -1 ? 0 : (1 - eased) * (i === active ? 1 : .83));
+        plane.style.opacity = String((1 - eased) * (i === active ? 1 : .83));
         plane.dataset.active = String(i === active);
       });
       if (enabled && (Math.abs(target - progress) > .001 || Math.abs(pointerX - x) > .001 || Math.abs(pointerY - y) > .001)) frame = requestAnimationFrame(draw);
