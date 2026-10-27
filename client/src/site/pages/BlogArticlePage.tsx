@@ -31,9 +31,11 @@ export function BlogArticlePage() {
   const [post, setPost] = useState<BlogPost | null>(initialPost === undefined ? fallback : initialPost);
   const [loading, setLoading] = useState(initialPost === undefined);
   const safeContent = useMemo(() => post ? sanitizeBlogHtml(post.content) : '', [post]);
+  const firstImage = useMemo(() => post?.content.match(/<img[^>]+src="((?:https?:\/\/|\/)[^"]+)"/i)?.[1], [post?.content]);
   const isChatDvtHistory = !!post && `/blog/${post.slug}` === CHATDVT_HISTORY_PATH;
   usePageMeta(post?.title || 'Bài viết — Tiến Đặng', {
     description: isChatDvtHistory ? CHATDVT_HISTORY_DESCRIPTION : post?.excerpt || 'Bài viết trên devtiendang.blog.',
+    image: firstImage,
     type: 'article',
     schema: 'article',
     noIndex: !post && !loading,
@@ -43,15 +45,20 @@ export function BlogArticlePage() {
   usePageTracker(`BlogArticle:${slug}`);
 
   useEffect(() => {
+    if (initialPost !== undefined) {
+      setPost(initialPost);
+      setLoading(false);
+      return;
+    }
     let alive = true;
-    setPost(initialPost === undefined ? fallback : initialPost);
+    setPost(fallback);
     setLoading(true);
     getPublishedBlogPost(slug)
       .then(value => { if (alive) setPost(value); })
-      .catch(() => { if (alive && initialPost === undefined) setPost(fallback); })
+      .catch(() => { if (alive) setPost(fallback); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [slug]);
+  }, [slug, initialPost, fallback]);
 
   if (loading && !post) {
     return <SiteLayout><div className="site-skeleton"><p role="status" className="sr-only">{t('blog.loading')}</p><div aria-hidden="true" aria-busy="true"><BlogArticleSkeleton /></div></div></SiteLayout>;

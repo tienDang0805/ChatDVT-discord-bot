@@ -900,6 +900,14 @@ export function createSeoRoutes(): Router {
         path: `/blog/${post.slug}`,
         lastmod: (post.updatedAt || post.publishedAt)?.toISOString().split('T')[0],
       }));
+      const latestBlogDate = blogEntries
+        .map((e) => e.lastmod)
+        .filter((d): d is string => Boolean(d))
+        .sort()
+        .at(-1);
+      if (latestBlogDate && (!ROUTE_META['/blog'].lastmod || latestBlogDate > ROUTE_META['/blog'].lastmod)) {
+        blogEntries.unshift({ path: '/blog', lastmod: latestBlogDate });
+      }
     } catch (error) {
       console.warn('[SEO] Could not load blog posts for sitemap:', error);
     }
@@ -939,14 +947,17 @@ export function createSeoFallbackHandler(clientBuildPath: string) {
           select: {
             title: true,
             excerpt: true,
+            content: true,
             publishedAt: true,
             updatedAt: true,
           },
         });
         if (post) {
+          const firstImage = post.content.match(/<img[^>]+src="((?:https?:\/\/|\/)[^"]+)"/i)?.[1];
           meta = {
             title: normalizePortfolioTitle(post.title),
             description: post.excerpt,
+            image: firstImage ? (/^https?:\/\//i.test(firstImage) ? firstImage : `${SITE_URL}${firstImage}`) : undefined,
             pageType: 'article',
             ogType: 'article',
             publishedTime: post.publishedAt?.toISOString(),

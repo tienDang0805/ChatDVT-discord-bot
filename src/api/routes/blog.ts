@@ -50,17 +50,25 @@ function sanitizeBlogHtml(value: unknown): string {
     if (tag === 'a') {
       const href = readAttribute(attrs, 'href').trim();
       const safeHref = /^(https?:\/\/|mailto:|\/|#)/i.test(href) ? href : '#';
-      return `<a href="${escapeAttribute(safeHref)}" target="_blank" rel="noopener noreferrer">`;
+      const externalAttrs = /^(https?:\/\/|mailto:)/i.test(safeHref)
+        ? ' target="_blank" rel="noopener noreferrer"'
+        : '';
+      return `<a href="${escapeAttribute(safeHref)}"${externalAttrs}>`;
     }
 
     if (tag === 'img') {
       const src = readAttribute(attrs, 'src').trim();
       const alt = readAttribute(attrs, 'alt').trim().slice(0, 240);
+      const width = readAttribute(attrs, 'width').trim();
+      const height = readAttribute(attrs, 'height').trim();
+      const loading = readAttribute(attrs, 'loading').trim().toLowerCase();
       const safeSource = /^(https?:\/\/|\/)/i.test(src)
         || /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(src);
-      return safeSource
-        ? `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}">`
-        : '';
+      if (!safeSource) return '';
+      const widthAttr = /^\d{1,5}$/.test(width) ? ` width="${width}"` : '';
+      const heightAttr = /^\d{1,5}$/.test(height) ? ` height="${height}"` : '';
+      const loadingAttr = loading === 'eager' || loading === 'lazy' ? ` loading="${loading}"` : '';
+      return `<img src="${escapeAttribute(src)}" alt="${escapeAttribute(alt)}"${widthAttr}${heightAttr}${loadingAttr}>`;
     }
 
     return `<${tag}>`;
