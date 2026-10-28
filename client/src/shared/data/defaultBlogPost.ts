@@ -4,6 +4,7 @@ export const DEFAULT_BLOG_POST: BlogPost = {
   id: -1,
   title: 'Vì sao một Mobile Dev lại đi làm bot? — Chuyện về ChatDVT (Phần 1)',
   slug: 'chatdvt-phan-1',
+  category: 'story',
   excerpt: 'ChatDVT không bắt đầu từ một ý tưởng startup hay một project để làm đẹp CV. Nó bắt đầu từ một lần mình dỗi mấy ông đồng nghiệp.',
   status: 'published',
   readingMinutes: 9,

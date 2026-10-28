@@ -13,12 +13,13 @@ import {
   updateBlogPost,
 } from '../../../../shared/api';
 import { DEFAULT_BLOG_POST } from '../../../../shared/data/defaultBlogPost';
-import type { BlogPost, BlogPostInput, BlogPostStatus } from '../../../../shared/types/blog';
+import { BLOG_CATEGORIES, getBlogCategoryMeta, inferBlogCategory, type BlogCategoryId, type BlogPost, type BlogPostInput, type BlogPostStatus } from '../../../../shared/types/blog';
 import { useTranslation } from 'react-i18next';
 
 const EMPTY_POST: BlogPostInput = {
   title: '',
   slug: '',
+  category: 'story',
   excerpt: '',
   content: '<p>Bắt đầu viết ở đây...</p>',
   status: 'draft',
@@ -29,6 +30,7 @@ function toInput(post: BlogPost): BlogPostInput {
   return {
     title: post.title,
     slug: post.slug,
+    category: inferBlogCategory(post),
     excerpt: post.excerpt,
     content: post.content,
     status: post.status,
@@ -218,7 +220,10 @@ export const BlogManager = () => {
           <div className="space-y-2">
             {posts.map((post) => (
               <button key={post.id} type="button" onClick={() => selectPost(post)} className={`w-full rounded-xl border p-3 text-left transition ${selectedId === post.id ? 'border-orange-400 bg-orange-50 dark:bg-orange-500/10' : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60'}`}>
-                <span className={`mb-2 inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${post.status === 'published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{post.status === 'published' ? (isEn ? 'Published' : 'Đã đăng') : (isEn ? 'Draft' : 'Bản nháp')}</span>
+                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                  <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${post.status === 'published' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>{post.status === 'published' ? (isEn ? 'Published' : 'Đã đăng') : (isEn ? 'Draft' : 'Bản nháp')}</span>
+                  <span className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">{getBlogCategoryMeta(post.category, post).label[isEn ? 'en' : 'vi']}</span>
+                </div>
                 <strong className="block text-sm leading-5 text-slate-800 dark:text-slate-100">{post.title}</strong>
                 <small className="mt-1 block truncate text-slate-400">/{post.slug}</small>
               </button>
@@ -234,8 +239,8 @@ export const BlogManager = () => {
             </div>
           )}
 
-          <div className="grid gap-5 lg:grid-cols-2">
-            <label className="block lg:col-span-2">
+          <div className="grid gap-5 lg:grid-cols-3">
+            <label className="block lg:col-span-3">
               <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">{isEn ? 'Title' : 'Tiêu đề'}</span>
               <input value={draft.title} onChange={(event) => updateTitle(event.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-lg font-bold text-slate-900 outline-none transition focus:border-orange-500 dark:border-slate-700 dark:bg-[#0f141c] dark:text-white" placeholder={isEn ? 'Post title' : 'Tên bài viết'} />
             </label>
@@ -247,13 +252,29 @@ export const BlogManager = () => {
               </div>
             </label>
             <label className="block">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">{isEn ? 'Category' : 'Chuyên mục'}</span>
+              <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 focus-within:border-orange-500 dark:border-slate-700 dark:bg-[#0f141c]">
+                <select
+                  value={draft.category || 'story'}
+                  onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value as BlogCategoryId }))}
+                  className="min-w-0 flex-1 bg-transparent py-3 text-sm font-semibold text-slate-800 outline-none dark:bg-[#0f141c] dark:text-slate-100"
+                >
+                  {BLOG_CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label[isEn ? 'en' : 'vi']} ({cat.shortBadge[isEn ? 'en' : 'vi']})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+            <label className="block">
               <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">{isEn ? 'Reading time' : 'Thời gian đọc'}</span>
               <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 px-4 focus-within:border-orange-500 dark:border-slate-700 dark:bg-[#0f141c]">
                 <input type="number" min={1} max={99} value={draft.readingMinutes} onChange={(event) => setDraft((current) => ({ ...current, readingMinutes: Math.max(1, Number(event.target.value) || 1) }))} className="min-w-0 flex-1 bg-transparent py-3 text-sm text-slate-800 outline-none dark:text-slate-100" />
                 <span className="text-sm text-slate-400">{isEn ? 'minutes' : 'phút'}</span>
               </div>
             </label>
-            <label className="block lg:col-span-2">
+            <label className="block lg:col-span-3">
               <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500">{isEn ? 'Excerpt' : 'Mô tả ngắn'}</span>
               <textarea rows={3} maxLength={420} value={draft.excerpt} onChange={(event) => setDraft((current) => ({ ...current, excerpt: event.target.value }))} className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-orange-500 dark:border-slate-700 dark:bg-[#0f141c] dark:text-slate-100" placeholder={isEn ? 'Shown in the post list and used for SEO.' : 'Đoạn này hiện ở trang danh sách và dùng cho SEO.'} />
             </label>

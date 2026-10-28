@@ -3,7 +3,7 @@ import path from 'path';
 import type { RequestHandler } from 'express';
 import { prisma } from '../database/prisma';
 import { injectSeoMeta, type RouteMeta } from './seo';
-import type { BlogPost, BlogPostSummary } from '../shared/blogTypes';
+import { inferBlogCategory, type BlogPost, type BlogPostSummary } from '../shared/blogTypes';
 import type { BlogPost as DatabaseBlogPost } from '@prisma/client';
 
 export const RENDERER_DIRECTORY = path.resolve(__dirname, '../../dist/seo');
@@ -20,7 +20,7 @@ interface Renderer {
 }
 
 function serializePost<T extends Omit<DatabaseBlogPost, 'content'>>(post: T) {
-  return { ...post, status: 'published' as const,
+  return { ...post, category: inferBlogCategory(post), status: 'published' as const,
     publishedAt: post.publishedAt?.toISOString() || null,
     createdAt: post.createdAt.toISOString(), updatedAt: post.updatedAt.toISOString() };
 }
@@ -68,7 +68,7 @@ export function createPublicPageHandler(buildPath: string): RequestHandler {
       if (basePath === '/blog') {
         const posts = await prisma.blogPost.findMany({
           where: { status: 'published' }, orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
-          select: { id: true, title: true, slug: true, excerpt: true, status: true,
+          select: { id: true, title: true, slug: true, category: true, excerpt: true, status: true,
             readingMinutes: true, publishedAt: true, createdAt: true, updatedAt: true },
         });
         const { content: _content, ...defaultSummary } = renderer.DEFAULT_BLOG_POST;

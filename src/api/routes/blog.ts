@@ -1,3 +1,4 @@
+import { inferBlogCategory, isBlogCategoryId } from '../../shared/blogTypes';
 import { Router } from 'express';
 import { prisma } from '../../database/prisma';
 
@@ -88,6 +89,9 @@ function plainTextFromHtml(html: string): string {
 function validatePayload(body: any) {
   const title = String(body.title || '').trim().slice(0, 180);
   const slug = normalizeSlug(body.slug || title);
+  const category = isBlogCategoryId(body.category)
+    ? body.category
+    : inferBlogCategory({ slug, title, category: body.category });
   const excerpt = String(body.excerpt || '').trim().slice(0, 420);
   const content = sanitizeBlogHtml(body.content);
   const status = body.status === 'published' ? 'published' : 'draft';
@@ -105,7 +109,7 @@ function validatePayload(body: any) {
     return { error: 'Nội dung bài viết vượt quá 12 MB. Hãy dùng ảnh nhỏ hơn.' } as const;
   }
 
-  return { data: { title, slug, excerpt, content, status, readingMinutes } } as const;
+  return { data: { title, slug, category, excerpt, content, status, readingMinutes } } as const;
 }
 
 router.get('/blog/posts', async (_req, res) => {
@@ -117,6 +121,7 @@ router.get('/blog/posts', async (_req, res) => {
         id: true,
         title: true,
         slug: true,
+        category: true,
         excerpt: true,
         status: true,
         readingMinutes: true,
@@ -125,7 +130,7 @@ router.get('/blog/posts', async (_req, res) => {
         updatedAt: true,
       },
     });
-    res.json(posts);
+    res.json(posts.map((post) => ({ ...post, category: inferBlogCategory(post) })));
   } catch (error) {
     console.error('[Blog] Failed to list published posts:', error);
     res.status(500).json({ error: 'Không thể tải danh sách bài viết.' });
@@ -138,7 +143,7 @@ router.get('/blog/posts/:slug', async (req, res) => {
       where: { slug: normalizeSlug(req.params.slug), status: 'published' },
     });
     if (!post) return res.status(404).json({ error: 'Không tìm thấy bài viết.' });
-    res.json(post);
+    res.json({ ...post, category: inferBlogCategory(post) });
   } catch (error) {
     console.error('[Blog] Failed to load published post:', error);
     res.status(500).json({ error: 'Không thể tải bài viết.' });
@@ -150,7 +155,7 @@ router.get('/admin/blog-posts', async (_req, res) => {
     const posts = await prisma.blogPost.findMany({
       orderBy: { updatedAt: 'desc' },
     });
-    res.json(posts);
+    res.json(posts.map((post) => ({ ...post, category: inferBlogCategory(post) })));
   } catch (error) {
     console.error('[Blog Admin] Failed to list posts:', error);
     res.status(500).json({ error: 'Không thể tải danh sách bài viết.' });

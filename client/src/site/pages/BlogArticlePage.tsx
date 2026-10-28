@@ -6,7 +6,7 @@ import { getPublishedBlogPost } from '../../shared/api';
 import { DEFAULT_BLOG_POST } from '../../shared/data/defaultBlogPost';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
-import type { BlogPost } from '../../shared/types/blog';
+import { getBlogCategoryMeta, type BlogPost } from '../../shared/types/blog';
 import { sanitizeBlogHtml } from '../../shared/utils/sanitizeBlogHtml';
 import { SiteLayout } from '../components/SiteLayout';
 import { BlogArticleSkeleton } from '../components/SiteLoadingFallback';
@@ -69,6 +69,7 @@ export function BlogArticlePage() {
   }
 
   const publishedDate = formatDate(post.publishedAt, locale);
+  const categoryMeta = getBlogCategoryMeta(post.category, post);
 
   return <SiteLayout>
     <article className="site-container blog-article selected-article">
@@ -76,7 +77,7 @@ export function BlogArticlePage() {
         <p className="site-kicker blog-article__eyebrow">
           <Link to={pathFor('/blog')}>BLOG</Link>
           <span aria-hidden="true">/</span>
-          <span>{post.slug === DEFAULT_BLOG_POST.slug ? 'CHATDVT · 01' : t('blog.notes')}</span>
+          <Link to={pathFor(`/blog?category=${categoryMeta.id}`)}>{post.slug === DEFAULT_BLOG_POST.slug ? `${categoryMeta.shortBadge[locale]} · CHATDVT 01` : categoryMeta.shortBadge[locale]}</Link>
         </p>
         <h1>{post.title}</h1>
         <div className="blog-article__meta">
