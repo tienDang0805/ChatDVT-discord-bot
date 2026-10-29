@@ -1,4 +1,4 @@
-import type { BlogPost } from '../types/blog';
+import type { BlogPost, BlogPostSummary } from '../types/blog';
 
 export const DEFAULT_BLOG_POST: BlogPost = {
   id: -1,
@@ -84,4 +84,57 @@ export const DEFAULT_BLOG_POST: BlogPost = {
     <p>Phần 2 chắc mình sẽ kể tiếp đoạn ChatDVT từ một con Discord bot bắt đầu có thêm web và đống thứ chạy phía sau.</p>
     <p>Còn tiếp.</p>
   `.trim(),
+};
+
+
+export const FALLBACK_BLOG_SUMMARIES: BlogPostSummary[] = [
+  {
+    id: 2,
+    title: 'Giải ngố AI Agent, Code Harness và MCP — Vì sao cùng một model mà chỗ chạy khôn, chỗ chạy “lỏ”?',
+    slug: 'giai-ngo-ai-agent-code-harness-va-mcp',
+    category: 'ai',
+    excerpt: 'Giải thích dễ hiểu về AI Agent, Code Harness và MCP kèm sơ đồ trực quan: vì sao cùng một model AI mà đặt vào app này chạy mượt, qua app kia lại lỏ.',
+    status: 'published',
+    readingMinutes: 8,
+    publishedAt: '2026-10-27T09:00:18.684Z',
+    createdAt: '2026-10-27T09:00:18.684Z',
+    updatedAt: '2026-10-27T09:00:18.684Z',
+  },
+  {
+    id: 1,
+    title: 'Mày mò đem Gemini 4 Argon (High) sang chạy trên OpenAI Codex — Khi hết tiền mua Plus nhưng chê Antigravity “lỏ” (Phần 2)',
+    slug: 'gemini-4-argon-tren-openai-codex-mcp-harness',
+    category: 'ai',
+    excerpt: 'Hướng dẫn ghép Gemini 4 Argon (High) từ Antigravity vào bộ khung MCP + Harness của OpenAI Codex qua CLIProxyAPI kèm System Instructions của Sol 6.1.',
+    status: 'published',
+    readingMinutes: 12,
+    publishedAt: '2026-10-26T08:43:28.452Z',
+    createdAt: '2026-10-26T08:43:28.452Z',
+    updatedAt: '2026-10-26T08:43:28.452Z',
+  },
+  {
+    id: DEFAULT_BLOG_POST.id,
+    title: DEFAULT_BLOG_POST.title,
+    slug: DEFAULT_BLOG_POST.slug,
+    category: DEFAULT_BLOG_POST.category,
+    excerpt: DEFAULT_BLOG_POST.excerpt,
+    status: DEFAULT_BLOG_POST.status,
+    readingMinutes: DEFAULT_BLOG_POST.readingMinutes,
+    publishedAt: DEFAULT_BLOG_POST.publishedAt,
+    createdAt: DEFAULT_BLOG_POST.createdAt,
+    updatedAt: DEFAULT_BLOG_POST.updatedAt,
+  },
+];
+
+export const BLOG_COVER_IMAGES: Record<string, { src: string; badge: string; sub: string }> = {
+  'giai-ngo-ai-agent-code-harness-va-mcp': {
+    src: '/images/blog/ai-agent-5-step-loop.webp',
+    badge: '50FPS ANIMATED DIAGRAM',
+    sub: 'MODEL · HARNESS · MCP LOOP',
+  },
+  'gemini-4-argon-tren-openai-codex-mcp-harness': {
+    src: '/images/blog/codex-gemini-4-argon-architecture.webp',
+    badge: '50FPS ARCHITECTURE',
+    sub: 'CODEX APP -> CLIPROXY :8317 -> ARGON',
+  },
 };

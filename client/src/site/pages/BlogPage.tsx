@@ -2,7 +2,7 @@ import { usePublicPageData } from '../../shared/contexts/PublicPageData';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { getPublishedBlogPosts } from '../../shared/api';
-import { DEFAULT_BLOG_POST } from '../../shared/data/defaultBlogPost';
+import { BLOG_COVER_IMAGES, DEFAULT_BLOG_POST, FALLBACK_BLOG_SUMMARIES } from '../../shared/data/defaultBlogPost';
 import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import {
@@ -41,7 +41,7 @@ export function BlogPage() {
 
   const initialData = usePublicPageData();
   const initialPosts = initialData?.posts;
-  const [posts, setPosts] = useState<BlogPostSummary[]>(initialPosts || [DEFAULT_BLOG_POST]);
+  const [posts, setPosts] = useState<BlogPostSummary[]>(initialPosts || FALLBACK_BLOG_SUMMARIES);
 
   usePageMeta(en ? 'Mobile, bots and side projects — Tiến’s blog' : 'Blog về mobile, bot và side project | Tiến Đặng', {
     description: en
@@ -165,13 +165,16 @@ export function BlogPage() {
           />
 
           <div className="blog-category-toolbar" role="navigation" aria-label={en ? 'Blog categories' : 'Chuyên mục bài viết'}>
-            <div className="blog-category-pills">
+            <div className="blog-category-pills" role="tablist" aria-label={en ? 'Filter by category' : 'Chọn chuyên mục'}>
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeCategory === 'all'}
                 className={`blog-category-pill${activeCategory === 'all' ? ' is-active' : ''}`}
                 aria-pressed={activeCategory === 'all'}
                 onClick={() => selectCategory('all')}
               >
+                <i className="blog-pill-dot" aria-hidden="true" />
                 <span>{en ? 'All topics' : 'Tất cả'}</span>
                 <b>{posts.length}</b>
               </button>
@@ -182,20 +185,29 @@ export function BlogPage() {
                   <button
                     key={cat.id}
                     type="button"
+                    role="tab"
+                    aria-selected={isActive}
                     data-blog-filter={cat.id}
                     className={`blog-category-pill${isActive ? ' is-active' : ''}`}
                     aria-pressed={isActive}
                     onClick={() => selectCategory(cat.id)}
                   >
+                    <i className="blog-pill-dot" aria-hidden="true" />
                     <span>{cat.label[locale]}</span>
                     <b>{count}</b>
                   </button>
                 );
               })}
             </div>
-            <p className="blog-count">
-              {t('blog.posts', { count: selectedCategoryPosts.length })}
-              {en && ' · Articles keep their authored language.'}
+            <p className="blog-count blog-active-indicator" aria-live="polite">
+              <span className="blog-active-indicator__label">
+                {en ? 'Viewing:' : 'Đang xem:'}{' '}
+                <strong>
+                  {selectedCategoryMeta ? selectedCategoryMeta.label[locale] : en ? 'All categories' : 'Tất cả chuyên mục'}
+                </strong>
+              </span>
+              <span aria-hidden="true"> · </span>
+              <span>{t('blog.posts', { count: selectedCategoryPosts.length })}</span>
             </p>
           </div>
 

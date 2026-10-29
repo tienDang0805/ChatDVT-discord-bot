@@ -271,3 +271,30 @@
     width: 100%;
   }
 }
+
+.blog-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .35;
+  transition: opacity .2s, transform .2s, box-shadow .2s;
+}
+.blog-category-pill.is-active .blog-pill-dot {
+  opacity: 1;
+  transform: scale(1.15);
+  box-shadow: 0 0 8px currentColor;
+}
+.blog-active-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--site-line);
+  background: var(--site-surface);
+  font-size: 12.5px;
+}
+.blog-active-indicator__label strong {
+  color: var(--site-cool, var(--site-orange));
+}

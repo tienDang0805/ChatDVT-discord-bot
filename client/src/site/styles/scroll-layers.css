@@ -1,5 +1,5 @@
 /* Five content layers share one scene, peeled continuously by document scroll. */
-.layered-home { position: relative; isolation: isolate; }
+.layered-home { position: relative; }
 .site-root.site-layered { --label-mint: #08776e; --label-blue: #2869a6; --label-purple: #7951a7; --label-amber: #926018; --label-rose: #aa4162; }
 .dark .site-root.site-layered { --label-mint: #86e8da; --label-blue: #85bcf5; --label-purple: #c5a0f0; --label-amber: #e8bd75; --label-rose: #f19cb8; }
 /* Section colours carry through headings, tags and the L0–L4 navigation. */
@@ -33,7 +33,10 @@
 .home-section-rail > a:nth-child(3) { --rail-accent: var(--label-purple); }
 .home-section-rail > a:nth-child(4) { --rail-accent: var(--label-amber); }
 .home-section-rail > a:nth-child(5) { --rail-accent: var(--label-rose); }
-.home-section-rail > a[aria-current=location] .rail-circle { color: var(--rail-accent); border-color: var(--rail-accent); box-shadow: 0 0 22px color-mix(in srgb, var(--rail-accent), transparent 82%); }
+.home-section-rail > a:nth-child(6) { --rail-accent: var(--label-mint); }
+.home-section-rail > a[aria-current=location] .rail-circle { color: var(--rail-accent); border-color: var(--rail-accent); background: color-mix(in srgb, var(--rail-accent), var(--site-bg) 86%); box-shadow: 0 0 22px color-mix(in srgb, var(--rail-accent), transparent 72%); }
+.home-section-rail > a[aria-current=location] .rail-tooltip { opacity: 1; transform: translate(0, -50%); border-color: color-mix(in srgb, var(--rail-accent), transparent 45%); color: var(--site-ink); background: color-mix(in srgb, var(--site-surface), var(--rail-accent) 10%); box-shadow: 0 8px 24px rgb(0 0 0 / .24); }
+.home-section-rail > a[aria-current=location] .rail-status-dot { background: var(--rail-accent); box-shadow: 0 0 8px var(--rail-accent); }
 .lh-description strong { color: var(--site-ink); font-weight: 600; }
 
 /* The RAF probe runs only while open, and publishes at most twice per second. */

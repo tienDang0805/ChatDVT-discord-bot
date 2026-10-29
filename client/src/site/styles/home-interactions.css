@@ -1,8 +1,8 @@
 /* Page navigation is immediate; intentional smooth scrolling is explicit in SiteLayout/Home. */
 html:has(.site-layered) { scroll-behavior: auto; }
 /* The projected object has its own reserved stage. Controls never sit over it. */
-.mobile-stack .stack-perspective { height: 480px; flex-shrink: 0; }
-.mobile-stack .stack-rig { top: 180px; }
+.mobile-stack .stack-perspective { height: 530px; flex-shrink: 0; }
+.mobile-stack .stack-rig { top: 215px; }
 .mobile-stack .stack-controls { margin-top: 50px; }
 .mobile-stack .stack-expand { display: grid; flex-shrink: 0; }
 .is-inspecting .stack-foundation, .is-inspecting .stack-axis { opacity: .15; }

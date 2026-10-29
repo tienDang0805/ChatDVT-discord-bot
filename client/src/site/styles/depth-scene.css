@@ -2,8 +2,8 @@
 .site-root.site-layered { position: relative; isolation: isolate; }
 .site-depth-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; contain: layout paint; --scene-reveal: 1; }
 .scene-atmosphere { position: absolute; inset: 0; background: radial-gradient(ellipse at 85% 45%, color-mix(in srgb, var(--page-accent), transparent 94%), transparent 54%), radial-gradient(ellipse at 85% 90%, color-mix(in srgb, var(--label-purple), transparent 97%), transparent 50%); }
-.scene-perspective { position: absolute; width: 860px; height: 850px; right: max(-180px, calc((100vw - 1640px) / 2)); top: calc(50% - 370px); perspective: 1600px; opacity: calc(var(--scene-reveal) * .53); }
-.dark .scene-perspective { opacity: calc(var(--scene-reveal) * .78); }
+.scene-perspective { position: absolute; width: 860px; height: 850px; right: max(-180px, calc((100vw - 1640px) / 2)); top: calc(50% - 370px); perspective: 1600px; opacity: calc(var(--scene-reveal) * .58); transition: opacity .35s ease-out; }
+.dark .scene-perspective { opacity: calc(var(--scene-reveal) * .84); }
 .scene-float { position: absolute; inset: 0; transform-style: preserve-3d; }
 .scene-camera { position: absolute; top: 180px; left: 150px; width: 550px; height: 345px; transform-style: preserve-3d; transform: rotateX(53deg) rotateY(-9deg) rotateZ(-29deg); }
 .scene-glass { --glass-color: var(--label-mint); position: absolute; inset: 0; border: 1px solid color-mix(in srgb, var(--glass-color), transparent 29%); border-radius: 19px; padding: 21px 24px 16px; color: var(--glass-color); background: linear-gradient(125deg, color-mix(in srgb, var(--glass-color), var(--site-bg) 85%), color-mix(in srgb, var(--glass-color), var(--site-bg) 95%) 58%, color-mix(in srgb, var(--glass-color), transparent 90%)); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--glass-color), transparent 45%), 0 3px 0 color-mix(in srgb, var(--glass-color), transparent 55%), 0 5px 0 color-mix(in srgb, var(--glass-color), transparent 83%), 0 15px 40px -30px var(--glass-color); backface-visibility: hidden; }
@@ -12,7 +12,8 @@
 .scene-glass--2 { --glass-color: var(--label-purple); }
 .scene-glass--3 { --glass-color: var(--label-amber); }
 .scene-glass--4 { --glass-color: var(--label-rose); }
-.scene-glass[data-active=true] { border-color: var(--glass-color); }
+.scene-glass--5 { --glass-color: var(--label-mint); }
+.scene-glass[data-active=true] { border-color: var(--glass-color); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--glass-color), transparent 32%), 0 4px 0 color-mix(in srgb, var(--glass-color), transparent 48%), 0 8px 0 color-mix(in srgb, var(--glass-color), transparent 76%), 0 22px 54px -26px var(--glass-color); }
 .scene-glass-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid color-mix(in srgb, var(--glass-color), transparent 76%); padding: 0 0 15px; font: 10px/1.6 var(--layered-mono); letter-spacing: .08em; }
 .scene-glass-header > span { display: flex; align-items: center; gap: 10px; }
 .scene-glass-header i { width: 6px; height: 6px; border: 1px solid currentColor; border-radius: 2px; }
@@ -38,7 +39,7 @@
 .site-depth-scene--quiet .scene-dust { display: none; }
 .site-root.site-layered :is(.selected-playground, .selected-discord, .selected-blog) { background: transparent; }
 .site-layered #site-main::before { display: none; }
-.site-root.site-layered .site-footer { position: relative; z-index: 1; }
+.site-root.site-layered .site-footer { position: relative; z-index: 0; background: transparent; }
 @media (min-width: 1800px) { .scene-perspective { transform: scale(1.12); transform-origin: 55% 50%; } }
 @media (max-width: 1000px) { .scene-perspective { right: -280px; transform: scale(.9); transform-origin: right center; } .scene-reading-shade { background: linear-gradient(90deg, var(--site-bg) 12%, color-mix(in srgb, var(--site-bg), transparent 17%) 45%, transparent); } }
 @media (max-width: 740px) {

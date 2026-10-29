@@ -6,6 +6,7 @@ export const profile = {
   email: 'dvtien0805@gmail.com',
   github: 'https://github.com/tienDang0805',
   linkedin: 'https://www.linkedin.com/in/%C4%91%E1%BA%B7ng-v%C4%83n-ti%E1%BA%BFn-41623529b/',
+  facebook: 'https://www.facebook.com/dvtien8599',
   education: {
     shortSchool: 'PTIT HCM',
     school: [

@@ -5,7 +5,7 @@
 .site-layered[data-page=apps] { --page-accent: var(--label-amber); }
 .site-layered[data-page=blog] { --page-accent: var(--label-rose); }
 .site-layered[data-page=me] { --page-accent: var(--label-purple); }
-.site-layered #site-main { position: relative; isolation: isolate; }
+.site-layered #site-main { position: relative; }
 .site-layered [data-nav=playground] { --nav-accent: var(--label-blue); }
 .site-layered [data-nav=apps] { --nav-accent: var(--label-amber); }
 .site-layered [data-nav=discord], .site-layered [data-nav=chat] { --nav-accent: var(--label-mint); }
