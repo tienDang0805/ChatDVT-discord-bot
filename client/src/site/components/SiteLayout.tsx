@@ -17,7 +17,7 @@ function SiteBrand() {
 
 function SiteLanguages() {
   const { locale, changeLocale } = useLanguage();
-  return <div className="site-languages" aria-label="Language / Ngôn ngữ">{(['vi','en'] as const).map(value => <button key={value} type="button" aria-pressed={locale === value} onClick={() => changeLocale(value)}>{value.toUpperCase()}</button>)}</div>;
+  return <div className="site-languages" role="tablist" aria-label="Language / Ngôn ngữ">{(['vi','en'] as const).map(value => <button key={value} type="button" role="tab" aria-selected={locale === value} onClick={() => changeLocale(value)}>{value.toUpperCase()}</button>)}</div>;
 }
 
 type SiteLayoutProps = { children: React.ReactNode; hideFooter?: boolean; hideFooterContact?: boolean };
@@ -89,7 +89,6 @@ function SiteFrame({ children, hideFooter = false, hideFooterContact = false }: 
   }, [open]);
 
   return <div className="site-root site-direction-b site-hybrid site-layered" data-page={page} data-motion={enabled ? 'on' : 'off'}>
-    <ScrollLayerBackdrop page={page} path={path} />
     <a href="#site-main" className="site-skip-link">{locale === 'en' ? 'Skip to content' : 'Đến nội dung chính'}</a>
     <header className="site-header">
       <div className="site-container site-header__inner">
@@ -222,6 +221,7 @@ function SiteFrame({ children, hideFooter = false, hideFooterContact = false }: 
         </div>
       </div>
     </footer>}
+    <ScrollLayerBackdrop page={page} path={path} />
   </div>;
 }
 

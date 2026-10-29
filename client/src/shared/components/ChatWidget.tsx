@@ -17,7 +17,7 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { Trans, useTranslation } from 'react-i18next';
 
-export const ChatWidget = ({ guide = false, renderMascot }: { guide?: boolean; renderMascot?: (action: 'wave' | 'idle' | 'talk') => ReactNode }) => {
+export const ChatWidget = ({ guide = false, defaultOpen = false, renderMascot }: { guide?: boolean; defaultOpen?: boolean; renderMascot?: (action: 'wave' | 'idle' | 'talk') => ReactNode }) => {
   const location = useLocation();
   const { locale, pathFor } = useLanguage();
   const { t } = useTranslation('chat');
@@ -30,7 +30,7 @@ export const ChatWidget = ({ guide = false, renderMascot }: { guide?: boolean; r
       document.getElementById('monopoly-game-root') !== null
     ));
 
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [guideAction, setGuideAction] = useState<'wave' | 'idle' | 'talk'>('wave');
   const [messages, setMessages] = useState<WebChatMessage[]>(() => loadWebChatHistory(locale));
   const [input, setInput] = useState('');

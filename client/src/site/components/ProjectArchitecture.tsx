@@ -56,12 +56,12 @@ export function ProjectArchitecture({ kind }: { kind: Kind }) {
   const product = kind === 'chatdvt' ? 'ChatDVT' : 'TD-WallpaperEngine';
   return <div ref={element} className={'project-architecture project-architecture--' + kind} data-running={running}>
     <div className="architecture-top"><span>{kind === 'chatdvt' ? 'CHATDVT / MESSAGE FLOW' : 'TD-WALLPAPERENGINE / PLAYBACK'}</span><button type="button" disabled={!enabled} onClick={() => setPlaying(value => !value)} aria-pressed={!playing} aria-label={(playing ? (en ? 'Pause ' : 'Dừng sơ đồ ') : (en ? 'Play ' : 'Chạy sơ đồ ')) + product}>{playing && enabled ? <Pause size={13} /> : <Play size={13} />}</button></div>
-    <div className="architecture-canvas">
+    <div className="architecture-canvas" role="tablist" aria-label={product + (en ? ' architecture components' : ' thành phần kiến trúc')}>
       <Connections kind={kind} mobile={false} running={running && !compact} /><Connections kind={kind} mobile running={running && compact} />
       <span className="architecture-host-label">{kind === 'chatdvt' ? 'AWS EC2' : 'WINDOWS APP'}</span>
       {nodes.map((node,index) => {
         const Icon = node.icon;
-        return <button type="button" key={node.name[0]} className={'architecture-node architecture-node--' + index} aria-pressed={selected === index} aria-label={(en ? 'Explore ' : 'Xem ') + node.name[en ? 1 : 0]} onClick={() => setSelected(index)}><span className="architecture-node-index">0{index + 1}</span><Icon size={18} strokeWidth={1.4} aria-hidden="true" /><strong>{node.name[en ? 1 : 0]}</strong><small>{node.sub}</small></button>;
+        return <button type="button" role="tab" key={node.name[0]} className={'architecture-node architecture-node--' + index} aria-selected={selected === index} aria-label={(en ? 'Explore ' : 'Xem ') + node.name[en ? 1 : 0]} onClick={() => setSelected(index)}><span className="architecture-node-index">0{index + 1}</span><Icon size={18} strokeWidth={1.4} aria-hidden="true" /><strong>{node.name[en ? 1 : 0]}</strong><small>{node.sub}</small></button>;
       })}
       <div className="architecture-legend"><span><i />{kind === 'chatdvt' ? (en ? 'Request' : 'Gửi yêu cầu') : (en ? 'Media → playback' : 'Media → phát hình nền')}</span>{kind === 'chatdvt' && <span><i />{en ? 'Reply' : 'Trả lời'}</span>}</div>
     </div>

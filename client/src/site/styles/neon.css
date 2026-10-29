@@ -6,7 +6,7 @@
 .site-root .hybrid-b .primary-stage .button.discord-invite{border-color:#a5bad8;color:white}
 .site-root .hybrid-a .home-copy .under-link{border:1px solid #a5bad8;border-radius:999px;padding:12px 20px;text-decoration:none;min-height:52px;display:inline-flex;align-items:center;justify-content:center}
 .site-root .hybrid-a .home-copy .actions{gap:16px}
-.site-root .hybrid-b .filters button[aria-pressed=true]{background:var(--brand-accent);border-color:var(--accent-border);color:var(--accent-ink)}
+.site-root .hybrid-b .filters button[aria-pressed=true], .filters button[aria-selected=true]{background:var(--brand-accent);border-color:var(--accent-border);color:var(--accent-ink)}
 .site-root .hybrid-b .project-product .status,.site-root .hybrid-b .project-product.rich .status,.site-root.site-hybrid .footer-bot-label{background:var(--brand-accent);border-color:var(--accent-border);color:var(--accent-ink)}
 .site-root .hybrid-b .project-product .product-actions>a{color:var(--accent-label)}
 .site-root.site-hybrid .site-nav a.is-active::after{background:var(--accent-border)}

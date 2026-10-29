@@ -1,8 +1,4 @@
 /* Integration of the owner's B + A selection; palette fields deliberately retain their contrast in both themes. */
-@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-latin-400-normal.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-vietnamese-400-normal.woff2') format('woff2');font-weight:400;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+1EA0-1EF9,U+20AB}
-@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-latin-700-normal.woff2') format('woff2');font-weight:700;font-display:swap}
-@font-face{font-family:'Be Vietnam Pro';src:url('/fonts/be-vietnam-pro-vietnamese-700-normal.woff2') format('woff2');font-weight:700;font-display:swap;unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+1EA0-1EF9,U+20AB}
 .site-root.site-hybrid{--site-bg:#fffcf4;--site-surface:#fff9e9;--site-surface-2:#a9d7ed;--site-ink:#20251f;--site-muted:#586153;--site-line:#c7c7b9;--site-orange:#a64010;--site-orange-soft:#fff0da;--site-cool:#164bd4;--site-cool-soft:#dbe8ff;--site-header-height:94px}
 .dark .site-root.site-hybrid{--site-bg:#242821;--site-surface:#30362d;--site-surface-2:#3c4942;--site-ink:#fffcf4;--site-muted:#c2cebe;--site-line:#677160;--site-orange:#ffac61;--site-orange-soft:#493528;--site-cool:#b6d6ff;--site-cool-soft:#35414f}
 .site-hybrid .site-header{position:relative;border-bottom-color:var(--site-ink)}

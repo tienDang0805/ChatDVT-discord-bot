@@ -22,7 +22,7 @@
   --layered-glass: rgb(19 110 99 / .07);
   --layered-glass-line: rgb(33 109 98 / .3);
   --layered-header: rgb(247 248 246 / .87);
-  --layered-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --layered-mono: var(--font-mono, "JetBrains Mono", "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace);
   --layered-ease: cubic-bezier(.16, 1, .3, 1);
   --site-header-height: 76px;
   letter-spacing: -.015em;
@@ -69,7 +69,7 @@
 .site-layered .site-menu-button { display: none; }
 .site-layered .site-languages { border: 0; padding: 0; gap: 0; }
 .site-layered .site-languages button { min-width: 31px; min-height: 36px; border-radius: 4px; font-size: 12px; color: var(--site-muted); background: none; }
-.site-layered .site-languages button[aria-pressed=true] { background: var(--site-surface-2); color: var(--site-ink); }
+.site-layered .site-languages button[aria-pressed=true], .site-languages button[aria-selected=true] { background: var(--site-surface-2); color: var(--site-ink); }
 .site-layered .site-command-trigger { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--site-line); border-radius: 6px; height: 34px; min-width: 49px; padding: 0 9px; background: transparent; color: var(--site-muted); transition: color .2s, border-color .2s; }
 .site-layered .site-command-trigger kbd { font: 12px var(--layered-mono); }
 .site-layered .site-command-trigger:hover { border-color: var(--site-cool); color: var(--site-ink); }
@@ -119,7 +119,7 @@
 .site-root.site-layered .hybrid-b .collection-toolbar { background: var(--site-surface); }
 .site-root.site-layered .hybrid-b .project-product.rich { border-radius: 10px; background: var(--site-surface); }
 .site-root.site-layered .hybrid-b .project-product :is(.status, .requirements) { color: var(--site-muted); }
-.site-root.site-layered .hybrid-b .filters button[aria-pressed=true] { background: var(--site-cool); color: var(--site-bg); border-color: var(--site-cool); }
+.site-root.site-layered .hybrid-b .filters button[aria-pressed=true], .filters button[aria-selected=true] { background: var(--site-cool); color: var(--site-bg); border-color: var(--site-cool); }
 .site-root.site-layered .selected-blog .blog-circle { border: 1px solid var(--site-line); border-radius: 16px; background: var(--site-surface); }
 .site-root.site-layered .hybrid-a h1 em { color: var(--site-cool); }
 .site-root.site-layered .selected-blog .blog-feature { border-color: var(--site-line); }

@@ -1,5 +1,4 @@
 @import '@fontsource/be-vietnam-pro/400.css';
-@import '@fontsource/be-vietnam-pro/500.css';
 @import '@fontsource/be-vietnam-pro/600.css';
 @import '@fontsource/be-vietnam-pro/700.css';
 
@@ -9,6 +8,8 @@
 
 @layer base {
   :root {
+    --font-sans: "Be Vietnam Pro", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --color-background: 250 252 254;
     --color-surface: 255 255 255;
     --color-primary: 37 99 235;
@@ -27,6 +28,7 @@
   }
 
   body {
+    font-family: var(--font-sans);
     @apply bg-background text-foreground antialiased transition-colors duration-300;
   }
 

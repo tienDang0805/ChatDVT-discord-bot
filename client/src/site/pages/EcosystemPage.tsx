@@ -24,7 +24,7 @@ import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { SiteLayout } from '../components/SiteLayout';
 import { collectionItems } from '../content/collection';
 
-const INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=8&integration_type=0&scope=bot';
+const INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1376397644238426173&permissions=277025441856&integration_type=0&scope=bot+applications.commands';
 
 const copy = {
   vi: {

@@ -90,7 +90,7 @@
 .stack-selector { display: flex; border: 1px solid var(--site-line); padding: 4px; border-radius: 7px; background: var(--site-bg); }
 .stack-selector button { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 5px 10px; border-radius: 4px; color: var(--site-muted); font: 12px var(--layered-mono); white-space: nowrap; transition: background .25s, color .25s; }
 .stack-selector button > span { display: inline-block; font-size: 10px; opacity: .65; padding: 1px 5px; border-radius: 3px; background: var(--site-surface-2); color: var(--site-cool); }
-.stack-selector button[aria-pressed=true] { color: var(--site-cool); background: var(--site-cool-soft); }
+.stack-selector button[aria-pressed=true], .stack-selector button[aria-selected=true] { color: var(--site-cool); background: var(--site-cool-soft); }
 .stack-expand { width: 37px; height: 42px; display: grid; place-items: center; color: var(--site-muted); border: 1px solid var(--site-line); border-radius: 6px; background: transparent; }
 .stack-expand:hover { color: var(--site-cool); }
 .layered-home .stack-caption { min-height: 45px; text-align: center; font-size: 12px; line-height: 1.65; color: var(--site-muted); padding: 13px 15px 0; position: relative; z-index: 2; }
@@ -833,8 +833,8 @@
   to { transform: translate3d(84px, 0, 0); }
 }
 .core-rn-code {
-  font: 8.2px/1.25 var(--layered-mono);
-  letter-spacing: -0.02em;
+  font: 7.8px/1.25 var(--layered-mono);
+  letter-spacing: -0.025em;
   color: var(--site-muted);
   white-space: normal;
   overflow-wrap: anywhere;

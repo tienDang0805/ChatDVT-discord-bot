@@ -23,7 +23,7 @@
 .architecture-node > small { font: 7px/1.4 var(--layered-mono); letter-spacing: .015em; white-space: nowrap; }
 .architecture-node > svg { width: 17px; height: 17px; }
 .architecture-node-index { position: absolute; top: 5px; left: 6px; font: 7px var(--layered-mono); opacity: .5; }
-.architecture-node[aria-pressed=true] { color: var(--site-cool); background: var(--site-cool-soft); border-color: var(--site-cool); box-shadow: 0 0 22px -10px var(--site-cool); }
+.architecture-node[aria-pressed=true], .architecture-node[aria-selected=true] { color: var(--site-cool); background: var(--site-cool-soft); border-color: var(--site-cool); box-shadow: 0 0 22px -10px var(--site-cool); }
 .architecture-node:hover { color: var(--site-cool); border-color: var(--site-cool); }
 .architecture-legend { position: absolute; bottom: 8%; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 20px; font: 8px/1.5 var(--layered-mono); color: var(--site-muted); }
 .architecture-legend > span { display: inline-flex; align-items: center; gap: 6px; }

@@ -57,7 +57,7 @@
 .site-root .hybrid-b .play-guide .guide-actions{gap:6px;margin-top:8px}
 .site-root .hybrid-b .play-guide .guide-actions button,.site-root .hybrid-b .play-guide .guide-actions a{padding:7px 11px}
 .site-root .hybrid-b .collection-toolbar{padding-top:22px;padding-bottom:22px;border-color:var(--site-line)}
-.site-root .hybrid-b .filters button[aria-pressed=true]{background:var(--site-cool);border-color:var(--site-cool);color:var(--site-bg)}
+.site-root .hybrid-b .filters button[aria-pressed=true], .filters button[aria-selected=true]{background:var(--site-cool);border-color:var(--site-cool);color:var(--site-bg)}
 .site-root .hybrid-b .collection{padding-top:32px;gap:0 28px}
 .site-root .hybrid-b .project-product .product-top .eyebrow{color:var(--site-cool)}
 .site-root .hybrid-b .project-product.rich{background:var(--site-surface);color:var(--site-ink);--ink:var(--site-ink);--paper:var(--site-bg);border:1px solid var(--site-line);border-radius:20px;padding:28px 32px;min-height:0;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;margin:0 0 26px}

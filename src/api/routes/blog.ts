@@ -1,4 +1,5 @@
 import { inferBlogCategory, isBlogCategoryId } from '../../shared/blogTypes';
+import { loadPublicRenderer } from '../public-renderer';
 import { Router } from 'express';
 import { prisma } from '../../database/prisma';
 
@@ -130,7 +131,11 @@ router.get('/blog/posts', async (_req, res) => {
         updatedAt: true,
       },
     });
-    res.json(posts.map((post) => ({ ...post, category: inferBlogCategory(post) })));
+    const mapped = posts.map((post) => ({ ...post, category: inferBlogCategory(post) }));
+    const defaultPost = loadPublicRenderer().DEFAULT_BLOG_POST;
+    const { content: _content, ...defaultSummary } = defaultPost;
+    const list = mapped.some((post) => post.slug === defaultPost.slug) ? mapped : [...mapped, defaultSummary];
+    res.json(list);
   } catch (error) {
     console.error('[Blog] Failed to list published posts:', error);
     res.status(500).json({ error: 'Không thể tải danh sách bài viết.' });
@@ -139,10 +144,15 @@ router.get('/blog/posts', async (_req, res) => {
 
 router.get('/blog/posts/:slug', async (req, res) => {
   try {
+    const normalized = normalizeSlug(req.params.slug);
     const post = await prisma.blogPost.findFirst({
-      where: { slug: normalizeSlug(req.params.slug), status: 'published' },
+      where: { slug: normalized, status: 'published' },
     });
-    if (!post) return res.status(404).json({ error: 'Không tìm thấy bài viết.' });
+    if (!post) {
+      const defaultPost = loadPublicRenderer().DEFAULT_BLOG_POST;
+      if (normalized === defaultPost.slug) return res.json(defaultPost);
+      return res.status(404).json({ error: 'Không tìm thấy bài viết.' });
+    }
     res.json({ ...post, category: inferBlogCategory(post) });
   } catch (error) {
     console.error('[Blog] Failed to load published post:', error);

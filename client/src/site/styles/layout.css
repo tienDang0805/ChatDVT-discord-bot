@@ -58,7 +58,7 @@
 .site-icon-button:hover { background: var(--site-surface); }
 .site-languages { display: flex; padding: 3px; border: 1px solid var(--site-line); border-radius: 999px; }
 .site-languages button { min-width: 44px; min-height: 44px; font-size: 12px; border-radius: 50%; }
-.site-languages button[aria-pressed="true"] { background: var(--site-ink); color: var(--site-bg); }
+.site-languages button[aria-pressed=true], .site-languages button[aria-selected=true] { background: var(--site-ink); color: var(--site-bg); }
 .site-menu-button { display: none; }
 .site-mobile-nav { position: fixed; inset: 0; z-index: 60; padding: 24px; background: var(--site-bg); overflow-y: auto; }
 .site-mobile-nav__top { display: flex; align-items: center; gap: 12px; }

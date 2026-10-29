@@ -122,7 +122,7 @@ function LayerCoreVisual({ type }: { type: (typeof layers)[number]['type'] }) {
         </div>
         <div className="core-rn-code">
           <span>
-            <i>const</i> bridge = {'{'} engine: <b>'Hermes · JSI'</b>, sync: <b>'realtime'</b> {'}'}
+            <i>const</i> bridge = {'{'} engine: <b>'Hermes · JSI'</b>, sync: <b>'live'</b> {'}'}
           </span>
         </div>
       </div>
@@ -192,7 +192,7 @@ export function MobileStack() {
         <div className="stack-light" aria-hidden="true" />
         <div className="holo-stage-inner">
           {/* Left Conduit Rail: Live fiber pulse + clickable 01-04 nodes */}
-          <div className="holo-conduit" role="group" aria-label={en ? 'Layer nodes' : 'Các nút tầng kiến trúc'}>
+          <div className="holo-conduit" role="tablist" aria-label={en ? 'Layer nodes' : 'Các nút tầng kiến trúc'}>
             <div className="holo-conduit-line" aria-hidden="true">
               <i className="holo-conduit-packet" />
             </div>
@@ -209,8 +209,9 @@ export function MobileStack() {
                     (isSelected ? ' is-active' : '') +
                     (isDimmed ? ' is-dimmed' : '')
                   }
+                  role="tab"
                   aria-label={(en ? 'Select layer ' : 'Chọn tầng ') + `0${index + 1} ${layer.name}`}
-                  aria-pressed={isSelected}
+                  aria-selected={isSelected}
                   onClick={() => handleSelect(index)}
                 >
                   0{index + 1}
@@ -238,7 +239,6 @@ export function MobileStack() {
                     (isDimmed ? ' is-dimmed' : '')
                   }
                   aria-label={(en ? 'Explore ' : 'Khám phá lớp ') + layer.name}
-                  aria-pressed={isSelected}
                   onClick={() => handleSelect(index)}
                 >
                   <span className="plane-edge" aria-hidden="true" />
@@ -268,12 +268,13 @@ export function MobileStack() {
       </div>
 
       <div className="stack-controls">
-        <div className="stack-selector" role="group" aria-label={en ? 'Explore the mobile layers' : 'Khám phá các lớp mobile'}>
+        <div className="stack-selector" role="tablist" aria-label={en ? 'Explore the mobile layers' : 'Khám phá các lớp mobile'}>
           {layers.map((layer, index) => (
             <button
               key={layer.type}
               type="button"
-              aria-pressed={selected === index}
+              role="tab"
+              aria-selected={selected === index}
               onClick={() => handleSelect(index)}
             >
               <span>0{index + 1}</span>

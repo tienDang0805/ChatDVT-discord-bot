@@ -19,7 +19,9 @@ export function ScrollLayerBackdrop({ page = 'home', path = '/' }: { page?: stri
   const root = useRef<HTMLDivElement>(null), camera = useRef<HTMLDivElement>(null);
   const planes = useRef<(HTMLDivElement | null)[]>([]);
   const quiet = page === 'chat' || path.includes('/blog/') || path.includes('cicd-visualizer');
+
   useEffect(() => {
+    if (quiet) return;
     const scene = root.current, rig = camera.current;
     if (!scene || !rig) return;
     let frame = 0, previous = 0, anchors: number[] = [], travel = 1;
@@ -67,8 +69,6 @@ export function ScrollLayerBackdrop({ page = 'home', path = '/' }: { page?: stri
       const active = Math.min(4, Math.floor(progress + 0.001));
       scene.dataset.layer = String(active);
       scene.dataset.progress = progress.toFixed(3);
-      // On home, keep the background 3D cards hidden while the Hero MobileStack 3D rig is in view,
-      // then smoothly reveal them as the user enters section 01 (#work) and keep them alive through footer.
       const heroThreshold = Math.max(240, (anchors[1] || 600) * 0.48);
       const revealSpan = Math.max(220, (anchors[1] || 600) * 0.45);
       const revealValue = home ? clamp((window.scrollY - heroThreshold) / revealSpan) : 1;
@@ -157,7 +157,7 @@ export function ScrollLayerBackdrop({ page = 'home', path = '/' }: { page?: stri
       document.removeEventListener('pointerleave', leave);
       document.removeEventListener('visibilitychange', visibility);
     };
-  }, [enabled, page, path]);
+  }, [enabled, page, path, quiet]);
 
   return (
     <div
@@ -167,53 +167,58 @@ export function ScrollLayerBackdrop({ page = 'home', path = '/' }: { page?: stri
       data-motion={enabled ? 'on' : 'off'}
       data-visible="true"
       aria-hidden="true"
+      role="presentation"
+      {...({ inert: '' } as Record<string, string>)}
     >
       <div className="scene-atmosphere" />
-      <div className="scene-dust">
-        {Array.from({ length: 18 }, (_, i) => (
-          <i
-            key={i}
-            style={{
-              left: `${42 + ((i * 23) % 57)}%`,
-              top: `${8 + ((i * 17) % 83)}%`,
-              animationDelay: `${-i * 1.7}s`,
-              animationDuration: `${13 + (i % 5) * 3}s`,
-            }}
-          />
-        ))}
-      </div>
-      <div className="scene-perspective">
-        <div className="scene-float">
-          <div ref={camera} className="scene-camera">
-            <div className="scene-foundation" />
-            {layers.map((layer, i) => (
-              <div
-                key={layer.id}
-                ref={(el) => {
-                  planes.current[i] = el;
+      {!quiet && (
+        <>
+          <div className="scene-dust">
+            {Array.from({ length: 12 }, (_, i) => (
+              <i
+                key={i}
+                style={{
+                  left: `${42 + ((i * 23) % 57)}%`,
+                  top: `${8 + ((i * 17) % 83)}%`,
+                  animationDelay: `${-i * 1.7}s`,
+                  animationDuration: `${13 + (i % 5) * 3}s`,
                 }}
-                className={'scene-glass scene-glass--' + i}
-                style={{ transform: `translateZ(${-i * 86}px)` }}
-              >
-                <div className="scene-glass-header">
-                  <span>
-                    <i />
-                    {layer.name}
-                  </span>
-                  <small>0{i + 1}</small>
-                </div>
-                <SceneSurface index={i} />
-                <div className="scene-glass-footer">
-                  <span>{layer.foot}</span>
-                  <i />
-                  <i />
-                  <i />
-                </div>
-              </div>
+              />
             ))}
           </div>
-        </div>
-      </div>
+          <div className="scene-perspective">
+            <div className="scene-float">
+              <div ref={camera} className="scene-camera">
+                <div className="scene-foundation" />
+                {layers.map((layer, i) => (
+                  <div
+                    key={layer.id}
+                    ref={(el) => {
+                      planes.current[i] = el;
+                    }}
+                    className={'scene-glass scene-glass--' + i}
+                    style={{ transform: `translateZ(${-i * 86}px)` }}
+                  >
+                    <div className="scene-glass-header">
+                      <span data-scene-label={layer.name}>
+                        <i />
+                      </span>
+                      <small data-scene-index={`0${i + 1}`} />
+                    </div>
+                    <SceneSurface index={i} />
+                    <div className="scene-glass-footer">
+                      <span data-scene-foot={layer.foot} />
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       <div className="scene-reading-shade" />
     </div>
   );

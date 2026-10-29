@@ -10,13 +10,15 @@ function Glyph({ letter, index, count, center, pointerX, pointerY, active }: { l
   const proximity = useSpring(influence, { stiffness: 320, damping: 28, mass: .6 });
   const y = useTransform(proximity, value => -8 * value);
   const scale = useTransform(proximity, value => 1 + .085 * value);
-  return <motion.span className="headline-letter" style={{ y, scale, '--hover-influence': proximity, '--letter-tone': `${index / Math.max(count - 1, 1) * 100}%`, '--letter-color': ['var(--layered-amber)', 'var(--headline-lilac)', 'var(--headline-blue)', 'var(--site-cool)'][Math.floor(index / count * 4)] } as MotionStyle}>{letter === ' ' ? '\u00a0' : letter}</motion.span>;
+  const char = letter === ' ' ? '\u00a0' : letter;
+  return <motion.span className="headline-letter" data-char={char} aria-hidden="true" style={{ y, scale, '--hover-influence': proximity, '--letter-tone': `${index / Math.max(count - 1, 1) * 100}%`, '--letter-color': ['var(--layered-amber)', 'var(--headline-lilac)', 'var(--headline-blue)', 'var(--site-cool)'][Math.floor(index / count * 4)] } as MotionStyle} />;
 }
 
-// The heading keeps a single accessible name; decorative glyphs animate without reflow.
+// The heading exposes one unbroken text node for crawlers/screen readers while decorative glyphs animate via CSS attr(data-char).
 export function AnimatedHeadline({ lines, id, className = 'lh-headline lh-enter' }: { lines: string[]; id: string; className?: string }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const text = lines.join('\n');
+  const fullLabel = lines.join(' ');
   const { enabled } = useSiteMotion();
   const [centers, setCenters] = useState<Point[]>([]);
   const pointerX = useMotionValue(-1000), pointerY = useMotionValue(-1000), active = useMotionValue(0);
@@ -38,7 +40,8 @@ export function AnimatedHeadline({ lines, id, className = 'lh-headline lh-enter'
     const bounds = event.currentTarget.getBoundingClientRect();
     pointerX.set(event.clientX - bounds.left); pointerY.set(event.clientY - bounds.top); active.set(1);
   }
-  return <h1 ref={heading} id={id} className={className} aria-label={lines.join(' ')} onPointerEnter={track} onPointerMove={track} onPointerLeave={() => active.set(0)}>
+  return <h1 ref={heading} id={id} className={className} aria-label={fullLabel} onPointerEnter={track} onPointerMove={track} onPointerLeave={() => active.set(0)}>
+    <span className="sr-only">{fullLabel}</span>
     {lines.map((line, row) => <span key={line} className={'headline-line' + (row === 1 ? ' headline-line--accent' : '')} aria-hidden="true">{Array.from(line.normalize('NFC')).map((letter, index, letters) => <Glyph key={index} letter={letter} index={index} count={letters.length} center={centers[lines.slice(0, row).reduce((sum, previous) => sum + Array.from(previous.normalize('NFC')).length, 0) + index] || { x: 0, y: 0 }} pointerX={pointerX} pointerY={pointerY} active={active} />)}</span>)}
   </h1>;
 }

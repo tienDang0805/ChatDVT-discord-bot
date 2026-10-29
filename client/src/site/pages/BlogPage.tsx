@@ -125,6 +125,7 @@ export function BlogPage() {
             </time>
             <span aria-hidden="true"> · </span>
             <span>{t('blog.minuteRead', { count: post.readingMinutes })}</span>
+            {en && <><span aria-hidden="true"> · </span><span className="blog-lang-badge" title="Article written in Vietnamese">[VI]</span></>}
           </p>
           <h2>
             <Link to={pathFor('/blog/' + post.slug)}>{post.title}</Link>
@@ -171,14 +172,13 @@ export function BlogPage() {
                 role="tab"
                 aria-selected={activeCategory === 'all'}
                 className={`blog-category-pill${activeCategory === 'all' ? ' is-active' : ''}`}
-                aria-pressed={activeCategory === 'all'}
                 onClick={() => selectCategory('all')}
               >
                 <i className="blog-pill-dot" aria-hidden="true" />
                 <span>{en ? 'All topics' : 'Tất cả'}</span>
                 <b>{posts.length}</b>
               </button>
-              {BLOG_CATEGORIES.map((cat) => {
+              {BLOG_CATEGORIES.filter((cat) => postsByCategory[cat.id].length > 0).map((cat) => {
                 const count = postsByCategory[cat.id].length;
                 const isActive = activeCategory === cat.id;
                 return (
@@ -189,7 +189,6 @@ export function BlogPage() {
                     aria-selected={isActive}
                     data-blog-filter={cat.id}
                     className={`blog-category-pill${isActive ? ' is-active' : ''}`}
-                    aria-pressed={isActive}
                     onClick={() => selectCategory(cat.id)}
                   >
                     <i className="blog-pill-dot" aria-hidden="true" />

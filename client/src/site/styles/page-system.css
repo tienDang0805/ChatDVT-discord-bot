@@ -50,7 +50,7 @@
 .site-root.site-layered .selected-playground .collection { padding-block: 30px 64px; }
 .site-root.site-layered .selected-playground .filters { gap: 6px; flex-wrap: wrap; }
 .site-root.site-layered .selected-playground .filters button { font: 400 12px/1.6 var(--layered-mono); min-height: 42px; padding: 9px 13px; color: var(--site-muted); border-color: var(--site-line); border-radius: 6px; }
-.site-root.site-layered .selected-playground .filters button[aria-pressed=true] { background: color-mix(in srgb, var(--page-accent), var(--site-bg) 90%); color: var(--page-accent); border-color: color-mix(in srgb, var(--page-accent), transparent 65%); }
+.site-root.site-layered .selected-playground .filters button[aria-pressed=true], .filters button[aria-selected=true] { background: color-mix(in srgb, var(--page-accent), var(--site-bg) 90%); color: var(--page-accent); border-color: color-mix(in srgb, var(--page-accent), transparent 65%); }
 .site-root.site-layered .selected-playground .search-label { font-size: 11px; font-weight: 400; color: var(--site-muted); }
 .site-root.site-layered .selected-playground .search-label input { border: 1px solid var(--site-line); border-radius: 6px; background: var(--site-surface); min-height: 44px; font-size: 14px; color: var(--site-ink); }
 .site-root.site-layered .selected-playground #project-count { color: var(--site-muted); font: 11px var(--layered-mono); }
@@ -121,7 +121,7 @@
 .site-root.site-layered .selected-discord .commands { padding-block: 64px; gap: 48px; }
 .site-root.site-layered .selected-discord .commands h2 { font-size: clamp(28px, 3vw, 40px); line-height: 1.3; }
 .site-root.site-layered .selected-discord .command-tabs button { font: 11px/1.6 var(--layered-mono); padding: 9px 12px; }
-.site-root.site-layered .selected-discord .command-tabs button[aria-pressed=true] { color: var(--page-accent); background: var(--site-cool-soft); border-color: var(--layered-glass-line); }
+.site-root.site-layered .selected-discord .command-tabs button[aria-pressed=true], .command-tabs button[aria-selected=true] { color: var(--page-accent); background: var(--site-cool-soft); border-color: var(--layered-glass-line); }
 .site-root.site-layered .selected-discord .getting-started { border-top: 1px solid var(--site-line); padding-block: 56px; background: transparent; }
 .site-root.site-layered .selected-discord .getting-started h2 { font-size: clamp(28px, 3vw, 40px); }
 

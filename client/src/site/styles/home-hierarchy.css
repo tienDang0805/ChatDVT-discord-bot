@@ -18,6 +18,7 @@
 .site-root .layered-home h1.lh-headline > .headline-line { display: block; background: none; -webkit-text-fill-color: initial; color: var(--site-ink); }
 .lh-headline { position: relative; }
 .headline-letter { --glyph-base: var(--site-ink); --hover-influence: 0; display: inline-block; color: color-mix(in srgb, var(--glyph-base), var(--letter-color) calc(var(--hover-influence) * 100%)); transform-origin: center 80%; }
+.headline-letter::before { content: attr(data-char); }
 .headline-line--accent .headline-letter { --glyph-base: color-mix(in srgb, var(--site-muted), var(--site-cool) var(--letter-tone)); }
 .site-layered[data-motion=off] .headline-letter { transform: none !important; --hover-influence: 0 !important; }
 .lh-section h2 span { transition: color .4s; }

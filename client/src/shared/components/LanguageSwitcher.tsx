@@ -13,7 +13,8 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           key={language}
           type="button"
           onClick={() => changeLocale(language)}
-          aria-pressed={locale === language}
+          role="tab"
+          aria-selected={locale === language}
           className={`rounded-md px-2 py-1 text-[11px] font-black tracking-wide transition-colors ${
             locale === language
               ? 'bg-white text-orange-600 shadow-sm dark:bg-slate-700 dark:text-orange-400'
