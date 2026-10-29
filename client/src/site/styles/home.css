@@ -2,7 +2,7 @@
 .layered-home p, .layered-home h1, .layered-home h2, .layered-home h3 { margin: 0; }
 .layered-home a { text-decoration: none; }
 .site-skeleton-stack { display: grid; gap: 18px; width: 78%; margin: 35px auto; }
-.site-skeleton-stack .site-skeleton-block { height: 75px; border-radius: 12px; transform: rotate(-12deg) skewX(12deg); }
+.site-skeleton-stack .site-skeleton-block { height: 84px; border-radius: 14px; }
 .site-root .layered-home h1 { font-size: clamp(54px, 5.6vw, 81px); line-height: 1.14; letter-spacing: -.07em; text-wrap: nowrap; }
 .site-root .layered-home:lang(en) h1 { font-size: clamp(42px, 4.25vw, 62px); }
 .layered-home h1 > span { color: var(--site-muted); background: linear-gradient(105deg, var(--site-muted) 5%, var(--site-ink) 48%, var(--site-cool) 95%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
