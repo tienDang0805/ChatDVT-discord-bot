@@ -1,5 +1,6 @@
 import { usePublicPageData } from '../../shared/contexts/PublicPageData';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
 import { Clock } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { getPublishedBlogPost } from '../../shared/api';
@@ -8,6 +9,7 @@ import { usePageMeta } from '../../shared/hooks/usePageMeta';
 import { usePageTracker } from '../../shared/hooks/usePageTracker';
 import { getBlogCategoryMeta, type BlogPost } from '../../shared/types/blog';
 import { sanitizeBlogHtml } from '../../shared/utils/sanitizeBlogHtml';
+import { enhanceBlogCodeBlocks } from '../../shared/utils/blogCodeHighlight';
 import { SiteLayout } from '../components/SiteLayout';
 import { BlogArticleSkeleton } from '../components/SiteLoadingFallback';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +23,23 @@ function formatDate(value: string | null, locale: 'vi' | 'en'): string {
     .replaceAll('/', '.');
 }
 
+function copyTextFallback(text: string): boolean {
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', 'true');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 export function BlogArticlePage() {
   const { t } = useTranslation('site');
   const { locale, pathFor } = useLanguage();
@@ -30,9 +49,15 @@ export function BlogArticlePage() {
   const fallback = slug === DEFAULT_BLOG_POST.slug ? DEFAULT_BLOG_POST : null;
   const [post, setPost] = useState<BlogPost | null>(initialPost === undefined ? fallback : initialPost);
   const [loading, setLoading] = useState(initialPost === undefined);
-  const safeContent = useMemo(() => post ? sanitizeBlogHtml(post.content) : '', [post]);
+  const copyTimers = useRef<Map<HTMLButtonElement, number>>(new Map());
+
+  const safeContent = useMemo(
+    () => (post ? enhanceBlogCodeBlocks(sanitizeBlogHtml(post.content), locale) : ''),
+    [post, locale]
+  );
   const firstImage = useMemo(() => post?.content.match(/<img[^>]+src="((?:https?:\/\/|\/)[^"]+)"/i)?.[1], [post?.content]);
   const isChatDvtHistory = !!post && `/blog/${post.slug}` === CHATDVT_HISTORY_PATH;
+
   usePageMeta(post?.title || 'Bài viết — Tiến Đặng', {
     description: isChatDvtHistory ? CHATDVT_HISTORY_DESCRIPTION : post?.excerpt || 'Bài viết trên devtiendang.blog.',
     image: firstImage,
@@ -43,6 +68,14 @@ export function BlogArticlePage() {
     modifiedTime: post?.updatedAt,
   });
   usePageTracker(`BlogArticle:${slug}`);
+
+  useEffect(() => {
+    const timers = copyTimers.current;
+    return () => {
+      timers.forEach((timerId) => window.clearTimeout(timerId));
+      timers.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (initialPost !== undefined) {
@@ -59,6 +92,48 @@ export function BlogArticlePage() {
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [slug, initialPost, fallback]);
+
+  const handleProseClick = useCallback(
+    async (event: MouseEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement | null;
+      const button = target?.closest<HTMLButtonElement>('button[data-copy-code]');
+      if (!button) return;
+
+      const frame = button.closest('.blog-code-frame');
+      const codeEl = frame?.querySelector('pre code') || frame?.querySelector('pre');
+      const rawText = codeEl?.textContent || '';
+      if (!rawText) return;
+
+      let copied = false;
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(rawText);
+          copied = true;
+        } catch {
+          copied = copyTextFallback(rawText);
+        }
+      } else {
+        copied = copyTextFallback(rawText);
+      }
+
+      if (!copied) return;
+
+      const labelEl = button.querySelector('.blog-code-copy__text');
+      button.setAttribute('data-copied', 'true');
+      if (labelEl) labelEl.textContent = locale === 'en' ? 'Copied' : 'Đã chép';
+
+      const prevTimer = copyTimers.current.get(button);
+      if (prevTimer) window.clearTimeout(prevTimer);
+
+      const timerId = window.setTimeout(() => {
+        button.removeAttribute('data-copied');
+        if (labelEl) labelEl.textContent = 'Copy';
+        copyTimers.current.delete(button);
+      }, 2000);
+      copyTimers.current.set(button, timerId);
+    },
+    [locale]
+  );
 
   if (loading && !post) {
     return <SiteLayout><div className="site-skeleton"><p role="status" className="sr-only">{t('blog.loading')}</p><div aria-hidden="true" aria-busy="true"><BlogArticleSkeleton /></div></div></SiteLayout>;
@@ -95,7 +170,7 @@ export function BlogArticlePage() {
           </div>
         </div>
       </header>
-      <div className="blog-prose" dangerouslySetInnerHTML={{ __html: safeContent }} />
+      <div className="blog-prose" onClick={handleProseClick} dangerouslySetInnerHTML={{ __html: safeContent }} />
       <footer className="blog-article__footer">
         <span>{isChatDvtHistory ? 'ChatDVT · 01' : 'devtiendang.blog'}</span>
         <div className="blog-article__footer-links">

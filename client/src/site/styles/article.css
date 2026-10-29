@@ -298,3 +298,162 @@
 .blog-active-indicator__label strong {
   color: var(--site-cool, var(--site-orange));
 }
+
+/* Syntax Highlighted Code Frames & Copy Button */
+.blog-prose .blog-code-frame {
+  position: relative;
+  margin: 28px 0;
+  border: 1px solid var(--site-line);
+  border-radius: 12px;
+  background: var(--site-surface);
+  overflow: hidden;
+}
+.blog-prose .blog-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--site-line), transparent 32%);
+  background: color-mix(in srgb, var(--site-surface-2), var(--site-surface) 45%);
+}
+.blog-prose .blog-code-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: 700 10.5px/1 var(--layered-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--site-muted);
+}
+.blog-prose .blog-code-lang > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--site-cool, var(--site-orange));
+  opacity: .85;
+}
+.blog-prose .blog-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--site-line);
+  background: var(--site-surface);
+  color: var(--site-muted);
+  font: 600 11.5px/1.2 var(--layered-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background-color .2s;
+}
+.blog-prose .blog-code-copy:hover,
+.blog-prose .blog-code-copy:focus-visible {
+  color: var(--site-ink);
+  border-color: var(--site-cool, var(--site-orange));
+  background: var(--site-surface-2);
+}
+.blog-prose .blog-code-copy__icon--check {
+  display: none;
+}
+.blog-prose .blog-code-copy[data-copied="true"] {
+  color: #10b981;
+  border-color: color-mix(in srgb, #10b981, transparent 42%);
+  background: color-mix(in srgb, #10b981, transparent 90%);
+}
+.blog-prose .blog-code-copy[data-copied="true"] .blog-code-copy__icon--copy {
+  display: none;
+}
+.blog-prose .blog-code-copy[data-copied="true"] .blog-code-copy__icon--check {
+  display: inline-block;
+}
+.blog-prose .blog-code-frame > pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 18px 22px;
+  background: transparent;
+}
+
+/* Prism Syntax Tokens — Dark Mode (Default) & Light Mode */
+.blog-prose pre .token.comment {
+  color: #6e7681;
+  font-style: italic;
+}
+.blog-prose pre .token.section {
+  color: #c084fc;
+  font-weight: 600;
+}
+.blog-prose pre .token.keyword {
+  color: #ff7b72;
+  font-weight: 600;
+}
+.blog-prose pre .token.function {
+  color: #79c0ff;
+}
+.blog-prose pre .token.property {
+  color: #7dd3fc;
+}
+.blog-prose pre .token.flag {
+  color: #f59e0b;
+}
+.blog-prose pre .token.variable {
+  color: #ffa657;
+}
+.blog-prose pre .token.string {
+  color: #a5d6ff;
+}
+.blog-prose pre .token.number,
+.blog-prose pre .token.boolean {
+  color: #5eead4;
+}
+.blog-prose pre .token.operator {
+  color: #f472b6;
+}
+.blog-prose pre .token.punctuation {
+  color: #94a3b8;
+}
+
+html:not(.dark) .blog-prose pre .token.comment {
+  color: #64748b;
+}
+html:not(.dark) .blog-prose pre .token.section {
+  color: #7c3aed;
+}
+html:not(.dark) .blog-prose pre .token.keyword {
+  color: #cf222e;
+}
+html:not(.dark) .blog-prose pre .token.function {
+  color: #0969da;
+}
+html:not(.dark) .blog-prose pre .token.property {
+  color: #0550ae;
+}
+html:not(.dark) .blog-prose pre .token.flag {
+  color: #b45309;
+}
+html:not(.dark) .blog-prose pre .token.variable {
+  color: #953800;
+}
+html:not(.dark) .blog-prose pre .token.string {
+  color: #0a3069;
+}
+html:not(.dark) .blog-prose pre .token.number,
+html:not(.dark) .blog-prose pre .token.boolean {
+  color: #0f766e;
+}
+html:not(.dark) .blog-prose pre .token.operator {
+  color: #be185d;
+}
+html:not(.dark) .blog-prose pre .token.punctuation {
+  color: #475569;
+}
+
+@media (max-width: 600px) {
+  .blog-prose .blog-code-header {
+    padding: 7px 12px;
+  }
+  .blog-prose .blog-code-frame > pre {
+    padding: 14px 16px;
+  }
+}

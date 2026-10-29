@@ -68,6 +68,7 @@
 .site-direction-b .blog-article__meta{font-size:12px}
 .site-root .tour-view .tour-blog-intro{max-width:650px;font-size:16px;line-height:1.85;margin-top:24px}
 .mascot-actor{position:relative;width:var(--size,160px);height:var(--size,160px);flex:0 0 auto;max-width:100%;isolation:isolate;pointer-events:none;contain:layout paint}
+.mascot-preload-img{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .mascot-sprite{position:absolute;inset:0;background-repeat:no-repeat;background-size:300% 300%;background-position:50% 50%;pointer-events:none}
 .mascot-actor[data-render-state=idle] .mascot-sprite{clip-path:inset(0 0 4% 0)}
 @media(max-width:1160px){.site-direction-b .site-nav{gap:15px}.site-direction-b .site-header .site-motion-control{display:none}.site-direction-b .site-header__inner{width:calc(100% - 48px)}}

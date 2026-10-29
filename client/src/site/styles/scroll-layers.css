@@ -35,7 +35,8 @@
 .home-section-rail > a:nth-child(5) { --rail-accent: var(--label-rose); }
 .home-section-rail > a:nth-child(6) { --rail-accent: var(--label-mint); }
 .home-section-rail > a[aria-current=location] .rail-circle { color: var(--rail-accent); border-color: var(--rail-accent); background: color-mix(in srgb, var(--rail-accent), var(--site-bg) 86%); box-shadow: 0 0 22px color-mix(in srgb, var(--rail-accent), transparent 72%); }
-.home-section-rail > a[aria-current=location] .rail-tooltip { opacity: 1; transform: translate(0, -50%); border-color: color-mix(in srgb, var(--rail-accent), transparent 45%); color: var(--site-ink); background: color-mix(in srgb, var(--site-surface), var(--rail-accent) 10%); box-shadow: 0 8px 24px rgb(0 0 0 / .24); }
+.home-section-rail > a[aria-current=location] .rail-tooltip { border-color: color-mix(in srgb, var(--rail-accent), transparent 45%); color: var(--site-ink); background: color-mix(in srgb, var(--site-surface), var(--rail-accent) 10%); box-shadow: 0 8px 24px rgb(0 0 0 / .24); }
+.home-section-rail > a:hover .rail-tooltip, .home-section-rail > a:focus-visible .rail-tooltip { opacity: 1; transform: translate(0, -50%); }
 .home-section-rail > a[aria-current=location] .rail-status-dot { background: var(--rail-accent); box-shadow: 0 0 8px var(--rail-accent); }
 .lh-description strong { color: var(--site-ink); font-weight: 600; }
 

@@ -17,9 +17,10 @@ export function FrameMonitor({ placement = 'floating' }: { placement?: 'floating
     setMounted(true);
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY);
-      setOpen(saved === null ? true : saved === '1');
+      const isDesktop = window.innerWidth > 960;
+      setOpen(saved === null ? isDesktop : saved === '1');
     } catch {
-      setOpen(true);
+      setOpen(window.innerWidth > 960);
     }
   }, []);
 

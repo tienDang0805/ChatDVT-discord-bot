@@ -117,7 +117,9 @@ export function Mascot({ character, size = 160, action = 'idle', className = '' 
     if (moving) { window.addEventListener('pointermove', gaze, { passive: true }); document.addEventListener('pointerleave', center); }
     return () => { alive = false; window.clearInterval(interval); if (gazeFrame) window.cancelAnimationFrame(gazeFrame); window.removeEventListener('pointermove', gaze); document.removeEventListener('pointerleave', center); };
   }, [action, base, enabled, foreground, meta, visible]);
-  return <div ref={actor} className={'mascot-actor ' + className} data-character={character} data-render-state="idle" role="img" aria-label={character === 'tien' ? 'Mascot Tiến' : 'Mascot ChatDVT'} style={{ '--size': `${size}px` } as CSSProperties}>
+  const label = character === 'tien' ? 'Mascot Tiến' : 'Mascot ChatDVT';
+  return <div ref={actor} className={'mascot-actor ' + className} data-character={character} data-render-state="idle" role="img" aria-label={label} style={{ '--size': `${size}px` } as CSSProperties}>
+    <img src={`${base}directions.webp`} alt={label} width={size} height={size} loading="eager" decoding="async" className="mascot-preload-img" />
     <span ref={sprite} className="mascot-sprite" style={{ backgroundImage: `url('${base}directions.webp')` }} />
   </div>;
 }
