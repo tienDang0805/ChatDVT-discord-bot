@@ -30,22 +30,22 @@ export const contributions = [
   {
     title: ['Multi-barcode & Multi-box SDK', 'Multi-barcode & Multi-box SDK'], category: 'Android · On-device AI',
     description: [
-      'Phát triển một SDK Android bằng Kotlin từ bản thử nghiệm ban đầu, sử dụng CameraX, model TensorFlow Lite và ML Kit để nhận diện đồng thời 10+ hộp sản phẩm cùng nhiều barcode trong một khung hình (~50ms/frame ở 30 FPS). Đóng gói thành thư viện AAR chuẩn hóa qua Maven giúp các team tích hợp trong dưới 1 giờ (giảm ~80% thời gian).',
-      'Developed an Android SDK in Kotlin from an initial prototype, using CameraX, a TensorFlow Lite model and ML Kit to recognize 10+ product boxes and multiple barcodes in one frame (~50ms/frame at 30 FPS). Packaged as a Maven AAR library, cutting integration time across teams by ~80% (under 1 hour).',
+      'Từng phát triển một SDK Android bằng Kotlin từ bản thử nghiệm ban đầu, sử dụng CameraX, model TensorFlow Lite và ML Kit để nhận diện nhiều hộp sản phẩm cùng nhiều barcode trong một ảnh. Sau đó đóng gói thành thư viện để team khác tích hợp qua Maven.',
+      'Developed an Android SDK in Kotlin from an initial prototype, using CameraX, a TensorFlow Lite model and ML Kit to recognize multiple product boxes and multiple barcodes in one image. Packaged it as a library for other teams to integrate through Maven.',
     ], tags: ['Kotlin', 'TensorFlow Lite', 'ML Kit', 'CameraX', 'Maven'],
   },
   {
     title: ['React Native & Mobile Systems', 'React Native & Mobile Systems'], category: 'Mobile · Systems',
     description: [
-      'Phát triển và bảo trì ứng dụng CRM B2B cho đội ngũ kinh doanh, xây dựng analytics SDK hỗ trợ hàng đợi lưu dữ liệu offline (đảm bảo 0% mất sự kiện khi rớt mạng), và nâng cấp ứng dụng React Native cũ lên phiên bản mới. Công việc còn liên quan đến API, database và hệ thống quản lý bản cập nhật ứng dụng.',
-      'Developed and maintained B2B CRM applications for enterprise teams, built an analytics SDK with offline queue storage (0% event loss during network drops), and upgraded legacy React Native applications. The work also involved APIs, databases and systems for managing application updates.',
+      'Phát triển và bảo trì ứng dụng CRM B2B, làm analytics SDK hỗ trợ lưu dữ liệu offline, và nâng cấp ứng dụng React Native cũ lên phiên bản mới. Công việc còn liên quan đến API, database và hệ thống quản lý bản cập nhật ứng dụng.',
+      'Developed and maintained B2B CRM applications, built an analytics SDK with offline storage, and upgraded legacy React Native applications. The work also involved APIs, databases and systems for managing application updates.',
     ], tags: ['React Native', 'API', 'Database'],
   },
   {
     title: ['Robot App & SDK Integration', 'Robot App & SDK Integration'], category: 'Android · Robot',
     description: [
-      'Phát triển giao diện ứng dụng điều khiển robot bằng React Native (60 FPS), làm bridge kết nối UI với Android/Java để gọi trực tiếp SDK phần cứng của nhà sản xuất robot. Công việc gồm đọc tài liệu và debug SDK trên thiết bị thật, xử lý các vấn đề tích hợp, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.',
-      'Developed the robot application UI in React Native (60 FPS) and a low-latency Android/Java bridge to call the robot manufacturer’s hardware SDK. The work included reading and debugging the SDK on real devices, resolving integration issues, deploying for customers, user training and operational support.',
+      'Phát triển giao diện ứng dụng robot bằng React Native, làm bridge kết nối UI với Android/Java để gọi SDK của nhà sản xuất robot. Công việc gồm đọc tài liệu và debug SDK, xử lý các vấn đề tích hợp, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.',
+      'Developed the robot application UI in React Native and an Android/Java bridge to call the robot manufacturer’s SDK. The work included reading and debugging the SDK, resolving integration issues, deploying for customers, user training and operational support.',
     ], tags: ['React Native UI', 'Android / Java', 'Native Bridge', 'Vendor SDK'],
   },
 ];

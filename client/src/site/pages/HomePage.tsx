@@ -27,9 +27,9 @@ import { contributions, profile } from '../content/profileData';
 import { WALLPAPER_APP } from '../../../../src/shared/desktopApps';
 
 const workSummaries = [
-  ['SDK Android bằng Kotlin: model TensorFlow Lite nhận diện 10+ hộp sản phẩm và ML Kit đọc nhiều barcode trong ~50ms/frame (30 FPS). Đóng gói AAR qua Maven giúp giảm ~80% thời gian tích hợp.', 'An Android SDK in Kotlin: a TensorFlow Lite model detects 10+ product boxes while ML Kit reads multiple barcodes in ~50ms/frame (30 FPS). Distributed via Maven AAR, cutting integration time by ~80%.'],
-  ['Ứng dụng CRM B2B cho đội ngũ vận hành, analytics SDK hỗ trợ hàng đợi offline (0% mất sự kiện khi rớt mạng) và nâng cấp kiến trúc các ứng dụng React Native.', 'B2B CRM apps for enterprise teams, an analytics SDK with offline queue support (0% event loss offline) and architecture upgrades to existing React Native applications.'],
-  ['React Native làm UI (60 FPS), bridge Android/Java kết nối trực tiếp SDK phần cứng của nhà sản xuất robot. Tích hợp và debug SDK trên thiết bị thật, triển khai cho khách hàng và hỗ trợ vận hành.', 'React Native UI (60 FPS) with a low-latency Android/Java bridge to the robot manufacturer’s SDK. On-device SDK debugging, customer deployment, user training and operational support.'],
+  ['SDK Android bằng Kotlin: model TensorFlow Lite nhận diện nhiều hộp sản phẩm, ML Kit đọc nhiều barcode trong cùng một ảnh. Đóng gói qua Maven để các team tích hợp.', 'An Android SDK in Kotlin: a TensorFlow Lite model detects multiple product boxes, while ML Kit reads multiple barcodes in the same image. Distributed through Maven for other teams to integrate.'],
+  ['Ứng dụng CRM B2B, analytics SDK hỗ trợ offline và những lần nâng cấp React Native.', 'B2B CRM apps, an analytics SDK with offline support and upgrades to existing React Native applications.'],
+  ['React Native làm UI, bridge Android/Java kết nối với SDK của nhà sản xuất robot. Tích hợp và debug SDK, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.', 'React Native UI with an Android/Java bridge to the robot manufacturer’s SDK. SDK integration and debugging, customer deployment, user training and operational support.'],
 ];
 const workIcons = [ScanLine, Braces, Bot];
 
