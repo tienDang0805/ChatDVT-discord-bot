@@ -3,19 +3,33 @@ import { Key, Eye, EyeOff, Check, X } from 'lucide-react';
 
 const STORAGE_KEY = 'gemini_custom_api_key';
 
+const readStoredKey = () => {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) || '' : '';
+  } catch {
+    return '';
+  }
+};
+
 export const useGeminiKey = () => {
-  const [key, setKey] = useState(() => localStorage.getItem(STORAGE_KEY) || '');
+  const [key, setKey] = useState(readStoredKey);
 
   const saveKey = (newKey: string) => {
     setKey(newKey);
-    if (newKey) localStorage.setItem(STORAGE_KEY, newKey);
-    else localStorage.removeItem(STORAGE_KEY);
+    try {
+      if (typeof window !== 'undefined') {
+        if (newKey) window.localStorage.setItem(STORAGE_KEY, newKey);
+        else window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      /* Ignore storage quota/privacy errors */
+    }
   };
 
   return { geminiKey: key, saveGeminiKey: saveKey };
 };
 
-export const getStoredGeminiKey = () => localStorage.getItem(STORAGE_KEY) || '';
+export const getStoredGeminiKey = () => readStoredKey();
 
 export const GeminiKeyInput = ({ accent = 'purple' }: { accent?: 'purple' | 'pink' | 'blue' | 'amber' | 'orange' | 'violet' }) => {
   const { geminiKey, saveGeminiKey } = useGeminiKey();
