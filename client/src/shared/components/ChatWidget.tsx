@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { X, Send, Trash2, Bot, User, ChevronDown, Maximize2 } from 'lucide-react';
+import { X, Send, Trash2, Bot, User, ChevronDown, Maximize2, ArrowUpRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { getStoredGeminiKey } from './GeminiKeyInput';
@@ -93,13 +93,21 @@ export const ChatWidget = ({ guide = false, defaultOpen = false, renderMascot }:
     if (isOpen) {
       setHasNewMessage(false);
       const timer = setTimeout(() => {
-        if (guide) guidePanel.current?.focus({ preventScroll: true });
-        else inputRef.current?.focus();
+        inputRef.current?.focus({ preventScroll: true });
         scrollToBottom();
-      }, 150);
+      }, 80);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, scrollToBottom, guide]);
+  }, [isOpen, scrollToBottom]);
+
+  useEffect(() => {
+    if (!guide || !isOpen || typeof document === 'undefined') return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [guide, isOpen]);
 
   useEffect(() => {
     const handleOpenChat = () => {
@@ -128,8 +136,8 @@ export const ChatWidget = ({ guide = false, defaultOpen = false, renderMascot }:
     }
   }, []);
 
-  const sendMessage = useCallback(async () => {
-    const text = input.trim();
+  const sendMessage = useCallback(async (overrideText?: string) => {
+    const text = (typeof overrideText === 'string' ? overrideText : input).trim();
     if (!text || isLoading || sending.current) return;
     sending.current = true;
     const version = ++requestVersion.current;
@@ -214,21 +222,235 @@ export const ChatWidget = ({ guide = false, defaultOpen = false, renderMascot }:
   const botAvatar = botInfo?.avatar || '';
 
   const quickQuestions = [t('prompt1'), t('prompt2'), t('prompt3'), t('prompt4')];
+  const guidePrompts = locale === 'en'
+    ? [
+        { code: '01 // OVERVIEW', label: 'Introduce Tiến and what I can explore on this website?' },
+        { code: '02 // MOBILE STACK', label: 'What is Tiến’s experience with React Native, Android/Kotlin & Native SDKs?' },
+        { code: '03 // TOOLS & APPS', label: 'Which dev tools, desktop apps or side projects here should I try first?' },
+        { code: '04 // AI ECOSYSTEM', label: 'What can ChatDVT do on the web and on Discord?' },
+      ]
+    : [
+        { code: '01 // TỔNG QUAN', label: 'Giới thiệu ngắn gọn về Tiến và những điểm thú vị trên website này?' },
+        { code: '02 // KINH NGHIỆM MOBILE', label: 'Tiến có kinh nghiệm gì với React Native, Android/Kotlin và Native SDK?' },
+        { code: '03 // CÔNG CỤ & DỰ ÁN', label: 'Trên web có những dev tool, ứng dụng hoặc side project nào đáng thử?' },
+        { code: '04 // HỆ SINH THÁI AI', label: 'ChatDVT làm được những gì trên Web và trên Discord?' },
+      ];
+  const askedSet = new Set(messages.filter(m => m.role === 'user').map(m => m.content.trim().toLowerCase()));
+  const remainingGuidePrompts = guidePrompts.filter(p => !askedSet.has(p.label.trim().toLowerCase()));
 
   if (isHidden) return null;
 
   if (guide) return isOpen ? (
-    <aside ref={guidePanel} tabIndex={-1} id="chatdvt-guide" className="chatdvt-companion" role="dialog" aria-modal="false" aria-labelledby="chatdvt-guide-title">
-      <div className="chatdvt-pet-stage"><p className="chatdvt-pet-bubble">{isLoading ? (locale === 'en' ? 'Let me think…' : 'Để mình nghĩ một chút…') : guideAction === 'talk' ? (locale === 'en' ? 'Here’s what I found ↓' : 'Mình trả lời ở dưới nhé ↓') : (locale === 'en' ? 'Hi! Where shall we go?' : 'Chào bạn! Mình đi đâu nhé?')}<span>ChatDVT · {locale === 'en' ? 'your site companion' : 'bạn đồng hành của bạn'}</span></p><div className="chatdvt-pet" key={guideAction}>{renderMascot ? renderMascot(guideAction) : <Bot size={72} />}</div></div>
-      <div className="chatdvt-guide chatdvt-guide--compact">
-      <header className="chatdvt-guide-header"><div><h2 id="chatdvt-guide-title">ChatDVT <span>AI</span></h2><p>{locale === 'en' ? 'Ask me or pick a place below' : 'Hỏi mình, hoặc chọn một nơi bên dưới'}</p></div><Link to={pathFor('/chat')} aria-label={locale === 'en' ? 'Open the full chat' : 'Mở trang chat đầy đủ'}><Maximize2 size={14} /></Link><button type="button" onClick={closeGuide} aria-label={locale === 'en' ? 'Close ChatDVT guide' : 'Đóng hướng dẫn ChatDVT'}><X size={17} /></button></header>
-      <nav className="chatdvt-destinations" aria-label={locale === 'en' ? 'Suggested destinations' : 'Gợi ý khám phá'}><Link to={pathFor('/#contact')} onClick={() => setIsOpen(false)}>Contact <span>↗</span></Link><Link to={pathFor('/playground')} onClick={() => setIsOpen(false)}>Playground <span>↗</span></Link><Link to={pathFor('/me')} onClick={() => setIsOpen(false)}>{locale === 'en' ? 'About Tiến' : 'Về Tiến Đặng'} <span>↗</span></Link></nav>
-      <div ref={scrollRef} className="chatdvt-guide-messages" onScroll={handleScroll} role="log" aria-label={locale === 'en' ? 'Conversation with ChatDVT' : 'Hội thoại với ChatDVT'} aria-live="polite" aria-relevant="additions text">
-        {messages.length === 0 && <div className="chatdvt-guide-welcome"><p>{locale === 'en' ? 'I can introduce Tiến, show you around the projects or help you find your way.' : 'Mình có thể giới thiệu về Tiến, các dự án hoặc giúp bạn tìm đúng nơi cần đến.'}</p><button type="button" className="chatdvt-question" onClick={() => { setInput(locale === 'en' ? 'Introduce Tiến and this website' : 'Giới thiệu Tiến và website này'); inputRef.current?.focus(); }}>{locale === 'en' ? 'Introduce this website' : 'Giới thiệu website này'} <span>↗</span></button></div>}
-        {messages.map(message => <div key={message.id} className={'chatdvt-guide-message is-' + message.role + (message.id.startsWith('e_') ? ' is-error' : '')}><small>{message.role === 'user' ? (locale === 'en' ? 'YOU' : 'BẠN') : 'CHATDVT'}</small><div>{message.role === 'assistant' ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer">{children} ↗</a> }}>{message.content}</ReactMarkdown> : <p>{message.content}</p>}</div></div>)}
-        {isLoading && <p className="chatdvt-guide-loading" role="status">{locale === 'en' ? 'ChatDVT is thinking…' : 'ChatDVT đang suy nghĩ…'}</p>}
-      </div>
-      <form className="chatdvt-guide-compose" onSubmit={event => { event.preventDefault(); void sendMessage(); }}><div><textarea ref={inputRef} value={input} onChange={event => setInput(event.target.value)} onKeyDown={handleKeyDown} onCompositionStart={() => setIsComposing(true)} onCompositionEnd={() => setIsComposing(false)} placeholder={locale === 'en' ? 'Ask ChatDVT…' : 'Hỏi ChatDVT…'} aria-label={locale === 'en' ? 'Message ChatDVT' : 'Tin nhắn cho ChatDVT'} rows={1} maxLength={4000} /><button type="submit" disabled={isLoading || !input.trim()} aria-label={locale === 'en' ? 'Send message' : 'Gửi tin nhắn'}><Send size={15} /></button></div><p><Link to={pathFor('/chat')}>{locale === 'en' ? 'Full chat & API key settings ↗' : 'Chat đầy đủ & cài đặt API key ↗'}</Link></p></form>
+    <aside
+      ref={guidePanel}
+      tabIndex={-1}
+      id="chatdvt-guide"
+      className="chatdvt-companion"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="chatdvt-guide-title"
+      onClick={event => {
+        if (event.target === event.currentTarget) closeGuide();
+      }}
+    >
+      <div className="chatdvt-guide">
+        <header className="chatdvt-guide-header">
+          <div className="chatdvt-guide-header__brand">
+            <div className="chatdvt-pet-stage" aria-hidden="true">
+              <div className="chatdvt-pet" key={guideAction}>
+                {renderMascot ? renderMascot(guideAction) : <Bot size={26} />}
+              </div>
+            </div>
+            <div className="chatdvt-guide-header__titles">
+              <p className="chatdvt-guide-kicker">
+                <span className="chatdvt-guide-dot" aria-hidden="true" />
+                {isLoading
+                  ? locale === 'en'
+                    ? 'CHATDVT AI // THINKING…'
+                    : 'CHATDVT AI // ĐANG SUY NGHĨ…'
+                  : locale === 'en'
+                    ? 'CHATDVT AI // SITE ASSISTANT'
+                    : 'CHATDVT AI // TRỢ LÝ DẪN ĐƯỜNG'}
+              </p>
+              <h2 id="chatdvt-guide-title">
+                {locale === 'en' ? 'Ask anything or explore the site' : 'Hỏi nhanh hoặc tìm đường trên web'}
+              </h2>
+            </div>
+          </div>
+          <div className="chatdvt-guide-header__actions">
+            {messages.length > 0 && (
+              <button
+                type="button"
+                className="chatdvt-guide-icon-btn"
+                onClick={clearHistory}
+                title={locale === 'en' ? 'Clear conversation' : 'Xoá đoạn hội thoại'}
+                aria-label={locale === 'en' ? 'Clear conversation' : 'Xoá đoạn hội thoại'}
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
+            <Link
+              to={pathFor('/chat')}
+              className="chatdvt-guide-expand"
+              onClick={() => setIsOpen(false)}
+              aria-label={locale === 'en' ? 'Open the full chat' : 'Mở trang chat đầy đủ'}
+            >
+              <span>{locale === 'en' ? 'Full Chat' : 'Mở /chat'}</span>
+              <Maximize2 size={13} />
+            </Link>
+            <button
+              type="button"
+              className="chatdvt-guide-close"
+              onClick={closeGuide}
+              aria-label={locale === 'en' ? 'Close ChatDVT guide' : 'Đóng hướng dẫn ChatDVT'}
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </header>
+
+        <div
+          ref={scrollRef}
+          className="chatdvt-guide-messages"
+          onScroll={handleScroll}
+          role="log"
+          aria-label={locale === 'en' ? 'Conversation with ChatDVT' : 'Hội thoại với ChatDVT'}
+          aria-live="polite"
+          aria-relevant="additions text"
+        >
+          {messages.length === 0 ? (
+            <div className="chatdvt-guide-welcome">
+              <p className="chatdvt-guide-welcome__lead">
+                {locale === 'en'
+                  ? 'Ask directly right here on this page — about Tiến’s mobile engineering work, tools on this site, or any technical question.'
+                  : 'Bạn có thể hỏi trực tiếp ngay tại đây về kinh nghiệm Mobile của Tiến, các công cụ trên web hoặc bất kỳ câu hỏi kỹ thuật nào.'}
+              </p>
+              <div className="chatdvt-guide-grid" role="group" aria-label={locale === 'en' ? 'Starter questions' : 'Gợi ý câu hỏi'}>
+                {guidePrompts.map(item => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    className="chatdvt-guide-card"
+                    onClick={() => void sendMessage(item.label)}
+                  >
+                    <div className="chatdvt-guide-card__top">
+                      <span>{item.code}</span>
+                      <ArrowUpRight size={14} aria-hidden="true" />
+                    </div>
+                    <strong>{item.label}</strong>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="chatdvt-guide-thread">
+              {messages.map(message => (
+                <div
+                  key={message.id}
+                  className={'chatdvt-guide-message is-' + message.role + (message.id.startsWith('e_') ? ' is-error' : '')}
+                >
+                  <small>{message.role === 'user' ? (locale === 'en' ? 'YOU' : 'BẠN') : 'CHATDVT // AI'}</small>
+                  <div>
+                    {message.role === 'assistant' ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: ({ href, children }) => (
+                            <a href={href} target="_blank" rel="noopener noreferrer">
+                              {children} ↗
+                            </a>
+                          ),
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <p className="chatdvt-guide-loading" role="status">
+                  <span className="chatdvt-guide-dot" aria-hidden="true" />
+                  {locale === 'en' ? 'ChatDVT is synthesizing an answer…' : 'ChatDVT đang tổng hợp câu trả lời…'}
+                </p>
+              )}
+              {!isLoading && remainingGuidePrompts.length > 0 && (
+                <div className="chatdvt-guide-followups">
+                  <span>{locale === 'en' ? 'Suggested follow-ups' : 'Gợi ý hỏi tiếp'}</span>
+                  <div>
+                    {remainingGuidePrompts.slice(0, 2).map(item => (
+                      <button key={item.code} type="button" onClick={() => void sendMessage(item.label)}>
+                        {item.label}
+                        <ArrowUpRight size={13} aria-hidden="true" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <nav className="chatdvt-destinations" aria-label={locale === 'en' ? 'Quick navigation' : 'Đi nhanh tới các mục'}>
+          <span className="chatdvt-destinations__label">{locale === 'en' ? 'JUMP TO' : 'ĐI NHANH'}</span>
+          <Link to={pathFor('/me')} onClick={() => setIsOpen(false)}>
+            {locale === 'en' ? 'About Tiến' : 'Về Tiến Đặng'} <span>↗</span>
+          </Link>
+          <Link to={pathFor('/playground')} onClick={() => setIsOpen(false)}>
+            Playground <span>↗</span>
+          </Link>
+          <Link to={pathFor('/apps')} onClick={() => setIsOpen(false)}>
+            {locale === 'en' ? 'Apps' : 'Ứng dụng'} <span>↗</span>
+          </Link>
+          <Link to={pathFor('/blog')} onClick={() => setIsOpen(false)}>
+            Blog <span>↗</span>
+          </Link>
+          <Link to={pathFor('/#contact')} onClick={() => setIsOpen(false)}>
+            {locale === 'en' ? 'Contact' : 'Liên hệ'} <span>↗</span>
+          </Link>
+        </nav>
+
+        <form
+          className="chatdvt-guide-compose"
+          onSubmit={event => {
+            event.preventDefault();
+            void sendMessage();
+          }}
+        >
+          <div className="chatdvt-guide-compose__box">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={event => setInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={() => setIsComposing(false)}
+              placeholder={
+                locale === 'en'
+                  ? 'Ask ChatDVT anything about Tiến, mobile dev, or this site… (Enter to send)'
+                  : 'Nhập câu hỏi cho ChatDVT về Tiến, lập trình Mobile hoặc các mục trên web… (Enter để gửi)'
+              }
+              aria-label={locale === 'en' ? 'Message ChatDVT' : 'Tin nhắn cho ChatDVT'}
+              rows={2}
+              maxLength={4000}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              aria-label={locale === 'en' ? 'Send message' : 'Gửi tin nhắn'}
+            >
+              <Send size={16} />
+            </button>
+          </div>
+          <div className="chatdvt-guide-compose__meta">
+            <span>{locale === 'en' ? 'Enter to send · Shift + Enter for new line · Esc to close' : 'Enter để gửi · Shift + Enter xuống dòng · Esc để đóng'}</span>
+            <Link to={pathFor('/chat')} onClick={() => setIsOpen(false)}>
+              {locale === 'en' ? 'Multi-session history & API key settings ↗' : 'Quản lý lịch sử đa phiên & API Key tại /chat ↗'}
+            </Link>
+          </div>
+        </form>
       </div>
     </aside>
   ) : null;
@@ -442,7 +664,7 @@ export const ChatWidget = ({ guide = false, defaultOpen = false, renderMascot }:
                   style={{ minHeight: '40px' }}
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={() => void sendMessage()}
                   disabled={!input.trim() || isLoading}
                   className="p-2.5 bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-700 dark:disabled:to-slate-800 text-white rounded-xl transition-all active:scale-90 disabled:cursor-not-allowed shrink-0 shadow-sm shadow-orange-500/20 disabled:shadow-none"
                   aria-label={t('send')}

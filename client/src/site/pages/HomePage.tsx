@@ -316,7 +316,7 @@ function HomeContent() {
       </Reveal>
     </section>
 
-    {chatGuideOpen && <Suspense fallback={null}><LazyChatWidget guide defaultOpen renderMascot={action => <Mascot character="chatdvt" size={144} action={action} />} /></Suspense>}
+    {chatGuideOpen && <Suspense fallback={null}><LazyChatWidget guide defaultOpen renderMascot={action => <Mascot character="chatdvt" size={52} action={action} />} /></Suspense>}
     <HomeSectionRail />
   </div>;
 }
