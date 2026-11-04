@@ -5,13 +5,10 @@ import {
   ArrowUpRight,
   Bot,
   Check,
-  Code2,
-  Compass,
   Copy,
   CornerDownRight,
   Eye,
   EyeOff,
-  Globe,
   Key,
   MessageSquare,
   MessageSquarePlus,
@@ -23,8 +20,6 @@ import {
   Sparkles,
   Terminal,
   Trash2,
-  User,
-  Wrench,
   X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -51,7 +46,6 @@ import { Mascot, useSiteMotion } from '../components/Mascot';
 import { SiteLayout } from '../components/SiteLayout';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 
 type FocusModeId = 'all' | 'portfolio' | 'mobile' | 'tools';
 
@@ -126,58 +120,20 @@ function MarkdownCodeBlock({
 
 function ChatContent() {
   const { enabled } = useSiteMotion();
-  const { locale, pathFor } = useLanguage();
+  const { locale } = useLanguage();
   const { t } = useTranslation('chat');
   const en = locale === 'en';
-
-  const quickPrompts = [
-    {
-      id: 'discover',
-      accent: 'mint',
-      icon: Compass,
-      title: t('page.discover'),
-      prompt: t('prompt1'),
-      tag: en ? 'Overview' : 'Tổng quan',
-    },
-    {
-      id: 'author',
-      accent: 'blue',
-      icon: User,
-      title: t('page.author'),
-      prompt: t('prompt2'),
-      tag: en ? 'Profile & Work' : 'Hồ sơ & Việc làm',
-    },
-    {
-      id: 'tools',
-      accent: 'purple',
-      icon: Wrench,
-      title: t('page.tools'),
-      prompt: t('prompt3'),
-      tag: en ? 'Playground' : 'Công cụ thực chiến',
-    },
-    {
-      id: 'learn',
-      accent: 'amber',
-      icon: Code2,
-      title: t('page.learn'),
-      prompt: t('prompt4'),
-      tag: en ? 'Discord & Web' : 'Discord & Web',
-    },
-  ];
 
   const focusModes: Array<{
     id: FocusModeId;
     label: string;
     shortLabel: string;
-    icon: typeof Globe;
     hint: string;
     prefix: string;
     starters: string[];
     cards: Array<{
       id: string;
-      accent: 'mint' | 'blue' | 'purple' | 'amber';
-      icon: typeof Compass;
-      title: string;
+      tag: string;
       prompt: string;
     }>;
   }> = useMemo(
@@ -186,7 +142,6 @@ function ChatContent() {
         id: 'all',
         label: en ? 'All context' : 'Tất cả',
         shortLabel: en ? 'All' : 'Tất cả',
-        icon: Globe,
         hint: en
           ? 'Message ChatDVT — ask about Tiến, mobile engineering, or any topic...'
           : 'Nhắn tin cho ChatDVT — hỏi về Tiến, lập trình Mobile hoặc bất kỳ chủ đề nào...',
@@ -194,20 +149,21 @@ function ChatContent() {
         starters: [
           t('prompt1'),
           t('prompt2'),
+          t('prompt3'),
+          t('prompt4'),
           en ? 'What makes ChatDVT different on Discord vs Web?' : 'ChatDVT trên Discord và trên Web có gì thú vị?',
         ],
         cards: [
-          { id: 'discover', accent: 'mint', icon: Compass, title: t('page.discover'), prompt: t('prompt1') },
-          { id: 'author', accent: 'blue', icon: User, title: t('page.author'), prompt: t('prompt2') },
-          { id: 'tools', accent: 'purple', icon: Wrench, title: t('page.tools'), prompt: t('prompt3') },
-          { id: 'learn', accent: 'amber', icon: Code2, title: t('page.learn'), prompt: t('prompt4') },
+          { id: 'discover', tag: en ? '01 // OVERVIEW' : '01 // TỔNG QUAN', prompt: t('prompt1') },
+          { id: 'author', tag: en ? '02 // AUTHOR' : '02 // TÁC GIẢ', prompt: t('prompt2') },
+          { id: 'tools', tag: en ? '03 // MOBILE TOOLS' : '03 // CÔNG CỤ MOBILE', prompt: t('prompt3') },
+          { id: 'learn', tag: en ? '04 // CHATDVT AI' : '04 // HỆ SINH THÁI AI', prompt: t('prompt4') },
         ],
       },
       {
         id: 'portfolio',
         label: en ? 'About Tiến' : 'Về Tiến',
         shortLabel: en ? 'Profile' : 'Hồ sơ Tiến',
-        icon: User,
         hint: en
           ? 'Ask about Đặng Văn Tiến’s 3.5+ yrs Mobile experience, SDKs & Southtelecom work...'
           : 'Hỏi về 3.5+ năm kinh nghiệm Mobile, SDK Android & công việc của Tiến...',
@@ -215,41 +171,34 @@ function ChatContent() {
         starters: [
           en ? 'Summarize Tiến’s 3.5+ years of Mobile Developer experience.' : 'Tóm tắt 3.5+ năm kinh nghiệm Mobile Developer của Tiến.',
           en ? 'Tell me about the Multi-barcode & Multi-box Android SDK project.' : 'Kể chi tiết về dự án SDK Android nhận diện nhiều barcode & hộp sản phẩm.',
+          en ? 'How did Tiến design the offline-first mobile Analytics SDK?' : 'Tiến đã thiết kế Analytics SDK hỗ trợ offline cho ứng dụng mobile như thế nào?',
           en ? 'How can I contact Tiến for React Native or Kotlin roles?' : 'Làm sao để liên hệ Tiến cho dự án React Native hoặc Kotlin?',
         ],
         cards: [
           {
             id: 'exp',
-            accent: 'blue',
-            icon: User,
-            title: en ? '3.5+ yrs Mobile Experience' : '3.5+ năm kinh nghiệm Mobile',
+            tag: en ? '01 // EXPERIENCE' : '01 // KINH NGHIỆM',
             prompt: en
               ? 'Summarize Tiến’s 3.5+ years of React Native and Android/Kotlin experience.'
               : 'Tóm tắt 3.5+ năm kinh nghiệm React Native và Android/Kotlin của Tiến.',
           },
           {
             id: 'sdk',
-            accent: 'mint',
-            icon: Code2,
-            title: en ? 'Multi-barcode & AI Vision SDK' : 'SDK AI nhận diện Barcode & Box',
+            tag: en ? '02 // VISION SDK' : '02 // ANDROID SDK',
             prompt: en
               ? 'Tell me about the Multi-barcode & Multi-box Android SDK project Tiến built.'
               : 'Kể chi tiết về dự án SDK Android nhận diện nhiều barcode & hộp sản phẩm của Tiến.',
           },
           {
             id: 'analytics',
-            accent: 'purple',
-            icon: Wrench,
-            title: en ? 'Offline-First Analytics SDK' : 'Kiến trúc Analytics SDK Offline',
+            tag: en ? '03 // ARCHITECTURE' : '03 // KIẾN TRÚC SDK',
             prompt: en
               ? 'How did Tiến design the offline-first mobile Analytics SDK?'
               : 'Tiến đã thiết kế Analytics SDK hỗ trợ offline cho ứng dụng mobile như thế nào?',
           },
           {
             id: 'contact',
-            accent: 'amber',
-            icon: Compass,
-            title: en ? 'Collaboration & Contact' : 'Hợp tác & Liên hệ công việc',
+            tag: en ? '04 // CONTACT' : '04 // HỢP TÁC',
             prompt: en
               ? 'How can I contact Tiến for React Native or Android/Kotlin opportunities?'
               : 'Làm sao để liên hệ Tiến cho vị trí hoặc dự án React Native / Kotlin?',
@@ -260,7 +209,6 @@ function ChatContent() {
         id: 'mobile',
         label: 'Mobile & Native',
         shortLabel: 'RN / Kotlin',
-        icon: Code2,
         hint: en
           ? 'Ask about React Native, Android/Kotlin, CameraX, TFLite & architecture...'
           : 'Hỏi sâu về React Native, Android/Kotlin, CameraX, TFLite & kiến trúc app...',
@@ -268,41 +216,34 @@ function ChatContent() {
         starters: [
           en ? 'How does React Native bridge to native Android/Java SDKs in Tiến’s projects?' : 'Cách kết nối React Native với Android/Java SDK trong dự án thực tế của Tiến?',
           en ? 'Best practices for CameraX + ML Kit barcode scanning on Android?' : 'Kinh nghiệm tối ưu CameraX + ML Kit quét nhiều barcode trên Android?',
+          en ? 'What are key techniques to keep React Native apps smooth at 60 FPS?' : 'Các kỹ thuật quan trọng giúp ứng dụng React Native mượt 60 FPS và tránh rò rỉ bộ nhớ?',
           en ? 'Explain offline-first analytics SDK design for mobile apps.' : 'Giải thích cách thiết kế Analytics SDK hỗ trợ offline cho ứng dụng mobile.',
         ],
         cards: [
           {
             id: 'bridge',
-            accent: 'mint',
-            icon: Code2,
-            title: en ? 'React Native Native Bridge' : 'Tích hợp Native SDK vào RN',
+            tag: '01 // RN BRIDGE',
             prompt: en
               ? 'How does React Native bridge to native Android/Java SDKs in production?'
               : 'Cách kết nối React Native với Android/Java SDK trong dự án thực tế?',
           },
           {
             id: 'camerax',
-            accent: 'blue',
-            icon: Compass,
-            title: en ? 'CameraX + ML Kit / TFLite' : 'Tối ưu CameraX + ML Kit / TFLite',
+            tag: '02 // CAMERAX · ML KIT',
             prompt: en
               ? 'Best practices for optimizing CameraX with ML Kit & TFLite on Android?'
               : 'Kinh nghiệm tối ưu CameraX kết hợp ML Kit & TFLite xử lý ảnh thời gian thực?',
           },
           {
             id: 'perf',
-            accent: 'purple',
-            icon: Wrench,
-            title: en ? '60 FPS & Memory Tuning' : 'Tối ưu 60 FPS & Bộ nhớ Mobile',
+            tag: '03 // 60 FPS PERFORMANCE',
             prompt: en
               ? 'What are key techniques to keep React Native apps smooth at 60 FPS?'
               : 'Các kỹ thuật quan trọng giúp ứng dụng React Native mượt 60 FPS và tránh rò rỉ bộ nhớ?',
           },
           {
             id: 'cicd',
-            accent: 'amber',
-            icon: Terminal,
-            title: en ? 'Mobile CI/CD Release Flow' : 'Quy trình CI/CD Mobile App',
+            tag: '04 // MOBILE CI/CD',
             prompt: en
               ? 'How to structure automated build and release pipelines for Android & iOS?'
               : 'Cách xây dựng luồng CI/CD tự động build và kiểm thử cho Android & iOS?',
@@ -313,47 +254,39 @@ function ChatContent() {
         id: 'tools',
         label: 'Playground',
         shortLabel: 'Playground',
-        icon: Wrench,
         hint: en
           ? 'Ask for developer utilities, AI tools & mini games on devtiendang.blog...'
           : 'Tìm nhanh dev tool, tiện ích AI và mini game trên devtiendang.blog...',
         prefix: en ? '[Context: Recommending tools & games in devtiendang.blog Playground] ' : '[Ngữ cảnh: Gợi ý công cụ & game trong Playground của web] ',
         starters: [
           t('prompt3'),
+          en ? 'Introduce the CI/CD Visualizer and Mermaid tool in the Playground.' : 'Giới thiệu công cụ mô phỏng CI/CD Visualizer và vẽ sơ đồ Mermaid trên web.',
           en ? 'What AI experiments and mini games can I try right now?' : 'Trên web có những thử nghiệm AI và mini game nào chơi được ngay?',
           en ? 'Tell me about TD-WallpaperEngine for Windows.' : 'Giới thiệu ứng dụng TD-WallpaperEngine cho Windows của Tiến.',
         ],
         cards: [
           {
             id: 'dev-tools',
-            accent: 'purple',
-            icon: Wrench,
-            title: en ? 'Mobile Dev Utilities' : 'Bộ công cụ cho Mobile Dev',
+            tag: '01 // DEV TOOLKIT',
             prompt: t('prompt3'),
           },
           {
             id: 'viz-tools',
-            accent: 'blue',
-            icon: Code2,
-            title: en ? 'CI/CD & Mermaid Visualizers' : 'Trực quan hóa CI/CD & Mermaid',
+            tag: '02 // VISUALIZERS',
             prompt: en
               ? 'Introduce the CI/CD Visualizer and Mermaid tool in the Playground.'
               : 'Giới thiệu công cụ mô phỏng CI/CD Visualizer và vẽ sơ đồ Mermaid trên web.',
           },
           {
             id: 'wallpaper',
-            accent: 'mint',
-            icon: Compass,
-            title: 'TD-WallpaperEngine',
+            tag: '03 // WINDOWS APP',
             prompt: en
               ? 'Tell me about TD-WallpaperEngine for Windows and how it works.'
               : 'Giới thiệu ứng dụng TD-WallpaperEngine cho Windows và cách hoạt động.',
           },
           {
             id: 'games',
-            accent: 'amber',
-            icon: Sparkles,
-            title: en ? 'Mini Games & AI Labs' : 'Mini Game & Thử nghiệm AI',
+            tag: '04 // MINI GAMES',
             prompt: en
               ? 'What mini games and interactive AI experiments can I play right now?'
               : 'Trên Playground có những mini game và thử nghiệm AI nào chơi được ngay?',
@@ -716,6 +649,18 @@ function ChatContent() {
     return null;
   }, [messages]);
 
+  const availableFollowups = useMemo(() => {
+    const asked = new Set(
+      messages
+        .filter((m) => m.role === 'user')
+        .map((m) => m.content.trim().toLowerCase()),
+    );
+    const filtered = activeFocusMeta.starters.filter(
+      (promptText) => !asked.has(promptText.trim().toLowerCase()),
+    );
+    return (filtered.length > 0 ? filtered : activeFocusMeta.starters).slice(0, 3);
+  }, [activeFocusMeta.starters, messages]);
+
   const filteredSessions = useMemo(() => {
     const q = historyFilter.trim().toLowerCase();
     if (!q) return sessions;
@@ -781,7 +726,6 @@ function ChatContent() {
           >
             {focusModes.map((mode) => {
               const active = focusMode === mode.id;
-              const ModeIcon = mode.icon;
               return (
                 <button
                   key={mode.id}
@@ -795,7 +739,6 @@ function ChatContent() {
                   }}
                   title={mode.hint}
                 >
-                  <ModeIcon size={13} aria-hidden="true" />
                   <span>{mode.shortLabel}</span>
                 </button>
               );
@@ -803,9 +746,11 @@ function ChatContent() {
           </div>
 
           <div className="chatdvt-composer__controls">
-            <span className="chatdvt-char-count" aria-hidden="true">
-              {input.length}/4000
-            </span>
+            {input.length > 200 && (
+              <span className="chatdvt-char-count" aria-hidden="true">
+                {input.length}/4000
+              </span>
+            )}
             {input.length > 0 && (
               <button
                 type="button"
@@ -826,7 +771,7 @@ function ChatContent() {
               disabled={!input.trim() || isLoading}
               aria-label={t('page.sendLabel')}
             >
-              <ArrowUp size={18} aria-hidden="true" />
+              <ArrowUp size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -857,74 +802,63 @@ function ChatContent() {
           className="chatdvt-directory"
           aria-label={en ? 'Chat sessions and workspace' : 'Danh sách hội thoại và công cụ'}
         >
-          <div className="chatdvt-sidebar-top">
-            <div className="chatdvt-sidebar-brand">
-              <div className="chatdvt-sidebar-brand__id">
-                <img
-                  src={botAvatar}
-                  alt=""
-                  width={26}
-                  height={26}
-                  onError={(event) => {
-                    if (!event.currentTarget.src.endsWith('/images/chibi/chatdvt.jpg')) {
-                      event.currentTarget.src = '/images/chibi/chatdvt.jpg';
-                    }
-                  }}
-                />
-                <strong>ChatDVT</strong>
-                <span className="chatdvt-sidebar-brand__badge">AI</span>
-              </div>
-              <button
-                type="button"
-                className="chatdvt-sidebar-icon-btn"
-                onClick={() => {
-                  setSidebarCollapsed(true);
-                  setMobileSidebarOpen(false);
-                }}
-                aria-label={en ? 'Collapse sidebar' : 'Thu gọn thanh bên'}
-                title={en ? 'Collapse sidebar' : 'Thu gọn thanh bên'}
-              >
-                <PanelLeftClose size={16} aria-hidden="true" />
-              </button>
-            </div>
+          <div className="chatdvt-sidebar-brand">
+            <span className="chatdvt-sidebar-kicker">
+              {en ? 'CHAT HISTORY' : 'LỊCH SỬ HỘI THOẠI'}
+            </span>
+            <button
+              type="button"
+              className="chatdvt-sidebar-icon-btn"
+              onClick={() => {
+                setSidebarCollapsed(true);
+                setMobileSidebarOpen(false);
+              }}
+              aria-label={en ? 'Collapse sidebar' : 'Thu gọn thanh bên'}
+              title={en ? 'Collapse sidebar' : 'Thu gọn thanh bên'}
+            >
+              <PanelLeftClose size={16} aria-hidden="true" />
+            </button>
+          </div>
 
+          <div className="chatdvt-sidebar-top">
             <button
               type="button"
               className="chatdvt-sidebar-new-btn"
               onClick={startNewChat}
               disabled={isLoading}
             >
-              <MessageSquarePlus size={16} aria-hidden="true" />
+              <MessageSquarePlus size={15} aria-hidden="true" />
               <span>{en ? 'New chat' : 'Cuộc trò chuyện mới'}</span>
-              <kbd>New</kbd>
             </button>
 
-            <div className="chatdvt-sidebar-search">
-              <Search size={14} aria-hidden="true" />
-              <input
-                type="search"
-                value={historyFilter}
-                onChange={(event) => setHistoryFilter(event.target.value)}
-                placeholder={en ? 'Search conversations...' : 'Tìm đoạn chat...'}
-                aria-label={en ? 'Search conversations' : 'Tìm đoạn chat'}
-              />
-              {historyFilter && (
-                <button
-                  type="button"
-                  onClick={() => setHistoryFilter('')}
-                  aria-label={en ? 'Clear search' : 'Xóa tìm kiếm'}
-                >
-                  <X size={12} aria-hidden="true" />
-                </button>
-              )}
-            </div>
+            {(sessions.length > 2 || Boolean(historyFilter)) && (
+              <div className="chatdvt-sidebar-search">
+                <Search size={13} aria-hidden="true" />
+                <input
+                  type="search"
+                  value={historyFilter}
+                  onChange={(event) => setHistoryFilter(event.target.value)}
+                  placeholder={en ? 'Filter chats...' : 'Lọc đoạn chat...'}
+                  aria-label={en ? 'Search conversations' : 'Tìm đoạn chat'}
+                />
+                {historyFilter && (
+                  <button
+                    type="button"
+                    onClick={() => setHistoryFilter('')}
+                    aria-label={en ? 'Clear search' : 'Xóa tìm kiếm'}
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="chatdvt-sidebar-scroll">
             <div className="chatdvt-sidebar-section">
-              <div className="chatdvt-sidebar-section__head">
-                <span>{en ? 'Recent chats' : 'Đoạn chat gần đây'}</span>
-                {sessions.length > 0 && (
+              {sessions.length > 0 && (
+                <div className="chatdvt-sidebar-section__head">
+                  <span>{en ? 'Recent' : 'Gần đây'}</span>
                   <button
                     type="button"
                     onClick={handleClearAllSessions}
@@ -932,22 +866,16 @@ function ChatContent() {
                   >
                     {en ? 'Clear' : 'Xóa hết'}
                   </button>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="chatdvt-session-list" role="list">
-                {isEmptyChat && !activeSessionId && (
-                  <button
-                    type="button"
-                    className="chatdvt-session-item is-active"
-                    onClick={() => inputRef.current?.focus()}
-                  >
-                    <Sparkles size={14} aria-hidden="true" />
-                    <div className="chatdvt-session-item__text">
-                      <strong>{en ? 'New conversation' : 'Cuộc trò chuyện mới'}</strong>
-                      <small>{en ? 'Ready to chat' : 'Đang mở · Sẵn sàng'}</small>
-                    </div>
-                  </button>
+                {sessions.length === 0 && (
+                  <p className="chatdvt-sidebar-empty">
+                    {en
+                      ? 'No saved conversations yet. Start chatting to save your thread here.'
+                      : 'Chưa có đoạn chat nào. Các cuộc trò chuyện của bạn sẽ tự động lưu tại đây.'}
+                  </p>
                 )}
 
                 {filteredSessions.map((session) => {
@@ -994,63 +922,13 @@ function ChatContent() {
                 )}
               </div>
             </div>
-
-            <div className="chatdvt-sidebar-section">
-              <div className="chatdvt-sidebar-section__head">
-                <span>{en ? 'Quick topics' : 'Chủ đề hỏi nhanh'}</span>
-              </div>
-              <div className="chatdvt-topic-list">
-                {quickPrompts.map((item) => {
-                  const ItemIcon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="chatdvt-topic-btn"
-                      disabled={isLoading}
-                      onClick={() => {
-                        setMobileSidebarOpen(false);
-                        void sendMessage(item.prompt);
-                      }}
-                    >
-                      <ItemIcon size={14} aria-hidden="true" />
-                      <span>{item.title}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
 
           <div className="chatdvt-sidebar-footer">
-            <button
-              type="button"
-              ref={keyTrigger}
-              className={'chatdvt-sidebar-key-btn' + (geminiKey ? ' is-active' : '')}
-              onClick={() => keyDialog.current?.showModal()}
-            >
-              <Key size={14} aria-hidden="true" />
-              <div>
-                <strong>Gemini API Key</strong>
-                <small>
-                  {geminiKey
-                    ? en
-                      ? 'Personal key active'
-                      : 'Đang dùng key cá nhân'
-                    : en
-                      ? 'Default server key · Set BYOK'
-                      : 'Key mặc định · Nhập key riêng'}
-                </small>
-              </div>
-              <span className="chatdvt-sidebar-key-dot" aria-hidden="true" />
-            </button>
-
-            <div className="chatdvt-sidebar-links" aria-label={en ? 'Quick links' : 'Liên kết nhanh'}>
-              <Link to={pathFor('/playground')}>Playground</Link>
-              <Link to={pathFor('/discord')}>Discord Bot</Link>
-              <Link to={pathFor('/me')}>{en ? 'About Tiến' : 'Về Tiến'}</Link>
-              <Link to={pathFor('/blog')}>Blog</Link>
-            </div>
+            <p className="chatdvt-sidebar-note">
+              <span className="chatdvt-online-pulse" aria-hidden="true" />
+              <span>{t('page.privacy')}</span>
+            </p>
           </div>
         </aside>
 
@@ -1073,29 +951,12 @@ function ChatContent() {
                 <PanelLeftOpen size={17} aria-hidden="true" />
               </button>
 
-              <div className="chatdvt-chat-avatar-wrap">
-                <img
-                  src={botAvatar}
-                  alt=""
-                  width={32}
-                  height={32}
-                  onError={(event) => {
-                    if (!event.currentTarget.src.endsWith('/images/chibi/chatdvt.jpg')) {
-                      event.currentTarget.src = '/images/chibi/chatdvt.jpg';
-                    }
-                  }}
-                />
-                <span className="chatdvt-chat-avatar-dot" aria-hidden="true" />
-              </div>
-              <div>
-                <div className="chatdvt-chat-title-row">
-                  <h1>ChatDVT</h1>
-                  <span className="chatdvt-model-pill">Gemini 2.5 Flash</span>
-                </div>
-                <p>
-                  <span className="chatdvt-online-pulse" aria-hidden="true" />
-                  {activeFocusMeta.label} · {en ? 'Online' : 'Sẵn sàng'}
-                </p>
+              <div className="chatdvt-chat-title-row">
+                <h1>ChatDVT</h1>
+                <span className="chatdvt-model-pill">Gemini 2.5 Flash</span>
+                {focusMode !== 'all' && (
+                  <span className="chatdvt-context-pill">{activeFocusMeta.shortLabel}</span>
+                )}
               </div>
             </div>
 
@@ -1106,12 +967,13 @@ function ChatContent() {
                 onClick={() => setCompanionOpen((v) => !v)}
                 title={en ? 'Toggle interactive Chibi companion' : 'Bật/tắt nhân vật đồng hành Chibi'}
               >
-                <Bot size={15} aria-hidden="true" />
+                <Bot size={14} aria-hidden="true" />
                 <span>{en ? 'Companion' : 'Nhân vật AI'}</span>
               </button>
 
               <button
                 type="button"
+                ref={keyTrigger}
                 className={'chatdvt-key-toggle' + (geminiKey ? ' is-active' : '')}
                 aria-haspopup="dialog"
                 aria-controls="chat-api-key"
@@ -1126,52 +988,56 @@ function ChatContent() {
                       : 'Cấu hình Gemini API Key cá nhân (BYOK)'
                 }
               >
-                <Key size={14} aria-hidden="true" />
+                <Key size={13} aria-hidden="true" />
                 <span>{geminiKey ? 'BYOK' : 'API Key'}</span>
                 <i aria-hidden="true" />
               </button>
 
-              <button
-                type="button"
-                className="chatdvt-new-chat"
-                aria-label={t('page.newChat')}
-                onClick={startNewChat}
-                disabled={isLoading || isEmptyChat}
-              >
-                <MessageSquarePlus size={16} aria-hidden="true" />
-                <span>{t('page.newChat')}</span>
-              </button>
+              {!isEmptyChat && (
+                <button
+                  type="button"
+                  className="chatdvt-new-chat"
+                  aria-label={t('page.newChat')}
+                  onClick={startNewChat}
+                  disabled={isLoading}
+                >
+                  <MessageSquarePlus size={14} aria-hidden="true" />
+                  <span>{t('page.newChat')}</span>
+                </button>
+              )}
             </div>
           </header>
 
           {companionOpen && (
             <div className="chatdvt-companion-float" role="region" aria-label="ChatDVT Companion">
-              <div className="chatdvt-companion-float__head">
-                <span>COMPANION // LIVE</span>
-                <button
-                  type="button"
-                  onClick={() => setCompanionOpen(false)}
-                  aria-label={en ? 'Close companion' : 'Đóng nhân vật'}
-                >
-                  <X size={13} aria-hidden="true" />
-                </button>
-              </div>
               <div className="chatdvt-companion-float__stage">
                 <Mascot
                   character="chatdvt"
-                  size={96}
+                  size={54}
                   action={isLoading ? 'coffee' : messages.length > 0 ? 'talk' : 'tablet-show'}
                 />
               </div>
-              <p>
-                {isLoading
-                  ? en
-                    ? 'Synthesizing response...'
-                    : 'Đang suy nghĩ câu trả lời...'
-                  : en
-                    ? 'ChatDVT is ready to assist you.'
-                    : 'ChatDVT đang đồng hành cùng bạn.'}
-              </p>
+              <div className="chatdvt-companion-float__info">
+                <div className="chatdvt-companion-float__head">
+                  <span>COMPANION // LIVE</span>
+                  <button
+                    type="button"
+                    onClick={() => setCompanionOpen(false)}
+                    aria-label={en ? 'Close companion' : 'Đóng nhân vật'}
+                  >
+                    <X size={13} aria-hidden="true" />
+                  </button>
+                </div>
+                <p>
+                  {isLoading
+                    ? en
+                      ? 'Synthesizing response...'
+                      : 'Đang suy nghĩ câu trả lời...'
+                    : en
+                      ? 'Ready to assist you.'
+                      : 'Sẵn sàng hỗ trợ bạn.'}
+                </p>
+              </div>
             </div>
           )}
 
@@ -1185,35 +1051,31 @@ function ChatContent() {
             {isEmptyChat ? (
               <article className="chatdvt-welcome">
                 <div className="chatdvt-welcome__identity">
-                  <div className="chatdvt-welcome__avatar">
-                    <img
-                      src={botAvatar}
-                      alt=""
-                      width={52}
-                      height={52}
-                      onError={(event) => {
-                        if (!event.currentTarget.src.endsWith('/images/chibi/chatdvt.jpg')) {
-                          event.currentTarget.src = '/images/chibi/chatdvt.jpg';
-                        }
-                      }}
-                    />
-                    <span className="chatdvt-welcome__avatar-dot" aria-hidden="true" />
+                  <div className="chatdvt-welcome__kicker">
+                    <div className="chatdvt-welcome__avatar">
+                      <img
+                        src={botAvatar}
+                        alt=""
+                        width={36}
+                        height={36}
+                        onError={(event) => {
+                          if (!event.currentTarget.src.endsWith('/images/chibi/chatdvt.jpg')) {
+                            event.currentTarget.src = '/images/chibi/chatdvt.jpg';
+                          }
+                        }}
+                      />
+                    </div>
+                    <span>
+                      {en ? 'CHATDVT // AI ASSISTANT' : 'CHATDVT // TRỢ LÝ AI CỦA TIẾN'}
+                    </span>
                   </div>
                   <h2>
-                    {en ? (
-                      <>
-                        Hi, I’m <em>ChatDVT</em>. How can I help you today?
-                      </>
-                    ) : (
-                      <>
-                        Xin chào, mình là <em>ChatDVT</em>. Hôm nay bạn muốn trao đổi gì?
-                      </>
-                    )}
+                    {en ? 'How can I help you today?' : 'Hôm nay bạn muốn trao đổi gì?'}
                   </h2>
                   <p className="chatdvt-welcome__copy">
                     {en
-                      ? 'Type your question directly below — ask about Đặng Văn Tiến, React Native & Android/Kotlin architecture, or explore AI tools.'
-                      : 'Nhập câu hỏi trực tiếp vào khung chat bên dưới — trao đổi về Đặng Văn Tiến, kiến trúc React Native & Kotlin, hoặc khám phá công cụ AI.'}
+                      ? 'Ask about Đặng Văn Tiến, React Native & Android/Kotlin architecture, or explore tools on this site.'
+                      : 'Hỏi về Đặng Văn Tiến, kiến trúc React Native & Kotlin, hoặc tìm nhanh công cụ trên web.'}
                   </p>
                 </div>
 
@@ -1223,27 +1085,21 @@ function ChatContent() {
                   className="chatdvt-suggestions"
                   aria-label={en ? 'Conversation starters' : 'Gợi ý bắt đầu'}
                 >
-                  {activeFocusMeta.cards.map((item) => {
-                    const ItemIcon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`chatdvt-suggestion-card chatdvt-suggestion-card--${item.accent}`}
-                        disabled={isLoading}
-                        onClick={() => void sendMessage(item.prompt)}
-                      >
-                        <span className="chatdvt-suggestion-card__icon" aria-hidden="true">
-                          <ItemIcon size={16} />
-                        </span>
-                        <div className="chatdvt-suggestion-card__content">
-                          <strong>{item.title}</strong>
-                          <small>{item.prompt}</small>
-                        </div>
+                  {activeFocusMeta.cards.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="chatdvt-suggestion-card"
+                      disabled={isLoading}
+                      onClick={() => void sendMessage(item.prompt)}
+                    >
+                      <div className="chatdvt-suggestion-card__top">
+                        <span className="chatdvt-suggestion-card__tag">{item.tag}</span>
                         <ArrowUpRight size={14} className="chatdvt-suggestion-card__arrow" aria-hidden="true" />
-                      </button>
-                    );
-                  })}
+                      </div>
+                      <p className="chatdvt-suggestion-card__prompt">{item.prompt}</p>
+                    </button>
+                  ))}
                 </div>
               </article>
             ) : (
@@ -1264,10 +1120,8 @@ function ChatContent() {
                         (isError ? ' chatdvt-message--error' : '')
                       }
                     >
-                      <div className="chatdvt-message__avatar">
-                        {isUser ? (
-                          <User size={16} aria-hidden="true" />
-                        ) : (
+                      {!isUser && (
+                        <div className="chatdvt-message__avatar">
                           <img
                             src={botAvatar}
                             alt=""
@@ -1277,20 +1131,21 @@ function ChatContent() {
                               }
                             }}
                           />
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       <div className="chatdvt-message__body">
-                        <div className="chatdvt-message__meta">
-                          <strong>{isUser ? t('page.you') : botName}</strong>
-                          {!isUser && <span className="chatdvt-message__badge">AI</span>}
-                          <time dateTime={new Date(message.timestamp).toISOString()}>
-                            {new Date(message.timestamp).toLocaleTimeString(
-                              en ? 'en-US' : 'vi-VN',
-                              { hour: '2-digit', minute: '2-digit' },
-                            )}
-                          </time>
-                        </div>
+                        {!isUser && (
+                          <div className="chatdvt-message__meta">
+                            <strong>{botName}</strong>
+                            <time dateTime={new Date(message.timestamp).toISOString()}>
+                              {new Date(message.timestamp).toLocaleTimeString(
+                                en ? 'en-US' : 'vi-VN',
+                                { hour: '2-digit', minute: '2-digit' },
+                              )}
+                            </time>
+                          </div>
+                        )}
 
                         <div className="chatdvt-message__surface">
                           {message.role === 'assistant' ? (
@@ -1387,10 +1242,10 @@ function ChatContent() {
                   <div className="chatdvt-followups" aria-label={en ? 'Suggested follow-ups' : 'Gợi ý hỏi tiếp'}>
                     <span className="chatdvt-followups__label">
                       <Sparkles size={12} aria-hidden="true" />
-                      {en ? 'NEXT TURN //' : 'HỎI TIẾP //'}
+                      {en ? 'FOLLOW-UP //' : 'GỢI Ý HỎI TIẾP //'}
                     </span>
                     <div className="chatdvt-followups__list">
-                      {activeFocusMeta.starters.map((promptText) => (
+                      {availableFollowups.map((promptText) => (
                         <button
                           key={promptText}
                           type="button"
