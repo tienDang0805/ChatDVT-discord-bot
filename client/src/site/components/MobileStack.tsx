@@ -21,6 +21,9 @@ interface OrbSpec {
   title: string;
   subtitle: string;
   badge: string;
+  role: string;
+  metricLabel: string;
+  metricValue: string;
   specs: [string, string, string];
   scene: SceneMode;
   color: string;
@@ -41,6 +44,9 @@ const ORBS: OrbSpec[] = [
     title: 'React Native',
     subtitle: 'iOS · Android · Hermes',
     badge: '60 FPS',
+    role: 'Cross-Platform UI Engine',
+    metricLabel: 'UI Frame Time',
+    metricValue: '0.8 ms · Fabric',
     specs: ['RN 0.74+', 'Native Mod', 'Reanimated'],
     scene: 'rn',
     color: '#38bdf8',
@@ -56,6 +62,9 @@ const ORBS: OrbSpec[] = [
     title: 'TypeScript',
     subtitle: 'Strict Typed Mobile',
     badge: 'TS 5.x',
+    role: 'End-to-End Type Safety',
+    metricLabel: 'Type Coverage',
+    metricValue: '100% · Strict',
     specs: ['Strict TS', 'Typed Hook', 'SDK Types'],
     scene: 'rn',
     color: '#3b82f6',
@@ -71,6 +80,9 @@ const ORBS: OrbSpec[] = [
     title: 'Java · Bridge',
     subtitle: 'ReactMethod · JNI',
     badge: 'BRIDGE',
+    role: 'Native Module Bridge',
+    metricLabel: 'Bridge Latency',
+    metricValue: '< 1.2 ms · JSI',
     specs: ['JNI Bridge', 'Events', 'Zero-Copy'],
     scene: 'sdk',
     color: '#f97316',
@@ -86,6 +98,9 @@ const ORBS: OrbSpec[] = [
     title: 'Node.js · API',
     subtitle: 'Express · MySQL',
     badge: '200 OK',
+    role: 'Backend & Realtime Bot',
+    metricLabel: 'API Response',
+    metricValue: '18 ms · Prisma',
     specs: ['REST API', 'Prisma ORM', 'WebSocket'],
     scene: 'backend',
     color: '#22c55e',
@@ -102,6 +117,9 @@ const ORBS: OrbSpec[] = [
     title: 'Kotlin Native',
     subtitle: 'Multi-Box · SDK',
     badge: 'KOTLIN',
+    role: 'Android Native Core',
+    metricLabel: 'Concurrency',
+    metricValue: 'Coroutines · Flow',
     specs: ['Coroutines', 'StateFlow', 'Jetpack'],
     scene: 'sdk',
     color: '#a855f7',
@@ -117,6 +135,9 @@ const ORBS: OrbSpec[] = [
     title: 'Android SDK',
     subtitle: 'Camera & Lifecycle',
     badge: 'API 34',
+    role: 'System & Hardware Layer',
+    metricLabel: 'Target Runtime',
+    metricValue: 'Android 14 · NDK',
     specs: ['NDK / JNI', 'Lifecycle', 'Low RAM'],
     scene: 'sdk',
     color: '#3ddc84',
@@ -132,6 +153,9 @@ const ORBS: OrbSpec[] = [
     title: 'CameraX Vision',
     subtitle: '60fps Frame Scan',
     badge: '14 MS',
+    role: 'Real-Time Vision Stream',
+    metricLabel: 'Frame Analyzer',
+    metricValue: 'YUV_420 · 60fps',
     specs: ['YUV_420', 'ML Kit', 'TFLite SDK'],
     scene: 'sdk',
     color: '#c084fc',
@@ -147,6 +171,9 @@ const ORBS: OrbSpec[] = [
     title: 'Native AAR SDK',
     subtitle: 'Gradle · Maven AAR',
     badge: 'v2.4',
+    role: 'Enterprise Mobile SDK',
+    metricLabel: 'Distribution',
+    metricValue: 'Maven · ProGuard',
     specs: ['Maven AAR', 'ProGuard', 'Offline DB'],
     scene: 'sdk',
     color: '#eab308',
@@ -162,13 +189,25 @@ const SCENE_ORDER: SceneMode[] = ['rn', 'sdk', 'backend'];
 
 const DEFAULT_SCENE_SPEC: Record<
   SceneMode,
-  { icon: OrbId; title: string; subtitle: string; badge: string; specs: [string, string, string] }
+  {
+    icon: OrbId;
+    title: string;
+    subtitle: string;
+    badge: string;
+    role: string;
+    metricLabel: string;
+    metricValue: string;
+    specs: [string, string, string];
+  }
 > = {
   rn: {
     icon: 'rn',
     title: 'React Native · TS',
     subtitle: 'iOS · Android · Hermes',
     badge: '60 FPS',
+    role: 'Cross-Platform App UI',
+    metricLabel: 'UI Thread',
+    metricValue: '0.8 ms · 60 FPS',
     specs: ['RN 0.74+', 'TypeScript', 'Native Mod'],
   },
   sdk: {
@@ -176,6 +215,9 @@ const DEFAULT_SCENE_SPEC: Record<
     title: 'Kotlin · Android',
     subtitle: 'CameraX · Native SDK',
     badge: '99.4%',
+    role: 'Multi-Barcode & Box SDK',
+    metricLabel: 'Vision Lock',
+    metricValue: '14 ms · 99.4%',
     specs: ['Kotlin', 'CameraX', 'Maven AAR'],
   },
   backend: {
@@ -183,6 +225,9 @@ const DEFAULT_SCENE_SPEC: Record<
     title: 'Node.js · API',
     subtitle: 'Express · MySQL',
     badge: '18 MS',
+    role: 'REST API & ChatDVT Bot',
+    metricLabel: 'Throughput',
+    metricValue: '200 OK · 18 ms',
     specs: ['Node.js', 'REST / WS', 'MySQL'],
   },
 };
@@ -261,7 +306,7 @@ function TechLogo({ id }: { id: OrbId }) {
   }
 }
 
-// Sleek flagship phone screen with authentic Framework/Language header, live interactive viewport & spec chips
+// Full-bleed flagship smartphone screen with rich mobile OS widgets, live SVG visuals & stack telemetry
 function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb: OrbSpec | null }) {
   const activeMeta = focusedOrb
     ? {
@@ -269,6 +314,9 @@ function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb:
         title: focusedOrb.title,
         subtitle: focusedOrb.subtitle,
         badge: focusedOrb.badge,
+        role: focusedOrb.role,
+        metricLabel: focusedOrb.metricLabel,
+        metricValue: focusedOrb.metricValue,
         specs: focusedOrb.specs,
       }
     : DEFAULT_SCENE_SPEC[scene];
@@ -276,51 +324,72 @@ function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb:
   if (scene === 'rn') {
     return (
       <div className="msc-scene msc-scene--rn">
-        {/* Top Framework Identity Header */}
-        <div className="msc-app-header">
-          <div className="msc-app-header__icon is-spin-slow">
-            <TechLogo id={activeMeta.icon} />
-          </div>
-          <div className="msc-app-header__copy">
-            <strong>{activeMeta.title}</strong>
-            <span>{activeMeta.subtitle}</span>
-          </div>
-          <b className="msc-app-header__badge is-cyan">{activeMeta.badge}</b>
-        </div>
-
-        {/* Live Cross-Platform UI & Bridge Inspector */}
-        <div className="msc-rn-stage">
-          <div className="msc-rn-codecard">
-            <div className="msc-rn-codecard__top">
-              <span className="msc-code-tag">&lt;ScannerView /&gt;</span>
-              <span className="msc-platform-pills">
-                <i>iOS</i>
-                <i>Android</i>
-              </span>
+        {/* Hero Glass Card: Active Framework & Role */}
+        <div className="msc-hero-card is-cyan">
+          <div className="msc-hero-card__top">
+            <div className="msc-hero-card__logo is-spin-slow">
+              <TechLogo id={activeMeta.icon} />
             </div>
-            <div className="msc-fps-graph" aria-hidden="true">
-              <i style={{ height: '65%' }} />
-              <i style={{ height: '85%' }} />
-              <i style={{ height: '78%' }} />
-              <i style={{ height: '96%' }} />
-              <i style={{ height: '88%' }} />
-              <i style={{ height: '100%' }} />
-              <i style={{ height: '92%' }} />
+            <div className="msc-hero-card__titles">
+              <strong>{activeMeta.title}</strong>
+              <span>{activeMeta.subtitle}</span>
             </div>
-            <div className="msc-rn-codecard__meta">
-              <span>UI Thread: 0.8ms</span>
-              <b>Hermes JIT</b>
-            </div>
+            <b className="msc-hero-card__badge">{activeMeta.badge}</b>
           </div>
 
-          <div className="msc-rn-bridge-row">
-            <span className="msc-bridge-dot" />
-            <span className="msc-bridge-text">NativeModules.BarcodeSDK</span>
-            <b className="msc-ui-toggle"><span /></b>
+          {/* Live SVG Smooth Bezier Frame-Timing Wave + Platform Pills */}
+          <div className="msc-hero-wave">
+            <svg viewBox="0 0 170 40" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="msc-rn-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.48" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0,34 C24,31 38,20 64,24 C90,28 108,17 134,21 C152,24 160,18 170,19 L170,40 L0,40 Z"
+                fill="url(#msc-rn-grad)"
+              />
+              <path
+                d="M0,34 C24,31 38,20 64,24 C90,28 108,17 134,21 C152,24 160,18 170,19"
+                fill="none"
+                stroke="#38bdf8"
+                strokeWidth="2"
+                className="msc-wave-stroke"
+              />
+            </svg>
+            <div className="msc-hero-wave__overlay">
+              <span>{activeMeta.metricLabel}</span>
+              <b>{activeMeta.metricValue}</b>
+            </div>
           </div>
         </div>
 
-        {/* Authentic Framework & Language Spec Chips */}
+        {/* Interactive Mobile App Stack Cards (Real Logos + Progress Meters) */}
+        <div className="msc-stack-list">
+          <div className="msc-stack-item is-active">
+            <span className="msc-stack-item__ico"><TechLogo id="rn" /></span>
+            <div className="msc-stack-item__body">
+              <div className="msc-stack-item__row">
+                <b>React Native</b>
+                <em>iOS · Android</em>
+              </div>
+              <div className="msc-progress"><i style={{ width: '94%', background: '#38bdf8' }} /></div>
+            </div>
+          </div>
+          <div className="msc-stack-item">
+            <span className="msc-stack-item__ico"><TechLogo id="ts" /></span>
+            <div className="msc-stack-item__body">
+              <div className="msc-stack-item__row">
+                <b>TypeScript 5</b>
+                <em>Strict · Hooks</em>
+              </div>
+              <div className="msc-progress"><i style={{ width: '90%', background: '#3b82f6' }} /></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Spec Chips */}
         <div className="msc-spec-chips">
           {activeMeta.specs.map((item) => (
             <span key={item} className="msc-spec-chip">
@@ -336,38 +405,55 @@ function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb:
   if (scene === 'sdk') {
     return (
       <div className="msc-scene msc-scene--sdk">
-        {/* Top Framework Identity Header */}
-        <div className="msc-app-header">
-          <div className="msc-app-header__icon">
-            <TechLogo id={activeMeta.icon} />
+        {/* Hero Glass Card: Active Native SDK / Vision Stack */}
+        <div className="msc-hero-card is-purple">
+          <div className="msc-hero-card__top">
+            <div className="msc-hero-card__logo">
+              <TechLogo id={activeMeta.icon} />
+            </div>
+            <div className="msc-hero-card__titles">
+              <strong>{activeMeta.title}</strong>
+              <span>{activeMeta.subtitle}</span>
+            </div>
+            <b className="msc-hero-card__badge">{activeMeta.badge}</b>
           </div>
-          <div className="msc-app-header__copy">
-            <strong>{activeMeta.title}</strong>
-            <span>{activeMeta.subtitle}</span>
-          </div>
-          <b className="msc-app-header__badge is-purple">{activeMeta.badge}</b>
         </div>
 
-        {/* Live CameraX + Native SDK Multi-Box & Barcode Laser Scanner */}
+        {/* Realistic Android CameraX AR Viewfinder HUD */}
         <div className="msc-scanner-frame">
+          <div className="msc-scanner-grid" aria-hidden="true" />
           <i className="msc-laser-line" />
+
           <div className="msc-target-box is-box1">
             <span className="msc-corner-tl" /><span className="msc-corner-tr" />
             <span className="msc-corner-bl" /><span className="msc-corner-br" />
             <div className="msc-barcode-bars">
-              <i /><i /><i /><i /><i /><i /><i /><i />
+              <i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
             </div>
             <b>99.4%</b>
           </div>
+
           <div className="msc-scanner-bottom">
-            <span className="msc-pipeline-pill">CameraX → Kotlin → AAR</span>
-            <div className="msc-target-box is-box2">
-              <b>BOX #2 ✓</b>
+            <div className="msc-ar-box">
+              <span className="msc-ar-dot" />
+              <span>BOX #02 · TFLite</span>
+              <b>14ms</b>
             </div>
           </div>
         </div>
 
-        {/* Authentic Framework & Language Spec Chips */}
+        {/* 4-Node Native Pipeline Bar */}
+        <div className="msc-native-flow">
+          <span>CameraX</span>
+          <i>→</i>
+          <span>Kotlin</span>
+          <i>→</i>
+          <span>JNI</span>
+          <i>→</i>
+          <b className="is-amber">AAR</b>
+        </div>
+
+        {/* Spec Chips */}
         <div className="msc-spec-chips">
           {activeMeta.specs.map((item) => (
             <span key={item} className="msc-spec-chip">
@@ -382,19 +468,48 @@ function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb:
 
   return (
     <div className="msc-scene msc-scene--ai">
-      {/* Top Framework Identity Header */}
-      <div className="msc-app-header">
-        <div className="msc-app-header__icon">
-          <TechLogo id={activeMeta.icon} />
+      {/* Hero Glass Card: Node.js API & ChatDVT */}
+      <div className="msc-hero-card is-green">
+        <div className="msc-hero-card__top">
+          <div className="msc-hero-card__logo">
+            <TechLogo id={activeMeta.icon} />
+          </div>
+          <div className="msc-hero-card__titles">
+            <strong>{activeMeta.title}</strong>
+            <span>{activeMeta.subtitle}</span>
+          </div>
+          <b className="msc-hero-card__badge">{activeMeta.badge}</b>
         </div>
-        <div className="msc-app-header__copy">
-          <strong>{activeMeta.title}</strong>
-          <span>{activeMeta.subtitle}</span>
+
+        {/* Live Server Throughput Sparkline */}
+        <div className="msc-hero-wave">
+          <svg viewBox="0 0 170 40" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="msc-node-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.45" />
+                <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0,34 C22,30 40,19 65,24 C92,28 112,17 138,21 C154,23 162,18 170,17 L170,40 L0,40 Z"
+              fill="url(#msc-node-grad)"
+            />
+            <path
+              d="M0,34 C22,30 40,19 65,24 C92,28 112,17 138,21 C154,23 162,18 170,17"
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2"
+              className="msc-wave-stroke"
+            />
+          </svg>
+          <div className="msc-hero-wave__overlay">
+            <span>{activeMeta.metricLabel}</span>
+            <b>{activeMeta.metricValue}</b>
+          </div>
         </div>
-        <b className="msc-app-header__badge is-green">{activeMeta.badge}</b>
       </div>
 
-      {/* Live API Telemetry & Mobile Sync Stream */}
+      {/* Live API & ChatDVT Stream Cards */}
       <div className="msc-api-stage">
         <div className="msc-api-row">
           <span className="msc-http-method is-post">POST</span>
@@ -408,13 +523,14 @@ function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb:
             <i /><i /><i /><i />
           </div>
         </div>
-        <div className="msc-api-metrics">
-          <span>Express · Prisma</span>
-          <b>MySQL Sync ✓</b>
+        <div className="msc-api-row">
+          <span className="msc-http-method is-post">SQL</span>
+          <span className="msc-http-path">Prisma · MySQL</span>
+          <b className="msc-http-status">SYNCED ✓</b>
         </div>
       </div>
 
-      {/* Authentic Framework & Language Spec Chips */}
+      {/* Spec Chips */}
       <div className="msc-spec-chips">
         {activeMeta.specs.map((item) => (
           <span key={item} className="msc-spec-chip">
@@ -536,46 +652,59 @@ export function MobileStack() {
             {/* Specular Glass Glare Overlay */}
             <div className="msc-device__glare" aria-hidden="true" />
 
-            {/* Flagship Top Status Bar + Dynamic Island */}
-            <div className="msc-statusbar" aria-hidden="true">
-              <span className="msc-statusbar__time">09:41</span>
-              <div className="msc-device__notch">
-                <span className="msc-notch-cam" />
-                <i />
-              </div>
-              <div className="msc-statusbar__icons">
-                <svg viewBox="0 0 14 10" className="msc-status-svg">
-                  <rect x="0.5" y="6.5" width="2" height="3" rx="0.6" fill="currentColor" />
-                  <rect x="3.8" y="4.5" width="2" height="5" rx="0.6" fill="currentColor" />
-                  <rect x="7.1" y="2.5" width="2" height="7" rx="0.6" fill="currentColor" />
-                  <rect x="10.4" y="0.5" width="2" height="9" rx="0.6" fill="currentColor" />
-                </svg>
-                <span className="msc-battery">
+            {/* EDGE-TO-EDGE FULL-BLEED OLED DISPLAY */}
+            <div className="msc-oled">
+              {/* Top OS Status Bar & Dynamic Island Embedded Inside Screen */}
+              <div className="msc-statusbar" aria-hidden="true">
+                <span className="msc-statusbar__time">9:41</span>
+                <div className="msc-device__notch">
+                  <span className="msc-notch-cam" />
+                  <div className="msc-notch-wave">
+                    <b /><b /><b />
+                  </div>
                   <i />
-                </span>
+                </div>
+                <div className="msc-statusbar__icons">
+                  <svg viewBox="0 0 14 10" className="msc-status-svg">
+                    <rect x="0.5" y="6.5" width="2" height="3" rx="0.6" fill="currentColor" />
+                    <rect x="3.8" y="4.5" width="2" height="5" rx="0.6" fill="currentColor" />
+                    <rect x="7.1" y="2.5" width="2" height="7" rx="0.6" fill="currentColor" />
+                    <rect x="10.4" y="0.5" width="2" height="9" rx="0.6" fill="currentColor" />
+                  </svg>
+                  <span className="msc-battery">
+                    <i />
+                  </span>
+                </div>
               </div>
-            </div>
 
-            <PhoneVisualScene scene={activeScene} focusedOrb={hoveredOrb} />
+              <PhoneVisualScene scene={activeScene} focusedOrb={hoveredOrb} />
 
-            {/* Bottom Mode Dots + Flagship Home Indicator Bar */}
-            <div className="msc-device__bottom" aria-hidden="true">
-              <div className="msc-device__dots">
-                {SCENE_ORDER.map((mode, idx) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    tabIndex={-1}
-                    className={activeScene === mode ? 'is-on' : ''}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setHoveredOrb(null);
-                      setSceneIndex(idx);
-                    }}
-                  />
-                ))}
+              {/* Frosted Glass Mobile Dock + Home Indicator Inside OLED Screen */}
+              <div className="msc-device__bottom" aria-hidden="true">
+                <div className="msc-dock">
+                  {([
+                    { mode: 'rn' as SceneMode, label: 'UI · RN', icon: 'rn' as OrbId },
+                    { mode: 'sdk' as SceneMode, label: 'Native', icon: 'kotlin' as OrbId },
+                    { mode: 'backend' as SceneMode, label: 'API', icon: 'nodejs' as OrbId },
+                  ]).map((tab, idx) => (
+                    <button
+                      key={tab.mode}
+                      type="button"
+                      tabIndex={-1}
+                      className={'msc-dock__btn' + (activeScene === tab.mode ? ' is-on' : '')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setHoveredOrb(null);
+                        setSceneIndex(idx);
+                      }}
+                    >
+                      <span className="msc-dock__ico"><TechLogo id={tab.icon} /></span>
+                      <b>{tab.label}</b>
+                    </button>
+                  ))}
+                </div>
+                <div className="msc-device__homebar" />
               </div>
-              <div className="msc-device__homebar" />
             </div>
           </div>
         </div>
