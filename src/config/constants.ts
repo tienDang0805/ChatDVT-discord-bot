@@ -14,12 +14,14 @@ export const GEMINI_CHAT_CONFIG = {
   model: "gemini-3.1-flash-lite",
   modelName: "gemini-3.1-flash-lite",
   generationConfig: {
-    temperature: 2.0,
+    temperature: 1.0,
     topP: 0.95,
     topK: 40,
-    maxOutputTokens: 8192,
+    maxOutputTokens: 2048,
   }
 };
+
+export const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
 
 export const WEB_CHAT_MODEL_FALLBACKS: readonly string[] = [
   "gemini-3.5-flash-lite",

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, PermissionsBitField } from 'discord.js';
 import { prisma } from '../../database/prisma';
+import { geminiService } from '../services/gemini';
 
 export const data = new SlashCommandBuilder()
     .setName('setting')
@@ -147,6 +148,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                          where: { guildId },
                          data: { activeModules: JSON.stringify(modules) }
                      });
+                     geminiService.invalidatePromptCache(guildId);
                  }
                  return interaction.reply({ content: '✅ Đã khôi phục Nhân Cách của Bot về mặc định (Global) cho máy chủ này!', ephemeral: true });
             } catch (error) {

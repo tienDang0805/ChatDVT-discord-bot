@@ -5,7 +5,7 @@ import { GEMINI_LOGIC_CONFIG, DEFAULT_SYSTEM_PROMPT } from '../../config/constan
 import { prisma } from '../../database/prisma';
 import { userIdentityService } from './identity';
 import { LoggerService } from './logger';
-import { geminiCore, retryWithBackoff } from '../../shared/services/gemini-core';
+import { geminiCore, retryWithBackoff, WebChatHistoryMessage } from '../../shared/services/gemini-core';
 
 // Helper to escape markdown
 function escapeMarkdown(text: string): string {
@@ -13,15 +13,99 @@ function escapeMarkdown(text: string): string {
     return text.replace(/(^|\s)(\*|_|~|`|>|\||#)(?=\s|$)/g, '$1\\$2');
 }
 
+const PROMPT_CACHE_TTL_MS = 2 * 60 * 1000;
+const DISCORD_HISTORY_TAKE = 12;
+const MAX_HISTORY_TURN_CHARS = 800;
+
+function buildSanitizedHistory(
+    logs: Array<{ username?: string | null; content?: string | null; response?: string | null }>,
+    maxChars = MAX_HISTORY_TURN_CHARS,
+): WebChatHistoryMessage[] {
+    const raw: WebChatHistoryMessage[] = [];
+    for (const log of [...logs].reverse()) {
+        if (log.content && log.content.trim() !== '') {
+            const userPrefix = log.username ? `[${log.username}]: ` : '';
+            const text = `${userPrefix}${log.content.trim()}`;
+            raw.push({
+                role: 'user',
+                content: text.length > maxChars ? `${text.slice(0, maxChars)}...` : text,
+            });
+        }
+        if (log.response && log.response.trim() !== '') {
+            const resp = log.response.trim();
+            raw.push({
+                role: 'model',
+                content: resp.length > maxChars ? `${resp.slice(0, maxChars)}...` : resp,
+            });
+        }
+    }
+
+    const valid: WebChatHistoryMessage[] = [];
+    for (const item of raw) {
+        if (valid.length === 0) {
+            if (item.role === 'user') valid.push(item);
+        } else if (item.role !== valid[valid.length - 1].role) {
+            valid.push(item);
+        } else {
+            valid[valid.length - 1].content = `${valid[valid.length - 1].content}\n${item.content}`.slice(0, maxChars);
+        }
+    }
+    if (valid.length > 0 && valid[valid.length - 1].role === 'user') {
+        valid.pop();
+    }
+    return valid;
+}
+
 class GeminiBotService {
+  private promptConfigCache = new Map<string, { value: string; timestamp: number }>();
+
   constructor() {}
+
+  public invalidatePromptCache(guildId?: string) {
+      if (!guildId) {
+          this.promptConfigCache.clear();
+          return;
+      }
+      for (const key of this.promptConfigCache.keys()) {
+          if (key.startsWith(`${guildId}:`)) {
+              this.promptConfigCache.delete(key);
+          }
+      }
+  }
 
   // --- Dynamic System Prompt ---
   public async getSystemPrompt(guildId: string, userId: string, feature: string = 'global'): Promise<string> {
+    const baseCacheKey = `${guildId || 'global'}:${feature}`;
+    const cachedBase = this.promptConfigCache.get(baseCacheKey);
+    const [{ nickname, signature }, baseCompiledPrompt] = await Promise.all([
+        userIdentityService.getIdentityForPrompt(userId),
+        cachedBase && Date.now() - cachedBase.timestamp < PROMPT_CACHE_TTL_MS
+            ? Promise.resolve(cachedBase.value)
+            : this.compileBaseGuildPrompt(guildId, feature).then((compiled) => {
+                  this.promptConfigCache.set(baseCacheKey, { value: compiled, timestamp: Date.now() });
+                  return compiled;
+              }),
+    ]);
+
+    let userContext = `\n\n# THÔNG TIN NGƯỜI DÙNG\nUser ID: ${userId}`;
+    if (nickname) userContext += `\nBiệt danh: ${nickname} (Hãy gọi họ bằng tên này)`;
+    if (signature) userContext += `\nBio: ${signature}`;
+
+    const coreRules = `\n# CÁC QUY TẮC BẤT BIẾN:\n${process.env.CORE_RULES || ''}`;
+    return `${baseCompiledPrompt}\n${userContext}\n${coreRules}`;
+  }
+
+  private async compileBaseGuildPrompt(guildId: string, feature: string): Promise<string> {
     let finalPromptData: any = null;
+    let personaData: any = null;
+
+    const [guildConfig, globalBotConfig, personaBotConfig] = await Promise.all([
+        guildId ? prisma.guildConfig.findUnique({ where: { guildId } }) : Promise.resolve(null),
+        prisma.botConfig.findUnique({ where: { key: 'global' } }),
+        prisma.botConfig.findUnique({ where: { key: 'persona' } }),
+    ]);
 
     // 1. Check Guild Config
-    const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
     if (guildConfig) {
         try {
             const prompts = JSON.parse(guildConfig.systemPrompts) as any;
@@ -36,11 +120,17 @@ class GeminiBotService {
         } catch (e) {
             console.error("Error parsing guild prompts", e);
         }
+        try {
+            const modules = JSON.parse(guildConfig.activeModules) as any;
+            if (modules && modules.persona) personaData = modules.persona;
+        } catch (e) {
+            console.error("Error parsing guild persona info:", e);
+        }
     }
 
     // 2. Fallback to Global Bot Config
     if (!finalPromptData) {
-        let globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+        let globalConfig = globalBotConfig;
         if (!globalConfig) {
              const defaults = {
                 global: process.env.SYSTEM_PROMPT || DEFAULT_SYSTEM_PROMPT,
@@ -96,31 +186,10 @@ class GeminiBotService {
     };
 
     let compiledPromptText = compileToMarkdown(finalPromptData);
-
-    // 3. User Identity Context
-    const { nickname, signature } = await userIdentityService.getIdentityForPrompt(userId);
-    let userContext = `\n\n# THÔNG TIN NGƯỜI DÙNG\nUser ID: ${userId}`;
-    if (nickname) userContext += `\nBiệt danh: ${nickname} (Hãy gọi họ bằng tên này)`;
-    if (signature) userContext += `\nBio: ${signature}`;
-
-    // 4. Bot Persona Context (Guild-Level Priority > Global)
     let personaContext = "";
-    let personaData = null;
-
-    if (guildId) {
-        const gConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
-        if (gConfig) {
-            try {
-                const modules = JSON.parse(gConfig.activeModules) as any;
-                if (modules.persona) personaData = modules.persona;
-            } catch (e) {
-                 console.error("Error parsing guild persona info:", e);
-            }
-        }
-    }
 
     if (!personaData) {
-        const personaConfig = await prisma.botConfig.findUnique({ where: { key: 'persona' } });
+        const personaConfig = personaBotConfig;
         if (personaConfig) {
             try {
                 personaData = JSON.parse(personaConfig.systemPrompts);
@@ -139,63 +208,67 @@ class GeminiBotService {
 - Giọng văn (Cách bạn giao tiếp?): ${personaData.writing_style || "Tự nhiên"}`;
     }
 
-    const coreRules = `\n# CÁC QUY TẮC BẤT BIẾN:\n${process.env.CORE_RULES || ''}`;
-
-    return `${compiledPromptText}\n${userContext}${personaContext}\n${coreRules}`;
+    return `${compiledPromptText}${personaContext}`;
   }
 
   // --- Chat Logic ---
   public async generateResponse(guildId: string, userId: string, username: string, messageContent: string, message?: any): Promise<string> {
       try {
-          const systemInstruction = await this.getSystemPrompt(guildId, userId);
-          await LoggerService.debug(`[UserID: ${userId}] Message: "${messageContent}"`);
+          void LoggerService.debug(`[UserID: ${userId}] Message: "${messageContent}"`).catch(() => {});
 
-          const logs = await prisma.chatLog.findMany({
-              where: { guildId },
-              orderBy: { createdAt: 'desc' },
-              take: 20
-          });
+          const [systemInstruction, logs] = await Promise.all([
+              this.getSystemPrompt(guildId, userId),
+              prisma.chatLog.findMany({
+                  where: { guildId },
+                  orderBy: { createdAt: 'desc' },
+                  take: DISCORD_HISTORY_TAKE,
+              }),
+          ]);
 
-          const history: any[] = [];
-          logs.reverse().forEach(log => {
-               if (log.content) {
-                    const userPrefix = log.username ? `[${log.username}]: ` : "";
-                    history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
-               }
-               if (log.response) {
-                    history.push({ role: 'model', parts: [{ text: log.response }] });
-               }
-          });
+          const sanitizedHistory = buildSanitizedHistory(logs);
+          let responseText = '';
 
-          const parts: Part[] = [{ text: messageContent }];
-          const model = await geminiCore.getModel(guildId, 'chat');
+          try {
+              const fallbackResult = await geminiCore.generateWebChatWithFallback({
+                  message: `[${username}]: ${messageContent}`,
+                  history: sanitizedHistory,
+                  systemInstruction,
+                  guildId,
+                  maxOutputTokens: 2048,
+                  temperature: 1.0,
+              });
+              responseText = fallbackResult.text;
+          } catch (fallbackErr) {
+              console.warn('[DiscordChat] Multi-model fallback failed, trying legacy chatSession:', fallbackErr);
+              const parts: Part[] = [{ text: messageContent }];
+              const model = await geminiCore.getModel(guildId, 'chat');
+              const chatSession = model.startChat({
+                  history: sanitizedHistory.map(h => ({ role: h.role, parts: [{ text: h.content }] })) as any,
+                  systemInstruction: {
+                      role: 'system',
+                      parts: [{ text: systemInstruction }],
+                  },
+              });
+              const result = await retryWithBackoff(() => chatSession.sendMessage(parts));
+              responseText = result.response.text();
+          }
 
-          const chatSession = model.startChat({
-              history: history as any,
-              systemInstruction: {
-                role: 'system',
-                parts: [{ text: systemInstruction }]
-              },
-          });
-
-          const result = await retryWithBackoff(() => chatSession.sendMessage(parts));
-          const responseText = result.response.text();
-          await LoggerService.info(`Generative Response Success`, { length: responseText.length, preview: responseText.substring(0, 50) });
+          void LoggerService.info(`Generative Response Success`, { length: responseText.length, preview: responseText.substring(0, 50) }).catch(() => {});
           
           let cleanResponse = responseText;
           if (message && message.channel) {
               cleanResponse = cleanContent(responseText, message.channel);
           }
 
-          await prisma.chatLog.create({
+          void prisma.chatLog.create({
               data: {
                 guildId, userId, username, content: messageContent, response: cleanResponse, type: 'chat'
               }
-          });
+          }).catch((e) => console.error('[ChatLog] Failed to persist chat log:', e));
 
           return cleanResponse;
       } catch (error: any) {
-          await LoggerService.error("Gemini Chat Error", error);
+          void LoggerService.error("Gemini Chat Error", error).catch(() => {});
           if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
           return "Xin lỗi, tôi đang gặp sự cố kết nối với não bộ.";
       }
@@ -237,23 +310,16 @@ class GeminiBotService {
               });
           }
 
-          const systemInstruction = await this.getSystemPrompt(guildId, userId);
-          const logs = await prisma.chatLog.findMany({
-              where: { guildId },
-              orderBy: { createdAt: 'desc' },
-              take: 20
-          });
+          const [systemInstruction, logs] = await Promise.all([
+              this.getSystemPrompt(guildId, userId),
+              prisma.chatLog.findMany({
+                  where: { guildId },
+                  orderBy: { createdAt: 'desc' },
+                  take: DISCORD_HISTORY_TAKE,
+              }),
+          ]);
 
-          const history: any[] = [];
-          logs.reverse().forEach(log => {
-              if (log.content) {
-                  const userPrefix = log.username ? `[${log.username}]: ` : "";
-                  history.push({ role: 'user', parts: [{ text: `${userPrefix}${log.content}` }] });
-              }
-              if (log.response) {
-                  history.push({ role: 'model', parts: [{ text: log.response }] });
-              }
-          });
+          const sanitizedHistory = buildSanitizedHistory(logs);
 
           const userInstruction = caption.trim() || "Hãy đọc và phân tích nội dung file văn bản đính kèm dưới đây.";
           const formattedFiles = loadedFiles
@@ -261,17 +327,15 @@ class GeminiBotService {
               .join('\n\n');
           const fullPrompt = `${userInstruction}\n\n${formattedFiles}`;
 
-          const model = await geminiCore.getModel(guildId, 'chat');
-          const chatSession = model.startChat({
-              history: history as any,
-              systemInstruction: {
-                  role: 'system',
-                  parts: [{ text: systemInstruction }]
-              },
+          const fallbackResult = await geminiCore.generateWebChatWithFallback({
+              message: fullPrompt,
+              history: sanitizedHistory,
+              systemInstruction,
+              guildId,
+              maxOutputTokens: 2048,
+              temperature: 0.9,
           });
-
-          const result = await retryWithBackoff(() => chatSession.sendMessage([{ text: fullPrompt }]));
-          const responseText = result.response.text();
+          const responseText = fallbackResult.text;
 
           let cleanResponse = responseText;
           if (message && message.channel) {
@@ -282,7 +346,7 @@ class GeminiBotService {
           const preview = loadedFiles[0]?.content.slice(0, 1000) || '';
           const logContent = `[FILE: ${fileNames}] ${userInstruction}\n${preview}`.trim();
 
-          await prisma.chatLog.create({
+          void prisma.chatLog.create({
               data: {
                   guildId,
                   userId,
@@ -291,11 +355,11 @@ class GeminiBotService {
                   response: cleanResponse,
                   type: 'chat'
               }
-          });
+          }).catch((e) => console.error('[ChatLog] Failed to persist file chat log:', e));
 
           return cleanResponse;
       } catch (error: any) {
-          await LoggerService.error("Text File Analysis Error", error);
+          void LoggerService.error("Text File Analysis Error", error).catch(() => {});
           if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
           return `Xin lỗi, tôi gặp lỗi khi đọc file văn bản: ${error.message}`;
       }
@@ -514,19 +578,19 @@ Hãy dùng Google Search để kiểm tra thông tin và trả lời câu hỏi 
   public async summarizeMessages(guildId: string, userId: string, messagesText: string): Promise<string> {
       try {
           const systemInstruction = await this.getSystemPrompt(guildId, userId);
-          const model = await geminiCore.getModel(guildId, 'chat');
           
           const prompt = `Dưới đây là một cuộc hội thoại gần đây trong nhóm:\n\n${messagesText}\n\nHãy đọc kỹ và tóm tắt lại nội dung chính của cuộc trò chuyện trên một cách ngắn gọn, súc tích và dễ hiểu nhất. Vui lòng giữ đúng nhân cách và giọng điệu của bạn (dựa theo các luật lệ và phần mô tả nhân cách ở trên) khi trả lời.`;
 
-          const result = await retryWithBackoff(() => model.generateContent({
-              systemInstruction: {
-                role: 'system',
-                parts: [{ text: systemInstruction }]
-              },
-              contents: [{ role: 'user', parts: [{ text: prompt }] }]
-          }));
+          const result = await geminiCore.generateWebChatWithFallback({
+              message: prompt,
+              history: [],
+              systemInstruction,
+              guildId,
+              maxOutputTokens: 1500,
+              temperature: 0.8,
+          });
 
-          return result.response.text();
+          return result.text;
       } catch (error: any) {
           console.error("Summarize Error:", error);
           if (error.message?.includes('503')) return "Server AI đang quá tải, vui lòng thử lại sau 1 chút.";
@@ -540,13 +604,16 @@ Hãy dùng Google Search để kiểm tra thông tin và trả lời câu hỏi 
           const userPrompt = `Kẻ tên "${senderName}" vừa nhắn: "${messageContent}". Hãy chửi nó và đuổi nó đi ngay.`;
           const systemInstruction = process.env.AUTO_REPLY_PROMPT || "Mày là trợ lý thô lỗ. Luôn đuổi người khác đi.";
           
-          const autoReplyModel = await geminiCore.getModel(guildId, 'chat');
-          const result = await retryWithBackoff(() => autoReplyModel.generateContent({
+          const result = await geminiCore.generateWebChatWithFallback({
+              message: userPrompt,
+              history: [],
               systemInstruction,
-              contents: [{ role: 'user', parts: [{ text: userPrompt }] }]
-          }));
+              guildId,
+              maxOutputTokens: 256,
+              temperature: 1.0,
+          });
           
-          return result.response.text();
+          return result.text;
       } catch (error: any) {
           return "Biến đi.";
       }
@@ -575,6 +642,7 @@ export const geminiService = {
     ...geminiCore,
     ...geminiBotService,
     // Explicitly bind methods to correct context
+    invalidatePromptCache: geminiBotService.invalidatePromptCache.bind(geminiBotService),
     getSystemPrompt: geminiBotService.getSystemPrompt.bind(geminiBotService),
     generateResponse: geminiBotService.generateResponse.bind(geminiBotService),
     generateAutoReply: geminiBotService.generateAutoReply.bind(geminiBotService),
@@ -586,6 +654,7 @@ export const geminiService = {
     summarizeMessages: geminiBotService.summarizeMessages.bind(geminiBotService),
     generatePKResponse: geminiBotService.generatePKResponse.bind(geminiBotService),
     // Core methods
+    invalidateApiKeyCache: geminiCore.invalidateApiKeyCache.bind(geminiCore),
     getApiKey: geminiCore.getApiKey.bind(geminiCore),
     getModel: geminiCore.getModel.bind(geminiCore),
     generateText: geminiCore.generateText.bind(geminiCore),

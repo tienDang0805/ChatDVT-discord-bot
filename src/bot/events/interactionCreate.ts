@@ -6,6 +6,7 @@ import { petService } from '../services/pet';
 import { expeditionService } from '../services/expedition';
 import { codeChallengeService } from '../services/code-challenge';
 import { wordleService } from '../services/wordle';
+import { geminiService } from '../services/gemini';
 import { prisma } from '../../database/prisma';
 import { isCommandDisabled } from '../../config/command-flags';
 
@@ -265,6 +266,7 @@ export async function handleInteraction(interaction: Interaction) {
                   update: { activeModules: JSON.stringify(modules) },
                   create: { guildId, systemPrompts: '{}', activeModules: JSON.stringify(modules) }
               });
+              geminiService.invalidatePromptCache(guildId);
 
               await interaction.editReply("✅ **Lưu Thành Công!**\nBạn đã cập nhật tuỳ chỉnh Nhân Cách Bot cho riêng máy chủ này.\nBot sẽ áp dụng ngay vào tin nhắn tiếp theo.");
           }
@@ -365,6 +367,7 @@ export async function handleInteraction(interaction: Interaction) {
                   update: { geminiApiKey: apiKey },
                   create: { guildId, systemPrompts: '{}', activeModules: '{}', geminiApiKey: apiKey }
               });
+              geminiService.invalidateApiKeyCache(guildId);
 
               const masked = apiKey.substring(0, 8) + '••••••••' + apiKey.substring(apiKey.length - 4);
               await interaction.editReply(`✅ **API Key đã được cập nhật thành công!**\n\`${masked}\`\nKey này sẽ được sử dụng cho tất cả tính năng AI trên server này.`);

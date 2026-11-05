@@ -175,6 +175,7 @@ export function formatTenure(totalDays: number): string {
 
 class CuongGiaService {
   private readonly syncingGuilds = new Set<string>();
+  private readonly lastMemberFetchByGuild = new Map<string, number>();
 
   async trackMessage(message: Message): Promise<void> {
     if (!message.guild || message.author.bot) return;
@@ -347,11 +348,18 @@ class CuongGiaService {
 
   async getGuildRanking(guild: Guild): Promise<GuildRankingResult> {
     let fetchedAllMembers = true;
-    try {
-      await guild.members.fetch();
-    } catch (error) {
-      fetchedAllMembers = false;
-      console.warn(`[CuongGia] Cannot fetch every member in guild ${guild.id}; using cache.`, error);
+    const now = Date.now();
+    const lastFetched = this.lastMemberFetchByGuild.get(guild.id) ?? 0;
+    const shouldFetch = now - lastFetched > 5 * 60 * 1000 || guild.members.cache.size < Math.min(guild.memberCount, 10);
+
+    if (shouldFetch) {
+      try {
+        await guild.members.fetch({ time: 6_000 });
+        this.lastMemberFetchByGuild.set(guild.id, now);
+      } catch (error) {
+        fetchedAllMembers = false;
+        console.warn(`[CuongGia] Cannot fetch every member in guild ${guild.id}; using cache.`, error);
+      }
     }
 
     const activities = await prisma.discordMemberActivity.findMany({

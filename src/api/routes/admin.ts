@@ -47,6 +47,7 @@ router.post('/config/:guildId', async (req, res) => {
         update: { systemPrompts: promptsStr, activeModules: modulesStr },
         create: { guildId: req.params.guildId, systemPrompts: promptsStr, activeModules: modulesStr }
     });
+    geminiService.invalidatePromptCache(req.params.guildId);
     
     res.json({
         ...config,
@@ -207,12 +208,14 @@ router.post('/gemini-api-key', async (req, res) => {
                 update: { geminiApiKey: apiKey || null },
                 create: { guildId, systemPrompts: '{}', activeModules: '{}', geminiApiKey: apiKey || null }
             });
+            geminiService.invalidateApiKeyCache(guildId);
         } else {
             await prisma.botConfig.upsert({
                 where: { key: 'global' },
                 update: { geminiApiKey: apiKey || null },
                 create: { key: 'global', systemPrompts: '{}', features: '{}', geminiApiKey: apiKey || null }
             });
+            geminiService.invalidateApiKeyCache();
         }
         res.json({ success: true });
     } catch (error) {
@@ -269,6 +272,7 @@ router.post('/bot-persona', async (req, res) => {
                 update: { activeModules: JSON.stringify(modules) },
                 create: { guildId, systemPrompts: '{}', activeModules: JSON.stringify(modules) }
             });
+            geminiService.invalidatePromptCache(guildId);
             res.json({ success: true, data: personaData, source: 'guild' });
             return;
         }
@@ -278,6 +282,7 @@ router.post('/bot-persona', async (req, res) => {
             update: { systemPrompts: personaStr },
             create: { key: 'persona', systemPrompts: personaStr, features: '{}' }
         });
+        geminiService.invalidatePromptCache();
         res.json({ success: true, data: JSON.parse(config.systemPrompts), source: 'global' });
     } catch (error) {
         console.error("Update Persona Error:", error);
@@ -343,9 +348,11 @@ router.post('/prompts', async (req, res) => {
         const promptsStr = JSON.stringify(systemPrompts);
         if (guildId && guildId !== 'global') {
             const config = await prisma.guildConfig.upsert({ where: { guildId }, update: { systemPrompts: promptsStr }, create: { guildId, systemPrompts: promptsStr, activeModules: '{}' } });
+            geminiService.invalidatePromptCache(guildId);
             res.json(config); return;
         }
         const config = await prisma.botConfig.upsert({ where: { key: 'global' }, update: { systemPrompts: promptsStr }, create: { key: 'global', systemPrompts: promptsStr, features: '{}' } });
+        geminiService.invalidatePromptCache();
         res.json(config);
     } catch (error) {
         res.status(500).json({ error: 'Internal Server Error' });

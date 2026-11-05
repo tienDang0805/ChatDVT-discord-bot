@@ -4,6 +4,7 @@ import {
   GEMINI_CHAT_CONFIG,
   GEMINI_LOGIC_CONFIG,
   GEMINI_IMAGE_MODEL,
+  GEMINI_REQUEST_TIMEOUT_MS,
   WEB_CHAT_GENERATION_CONFIG,
   WEB_CHAT_MODEL_FALLBACKS,
 } from '../../config/constants';
@@ -12,15 +13,51 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
+export function withTimeout<T>(promise: Promise<T>, timeoutMs = GEMINI_REQUEST_TIMEOUT_MS, label = 'Gemini request'): Promise<T> {
+  if (!timeoutMs || timeoutMs <= 0) return promise;
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      const err: any = new Error(`${label} timed out after ${timeoutMs}ms`);
+      err.status = 408;
+      reject(err);
+    }, timeoutMs);
+    if (typeof timer.unref === 'function') timer.unref();
+
+    promise.then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 // Helper to retry API calls with exponential backoff
-export async function retryWithBackoff<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+export async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  retries = 1,
+  delay = 800,
+  timeoutMs = GEMINI_REQUEST_TIMEOUT_MS,
+): Promise<T> {
   try {
-    return await fn();
+    return await withTimeout(fn(), timeoutMs);
   } catch (error: any) {
-    if (retries > 0 && (error.message?.includes('503') || error.response?.status === 503 || error.status === 503)) {
+    const msg = String(error?.message || '').toLowerCase();
+    const isTransient =
+      error?.message?.includes('503') ||
+      error?.response?.status === 503 ||
+      error?.status === 503 ||
+      error?.status === 408 ||
+      msg.includes('timed out') ||
+      msg.includes('overloaded');
+    if (retries > 0 && isTransient) {
       console.warn(`[GeminiCore] API 503 Overloaded. Retrying in ${delay}ms... (${retries} left)`);
       await new Promise(res => setTimeout(res, delay));
-      return retryWithBackoff(fn, retries - 1, delay * 2);
+      return retryWithBackoff(fn, retries - 1, delay * 2, timeoutMs);
     }
     throw error;
   }
@@ -42,7 +79,7 @@ function getErrorStatus(error: any): number | undefined {
 
 function shouldTryNextWebChatModel(error: any): boolean {
   const status = getErrorStatus(error);
-  if (status && [403, 404, 408, 429, 500, 502, 503, 504].includes(status)) return true;
+  if (status && [400, 403, 404, 408, 429, 500, 502, 503, 504].includes(status)) return true;
 
   const message = String(error?.message || '').toLowerCase();
   return [
@@ -54,31 +91,64 @@ function shouldTryNextWebChatModel(error: any): boolean {
     'not found',
     'deadline',
     'timed out',
+    'timeout',
+    'abort',
     'network',
     'empty response',
+    'developer instruction',
+    'systeminstruction',
   ].some(fragment => message.includes(fragment));
 }
 
+const API_KEY_CACHE_TTL_MS = 2 * 60 * 1000;
+
 class GeminiCoreService {
+  private apiKeyCache = new Map<string, { key: string; timestamp: number }>();
+
   constructor() {}
+
+  public invalidateApiKeyCache(guildId?: string | null) {
+      if (guildId) {
+          this.apiKeyCache.delete(guildId);
+      } else {
+          this.apiKeyCache.clear();
+      }
+  }
 
   // --- API Key Resolution ---
   public async getApiKey(guildId?: string | null): Promise<string> {
+      const cacheKey = guildId && guildId !== 'global' ? guildId : 'global';
+      const cached = this.apiKeyCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < API_KEY_CACHE_TTL_MS) {
+          return cached.key;
+      }
+
       let apiKey = process.env.GEMINI_API_KEY || '';
       try {
           if (guildId && guildId !== 'global') {
-              const guildConfig = await prisma.guildConfig.findUnique({ where: { guildId } });
+              const [guildConfig, globalConfig] = await Promise.all([
+                  prisma.guildConfig.findUnique({ where: { guildId } }),
+                  prisma.botConfig.findUnique({ where: { key: 'global' } }),
+              ]);
               if (guildConfig && guildConfig.geminiApiKey) {
+                  this.apiKeyCache.set(cacheKey, { key: guildConfig.geminiApiKey, timestamp: Date.now() });
                   return guildConfig.geminiApiKey;
               }
-          }
-          const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
-          if (globalConfig && globalConfig.geminiApiKey) {
-              return globalConfig.geminiApiKey;
+              if (globalConfig && globalConfig.geminiApiKey) {
+                  this.apiKeyCache.set(cacheKey, { key: globalConfig.geminiApiKey, timestamp: Date.now() });
+                  return globalConfig.geminiApiKey;
+              }
+          } else {
+              const globalConfig = await prisma.botConfig.findUnique({ where: { key: 'global' } });
+              if (globalConfig && globalConfig.geminiApiKey) {
+                  this.apiKeyCache.set(cacheKey, { key: globalConfig.geminiApiKey, timestamp: Date.now() });
+                  return globalConfig.geminiApiKey;
+              }
           }
       } catch (e) {
           console.error("Error fetching dynamic API Key, falling back to ENV", e);
       }
+      this.apiKeyCache.set(cacheKey, { key: apiKey, timestamp: Date.now() });
       return apiKey;
   }
 
@@ -86,6 +156,7 @@ class GeminiCoreService {
   public async getModel(guildId?: string | null, type: 'chat' | 'image' | 'logic' | 'search' = 'chat', customConfig?: any, customApiKey?: string): Promise<GenerativeModel> {
       const apiKey = customApiKey || await this.getApiKey(guildId);
       const genAI = new GoogleGenerativeAI(apiKey);
+      const requestOptions = { timeout: GEMINI_REQUEST_TIMEOUT_MS };
       const safetySettings = [
         { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
         { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -94,14 +165,14 @@ class GeminiCoreService {
       ];
 
       if (type === 'image') {
-          return genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+          return genAI.getGenerativeModel({ model: GEMINI_IMAGE_MODEL, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings }, requestOptions);
       } else if (type === 'logic') {
-          return genAI.getGenerativeModel({ model: GEMINI_LOGIC_CONFIG.modelName, generationConfig: customConfig || GEMINI_LOGIC_CONFIG.generationConfig, safetySettings });
+          return genAI.getGenerativeModel({ model: GEMINI_LOGIC_CONFIG.modelName, generationConfig: customConfig || GEMINI_LOGIC_CONFIG.generationConfig, safetySettings }, requestOptions);
       } else if (type === 'search') {
-          return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, tools: [{ googleSearch: {} } as any], generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+          return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, tools: [{ googleSearch: {} } as any], generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings }, requestOptions);
       }
       
-      return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings });
+      return genAI.getGenerativeModel({ model: GEMINI_CHAT_CONFIG.modelName, generationConfig: GEMINI_CHAT_CONFIG.generationConfig, safetySettings }, requestOptions);
   }
 
   public async generateWebChatWithFallback(params: {
@@ -110,12 +181,14 @@ class GeminiCoreService {
       systemInstruction: string;
       guildId?: string | null;
       customApiKey?: string;
+      maxOutputTokens?: number;
+      temperature?: number;
   }): Promise<WebChatFallbackResult> {
       const apiKey = params.customApiKey || await this.getApiKey(params.guildId);
       if (!apiKey) throw new Error('Missing Gemini API key');
 
       const ai = new GoogleGenAI({ apiKey });
-      const contents = [
+      const baseContents = [
           ...params.history.map(item => ({
               role: item.role,
               parts: [{ text: item.content }],
@@ -126,14 +199,31 @@ class GeminiCoreService {
       let lastError: any;
       for (const model of WEB_CHAT_MODEL_FALLBACKS) {
           try {
+              const isGemma = model.toLowerCase().startsWith('gemma');
+              const contents = isGemma && params.systemInstruction
+                  ? [
+                        ...params.history.map(item => ({
+                            role: item.role,
+                            parts: [{ text: item.content }],
+                        })),
+                        {
+                            role: 'user' as const,
+                            parts: [{ text: `${params.systemInstruction}\n\n---\nTin nhắn người dùng:\n${params.message}` }],
+                        },
+                    ]
+                  : baseContents;
+
               const response = await retryWithBackoff(() => ai.models.generateContent({
                   model,
                   contents,
                   config: {
-                      systemInstruction: params.systemInstruction,
+                      ...(isGemma || !params.systemInstruction ? {} : { systemInstruction: params.systemInstruction }),
                       ...WEB_CHAT_GENERATION_CONFIG,
+                      ...(params.maxOutputTokens ? { maxOutputTokens: params.maxOutputTokens } : {}),
+                      ...(typeof params.temperature === 'number' ? { temperature: params.temperature } : {}),
+                      httpOptions: { timeout: 18_000 },
                   },
-              }), 1);
+              }), 0, 500, 18_000);
 
               const text = response.text?.trim();
               if (!text) throw new Error('Model returned an empty response');
@@ -156,12 +246,25 @@ class GeminiCoreService {
   // --- Generic Text Generation ---
   public async generateText(prompt: string, guildId?: string, customApiKey?: string): Promise<string> {
       try {
-          const model = await this.getModel(guildId, 'chat', undefined, customApiKey);
-          const result = await retryWithBackoff(() => model.generateContent(prompt));
-          return result.response.text();
-      } catch (error: any) {
-          console.error("Generate Text Error:", error);
-          throw error;
+          const fallback = await this.generateWebChatWithFallback({
+              message: prompt,
+              history: [],
+              systemInstruction: '',
+              guildId,
+              customApiKey,
+              maxOutputTokens: GEMINI_CHAT_CONFIG.generationConfig.maxOutputTokens,
+              temperature: GEMINI_CHAT_CONFIG.generationConfig.temperature,
+          });
+          return fallback.text;
+      } catch {
+          try {
+              const model = await this.getModel(guildId, 'chat', undefined, customApiKey);
+              const result = await retryWithBackoff(() => model.generateContent(prompt));
+              return result.response.text();
+          } catch (error: any) {
+              console.error("Generate Text Error:", error);
+              throw error;
+          }
       }
   }
 

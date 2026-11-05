@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { ADMIN_ID } from '../../config/constants';
 import { prisma } from '../../database/prisma';
+import { geminiService } from '../services/gemini';
 
 export const data = new SlashCommandBuilder()
   .setName('setapikey')
@@ -89,6 +90,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
           where: { guildId },
           data: { geminiApiKey: null }
       });
+      geminiService.invalidateApiKeyCache(guildId);
 
       await interaction.editReply("✅ Đã xoá API Key của server. Bot sẽ dùng key Global/ENV mặc định.");
   }

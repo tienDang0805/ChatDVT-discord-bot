@@ -37,6 +37,18 @@ function isTextAttachment(attachment: Attachment): boolean {
   );
 }
 
+function startTypingLoop(channel: any): () => void {
+  const triggerTyping = () => {
+    if (channel && typeof channel.sendTyping === 'function') {
+      void channel.sendTyping().catch(() => {});
+    }
+  };
+  triggerTyping();
+  const timer = setInterval(triggerTyping, 8_000);
+  if (typeof timer.unref === 'function') timer.unref();
+  return () => clearInterval(timer);
+}
+
 export const messageCreate = async (message: Message) => {
   if (message.author.bot) return;
 
@@ -86,7 +98,7 @@ export const messageCreate = async (message: Message) => {
   if (message.guild && message.channel.type === ChannelType.GuildText) {
       const permissions = message.channel.permissionsFor(bot.user!);
       if (!permissions?.has('SendMessages') || !permissions?.has('ViewChannel')) {
-        await LoggerService.warn(`[MessageCreate] Missing permissions in channel ${message.channel.id}`, { guild: message.guild.id });
+        void LoggerService.warn(`[MessageCreate] Missing permissions in channel ${message.channel.id}`, { guild: message.guild.id }).catch(() => {});
         return;
       }
   }
@@ -103,11 +115,7 @@ export const messageCreate = async (message: Message) => {
 
   if (!cleanContent && attachments.length === 0) return;
 
-  if (message.channel && message.channel.type === ChannelType.GuildText) {
-       await message.channel.sendTyping();
-  } else if ('sendTyping' in message.channel) {
-       await (message.channel as any).sendTyping();
-  }
+  const stopTyping = startTypingLoop(message.channel);
 
   try {
     let responseText = '';
@@ -153,7 +161,7 @@ export const messageCreate = async (message: Message) => {
 
     // 3. Send Response
     if (responseText) {
-       await LoggerService.info(`Sending response`, { channel: message.channel.id, length: responseText.length });
+       void LoggerService.info(`Sending response`, { channel: message.channel.id, length: responseText.length }).catch(() => {});
        const API_LIMIT = 1900;
        
        if (responseText.length <= API_LIMIT) {
@@ -175,10 +183,12 @@ export const messageCreate = async (message: Message) => {
            }
        }
     } else {
-        await LoggerService.warn(`[MessageCreate] Empty responseText received from GeminiService.`);
+        void LoggerService.warn(`[MessageCreate] Empty responseText received from GeminiService.`).catch(() => {});
     }
 
   } catch (error) {
     console.error('Message Event Error:', error);
+  } finally {
+    stopTyping();
   }
 };
