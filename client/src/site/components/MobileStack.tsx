@@ -1,328 +1,637 @@
-import { useState } from 'react';
-import { Braces, Cpu, Layers, ScanLine, Smartphone, ArrowUpRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { useSiteMotion } from './Mascot';
 
-const layers = [
+type OrbId =
+  | 'rn'
+  | 'kotlin'
+  | 'android'
+  | 'ts'
+  | 'java'
+  | 'camerax'
+  | 'maven'
+  | 'nodejs';
+
+type SceneMode = 'rn' | 'sdk' | 'backend';
+
+interface OrbSpec {
+  id: OrbId;
+  label: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  specs: [string, string, string];
+  scene: SceneMode;
+  color: string;
+  size: 'lg' | 'md';
+  // Position in 540x460 viewBox
+  cx: number;
+  cy: number;
+  depth: number;
+  floatDelay: string;
+}
+
+// Symmetric 4+4 constellation around the central flagship smartphone (270, 230)
+const ORBS: OrbSpec[] = [
+  // Left Arc: App UI, TypeScript, Native Bridge, Backend API
   {
-    name: 'App interface',
-    short: 'UI',
-    kicker: '01 // UI LAYER',
+    id: 'rn',
+    label: 'React Native',
+    title: 'React Native',
+    subtitle: 'iOS · Android · Hermes',
     badge: '60 FPS',
-    icon: Smartphone,
-    type: 'interface',
-    caption: ['Giao diện là nơi mọi trải nghiệm bắt đầu.', 'The interface is where the experience begins.'],
+    specs: ['RN 0.74+', 'Native Mod', 'Reanimated'],
+    scene: 'rn',
+    color: '#38bdf8',
+    size: 'lg',
+    cx: 82,
+    cy: 78,
+    depth: 1.35,
+    floatDelay: '0s',
   },
   {
-    name: 'React Native',
-    short: 'React Native',
-    kicker: '02 // SHARED LOGIC',
-    badge: 'RN BRIDGE',
-    icon: Braces,
-    type: 'react',
-    caption: ['Component, điều hướng và logic dùng chung.', 'Components, navigation and shared application logic.'],
+    id: 'ts',
+    label: 'TypeScript',
+    title: 'TypeScript',
+    subtitle: 'Strict Typed Mobile',
+    badge: 'TS 5.x',
+    specs: ['Strict TS', 'Typed Hook', 'SDK Types'],
+    scene: 'rn',
+    color: '#3b82f6',
+    size: 'md',
+    cx: 50,
+    cy: 180,
+    depth: 1.05,
+    floatDelay: '-1.4s',
   },
   {
-    name: 'Android / Kotlin',
-    short: 'Android',
-    kicker: '03 // PLATFORM OS',
-    badge: 'CAMERAX · OS',
-    icon: ScanLine,
-    type: 'android',
-    caption: ['Đi sâu vào hệ điều hành, camera và thiết bị thật.', 'Closer to the operating system, camera and real devices.'],
+    id: 'java',
+    label: 'Java · Bridge',
+    title: 'Java · Bridge',
+    subtitle: 'ReactMethod · JNI',
+    badge: 'BRIDGE',
+    specs: ['JNI Bridge', 'Events', 'Zero-Copy'],
+    scene: 'sdk',
+    color: '#f97316',
+    size: 'md',
+    cx: 50,
+    cy: 282,
+    depth: 1.1,
+    floatDelay: '-1.6s',
   },
   {
-    name: 'Native SDK',
-    short: 'SDK',
-    kicker: '04 // NATIVE CORE',
-    badge: 'MAVEN · AAR',
-    icon: Cpu,
-    type: 'native',
-    caption: ['Đóng gói khả năng native để ứng dụng tích hợp.', 'Native capabilities, packaged for applications to integrate.'],
+    id: 'nodejs',
+    label: 'Node.js · API',
+    title: 'Node.js · API',
+    subtitle: 'Express · MySQL',
+    badge: '200 OK',
+    specs: ['REST API', 'Prisma ORM', 'WebSocket'],
+    scene: 'backend',
+    color: '#22c55e',
+    size: 'md',
+    cx: 82,
+    cy: 384,
+    depth: 1.15,
+    floatDelay: '-2.5s',
   },
-] as const;
+  // Right Arc: Kotlin, Android, CameraX, Native SDK
+  {
+    id: 'kotlin',
+    label: 'Kotlin',
+    title: 'Kotlin Native',
+    subtitle: 'Multi-Box · SDK',
+    badge: 'KOTLIN',
+    specs: ['Coroutines', 'StateFlow', 'Jetpack'],
+    scene: 'sdk',
+    color: '#a855f7',
+    size: 'lg',
+    cx: 458,
+    cy: 78,
+    depth: 1.4,
+    floatDelay: '-0.9s',
+  },
+  {
+    id: 'android',
+    label: 'Android',
+    title: 'Android SDK',
+    subtitle: 'Camera & Lifecycle',
+    badge: 'API 34',
+    specs: ['NDK / JNI', 'Lifecycle', 'Low RAM'],
+    scene: 'sdk',
+    color: '#3ddc84',
+    size: 'lg',
+    cx: 490,
+    cy: 180,
+    depth: 1.25,
+    floatDelay: '-2.1s',
+  },
+  {
+    id: 'camerax',
+    label: 'CameraX',
+    title: 'CameraX Vision',
+    subtitle: '60fps Frame Scan',
+    badge: '14 MS',
+    specs: ['YUV_420', 'ML Kit', 'TFLite SDK'],
+    scene: 'sdk',
+    color: '#c084fc',
+    size: 'md',
+    cx: 490,
+    cy: 282,
+    depth: 0.95,
+    floatDelay: '-2.9s',
+  },
+  {
+    id: 'maven',
+    label: 'Native SDK',
+    title: 'Native AAR SDK',
+    subtitle: 'Gradle · Maven AAR',
+    badge: 'v2.4',
+    specs: ['Maven AAR', 'ProGuard', 'Offline DB'],
+    scene: 'sdk',
+    color: '#eab308',
+    size: 'md',
+    cx: 458,
+    cy: 384,
+    depth: 1.05,
+    floatDelay: '-0.5s',
+  },
+];
 
-const details = [
-  {
-    text: [
-      'Biến một luồng thao tác thành màn hình dễ dùng: component, trạng thái tải, phản hồi khi chạm và chuyển cảnh.',
-      'Turn a user journey into a usable screen: components, loading states, touch feedback and transitions.',
-    ],
-    tags: ['Components', 'Interaction', 'Navigation'],
-  },
-  {
-    text: [
-      'Kết nối màn hình với dữ liệu và logic ứng dụng. Chia sẻ code trong React Native, rồi gọi xuống native khi cần khả năng của thiết bị.',
-      'Connect screens to data and application logic. Share code in React Native, then call native capabilities when the device needs them.',
-    ],
-    tags: ['TypeScript', 'State & data', 'Native modules'],
-  },
-  {
-    text: [
-      'Làm việc trực tiếp với vòng đời Android, camera và SDK của thiết bị. Tích hợp và debug trên phần cứng thật.',
-      'Work directly with Android lifecycle, camera and device SDKs. Integrate and debug on real hardware.',
-    ],
-    tags: ['Kotlin / Java', 'Camera', 'Device integration'],
-  },
-  {
-    text: [
-      'Đưa phần xử lý bên dưới thành thư viện có API rõ ràng, để ứng dụng khác có thể tích hợp và dùng lại.',
-      'Package the underlying capabilities into a library with a clear API, ready for other applications to integrate.',
-    ],
-    tags: ['Library API', 'Packaging', 'Integration'],
-  },
-] as const;
+const SCENE_ORDER: SceneMode[] = ['rn', 'sdk', 'backend'];
 
-function LayerCoreVisual({ type }: { type: (typeof layers)[number]['type'] }) {
-  if (type === 'interface') {
+const DEFAULT_SCENE_SPEC: Record<
+  SceneMode,
+  { icon: OrbId; title: string; subtitle: string; badge: string; specs: [string, string, string] }
+> = {
+  rn: {
+    icon: 'rn',
+    title: 'React Native · TS',
+    subtitle: 'iOS · Android · Hermes',
+    badge: '60 FPS',
+    specs: ['RN 0.74+', 'TypeScript', 'Native Mod'],
+  },
+  sdk: {
+    icon: 'kotlin',
+    title: 'Kotlin · Android',
+    subtitle: 'CameraX · Native SDK',
+    badge: '99.4%',
+    specs: ['Kotlin', 'CameraX', 'Maven AAR'],
+  },
+  backend: {
+    icon: 'nodejs',
+    title: 'Node.js · API',
+    subtitle: 'Express · MySQL',
+    badge: '18 MS',
+    specs: ['Node.js', 'REST / WS', 'MySQL'],
+  },
+};
+
+function TechLogo({ id }: { id: OrbId }) {
+  switch (id) {
+    case 'rn':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <circle cx="18" cy="18" r="3.2" fill="#38bdf8" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" transform="rotate(60 18 18)" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" transform="rotate(120 18 18)" />
+        </svg>
+      );
+    case 'kotlin':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <defs>
+            <linearGradient id="ms-kt" x1="0" y1="1" x2="1" y2="0">
+              <stop offset="0%" stopColor="#7f52ff" />
+              <stop offset="50%" stopColor="#c711e1" />
+              <stop offset="100%" stopColor="#ff6b00" />
+            </linearGradient>
+          </defs>
+          <path d="M7 7h22L18 18l11 11H7V7z" fill="url(#ms-kt)" />
+        </svg>
+      );
+    case 'android':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M11 13L8.5 8.6a.8.8 0 0 1 1.4-.8l2.5 4.3a12.6 12.6 0 0 1 11.2 0l2.5-4.3a.8.8 0 1 1 1.4.8L25 13a10.8 10.8 0 0 1 4.2 8.8v1.7H6.8v-1.7A10.8 10.8 0 0 1 11 13z" fill="#3ddc84" />
+          <circle cx="13.8" cy="18" r="1.5" fill="#061510" />
+          <circle cx="22.2" cy="18" r="1.5" fill="#061510" />
+          <rect x="9" y="25" width="18" height="5" rx="2.5" fill="#3ddc84" opacity=".9" />
+        </svg>
+      );
+    case 'ts':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <rect x="5" y="5" width="26" height="26" rx="6" fill="#3178c6" />
+          <path d="M10.5 15.2h9v2.2h-3.2V27h-2.6v-9.6h-3.2v-2.2zm15 7.5c0 2.4-1.8 3.9-4.5 3.9-1.8 0-3.2-.5-4.1-1.3l1.3-1.9c.7.6 1.7 1.1 2.7 1.1 1.1 0 1.8-.4 1.8-1.2 0-.7-.6-1-2-1.5-2-.7-3.2-1.5-3.2-3.3 0-2.1 1.7-3.5 4.1-3.5 1.6 0 2.8.4 3.6 1.1l-1.2 1.9c-.6-.4-1.5-.8-2.4-.8-1 0-1.5.4-1.5 1.1 0 .7.6 1 2 1.5 2 .7 3.4 1.5 3.4 2.9z" fill="#fff" />
+        </svg>
+      );
+    case 'java':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M15 6.5c2.2 2.4-2.4 4.6-.5 7.2 1.3 1.8 3.8 2.8 2.2 6M20.5 9.2c1.7 2-1.7 3.8-.3 5.8 1.1 1.4 2.8 2.4 1.3 4.8" fill="none" stroke="#f97316" strokeWidth="2.3" strokeLinecap="round" />
+          <path d="M9 22h14.5v2.8a6 6 0 0 1-6 6h-2.5a6 6 0 0 1-6-6V22z" fill="#38bdf8" />
+          <path d="M23.5 22.8h2.2a2.5 2.5 0 0 1 0 5h-2.2" fill="none" stroke="#38bdf8" strokeWidth="2.2" />
+        </svg>
+      );
+    case 'camerax':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <rect x="5" y="8" width="26" height="20" rx="5" fill="#7c3aed" />
+          <circle cx="18" cy="18" r="6" fill="none" stroke="#ede9fe" strokeWidth="2.2" />
+          <circle cx="18" cy="18" r="2.6" fill="#38bdf8" />
+          <circle cx="26" cy="12.5" r="1.5" fill="#f472b6" />
+        </svg>
+      );
+    case 'nodejs':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <polygon points="18,4.5 29.5,11 29.5,25 18,31.5 6.5,25 6.5,11" fill="#16a34a" />
+          <path d="M14 22V13.5l8 4.8v4l-4 2.3-4-2.6z" fill="#dcfce7" />
+        </svg>
+      );
+    case 'maven':
+      return (
+        <svg viewBox="0 0 36 36" aria-hidden="true">
+          <path d="M18 5l12 7v12l-12 7-12-7V12l12-7z" fill="#ca8a04" />
+          <path d="M6 12l12 7 12-7M18 19v12" stroke="#fef08a" strokeWidth="2.1" fill="none" />
+        </svg>
+      );
+  }
+}
+
+// Sleek flagship phone screen with authentic Framework/Language header, live interactive viewport & spec chips
+function PhoneVisualScene({ scene, focusedOrb }: { scene: SceneMode; focusedOrb: OrbSpec | null }) {
+  const activeMeta = focusedOrb
+    ? {
+        icon: focusedOrb.id,
+        title: focusedOrb.title,
+        subtitle: focusedOrb.subtitle,
+        badge: focusedOrb.badge,
+        specs: focusedOrb.specs,
+      }
+    : DEFAULT_SCENE_SPEC[scene];
+
+  if (scene === 'rn') {
     return (
-      <div className="holo-core holo-core--ui" aria-hidden="true">
-        <div className="core-ui-screen">
-          <div className="core-ui-bar">
-            <i className="core-ui-dot" />
-            <span>Screen · UI</span>
-            <b className="core-ui-pill" />
+      <div className="msc-scene msc-scene--rn">
+        {/* Top Framework Identity Header */}
+        <div className="msc-app-header">
+          <div className="msc-app-header__icon is-spin-slow">
+            <TechLogo id={activeMeta.icon} />
           </div>
-          <div className="core-ui-grid">
-            <span className="core-ui-cell is-primary">
-              <i className="core-ui-ripple" />
+          <div className="msc-app-header__copy">
+            <strong>{activeMeta.title}</strong>
+            <span>{activeMeta.subtitle}</span>
+          </div>
+          <b className="msc-app-header__badge is-cyan">{activeMeta.badge}</b>
+        </div>
+
+        {/* Live Cross-Platform UI & Bridge Inspector */}
+        <div className="msc-rn-stage">
+          <div className="msc-rn-codecard">
+            <div className="msc-rn-codecard__top">
+              <span className="msc-code-tag">&lt;ScannerView /&gt;</span>
+              <span className="msc-platform-pills">
+                <i>iOS</i>
+                <i>Android</i>
+              </span>
+            </div>
+            <div className="msc-fps-graph" aria-hidden="true">
+              <i style={{ height: '65%' }} />
+              <i style={{ height: '85%' }} />
+              <i style={{ height: '78%' }} />
+              <i style={{ height: '96%' }} />
+              <i style={{ height: '88%' }} />
+              <i style={{ height: '100%' }} />
+              <i style={{ height: '92%' }} />
+            </div>
+            <div className="msc-rn-codecard__meta">
+              <span>UI Thread: 0.8ms</span>
+              <b>Hermes JIT</b>
+            </div>
+          </div>
+
+          <div className="msc-rn-bridge-row">
+            <span className="msc-bridge-dot" />
+            <span className="msc-bridge-text">NativeModules.BarcodeSDK</span>
+            <b className="msc-ui-toggle"><span /></b>
+          </div>
+        </div>
+
+        {/* Authentic Framework & Language Spec Chips */}
+        <div className="msc-spec-chips">
+          {activeMeta.specs.map((item) => (
+            <span key={item} className="msc-spec-chip">
+              <i />
+              {item}
             </span>
-            <span className="core-ui-cell is-secondary" />
-            <span className="core-ui-cell" />
-            <span className="core-ui-cell" />
-          </div>
-          <div className="core-ui-tabs">
-            <b className="core-ui-tab-Highlight" />
-            <i />
-            <i />
-            <i />
-          </div>
-        </div>
-        <div className="core-ui-Flow">
-          <span>Components</span>
-          <span>Touch · Nav</span>
+          ))}
         </div>
       </div>
     );
   }
 
-  if (type === 'react') {
+  if (scene === 'sdk') {
     return (
-      <div className="holo-core holo-core--rn" aria-hidden="true">
-        <div className="core-rn-pipeline">
-          <span className="core-rn-node">TS / State</span>
-          <i className="core-rn-link">
-            <b className="core-rn-packet" />
-          </i>
-          <span className="core-rn-node is-bridge">JSI Bridge</span>
-          <i className="core-rn-link">
-            <b className="core-rn-packet is-delayed" />
-          </i>
-          <span className="core-rn-node">Native</span>
+      <div className="msc-scene msc-scene--sdk">
+        {/* Top Framework Identity Header */}
+        <div className="msc-app-header">
+          <div className="msc-app-header__icon">
+            <TechLogo id={activeMeta.icon} />
+          </div>
+          <div className="msc-app-header__copy">
+            <strong>{activeMeta.title}</strong>
+            <span>{activeMeta.subtitle}</span>
+          </div>
+          <b className="msc-app-header__badge is-purple">{activeMeta.badge}</b>
         </div>
-        <div className="core-rn-code">
-          <span>
-            <i>const</i> bridge = {'{'} engine: <b>'Hermes · JSI'</b>, sync: <b>'live'</b> {'}'}
-          </span>
-        </div>
-      </div>
-    );
-  }
 
-  if (type === 'android') {
-    return (
-      <div className="holo-core holo-core--android" aria-hidden="true">
-        <div className="core-android-pills">
-          <span>Lifecycle · OS</span>
-          <span>CameraX · IPC</span>
+        {/* Live CameraX + Native SDK Multi-Box & Barcode Laser Scanner */}
+        <div className="msc-scanner-frame">
+          <i className="msc-laser-line" />
+          <div className="msc-target-box is-box1">
+            <span className="msc-corner-tl" /><span className="msc-corner-tr" />
+            <span className="msc-corner-bl" /><span className="msc-corner-br" />
+            <div className="msc-barcode-bars">
+              <i /><i /><i /><i /><i /><i /><i /><i />
+            </div>
+            <b>99.4%</b>
+          </div>
+          <div className="msc-scanner-bottom">
+            <span className="msc-pipeline-pill">CameraX → Kotlin → AAR</span>
+            <div className="msc-target-box is-box2">
+              <b>BOX #2 ✓</b>
+            </div>
+          </div>
         </div>
-        <div className="core-android-scanner">
-          <div className="scanner-viewport">
-            <i className="scanner-beam" />
-            <b className="scanner-box" />
-          </div>
-          <div className="scanner-meta">
-            <strong>KOTLIN</strong>
-            <small>DEVICE HW</small>
-          </div>
+
+        {/* Authentic Framework & Language Spec Chips */}
+        <div className="msc-spec-chips">
+          {activeMeta.specs.map((item) => (
+            <span key={item} className="msc-spec-chip">
+              <i />
+              {item}
+            </span>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="holo-core holo-core--sdk" aria-hidden="true">
-      <div className="core-sdk-chip-wrap">
-        <i className="core-sdk-pins" />
-        <div className="core-sdk-die">
-          <i className="core-sdk-pulse" />
-          <strong>KOTLIN · JAVA</strong>
-          <span>TFLITE / ML KIT</span>
+    <div className="msc-scene msc-scene--ai">
+      {/* Top Framework Identity Header */}
+      <div className="msc-app-header">
+        <div className="msc-app-header__icon">
+          <TechLogo id={activeMeta.icon} />
         </div>
-        <i className="core-sdk-pins" />
+        <div className="msc-app-header__copy">
+          <strong>{activeMeta.title}</strong>
+          <span>{activeMeta.subtitle}</span>
+        </div>
+        <b className="msc-app-header__badge is-green">{activeMeta.badge}</b>
       </div>
-      <div className="core-sdk-outputs">
-        <span>Maven AAR</span>
-        <span>Library API</span>
+
+      {/* Live API Telemetry & Mobile Sync Stream */}
+      <div className="msc-api-stage">
+        <div className="msc-api-row">
+          <span className="msc-http-method is-post">POST</span>
+          <span className="msc-http-path">/v1/sdk/scan</span>
+          <b className="msc-http-status">200 · 18ms</b>
+        </div>
+        <div className="msc-api-row">
+          <span className="msc-http-method is-ws">WS</span>
+          <span className="msc-http-path">/chatdvt/stream</span>
+          <div className="msc-typing-wave">
+            <i /><i /><i /><i />
+          </div>
+        </div>
+        <div className="msc-api-metrics">
+          <span>Express · Prisma</span>
+          <b>MySQL Sync ✓</b>
+        </div>
+      </div>
+
+      {/* Authentic Framework & Language Spec Chips */}
+      <div className="msc-spec-chips">
+        {activeMeta.specs.map((item) => (
+          <span key={item} className="msc-spec-chip">
+            <i />
+            {item}
+          </span>
+        ))}
       </div>
     </div>
   );
 }
 
 export function MobileStack() {
-  const { locale, pathFor } = useLanguage(), en = locale === 'en';
-  // Click-only highlight state: null = all 4 bright & animating, 0..3 = clicked card highlighted & other 3 dimmed
-  const [selected, setSelected] = useState<number | null>(null);
+  const { locale } = useLanguage(), en = locale === 'en';
+  const { enabled: motionEnabled } = useSiteMotion();
+  const [sceneIndex, setSceneIndex] = useState<number>(0);
+  const [hoveredOrb, setHoveredOrb] = useState<OrbSpec | null>(null);
+  const [tilt, setTilt] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const stageRef = useRef<HTMLDivElement>(null);
 
-  function handleSelect(index: number) {
-    setSelected((prev) => (prev === index ? null : index));
+  useEffect(() => {
+    if (!motionEnabled || isPaused || hoveredOrb !== null) return;
+    const timer = window.setInterval(() => {
+      setSceneIndex((prev) => (prev + 1) % SCENE_ORDER.length);
+    }, 2900);
+    return () => window.clearInterval(timer);
+  }, [motionEnabled, isPaused, hoveredOrb]);
+
+  const activeScene: SceneMode = hoveredOrb ? hoveredOrb.scene : SCENE_ORDER[sceneIndex];
+
+  function handlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const nx = ((e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2));
+    const ny = ((e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2));
+    setTilt({
+      x: Math.max(-1, Math.min(1, nx)),
+      y: Math.max(-1, Math.min(1, ny)),
+    });
+  }
+
+  function handlePointerLeave() {
+    setTilt({ x: 0, y: 0 });
+    setHoveredOrb(null);
+    setIsPaused(false);
   }
 
   return (
-    <div className={'mobile-stack mobile-stack--holo' + (selected !== null ? ' is-inspecting' : '')}>
-      <div className="stack-overline">
-        <span>
-          <i />
-          {en ? 'A LITTLE CLOSER TO THE NATIVE LAYER' : 'ĐI SÂU HƠN MỘT LỚP'}
-        </span>
-        <span>01 — 04</span>
-      </div>
+    <div
+      ref={stageRef}
+      className={'mobile-stack mobile-stack--constellation is-scene-' + activeScene}
+      onMouseEnter={() => setIsPaused(true)}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
+    >
+      <div className="msc-stage">
+        {/* Ambient Aurora Glow */}
+        <div className="msc-aurora" aria-hidden="true" />
 
-      <div className="stack-perspective stack-perspective--holo">
-        <div className="stack-light" aria-hidden="true" />
-        <div className="holo-stage-inner">
-          {/* Left Conduit Rail: Live fiber pulse + clickable 01-04 nodes */}
-          <div className="holo-conduit" role="tablist" aria-label={en ? 'Layer nodes' : 'Các nút tầng kiến trúc'}>
-            <div className="holo-conduit-line" aria-hidden="true">
-              <i className="holo-conduit-packet" />
-            </div>
-            {layers.map((layer, index) => {
-              const isSelected = selected === index;
-              const isDimmed = selected !== null && !isSelected;
-              return (
-                <button
-                  key={layer.type}
-                  type="button"
-                  className={
-                    'holo-conduit-node holo-conduit-node--' +
-                    layer.type +
-                    (isSelected ? ' is-active' : '') +
-                    (isDimmed ? ' is-dimmed' : '')
+        {/* Curved Animated Energy Streams Connecting Orbs -> Central Phone */}
+        <svg className="msc-streams" viewBox="0 0 540 460" aria-hidden="true">
+          <defs>
+            <radialGradient id="msc-core-glow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Subtle Orbital Rings */}
+          <circle cx="270" cy="230" r="148" className="msc-orbit-ring" />
+          <circle cx="270" cy="230" r="204" className="msc-orbit-ring is-outer" />
+
+          {ORBS.map((orb) => {
+            const isLit = orb.scene === activeScene;
+            // Control point for an organic curved bezier arc toward (270, 230)
+            const midX = (orb.cx + 270) / 2 + (orb.cy - 230) * 0.16;
+            const midY = (orb.cy + 230) / 2 - (orb.cx - 270) * 0.14;
+            const d = `M ${orb.cx} ${orb.cy} Q ${Math.round(midX)} ${Math.round(midY)} 270 230`;
+
+            return (
+              <g key={orb.id} className={'msc-stream-group' + (isLit ? ' is-lit' : '')}>
+                <path d={d} className="msc-stream-base" style={{ '--orb-c': orb.color } as React.CSSProperties} />
+                <path
+                  d={d}
+                  className="msc-stream-pulse"
+                  style={
+                    {
+                      '--orb-c': orb.color,
+                      animationDelay: orb.floatDelay,
+                    } as React.CSSProperties
                   }
-                  role="tab"
-                  aria-label={(en ? 'Select layer ' : 'Chọn tầng ') + `0${index + 1} ${layer.name}`}
-                  aria-selected={isSelected}
-                  onClick={() => handleSelect(index)}
-                >
-                  0{index + 1}
-                </button>
-              );
-            })}
-          </div>
+                />
+              </g>
+            );
+          })}
+        </svg>
 
-          {/* 4 Layer Cards: Smooth 3D hover + live 60fps core animations; click highlights 1 and dims the rest */}
-          <div className="holo-rig">
-            <div className="holo-grid-backdrop" aria-hidden="true" />
-            {layers.map((layer, index) => {
-              const Icon = layer.icon;
-              const isSelected = selected === index;
-              const isDimmed = selected !== null && !isSelected;
-
-              return (
-                <button
-                  key={layer.type}
-                  type="button"
-                  className={
-                    'stack-plane holo-deck stack-plane--' +
-                    layer.type +
-                    (isSelected ? ' is-selected is-focused' : '') +
-                    (isDimmed ? ' is-dimmed' : '')
-                  }
-                  aria-label={(en ? 'Explore ' : 'Khám phá lớp ') + layer.name}
-                  onClick={() => handleSelect(index)}
-                >
-                  <span className="plane-edge" aria-hidden="true" />
-                  <span className="holo-deck__sheen" aria-hidden="true" />
-                  <div className="holo-deck__identity">
-                    <div className="holo-deck__top-row">
-                      <span className="holo-deck__kicker">{layer.kicker}</span>
-                      <em className="plane-badge">{layer.badge}</em>
-                    </div>
-                    <span className="holo-deck__title">
-                      <Icon size={16} strokeWidth={1.6} aria-hidden="true" />
-                      <strong>{layer.name}</strong>
-                    </span>
-                  </div>
-
-                  <div className="holo-deck__viz" aria-hidden="true">
-                    <LayerCoreVisual type={layer.type} />
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <span className="stack-axis" aria-hidden="true">
-          UI <i /> NATIVE
-        </span>
-      </div>
-
-      <div className="stack-controls">
-        <div className="stack-selector" role="tablist" aria-label={en ? 'Explore the mobile layers' : 'Khám phá các lớp mobile'}>
-          {layers.map((layer, index) => (
-            <button
-              key={layer.type}
-              type="button"
-              role="tab"
-              aria-selected={selected === index}
-              onClick={() => handleSelect(index)}
-            >
-              <span>0{index + 1}</span>
-              {layer.short}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="stack-expand"
-          aria-pressed={selected === null}
-          onClick={() => setSelected(null)}
-          title={en ? 'View all four layers' : 'Xem toàn bộ 4 lớp'}
-          aria-label={en ? 'View all four layers' : 'Xem toàn bộ 4 lớp'}
+        {/* CENTRAL 3D TILTED SMARTPHONE HUB */}
+        <div
+          className="msc-device-wrap"
+          style={{
+            transform: `perspective(950px) rotateX(${(-tilt.y * 7).toFixed(2)}deg) rotateY(${(tilt.x * 9).toFixed(2)}deg) translate3d(${(tilt.x * 6).toFixed(1)}px, ${(tilt.y * 6).toFixed(1)}px, 0)`,
+          }}
         >
-          <Layers size={17} />
-        </button>
-      </div>
+          <div
+            className="msc-device"
+            onClick={() => setSceneIndex((prev) => (prev + 1) % SCENE_ORDER.length)}
+            role="button"
+            tabIndex={0}
+            aria-label={en ? 'Interactive mobile showcase — click to switch scene' : 'Màn hình mô phỏng trực quan — bấm để chuyển cảnh'}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setSceneIndex((prev) => (prev + 1) % SCENE_ORDER.length);
+              }
+            }}
+          >
+            {/* Specular Glass Glare Overlay */}
+            <div className="msc-device__glare" aria-hidden="true" />
 
-      <div className="stack-insight" aria-live="polite">
-        {selected === null ? (
-          <p className="stack-hint">
-            {en ? 'Hover to preview · Click any layer (01–04) to highlight and inspect.' : 'Rê chuột để xem hiệu ứng · Bấm vào một tầng (01–04) để highlight và xem chi tiết.'}
-            <span>01 UI → 02 REACT NATIVE → 03 ANDROID → 04 NATIVE SDK</span>
-          </p>
-        ) : (
-          <div key={selected} className="stack-detail">
-            <div className="stack-detail-title">
-              <strong>
-                0{selected + 1} / {layers[selected].name} · {layers[selected].badge}
-              </strong>
-              <button type="button" onClick={() => setSelected(null)}>
-                {en ? '← All layers' : '← Xem cả 4 tầng'}
-              </button>
+            {/* Flagship Top Status Bar + Dynamic Island */}
+            <div className="msc-statusbar" aria-hidden="true">
+              <span className="msc-statusbar__time">09:41</span>
+              <div className="msc-device__notch">
+                <span className="msc-notch-cam" />
+                <i />
+              </div>
+              <div className="msc-statusbar__icons">
+                <svg viewBox="0 0 14 10" className="msc-status-svg">
+                  <rect x="0.5" y="6.5" width="2" height="3" rx="0.6" fill="currentColor" />
+                  <rect x="3.8" y="4.5" width="2" height="5" rx="0.6" fill="currentColor" />
+                  <rect x="7.1" y="2.5" width="2" height="7" rx="0.6" fill="currentColor" />
+                  <rect x="10.4" y="0.5" width="2" height="9" rx="0.6" fill="currentColor" />
+                </svg>
+                <span className="msc-battery">
+                  <i />
+                </span>
+              </div>
             </div>
-            <p>{details[selected].text[en ? 1 : 0]}</p>
-            <div className="stack-detail-bottom">
-              <div>
-                {details[selected].tags.map((tag) => (
-                  <span key={tag}>{tag}</span>
+
+            <PhoneVisualScene scene={activeScene} focusedOrb={hoveredOrb} />
+
+            {/* Bottom Mode Dots + Flagship Home Indicator Bar */}
+            <div className="msc-device__bottom" aria-hidden="true">
+              <div className="msc-device__dots">
+                {SCENE_ORDER.map((mode, idx) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    tabIndex={-1}
+                    className={activeScene === mode ? 'is-on' : ''}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHoveredOrb(null);
+                      setSceneIndex(idx);
+                    }}
+                  />
                 ))}
               </div>
-              <Link to={pathFor('/me#experience')} aria-label={en ? 'Related experience' : 'Kinh nghiệm liên quan'}>
-                <ArrowUpRight size={18} />
-              </Link>
+              <div className="msc-device__homebar" />
             </div>
           </div>
-        )}
+        </div>
+
+        {/* FLOATING 3D GLASS ORBS FOR FRAMEWORKS, LANGUAGES & PRODUCTS */}
+        <div className="msc-orbs" role="group" aria-label={en ? 'Tech stack and products' : 'Ngôn ngữ, Framework và Sản phẩm'}>
+          {ORBS.map((orb) => {
+            const isLit = orb.scene === activeScene;
+            const leftPct = (orb.cx / 540) * 100;
+            const topPct = (orb.cy / 460) * 100;
+            const px = (tilt.x * -14 * orb.depth).toFixed(1);
+            const py = (tilt.y * -12 * orb.depth).toFixed(1);
+
+            return (
+              <button
+                key={orb.id}
+                type="button"
+                className={
+                  'msc-orb msc-orb--' +
+                  orb.size +
+                  (isLit ? ' is-lit' : '') +
+                  (hoveredOrb?.id === orb.id ? ' is-hovered' : '')
+                }
+                style={
+                  {
+                    left: `${leftPct}%`,
+                    top: `${topPct}%`,
+                    '--orb-c': orb.color,
+                    '--orb-delay': orb.floatDelay,
+                    '--orb-px': `${px}px`,
+                    '--orb-py': `${py}px`,
+                  } as React.CSSProperties
+                }
+                onMouseEnter={() => {
+                  setHoveredOrb(orb);
+                  setSceneIndex(SCENE_ORDER.indexOf(orb.scene));
+                }}
+                onFocus={() => {
+                  setHoveredOrb(orb);
+                  setSceneIndex(SCENE_ORDER.indexOf(orb.scene));
+                }}
+                onBlur={() => setHoveredOrb(null)}
+                onClick={() => {
+                  setHoveredOrb(orb);
+                  setSceneIndex(SCENE_ORDER.indexOf(orb.scene));
+                }}
+              >
+                <span className="msc-orb__halo" aria-hidden="true" />
+                <span className="msc-orb__core">
+                  <TechLogo id={orb.id} />
+                </span>
+                <span className="msc-orb__label">{orb.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
