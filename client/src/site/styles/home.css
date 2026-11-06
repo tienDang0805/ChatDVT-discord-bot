@@ -1059,8 +1059,8 @@
   justify-content: center;
 }
 .mobile-stack--constellation.is-scene-rn { --msc-accent: #38bdf8; }
-.mobile-stack--constellation.is-scene-sdk { --msc-accent: #a855f7; }
-.mobile-stack--constellation.is-scene-backend { --msc-accent: #22c55e; }
+.mobile-stack--constellation.is-scene-sdk { --msc-accent: #2dd4bf; }
+.mobile-stack--constellation.is-scene-backend { --msc-accent: #e5b869; }
 
 .msc-stage {
   position: relative;
@@ -1163,17 +1163,17 @@
 }
 .msc-device {
   position: relative;
-  width: 208px;
-  height: 376px;
-  border-radius: 40px;
-  padding: 5.5px;
-  background: linear-gradient(145deg, #475569 0%, #1e293b 38%, #0f172a 72%, #334155 100%);
-  border: 1.5px solid color-mix(in srgb, var(--msc-accent), #94a3b8 42%);
+  width: 214px;
+  height: 392px;
+  border-radius: 42px;
+  padding: 6px;
+  background: linear-gradient(155deg, #64748b 0%, #273244 26%, #0f1622 65%, #334155 100%);
+  border: 1px solid rgb(255 255 255 / .24);
   box-shadow:
-    inset 0 0 0 1.5px #020617,
-    inset 0 1px 2px rgb(255 255 255 / .38),
-    0 32px 64px -12px rgb(0 0 0 / .88),
-    0 0 48px -6px color-mix(in srgb, var(--msc-accent), transparent 50%);
+    inset 0 0 0 1.5px #03060a,
+    inset 0 1px 1px rgb(255 255 255 / .32),
+    0 36px 72px -14px rgb(0 0 0 / .92),
+    0 0 44px -12px color-mix(in srgb, var(--msc-accent), transparent 68%);
   display: flex;
   flex-direction: column;
   cursor: pointer;
@@ -1219,17 +1219,16 @@
 .msc-oled {
   position: relative;
   flex: 1;
-  border-radius: 34px;
+  border-radius: 36px;
   background:
-    radial-gradient(120% 55% at 50% 0%, color-mix(in srgb, var(--msc-accent), transparent 68%) 0%, transparent 65%),
-    radial-gradient(90% 45% at 85% 95%, color-mix(in srgb, var(--msc-accent), transparent 82%) 0%, transparent 70%),
-    linear-gradient(180deg, #0b1320 0%, #060a11 58%, #04070c 100%);
-  border: 1px solid rgb(255 255 255 / .08);
-  padding: 8px 9px 7px;
+    radial-gradient(110% 42% at 50% 0%, color-mix(in srgb, var(--msc-accent), transparent 82%) 0%, transparent 68%),
+    linear-gradient(180deg, #070b11 0%, #04070b 65%, #030508 100%);
+  border: 1px solid rgb(255 255 255 / .06);
+  padding: 9px 11px 8px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 7px;
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -1318,10 +1317,114 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 7px;
+  gap: 8px;
   overflow: hidden;
   position: relative;
   z-index: 2;
+}
+
+/* Unboxed Editorial Screen Header */
+.msc-screen-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 2px 6px;
+  border-bottom: 1px solid rgb(255 255 255 / .07);
+}
+.msc-screen-head__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.msc-screen-kicker {
+  font: 700 6.8px/1 var(--layered-mono);
+  letter-spacing: 0.08em;
+  color: var(--msc-accent);
+}
+.msc-screen-badge {
+  font: 700 7px/1 var(--layered-mono);
+  padding: 2.5px 5.5px;
+  border-radius: 99px;
+  color: var(--msc-accent);
+  background: color-mix(in srgb, var(--msc-accent), transparent 88%);
+  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 68%);
+}
+.msc-screen-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.msc-screen-brand__logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / .04);
+  border: 1px solid rgb(255 255 255 / .08);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.msc-screen-brand__logo svg {
+  width: 18px;
+  height: 18px;
+}
+.msc-screen-brand__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.msc-screen-brand__text strong {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 11.5px !important;
+  font-weight: 700;
+  line-height: 1.15;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.msc-screen-brand__text span {
+  font-family: var(--layered-mono);
+  font-size: 7.2px !important;
+  font-weight: 500;
+  line-height: 1.15;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Open Vector Canvas Centerpiece Inside OLED */
+.msc-canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 0;
+}
+.msc-canvas-svg {
+  width: 100%;
+  height: 100%;
+  max-height: 156px;
+  display: block;
+  overflow: visible;
+}
+.msc-svg-float {
+  animation: msc-orb-float 4.2s ease-in-out infinite;
+}
+.msc-svg-float-slow {
+  animation: msc-orb-float 5.6s ease-in-out infinite reverse;
+}
+.msc-svg-laser {
+  animation: msc-svg-laser-sweep 2.2s ease-in-out infinite alternate;
+}
+@keyframes msc-svg-laser-sweep {
+  from { transform: translateY(18px); }
+  to { transform: translateY(126px); }
 }
 
 /* Hero Glassmorphic App Card Inside Phone */
@@ -1688,12 +1791,12 @@
   align-items: center;
   justify-content: center;
   gap: 3px;
-  padding: 4px 3px;
-  border-radius: 7px;
-  background: rgb(255 255 255 / .05);
-  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 68%);
+  padding: 4.5px 3px;
+  border-radius: 6px;
+  background: rgb(255 255 255 / .03);
+  border: 1px solid rgb(255 255 255 / .07);
   font: 700 6.8px/1 var(--layered-mono);
-  color: #e2e8f0;
+  color: #cbd5e1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1891,11 +1994,11 @@
   width: 56px;
   height: 56px;
   border-radius: 18px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--site-surface-2), white 6%), var(--site-bg));
-  border: 1.5px solid color-mix(in srgb, var(--orb-c), var(--site-line) 55%);
+  background: linear-gradient(155deg, #131922 0%, #090d13 100%);
+  border: 1px solid rgb(255 255 255 / .12);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .14),
-    0 14px 28px -10px rgb(0 0 0 / .6);
+    inset 0 1px 0 rgb(255 255 255 / .12),
+    0 16px 30px -10px rgb(0 0 0 / .75);
   display: grid;
   place-items: center;
   animation: msc-orb-float 4.6s ease-in-out infinite;
@@ -1946,12 +2049,12 @@
 }
 .msc-orb.is-lit .msc-orb__core,
 .msc-orb:hover .msc-orb__core {
-  border-color: var(--orb-c);
+  border-color: color-mix(in srgb, var(--orb-c), rgb(255 255 255 / .45) 35%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .25),
-    0 0 24px -4px color-mix(in srgb, var(--orb-c), transparent 32%),
-    0 18px 32px -10px rgb(0 0 0 / .72);
-  transform: scale(1.1) translateY(-3px);
+    inset 0 1px 0 rgb(255 255 255 / .22),
+    0 0 22px -6px color-mix(in srgb, var(--orb-c), transparent 45%),
+    0 18px 32px -10px rgb(0 0 0 / .82);
+  transform: scale(1.06) translateY(-2px);
 }
 .msc-orb.is-lit .msc-orb__label,
 .msc-orb:hover .msc-orb__label {
