@@ -631,6 +631,7 @@ app.use(createSeoRoutes());
 
 app.get('/profile', (_req, res) => res.redirect(301, '/me'));
 app.get('/chatDVT', (_req, res) => res.redirect(301, '/discord'));
+app.get('/gym8d', (_req, res) => res.redirect(301, '/gym8D'));
 
 app.use((req, res, next) => {
   if ((req.method === 'GET' || req.method === 'HEAD') && req.path.length > 1 && req.path.endsWith('/')) {
