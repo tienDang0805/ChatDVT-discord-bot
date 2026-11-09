@@ -4,14 +4,15 @@ import { prisma } from '../../database/prisma';
 import { bot } from '../../bot/client';
 import { geminiService } from '../../bot/services/gemini';
 import { userIdentityService } from '../../bot/services/identity';
-import { authenticateToken, JWT_SECRET, ADMIN_USER, ADMIN_PASS } from '../middleware/auth';
+import { authenticateToken, JWT_SECRET, verifyAdminCredentials } from '../middleware/auth';
+import { loginRateLimiter } from '../middleware/security';
 
 const router = Router();
 
 // --- Login ---
-router.post('/login', (req, res) => {
+router.post('/login', loginRateLimiter, (req, res) => {
     const { username, password } = req.body;
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
+    if (verifyAdminCredentials(username, password)) {
         const token = jwt.sign({ username: username }, JWT_SECRET, { expiresIn: '24h' });
         res.json({ token });
     } else {

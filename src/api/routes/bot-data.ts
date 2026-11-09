@@ -4,6 +4,7 @@ import { prisma } from '../../database/prisma';
 import { bot } from '../../bot/client';
 import { geminiService } from '../../bot/services/gemini';
 import { authenticateToken } from '../middleware/auth';
+import { aiPublicRateLimiter } from '../middleware/security';
 import { userIdentityService } from '../../bot/services/identity';
 import multer from 'multer';
 
@@ -11,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 
 const router = Router();
 
 // --- 8D Chat API ---
-router.post('/8d-chat', async (req, res) => {
+router.post('/8d-chat', aiPublicRateLimiter, async (req, res) => {
     try {
         const { message, context, tags, stats } = req.body;
         const contextStr = (context && Object.keys(context).length > 0) 

@@ -10,14 +10,26 @@ import axios from 'axios';
 import { prisma } from '../database/prisma';
 import { geminiService } from '../bot/services/gemini';
 import { authenticateToken } from './middleware/auth';
+import {
+  corsOptions,
+  isOriginAllowed,
+  securityHeadersMiddleware,
+  aiPublicRateLimiter,
+  trackRateLimiter,
+  allowSocketAiEvent,
+  getClientIp,
+} from './middleware/security';
 import poe2TradeRoutes from './routes/poe2-trade';
 import http from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { setupMonopolySocket } from './monopoly/MonopolyRoom';
+import mobileConsoleRoutes, { recordTrackedVisitor, scoreVisitorRequest, scraperFirewallMiddleware } from './routes/mobile-console';
 
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', true);
+app.use(securityHeadersMiddleware);
 app.use(preventResponseCaching);
 app.use((req, res, next) => {
   if (req.hostname.toLowerCase() === 'www.devtiendang.blog') {
@@ -25,19 +37,38 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use(cors());
-app.use(bodyParser.json({
-  limit: '50mb',
+app.use(cors(corsOptions));
+app.use(scraperFirewallMiddleware);
+
+const defaultJsonParser = bodyParser.json({
+  limit: '1mb',
   verify: (req, _res, buffer) => {
     const requestPath = (req as any).originalUrl?.split('?')[0];
     if (requestPath === '/api/facebook/webhook') {
       (req as any).rawBody = Buffer.from(buffer);
     }
   },
-}));
-app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+});
+const largeJsonParser = bodyParser.json({ limit: '15mb' });
+
+app.use((req, res, next) => {
+  const reqPath = req.path;
+  if (reqPath.startsWith('/api/admin/blog-posts') || reqPath === '/api/handsome-analyzer') {
+    return largeJsonParser(req, res, next);
+  }
+  return defaultJsonParser(req, res, next);
+});
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 const server = http.createServer(app);
-const io = new SocketServer(server, { cors: { origin: '*' } });
+const io = new SocketServer(server, {
+  cors: {
+    origin(origin, callback) {
+      if (isOriginAllowed(origin)) callback(null, true);
+      else callback(new Error('Origin not allowed by CORS'));
+    },
+    methods: ['GET', 'POST'],
+  },
+});
 setupMonopolySocket(io);
 const PORT = process.env.PORT || 3000;
 
@@ -69,6 +100,14 @@ io.on('connection', (socket) => {
     socket.emit('init_state', { messages: globalMessages, agentActions: globalAgentActions });
     
     socket.on('chat_message', async (data) => {
+        const socketIp = String(socket.handshake.headers['cf-connecting-ip'] || socket.handshake.address || 'unknown');
+        if (!allowSocketAiEvent(socketIp, 8)) {
+            socket.emit('chat_update', [
+                ...globalMessages,
+                { speaker: 'HỆ THỐNG', message: 'Bạn gửi tin nhắn quá nhanh, chờ chút rồi thử lại nhé!' },
+            ]);
+            return;
+        }
         const { text, tags } = data;
         const userMsg = { speaker: 'BẠN', message: text };
         globalMessages.push(userMsg);
@@ -268,7 +307,7 @@ app.use('/api', poe2TradeRoutes);
 
 // Protect API Routes (except public routes)
 app.use((req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || (req.method === 'GET' && req.path.startsWith('/api/blog/')) || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path === '/api/facebook/webhook' || req.path.startsWith('/api/ping-sos') || req.path === '/api/activity-token' || req.path === '/api/tutien-story' || req.path === '/api/tutien-init' || req.path.startsWith('/api/deeplink')) {
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path === '/api/bot-info' || req.path === '/api/track' || req.path === '/api/mobile/widget-summary' || (req.method === 'GET' && req.path.startsWith('/api/blog/')) || req.path.startsWith('/api/web-quiz/') || req.path === '/api/food-wheel' || req.path === '/api/excuse-generator' || req.path === '/api/handsome-analyzer' || req.path === '/api/cv-reviewer' || req.path.startsWith('/api/music/') || req.path === '/api/8d-chat' || req.path.startsWith('/api/numerology') || req.path.startsWith('/api/gender-quiz') || req.path.startsWith('/api/astrology') || req.path.startsWith('/api/tarot') || req.path === '/api/magic-ball' || req.path === '/api/deep-status' || req.path.startsWith('/api/burnout-check') || req.path.startsWith('/api/weather') || req.path === '/api/poem-generator' || req.path === '/api/chibi-sticker' || req.path.startsWith('/api/face-reader') || req.path.startsWith('/api/dream-interpreter') || req.path.startsWith('/api/tech-duel') || req.path.startsWith('/api/english/') || req.path === '/api/web-chat' || req.path.startsWith('/api/detox') || req.path === '/api/facebook/webhook' || req.path.startsWith('/api/ping-sos') || req.path === '/api/activity-token' || req.path === '/api/tutien-story' || req.path === '/api/tutien-init' || req.path.startsWith('/api/deeplink')) {
         return next();
     }
     if (req.path.startsWith('/api/')) {
@@ -297,10 +336,12 @@ import facebookRoutes from './routes/facebook';
 app.use('/api', facebookRoutes);
 
 import publicAiRoutes from './routes/public-ai';
-app.use('/api', publicAiRoutes);
+app.use('/api', aiPublicRateLimiter, publicAiRoutes);
 
 import pingSosRoutes from './routes/ping-sos';
 app.use('/api', pingSosRoutes);
+
+app.use('/api', mobileConsoleRoutes);
 
 // Web Chat Prompt Config (Admin - protected)
 const WEB_CHAT_PROMPT_KEYS = {
@@ -384,7 +425,19 @@ app.post('/api/web-chat/prompt', authenticateToken, async (req, res) => {
 });
 
 // --- Stealth Page Tracking ---
-app.post('/api/track', async (req, res) => {
+interface CachedGeoInfo {
+  cityStr: string;
+  ispStr: string;
+  isHosting: boolean;
+  geoStr: string;
+  expiresAt: number;
+}
+const geoIpCache = new Map<string, CachedGeoInfo>();
+const trackWebhookCooldown = new Map<string, number>();
+const GEO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const WEBHOOK_COOLDOWN_MS = 15 * 1000;
+
+app.post('/api/track', trackRateLimiter, async (req, res) => {
   res.status(204).end();
 
   const webhookUrl = process.env.DiscrodTrackingWebhook;
@@ -394,23 +447,59 @@ app.post('/api/track', async (req, res) => {
     const { page, url, referrer, os, browser, screenSize, viewport, pixelRatio, language, timezone, timestamp, connection, touchSupport } = req.body || {};
     if (!page) return;
 
-    const clientIp = (req.ip || 'unknown').replace(/^::ffff:/, '');
+    const clientIp = getClientIp(req);
 
     const isMobile = touchSupport || /Mobile|Android|iPhone|iPad/i.test(req.body?.userAgent || '');
     const deviceEmoji = isMobile ? '📱' : '🖥️';
     const deviceType = isMobile ? 'Mobile' : 'Desktop';
 
     let geoStr = '';
+    let cityStr = 'TP.HCM';
+    let ispStr = 'ISP';
+    let isHosting = false;
     try {
       if (clientIp !== '127.0.0.1' && clientIp !== '::1' && clientIp !== 'unknown') {
-        const geoRes = await axios.get(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,isp,org`, { timeout: 3000 });
-        if (geoRes.data?.status === 'success') {
-          const g = geoRes.data;
-          geoStr = `${g.city || ''}, ${g.regionName || ''}, ${g.country || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '');
-          if (g.isp) geoStr += ` (${g.isp})`;
+        const now = Date.now();
+        const cachedGeo = geoIpCache.get(clientIp);
+        if (cachedGeo && now < cachedGeo.expiresAt) {
+          cityStr = cachedGeo.cityStr;
+          ispStr = cachedGeo.ispStr;
+          isHosting = cachedGeo.isHosting;
+          geoStr = cachedGeo.geoStr;
+        } else {
+          const geoRes = await axios.get(`http://ip-api.com/json/${clientIp}?fields=status,country,regionName,city,isp,org,hosting`, { timeout: 3000 });
+          if (geoRes.data?.status === 'success') {
+            const g = geoRes.data;
+            cityStr = g.city || g.regionName || 'Việt Nam';
+            ispStr = g.isp || g.org || 'ISP';
+            isHosting = Boolean(g.hosting);
+            geoStr = `${g.city || ''}, ${g.regionName || ''}, ${g.country || ''}`.replace(/, ,/g, ',').replace(/^, |, $/g, '');
+            if (g.isp) geoStr += ` (${g.isp})`;
+            if (geoIpCache.size > 2000) geoIpCache.clear();
+            geoIpCache.set(clientIp, { cityStr, ispStr, isHosting, geoStr, expiresAt: now + GEO_CACHE_TTL_MS });
+          }
         }
       }
     } catch {}
+
+    recordTrackedVisitor(
+      scoreVisitorRequest({
+        ip: clientIp,
+        userAgent: String(req.body?.userAgent || req.headers['user-agent'] || ''),
+        page: String(url || page || '/'),
+        referrer: String(referrer || 'direct'),
+        os: String(os || ''),
+        browser: String(browser || ''),
+        city: cityStr,
+        isp: ispStr,
+        hosting: isHosting,
+        webdriver: Boolean(req.body?.webdriver),
+        gpuRenderer: String(req.body?.gpuRenderer || 'Apple GPU'),
+        touchSupport: Boolean(touchSupport),
+        dwellSec: Number(req.body?.dwellSec || 12),
+        scrollPct: Number(req.body?.scrollPct || 45),
+      }),
+    );
 
     const pageColors: Record<string, number> = {
       PublicPortal: 0x3b82f6,
@@ -439,6 +528,14 @@ app.post('/api/track', async (req, res) => {
       timestamp: timestamp || new Date().toISOString(),
       footer: { text: 'ChatDVT Tracking System' },
     };
+
+    const now = Date.now();
+    const lastWebhookAt = trackWebhookCooldown.get(clientIp) || 0;
+    if (now - lastWebhookAt < WEBHOOK_COOLDOWN_MS) {
+      return;
+    }
+    if (trackWebhookCooldown.size > 2000) trackWebhookCooldown.clear();
+    trackWebhookCooldown.set(clientIp, now);
 
     await axios.post(webhookUrl, { embeds: [embed] }).catch(() => {});
   } catch {}
