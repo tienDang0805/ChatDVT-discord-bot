@@ -2491,7 +2491,7 @@
 
   const SESSION_ALLOWED_SLOT_GROUPS = {
     press_day: ["chest_press", "shoulder_press", "chest_fly", "lateral_delt", "triceps", "cardio_finisher"],
-    pull_day: ["vertical_pull", "horizontal_row", "rear_delt_pull", "biceps", "core_stability", "cardio_finisher"],
+    pull_day: ["vertical_pull", "horizontal_row", "rear_delt_pull", "lateral_delt", "shoulder_press", "biceps", "core_stability", "cardio_finisher"],
     legs_day: ["quad_compound", "posterior_chain", "calves", "core_stability", "cardio_finisher"],
     upper_day: [
       "chest_press",
@@ -2625,8 +2625,8 @@
       description: "Bộ khung gốc cân bằng giữa Tạ đơn, Máy cáp và Đi bộ dốc tập được ở mọi phòng.",
       sessions: {
         press_day: ["incline_db_press", "dumbbell_shoulder_press", "pec_deck_fly", "lateral_raise", "tricep_rope_pushdown", "incline_treadmill_walk"],
-        pull_day: ["lat_pulldown", "seated_cable_row", "dumbbell_curl_lateral", "plank_core", "incline_treadmill_walk"],
-        legs_day: ["leg_press_45", "dumbbell_rdl", "plank_core", "incline_treadmill_walk"],
+        pull_day: ["lat_pulldown", "seated_cable_row", "rope_face_pull", "dumbbell_curl_lateral", "plank_core", "incline_treadmill_walk"],
+        legs_day: ["leg_press_45", "dumbbell_rdl", "seated_leg_extension", "seated_leg_curl_machine", "seated_calf_press", "incline_treadmill_walk"],
         upper_day: ["machine_chest_press", "lat_pulldown", "pec_deck_fly", "seated_cable_row", "lateral_raise", "tricep_rope_pushdown"]
       }
     },
@@ -2919,8 +2919,8 @@
       code: "PRESS",
       calendarLabel: "ĐẨY NGỰC·VAI",
       focusShort: "Ngực · Vai · Tay sau",
-      shortName: "Buổi Đẩy (Press)",
-      title: "Buổi Đẩy (Press Day) — Ngực, Vai & Tay Sau",
+      shortName: "Buổi 1: Đẩy (Ngực · Vai · Tay sau)",
+      title: "Buổi 1: Đẩy (Press Day) — Ngực, Vai & Tay Sau",
       subtitle: "Sắp xếp theo thứ tự ưu tiên từ bài Đa Khớp (Tier S) xuống bài Cô Lập & Đốt Mỡ",
       durationMin: 55,
       mascot: "benchPress",
@@ -2938,18 +2938,19 @@
     pull_day: {
       id: "pull_day",
       code: "PULL",
-      calendarLabel: "KÉO LƯNG·XÔ",
-      focusShort: "Lưng xô · Tay trước",
-      shortName: "Buổi Kéo (Pull)",
-      title: "Buổi Kéo (Pull Day) — Lưng Xô, Lưng Giữa & Tay Trước",
+      calendarLabel: "KÉO VAI·XÔ",
+      focusShort: "Vai · Lưng xô · Tay trước",
+      shortName: "Buổi 2: Kéo (Vai · Xô)",
+      title: "Buổi 2: Kéo (Pull Day) — Vai Sau, Lưng Xô & Tay Trước",
       subtitle: "Mở rộng khung lưng chữ V, chống gù lưng và làm săn bắp tay trước",
-      durationMin: 50,
+      durationMin: 55,
       mascot: "latPulldown",
-      targetMuscles: "Lưng xô · Lưng giữa · Vai sau · Tay trước",
+      targetMuscles: "Vai sau · Lưng xô · Lưng giữa · Tay trước",
       sessionRationale: "Sử dụng cáp kéo xô và cáp ngồi giúp cô lập toàn bộ khối cơ lưng dày rộng mà không cần gập lưng chịu tải nặng.",
       exerciseIds: [
         "lat_pulldown",
         "seated_cable_row",
+        "rope_face_pull",
         "dumbbell_curl_lateral",
         "plank_core",
         "incline_treadmill_walk"
@@ -2958,29 +2959,31 @@
     legs_day: {
       id: "legs_day",
       code: "LEGS",
-      calendarLabel: "CHÂN · ĐÙI",
-      focusShort: "Đùi · Mông · Core",
-      shortName: "Buổi Chân & Core",
-      title: "Buổi Chân & Core (Joint-Safe Legs) — Đùi, Mông & Bảo Vệ Gối",
+      calendarLabel: "BUỔI CHÂN",
+      focusShort: "Đùi · Mông · Bắp chân",
+      shortName: "Buổi 3: Chân (Legs)",
+      title: "Buổi 3: Chân (Legs Day) — Đùi, Mông & Bắp Chân",
       subtitle: "Tăng cơ chân đốt mỡ mạnh mẽ với 0% áp lực chèn ép đĩa đệm",
-      durationMin: 50,
+      durationMin: 55,
       mascot: "legPress",
-      targetMuscles: "Đùi trước · Đùi sau · Cơ mông · Core L4-L5",
+      targetMuscles: "Đùi trước · Đùi sau · Cơ mông · Bắp chân",
       sessionRationale: "Thay thế Back Squat thanh đòn bằng Đạp Đùi 45° và RDL tạ đơn để bảo vệ sụn gối & thắt lưng cho người nặng cân.",
       exerciseIds: [
         "leg_press_45",
         "dumbbell_rdl",
-        "plank_core",
+        "seated_leg_extension",
+        "seated_leg_curl_machine",
+        "seated_calf_press",
         "incline_treadmill_walk"
       ]
     },
     upper_day: {
       id: "upper_day",
       code: "UPPER",
-      calendarLabel: "THÂN TRÊN",
-      focusShort: "Ngực · Xô · Vai",
-      shortName: "Buổi Thân Trên",
-      title: "Buổi Thân Trên Tổng Hợp (Upper Body Hypertrophy)",
+      calendarLabel: "T7 TỰ CHỌN",
+      focusShort: "Optional · Thân trên",
+      shortName: "Thứ 7 (Optional)",
+      title: "Buổi Thứ 7 Tự Chọn (Optional — Thân Trên & Đốt Mỡ)",
       subtitle: "Kích thích lặp lại lần 2 trong tuần cho Ngực, Lưng Xô và Vai",
       durationMin: 55,
       mascot: "shoulderPress",
@@ -3003,8 +3006,8 @@
       isoDate: "2026-11-09",
       dayShort: "Thứ 2",
       dateLabel: "09/11/2026",
-      badge: "Hôm nay · Chuẩn bị",
-      isToday: true,
+      badge: "Trước lộ trình",
+      isToday: false,
       isWorkoutDay: false,
       sessionId: "rest",
       workoutTime: "06:00",
@@ -3017,14 +3020,15 @@
       isoDate: "2026-11-10",
       dayShort: "Thứ 3",
       dateLabel: "10/11/2026",
-      badge: "Ngày mai · Khởi đầu",
+      badge: "Đã tập Done",
+      isToday: true,
       isFirstWorkout: true,
       isWorkoutDay: true,
       sessionId: "press_day",
       workoutTime: "06:00",
       preSleepAlertTime: "21:15",
       sleepTargetTime: "21:45",
-      note: "Buổi tập đầu tiên: Buổi Đẩy (Press Day) lúc 06:00 sáng — Ưu tiên Đẩy Ngực Dốc 30° & Đẩy Vai Tạ Đơn."
+      note: "Đã hoàn thành Buổi 1: Đẩy (Ngực · Vai · Tay sau) ngày 10/11/2026."
     },
     {
       id: "wed_2026_11_11",
@@ -3037,7 +3041,7 @@
       workoutTime: "06:00",
       preSleepAlertTime: "21:15",
       sleepTargetTime: "21:45",
-      note: "Buổi Kéo (Pull Day): Kéo Xô Cáp Rộng Tay & Kéo Cáp Lưng Giữa."
+      note: "Buổi 2: Kéo (Vai · Xô · Tay trước) — Kéo Xô Cáp Rộng Tay, Kéo Cáp Lưng Giữa & Face Pull Vai Sau."
     },
     {
       id: "thu_2026_11_12",
@@ -3063,20 +3067,21 @@
       workoutTime: "06:00",
       preSleepAlertTime: "21:15",
       sleepTargetTime: "21:45",
-      note: "Buổi Chân & Core: Đạp Đùi 45°, RDL Tạ Đơn & Plank Bảo Vệ Lưng."
+      note: "Buổi 3: Chân (Đùi · Mông · Bắp chân) — Đạp Đùi 45°, RDL Tạ Đơn, Đá Đùi Trước & Cuốn Đùi Sau."
     },
     {
       id: "sat_2026_11_14",
       isoDate: "2026-11-14",
       dayShort: "Thứ 7",
       dateLabel: "14/11/2026",
-      badge: "Buổi 4",
-      isWorkoutDay: true,
-      sessionId: "upper_day",
+      badge: "Thứ 7 · Optional (Off)",
+      isWorkoutDay: false,
+      isSaturdayOptional: true,
+      sessionId: "rest",
       workoutTime: "07:00",
       preSleepAlertTime: "22:00",
       sleepTargetTime: "22:30",
-      note: "Buổi Thân Trên Tổng Hợp (Upper Body) cuối tuần."
+      note: "Cuối tuần Off (Hoặc bấm bật Tập Thứ 7 Optional nếu cuối tuần rảnh muốn tập thêm)."
     },
     {
       id: "sun_2026_11_15",
@@ -3155,27 +3160,22 @@
   }
 
   function buildDefaultWeeklyPattern(todayISO) {
-    const baseToday = todayISO || getTodayISO();
-    const tomorrowISO = addDaysISO(baseToday, 1);
-    const tomorrowDow = parseISODate(tomorrowISO).getDay();
-    const cycleOffsets = [
-      { offset: 0, sessionId: "press_day", workoutTime: "06:00" },
-      { offset: 1, sessionId: "pull_day", workoutTime: "06:00" },
-      { offset: 2, sessionId: "rest", workoutTime: "06:00" },
-      { offset: 3, sessionId: "legs_day", workoutTime: "06:00" },
-      { offset: 4, sessionId: "upper_day", workoutTime: "07:00" },
-      { offset: 5, sessionId: "rest", workoutTime: "07:00" },
-      { offset: 6, sessionId: "rest", workoutTime: "06:00" }
-    ];
-    const pattern = {};
-    cycleOffsets.forEach((item) => {
-      const dow = (tomorrowDow + item.offset) % 7;
-      pattern[dow] = {
-        sessionId: item.sessionId,
-        workoutTime: item.workoutTime
-      };
-    });
-    return pattern;
+    // Lịch mặc định của người dùng:
+    // Thứ 3 (10/11): Buổi 1 Đẩy (Ngực · Vai · Tay sau)
+    // Thứ 4 (11/11): Buổi 2 Kéo (Vai · Xô · Tay trước)
+    // Thứ 5 (12/11): Nghỉ giãn cơ giữa tuần (hoặc bật 3 ngày liên tiếp T3-T4-T5)
+    // Thứ 6 (13/11): Buổi 3 Chân (Đùi · Mông · Bắp chân)
+    // Thứ 7 (14/11): Cuối tuần Off (Hoặc tập Thứ 7 Optional)
+    // Chủ Nhật (15/11): Cuối tuần Off
+    return {
+      1: { sessionId: "rest", workoutTime: "06:00" },
+      2: { sessionId: "press_day", workoutTime: "06:00" },
+      3: { sessionId: "pull_day", workoutTime: "06:00" },
+      4: { sessionId: "rest", workoutTime: "06:00" },
+      5: { sessionId: "legs_day", workoutTime: "06:00" },
+      6: { sessionId: "rest", workoutTime: "07:00", isOptionalDay: true },
+      0: { sessionId: "rest", workoutTime: "07:00" }
+    };
   }
 
   function buildDayScheduleEntry(isoDate, options) {
@@ -3254,6 +3254,7 @@
     const isFirstWorkout = isoDate === startDateISO;
     const isPastDay = diffDaysISO(isoDate, todayISO) < 0;
     const isFutureDay = diffDaysISO(isoDate, todayISO) > 0;
+    const isSaturdayOptional = dow === 6;
     const daysFromToday = diffDaysISO(isoDate, todayISO);
     const daysSinceStart = diffDaysISO(isoDate, startDateISO);
     const weighInIntervalDays = Number(opts.weighInIntervalDays) === 14 ? 14 : 7;
@@ -3271,7 +3272,7 @@
       !isFutureDay &&
       !isBeforeStart &&
       isWorkoutDay &&
-      (explicitStatus === "missed" || (!isCompleted && isPastDay));
+      (explicitStatus === "missed" || (!isCompleted && isPastDay && !isSaturdayOptional));
     const kcalBurned = isCompleted ? (sess ? sess.durationMin * 7 : 350) : 0;
     const isUnreportedToday = isToday && isWorkoutDay && !isCompleted && !isMissed;
     const canReportStatus = !isFutureDay && (isWorkoutDay || isCompleted || isMissed || isToday);
@@ -3296,8 +3297,12 @@
       badge = isTomorrow ? "Ngày mai · Khởi đầu" : "Buổi 1 · Khởi đầu";
     } else if (isTomorrow) {
       badge = "Ngày mai";
+    } else if (isSaturdayOptional) {
+      badge = isWorkoutDay ? "Thứ 7 · Optional (Bật)" : "Thứ 7 · Optional (Off)";
     } else if (isWorkoutDay && sess) {
       badge = sess.shortName;
+    } else if (dow === 0) {
+      badge = "Chủ Nhật · Off";
     } else {
       badge = "Nghỉ hồi phục";
     }
@@ -3313,6 +3318,10 @@
       const nextRule = dateOverrides[nextTomorrow] || weeklyPattern[nextDow] || { sessionId: "press_day", workoutTime: "06:00" };
       const nextSess = WORKOUT_SESSIONS[nextRule.sessionId] || WORKOUT_SESSIONS.press_day;
       note = `Hôm nay (${formatVNShortDate(todayISO)}): Tối nay lúc ${preSleepAlertTime} hệ thống báo soạn sẵn đồ tập & bình nước để ${nextRule.workoutTime} sáng mai (${DAY_SHORT_NAMES[nextDow]} ${formatVNShortDate(nextTomorrow)}) bắt đầu ${nextSess.shortName}.`;
+    } else if (isSaturdayOptional && !isWorkoutDay) {
+      note = `Cuối tuần Off (Hoặc tập Thứ 7 Optional) — Nếu cuối tuần khoẻ và muốn tập thêm, bấm "Bật Tập Thứ 7 (Optional)" ngay bên dưới!`;
+    } else if (dow === 0 && !isWorkoutDay) {
+      note = `Nghỉ cuối tuần hoàn toàn để cơ bắp hồi phục 100%, chuẩn bị cho chu kỳ Đẩy ➔ Kéo ➔ Chân tuần tới.`;
     } else if (isWorkoutDay && sess) {
       note = `${sess.title} lúc ${workoutTime}. Nhắc đi ngủ từ tối hôm trước lúc ${preSleepAlertTime} (Ngủ lúc ${sleepTargetTime}).`;
     } else {
@@ -3334,6 +3343,7 @@
       isBeforeStart,
       isPastDay,
       isFutureDay,
+      isSaturdayOptional,
       daysFromToday,
       isWeighInDay,
       weighInIndex,
@@ -3371,8 +3381,40 @@
     };
   }
 
+  function buildDefaultCompletedSessionLog(sessionId) {
+    const sess = WORKOUT_SESSIONS[sessionId] || WORKOUT_SESSIONS.press_day;
+    const dayLog = {};
+    (sess.exerciseIds || []).forEach((exId) => {
+      const ex = EXERCISES[exId];
+      if (ex && Array.isArray(ex.defaultSets)) {
+        dayLog[exId] = ex.defaultSets.map((s) => ({ ...s, done: true }));
+      }
+    });
+    return dayLog;
+  }
+
+  function buildDefaultLogsMap() {
+    return {
+      "2026-11-10": buildDefaultCompletedSessionLog("press_day")
+    };
+  }
+
   function buildDefaultDayStatusMap() {
-    return {};
+    const completedLog = buildDefaultCompletedSessionLog("press_day");
+    const prog = calculateSessionCompletion("press_day", completedLog);
+    return {
+      "2026-11-10": {
+        status: "done",
+        sessionId: "press_day",
+        completedAt: "07:05 · 10/11/2026",
+        updatedAt: "2026-11-10T07:05:00.000Z",
+        completionPct: 100,
+        completedExercises: prog.completedExercises,
+        totalExercises: prog.totalExercises,
+        completedSets: prog.completedSetsCount,
+        totalSets: prog.totalSetsCount
+      }
+    };
   }
 
   function buildStreakSummary(options) {
@@ -4576,6 +4618,8 @@
     formatVNDate,
     formatVNShortDate,
     buildDefaultWeeklyPattern,
+    buildDefaultCompletedSessionLog,
+    buildDefaultLogsMap,
     buildDefaultDayStatusMap,
     buildDayScheduleEntry,
     buildStreakSummary,

@@ -1,13 +1,14 @@
 
     const { useState, useEffect, useMemo } = React;
-    const STORAGE_KEY = '8d_gym_mobile_v7_pro';
+    const STORAGE_KEY = '8d_gym_mobile_v8_ppl_1011';
     const LEGACY_STORAGE_KEYS = [
       '8d_gym_mobile_v1',
       '8d_gym_mobile_v2',
       '8d_gym_mobile_v3',
       '8d_gym_mobile_v4',
       '8d_gym_mobile_v5',
-      '8d_gym_mobile_v6_fresh'
+      '8d_gym_mobile_v6_fresh',
+      '8d_gym_mobile_v7_pro'
     ];
 
     function playChimeSound(type = 'rest') {
@@ -247,39 +248,39 @@
     const SESSION_PICKER_OPTIONS = [
       {
         value: 'press_day',
-        shortLabel: 'Buổi Đẩy (Press)',
-        title: 'Buổi Đẩy (Press — Ngực, Vai & Tay sau)',
+        shortLabel: 'Buổi 1: Đẩy (Ngực · Vai · Tay sau)',
+        title: 'Buổi 1: Đẩy (Press — Ngực, Vai & Tay sau)',
         desc: '6 bài theo thứ tự ưu tiên: Đẩy ngực dốc 30°, Đẩy vai 75°, Pec Deck, Bay vai, Tay sau & Đi bộ dốc.',
         badge: '55 phút · 6 bài',
         mascot: 'benchPress'
       },
       {
         value: 'pull_day',
-        shortLabel: 'Buổi Kéo (Pull)',
-        title: 'Buổi Kéo (Pull — Lưng Xô, Lưng Giữa & Tay trước)',
-        desc: '5 bài mở rộng lưng chữ V: Kéo xô rộng tay, Kéo cáp ngồi, Cuốn tay trước, Plank & Đi bộ dốc.',
-        badge: '50 phút · 5 bài',
+        shortLabel: 'Buổi 2: Kéo (Vai · Xô)',
+        title: 'Buổi 2: Kéo (Pull — Vai Sau, Lưng Xô & Tay trước)',
+        desc: '6 bài mở rộng vai xô chữ V: Kéo xô rộng tay, Kéo cáp ngồi, Face Pull vai sau, Cuốn tay trước, Plank & Đi bộ dốc.',
+        badge: '55 phút · 6 bài',
         mascot: 'latPulldown'
       },
       {
         value: 'legs_day',
-        shortLabel: 'Buổi Chân & Core',
-        title: 'Buổi Chân & Core (Đạp đùi 45°, RDL & Bảo vệ gối)',
-        desc: '4 bài tăng cơ chân đốt mỡ mạnh mẽ với 0% áp lực chèn ép đĩa đệm thắt lưng.',
-        badge: '50 phút · 4 bài',
+        shortLabel: 'Buổi 3: Chân (Legs)',
+        title: 'Buổi 3: Chân (Legs — Đùi, Mông & Bắp chân)',
+        desc: '6 bài tăng cơ chân đốt mỡ bảo vệ gối: Đạp đùi 45°, RDL tạ đơn, Đá đùi trước, Cuốn đùi sau, Bắp chân & Đi bộ dốc.',
+        badge: '55 phút · 6 bài',
         mascot: 'legPress'
       },
       {
         value: 'upper_day',
-        shortLabel: 'Thân Trên (Upper)',
-        title: 'Buổi Thân Trên Tổng Hợp (Upper Hypertrophy)',
-        desc: '6 bài kích thích lặp lại lần 2 trong tuần cho Ngực, Lưng Xô, Vai ngang và Tay.',
-        badge: '55 phút · 6 bài',
+        shortLabel: 'Thứ 7 (Optional)',
+        title: 'Buổi Thứ 7 Tự Chọn (Optional — Thân Trên & Đốt Mỡ)',
+        desc: 'Buổi tập tự chọn khi cuối tuần rảnh rỗi: kết hợp Ngực, Lưng Xô, Vai và Cardio đốt mỡ.',
+        badge: 'Optional · 6 bài',
         mascot: 'shoulderPress'
       },
       {
         value: 'rest',
-        shortLabel: 'Nghỉ hồi phục cơ',
+        shortLabel: 'Nghỉ hồi phục / Cuối tuần Off',
         title: 'Nghỉ hồi phục cơ & Đi bộ nhẹ 7,000 bước',
         desc: 'Nghỉ tập tạ để sợi cơ và sụn khớp siêu hồi phục, duy trì uống đủ nước và ngủ đúng giờ.',
         badge: 'Ngày nghỉ',
@@ -1099,7 +1100,7 @@
       const [startDateISO, setStartDateISO] = useState(
         saved?.startDateISO && GymCore.diffDaysISO(saved.startDateISO, todayISO) <= 0
           ? saved.startDateISO
-          : todayISO
+          : '2026-11-10'
       );
       const [weeklyPattern, setWeeklyPattern] = useState(
         () => saved?.weeklyPattern || GymCore.buildDefaultWeeklyPattern(todayISO)
@@ -1108,10 +1109,16 @@
         saved?.dateOverrides || {}
       );
       const [logsByDate, setLogsByDate] = useState(
-        saved?.logsByDate || {}
+        () =>
+          saved?.logsByDate && Object.keys(saved.logsByDate).length > 0
+            ? saved.logsByDate
+            : GymCore.buildDefaultLogsMap()
       );
       const [dayStatusByDate, setDayStatusByDate] = useState(
-        () => saved?.dayStatusByDate || {}
+        () =>
+          saved?.dayStatusByDate && Object.keys(saved.dayStatusByDate).length > 0
+            ? saved.dayStatusByDate
+            : GymCore.buildDefaultDayStatusMap()
       );
       const [weekOffset, setWeekOffset] = useState(0);
       const [monthOffset, setMonthOffset] = useState(0);
@@ -1124,8 +1131,14 @@
           startDateISO: todayISO,
           weeklyPattern: initPat,
           dateOverrides: saved?.dateOverrides || {},
-          logsByDate: saved?.logsByDate || {},
-          dayStatusByDate: saved?.dayStatusByDate || {},
+          logsByDate:
+            saved?.logsByDate && Object.keys(saved.logsByDate).length > 0
+              ? saved.logsByDate
+              : GymCore.buildDefaultLogsMap(),
+          dayStatusByDate:
+            saved?.dayStatusByDate && Object.keys(saved.dayStatusByDate).length > 0
+              ? saved.dayStatusByDate
+              : GymCore.buildDefaultDayStatusMap(),
           sessionSwaps: saved?.sessionSwaps || {},
           customSessionLists: saved?.customSessionLists || {}
         });
@@ -1135,7 +1148,7 @@
         return saved?.activeSessionId || 'press_day';
       });
       const [onboardingStep, setOnboardingStep] = useState(
-        saved?.hasOnboarded ? 0 : 1
+        saved && typeof saved.hasOnboarded === 'boolean' ? (saved.hasOnboarded ? 0 : 1) : 0
       );
       const [onboardingFirstSessionId, setOnboardingFirstSessionId] = useState(
         saved?.onboardingFirstSessionId || 'press_day'
@@ -1355,17 +1368,18 @@
         const startDow = isNaN(startDt.getDay()) ? 2 : startDt.getDay();
         const sessionOrder =
           onboardingFirstSessionId === 'pull_day'
-            ? ['pull_day', 'press_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest']
+            ? ['pull_day', 'press_day', 'rest', 'legs_day', 'rest', 'rest', 'rest']
             : onboardingFirstSessionId === 'legs_day'
-            ? ['legs_day', 'press_day', 'rest', 'pull_day', 'upper_day', 'rest', 'rest']
-            : ['press_day', 'pull_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest'];
+            ? ['legs_day', 'press_day', 'rest', 'pull_day', 'rest', 'rest', 'rest']
+            : ['press_day', 'pull_day', 'rest', 'legs_day', 'rest', 'rest', 'rest'];
 
         const newPattern = {};
         sessionOrder.forEach((sId, idx) => {
           const dow = (startDow + idx) % 7;
           newPattern[dow] = {
             sessionId: sId,
-            workoutTime: profileInput.workoutTime || '06:00'
+            workoutTime: profileInput.workoutTime || '06:00',
+            isOptionalDay: dow === 6
           };
         });
         setWeeklyPattern(newPattern);
@@ -1577,16 +1591,17 @@
         const startDow = isNaN(todayDt.getDay()) ? 2 : todayDt.getDay();
         const sessionOrder =
           firstSess === 'pull_day'
-            ? ['pull_day', 'press_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest']
+            ? ['pull_day', 'press_day', 'rest', 'legs_day', 'rest', 'rest', 'rest']
             : firstSess === 'legs_day'
-            ? ['legs_day', 'press_day', 'rest', 'pull_day', 'upper_day', 'rest', 'rest']
-            : ['press_day', 'pull_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest'];
+            ? ['legs_day', 'press_day', 'rest', 'pull_day', 'rest', 'rest', 'rest']
+            : ['press_day', 'pull_day', 'rest', 'legs_day', 'rest', 'rest', 'rest'];
         const newPattern = {};
         sessionOrder.forEach((sId, idx) => {
           const dow = (startDow + idx) % 7;
           newPattern[dow] = {
             sessionId: sId,
-            workoutTime: profileInput.workoutTime || '06:00'
+            workoutTime: profileInput.workoutTime || '06:00',
+            isOptionalDay: dow === 6
           };
         });
         setStartDateISO(todayISO);
@@ -3855,6 +3870,138 @@
                   {/* WEEK MODE: IMPRESSIVE 7-DAY BENTO CALENDAR (Row 1: 4 Days T2-T5, Row 2: 3 Days T6-CN, Zero Empty Hole + High-Contrast Done vs Undone) */}
                   {calendarViewMode === 'week' ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      {/* Thanh Chọn Nhanh Chu Kỳ 3 Buổi (Đẩy -> Kéo -> Chân) & Bật/Tắt Thứ 7 Optional */}
+                      {(() => {
+                        const isConsecutivePPL =
+                          weeklyPattern?.[2]?.sessionId === 'press_day' &&
+                          weeklyPattern?.[3]?.sessionId === 'pull_day' &&
+                          weeklyPattern?.[4]?.sessionId === 'legs_day';
+                        const isSpacedPPL =
+                          weeklyPattern?.[2]?.sessionId === 'press_day' &&
+                          weeklyPattern?.[3]?.sessionId === 'pull_day' &&
+                          weeklyPattern?.[5]?.sessionId === 'legs_day';
+                        const isSaturdayEnabled =
+                          weeklyPattern?.[6]?.sessionId && weeklyPattern[6].sessionId !== 'rest';
+                        return (
+                          <div
+                            style={{
+                              padding: '8px 9px',
+                              borderRadius: 12,
+                              background: '#FFF7ED',
+                              border: '1.5px solid #2B2118',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 6
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 10, fontWeight: 900, color: '#9A3412' }}>
+                                LỘ TRÌNH MẶC ĐỊNH: 1. ĐẨY ➔ 2. KÉO (VAI·XÔ) ➔ 3. CHÂN
+                              </span>
+                              <span style={{ fontSize: 9.5, fontWeight: 900, color: '#6B5744' }}>
+                                Cuối tuần Off · T7 Optional
+                              </span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 5 }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWeeklyPattern((prev) => ({
+                                    ...prev,
+                                    1: { sessionId: 'rest', workoutTime: '06:00' },
+                                    2: { sessionId: 'press_day', workoutTime: '06:00' },
+                                    3: { sessionId: 'pull_day', workoutTime: '06:00' },
+                                    4: { sessionId: 'rest', workoutTime: '06:00' },
+                                    5: { sessionId: 'legs_day', workoutTime: '06:00' }
+                                  }));
+                                  setDateOverrides((prev) => {
+                                    const next = { ...prev };
+                                    delete next['2026-11-12'];
+                                    delete next['2026-11-13'];
+                                    return next;
+                                  });
+                                }}
+                                style={{
+                                  padding: '5px 6px',
+                                  borderRadius: 8,
+                                  border: '1.5px solid #2B2118',
+                                  background: isSpacedPPL ? '#2B2118' : '#FFFDF9',
+                                  color: isSpacedPPL ? '#FFFFFF' : '#2B2118',
+                                  fontSize: 9.5,
+                                  fontWeight: 900,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                T3 Đẩy · T4 Kéo · T6 Chân
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setWeeklyPattern((prev) => ({
+                                    ...prev,
+                                    1: { sessionId: 'rest', workoutTime: '06:00' },
+                                    2: { sessionId: 'press_day', workoutTime: '06:00' },
+                                    3: { sessionId: 'pull_day', workoutTime: '06:00' },
+                                    4: { sessionId: 'legs_day', workoutTime: '06:00' },
+                                    5: { sessionId: 'rest', workoutTime: '06:00' }
+                                  }));
+                                  setDateOverrides((prev) => {
+                                    const next = { ...prev };
+                                    delete next['2026-11-12'];
+                                    delete next['2026-11-13'];
+                                    return next;
+                                  });
+                                }}
+                                style={{
+                                  padding: '5px 6px',
+                                  borderRadius: 8,
+                                  border: '1.5px solid #2B2118',
+                                  background: isConsecutivePPL ? '#2B2118' : '#FFFDF9',
+                                  color: isConsecutivePPL ? '#FFFFFF' : '#2B2118',
+                                  fontSize: 9.5,
+                                  fontWeight: 900,
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                T3 Đẩy · T4 Kéo · T5 Chân
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextSess = isSaturdayEnabled ? 'rest' : 'upper_day';
+                                  setWeeklyPattern((prev) => ({
+                                    ...prev,
+                                    6: {
+                                      sessionId: nextSess,
+                                      workoutTime: '07:00',
+                                      isOptionalDay: true
+                                    }
+                                  }));
+                                  setDateOverrides((prev) => {
+                                    const next = { ...prev };
+                                    delete next['2026-11-14'];
+                                    return next;
+                                  });
+                                }}
+                                style={{
+                                  padding: '5px 8px',
+                                  borderRadius: 8,
+                                  border: '1.5px solid #2B2118',
+                                  background: isSaturdayEnabled ? '#7C3AED' : '#FEF3C7',
+                                  color: isSaturdayEnabled ? '#FFFFFF' : '#92400E',
+                                  fontSize: 9.5,
+                                  fontWeight: 900,
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {isSaturdayEnabled ? '⚡ T7: Đang Bật' : 'T7: Off (Optional)'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       {/* Legend Strip: Clear Distinction Between Done, Tomorrow, Uncompleted & Future */}
                       <div
                         style={{
@@ -3904,8 +4051,12 @@
                             const mascotKey = sess ? sess.mascot : 'restHydration';
                             const vnShortLabel = day.isBeforeStart
                               ? 'CHƯA MỞ MÀN'
+                              : day.isSaturdayOptional && !sess
+                              ? 'OFF · OPTIONAL'
                               : sess
                               ? sess.calendarLabel || sess.shortName
+                              : day.dayOfWeek === 0
+                              ? 'CUỐI TUẦN OFF'
                               : 'NGHỈ CƠ';
 
                             const cardBg = day.isCompleted
@@ -4000,6 +4151,8 @@
                                       ? 'HÔM NAY'
                                       : isTomorrow
                                       ? 'NGÀY MAI'
+                                      : day.isSaturdayOptional
+                                      ? 'OPTIONAL'
                                       : day.isWeighInDay
                                       ? '⚖️ CÂN'
                                       : day.shortDate}
@@ -4183,6 +4336,48 @@
                       </div>
 
                       {/* Aligned 2-Column Picker Grid (Single-line Labels + 50px Height Triggers) */}
+                      {selectedDay.isSaturdayOptional && (
+                        <div
+                          style={{
+                            marginTop: 9,
+                            padding: '8px 10px',
+                            borderRadius: 11,
+                            background: selectedDay.sessionId !== 'rest' ? '#EDE9FE' : '#FEF3C7',
+                            border: '1.5px solid #2B2118',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 8
+                          }}
+                        >
+                          <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118', lineHeight: 1.3 }}>
+                            {selectedDay.sessionId !== 'rest'
+                              ? '⚡ Thứ 7 đang Bật Tập Optional (Không tính lỗi nếu nghỉ)'
+                              : '🛋️ Thứ 7 mặc định Nghỉ Cuối Tuần (Optional tập thêm)'}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const enableSat = selectedDay.sessionId === 'rest';
+                              handleUpdateRecurringWeekday(6, {
+                                sessionId: enableSat ? 'upper_day' : 'rest',
+                                isOptionalDay: true
+                              });
+                            }}
+                            className="sherpa-btn"
+                            style={{
+                              padding: '6px 10px',
+                              fontSize: 10.5,
+                              background: selectedDay.sessionId !== 'rest' ? '#FFFDF9' : '#7C3AED',
+                              color: selectedDay.sessionId !== 'rest' ? '#2B2118' : '#FFFFFF',
+                              flexShrink: 0
+                            }}
+                          >
+                            <span>{selectedDay.sessionId !== 'rest' ? 'Đổi về Off' : '+ Bật Tập T7'}</span>
+                          </button>
+                        </div>
+                      )}
+
                       <div
                         style={{
                           display: 'grid',
@@ -4490,6 +4685,22 @@
                         Array.isArray(customSessionLists[sess.id]) && customSessionLists[sess.id].length > 0
                           ? customSessionLists[sess.id]
                           : sess.exerciseIds;
+                      const pillTitle =
+                        sess.id === 'press_day'
+                          ? '1. ĐẨY'
+                          : sess.id === 'pull_day'
+                          ? '2. KÉO'
+                          : sess.id === 'legs_day'
+                          ? '3. CHÂN'
+                          : 'T7 TỰ CHỌN';
+                      const pillSub =
+                        sess.id === 'press_day'
+                          ? 'Ngực·Vai·Tay'
+                          : sess.id === 'pull_day'
+                          ? 'Vai·Xô·Tay'
+                          : sess.id === 'legs_day'
+                          ? 'Đùi·Mông'
+                          : 'Optional';
                       return (
                         <button
                           key={sess.id}
@@ -4508,9 +4719,9 @@
                             boxShadow: active ? '2px 2px 0 #2B2118' : 'none'
                           }}
                         >
-                          <div style={{ fontSize: 11, fontWeight: 900 }}>{sess.code}</div>
+                          <div style={{ fontSize: 10.5, fontWeight: 900 }}>{pillTitle}</div>
                           <div style={{ fontSize: 9.5, fontWeight: 700, opacity: 0.9 }}>
-                            {sessSlots.length} bài · {sess.durationMin}p
+                            {pillSub} ({sessSlots.length})
                           </div>
                         </button>
                       );
