@@ -14,14 +14,14 @@
   <meta name="apple-mobile-web-app-title" content="Gấu Gym 8D" />
   <meta name="theme-color" content="#FAF5EA" />
   <title>Gấu Tập Gym 8D — Lịch Tập, Bài Tập Ưu Tiên & Dinh Dưỡng Khoa Học</title>
-  <link rel="manifest" href="/gym8D/manifest.json" />
-  <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="stylesheet" href="/gym8D/styles.css?v=10" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./assets/mascots/app_icon_sherpa_512.png" />
+  <link rel="icon" type="image/png" href="./assets/mascots/app_icon_sherpa_512.png" />
+  <link rel="stylesheet" href="./styles.css?v=10" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <script src="/gym8D/src/gym-core.js?v=10"></script>
+  <script src="./src/gym-core.js?v=10"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -1385,6 +1385,12 @@
           ),
         [currentSession.id, logsByDate, selectedDateISO, sessionSwaps, customSessionLists]
       );
+
+      const isCurrentSessionCompleted =
+        !selectedDay.isFutureDay &&
+        currentSessionCompletion.meetsThreshold &&
+        ((selectedDay.isCompleted && selectedDay.sessionId === currentSession.id) ||
+          currentSessionCompletion.completionPct >= 100);
 
       function getSetsForDateAndExercise(isoDate, exId) {
         const dayMap = logsByDate[isoDate];
@@ -4206,13 +4212,13 @@
                       marginTop: 9,
                       padding: '10px 11px',
                       borderRadius: 14,
-                      background: selectedDay.isCompleted
+                      background: isCurrentSessionCompleted
                         ? 'linear-gradient(145deg, #059669 0%, #10B981 100%)'
                         : selectedDay.isFutureDay
                         ? '#FEF3C7'
                         : '#FAF5EA',
-                      color: selectedDay.isCompleted ? '#FFFFFF' : '#2B2118',
-                      border: selectedDay.isCompleted
+                      color: isCurrentSessionCompleted ? '#FFFFFF' : '#2B2118',
+                      border: isCurrentSessionCompleted
                         ? '2.5px solid #064E3B'
                         : selectedDay.isFutureDay
                         ? '2px dashed #D97706'
@@ -4221,28 +4227,28 @@
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 8,
-                      boxShadow: selectedDay.isCompleted ? '0 6px 16px rgba(5,150,105,0.28)' : 'none'
+                      boxShadow: isCurrentSessionCompleted ? '0 6px 16px rgba(5,150,105,0.28)' : 'none'
                     }}
                   >
                     <div>
                       <div className="serif-title" style={{ fontSize: 14.5, fontWeight: 900 }}>
-                        {selectedDay.isCompleted
+                        {isCurrentSessionCompleted
                           ? `✓ ĐÃ TẬP DONE: ${currentSession.shortName}`
                           : currentSession.title.split('—')[0].trim()}
                       </div>
                       <div
                         style={{
                           fontSize: 10.5,
-                          color: selectedDay.isCompleted ? '#DCFCE7' : selectedDay.isFutureDay ? '#92400E' : '#6B5744',
+                          color: isCurrentSessionCompleted ? '#DCFCE7' : selectedDay.isFutureDay ? '#92400E' : '#6B5744',
                           fontWeight: 700,
                           marginTop: 2
                         }}
                       >
-                        {selectedDay.isCompleted
-                          ? `Hoàn thành 100% ngày ${selectedDay.shortDate} · Tổng tạ ${selectedDay.totalVolumeKg.toLocaleString('vi-VN')}kg · Đốt ~${selectedDay.kcalBurned} kcal`
+                        {isCurrentSessionCompleted
+                          ? `Hoàn thành ${currentSessionCompletion.completionPct}% ngày ${selectedDay.shortDate} · Tổng tạ ${currentSessionCompletion.totalVolumeKg.toLocaleString('vi-VN')}kg · Đốt ~${currentSession.durationMin * 7} kcal`
                           : selectedDay.isFutureDay
                           ? `🔒 Ngày tập tương lai (${selectedDay.dayShort} ${selectedDay.shortDate}) · Xem trước giáo án`
-                          : `Ngày tập: ${selectedDay.dayShort} (${selectedDay.dateLabel}) · Chưa hoàn thành`}
+                          : `Ngày tập: ${selectedDay.dayShort} (${selectedDay.dateLabel}) · Đạt ${currentSessionCompletion.completionPct}% (Cần ≥ 70%)`}
                       </div>
                     </div>
                     <span
@@ -4251,17 +4257,17 @@
                         fontWeight: 900,
                         padding: '4px 9px',
                         borderRadius: 999,
-                        background: selectedDay.isCompleted
+                        background: isCurrentSessionCompleted
                           ? '#064E3B'
                           : selectedDay.isFutureDay
                           ? '#D97706'
                           : '#FFEDD5',
-                        color: selectedDay.isCompleted || selectedDay.isFutureDay ? '#FFFFFF' : '#9A3412',
-                        border: selectedDay.isCompleted ? '1.5px solid #A7F3D0' : '1.5px solid #2B2118',
+                        color: isCurrentSessionCompleted || selectedDay.isFutureDay ? '#FFFFFF' : '#9A3412',
+                        border: isCurrentSessionCompleted ? '1.5px solid #A7F3D0' : '1.5px solid #2B2118',
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {selectedDay.isCompleted
+                      {isCurrentSessionCompleted
                         ? '✓ ĐÃ XONG'
                         : selectedDay.isFutureDay
                         ? '🔒 TƯƠNG LAI'
@@ -4597,7 +4603,7 @@
                         onClick={() =>
                           handleSetDayStatus(
                             selectedDay.isoDate,
-                            selectedDay.isCompleted ? null : 'done',
+                            isCurrentSessionCompleted ? null : 'done',
                             currentSession.id
                           )
                         }
@@ -4606,7 +4612,7 @@
                           width: '100%',
                           padding: '10px',
                           fontSize: 11.5,
-                          background: selectedDay.isCompleted
+                          background: isCurrentSessionCompleted
                             ? '#065F46'
                             : currentSessionCompletion.meetsThreshold
                             ? '#16A34A'
@@ -4614,12 +4620,12 @@
                         }}
                       >
                         <SvgIcon
-                          name={selectedDay.isCompleted || currentSessionCompletion.meetsThreshold ? 'check' : 'lock'}
+                          name={isCurrentSessionCompleted || currentSessionCompletion.meetsThreshold ? 'check' : 'lock'}
                           size={15}
                           color="#FFFFFF"
                         />
                         <span>
-                          {selectedDay.isCompleted
+                          {isCurrentSessionCompleted
                             ? `✓ Đã Chốt Done (${currentSessionCompletion.completionPct}% · ${selectedDay.shortDate})`
                             : currentSessionCompletion.meetsThreshold
                             ? `Chốt Done Buổi Tập (${currentSessionCompletion.completionPct}% ≥ 70%)`
