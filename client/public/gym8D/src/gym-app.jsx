@@ -1451,6 +1451,23 @@
         [selectedDateISO, calendarOptions]
       );
 
+      const prevDayEntry = useMemo(
+        () => GymCore.buildDayScheduleEntry(GymCore.addDaysISO(selectedDateISO, -1), calendarOptions),
+        [selectedDateISO, calendarOptions]
+      );
+
+      const nextDayEntry = useMemo(
+        () => GymCore.buildDayScheduleEntry(GymCore.addDaysISO(selectedDateISO, 1), calendarOptions),
+        [selectedDateISO, calendarOptions]
+      );
+
+      const selectedWeekDays = useMemo(() => {
+        const mondayISO = GymCore.getMondayISO(selectedDateISO);
+        return [0, 1, 2, 3, 4, 5, 6].map((offset) =>
+          GymCore.buildDayScheduleEntry(GymCore.addDaysISO(mondayISO, offset), calendarOptions)
+        );
+      }, [selectedDateISO, calendarOptions]);
+
       const todayEntry = useMemo(
         () => GymCore.buildDayScheduleEntry(todayISO, calendarOptions),
         [todayISO, calendarOptions]
@@ -2720,31 +2737,59 @@
 
       function handleShellTouchMove(e) {
         if (!touchStartRef.current || !e.touches || e.touches.length !== 1) return;
+        if (pickerSheetConfig || setEditorConfig || plateModalConfig || showInstallGuideSheet) return;
+        const isDayOverview = activeTab === 'workout' && detailSlotIndex === null;
         const canGoBack = detailSlotIndex !== null || activeTab !== 'schedule';
-        if (!canGoBack) return;
+        if (!canGoBack && !isDayOverview) return;
         const t = e.touches[0];
         const dx = t.clientX - touchStartRef.current.x;
         const dy = t.clientY - touchStartRef.current.y;
-        if (dx > 16 && Math.abs(dx) > Math.abs(dy) * 1.35) {
-          setSwipeBackDragX(Math.min(110, dx));
-        } else if (dx <= 0 && swipeBackDragX > 0) {
+        if (Math.abs(dx) > 16 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+          if (dx > 0) {
+            setSwipeBackDragX(Math.min(110, dx));
+          } else if (isDayOverview && dx < 0) {
+            setSwipeBackDragX(Math.max(-110, dx));
+          }
+        } else if (Math.abs(dx) <= 10 && swipeBackDragX !== 0) {
           setSwipeBackDragX(0);
         }
       }
 
       function handleShellTouchEnd(e) {
         if (!touchStartRef.current) return;
+        if (pickerSheetConfig || setEditorConfig || plateModalConfig || showInstallGuideSheet) {
+          touchStartRef.current = null;
+          if (swipeBackDragX !== 0) setSwipeBackDragX(0);
+          return;
+        }
+        const isDayOverview = activeTab === 'workout' && detailSlotIndex === null;
         const canGoBack = detailSlotIndex !== null || activeTab !== 'schedule';
         const changed = e.changedTouches && e.changedTouches[0];
-        if (canGoBack && changed) {
+        if (changed) {
           const dx = changed.clientX - touchStartRef.current.x;
           const dy = changed.clientY - touchStartRef.current.y;
-          if (dx > 65 && Math.abs(dx) > Math.abs(dy) * 1.35) {
-            handleNavigateBack();
+          const startX = touchStartRef.current.x;
+          if (Math.abs(dx) > 52 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+            if (isDayOverview) {
+              if (dx < -52) {
+                // Vuốt sang trái -> Qua ngày tiếp theo (+1 ngày)
+                navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, 1));
+              } else if (dx > 52) {
+                if (startX <= 28) {
+                  // Vuốt từ mép trái màn hình -> Quay lại Lịch tuần
+                  setActiveTab('schedule');
+                } else {
+                  // Vuốt sang phải -> Lùi về ngày trước (-1 ngày)
+                  navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, -1));
+                }
+              }
+            } else if (canGoBack && dx > 60) {
+              handleNavigateBack();
+            }
           }
         }
         touchStartRef.current = null;
-        if (swipeBackDragX > 0) setSwipeBackDragX(0);
+        if (swipeBackDragX !== 0) setSwipeBackDragX(0);
       }
 
       return (
@@ -2754,12 +2799,13 @@
           onTouchMove={handleShellTouchMove}
           onTouchEnd={handleShellTouchEnd}
         >
-          {/* Chỉ báo vuốt ngang từ trái qua phải (iOS Swipe Back Indicator) */}
-          {swipeBackDragX > 18 && (
+          {/* Chỉ báo vuốt ngang qua lại (Chuyển Ngày Trước / Ngày Tiếp Theo / Quay Lại) */}
+          {Math.abs(swipeBackDragX) > 18 && (
             <div
               style={{
                 position: 'fixed',
-                left: Math.min(18, swipeBackDragX - 24),
+                left: swipeBackDragX > 0 ? Math.min(18, swipeBackDragX - 20) : 'auto',
+                right: swipeBackDragX < 0 ? Math.min(18, Math.abs(swipeBackDragX) - 20) : 'auto',
                 top: '46%',
                 zIndex: 90,
                 padding: '7px 12px',
@@ -2776,8 +2822,22 @@
                 gap: 5
               }}
             >
-              <span>‹</span>
-              <span>{detailSlotIndex !== null ? 'Quay lại Buổi tập' : 'Quay lại Lịch tập'}</span>
+              {swipeBackDragX < 0 ? (
+                <>
+                  <span>Ngày tiếp: {nextDayEntry.dayShort} · {nextDayEntry.shortDate}</span>
+                  <span>›</span>
+                </>
+              ) : activeTab === 'workout' && detailSlotIndex === null && (touchStartRef.current?.x || 100) > 28 ? (
+                <>
+                  <span>‹</span>
+                  <span>Ngày trước: {prevDayEntry.dayShort} · {prevDayEntry.shortDate}</span>
+                </>
+              ) : (
+                <>
+                  <span>‹</span>
+                  <span>{detailSlotIndex !== null ? 'Quay lại Buổi tập' : 'Quay lại Lịch tuần'}</span>
+                </>
+              )}
             </div>
           )}
 
@@ -4558,15 +4618,14 @@
               <>
                 {/* Thanh Điều Hướng Mobile & Cài Đặt Ngày Tập (Đổi Giáo Án, Giờ Tập, Phòng Tập bằng Popup) */}
                 <section className="sherpa-card" style={{ padding: 11 }}>
-                  {/* Hàng 1: Nút Quay Lại Lịch + Tiêu Đề Thứ/Ngày + Chuyển Nhanh Ngày Trước/Sau */}
+                  {/* Hàng 1: Nút Quay Lại Lịch + Tiêu Đề Thứ/Ngày + Trạng Thái Hôm Nay (Bỏ 2 nút < > nhỏ xíu) */}
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 8,
-                      paddingBottom: 9,
-                      borderBottom: '1.5px dashed #D8C8B0'
+                      paddingBottom: 8
                     }}
                   >
                     <button
@@ -4584,29 +4643,145 @@
                         {selectedDay.dayShort} · {selectedDay.dateLabel}
                       </div>
                       <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
-                        {selectedDay.badge} · Vuốt phải để quay lại
+                        {selectedDay.badge} · ↔ Vuốt ngang qua lại đổi ngày
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    {selectedDateISO !== todayISO ? (
                       <button
                         type="button"
-                        onClick={() => navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, -1))}
+                        onClick={() => navigateToDayScreen(todayISO)}
                         className="sherpa-btn"
-                        style={{ padding: '6px 8px', fontSize: 11, background: '#FFFDF9' }}
-                        aria-label="Ngày trước"
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: 10.5,
+                          background: '#FFF3E0',
+                          color: '#C2410C',
+                          borderColor: '#E05A2B',
+                          flexShrink: 0
+                        }}
                       >
-                        ‹
+                        Hôm nay
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, 1))}
-                        className="sherpa-btn"
-                        style={{ padding: '6px 8px', fontSize: 11, background: '#FFFDF9' }}
-                        aria-label="Ngày kế tiếp"
+                    ) : (
+                      <span
+                        style={{
+                          padding: '5px 9px',
+                          borderRadius: 999,
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          background: '#DCFCE7',
+                          color: '#14532D',
+                          border: '1.5px solid #15803D',
+                          flexShrink: 0
+                        }}
                       >
-                        ›
-                      </button>
+                        HÔM NAY
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Thanh Lịch 7 Ngày Chuẩn App Mobile (Chạm Ngón Cái Hoặc Vuốt Ngang Đổi Ngày) */}
+                  <div
+                    style={{
+                      paddingBottom: 9,
+                      borderBottom: '1.5px dashed #D8C8B0'
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                        gap: 5
+                      }}
+                    >
+                      {selectedWeekDays.map((d) => {
+                        const isSel = d.isoDate === selectedDateISO;
+                        const daySess = GymCore.WORKOUT_SESSIONS[d.sessionId];
+                        const shortTag = d.isCompleted
+                          ? '✓ DONE'
+                          : d.isWorkoutDay && daySess
+                          ? daySess.code
+                          : d.isSaturdayOptional
+                          ? 'OPT'
+                          : 'OFF';
+                        return (
+                          <button
+                            key={d.isoDate}
+                            type="button"
+                            onClick={() => navigateToDayScreen(d.isoDate)}
+                            style={{
+                              padding: '5px 2px',
+                              borderRadius: 11,
+                              border: isSel
+                                ? '2px solid #E05A2B'
+                                : d.isToday
+                                ? '1.5px solid #15803D'
+                                : '1.5px solid #D8C8B0',
+                              background: isSel
+                                ? '#2B2118'
+                                : d.isCompleted
+                                ? '#DCFCE7'
+                                : d.isWorkoutDay
+                                ? '#FFF8EE'
+                                : '#FAF5EA',
+                              color: isSel ? '#FFFFFF' : '#2B2118',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 1,
+                              cursor: 'pointer',
+                              boxShadow: isSel ? '0 3px 8px rgba(43,33,24,0.22)' : 'none',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: 9,
+                                fontWeight: 900,
+                                color: isSel ? '#FDBA74' : d.isToday ? '#15803D' : '#6B5744'
+                              }}
+                            >
+                              {d.dayShort}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 900,
+                                lineHeight: 1.15,
+                                color: isSel ? '#FFFFFF' : '#2B2118'
+                              }}
+                            >
+                              {String(d.dayNumber).padStart(2, '0')}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 7.5,
+                                fontWeight: 900,
+                                padding: '1px 4px',
+                                borderRadius: 999,
+                                background: isSel
+                                  ? d.isCompleted
+                                    ? '#22C55E'
+                                    : '#E05A2B'
+                                  : d.isCompleted
+                                  ? '#15803D'
+                                  : d.isWorkoutDay
+                                  ? '#FDBA74'
+                                  : '#E6DCCB',
+                                color: isSel || d.isCompleted ? '#FFFFFF' : '#2B2118',
+                                maxWidth: '100%',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {shortTag}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
