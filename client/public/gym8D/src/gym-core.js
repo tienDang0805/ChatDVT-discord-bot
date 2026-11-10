@@ -441,12 +441,12 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Do Incline Dumbbell Press (Form & Scapular Setup)",
       defaultSets: [
-        { type: "W", prev: "14kg × 12", weight: 14, reps: 12, effort: "easy", done: true },
-        { type: "1", prev: "22kg × 12", weight: 24, reps: 10, effort: "good", done: false },
-        { type: "2", prev: "22kg × 12", weight: 24, reps: 10, effort: "good", done: false },
-        { type: "3", prev: "22kg × 12", weight: 24, reps: 9, effort: "good", done: false }
+        { type: "W", prev: "Khởi động khớp", weight: 14, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 22, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 22, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 22, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Buổi trước đạt 3×12 ở 22kg -> Hôm nay lên tạ 24kg (Mục tiêu 8–10 reps)"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp chính × 8–10 reps (Kiểm soát nhịp hạ 2.5s)"
     },
     dumbbell_shoulder_press: {
       id: "dumbbell_shoulder_press",
@@ -478,12 +478,12 @@
       videoAuthor: "Renaissance Periodization",
       videoTitle: "Seated Dumbbell Shoulder Press — Scapular Plane Form",
       defaultSets: [
-        { type: "W", prev: "10kg × 12", weight: 10, reps: 12, effort: "easy", done: true },
-        { type: "1", prev: "18kg × 10", weight: 18, reps: 11, effort: "good", done: false },
-        { type: "2", prev: "18kg × 10", weight: 18, reps: 10, effort: "good", done: false },
-        { type: "3", prev: "18kg × 9", weight: 18, reps: 10, effort: "good", done: false }
+        { type: "W", prev: "Khởi động khớp", weight: 10, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 16, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 16, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 16, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Giữ mức 18kg/tay, mục tiêu tăng +1 rep ở hiệp 1 và hiệp 3"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp chính × 10–12 reps (Tựa lưng ghế 75°)"
     },
     pec_deck_fly: {
       id: "pec_deck_fly",
@@ -515,11 +515,11 @@
       videoAuthor: "Renaissance Periodization",
       videoTitle: "Pec Deck Machine Chest Fly — Stretch & Contraction Technique",
       defaultSets: [
-        { type: "1", prev: "45kg × 12", weight: 50, reps: 12, effort: "good", done: false },
-        { type: "2", prev: "45kg × 12", weight: 50, reps: 11, effort: "good", done: false },
-        { type: "3", prev: "45kg × 12", weight: 50, reps: 10, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 45, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 45, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 45, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Tăng lên 50kg, tập trung giữ 1 giây ở điểm ép sát ngực"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp × 10–12 reps (Giữ 1 giây ở đỉnh ép ngực)"
     },
     lateral_raise: {
       id: "lateral_raise",
@@ -551,11 +551,11 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Do Lateral Raises Properly For Wider Shoulders",
       defaultSets: [
-        { type: "1", prev: "10kg × 14", weight: 10, reps: 15, effort: "good", done: false },
-        { type: "2", prev: "10kg × 13", weight: 10, reps: 14, effort: "good", done: false },
-        { type: "D", prev: "8kg × 15", weight: 8, reps: 15, effort: "max", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 8, reps: 14, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 8, reps: 14, effort: "good", done: false },
+        { type: "D", prev: "Drop Set nhẹ", weight: 6, reps: 15, effort: "max", done: false }
       ],
-      progressionBadge: "Chạm mốc 15 reps chuẩn form ở 10kg kèm 1 hiệp Drop Set 8kg"
+      progressionBadge: "Mục tiêu chuẩn: 2 hiệp × 14–15 reps + 1 hiệp Drop Set bơm cơ vai"
     },
     tricep_rope_pushdown: {
       id: "tricep_rope_pushdown",
@@ -587,11 +587,11 @@
       videoAuthor: "Renaissance Periodization",
       videoTitle: "Cable Rope Tricep Pushdown — Elbow Position & Lockout",
       defaultSets: [
-        { type: "1", prev: "25kg × 12", weight: 27.5, reps: 12, effort: "good", done: false },
-        { type: "2", prev: "25kg × 12", weight: 27.5, reps: 11, effort: "good", done: false },
-        { type: "3", prev: "25kg × 12", weight: 27.5, reps: 10, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 25, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 25, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 25, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Tăng lên 27.5kg sau khi hoàn thành đủ 3×12 buổi trước"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp × 10–12 reps (Khóa cố định khuỷu tay)"
     },
     barbell_bench_press: {
       id: "barbell_bench_press",
@@ -623,12 +623,12 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Barbell Bench Press With Proper Technique",
       defaultSets: [
-        { type: "W", prev: "40kg × 10", weight: 40, reps: 10, effort: "easy", done: true },
-        { type: "1", prev: "65kg × 9", weight: 65, reps: 10, effort: "good", done: false },
-        { type: "2", prev: "65kg × 8", weight: 65, reps: 9, effort: "good", done: false },
-        { type: "3", prev: "65kg × 8", weight: 65, reps: 8, effort: "good", done: false }
+        { type: "W", prev: "Khởi động khớp", weight: 40, reps: 10, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 60, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 60, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 60, reps: 8, effort: "good", done: false }
       ],
-      progressionBadge: "Giữ mức 65kg, mục tiêu thêm +1 rep ở hiệp 1 và hiệp 2"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp chính × 8–10 reps (Khép bả vai bảo vệ khớp)"
     },
     machine_chest_press: {
       id: "machine_chest_press",
@@ -660,11 +660,11 @@
       videoAuthor: "Renaissance Periodization",
       videoTitle: "Seated Machine Chest Press — Setup & Hypertrophy Cues",
       defaultSets: [
-        { type: "1", prev: "55kg × 12", weight: 60, reps: 10, effort: "good", done: false },
-        { type: "2", prev: "55kg × 12", weight: 60, reps: 10, effort: "good", done: false },
-        { type: "3", prev: "55kg × 11", weight: 60, reps: 10, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Lên tạ 60kg an toàn tuyệt đối với điểm tựa lưng"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp × 10–12 reps an toàn tuyệt đối với tựa lưng"
     },
     lat_pulldown: {
       id: "lat_pulldown",
@@ -696,12 +696,12 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Do Lat Pulldowns For A Wider Back",
       defaultSets: [
-        { type: "W", prev: "35kg × 12", weight: 35, reps: 12, effort: "easy", done: true },
-        { type: "1", prev: "55kg × 11", weight: 55, reps: 12, effort: "good", done: false },
-        { type: "2", prev: "55kg × 10", weight: 55, reps: 11, effort: "good", done: false },
-        { type: "3", prev: "55kg × 10", weight: 55, reps: 10, effort: "good", done: false }
+        { type: "W", prev: "Khởi động khớp", weight: 35, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Giữ 55kg, mục tiêu chạm mốc 12 reps ở hiệp đầu"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp chính × 10–12 reps (Kéo bằng cùi chỏ xuống hông)"
     },
     seated_cable_row: {
       id: "seated_cable_row",
@@ -733,11 +733,11 @@
       videoAuthor: "Renaissance Periodization",
       videoTitle: "Seated Cable Row — Proper Scapular Retraction Technique",
       defaultSets: [
-        { type: "1", prev: "50kg × 12", weight: 55, reps: 10, effort: "good", done: false },
-        { type: "2", prev: "50kg × 12", weight: 55, reps: 10, effort: "good", done: false },
-        { type: "3", prev: "50kg × 12", weight: 55, reps: 10, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Đã đạt 3×12 ở 50kg -> Hôm nay tăng lên 55kg"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp × 10–12 reps (Ép sát hai bả vai giữ 1s)"
     },
     plank_core: {
       id: "plank_core",
@@ -769,9 +769,9 @@
       videoAuthor: "ATHLEAN-X",
       videoTitle: "How To Plank Properly For Core Stability & Back Safety",
       defaultSets: [
-        { type: "1", prev: "45 giây × 3", weight: 0, reps: 50, effort: "good", done: false },
-        { type: "2", prev: "45 giây × 3", weight: 0, reps: 45, effort: "good", done: false },
-        { type: "3", prev: "45 giây × 3", weight: 0, reps: 45, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 0, reps: 45, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 0, reps: 45, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 0, reps: 45, effort: "good", done: false }
       ],
       progressionBadge: "Đai lưng tự nhiên bảo vệ đĩa đệm L4-L5 (Mục tiêu 50 giây)"
     },
@@ -805,12 +805,12 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Do The 45° Leg Press Safely (Foot Placement & Depth)",
       defaultSets: [
-        { type: "W", prev: "80kg × 12", weight: 80, reps: 12, effort: "easy", done: true },
-        { type: "1", prev: "140kg × 12", weight: 150, reps: 10, effort: "good", done: false },
-        { type: "2", prev: "140kg × 12", weight: 150, reps: 10, effort: "good", done: false },
-        { type: "3", prev: "140kg × 12", weight: 150, reps: 10, effort: "good", done: false }
+        { type: "W", prev: "Khởi động khớp", weight: 80, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 130, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 130, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 130, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Tăng +10kg lên 150kg (Đùi khỏe nhờ bảo vệ lưng dưới hoàn toàn)"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp chính × 10–12 reps (Không khóa thẳng khớp gối)"
     },
     dumbbell_rdl: {
       id: "dumbbell_rdl",
@@ -842,11 +842,11 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Do Romanian Deadlifts (Hip Hinge Mechanics)",
       defaultSets: [
-        { type: "1", prev: "24kg × 10", weight: 24, reps: 11, effort: "good", done: false },
-        { type: "2", prev: "24kg × 10", weight: 24, reps: 11, effort: "good", done: false },
-        { type: "3", prev: "24kg × 10", weight: 24, reps: 10, effort: "good", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 20, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 20, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 20, reps: 10, effort: "good", done: false }
       ],
-      progressionBadge: "Giữ tạ đơn 24kg/bên, mục tiêu tăng lên 11 reps mỗi hiệp"
+      progressionBadge: "Mục tiêu chuẩn: 3 hiệp × 10–11 reps (Đẩy hông ra sau, giữ lưng thẳng)"
     },
     dumbbell_curl_lateral: {
       id: "dumbbell_curl_lateral",
@@ -878,9 +878,9 @@
       videoAuthor: "Jeff Nippard",
       videoTitle: "How To Build Bigger Biceps — Optimal Curl Form",
       defaultSets: [
-        { type: "1", prev: "12kg × 12", weight: 12, reps: 13, effort: "good", done: false },
-        { type: "2", prev: "12kg × 12", weight: 12, reps: 12, effort: "good", done: false },
-        { type: "D", prev: "8kg × 15", weight: 8, reps: 15, effort: "max", done: false }
+        { type: "1", prev: "Mức gợi ý", weight: 10, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 10, reps: 12, effort: "good", done: false },
+        { type: "D", prev: "Drop Set nhẹ", weight: 8, reps: 15, effort: "max", done: false }
       ],
       progressionBadge: "Khoảng 12–15 reps kèm 1 hiệp Drop Set bơm máu cơ tay"
     },
@@ -1195,7 +1195,7 @@
     const override = dateOverrides[isoDate] || {};
     const statusRecord = dayStatusByDate[isoDate] || null;
 
-    const isBeforeStart = diffDaysISO(isoDate, startDateISO) < 0 && isoDate === todayISO;
+    const isBeforeStart = diffDaysISO(isoDate, startDateISO) < 0;
     const sessionId =
       override.sessionId ||
       statusRecord?.sessionId ||
@@ -1219,11 +1219,13 @@
     let totalVolumeKg = 0;
     if (isWorkoutDay && sess) {
       sess.exerciseIds.forEach((exId) => {
-        const sets = dayLogs[exId] || (EXERCISES[exId] ? EXERCISES[exId].defaultSets : []);
+        const hasCustomLog = Array.isArray(dayLogs[exId]);
+        const sets = hasCustomLog ? dayLogs[exId] : (EXERCISES[exId] ? EXERCISES[exId].defaultSets : []);
         totalSetsCount += sets.length;
         sets.forEach((s) => {
-          if (s.done || statusRecord?.status === "done") {
-            if (s.done) completedSetsCount += 1;
+          const setDone = (hasCustomLog && s.done) || statusRecord?.status === "done";
+          if (setDone) {
+            completedSetsCount += 1;
             const w = Number(s.weight) || 0;
             const r = Number(s.reps) || 0;
             if (w > 0 && r > 0) {
@@ -1255,10 +1257,12 @@
       badge = "Đã tập Done";
     } else if (isMissed) {
       badge = "Bỏ tập · Cần bù";
+    } else if (isBeforeStart) {
+      badge = isToday ? "Hôm nay · Chuẩn bị" : "Chưa bắt đầu";
     } else if (isToday) {
       badge = isWorkoutDay ? "Hôm nay · Lịch tập" : "Hôm nay · Chuẩn bị";
     } else if (isFirstWorkout) {
-      badge = "Ngày mai · Khởi đầu";
+      badge = isTomorrow ? "Ngày mai · Khởi đầu" : "Buổi 1 · Khởi đầu";
     } else if (isTomorrow) {
       badge = "Ngày mai";
     } else if (isWorkoutDay && sess) {
@@ -1296,6 +1300,7 @@
       isToday,
       isTomorrow,
       isFirstWorkout,
+      isBeforeStart,
       isPastDay,
       isWorkoutDay,
       isOverridden: Boolean(dateOverrides[isoDate]),
@@ -1316,29 +1321,8 @@
     };
   }
 
-  function buildDefaultDayStatusMap(todayISO) {
-    const baseToday = todayISO || getTodayISO();
-    return {
-      [addDaysISO(baseToday, -6)]: {
-        status: "done",
-        sessionId: "press_day",
-        completedAt: "06:54"
-      },
-      [addDaysISO(baseToday, -5)]: {
-        status: "done",
-        sessionId: "pull_day",
-        completedAt: "06:48"
-      },
-      [addDaysISO(baseToday, -3)]: {
-        status: "done",
-        sessionId: "legs_day",
-        completedAt: "06:52"
-      },
-      [addDaysISO(baseToday, -2)]: {
-        status: "missed",
-        sessionId: "upper_day"
-      }
-    };
+  function buildDefaultDayStatusMap() {
+    return {};
   }
 
   function buildStreakSummary(options) {
@@ -1386,17 +1370,18 @@
     const totalVolumeKg = doneDays.reduce((acc, d) => acc + (d.totalVolumeKg || 0), 0);
     const totalKcalBurned = doneDays.reduce((acc, d) => acc + (d.kcalBurned || 0), 0);
     const totalSetsDone = doneDays.reduce((acc, d) => acc + (d.completedSetsCount || 0), 0);
-    const disciplineScore = Math.round(
-      (doneDays.length / Math.max(1, doneDays.length + missedDays.length)) * 100
-    );
+    const totalTracked = doneDays.length + missedDays.length;
+    const disciplineScore = totalTracked > 0 ? Math.round((doneDays.length / totalTracked) * 100) : 100;
 
-    const timeline14 = allEntries.filter(
-      (d) => diffDaysISO(d.isoDate, todayISO) >= -6 && diffDaysISO(d.isoDate, todayISO) <= 7
-    );
+    const mondayISO = getMondayISO(todayISO);
+    const timeline14 = [];
+    for (let i = 0; i < 14; i++) {
+      timeline14.push(buildDayScheduleEntry(addDaysISO(mondayISO, i), opts));
+    }
 
     const nextRestDayForMakeup =
       allEntries.find(
-        (d) => diffDaysISO(d.isoDate, todayISO) >= 0 && !d.isWorkoutDay && !d.isCompleted
+        (d) => diffDaysISO(d.isoDate, opts.startDateISO || todayISO) >= 0 && diffDaysISO(d.isoDate, todayISO) >= 0 && !d.isWorkoutDay && !d.isCompleted
       ) || null;
 
     return {

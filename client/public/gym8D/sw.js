@@ -1,4 +1,4 @@
-const CACHE_NAME = "8d-bear-sherpa-pwa-v2";
+const CACHE_NAME = "8d-bear-sherpa-pwa-v6";
 const CORE_ASSETS = [
   "/gym8D",
   "/gym8D/index.html",
@@ -49,6 +49,22 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const reqUrl = event.request.url || "";
+  const isImage = /\.(png|webp|jpg|jpeg|svg|ico)(\?|$)/i.test(reqUrl);
+  if (!isImage) {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          if (res && res.status === 200) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(event.request, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const net = fetch(event.request)

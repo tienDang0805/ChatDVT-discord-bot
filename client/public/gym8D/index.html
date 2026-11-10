@@ -12,18 +12,25 @@
   <link rel="manifest" href="/gym8D/manifest.json" />
   <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
   <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="stylesheet" href="/gym8D/styles.css" />
+  <link rel="stylesheet" href="/gym8D/styles.css?v=6" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <script src="/gym8D/src/gym-core.js"></script>
+  <script src="/gym8D/src/gym-core.js?v=6"></script>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-    const STORAGE_KEY = '8d_gym_mobile_v4';
+    const STORAGE_KEY = '8d_gym_mobile_v6_fresh';
+    const LEGACY_STORAGE_KEYS = [
+      '8d_gym_mobile_v1',
+      '8d_gym_mobile_v2',
+      '8d_gym_mobile_v3',
+      '8d_gym_mobile_v4',
+      '8d_gym_mobile_v5'
+    ];
 
     function playChimeSound(type = 'rest') {
       try {
@@ -377,6 +384,54 @@
       );
     }
 
+    function SubTabPills({ items, activeId, onChange }) {
+      return (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${items.length}, 1fr)`,
+            gap: 5,
+            padding: 4,
+            borderRadius: 14,
+            background: '#EFE4D2',
+            border: '2px solid #2B2118'
+          }}
+        >
+          {items.map((item) => {
+            const active = item.id === activeId;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onChange(item.id)}
+                style={{
+                  padding: '8px 6px',
+                  borderRadius: 10,
+                  border: active ? '2px solid #2B2118' : '2px solid transparent',
+                  background: active ? '#E05A2B' : 'transparent',
+                  color: active ? '#FFFFFF' : '#2B2118',
+                  fontWeight: 900,
+                  fontSize: 11,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 4,
+                  boxShadow: active ? '1.5px 1.5px 0 #2B2118' : 'none',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {item.icon && (
+                  <SvgIcon name={item.icon} size={13} color={active ? '#FFFFFF' : '#2B2118'} />
+                )}
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      );
+    }
+
     function InteractiveVideoAndMotionCoach({ exercise }) {
       const [coachPlaying, setCoachPlaying] = useState(true);
       const [phaseIdx, setPhaseIdx] = useState(0);
@@ -659,6 +714,11 @@
 
     function loadSavedState() {
       try {
+        LEGACY_STORAGE_KEYS.forEach((k) => {
+          try {
+            localStorage.removeItem(k);
+          } catch (err) {}
+        });
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return null;
         return JSON.parse(raw);
@@ -673,6 +733,14 @@
       const tomorrowISO = useMemo(() => GymCore.addDaysISO(todayISO, 1), [todayISO]);
 
       const [activeTab, setActiveTab] = useState('schedule');
+      const [onboardingSubTab, setOnboardingSubTab] = useState('strategy');
+      const [scheduleSubTab, setScheduleSubTab] = useState('calendar');
+      const [exerciseSubTab, setExerciseSubTab] = useState('sets');
+      const [streakSubTab, setStreakSubTab] = useState('chain');
+      const [nutritionSubTab, setNutritionSubTab] = useState('water');
+      const [profileSubTab, setProfileSubTab] = useState('edit');
+      const [settingsSubTab, setSettingsSubTab] = useState('alarm');
+
       const [profileInput, setProfileInput] = useState(
         saved?.profileInput || GymCore.PRESET_PROFILES.user_115kg
       );
@@ -689,12 +757,12 @@
         saved?.logsByDate || {}
       );
       const [dayStatusByDate, setDayStatusByDate] = useState(
-        () => saved?.dayStatusByDate || GymCore.buildDefaultDayStatusMap(todayISO)
+        () => saved?.dayStatusByDate || {}
       );
       const [weekOffset, setWeekOffset] = useState(0);
       const [monthOffset, setMonthOffset] = useState(0);
       const [calendarViewMode, setCalendarViewMode] = useState('week');
-      const [selectedDateISO, setSelectedDateISO] = useState(tomorrowISO);
+      const [selectedDateISO, setSelectedDateISO] = useState(saved?.startDateISO || tomorrowISO);
       const [activeSessionId, setActiveSessionId] = useState(
         saved?.activeSessionId || 'press_day'
       );
@@ -706,9 +774,9 @@
       );
       const [detailSlotIndex, setDetailSlotIndex] = useState(null);
       const [sessionSwaps, setSessionSwaps] = useState(saved?.sessionSwaps || {});
-      const [waterDrankMl, setWaterDrankMl] = useState(saved?.waterDrankMl ?? 1500);
+      const [waterDrankMl, setWaterDrankMl] = useState(saved?.waterDrankMl ?? 0);
       const [loggedFoodIds, setLoggedFoodIds] = useState(
-        saved?.loggedFoodIds || ['chuoi_chin', 'pho_bo_tai', 'whey_isolate']
+        saved?.loggedFoodIds || []
       );
       const [preSleepAlertEnabled, setPreSleepAlertEnabled] = useState(
         saved?.preSleepAlertEnabled ?? true
@@ -827,6 +895,23 @@
         setActiveSessionId(onboardingFirstSessionId);
         setOnboardingStep(0);
         setActiveTab('schedule');
+        setScheduleSubTab('calendar');
+      }
+
+      function handleResetAllData() {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          LEGACY_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+        } catch (e) {}
+        setDateOverrides({});
+        setLogsByDate({});
+        setDayStatusByDate({});
+        setWaterDrankMl(0);
+        setLoggedFoodIds([]);
+        setStartDateISO(tomorrowISO);
+        setSelectedDateISO(tomorrowISO);
+        setOnboardingStep(1);
+        setActiveTab('schedule');
       }
 
       const calendarOptions = useMemo(
@@ -878,7 +963,7 @@
           return dayMap[exId];
         }
         const ex = GymCore.EXERCISES[exId];
-        return ex ? ex.defaultSets.map((s) => ({ ...s, done: s.type === 'W' })) : [];
+        return ex ? ex.defaultSets.map((s) => ({ ...s, done: false })) : [];
       }
 
       const foodTotals = useMemo(() => {
@@ -1649,13 +1734,13 @@
                       background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)'
                     }}
                   >
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
                       <img
                         src={GymCore.resolveAsset('coachThumbsup')}
                         alt="Gấu Coach Đề Xuất"
                         style={{
-                          width: 72,
-                          height: 72,
+                          width: 60,
+                          height: 60,
                           borderRadius: 16,
                           border: '2px solid #2B2118',
                           objectFit: 'cover',
@@ -1677,106 +1762,120 @@
                         >
                           BƯỚC 2 / 2 · ĐỀ XUẤT CÁ NHÂN HÓA
                         </span>
-                        <h2 className="serif-title" style={{ fontSize: 16.5, fontWeight: 900, marginTop: 5, lineHeight: 1.25 }}>
-                          {personalizedPlan.strategyHeadline}
+                        <h2 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginTop: 4, lineHeight: 1.2 }}>
+                          Phác Đồ {metrics.profile.weightKg}kg → {metrics.profile.targetWeightKg}kg
                         </h2>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: '#6B5744', marginTop: 3 }}>
-                          Hồ sơ: {metrics.profile.gender === 'male' ? 'Nam' : 'Nữ'} · {metrics.profile.age} tuổi ·{' '}
-                          {metrics.profile.heightCm}cm · {metrics.profile.weightKg}kg
+                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#6B5744', marginTop: 2 }}>
+                          {metrics.profile.gender === 'male' ? 'Nam' : 'Nữ'} · {metrics.profile.age}t · {metrics.profile.heightCm}cm · Tập lúc {metrics.profile.workoutTime}
                         </div>
                       </div>
                     </div>
 
                     {/* 4 Key Synthesized Metrics */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#6B5744' }}>BMI CHÂU Á & KHỐI CƠ NẠC</div>
-                        <div style={{ fontSize: 16, fontWeight: 900, marginTop: 2 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 10 }}>
+                      <div style={{ padding: 9, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>BMI & CƠ NẠC</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, marginTop: 2 }}>
                           BMI {metrics.bmi} · {metrics.lbm}kg LBM
                         </div>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#E05A2B', marginTop: 2 }}>
-                          {metrics.bmiCategory} (~{metrics.bodyFatPct}% mỡ)
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#E05A2B', marginTop: 1 }}>
+                          ~{metrics.bodyFatPct}% mỡ · {metrics.jointSafeMode ? 'Bảo vệ khớp' : 'Chuẩn'}
                         </div>
                       </div>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#6B5744' }}>MỤC TIÊU CALO & CẮT GIẢM</div>
-                        <div style={{ fontSize: 16, fontWeight: 900, marginTop: 2, color: '#16A34A' }}>
+                      <div style={{ padding: 9, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>MỤC TIÊU CALO</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, marginTop: 2, color: '#16A34A' }}>
                           {metrics.targetKcal} kcal/ngày
                         </div>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#5C4938', marginTop: 2 }}>
-                          TDEE {metrics.tdee} · Lệch {metrics.calorieDelta > 0 ? `+${metrics.calorieDelta}` : metrics.calorieDelta} kcal
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#5C4938', marginTop: 1 }}>
+                          TDEE {metrics.tdee} ({metrics.calorieDelta > 0 ? `+${metrics.calorieDelta}` : metrics.calorieDelta})
                         </div>
                       </div>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#6B5744' }}>CHỈ TIÊU ĐẠM · BÉO · TINH BỘT</div>
-                        <div style={{ fontSize: 15, fontWeight: 900, marginTop: 2 }}>
+                      <div style={{ padding: 9, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>CHỈ TIÊU MACRO</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 900, marginTop: 2 }}>
                           {metrics.proteinG}g Đạm · {metrics.carbG}g Carb
                         </div>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#166534', marginTop: 2 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#166534', marginTop: 1 }}>
                           Chất béo tốt: {metrics.fatG}g/ngày
                         </div>
                       </div>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#6B5744' }}>LƯỢNG NƯỚC & TỐC ĐỘ ĐẠT ĐÍCH</div>
-                        <div style={{ fontSize: 15, fontWeight: 900, marginTop: 2, color: '#0284C7' }}>
+                      <div style={{ padding: 9, borderRadius: 12, background: '#FFFDF9', border: '1.5px solid #2B2118' }}>
+                        <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>NƯỚC & LỘ TRÌNH</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 900, marginTop: 2, color: '#0284C7' }}>
                           {metrics.waterLiters} Lít nước/ngày
                         </div>
-                        <div style={{ fontSize: 10.5, fontWeight: 800, color: '#5C4938', marginTop: 2 }}>
-                          ~{Math.abs(metrics.weeklyRateKg)}kg/tuần · Đích sau ~{metrics.weeksToGoal} tuần
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#5C4938', marginTop: 1 }}>
+                          ~{Math.abs(metrics.weeklyRateKg)}kg/tuần · ~{metrics.weeksToGoal} tuần
                         </div>
                       </div>
                     </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '0.85fr 1.45fr', gap: 8, marginTop: 11 }}>
+                      <button
+                        onClick={() => setOnboardingStep(1)}
+                        className="sherpa-btn"
+                        style={{ width: '100%', padding: '11px 8px', fontSize: 11.5, background: '#FFFDF9' }}
+                      >
+                        <SvgIcon name="arrowLeft" size={14} />
+                        <span>Sửa số đo</span>
+                      </button>
+                      <button
+                        onClick={handleApplyOnboardingPlan}
+                        className="sherpa-btn sherpa-btn-green"
+                        style={{ width: '100%', padding: '11px 10px', fontSize: 12.5 }}
+                      >
+                        <SvgIcon name="check" size={15} color="#FFFFFF" />
+                        <span>Áp Dụng & Vào App Ngay</span>
+                      </button>
+                    </div>
                   </section>
 
-                  {/* Detailed Coaching Suggestions Card */}
-                  <section className="sherpa-card">
-                    <h3 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginBottom: 8 }}>
-                      Đề Xuất Chuyên Sâu Dành Riêng Cho Thể Trạng Của Bạn
-                    </h3>
+                  <SubTabPills
+                    items={[
+                      { id: 'strategy', label: '3 Nguyên Tắc Tập & Ăn', icon: 'dumbbell' },
+                      { id: 'timeline', label: 'Khung Giờ Sinh Học', icon: 'clock' }
+                    ]}
+                    activeId={onboardingSubTab}
+                    onChange={setOnboardingSubTab}
+                  />
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
+                  {onboardingSubTab === 'strategy' ? (
+                    <section className="sherpa-card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ padding: 9, borderRadius: 11, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
                         <div style={{ fontSize: 11.5, fontWeight: 900, color: '#E05A2B' }}>
-                          1. Chiến lược chọn bài tập & Bảo vệ sụn khớp:
+                          1. Ưu tiên bài tập có điểm tựa bảo vệ khớp
                         </div>
-                        <p style={{ fontSize: 11.5, color: '#2B2118', marginTop: 3, lineHeight: 1.45 }}>
-                          {personalizedPlan.trainingStrategy}
-                        </p>
+                        <div style={{ fontSize: 11, color: '#2B2118', marginTop: 2 }}>
+                          Tập trung ghế dốc 30°, máy kéo xô và đạp đùi 45°; khóa các bài nhảy dội lực lên sụn gối.
+                        </div>
                       </div>
-
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
+                      <div style={{ padding: 9, borderRadius: 11, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
                         <div style={{ fontSize: 11.5, fontWeight: 900, color: '#166534' }}>
-                          2. Chiến lược cắt calo & Tính đạm theo cơ nạc LBM:
+                          2. Cắt {Math.abs(metrics.calorieDelta)} kcal/ngày · Đạm tính theo cơ nạc LBM
                         </div>
-                        <p style={{ fontSize: 11.5, color: '#2B2118', marginTop: 3, lineHeight: 1.45 }}>
-                          {personalizedPlan.calorieStrategy} {metrics.proteinRuleNote}
-                        </p>
+                        <div style={{ fontSize: 11, color: '#2B2118', marginTop: 2 }}>
+                          Ăn {metrics.targetKcal} kcal & {metrics.proteinG}g Đạm ({metrics.lbm}kg LBM) để giảm mỡ mà không hụt sức ca tập {metrics.profile.workoutTime}.
+                        </div>
                       </div>
-
-                      <div style={{ padding: 10, borderRadius: 12, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
+                      <div style={{ padding: 9, borderRadius: 11, background: '#FAF5EA', border: '1.5px solid #2B2118' }}>
                         <div style={{ fontSize: 11.5, fontWeight: 900, color: '#0284C7' }}>
-                          3. Chiến lược Tim mạch Đốt mỡ Zone 2:
+                          3. Đi bộ dốc 10% cuối buổi (15 phút · Zone 2)
                         </div>
-                        <p style={{ fontSize: 11.5, color: '#2B2118', marginTop: 3, lineHeight: 1.45 }}>
-                          {personalizedPlan.cardioStrategy}
-                        </p>
+                        <div style={{ fontSize: 11, color: '#2B2118', marginTop: 2 }}>
+                          Tốc độ 4.4 km/h ở nhịp tim {metrics.zone2Min}–{metrics.zone2Max} bpm đốt mỡ tối đa mà êm khớp cổ chân.
+                        </div>
                       </div>
-                    </div>
-                  </section>
-
-                  {/* Synthesized 24h Schedule & First Session Preview */}
-                  <section className="sherpa-card">
-                    <h3 className="serif-title" style={{ fontSize: 15, fontWeight: 900, marginBottom: 6 }}>
-                      Lịch Trình Hoạt Động Đề Xuất (Khởi Đầu {personalizedPlan.startLabel})
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                    </section>
+                  ) : (
+                    <section className="sherpa-card" style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                       {personalizedPlan.habitBlueprint.map((hb, idx) => (
                         <div
                           key={idx}
                           style={{
                             display: 'flex',
-                            gap: 9,
-                            alignItems: 'flex-start',
+                            gap: 8,
+                            alignItems: 'center',
                             padding: '8px 10px',
                             borderRadius: 11,
                             background: '#FAF5EA',
@@ -1785,7 +1884,7 @@
                         >
                           <span
                             style={{
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: 900,
                               padding: '2px 7px',
                               borderRadius: 6,
@@ -1796,35 +1895,11 @@
                           >
                             {hb.time}
                           </span>
-                          <div>
-                            <div style={{ fontSize: 12, fontWeight: 900 }}>{hb.title}</div>
-                            <div style={{ fontSize: 11, color: '#5C4938', marginTop: 2, lineHeight: 1.35 }}>
-                              {hb.detail}
-                            </div>
-                          </div>
+                          <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>{hb.title}</div>
                         </div>
                       ))}
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.4fr', gap: 8, marginTop: 14 }}>
-                      <button
-                        onClick={() => setOnboardingStep(1)}
-                        className="sherpa-btn"
-                        style={{ width: '100%', padding: '12px 8px', fontSize: 12 }}
-                      >
-                        <SvgIcon name="arrowLeft" size={14} />
-                        <span>Sửa thông số</span>
-                      </button>
-                      <button
-                        onClick={handleApplyOnboardingPlan}
-                        className="sherpa-btn sherpa-btn-green"
-                        style={{ width: '100%', padding: '12px 10px', fontSize: 12.5 }}
-                      >
-                        <SvgIcon name="check" size={15} color="#FFFFFF" />
-                        <span>Áp Dụng & Vào App Ngay</span>
-                      </button>
-                    </div>
-                  </section>
+                    </section>
+                  )}
                 </>
               )}
             </main>
@@ -1927,66 +2002,65 @@
             {/* TAB 1: LỊCH BIỂU & THÔNG BÁO TRƯỚC KHI NGỦ */}
             {activeTab === 'schedule' && (
               <>
-                {/* Hero Card: Tomorrow Tuesday 10/11/2026 First Press Session */}
+                <SubTabPills
+                  items={[
+                    { id: 'calendar', label: 'Lịch Tập & Giáo Án', icon: 'calendar' },
+                    { id: 'sleep', label: 'Nhịp Ngủ 24h', icon: 'clock' }
+                  ]}
+                  activeId={scheduleSubTab}
+                  onChange={setScheduleSubTab}
+                />
+
+                {scheduleSubTab === 'calendar' && (
+                  <>
+                {/* Compact Next Session Banner */}
                 <section
                   className="sherpa-card"
                   style={{
-                    background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)'
+                    background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)',
+                    padding: 11
                   }}
                 >
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
                     <img
                       src={GymCore.resolveAsset('calendarNotify')}
                       alt="Lịch tập"
                       style={{
-                        width: 74,
-                        height: 74,
-                        borderRadius: 16,
+                        width: 50,
+                        height: 50,
+                        borderRadius: 13,
                         border: '2px solid #2B2118',
                         objectFit: 'cover',
-                        background: '#FFF'
+                        background: '#FFF',
+                        flexShrink: 0
                       }}
                     />
-                    <div style={{ flex: 1 }}>
+                    <div style={{ minWidth: 0 }}>
                       <div
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 5,
-                          fontSize: 10,
+                          gap: 4,
+                          fontSize: 9.5,
                           fontWeight: 900,
-                          padding: '3px 8px',
+                          padding: '2px 7px',
                           borderRadius: 999,
                           background: '#E05A2B',
                           color: '#FFFFFF',
                           border: '1.5px solid #2B2118'
                         }}
                       >
-                        <SvgIcon name="calendar" size={12} color="#FFFFFF" />
-                        <span>
-                          ĐỒNG BỘ LỊCH THỰC TẾ · HÔM NAY {GymCore.formatVNShortDate(todayISO)}
-                        </span>
+                        <span>BUỔI TẬP SẮP TỚI · {tomorrowEntry.shortDate}</span>
                       </div>
-                      <h1 className="serif-title" style={{ fontSize: 18, fontWeight: 900, marginTop: 6, lineHeight: 1.25 }}>
-                        Ngày mai ({tomorrowEntry.dayShort} {tomorrowEntry.shortDate}):{' '}
-                        {(GymCore.WORKOUT_SESSIONS[tomorrowEntry.sessionId] || GymCore.WORKOUT_SESSIONS.press_day).shortName} lúc {tomorrowEntry.workoutTime}
-                      </h1>
-                      <p style={{ fontSize: 12, color: '#5C4938', marginTop: 4, lineHeight: 1.4 }}>
-                        Tối nay ({GymCore.formatVNShortDate(todayISO)}) hệ thống báo soạn đồ lúc{' '}
-                        <strong>{metrics.circadianSchedule.bedPrepTime}</strong> và ngủ lúc{' '}
-                        <strong>{metrics.circadianSchedule.sleepTime}</strong>.
-                      </p>
+                      <div className="serif-title" style={{ fontSize: 14.5, fontWeight: 900, marginTop: 3 }}>
+                        {(GymCore.WORKOUT_SESSIONS[tomorrowEntry.sessionId] || GymCore.WORKOUT_SESSIONS.press_day).shortName} · {tomorrowEntry.workoutTime}
+                      </div>
+                      <div style={{ fontSize: 10.5, color: '#5C4938', fontWeight: 700 }}>
+                        Báo đi ngủ: <strong>{metrics.circadianSchedule.bedPrepTime}</strong> tối nay
+                      </div>
                     </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 8,
-                      marginTop: 12
-                    }}
-                  >
+                    </div>
                     <button
                       onClick={() => {
                         setSelectedDateISO(tomorrowISO);
@@ -1995,18 +2069,9 @@
                         setActiveTab('workout');
                       }}
                       className="sherpa-btn sherpa-btn-primary"
-                      style={{ width: '100%', padding: '11px 10px', fontSize: 12 }}
+                      style={{ padding: '9px 10px', fontSize: 11, flexShrink: 0 }}
                     >
-                      <SvgIcon name="dumbbell" size={15} color="#FFFFFF" />
-                      <span>Xem 6 Bài Buổi Đẩy</span>
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('streak')}
-                      className="sherpa-btn"
-                      style={{ width: '100%', padding: '11px 10px', fontSize: 12, background: '#FFFDF9' }}
-                    >
-                      <SvgIcon name="flame" size={15} color="#E05A2B" />
-                      <span>Streak ({streakSummary.currentStreak} buổi) & Chuông</span>
+                      <span>Xem 6 bài</span>
                     </button>
                   </div>
                 </section>
@@ -2169,7 +2234,7 @@
                                     : '#5C4938'
                               }}
                             >
-                            {day.isCompleted ? 'DONE' : day.isMissed ? 'BỎ TẬP' : sess ? sess.code : 'NGHỈ'}
+                            {day.isCompleted ? 'DONE' : day.isMissed ? 'BỎ TẬP' : day.isBeforeStart ? '—' : sess ? sess.code : 'NGHỈ'}
                             </div>
                           </button>
                         );
@@ -2422,26 +2487,14 @@
                           </span>
                         </button>
                       </div>
-
-                      <button
-                        type="button"
-                          onClick={() => {
-                            setStartDateISO(selectedDay.isoDate);
-                            handleUpdateRecurringWeekday(selectedDay.dayOfWeek, { sessionId: 'press_day' });
-                          }}
-                          className="sherpa-btn"
-                        style={{ width: '100%', marginTop: 7, padding: '7px 10px', fontSize: 11, background: '#FFFDF9' }}
-                        >
-                          Đặt ngày {selectedDay.shortDate} làm Buổi 1 (Khởi đầu bằng Press)
-                        </button>
-
-                      <p style={{ fontSize: 11.5, color: '#5C4938', marginTop: 9, lineHeight: 1.45 }}>
-                        {selectedDay.note}
-                      </p>
                     </div>
                   )}
                 </section>
+                  </>
+                )}
 
+                {scheduleSubTab === 'sleep' && (
+                  <>
                 {/* Compact 1-Line Mobile Alarm Status Strip (Opens Dedicated Settings Screen) */}
                 <section
                   className="sherpa-card"
@@ -2541,14 +2594,13 @@
                             <span style={{ fontSize: 10, fontWeight: 800, color: '#E05A2B' }}>{item.tag}</span>
                           </div>
                           <div style={{ fontSize: 12.5, fontWeight: 900, marginTop: 3 }}>{item.title}</div>
-                          <div style={{ fontSize: 11, color: '#5C4938', marginTop: 2, lineHeight: 1.35 }}>
-                            {item.desc}
-                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </section>
+                  </>
+                )}
               </>
             )}
 
@@ -2834,8 +2886,8 @@
                     </div>
                   </div>
 
-                  <section className="sherpa-card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <section className="sherpa-card" style={{ padding: 11 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                       <span
                         style={{
                           fontSize: 10,
@@ -2852,35 +2904,29 @@
                         Nghỉ giữa hiệp: {ex.defaultRestSec}s
                       </span>
                     </div>
-                    <h2 className="serif-title" style={{ fontSize: 17.5, fontWeight: 900, lineHeight: 1.25 }}>
+                    <h2 className="serif-title" style={{ fontSize: 16.5, fontWeight: 900, lineHeight: 1.2 }}>
                       {ex.name}
                     </h2>
-                    <div style={{ fontSize: 11.5, fontWeight: 800, color: '#E05A2B', marginTop: 3 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: '#E05A2B', marginTop: 2 }}>
                       {ex.muscle} · {ex.equipment}
-                    </div>
-                    <p style={{ fontSize: 11.5, color: '#5C4938', marginTop: 6, lineHeight: 1.4 }}>
-                      <strong>Tác dụng thực tế:</strong> {ex.whyItWorks}
-                    </p>
-                    <div
-                      style={{
-                        marginTop: 8,
-                        padding: '7px 10px',
-                        borderRadius: 10,
-                        background: '#DCFCE7',
-                        border: '1.5px solid #166534',
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: '#14532D'
-                      }}
-                    >
-                      Mục tiêu hôm nay: {ex.progressionBadge}
                     </div>
                   </section>
 
+                  <SubTabPills
+                    items={[
+                      { id: 'sets', label: `Ghi Hiệp (${sets.filter((s) => s.done).length}/${sets.length})`, icon: 'dumbbell' },
+                      { id: 'guide', label: 'Video & Kỹ Thuật', icon: 'play' },
+                      { id: 'swap', label: 'Đổi Bài Khác', icon: 'swap' }
+                    ]}
+                    activeId={exerciseSubTab}
+                    onChange={setExerciseSubTab}
+                  />
+
                   {/* Interactive Motion Simulator + YouTube Video Card (Zero Error 153!) */}
-                  <InteractiveVideoAndMotionCoach exercise={ex} />
+                  {exerciseSubTab === 'guide' && <InteractiveVideoAndMotionCoach exercise={ex} />}
 
                   {/* Native Mobile Workout Set Logger (Tactile Cards + Stepper Pills + Bottom-Sheet Keypad) */}
+                  {exerciseSubTab === 'sets' && (
                   <section className="sherpa-card">
                     {(() => {
                       const doneCount = sets.filter((s) => s.done).length;
@@ -3269,9 +3315,10 @@
                       );
                     })()}
                   </section>
+                  )}
 
                   {/* Alternative / Fallback Exercises Card */}
-                  {(ex.swapOptions?.length > 0 || isSwapped) && (
+                  {exerciseSubTab === 'swap' && (
                     <section
                       className="sherpa-card"
                       style={{
@@ -3284,7 +3331,7 @@
                         <span>Nếu kẹt máy / hết ghế thì tập bài nào thay thế?</span>
                       </div>
                       <p style={{ fontSize: 11.5, color: '#78350F', marginTop: 4, lineHeight: 1.4 }}>
-                        {ex.swapReason}
+                        {ex.swapReason || ex.whyItWorks}
                       </p>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 9 }}>
                         {isSwapped && (
@@ -3347,17 +3394,18 @@
                 <section
                   className="sherpa-card"
                   style={{
-                    background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)'
+                    background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)',
+                    padding: 11
                   }}
                 >
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <img
                       src={GymCore.resolveAsset('streakFire')}
                       alt="Streak"
                       style={{
-                        width: 74,
-                        height: 74,
-                        borderRadius: 16,
+                        width: 56,
+                        height: 56,
+                        borderRadius: 14,
                         border: '2px solid #2B2118',
                         objectFit: 'cover',
                         background: '#FFF',
@@ -3367,29 +3415,29 @@
                     <div style={{ flex: 1 }}>
                       <span
                         style={{
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: 900,
-                          padding: '2px 8px',
+                          padding: '2px 7px',
                           borderRadius: 999,
                           background: '#E05A2B',
                           color: '#FFFFFF',
                           border: '1.5px solid #2B2118'
                         }}
                       >
-                        CHUỖI KỶ LUẬT & NHẬT KÝ BUỔI TẬP DONE
+                        CHUỖI KỶ LUẬT TẬP LUYỆN
                       </span>
-                      <h1 className="serif-title" style={{ fontSize: 19, fontWeight: 900, marginTop: 5 }}>
-                        Streak Hiện Tại: {streakSummary.currentStreak} Buổi Liên Tiếp
+                      <h1 className="serif-title" style={{ fontSize: 16.5, fontWeight: 900, marginTop: 4 }}>
+                        Streak: {streakSummary.currentStreak} Buổi Liên Tiếp
                       </h1>
-                      <p style={{ fontSize: 11.5, color: '#5C4938', marginTop: 2, lineHeight: 1.35 }}>
-                        Kỷ lục cao nhất: <strong>{streakSummary.bestStreak} buổi</strong> · Điểm kỷ luật:{' '}
-                        <strong style={{ color: '#166534' }}>{streakSummary.disciplineScore}%</strong>
+                      <p style={{ fontSize: 10.5, color: '#5C4938', marginTop: 2 }}>
+                        Kỷ lục: <strong>{streakSummary.bestStreak} buổi</strong> · Khởi đầu từ{' '}
+                        <strong>{GymCore.formatVNShortDate(startDateISO)}</strong>
                       </p>
                     </div>
                   </div>
 
                   {/* 4 Summary Stat Tiles */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7, marginTop: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 10 }}>
                     <div
                       style={{
                         padding: '8px 6px',
@@ -3453,6 +3501,17 @@
                   </div>
                 </section>
 
+                <SubTabPills
+                  items={[
+                    { id: 'chain', label: 'Chuỗi 14 Ngày', icon: 'calendar' },
+                    { id: 'history', label: `Nhật Ký Done (${streakSummary.doneDays.length})`, icon: 'check' }
+                  ]}
+                  activeId={streakSubTab}
+                  onChange={setStreakSubTab}
+                />
+
+                {streakSubTab === 'chain' && (
+                  <>
                 {/* Missed Workout Alert & 1-Tap Makeup Recovery Card */}
                 {streakSummary.missedDays.length > 0 && (
                   <section
@@ -3518,7 +3577,7 @@
                                 style={{ width: '100%', padding: '8px 8px', fontSize: 11 }}
                               >
                                 <SvgIcon name="check" size={13} color="#FFFFFF" />
-                                <span>Đã tập bù -> Chốt Done</span>
+                                <span>Đã tập bù → Chốt Done</span>
                               </button>
                             </div>
                           </div>
@@ -3574,7 +3633,7 @@
                           </div>
                           <div style={{ fontSize: 10, fontWeight: 900, marginTop: 1 }}>{d.shortDate}</div>
                           <div style={{ fontSize: 7.5, fontWeight: 900, marginTop: 2 }}>
-                            {d.isCompleted ? 'DONE' : d.isMissed ? 'BỎ' : sess ? sess.code : 'NGHỈ'}
+                            {d.isCompleted ? 'DONE' : d.isMissed ? 'BỎ' : d.isBeforeStart ? '—' : sess ? sess.code : 'NGHỈ'}
                           </div>
                         </button>
                       );
@@ -3649,12 +3708,32 @@
                     </div>
                   </div>
                 </section>
+                  </>
+                )}
 
-                {/* Completed Workout Days Log (Danh Sách Những Ngày Đã Tập Done) */}
+                {streakSubTab === 'history' && (
                 <section className="sherpa-card">
                   <h3 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginBottom: 8 }}>
                     Nhật Ký Những Ngày Đã Tập Done ({streakSummary.doneDays.length} buổi)
                   </h3>
+                  {streakSummary.doneDays.length === 0 ? (
+                    <div
+                      style={{
+                        padding: 14,
+                        borderRadius: 14,
+                        background: '#FAF5EA',
+                        border: '1.5px dashed #2B2118',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118' }}>
+                        Chưa có buổi tập nào hoàn thành (0 buổi)
+                      </div>
+                      <div style={{ fontSize: 11, color: '#6B5744', marginTop: 4 }}>
+                        Sau khi hoàn thành buổi tập đầu tiên vào ngày {GymCore.formatVNShortDate(startDateISO)}, bấm Chốt Done để ghi danh vào nhật ký!
+                      </div>
+                    </div>
+                  ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                     {streakSummary.doneDays.map((d) => {
                       const sess = GymCore.WORKOUT_SESSIONS[d.sessionId] || GymCore.WORKOUT_SESSIONS.press_day;
@@ -3727,21 +3806,23 @@
                       );
                     })}
                   </div>
+                  )}
                 </section>
+                )}
               </>
             )}
 
             {activeTab === 'nutrition' && (
               <>
-                <section className="sherpa-card">
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <section className="sherpa-card" style={{ padding: 11 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <img
                       src={GymCore.resolveAsset('nutritionVn')}
                       alt="Dinh dưỡng"
                       style={{
-                        width: 68,
-                        height: 68,
-                        borderRadius: 16,
+                        width: 52,
+                        height: 52,
+                        borderRadius: 14,
                         border: '2px solid #2B2118',
                         objectFit: 'cover'
                       }}
@@ -3749,26 +3830,25 @@
                     <div style={{ flex: 1 }}>
                       <span
                         style={{
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: 900,
-                          padding: '2px 8px',
+                          padding: '2px 7px',
                           borderRadius: 999,
                           background: '#DCFCE7',
                           color: '#166534',
                           border: '1.5px solid #2B2118'
                         }}
                       >
-                        ĐẠM TÍNH THEO KHỐI CƠ NẠC ({metrics.lbm}KG LBM)
+                        MỤC TIÊU DINH DƯỠNG ({metrics.lbm}KG CƠ NẠC)
                       </span>
-                      <h2 className="serif-title" style={{ fontSize: 17, fontWeight: 900, marginTop: 5 }}>
-                        Mục tiêu: {metrics.targetKcal} kcal · {metrics.proteinG}g Đạm
+                      <h2 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginTop: 3 }}>
+                        {metrics.targetKcal} kcal · {metrics.proteinG}g Đạm · {metrics.waterLiters}L Nước
                       </h2>
-                      <p style={{ fontSize: 11, color: '#5C4938', marginTop: 2 }}>{metrics.proteinRuleNote}</p>
                     </div>
                   </div>
 
                   {/* Macro Progress Grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 7, marginTop: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 10 }}>
                     {[
                       { label: 'Calo nạp', cur: foodTotals.kcal, max: metrics.targetKcal, unit: 'kcal', bg: '#FFEDD5' },
                       { label: 'Đạm (Protein)', cur: foodTotals.protein, max: metrics.proteinG, unit: 'g', bg: '#DCFCE7' },
@@ -3795,7 +3875,18 @@
                   </div>
                 </section>
 
+                <SubTabPills
+                  items={[
+                    { id: 'water', label: 'Nước & Hôm Nay', icon: 'droplet' },
+                    { id: 'foods', label: `Món Việt (${loggedFoodIds.length})`, icon: 'utensils' },
+                    { id: 'meals', label: 'Khung 5 Bữa', icon: 'clock' }
+                  ]}
+                  activeId={nutritionSubTab}
+                  onChange={setNutritionSubTab}
+                />
+
                 {/* Hydration Tracker */}
+                {nutritionSubTab === 'water' && (
                 <section className="sherpa-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -3829,9 +3920,37 @@
                       Reset
                     </button>
                   </div>
+
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: 10,
+                      borderRadius: 12,
+                      background: '#FAF5EA',
+                      border: '1.5px solid #2B2118',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 8
+                    }}
+                  >
+                    <div style={{ fontSize: 11.5, fontWeight: 800, color: '#2B2118' }}>
+                      Đã chọn hôm nay: <strong>{loggedFoodIds.length} món</strong> ({foodTotals.kcal} kcal)
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNutritionSubTab('foods')}
+                      className="sherpa-btn sherpa-btn-primary"
+                      style={{ padding: '6px 10px', fontSize: 11 }}
+                    >
+                      Chọn món ăn
+                    </button>
+                  </div>
                 </section>
+                )}
 
                 {/* 5-Meal Daily Plan Synced with Workout Time */}
+                {nutritionSubTab === 'meals' && (
                 <section className="sherpa-card">
                   <h3 className="serif-title" style={{ fontSize: 15, fontWeight: 900, marginBottom: 8 }}>
                     Phân Bổ 5 Bữa Ăn Theo Giờ Tập ({metrics.profile.workoutTime})
@@ -3862,8 +3981,10 @@
                     ))}
                   </div>
                 </section>
+                )}
 
                 {/* Quick Vietnamese Food Logger */}
+                {nutritionSubTab === 'foods' && (
                 <section className="sherpa-card">
                   <h3 className="serif-title" style={{ fontSize: 15, fontWeight: 900, marginBottom: 8 }}>
                     Thực Đơn Món Việt Phổ Thông (Chạm Để Ghi Nhận)
@@ -3897,7 +4018,6 @@
                             <div style={{ fontSize: 11, color: '#6B5744', marginTop: 2 }}>
                               {food.portion} · <strong>{food.kcal} kcal</strong> · Đạm {food.protein}g · Tinh bột {food.carb}g
                             </div>
-                            <div style={{ fontSize: 10.5, color: '#166534', marginTop: 3 }}>{food.tip}</div>
                           </div>
                           <div
                             style={{
@@ -3919,12 +4039,23 @@
                     })}
                   </div>
                 </section>
+                )}
               </>
             )}
 
             {/* TAB 4: MÁY TÍNH THỂ TRẠNG ĐỘNG CHO MỌI NGƯỜI DÙNG */}
             {activeTab === 'profile' && (
               <>
+                <SubTabPills
+                  items={[
+                    { id: 'edit', label: 'Chỉnh Số Đo', icon: 'user' },
+                    { id: 'result', label: 'Chỉ Số BMI & TDEE', icon: 'flame' }
+                  ]}
+                  activeId={profileSubTab}
+                  onChange={setProfileSubTab}
+                />
+
+                {profileSubTab === 'edit' && (
                 <section className="sherpa-card">
                   <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginBottom: 10 }}>
                     <img
@@ -4085,8 +4216,10 @@
                     })()}
                   </div>
                 </section>
+                )}
 
                 {/* Computed Biometrics Summary */}
+                {profileSubTab === 'result' && (
                 <section className="sherpa-card">
                   <h3 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginBottom: 8 }}>
                     Kết Quả Phân Tích Sinh Học & Dinh Dưỡng
@@ -4126,6 +4259,7 @@
                     </div>
                   </div>
                 </section>
+                )}
               </>
             )}
 
@@ -4156,7 +4290,17 @@
                   </span>
                 </div>
 
+                <SubTabPills
+                  items={[
+                    { id: 'alarm', label: 'Chuông Báo & Lịch', icon: 'bell' },
+                    { id: 'data', label: 'Phòng Tập & Xóa Cache', icon: 'settings' }
+                  ]}
+                  activeId={settingsSubTab}
+                  onChange={setSettingsSubTab}
+                />
+
                 {/* Group 1: Real Notification Verification & Scheduled Alarm Engine */}
+                {settingsSubTab === 'alarm' && (
                 <section className="sherpa-card">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -4356,8 +4500,10 @@
                     </span>
                   </button>
                 </section>
+                )}
 
                 {/* Group 2: Gym Equipment & Onboarding Reset Settings */}
+                {settingsSubTab === 'data' && (
                 <section className="sherpa-card">
                   <h3 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginBottom: 8 }}>
                     Cài Đặt Phòng Tập & Thiết Lập Hồ Sơ
@@ -4403,8 +4549,23 @@
                       <SvgIcon name="user" size={15} color="#E05A2B" />
                       <span>Mở Lại Trình Tư Vấn & Nhập Chỉ Số Ban Đầu (2 Bước)</span>
                     </button>
+                    <button
+                      type="button"
+                      onClick={handleResetAllData}
+                      className="sherpa-btn"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        fontSize: 12,
+                        background: '#FEE2E2',
+                        color: '#991B1B'
+                      }}
+                    >
+                      <span>Xóa Sạch Cache & Đặt Lại Từ Đầu (0 Buổi Tập)</span>
+                    </button>
                   </div>
                 </section>
+                )}
               </>
             )}
           </main>
@@ -5493,10 +5654,19 @@
       (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ) {
       window.addEventListener('load', () => {
+        if ('caches' in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((k) => {
+              if (k !== '8d-bear-sherpa-pwa-v6') caches.delete(k);
+            });
+          }).catch(() => {});
+        }
         const isGym8DSubpath = /^\/gym8d(\/|$)/i.test(location.pathname);
-        const swUrl = isGym8DSubpath ? '/gym8D/sw.js' : './sw.js';
+        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=6' : './sw.js?v=6';
         const swOpts = isGym8DSubpath ? { scope: '/gym8D' } : undefined;
-        navigator.serviceWorker.register(swUrl, swOpts).catch(() => {});
+        navigator.serviceWorker.register(swUrl, swOpts).then((reg) => {
+          if (reg && reg.update) reg.update();
+        }).catch(() => {});
       });
     }
   </script>
