@@ -4698,10 +4698,17 @@
                       {selectedWeekDays.map((d) => {
                         const isSel = d.isoDate === selectedDateISO;
                         const daySess = GymCore.WORKOUT_SESSIONS[d.sessionId];
+                        const compactDow = d.dayOfWeek === 0 ? 'CN' : `T${d.dayOfWeek + 1}`;
                         const shortTag = d.isCompleted
-                          ? '✓ DONE'
+                          ? '✓ XONG'
                           : d.isWorkoutDay && daySess
-                          ? daySess.code
+                          ? d.sessionId === 'press_day'
+                            ? 'ĐẨY'
+                            : d.sessionId === 'pull_day'
+                            ? 'KÉO'
+                            : d.sessionId === 'legs_day'
+                            ? 'CHÂN'
+                            : daySess.code
                           : d.isSaturdayOptional
                           ? 'OPT'
                           : 'OFF';
@@ -4738,12 +4745,12 @@
                           >
                             <span
                               style={{
-                                fontSize: 9,
+                                fontSize: 9.5,
                                 fontWeight: 900,
                                 color: isSel ? '#FDBA74' : d.isToday ? '#15803D' : '#6B5744'
                               }}
                             >
-                              {d.dayShort}
+                              {compactDow}
                             </span>
                             <span
                               style={{
@@ -4759,7 +4766,7 @@
                               style={{
                                 fontSize: 7.5,
                                 fontWeight: 900,
-                                padding: '1px 4px',
+                                padding: '1px 3px',
                                 borderRadius: 999,
                                 background: isSel
                                   ? d.isCompleted
@@ -4772,8 +4779,6 @@
                                   : '#E6DCCB',
                                 color: isSel || d.isCompleted ? '#FFFFFF' : '#2B2118',
                                 maxWidth: '100%',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
                               }}
                             >
