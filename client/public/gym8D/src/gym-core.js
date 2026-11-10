@@ -1867,8 +1867,11 @@
     return {
       intervalDays,
       startWeight: firstLog.weight,
+      startWeightKg: firstLog.weight,
       latestWeight: latestLog.weight,
+      latestWeightKg: latestLog.weight,
       targetWeight,
+      targetWeightKg: targetWeight,
       deltaFromStart,
       remainingToGoal,
       progressPct,
@@ -1876,6 +1879,13 @@
       nextWeighInLabel: `${DAY_SHORT_NAMES[parseISODate(nextWeighInISO).getDay()]} · ${formatVNDate(nextWeighInISO)}`,
       nextWeighInShort: formatVNShortDate(nextWeighInISO),
       daysUntilNextWeighIn,
+      nextWeighIn: {
+        isoDate: nextWeighInISO,
+        dayShort: DAY_SHORT_NAMES[parseISODate(nextWeighInISO).getDay()],
+        shortDate: formatVNShortDate(nextWeighInISO),
+        dateLabel: formatVNDate(nextWeighInISO),
+        daysRemaining: daysUntilNextWeighIn
+      },
       isWeighInDueToday,
       hasLoggedToday,
       logs: effectiveLogs,
