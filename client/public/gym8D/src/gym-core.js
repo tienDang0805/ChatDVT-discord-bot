@@ -924,6 +924,8 @@
     press_day: {
       id: "press_day",
       code: "PRESS",
+      calendarLabel: "ĐẨY NGỰC·VAI",
+      focusShort: "Ngực · Vai · Tay sau",
       shortName: "Buổi Đẩy (Press)",
       title: "Buổi Đẩy (Press Day) — Ngực, Vai & Tay Sau",
       subtitle: "Sắp xếp theo thứ tự ưu tiên từ bài Đa Khớp (Tier S) xuống bài Cô Lập & Đốt Mỡ",
@@ -943,6 +945,8 @@
     pull_day: {
       id: "pull_day",
       code: "PULL",
+      calendarLabel: "KÉO LƯNG·XÔ",
+      focusShort: "Lưng xô · Tay trước",
       shortName: "Buổi Kéo (Pull)",
       title: "Buổi Kéo (Pull Day) — Lưng Xô, Lưng Giữa & Tay Trước",
       subtitle: "Mở rộng khung lưng chữ V, chống gù lưng và làm săn bắp tay trước",
@@ -961,6 +965,8 @@
     legs_day: {
       id: "legs_day",
       code: "LEGS",
+      calendarLabel: "CHÂN · ĐÙI",
+      focusShort: "Đùi · Mông · Core",
       shortName: "Buổi Chân & Core",
       title: "Buổi Chân & Core (Joint-Safe Legs) — Đùi, Mông & Bảo Vệ Gối",
       subtitle: "Tăng cơ chân đốt mỡ mạnh mẽ với 0% áp lực chèn ép đĩa đệm",
@@ -978,6 +984,8 @@
     upper_day: {
       id: "upper_day",
       code: "UPPER",
+      calendarLabel: "THÂN TRÊN",
+      focusShort: "Ngực · Xô · Vai",
       shortName: "Buổi Thân Trên",
       title: "Buổi Thân Trên Tổng Hợp (Upper Body Hypertrophy)",
       subtitle: "Kích thích lặp lại lần 2 trong tuần cho Ngực, Lưng Xô và Vai",
@@ -1243,14 +1251,33 @@
     const isTomorrow = isoDate === tomorrowISO;
     const isFirstWorkout = isoDate === startDateISO;
     const isPastDay = diffDaysISO(isoDate, todayISO) < 0;
+    const isFutureDay = diffDaysISO(isoDate, todayISO) > 0;
+    const daysFromToday = diffDaysISO(isoDate, todayISO);
+    const daysSinceStart = diffDaysISO(isoDate, startDateISO);
+    const weighInIntervalDays = Number(opts.weighInIntervalDays) === 14 ? 14 : 7;
+    const isWeighInDay = daysSinceStart >= 0 && daysSinceStart % weighInIntervalDays === 0;
+    const weighInIndex = isWeighInDay ? Math.floor(daysSinceStart / weighInIntervalDays) + 1 : null;
+
     const explicitStatus = statusRecord?.status || null;
     const isCompleted =
-      explicitStatus === "done" ||
-      (explicitStatus !== "missed" && totalSetsCount > 0 && completedSetsCount >= totalSetsCount);
+      !isFutureDay &&
+      (explicitStatus === "done" ||
+        (explicitStatus !== "missed" && totalSetsCount > 0 && completedSetsCount >= totalSetsCount));
     const isMissed =
-      explicitStatus === "missed" ||
-      (!isCompleted && isWorkoutDay && isPastDay && diffDaysISO(isoDate, startDateISO) >= 0);
+      !isFutureDay &&
+      !isBeforeStart &&
+      isWorkoutDay &&
+      (explicitStatus === "missed" || (!isCompleted && isPastDay));
     const kcalBurned = isCompleted ? (sess ? sess.durationMin * 7 : 350) : 0;
+    const isUnreportedToday = isToday && isWorkoutDay && !isCompleted && !isMissed;
+    const canReportStatus = !isFutureDay && !isBeforeStart && (isWorkoutDay || isCompleted || isMissed);
+    const lockReason = isFutureDay
+      ? `Chưa tới ngày tập (còn ${daysFromToday} ngày) — Không thể chốt Done trước tương lai.`
+      : isBeforeStart
+      ? `Trước ngày khởi đầu (${formatVNShortDate(startDateISO)}) — Lộ trình chưa bắt đầu.`
+      : !isWorkoutDay
+      ? "Ngày nghỉ hồi phục — Đổi sang Giáo án tập nếu bạn muốn tập thêm hôm nay."
+      : null;
 
     let badge = dayShort;
     if (isCompleted) {
@@ -1302,6 +1329,13 @@
       isFirstWorkout,
       isBeforeStart,
       isPastDay,
+      isFutureDay,
+      daysFromToday,
+      isWeighInDay,
+      weighInIndex,
+      isUnreportedToday,
+      canReportStatus,
+      lockReason,
       isWorkoutDay,
       isOverridden: Boolean(dateOverrides[isoDate]),
       sessionId,
@@ -1529,10 +1563,29 @@
       lines.push("BEGIN:VALARM");
       lines.push("TRIGGER:PT12H");
       lines.push("ACTION:DISPLAY");
-      lines.push(`DESCRIPTION:Kiểm tra Streak Gấu Gym 8D: Đừng quên bấm Chốt Đã Tập Done cho ${sess.shortName} hôm nay!`);
+      lines.push(`DESCRIPTION:Bạn có 1 buổi tập hôm nay (${sess.shortName})? Vào Gấu Gym 8D báo cáo ngay (Chốt Done hoặc Báo Bận) để giữ Streak!`);
       lines.push("END:VALARM");
       lines.push("END:VEVENT");
     });
+
+    const firstDay = (scheduleList && scheduleList[0]?.isoDate) || getTodayISO();
+    const weighCompact = String(firstDay).replace(/-/g, "");
+    const intervalWeeks = Number(profile?.weighInIntervalDays) === 14 ? 2 : 1;
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:8dgym-weighin-${weighCompact}@sherpa.local`);
+    lines.push(`DTSTAMP:20261109T080000Z`);
+    lines.push(`DTSTART;TZID=Asia/Ho_Chi_Minh:${weighCompact}T053000`);
+    lines.push(`DTEND;TZID=Asia/Ho_Chi_Minh:${weighCompact}T054500`);
+    lines.push(`RRULE:FREQ=WEEKLY;INTERVAL=${intervalWeeks};COUNT=16`);
+    lines.push(`SUMMARY:[Gấu Gym 8D] Kỳ Cân Định Kỳ (${intervalWeeks} Tuần/Lần) & Cập Nhật Biểu Đồ`);
+    lines.push(`DESCRIPTION:Cân lúc sáng sớm sau khi vệ sinh, trước khi ăn uống rồi nhập vào tab Thể Trạng -> Biểu Đồ Cân Nặng để hệ thống tính toán lại Calo & TDEE.`);
+    lines.push("BEGIN:VALARM");
+    lines.push("TRIGGER:-PT5M");
+    lines.push("ACTION:DISPLAY");
+    lines.push(`DESCRIPTION:Đến kỳ cân kiểm tra định kỳ (${intervalWeeks} tuần/lần)! Hãy cân sáng bụng rỗng và cập nhật vào Gấu Gym 8D.`);
+    lines.push("END:VALARM");
+    lines.push("END:VEVENT");
+
     lines.push("END:VCALENDAR");
     return lines.join("\r\n");
   }
@@ -1707,24 +1760,127 @@
   ];
 
   function calculateWeightTrend(logs) {
-    const list = Array.isArray(logs) && logs.length > 0 ? logs : [
-      { date: "03/11", weight: 116.2 },
-      { date: "04/11", weight: 115.8 },
-      { date: "05/11", weight: 116.0 },
-      { date: "06/11", weight: 115.5 },
-      { date: "07/11", weight: 115.3 },
-      { date: "08/11", weight: 115.1 },
-      { date: "09/11", weight: 114.9 }
-    ];
+    const list = Array.isArray(logs) ? logs : [];
     return list.map((item, idx) => {
       const slice = list.slice(Math.max(0, idx - 6), idx + 1);
       const avg = slice.reduce((s, x) => s + Number(x.weight), 0) / slice.length;
       return {
         date: item.date,
+        isoDate: item.isoDate || null,
         scaleWeight: Number(item.weight),
         trendWeight: Number(avg.toFixed(2))
       };
     });
+  }
+
+  function buildWeightTrackerSummary(options) {
+    const opts = options || {};
+    const todayISO = opts.todayISO || getTodayISO();
+    const startDateISO = opts.startDateISO || addDaysISO(todayISO, 1);
+    const intervalDays = Number(opts.weighInIntervalDays) === 14 ? 14 : 7;
+    const startWeight = Number(opts.initialWeightKg || opts.currentWeightKg || 115);
+    const currentWeight = Number(opts.currentWeightKg || startWeight);
+    const targetWeight = Number(opts.targetWeightKg || 95);
+    const weeklyRate = Number(opts.weeklyRateKg || -0.75);
+    const rawLogs = Array.isArray(opts.weightLogs) ? opts.weightLogs : [];
+
+    const normalizedLogs = rawLogs
+      .filter((x) => x && Number.isFinite(Number(x.weight)))
+      .map((x) => ({
+        isoDate: x.isoDate || todayISO,
+        dateLabel: x.dateLabel || formatVNShortDate(x.isoDate || todayISO),
+        weight: Number(Number(x.weight).toFixed(1)),
+        note: x.note || "Cân sáng bụng rỗng"
+      }))
+      .sort((a, b) => diffDaysISO(a.isoDate, b.isoDate));
+
+    const effectiveLogs =
+      normalizedLogs.length > 0
+        ? normalizedLogs
+        : [
+            {
+              isoDate: todayISO,
+              dateLabel: formatVNShortDate(todayISO),
+              weight: startWeight,
+              note: "Cân nặng khởi điểm"
+            }
+          ];
+
+    const latestLog = effectiveLogs[effectiveLogs.length - 1];
+    const firstLog = effectiveLogs[0];
+    const deltaFromStart = Number((latestLog.weight - firstLog.weight).toFixed(1));
+    const remainingToGoal = Number(Math.abs(targetWeight - latestLog.weight).toFixed(1));
+    const totalGoalSpan = Math.max(0.5, Math.abs(targetWeight - firstLog.weight));
+    const achievedSpan = Math.max(0, Math.abs(firstLog.weight - latestLog.weight));
+    const progressPct = Math.min(100, Math.round((achievedSpan / totalGoalSpan) * 100));
+
+    // Find next weigh-in date aligned with startDateISO + k * intervalDays
+    let nextWeighInISO = startDateISO;
+    let k = 0;
+    while (diffDaysISO(nextWeighInISO, todayISO) < 0 && k < 100) {
+      k += 1;
+      nextWeighInISO = addDaysISO(startDateISO, k * intervalDays);
+    }
+    // If today already has a weigh-in logged and nextWeighInISO === todayISO, advance to next cycle
+    const hasLoggedToday = normalizedLogs.some((l) => l.isoDate === todayISO);
+    if (nextWeighInISO === todayISO && hasLoggedToday) {
+      nextWeighInISO = addDaysISO(todayISO, intervalDays);
+    }
+    const daysUntilNextWeighIn = Math.max(0, diffDaysISO(nextWeighInISO, todayISO));
+    const isWeighInDueToday =
+      (diffDaysISO(todayISO, startDateISO) >= 0 &&
+        diffDaysISO(todayISO, startDateISO) % intervalDays === 0 &&
+        !hasLoggedToday) ||
+      (normalizedLogs.length > 0 && diffDaysISO(todayISO, latestLog.isoDate) >= intervalDays);
+
+    // Build 7 checkpoints for the SVG chart (Checkpoints 0..6 spaced by intervalDays)
+    const checkpoints = [];
+    for (let i = 0; i < 7; i++) {
+      const cpISO = addDaysISO(startDateISO, i * intervalDays);
+      const weeksElapsed = (i * intervalDays) / 7;
+      const rawExpected = firstLog.weight + weeksElapsed * weeklyRate;
+      const expectedWeight = Number(
+        (weeklyRate < 0
+          ? Math.max(targetWeight, rawExpected)
+          : Math.min(targetWeight, rawExpected)
+        ).toFixed(1)
+      );
+      // Match logged weight if within +/-3 days of checkpoint, or at i === 0 use firstLog
+      let matchedLog = null;
+      if (i === 0) {
+        matchedLog = firstLog;
+      } else {
+        matchedLog =
+          normalizedLogs.find((l) => Math.abs(diffDaysISO(l.isoDate, cpISO)) <= 3) || null;
+      }
+      checkpoints.push({
+        index: i + 1,
+        isoDate: cpISO,
+        shortDate: formatVNShortDate(cpISO),
+        label: i === 0 ? "Khởi điểm" : `Kỳ ${i}`,
+        expectedWeight,
+        actualWeight: matchedLog ? matchedLog.weight : null,
+        isFuture: diffDaysISO(cpISO, todayISO) > 0
+      });
+    }
+
+    return {
+      intervalDays,
+      startWeight: firstLog.weight,
+      latestWeight: latestLog.weight,
+      targetWeight,
+      deltaFromStart,
+      remainingToGoal,
+      progressPct,
+      nextWeighInISO,
+      nextWeighInLabel: `${DAY_SHORT_NAMES[parseISODate(nextWeighInISO).getDay()]} · ${formatVNDate(nextWeighInISO)}`,
+      nextWeighInShort: formatVNShortDate(nextWeighInISO),
+      daysUntilNextWeighIn,
+      isWeighInDueToday,
+      hasLoggedToday,
+      logs: effectiveLogs,
+      checkpoints
+    };
   }
 
   function buildPersonalizedRecommendation(metrics, firstSessionId, startDateISO) {
@@ -1825,6 +1981,7 @@
     generateICSCalendar,
     calculatePlates,
     calculateWeightTrend,
+    buildWeightTrackerSummary,
     VN_FOODS
   };
 })(typeof window !== "undefined" ? window : globalThis);

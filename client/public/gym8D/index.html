@@ -9,27 +9,28 @@
   <meta name="apple-mobile-web-app-title" content="Gấu Gym 8D" />
   <meta name="theme-color" content="#FAF5EA" />
   <title>Gấu Tập Gym 8D — Lịch Tập, Bài Tập Ưu Tiên & Dinh Dưỡng Khoa Học</title>
-  <link rel="manifest" href="/gym8D/manifest.json" />
-  <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="stylesheet" href="/gym8D/styles.css?v=6" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./assets/mascots/app_icon_sherpa_512.png" />
+  <link rel="icon" type="image/png" href="./assets/mascots/app_icon_sherpa_512.png" />
+  <link rel="stylesheet" href="./styles.css?v=7" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <script src="/gym8D/src/gym-core.js?v=6"></script>
+  <script src="./src/gym-core.js?v=7"></script>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
     const { useState, useEffect, useMemo } = React;
-    const STORAGE_KEY = '8d_gym_mobile_v6_fresh';
+    const STORAGE_KEY = '8d_gym_mobile_v7_pro';
     const LEGACY_STORAGE_KEYS = [
       '8d_gym_mobile_v1',
       '8d_gym_mobile_v2',
       '8d_gym_mobile_v3',
       '8d_gym_mobile_v4',
-      '8d_gym_mobile_v5'
+      '8d_gym_mobile_v5',
+      '8d_gym_mobile_v6_fresh'
     ];
 
     function playChimeSound(type = 'rest') {
@@ -202,6 +203,28 @@
           return (
             <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 12 15 18 9" />
+            </svg>
+          );
+        case 'lock':
+          return (
+            <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="4" y="11" width="16" height="10" rx="2.5" />
+              <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+            </svg>
+          );
+        case 'scale':
+          return (
+            <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="4" />
+              <path d="M8 9a4 4 0 0 1 8 0" />
+              <line x1="12" y1="9" x2="14.5" y2="6.5" />
+              <line x1="8" y1="16" x2="16" y2="16" />
+            </svg>
+          );
+        case 'chart':
+          return (
+            <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           );
         default:
@@ -429,6 +452,318 @@
             );
           })}
         </div>
+      );
+    }
+
+    function WeightProgressChart({
+      weightTracker,
+      weighInIntervalDays,
+      onChangeInterval,
+      onOpenWeighInModal,
+      metrics
+    }) {
+      const checkpoints = weightTracker?.checkpoints || [];
+      const allWeights = [];
+      checkpoints.forEach((cp) => {
+        if (typeof cp.expectedWeight === 'number') allWeights.push(cp.expectedWeight);
+        if (typeof cp.actualWeight === 'number') allWeights.push(cp.actualWeight);
+      });
+      if (typeof weightTracker?.targetWeightKg === 'number') {
+        allWeights.push(weightTracker.targetWeightKg);
+      }
+      const minW = Math.floor(Math.min(...(allWeights.length ? allWeights : [65])) - 2);
+      const maxW = Math.ceil(Math.max(...(allWeights.length ? allWeights : [120])) + 2);
+      const rangeW = Math.max(4, maxW - minW);
+
+      const svgW = 356;
+      const svgH = 188;
+      const padL = 36;
+      const padR = 16;
+      const padT = 18;
+      const padB = 30;
+      const plotW = svgW - padL - padR;
+      const plotH = svgH - padT - padB;
+
+      function getX(idx) {
+        if (checkpoints.length <= 1) return padL + plotW / 2;
+        return padL + (idx / (checkpoints.length - 1)) * plotW;
+      }
+      function getY(w) {
+        const ratio = (w - minW) / rangeW;
+        return padT + plotH - ratio * plotH;
+      }
+
+      const expectedPoints = checkpoints.map((cp, idx) => `${getX(idx).toFixed(1)},${getY(cp.expectedWeight).toFixed(1)}`).join(' ');
+      const actualNodes = checkpoints
+        .map((cp, idx) => (typeof cp.actualWeight === 'number' ? { idx, x: getX(idx), y: getY(cp.actualWeight), w: cp.actualWeight, label: cp.shortDate } : null))
+        .filter(Boolean);
+      const actualPoints = actualNodes.map((n) => `${n.x.toFixed(1)},${n.y.toFixed(1)}`).join(' ');
+      const targetY = getY(weightTracker.targetWeightKg);
+
+      const gridTicks = [0, 0.5, 1].map((t) => {
+        const val = Math.round((minW + rangeW * (1 - t)) * 10) / 10;
+        const y = padT + plotH * t;
+        return { val, y };
+      });
+
+      return (
+        <section className="sherpa-card" style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <img
+                src={GymCore.resolveAsset('bodyCalc')}
+                alt="Biểu đồ cân nặng"
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 14,
+                  border: '2px solid #2B2118',
+                  objectFit: 'cover',
+                  background: '#FAF5EA',
+                  flexShrink: 0
+                }}
+              />
+              <div>
+                <span
+                  style={{
+                    fontSize: 9.5,
+                    fontWeight: 900,
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    background: '#7C3AED',
+                    color: '#FFFFFF'
+                  }}
+                >
+                  LỊCH CÂN ĐỊNH KỲ & BIỂU ĐỒ SỐ CÂN
+                </span>
+                <h3 className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, marginTop: 3 }}>
+                  Theo Dõi Cân Nặng Mỗi {weighInIntervalDays === 7 ? '1 Tuần' : '2 Tuần'}
+                </h3>
+                <div style={{ fontSize: 10.5, color: '#6B5744', fontWeight: 700 }}>
+                  Kỳ cân tiếp theo: <strong style={{ color: '#E05A2B' }}>{weightTracker.nextWeighIn.dayShort} ({weightTracker.nextWeighIn.shortDate})</strong>
+                  {weightTracker.nextWeighIn.daysRemaining === 0
+                    ? ' · Hôm nay đến kỳ cân!'
+                    : ` · Còn ${weightTracker.nextWeighIn.daysRemaining} ngày`}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Toggle 1 Week vs 2 Weeks Weigh-In Schedule */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+            {[
+              { days: 7, label: 'Mỗi 1 tuần (7 ngày/lần)' },
+              { days: 14, label: 'Mỗi 2 tuần (14 ngày/lần)' }
+            ].map((opt) => {
+              const active = weighInIntervalDays === opt.days;
+              return (
+                <button
+                  key={opt.days}
+                  type="button"
+                  onClick={() => onChangeInterval(opt.days)}
+                  className="sherpa-btn"
+                  style={{
+                    padding: '8px 8px',
+                    fontSize: 11,
+                    background: active ? '#2B2118' : '#FAF5EA',
+                    color: active ? '#FFFFFF' : '#2B2118'
+                  }}
+                >
+                  <SvgIcon name="scale" size={13} color={active ? '#FDBA74' : '#2B2118'} />
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 3 Weight Progress Stat Tiles */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7 }}>
+            <div style={{ padding: '8px 7px', borderRadius: 12, background: '#FAF5EA', border: '1.5px solid #2B2118', textAlign: 'center' }}>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>LÚC BẮT ĐẦU</div>
+              <div style={{ fontSize: 15.5, fontWeight: 900, color: '#2B2118', marginTop: 2 }}>
+                {weightTracker.startWeightKg} kg
+              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#6B5744' }}>Mốc gốc</div>
+            </div>
+            <div style={{ padding: '8px 7px', borderRadius: 12, background: '#DCFCE7', border: '1.5px solid #15803D', textAlign: 'center' }}>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#14532D' }}>HIỆN TẠI</div>
+              <div style={{ fontSize: 15.5, fontWeight: 900, color: '#15803D', marginTop: 2 }}>
+                {weightTracker.latestWeightKg} kg
+              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 900, color: '#166534' }}>
+                {weightTracker.deltaFromStart === 0
+                  ? 'Mới khởi tạo'
+                  : weightTracker.deltaFromStart > 0
+                  ? `+${weightTracker.deltaFromStart} kg`
+                  : `${weightTracker.deltaFromStart} kg`}
+              </div>
+            </div>
+            <div style={{ padding: '8px 7px', borderRadius: 12, background: '#FFEDD5', border: '1.5px solid #2B2118', textAlign: 'center' }}>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#9A3412' }}>ĐÍCH MỤC TIÊU</div>
+              <div style={{ fontSize: 15.5, fontWeight: 900, color: '#E05A2B', marginTop: 2 }}>
+                {weightTracker.targetWeightKg} kg
+              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#9A3412' }}>
+                Còn {weightTracker.remainingToGoal} kg ({weightTracker.progressPct}%)
+              </div>
+            </div>
+          </div>
+
+          {/* SVG Dual-Line Chart: Actual vs Scientific Projected Trajectory */}
+          <div
+            style={{
+              borderRadius: 15,
+              border: '2px solid #2B2118',
+              background: '#FFFDF9',
+              padding: '10px 8px 8px'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 4px 6px', flexWrap: 'wrap', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                Biểu Đồ Số Cân & Quỹ Đạo Đạt Đích (~{Math.abs(metrics.weeklyRateKg)}kg/tuần)
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 9.5, fontWeight: 800 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#059669' }}>
+                  <span style={{ width: 9, height: 9, borderRadius: 99, background: '#10B981', display: 'inline-block', border: '1.5px solid #064E3B' }} />
+                  Cân thực tế
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#D97706' }}>
+                  <span style={{ width: 12, height: 3, background: '#E05A2B', display: 'inline-block' }} />
+                  Phác đồ chuẩn
+                </span>
+              </div>
+            </div>
+
+            <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}>
+              {/* Horizontal Grid Lines */}
+              {gridTicks.map((g, i) => (
+                <g key={i}>
+                  <line x1={padL} y1={g.y} x2={svgW - padR} y2={g.y} stroke="#E5D5C0" strokeWidth="1" strokeDasharray="3 3" />
+                  <text x={padL - 5} y={g.y + 3.5} textAnchor="end" fontSize="9.5" fontWeight="800" fill="#6B5744">
+                    {g.val}
+                  </text>
+                </g>
+              ))}
+
+              {/* Target Weight Line */}
+              {targetY >= padT && targetY <= padT + plotH && (
+                <g>
+                  <line x1={padL} y1={targetY} x2={svgW - padR} y2={targetY} stroke="#16A34A" strokeWidth="1.4" strokeDasharray="5 3" />
+                  <text x={svgW - padR - 2} y={Math.max(11, targetY - 4)} textAnchor="end" fontSize="8.5" fontWeight="900" fill="#15803D">
+                    Đích {weightTracker.targetWeightKg}kg
+                  </text>
+                </g>
+              )}
+
+              {/* Scientific Expected Trajectory Polyline */}
+              {checkpoints.length > 1 && (
+                <polyline
+                  fill="none"
+                  stroke="#E05A2B"
+                  strokeWidth="2.4"
+                  strokeDasharray="5 4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={expectedPoints}
+                />
+              )}
+
+              {/* Expected Checkpoint Dots + X-Axis Labels */}
+              {checkpoints.map((cp, idx) => {
+                const cx = getX(idx);
+                const cy = getY(cp.expectedWeight);
+                return (
+                  <g key={cp.isoDate + '_' + idx}>
+                    <circle cx={cx} cy={cy} r="3.5" fill="#FFFDF9" stroke="#E05A2B" strokeWidth="2" />
+                    <text x={cx} y={cy - 7} textAnchor="middle" fontSize="8.5" fontWeight="800" fill="#9A3412">
+                      {cp.expectedWeight}
+                    </text>
+                    <text x={cx} y={svgH - 13} textAnchor="middle" fontSize="8.5" fontWeight="900" fill={cp.isDueToday ? '#E05A2B' : '#2B2118'}>
+                      {idx === 0 ? 'Bắt đầu' : `Kỳ ${idx}`}
+                    </text>
+                    <text x={cx} y={svgH - 3} textAnchor="middle" fontSize="8" fontWeight="700" fill="#6B5744">
+                      {cp.shortDate}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Actual Logged Weight Polyline & Emerald Nodes */}
+              {actualNodes.length > 1 && (
+                <polyline
+                  fill="none"
+                  stroke="#10B981"
+                  strokeWidth="3.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  points={actualPoints}
+                />
+              )}
+              {actualNodes.map((n, i) => (
+                <g key={'actual_' + i}>
+                  <circle cx={n.x} cy={n.y} r="5.5" fill="#10B981" stroke="#064E3B" strokeWidth="2" />
+                  <rect x={n.x - 18} y={n.y + 7} width="36" height="14" rx="4" fill="#064E3B" />
+                  <text x={n.x} y={n.y + 16.5} textAnchor="middle" fontSize="8.5" fontWeight="900" fill="#FFFFFF">
+                    {n.w}kg
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+
+          {/* 1-Tap Log Weigh-In Button */}
+          <button
+            type="button"
+            onClick={onOpenWeighInModal}
+            className="sherpa-btn sherpa-btn-primary"
+            style={{ width: '100%', padding: '11px 12px', fontSize: 12.5 }}
+          >
+            <SvgIcon name="scale" size={16} color="#FFFFFF" />
+            <span>Cân Thử & Cập Nhật Số Kg Hôm Nay ({GymCore.formatVNShortDate(GymCore.getTodayISO())})</span>
+          </button>
+
+          {/* Weigh-In History Log List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 900, color: '#6B5744' }}>
+              Lịch sử các lần cân đã ghi nhận ({weightTracker.logs.length} lần):
+            </div>
+            {weightTracker.logs.slice().reverse().slice(0, 5).map((item, idx) => (
+              <div
+                key={item.isoDate + '_' + idx}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '8px 10px',
+                  borderRadius: 11,
+                  background: idx === 0 ? '#F0FDF4' : '#FAF5EA',
+                  border: idx === 0 ? '1.5px solid #16A34A' : '1.5px solid #D8C8B0'
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>
+                    Ngày {item.dateLabel || GymCore.formatVNShortDate(item.isoDate)}
+                  </span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: '#6B5744', marginLeft: 6 }}>
+                    · {item.note || 'Cân định kỳ'}
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    background: idx === 0 ? '#16A34A' : '#2B2118',
+                    color: '#FFFFFF'
+                  }}
+                >
+                  {item.weight} kg
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       );
     }
 
@@ -794,6 +1129,24 @@
       const [liveClockNow, setLiveClockNow] = useState(() => new Date());
       const [scheduledCountdownSec, setScheduledCountdownSec] = useState(0);
       const [firedAlarmKeys, setFiredAlarmKeys] = useState({});
+      const [weighInIntervalDays, setWeighInIntervalDays] = useState(
+        () => (Number(saved?.weighInIntervalDays) === 14 ? 14 : 7)
+      );
+      const [weightLogs, setWeightLogs] = useState(() =>
+        Array.isArray(saved?.weightLogs) && saved.weightLogs.length > 0
+          ? saved.weightLogs
+          : [
+              {
+                isoDate: todayISO,
+                dateLabel: GymCore.formatVNShortDate(todayISO),
+                weight: Number(saved?.profileInput?.weightKg || 115),
+                note: 'Cân nặng khởi điểm'
+              }
+            ]
+      );
+      const [weighInDraftKg, setWeighInDraftKg] = useState(
+        () => Number(saved?.profileInput?.weightKg || 115)
+      );
 
       const isStandalonePWA = useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -821,7 +1174,9 @@
               waterDrankMl,
               loggedFoodIds,
               preSleepAlertEnabled,
-              icsInstalledAt
+              icsInstalledAt,
+              weighInIntervalDays,
+              weightLogs
             })
           );
         } catch (e) {}
@@ -839,7 +1194,9 @@
         waterDrankMl,
         loggedFoodIds,
         preSleepAlertEnabled,
-        icsInstalledAt
+        icsInstalledAt,
+        weighInIntervalDays,
+        weightLogs
       ]);
 
       useEffect(() => {
@@ -908,6 +1265,14 @@
         setDayStatusByDate({});
         setWaterDrankMl(0);
         setLoggedFoodIds([]);
+        setWeightLogs([
+          {
+            isoDate: todayISO,
+            dateLabel: GymCore.formatVNShortDate(todayISO),
+            weight: Number(profileInput.weightKg || 115),
+            note: 'Cân nặng khởi điểm'
+          }
+        ]);
         setStartDateISO(tomorrowISO);
         setSelectedDateISO(tomorrowISO);
         setOnboardingStep(1);
@@ -925,9 +1290,10 @@
           preSleepLeadMin: profileInput.preSleepLeadMin || 30,
           currentWeightKg: metrics.profile.weightKg,
           targetWeightKg: metrics.profile.targetWeightKg,
-          weeklyRateKg: metrics.weeklyRateKg
+          weeklyRateKg: metrics.weeklyRateKg,
+          weighInIntervalDays
         }),
-        [todayISO, startDateISO, weeklyPattern, dateOverrides, logsByDate, dayStatusByDate, profileInput.preSleepLeadMin, metrics]
+        [todayISO, startDateISO, weeklyPattern, dateOverrides, logsByDate, dayStatusByDate, profileInput.preSleepLeadMin, metrics, weighInIntervalDays]
       );
 
       const dynamicWeek = useMemo(
@@ -945,6 +1311,11 @@
         [selectedDateISO, calendarOptions]
       );
 
+      const todayEntry = useMemo(
+        () => GymCore.buildDayScheduleEntry(todayISO, calendarOptions),
+        [todayISO, calendarOptions]
+      );
+
       const tomorrowEntry = useMemo(
         () => GymCore.buildDayScheduleEntry(tomorrowISO, calendarOptions),
         [tomorrowISO, calendarOptions]
@@ -953,6 +1324,21 @@
       const streakSummary = useMemo(
         () => GymCore.buildStreakSummary(calendarOptions),
         [calendarOptions]
+      );
+
+      const weightTracker = useMemo(
+        () =>
+          GymCore.buildWeightTrackerSummary({
+            todayISO,
+            startDateISO,
+            weighInIntervalDays,
+            initialWeightKg: weightLogs[0]?.weight || metrics.profile.weightKg,
+            currentWeightKg: metrics.profile.weightKg,
+            targetWeightKg: metrics.profile.targetWeightKg,
+            weeklyRateKg: metrics.weeklyRateKg,
+            weightLogs
+          }),
+        [todayISO, startDateISO, weighInIntervalDays, weightLogs, metrics]
       );
 
       const currentSession = GymCore.WORKOUT_SESSIONS[activeSessionId] || GymCore.WORKOUT_SESSIONS.press_day;
@@ -982,7 +1368,93 @@
       }, [loggedFoodIds]);
 
       function updateProfileField(field, value) {
-        setProfileInput((prev) => ({ ...prev, [field]: value }));
+        setProfileInput((prev) => {
+          const next = { ...prev, [field]: value };
+          if (field === 'weightKg' || field === 'targetWeightKg') {
+            const w = Number(next.weightKg) || 75;
+            const tw = Number(next.targetWeightKg) || 70;
+            if (tw < w - 1 && next.goal === 'bulk') {
+              next.goal = 'cut';
+            } else if (tw > w + 1 && next.goal === 'cut') {
+              next.goal = 'bulk';
+            }
+          }
+          return next;
+        });
+        if (field === 'weightKg') {
+          const cleanW = Math.round(Number(value) * 10) / 10;
+          setWeighInDraftKg(cleanW);
+          setWeightLogs((prev) => {
+            const list = Array.isArray(prev) ? [...prev] : [];
+            const idx = list.findIndex((x) => x.isoDate === todayISO);
+            const entry = {
+              isoDate: todayISO,
+              dateLabel: GymCore.formatVNShortDate(todayISO),
+              weight: cleanW,
+              note: list.length <= 1 ? 'Cân nặng khởi điểm' : 'Cập nhật cân nặng'
+            };
+            if (idx >= 0) list[idx] = entry;
+            else list.push(entry);
+            return list;
+          });
+        }
+      }
+
+      function handleLogNewWeight(newWeightKg) {
+        const cleanW = Math.max(38, Math.min(180, Math.round(Number(newWeightKg || profileInput.weightKg) * 10) / 10));
+        const startW = weightLogs[0]?.weight || profileInput.weightKg;
+        const diff = Math.round((cleanW - startW) * 10) / 10;
+        setProfileInput((prev) => ({ ...prev, weightKg: cleanW }));
+        setWeighInDraftKg(cleanW);
+        setWeightLogs((prev) => {
+          const list = Array.isArray(prev) ? [...prev] : [];
+          const idx = list.findIndex((x) => x.isoDate === todayISO);
+          const entry = {
+            isoDate: todayISO,
+            dateLabel: GymCore.formatVNShortDate(todayISO),
+            weight: cleanW,
+            note: `Cân định kỳ (${weighInIntervalDays} ngày/lần)`
+          };
+          if (idx >= 0) list[idx] = entry;
+          else list.push(entry);
+          return list;
+        });
+        dispatchRealOSNotification(
+          `Đã cập nhật số cân mới: ${cleanW} kg (${GymCore.formatVNShortDate(todayISO)})`,
+          `Thay đổi ${diff <= 0 ? diff : '+' + diff} kg so với mốc khởi điểm (${startW} kg). BMI, Calo và Macro đã tự động tính lại!`,
+          `weigh_in_${todayISO}`
+        );
+      }
+
+      function handleStartTrainingToday() {
+        const firstSess = activeSessionId !== 'rest' ? activeSessionId : onboardingFirstSessionId || 'press_day';
+        const todayDt = new Date(todayISO + 'T12:00:00');
+        const startDow = isNaN(todayDt.getDay()) ? 2 : todayDt.getDay();
+        const sessionOrder =
+          firstSess === 'pull_day'
+            ? ['pull_day', 'press_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest']
+            : firstSess === 'legs_day'
+            ? ['legs_day', 'press_day', 'rest', 'pull_day', 'upper_day', 'rest', 'rest']
+            : ['press_day', 'pull_day', 'rest', 'legs_day', 'upper_day', 'rest', 'rest'];
+        const newPattern = {};
+        sessionOrder.forEach((sId, idx) => {
+          const dow = (startDow + idx) % 7;
+          newPattern[dow] = {
+            sessionId: sId,
+            workoutTime: profileInput.workoutTime || '06:00'
+          };
+        });
+        setStartDateISO(todayISO);
+        setSelectedDateISO(todayISO);
+        setWeeklyPattern(newPattern);
+        setDateOverrides({});
+        setWeekOffset(0);
+        const sessObj = GymCore.WORKOUT_SESSIONS[firstSess] || GymCore.WORKOUT_SESSIONS.press_day;
+        dispatchRealOSNotification(
+          `Đã chuyển ngày bắt đầu tập sang Hôm nay (${GymCore.formatVNShortDate(todayISO)})`,
+          `Hôm nay bạn có lịch tập ${sessObj.shortName} (${sessObj.focusShort}). Tập xong hãy bấm Chốt Done ngay nhé!`,
+          `start_today_${todayISO}`
+        );
       }
 
       function handleUpdateRecurringWeekday(dow, patch) {
@@ -1139,15 +1611,38 @@
             if (todaySchedule.isWorkoutDay && !todaySchedule.isCompleted) {
               setFiredAlarmKeys((p) => ({ ...p, [streakKey]: true }));
               dispatchRealOSNotification(
-                `Cảnh báo giữ chuỗi Streak (${streakSummary.currentStreak} buổi)`,
-                `Hôm nay bạn có lịch tập nhưng chưa bấm Chốt Done. Hãy hoàn thành hoặc dời lịch bù để không đứt Streak!`,
+                `Bạn có 1 buổi tập vào hôm nay? Báo cáo ngay!`,
+                `Hôm nay bạn có lịch ${GymCore.WORKOUT_SESSIONS[todaySchedule.sessionId]?.shortName || 'tập Gym'} nhưng chưa báo Done hay báo Bỏ tập. Hãy vào app chốt ngay để giữ chuỗi Streak!`,
                 streakKey
               );
             }
           }
+          const checkInTimes = ['12:00', '18:00', '20:30'];
+          const checkInKey = `${dateKey}_unreported_${hhmm}`;
+          if (checkInTimes.includes(hhmm) && !firedAlarmKeys[checkInKey]) {
+            const todaySchedule = GymCore.buildDayScheduleEntry(dateKey, calendarOptions);
+            if (todaySchedule.isUnreportedToday) {
+              setFiredAlarmKeys((p) => ({ ...p, [checkInKey]: true }));
+              const sessName = GymCore.WORKOUT_SESSIONS[todaySchedule.sessionId]?.shortName || 'Buổi tập';
+              dispatchRealOSNotification(
+                `Bạn có 1 buổi tập vào hôm nay (${sessName})? Báo cáo ngay!`,
+                `Bạn đã hoàn thành ${sessName} hôm nay chưa? Chạm vào app để Chốt Done hoặc Dời lịch bù nếu bận nhé!`,
+                checkInKey
+              );
+            }
+          }
+          const weighInKey = `${dateKey}_weighin_${hhmm}`;
+          if ((hhmm === '06:30' || hhmm === '08:00') && weightTracker.isWeighInDueToday && !firedAlarmKeys[weighInKey]) {
+            setFiredAlarmKeys((p) => ({ ...p, [weighInKey]: true }));
+            dispatchRealOSNotification(
+              `Đến kỳ cân lại định kỳ (${weighInIntervalDays} ngày/lần)`,
+              `Hôm nay là ngày kiểm tra cân nặng định kỳ. Hãy bước lên cân sau khi ngủ dậy và cập nhật số kg vào biểu đồ!`,
+              weighInKey
+            );
+          }
         }, 10000);
         return () => clearInterval(id);
-      }, [preSleepAlertEnabled, metrics, tomorrowEntry, firedAlarmKeys, calendarOptions, streakSummary]);
+      }, [preSleepAlertEnabled, metrics, tomorrowEntry, firedAlarmKeys, calendarOptions, streakSummary, weightTracker, weighInIntervalDays]);
 
       const nextAlarmCountdown = useMemo(() => {
         const now = liveClockNow;
@@ -1196,7 +1691,23 @@
       }
 
       function handleSetDayStatus(isoDate, status, sessionIdOverride) {
+        if (GymCore.diffDaysISO(isoDate, todayISO) > 0) {
+          dispatchRealOSNotification(
+            `Chưa tới ngày tập (${GymCore.formatVNShortDate(isoDate)})`,
+            `Ràng buộc bảo vệ dữ liệu: Bạn không thể chốt Done hoặc báo Bỏ tập cho một buổi tập ở tương lai. Nếu muốn tập ngay hôm nay (${GymCore.formatVNShortDate(todayISO)}), hãy bấm "Đổi ngày mở màn sang Hôm nay"!`,
+            `guard_future_${isoDate}`
+          );
+          return;
+        }
         const dayEntry = GymCore.buildDayScheduleEntry(isoDate, calendarOptions);
+        if (status === 'missed' && dayEntry.sessionId === 'rest') {
+          dispatchRealOSNotification(
+            `Ngày ${GymCore.formatVNShortDate(isoDate)} là Ngày Nghỉ Hồi Phục`,
+            `Ngày nghỉ hồi phục cơ không tính là Bỏ tập. Bạn chỉ báo Bỏ tập vào những ngày có lịch tập tạ!`,
+            `guard_rest_${isoDate}`
+          );
+          return;
+        }
         const effSessionId =
           sessionIdOverride ||
           (dayEntry.sessionId !== 'rest' ? dayEntry.sessionId : activeSessionId || 'press_day');
@@ -1278,6 +1789,14 @@
       }
 
       function toggleSetDone(exId, setIdx) {
+        if (GymCore.diffDaysISO(selectedDateISO, todayISO) > 0) {
+          dispatchRealOSNotification(
+            `Buổi tập ngày ${GymCore.formatVNShortDate(selectedDateISO)} ở tương lai`,
+            `Bạn không thể tích Chốt hiệp tập cho ngày chưa diễn ra. Hãy chuyển sang ngày Hôm nay (${GymCore.formatVNShortDate(todayISO)}) để ghi hiệp thực tế!`,
+            `guard_set_${selectedDateISO}`
+          );
+          return;
+        }
         const ex = GymCore.EXERCISES[exId];
         setLogsByDate((prev) => {
           const dayMap = prev[selectedDateISO] || {};
@@ -2004,74 +2523,288 @@
               <>
                 <SubTabPills
                   items={[
-                    { id: 'calendar', label: 'Lịch Tập & Giáo Án', icon: 'calendar' },
+                    { id: 'calendar', label: 'Lịch Tập', icon: 'calendar' },
+                    { id: 'weighin', label: `Cân & Biểu Đồ (${weightTracker.latestWeightKg}kg)`, icon: 'chart' },
                     { id: 'sleep', label: 'Nhịp Ngủ 24h', icon: 'clock' }
                   ]}
                   activeId={scheduleSubTab}
                   onChange={setScheduleSubTab}
                 />
 
+                {scheduleSubTab === 'weighin' && (
+                  <WeightProgressChart
+                    weightTracker={weightTracker}
+                    weighInIntervalDays={weighInIntervalDays}
+                    onChangeInterval={(days) => setWeighInIntervalDays(days)}
+                    onOpenWeighInModal={() => {
+                      setWeighInDraftKg(Number(profileInput.weightKg) || 115);
+                      setPickerSheetConfig({ type: 'weigh_in_log' });
+                    }}
+                    metrics={metrics}
+                  />
+                )}
+
                 {scheduleSubTab === 'calendar' && (
                   <>
-                {/* Compact Next Session Banner */}
+                {/* 1. UNREPORTED WORKOUT PROMPT FOR TODAY (BẠN CÓ 1 BUỔI TẬP VÀO HÔM NAY? BÁO CÁO NGAY!) */}
+                {todayEntry.isUnreportedToday && (() => {
+                  const todaySess = GymCore.WORKOUT_SESSIONS[todayEntry.sessionId] || GymCore.WORKOUT_SESSIONS.press_day;
+                  return (
+                    <section
+                      className="sherpa-card"
+                      style={{
+                        background: 'linear-gradient(145deg, #FFF7ED 0%, #FFEDD5 100%)',
+                        border: '2.5px solid #EA580C',
+                        boxShadow: '0 8px 22px rgba(234, 88, 12, 0.22)',
+                        padding: 12
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <img
+                          src={GymCore.resolveAsset(todaySess.mascot)}
+                          alt={todaySess.shortName}
+                          style={{
+                            width: 54,
+                            height: 54,
+                            borderRadius: 14,
+                            border: '2px solid #2B2118',
+                            objectFit: 'cover',
+                            background: '#FFF',
+                            flexShrink: 0
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span
+                            className="pulse-badge"
+                            style={{
+                              display: 'inline-block',
+                              fontSize: 9.5,
+                              fontWeight: 900,
+                              padding: '2px 8px',
+                              borderRadius: 999,
+                              background: '#EA580C',
+                              color: '#FFFFFF',
+                              border: '1.5px solid #2B2118'
+                            }}
+                          >
+                            NHẮC BÁO CÁO HÔM NAY ({todayEntry.shortDate})
+                          </span>
+                          <div className="serif-title" style={{ fontSize: 15, fontWeight: 900, color: '#2B2118', marginTop: 3 }}>
+                            Bạn có 1 buổi tập vào hôm nay ({todaySess.shortName})? Báo cáo ngay!
+                          </div>
+                          <div style={{ fontSize: 11, color: '#7C2D12', fontWeight: 700, marginTop: 2 }}>
+                            Ca tập {todayEntry.workoutTime} · Đã xong {todayEntry.completedSetsCount}/{todayEntry.totalSetsCount} hiệp · Chốt ngay để giữ chuỗi Streak!
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.9fr 0.9fr', gap: 6, marginTop: 10 }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSetDayStatus(todayISO, 'done', todayEntry.sessionId)}
+                          className="sherpa-btn sherpa-btn-green"
+                          style={{ padding: '8px 6px', fontSize: 11 }}
+                        >
+                          <SvgIcon name="check" size={13} color="#FFFFFF" />
+                          <span>Đã Tập Done</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDateISO(todayISO);
+                            setActiveSessionId(todayEntry.sessionId);
+                            setDetailSlotIndex(null);
+                            setActiveTab('workout');
+                          }}
+                          className="sherpa-btn"
+                          style={{ padding: '8px 6px', fontSize: 11, background: '#FFFDF9' }}
+                        >
+                          <span>Ghi hiệp tập</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetDayStatus(todayISO, 'missed', todayEntry.sessionId)}
+                          className="sherpa-btn"
+                          style={{ padding: '8px 6px', fontSize: 11, background: '#FEE2E2', color: '#991B1B' }}
+                        >
+                          <span>Báo bận/Bỏ</span>
+                        </button>
+                      </div>
+                    </section>
+                  );
+                })()}
+
+                {/* 2. TOMORROW / NEXT WORKOUT SPOTLIGHT HERO CARD (NHÌN LƯỚT QUA BIẾT NGAY MAI TẬP GÌ!) */}
+                {(() => {
+                  const tomorrowSess =
+                    GymCore.WORKOUT_SESSIONS[tomorrowEntry.sessionId] || GymCore.WORKOUT_SESSIONS.press_day;
+                  const isTomorrowRest = tomorrowEntry.sessionId === 'rest';
+                  const previewExNames = (tomorrowSess.exerciseIds || [])
+                    .slice(0, 3)
+                    .map((id, i) => `${i + 1}. ${GymCore.EXERCISES[id]?.shortName || id}`);
+
+                  return (
+                    <section className="sherpa-card sherpa-card-spotlight" style={{ padding: 13 }}>
+                      <div style={{ display: 'flex', gap: 11, alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', gap: 11, alignItems: 'center', minWidth: 0, flex: 1 }}>
+                          <img
+                            src={GymCore.resolveAsset(isTomorrowRest ? 'restHydration' : tomorrowSess.mascot)}
+                            alt="Ngày mai tập gì"
+                            style={{
+                              width: 58,
+                              height: 58,
+                              borderRadius: 15,
+                              border: '2px solid #FDBA74',
+                              objectFit: 'cover',
+                              background: '#FAF5EA',
+                              flexShrink: 0
+                            }}
+                          />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                              <span
+                                style={{
+                                  fontSize: 9.5,
+                                  fontWeight: 900,
+                                  padding: '2.5px 8px',
+                                  borderRadius: 999,
+                                  background: '#E05A2B',
+                                  color: '#FFFFFF',
+                                  letterSpacing: '0.02em'
+                                }}
+                              >
+                                NGÀY MAI TẬP GÌ? · {tomorrowEntry.dayShort.toUpperCase()} {tomorrowEntry.shortDate}
+                              </span>
+                              <span style={{ fontSize: 10, fontWeight: 800, color: '#FDE68A' }}>
+                                Ca {tomorrowEntry.workoutTime}
+                              </span>
+                            </div>
+                            <div
+                              className="serif-title"
+                              style={{
+                                fontSize: 16,
+                                fontWeight: 900,
+                                marginTop: 4,
+                                color: '#FFFFFF',
+                                lineHeight: 1.2
+                              }}
+                            >
+                              {isTomorrowRest
+                                ? 'Nghỉ Hồi Phục Cơ & Đi Bộ Nhẹ 7.000 Bước'
+                                : `${tomorrowSess.shortName}: ${tomorrowSess.focusShort || tomorrowSess.targetMuscles}`}
+                            </div>
+                            <div style={{ fontSize: 10.5, color: '#FED7AA', fontWeight: 700, marginTop: 3 }}>
+                              Chuông báo đi ngủ tối nay: <strong style={{ color: '#4ADE80' }}>{metrics.circadianSchedule.bedPrepTime}</strong> · Lên giường {metrics.circadianSchedule.sleepTime}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedDateISO(tomorrowISO);
+                            setActiveSessionId(tomorrowEntry.sessionId !== 'rest' ? tomorrowEntry.sessionId : 'press_day');
+                            setDetailSlotIndex(null);
+                            setActiveTab('workout');
+                          }}
+                          className="sherpa-btn sherpa-btn-primary"
+                          style={{ padding: '9px 11px', fontSize: 11, flexShrink: 0, border: '2px solid #FFF' }}
+                        >
+                          <span>Xem {tomorrowSess.exerciseIds.length} bài</span>
+                        </button>
+                      </div>
+
+                      {!isTomorrowRest && (
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(3, 1fr)',
+                            gap: 5,
+                            marginTop: 10,
+                            paddingTop: 9,
+                            borderTop: '1px solid rgba(255,255,255,0.14)'
+                          }}
+                        >
+                          {previewExNames.map((name, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                padding: '5px 7px',
+                                borderRadius: 8,
+                                background: 'rgba(255,255,255,0.1)',
+                                color: '#FAF5EA',
+                                fontSize: 10,
+                                fontWeight: 800,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })()}
+
+                {/* 3. PERIODIC 1-2 WEEK WEIGH-IN QUICK STRIP */}
                 <section
                   className="sherpa-card"
                   style={{
-                    background: 'linear-gradient(145deg, #FFFDF9 0%, #FFEDD5 100%)',
-                    padding: 11
+                    padding: '9px 11px',
+                    background: weightTracker.isWeighInDueToday
+                      ? 'linear-gradient(145deg, #F3E8FF 0%, #E9D5FF 100%)'
+                      : '#FFFDF9',
+                    border: weightTracker.isWeighInDueToday ? '2px solid #7C3AED' : '2px solid #2B2118',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8
                   }}
                 >
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', minWidth: 0 }}>
-                    <img
-                      src={GymCore.resolveAsset('calendarNotify')}
-                      alt="Lịch tập"
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <div
                       style={{
-                        width: 50,
-                        height: 50,
-                        borderRadius: 13,
-                        border: '2px solid #2B2118',
-                        objectFit: 'cover',
-                        background: '#FFF',
+                        width: 34,
+                        height: 34,
+                        borderRadius: 10,
+                        background: '#F3E8FF',
+                        border: '1.5px solid #2B2118',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         flexShrink: 0
                       }}
-                    />
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                          fontSize: 9.5,
-                          fontWeight: 900,
-                          padding: '2px 7px',
-                          borderRadius: 999,
-                          background: '#E05A2B',
-                          color: '#FFFFFF',
-                          border: '1.5px solid #2B2118'
-                        }}
-                      >
-                        <span>BUỔI TẬP SẮP TỚI · {tomorrowEntry.shortDate}</span>
-                      </div>
-                      <div className="serif-title" style={{ fontSize: 14.5, fontWeight: 900, marginTop: 3 }}>
-                        {(GymCore.WORKOUT_SESSIONS[tomorrowEntry.sessionId] || GymCore.WORKOUT_SESSIONS.press_day).shortName} · {tomorrowEntry.workoutTime}
-                      </div>
-                      <div style={{ fontSize: 10.5, color: '#5C4938', fontWeight: 700 }}>
-                        Báo đi ngủ: <strong>{metrics.circadianSchedule.bedPrepTime}</strong> tối nay
-                      </div>
-                    </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedDateISO(tomorrowISO);
-                        setActiveSessionId(tomorrowEntry.sessionId !== 'rest' ? tomorrowEntry.sessionId : 'press_day');
-                        setDetailSlotIndex(null);
-                        setActiveTab('workout');
-                      }}
-                      className="sherpa-btn sherpa-btn-primary"
-                      style={{ padding: '9px 10px', fontSize: 11, flexShrink: 0 }}
                     >
-                      <span>Xem 6 bài</span>
+                      <SvgIcon name="scale" size={16} color="#7C3AED" />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>
+                        Lịch cân lại mỗi {weighInIntervalDays === 7 ? '1 tuần' : '2 tuần'} · Hiện tại {weightTracker.latestWeightKg}kg
+                      </div>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#6B5744' }}>
+                        Kỳ cân kế tiếp: <strong style={{ color: '#7C3AED' }}>{weightTracker.nextWeighIn.dayShort} ({weightTracker.nextWeighIn.shortDate})</strong> · Đích {weightTracker.targetWeightKg}kg
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setWeighInDraftKg(Number(profileInput.weightKg) || 115);
+                        setPickerSheetConfig({ type: 'weigh_in_log' });
+                      }}
+                      className="sherpa-btn"
+                      style={{ padding: '7px 9px', fontSize: 10.5, background: '#FFEDD5' }}
+                    >
+                      <span>Cân ngay</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setScheduleSubTab('weighin')}
+                      className="sherpa-btn"
+                      style={{ padding: '7px 9px', fontSize: 10.5, background: '#2B2118', color: '#FFFFFF' }}
+                    >
+                      <span>Biểu đồ</span>
                     </button>
                   </div>
                 </section>
@@ -2170,75 +2903,211 @@
                     </button>
                   </div>
 
-                  {/* WEEK MODE: 7-Day Grid */}
+                  {/* WEEK MODE: IMPRESSIVE 7-DAY BENTO CALENDAR (Row 1: 4 Days T2-T5, Row 2: 3 Days T6-CN, Zero Empty Hole + High-Contrast Done vs Undone) */}
                   {calendarViewMode === 'week' ? (
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: 7
-                      }}
-                    >
-                      {dynamicWeek.days.map((day) => {
-                        const isSelected = day.isoDate === selectedDateISO;
-                        const sess = GymCore.WORKOUT_SESSIONS[day.sessionId];
-                        return (
-                          <button
-                            key={day.isoDate}
-                            onClick={() => setSelectedDateISO(day.isoDate)}
-                            style={{
-                              padding: '8px 6px',
-                              borderRadius: 13,
-                              border: day.isToday ? '2.5px solid #16A34A' : '2px solid #2B2118',
-                              background: isSelected
-                                ? '#E05A2B'
-                                : day.isFirstWorkout
-                                ? '#FFEDD5'
-                                : day.isWorkoutDay
-                                ? '#FFFDF9'
-                                : '#F3E7D3',
-                              color: isSelected ? '#FFFFFF' : '#2B2118',
-                              textAlign: 'center',
-                              cursor: 'pointer',
-                              boxShadow: isSelected ? '2px 2px 0 #2B2118' : 'none',
-                              position: 'relative'
-                            }}
-                          >
-                            <div style={{ fontSize: 11, fontWeight: 900 }}>
-                              {day.dayShort} {day.isToday ? '· Nay' : ''}
-                            </div>
-                            <div style={{ fontSize: 10, opacity: 0.88, fontWeight: 700 }}>
-                              {day.shortDate}
-                            </div>
-                            <div
-                              style={{
-                                marginTop: 4,
-                                fontSize: 9,
-                                fontWeight: 900,
-                                padding: '2px 4px',
-                                borderRadius: 6,
-                                background: isSelected
-                                  ? 'rgba(255,255,255,0.22)'
-                                  : day.isCompleted
-                                  ? '#16A34A'
-                                  : day.isMissed
-                                  ? '#DC2626'
-                                  : day.isWorkoutDay
-                                  ? '#DCFCE7'
-                                  : '#E5D5C0',
-                                color:
-                                  isSelected || day.isCompleted || day.isMissed
-                                    ? '#FFFFFF'
-                                    : day.isWorkoutDay
-                                    ? '#166534'
-                                    : '#5C4938'
-                              }}
-                            >
-                            {day.isCompleted ? 'DONE' : day.isMissed ? 'BỎ TẬP' : day.isBeforeStart ? '—' : sess ? sess.code : 'NGHỈ'}
-                            </div>
-                          </button>
-                        );
-                      })}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                      {/* Legend Strip: Clear Distinction Between Done, Tomorrow, Uncompleted & Future */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 8,
+                          padding: '6px 9px',
+                          borderRadius: 10,
+                          background: '#FAF5EA',
+                          border: '1.5px solid #D8C8B0',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          color: '#5C4938'
+                        }}
+                      >
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#065F46' }}>
+                          <span style={{ width: 9, height: 9, borderRadius: 3, background: '#10B981', display: 'inline-block' }} />
+                          Đã Tập Done
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#C2410C' }}>
+                          <span style={{ width: 9, height: 9, borderRadius: 3, background: '#EA580C', display: 'inline-block' }} />
+                          Ngày Mai Tập
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#2B2118' }}>
+                          <span style={{ width: 9, height: 9, borderRadius: 3, background: '#FFFDF9', border: '1.5px solid #2B2118', display: 'inline-block' }} />
+                          Chưa Done
+                        </span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#7C3AED' }}>
+                          <span style={{ width: 9, height: 9, borderRadius: 3, background: '#7C3AED', display: 'inline-block' }} />
+                          Kỳ Cân Lại
+                        </span>
+                      </div>
+
+                      {[dynamicWeek.days.slice(0, 4), dynamicWeek.days.slice(4, 7)].map((rowDays, rIdx) => (
+                        <div
+                          key={rIdx}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: `repeat(${rowDays.length}, 1fr)`,
+                            gap: 7
+                          }}
+                        >
+                          {rowDays.map((day) => {
+                            const isSelected = day.isoDate === selectedDateISO;
+                            const isTomorrow = day.isoDate === tomorrowISO;
+                            const sess = GymCore.WORKOUT_SESSIONS[day.sessionId];
+                            const mascotKey = sess ? sess.mascot : 'restHydration';
+                            const vnShortLabel = day.isBeforeStart
+                              ? 'CHƯA MỞ MÀN'
+                              : sess
+                              ? sess.calendarLabel || sess.shortName
+                              : 'NGHỈ CƠ';
+
+                            const cardBg = day.isCompleted
+                              ? 'linear-gradient(145deg, #059669 0%, #10B981 100%)'
+                              : day.isMissed
+                              ? 'linear-gradient(145deg, #DC2626 0%, #EF4444 100%)'
+                              : isSelected
+                              ? 'linear-gradient(145deg, #FFF7ED 0%, #FFEDD5 100%)'
+                              : isTomorrow
+                              ? 'linear-gradient(145deg, #FFFBEB 0%, #FEF3C7 100%)'
+                              : day.isWorkoutDay
+                              ? '#FFFDF9'
+                              : '#EFE4D2';
+
+                            const textColor = day.isCompleted || day.isMissed ? '#FFFFFF' : '#2B2118';
+                            const borderStyle = isSelected
+                              ? '2.5px solid #E05A2B'
+                              : day.isCompleted
+                              ? '2.5px solid #064E3B'
+                              : isTomorrow
+                              ? '2.5px solid #D97706'
+                              : day.isToday
+                              ? '2.5px solid #0284C7'
+                              : '1.5px solid #2B2118';
+
+                            return (
+                              <button
+                                key={day.isoDate}
+                                onClick={() => setSelectedDateISO(day.isoDate)}
+                                style={{
+                                  padding: '7px 5px',
+                                  borderRadius: 14,
+                                  border: borderStyle,
+                                  background: cardBg,
+                                  color: textColor,
+                                  textAlign: 'center',
+                                  cursor: 'pointer',
+                                  boxShadow: isSelected
+                                    ? '0 0 0 2px rgba(224,90,43,0.28), 2.5px 2.5px 0 #2B2118'
+                                    : day.isCompleted
+                                    ? '0 4px 12px rgba(5, 150, 105, 0.28)'
+                                    : '1.5px 1.5px 0 #2B2118',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  minHeight: 108,
+                                  position: 'relative'
+                                }}
+                              >
+                                {/* Top Status Ribbon */}
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    gap: 2
+                                  }}
+                                >
+                                  <span style={{ fontSize: 10, fontWeight: 900 }}>
+                                    {day.dayShort === 'Chủ Nhật' ? 'CN' : day.dayShort.replace('Thứ ', 'T')}
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: 8,
+                                      fontWeight: 900,
+                                      padding: '1.5px 4px',
+                                      borderRadius: 999,
+                                      background: day.isCompleted
+                                        ? '#064E3B'
+                                        : day.isMissed
+                                        ? '#7F1D1D'
+                                        : day.isToday
+                                        ? '#0284C7'
+                                        : isTomorrow
+                                        ? '#EA580C'
+                                        : day.isWeighInDay
+                                        ? '#7C3AED'
+                                        : 'rgba(43,33,24,0.1)',
+                                      color:
+                                        day.isCompleted || day.isMissed || day.isToday || isTomorrow || day.isWeighInDay
+                                          ? '#FFFFFF'
+                                          : '#5C4938'
+                                    }}
+                                  >
+                                    {day.isCompleted
+                                      ? '✓ DONE'
+                                      : day.isMissed
+                                      ? '✕ BỎ'
+                                      : day.isToday
+                                      ? 'HÔM NAY'
+                                      : isTomorrow
+                                      ? 'NGÀY MAI'
+                                      : day.isWeighInDay
+                                      ? '⚖️ CÂN'
+                                      : day.shortDate}
+                                  </span>
+                                </div>
+
+                                {/* Mascot Thumbnail & Date */}
+                                <div style={{ margin: '4px 0 3px', position: 'relative' }}>
+                                  <img
+                                    src={GymCore.resolveAsset(mascotKey)}
+                                    alt={vnShortLabel}
+                                    style={{
+                                      width: 34,
+                                      height: 34,
+                                      borderRadius: 10,
+                                      border: day.isCompleted ? '2px solid #FFFFFF' : '1.5px solid #2B2118',
+                                      objectFit: 'cover',
+                                      background: '#FAF5EA',
+                                      opacity: day.isWorkoutDay || day.isCompleted ? 1 : 0.72
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Clear Vietnamese Muscle Label */}
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    fontSize: 8.5,
+                                    fontWeight: 900,
+                                    lineHeight: 1.15,
+                                    padding: '3px 3px',
+                                    borderRadius: 6,
+                                    background: day.isCompleted
+                                      ? 'rgba(6, 78, 59, 0.45)'
+                                      : day.isMissed
+                                      ? 'rgba(127, 29, 29, 0.45)'
+                                      : isTomorrow
+                                      ? '#EA580C'
+                                      : day.isWorkoutDay
+                                      ? '#2B2118'
+                                      : 'rgba(43,33,24,0.08)',
+                                    color:
+                                      day.isCompleted || day.isMissed || isTomorrow || day.isWorkoutDay
+                                        ? '#FFFFFF'
+                                        : '#5C4938',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                  }}
+                                >
+                                  {day.isCompleted ? '✓ ĐÃ TẬP XONG' : vnShortLabel}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     /* MONTH MODE: 7-Column 35-Day Full Month Calendar Grid */
@@ -2435,58 +3304,95 @@
                       </div>
 
                       {/* Symmetrical 2-Column Action Buttons: Mark Done vs Mark Missed / Busy */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 9 }}>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleSetDayStatus(
-                              selectedDay.isoDate,
-                              selectedDay.isCompleted ? null : 'done',
-                              selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                            )
-                          }
-                          className="sherpa-btn"
+                      {selectedDay.isFutureDay ? (
+                        <div
                           style={{
-                            width: '100%',
-                            padding: '8px 8px',
-                            fontSize: 11,
-                            background: selectedDay.isCompleted ? '#16A34A' : '#DCFCE7',
-                            color: selectedDay.isCompleted ? '#FFFFFF' : '#14532D'
+                            marginTop: 10,
+                            padding: '10px 11px',
+                            borderRadius: 12,
+                            background: '#FEF3C7',
+                            border: '2px dashed #D97706',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 7
                           }}
                         >
-                          <SvgIcon name="check" size={13} color={selectedDay.isCompleted ? '#FFFFFF' : '#14532D'} />
-                          <span>
-                            {selectedDay.isCompleted
-                              ? `Đã Tập Done (${selectedDay.shortDate})`
-                              : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
-                          </span>
-                        </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, fontWeight: 900, color: '#92400E' }}>
+                            <SvgIcon name="lock" size={15} color="#D97706" />
+                            <span>
+                              Buổi tập tương lai (còn {selectedDay.daysFromToday} ngày) — Chưa thể chốt Done
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 10.5, color: '#78350F', lineHeight: 1.35 }}>
+                            Hệ thống khóa nút Chốt Done ở ngày tương lai để tránh sai lệch chuỗi Streak. Nếu hôm nay bạn đi tập luôn, bấm nút bên dưới để mở màn từ Hôm nay ({GymCore.formatVNShortDate(todayISO)}):
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleStartTrainingToday}
+                            className="sherpa-btn sherpa-btn-primary"
+                            style={{ width: '100%', padding: '9px 10px', fontSize: 11.5 }}
+                          >
+                            <SvgIcon name="check" size={14} color="#FFFFFF" />
+                            <span>Đổi Ngày Bắt Đầu Sang Hôm Nay ({GymCore.formatVNShortDate(todayISO)}) & Tập Ngay</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 9 }}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleSetDayStatus(
+                                selectedDay.isoDate,
+                                selectedDay.isCompleted ? null : 'done',
+                                selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
+                              )
+                            }
+                            className="sherpa-btn"
+                            style={{
+                              width: '100%',
+                              padding: '9px 8px',
+                              fontSize: 11.5,
+                              background: selectedDay.isCompleted ? '#059669' : '#DCFCE7',
+                              color: selectedDay.isCompleted ? '#FFFFFF' : '#065F46'
+                            }}
+                          >
+                            <SvgIcon name="check" size={14} color={selectedDay.isCompleted ? '#FFFFFF' : '#065F46'} />
+                            <span>
+                              {selectedDay.isCompleted
+                                ? `✓ Đã Tập Done (${selectedDay.shortDate})`
+                                : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
+                            </span>
+                          </button>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleSetDayStatus(
-                              selectedDay.isoDate,
-                              selectedDay.isMissed ? null : 'missed',
-                              selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                            )
-                          }
-                          className="sherpa-btn"
-                          style={{
-                            width: '100%',
-                            padding: '8px 8px',
-                            fontSize: 11,
-                            background: selectedDay.isMissed ? '#DC2626' : '#FFFDF9',
-                            color: selectedDay.isMissed ? '#FFFFFF' : '#2B2118'
-                          }}
-                        >
-                          <span>
-                            {selectedDay.isMissed
-                              ? `Đang báo Bỏ tập (${selectedDay.shortDate})`
-                              : `Báo Bỏ Tập / Bận (${selectedDay.shortDate})`}
-                          </span>
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleSetDayStatus(
+                                selectedDay.isoDate,
+                                selectedDay.isMissed ? null : 'missed',
+                                selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
+                              )
+                            }
+                            className="sherpa-btn"
+                            style={{
+                              width: '100%',
+                              padding: '9px 8px',
+                              fontSize: 11.5,
+                              background: selectedDay.isMissed ? '#DC2626' : '#FFFDF9',
+                              color: selectedDay.isMissed ? '#FFFFFF' : '#2B2118',
+                              opacity: selectedDay.sessionId === 'rest' ? 0.5 : 1
+                            }}
+                          >
+                            <span>
+                              {selectedDay.isMissed
+                                ? `Đang báo Bỏ tập (${selectedDay.shortDate})`
+                                : selectedDay.sessionId === 'rest'
+                                ? 'Ngày Nghỉ Hồi Phục'
+                                : `Báo Bỏ Tập / Bận (${selectedDay.shortDate})`}
+                            </span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </section>
@@ -2641,37 +3547,68 @@
                   <div
                     style={{
                       marginTop: 9,
-                      padding: '8px 10px',
-                      borderRadius: 12,
-                      background: '#FAF5EA',
-                      border: '1.5px solid #2B2118',
+                      padding: '10px 11px',
+                      borderRadius: 14,
+                      background: selectedDay.isCompleted
+                        ? 'linear-gradient(145deg, #059669 0%, #10B981 100%)'
+                        : selectedDay.isFutureDay
+                        ? '#FEF3C7'
+                        : '#FAF5EA',
+                      color: selectedDay.isCompleted ? '#FFFFFF' : '#2B2118',
+                      border: selectedDay.isCompleted
+                        ? '2.5px solid #064E3B'
+                        : selectedDay.isFutureDay
+                        ? '2px dashed #D97706'
+                        : '2px solid #2B2118',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 8
+                      gap: 8,
+                      boxShadow: selectedDay.isCompleted ? '0 6px 16px rgba(5,150,105,0.28)' : 'none'
                     }}
                   >
                     <div>
                       <div className="serif-title" style={{ fontSize: 14.5, fontWeight: 900 }}>
-                        {currentSession.title.split('—')[0].trim()}
+                        {selectedDay.isCompleted
+                          ? `✓ ĐÃ TẬP DONE: ${currentSession.shortName}`
+                          : currentSession.title.split('—')[0].trim()}
                       </div>
-                      <div style={{ fontSize: 10.5, color: '#6B5744', fontWeight: 700 }}>
-                        Ngày tập: {selectedDay.dayShort} ({selectedDay.dateLabel}) · Chạm thẻ để mở Chi Tiết
+                      <div
+                        style={{
+                          fontSize: 10.5,
+                          color: selectedDay.isCompleted ? '#DCFCE7' : selectedDay.isFutureDay ? '#92400E' : '#6B5744',
+                          fontWeight: 700,
+                          marginTop: 2
+                        }}
+                      >
+                        {selectedDay.isCompleted
+                          ? `Hoàn thành 100% ngày ${selectedDay.shortDate} · Tổng tạ ${selectedDay.totalVolumeKg.toLocaleString('vi-VN')}kg · Đốt ~${selectedDay.kcalBurned} kcal`
+                          : selectedDay.isFutureDay
+                          ? `🔒 Ngày tập tương lai (${selectedDay.dayShort} ${selectedDay.shortDate}) · Xem trước giáo án`
+                          : `Ngày tập: ${selectedDay.dayShort} (${selectedDay.dateLabel}) · Chưa hoàn thành`}
                       </div>
                     </div>
                     <span
                       style={{
                         fontSize: 10,
                         fontWeight: 900,
-                        padding: '3px 8px',
+                        padding: '4px 9px',
                         borderRadius: 999,
-                        background: '#DCFCE7',
-                        color: '#166534',
-                        border: '1.5px solid #2B2118',
+                        background: selectedDay.isCompleted
+                          ? '#064E3B'
+                          : selectedDay.isFutureDay
+                          ? '#D97706'
+                          : '#FFEDD5',
+                        color: selectedDay.isCompleted || selectedDay.isFutureDay ? '#FFFFFF' : '#9A3412',
+                        border: selectedDay.isCompleted ? '1.5px solid #A7F3D0' : '1.5px solid #2B2118',
                         whiteSpace: 'nowrap'
                       }}
                     >
-                      {currentSession.exerciseIds.length} BÀI TẬP
+                      {selectedDay.isCompleted
+                        ? '✓ ĐÃ XONG'
+                        : selectedDay.isFutureDay
+                        ? '🔒 TƯƠNG LAI'
+                        : 'CHƯA DONE'}
                     </span>
                   </div>
 
@@ -2689,7 +3626,7 @@
                       const ex = GymCore.EXERCISES[effectiveId] || GymCore.EXERCISES[slotExId];
                       const sets = getSetsForDateAndExercise(selectedDateISO, ex.id);
                       const doneCount = sets.filter((s) => s.done).length;
-                      const allDone = doneCount === sets.length && sets.length > 0;
+                      const allDone = !selectedDay.isFutureDay && ((doneCount === sets.length && sets.length > 0) || selectedDay.isCompleted);
 
                       return (
                         <button
@@ -2701,12 +3638,16 @@
                             justifyContent: 'space-between',
                             padding: 9,
                             borderRadius: 15,
-                            border: '2px solid #2B2118',
-                            background: allDone ? '#DCFCE7' : '#FFFDF9',
+                            border: allDone ? '2.5px solid #059669' : '2px solid #2B2118',
+                            background: allDone
+                              ? 'linear-gradient(145deg, #ECFDF5 0%, #D1FAE5 100%)'
+                              : '#FFFDF9',
                             color: '#2B2118',
                             textAlign: 'left',
                             cursor: 'pointer',
-                            boxShadow: '2px 2px 0 #2B2118',
+                            boxShadow: allDone
+                              ? '0 4px 12px rgba(5, 150, 105, 0.2), 2px 2px 0 #064E3B'
+                              : '2px 2px 0 #2B2118',
                             minHeight: 118
                           }}
                         >
@@ -2717,20 +3658,23 @@
                                 fontWeight: 900,
                                 padding: '2px 6px',
                                 borderRadius: 999,
-                                background: index < 2 ? '#E05A2B' : '#2B2118',
+                                background: allDone ? '#059669' : index < 2 ? '#E05A2B' : '#2B2118',
                                 color: '#FFFFFF'
                               }}
                             >
-                              BÀI {index + 1} · {index < 2 ? 'TIER S' : index < 4 ? 'TIER A' : 'BỔ TRỢ'}
+                              {allDone ? `✓ XONG BÀI ${index + 1}` : `BÀI ${index + 1} · ${index < 2 ? 'TIER S' : index < 4 ? 'TIER A' : 'BỔ TRỢ'}`}
                             </span>
                             <span
                               style={{
                                 fontSize: 9.5,
                                 fontWeight: 900,
-                                color: allDone ? '#15803D' : '#6B5744'
+                                padding: '1.5px 5px',
+                                borderRadius: 6,
+                                background: allDone ? '#064E3B' : '#F3E7D3',
+                                color: allDone ? '#FFFFFF' : '#6B5744'
                               }}
                             >
-                              {doneCount}/{sets.length} hiệp
+                              {allDone ? `${sets.length}/${sets.length} hiệp` : `${doneCount}/${sets.length} hiệp`}
                             </span>
                           </div>
 
@@ -2770,20 +3714,20 @@
                             style={{
                               marginTop: 7,
                               paddingTop: 5,
-                              borderTop: '1px dashed #D8C8B0',
+                              borderTop: allDone ? '1px solid #6EE7B7' : '1px dashed #D8C8B0',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               fontSize: 10,
                               fontWeight: 900,
-                              color: '#5C4938'
+                              color: allDone ? '#065F46' : '#5C4938'
                             }}
                           >
                             <span>
-                              {sets.length}×{ex.repRange[0]}–{ex.repRange[1]}
+                              {allDone ? '✓ ĐÃ HOÀN THÀNH' : `${sets.length}×${ex.repRange[0]}–${ex.repRange[1]}`}
                             </span>
-                            <span style={{ color: '#E05A2B', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                              Chi tiết <SvgIcon name="chevronRight" size={12} color="#E05A2B" />
+                            <span style={{ color: allDone ? '#059669' : '#E05A2B', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                              {allDone ? 'Xem lại' : 'Tập ngay'} <SvgIcon name="chevronRight" size={12} color={allDone ? '#059669' : '#E05A2B'} />
                             </span>
                           </div>
                         </button>
@@ -2792,36 +3736,70 @@
                   </div>
 
                   {/* 1-Tap Session Complete & Streak Button right inside Workout Overview */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 8, marginTop: 10 }}>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleSetDayStatus(
-                          selectedDay.isoDate,
-                          selectedDay.isCompleted ? null : 'done',
-                          currentSession.id
-                        )
-                      }
-                      className="sherpa-btn sherpa-btn-green"
-                      style={{ width: '100%', padding: '10px', fontSize: 12 }}
+                  {selectedDay.isFutureDay ? (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        padding: '10px 11px',
+                        borderRadius: 12,
+                        background: '#FEF3C7',
+                        border: '2px dashed #D97706',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 7
+                      }}
                     >
-                      <SvgIcon name="check" size={15} color="#FFFFFF" />
-                      <span>
-                        {selectedDay.isCompleted
-                          ? `Đã Chốt Done (${selectedDay.shortDate})`
-                          : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('streak')}
-                      className="sherpa-btn"
-                      style={{ width: '100%', padding: '10px', fontSize: 11.5, background: '#FFFDF9' }}
-                    >
-                      <SvgIcon name="flame" size={15} color="#E05A2B" />
-                      <span>Streak ({streakSummary.currentStreak})</span>
-                    </button>
-                  </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 900, color: '#92400E' }}>
+                        <SvgIcon name="lock" size={14} color="#D97706" />
+                        <span>Ngày {selectedDay.shortDate} ở tương lai (còn {selectedDay.daysFromToday} ngày) — Chưa thể Chốt Done</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleStartTrainingToday}
+                        className="sherpa-btn sherpa-btn-primary"
+                        style={{ width: '100%', padding: '9px 10px', fontSize: 11.5 }}
+                      >
+                        <SvgIcon name="check" size={14} color="#FFFFFF" />
+                        <span>Chuyển Lịch Mở Màn Sang Hôm Nay ({GymCore.formatVNShortDate(todayISO)}) Để Tập Ngay</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 8, marginTop: 10 }}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSetDayStatus(
+                            selectedDay.isoDate,
+                            selectedDay.isCompleted ? null : 'done',
+                            currentSession.id
+                          )
+                        }
+                        className="sherpa-btn sherpa-btn-green"
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          fontSize: 12,
+                          background: selectedDay.isCompleted ? '#065F46' : '#16A34A'
+                        }}
+                      >
+                        <SvgIcon name="check" size={15} color="#FFFFFF" />
+                        <span>
+                          {selectedDay.isCompleted
+                            ? `✓ Đã Chốt Done (${selectedDay.shortDate})`
+                            : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('streak')}
+                        className="sherpa-btn"
+                        style={{ width: '100%', padding: '10px', fontSize: 11.5, background: '#FFFDF9' }}
+                      >
+                        <SvgIcon name="flame" size={15} color="#E05A2B" />
+                        <span>Streak ({streakSummary.currentStreak})</span>
+                      </button>
+                    </div>
+                  )}
                 </section>
               </>
             )}
@@ -3653,59 +4631,72 @@
                     <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118', marginBottom: 7 }}>
                       Đang chọn: {selectedDay.dayShort} ({selectedDay.dateLabel}) — {selectedDay.badge}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                    {selectedDay.isFutureDay ? (
                       <button
                         type="button"
-                        onClick={() =>
-                          handleSetDayStatus(
-                            selectedDay.isoDate,
-                            'done',
-                            selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                          )
-                        }
-                        className="sherpa-btn"
-                        style={{
-                          padding: '8px 6px',
-                          fontSize: 11,
-                          background: selectedDay.isCompleted ? '#16A34A' : '#DCFCE7',
-                          color: selectedDay.isCompleted ? '#FFFFFF' : '#14532D'
-                        }}
+                        onClick={handleStartTrainingToday}
+                        className="sherpa-btn sherpa-btn-primary"
+                        style={{ width: '100%', padding: '9px 10px', fontSize: 11.5 }}
                       >
-                        <SvgIcon name="check" size={13} color={selectedDay.isCompleted ? '#FFFFFF' : '#14532D'} />
-                        <span>Chốt Done</span>
+                        <SvgIcon name="lock" size={14} color="#FFFFFF" />
+                        <span>Ngày tương lai đang khóa · Bấm để mở màn từ Hôm nay ({GymCore.formatVNShortDate(todayISO)})</span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSetDayStatus(
-                            selectedDay.isoDate,
-                            'missed',
-                            selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                          )
-                        }
-                        className="sherpa-btn"
-                        style={{
-                          padding: '8px 6px',
-                          fontSize: 11,
-                          background: selectedDay.isMissed ? '#DC2626' : '#FEE2E2',
-                          color: selectedDay.isMissed ? '#FFFFFF' : '#991B1B'
-                        }}
-                      >
-                        Báo Bỏ Tập
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSetDayStatus(selectedDay.isoDate, null)}
-                        className="sherpa-btn"
-                        style={{
-                          padding: '8px 6px',
-                          fontSize: 11,
-                          background: '#FFFDF9'
-                        }}
-                      >
-                        Đặt lại lịch
-                      </button>
-                    </div>
+                    ) : (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSetDayStatus(
+                              selectedDay.isoDate,
+                              'done',
+                              selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
+                            )
+                          }
+                          className="sherpa-btn"
+                          style={{
+                            padding: '8px 6px',
+                            fontSize: 11,
+                            background: selectedDay.isCompleted ? '#16A34A' : '#DCFCE7',
+                            color: selectedDay.isCompleted ? '#FFFFFF' : '#14532D'
+                          }}
+                        >
+                          <SvgIcon name="check" size={13} color={selectedDay.isCompleted ? '#FFFFFF' : '#14532D'} />
+                          <span>Chốt Done</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSetDayStatus(
+                              selectedDay.isoDate,
+                              'missed',
+                              selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
+                            )
+                          }
+                          className="sherpa-btn"
+                          style={{
+                            padding: '8px 6px',
+                            fontSize: 11,
+                            background: selectedDay.isMissed ? '#DC2626' : '#FEE2E2',
+                            color: selectedDay.isMissed ? '#FFFFFF' : '#991B1B',
+                            opacity: selectedDay.sessionId === 'rest' ? 0.5 : 1
+                          }}
+                        >
+                          Báo Bỏ Tập
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetDayStatus(selectedDay.isoDate, null)}
+                          className="sherpa-btn"
+                          style={{
+                            padding: '8px 6px',
+                            fontSize: 11,
+                            background: '#FFFDF9'
+                          }}
+                        >
+                          Đặt lại lịch
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </section>
                   </>
@@ -3905,7 +4896,7 @@
                     {[250, 400, 500].map((ml) => (
                       <button
                         key={ml}
-                        onClick={() => setWaterDrankMl((v) => v + ml)}
+                        onClick={() => setWaterDrankMl((v) => Math.min(8000, v + ml))}
                         className="sherpa-btn"
                         style={{ padding: '8px 6px', fontSize: 11, background: '#E0F2FE' }}
                       >
@@ -4049,11 +5040,25 @@
                 <SubTabPills
                   items={[
                     { id: 'edit', label: 'Chỉnh Số Đo', icon: 'user' },
+                    { id: 'weight_chart', label: 'Cân & Biểu Đồ', icon: 'chart' },
                     { id: 'result', label: 'Chỉ Số BMI & TDEE', icon: 'flame' }
                   ]}
                   activeId={profileSubTab}
                   onChange={setProfileSubTab}
                 />
+
+                {profileSubTab === 'weight_chart' && (
+                  <WeightProgressChart
+                    weightTracker={weightTracker}
+                    weighInIntervalDays={weighInIntervalDays}
+                    onChangeInterval={(days) => setWeighInIntervalDays(days)}
+                    onOpenWeighInModal={() => {
+                      setWeighInDraftKg(Number(profileInput.weightKg) || 115);
+                      setPickerSheetConfig({ type: 'weigh_in_log' });
+                    }}
+                    metrics={metrics}
+                  />
+                )}
 
                 {profileSubTab === 'edit' && (
                 <section className="sherpa-card">
@@ -5207,6 +6212,87 @@
                     </>
                   );
                 })()}
+
+                {/* 6. PERIODIC WEIGH-IN LOGGING KEYPAD (CÂN THỬ ĐỊNH KỲ 1-2 TUẦN & CẬP NHẬT BIỂU ĐỒ) */}
+                {pickerSheetConfig.type === 'weigh_in_log' && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <div>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: '#7C3AED',
+                            color: '#FFFFFF'
+                          }}
+                        >
+                          CẬP NHẬT SỐ CÂN ĐỊNH KỲ ({weighInIntervalDays} NGÀY/LẦN)
+                        </span>
+                        <h3 className="serif-title" style={{ fontSize: 17, fontWeight: 900, marginTop: 4 }}>
+                          Nhập Số Cân Thực Tế Hôm Nay ({GymCore.formatVNShortDate(todayISO)})
+                        </h3>
+                      </div>
+                      <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                        <SvgIcon name="close" size={16} />
+                      </button>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: 14,
+                        borderRadius: 16,
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: 11, fontWeight: 800, color: '#6B5744' }}>
+                        Mốc khởi điểm: <strong>{weightTracker.startWeightKg} kg</strong> · Đích: <strong>{weightTracker.targetWeightKg} kg</strong>
+                      </div>
+                      <div style={{ fontSize: 30, fontWeight: 900, color: '#059669', marginTop: 4 }}>
+                        {weighInDraftKg} <span style={{ fontSize: 16, color: '#2B2118' }}>kg</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginTop: 10 }}>
+                        {[-2, -1, -0.5, +0.5, +1, +2].map((delta) => (
+                          <button
+                            key={delta}
+                            type="button"
+                            onClick={() =>
+                              setWeighInDraftKg((prev) =>
+                                Math.max(38, Math.min(180, Math.round((Number(prev || 75) + delta) * 10) / 10))
+                              )
+                            }
+                            className="sherpa-btn"
+                            style={{
+                              padding: '9px 2px',
+                              fontSize: 12,
+                              background: delta < 0 ? '#DCFCE7' : '#FFEDD5',
+                              color: '#2B2118'
+                            }}
+                          >
+                            {delta > 0 ? `+${delta}` : delta}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleLogNewWeight(weighInDraftKg);
+                        setPickerSheetConfig(null);
+                      }}
+                      className="sherpa-btn sherpa-btn-green"
+                      style={{ width: '100%', marginTop: 14, padding: '12px', fontSize: 13 }}
+                    >
+                      <SvgIcon name="check" size={15} color="#FFFFFF" />
+                      <span>Lưu Số Cân ({weighInDraftKg} kg) & Cập Nhật Biểu Đồ</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -5657,12 +6743,12 @@
         if ('caches' in window) {
           caches.keys().then((keys) => {
             keys.forEach((k) => {
-              if (k !== '8d-bear-sherpa-pwa-v6') caches.delete(k);
+              if (k !== '8d-bear-sherpa-pwa-v7') caches.delete(k);
             });
           }).catch(() => {});
         }
         const isGym8DSubpath = /^\/gym8d(\/|$)/i.test(location.pathname);
-        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=6' : './sw.js?v=6';
+        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=7' : './sw.js?v=7';
         const swOpts = isGym8DSubpath ? { scope: '/gym8D' } : undefined;
         navigator.serviceWorker.register(swUrl, swOpts).then((reg) => {
           if (reg && reg.update) reg.update();

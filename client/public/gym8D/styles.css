@@ -70,7 +70,8 @@ input[type="number"] {
 }
 
 .serif-title {
-  font-family: Georgia, "Newsreader", "Times New Roman", serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Rounded", system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .sherpa-card {
@@ -78,7 +79,35 @@ input[type="number"] {
   border: 2px solid var(--sherpa-border);
   border-radius: 20px;
   padding: 14px;
-  box-shadow: 3px 3px 0 var(--sherpa-border);
+  box-shadow: 0 6px 18px rgba(43, 33, 24, 0.06), 3px 3px 0 var(--sherpa-border);
+}
+
+.sherpa-card-done {
+  background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2.5px solid #15803d;
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.16), 3px 3px 0 #14532d;
+}
+
+.sherpa-card-spotlight {
+  background: linear-gradient(145deg, #2b2118 0%, #3d2e22 100%);
+  color: #faf5ea;
+  border: 2.5px solid #2b2118;
+  box-shadow: 0 10px 24px rgba(43, 33, 24, 0.22), 3px 3px 0 #e05a2b;
+}
+
+@keyframes pulseDot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.7;
+  }
+}
+
+.pulse-badge {
+  animation: pulseDot 1.8s ease-in-out infinite;
 }
 
 .sherpa-btn {
