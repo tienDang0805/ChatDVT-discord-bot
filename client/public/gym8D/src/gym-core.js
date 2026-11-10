@@ -72,10 +72,10 @@
       return raw.replace(/^\.\.\//, cleanPrefix);
     }
     if (typeof window !== "undefined" && window.location && /^\/gym8d(\/|$)/i.test(window.location.pathname)) {
-      return raw.replace(/^\.\.\//, "/gym8D/") + "?v=12";
+      return raw.replace(/^\.\.\//, "/gym8D/") + "?v=13";
     }
     if (typeof window !== "undefined" && window.location && !window.location.pathname.includes("/prototypes/")) {
-      return raw.replace(/^\.\.\//, "./") + "?v=12";
+      return raw.replace(/^\.\.\//, "./") + "?v=13";
     }
     return raw;
   }
@@ -2841,6 +2841,78 @@
     };
   }
 
+  function resolveBestLoggedSession(preferredSessionId, dayLogs, sessionSwaps, customSessionLists) {
+    const logs = dayLogs || {};
+    const hasAnyDoneSet = Object.values(logs).some(
+      (sets) => Array.isArray(sets) && sets.some((s) => s && s.done)
+    );
+    const isPrefValid = Boolean(preferredSessionId && preferredSessionId !== "rest" && WORKOUT_SESSIONS[preferredSessionId]);
+    const prefId = isPrefValid ? preferredSessionId : "press_day";
+    const prefProgress = calculateSessionCompletion(prefId, logs, sessionSwaps, customSessionLists);
+
+    if (!hasAnyDoneSet) {
+      return {
+        sessionId: isPrefValid ? preferredSessionId : "rest",
+        bestWorkoutSessionId: prefId,
+        progress: isPrefValid
+          ? prefProgress
+          : {
+              totalExercises: 0,
+              completedExercises: 0,
+              totalSetsCount: 0,
+              completedSetsCount: 0,
+              totalTargetReps: 0,
+              completedRepsCount: 0,
+              totalVolumeKg: 0,
+              exercisePct: 0,
+              setPct: 0,
+              repPct: 0,
+              completionPct: 0,
+              minRequiredPct: MIN_WORKOUT_COMPLETION_PCT,
+              minRequiredExercises: 0,
+              minRequiredSets: 0,
+              minRequiredReps: 0,
+              meetsThreshold: false
+            }
+      };
+    }
+
+    if (isPrefValid && prefProgress.meetsThreshold) {
+      return {
+        sessionId: preferredSessionId,
+        bestWorkoutSessionId: preferredSessionId,
+        progress: prefProgress
+      };
+    }
+
+    let bestId = prefId;
+    let bestProg = prefProgress;
+    Object.keys(WORKOUT_SESSIONS).forEach((candId) => {
+      const prog = calculateSessionCompletion(candId, logs, sessionSwaps, customSessionLists);
+      if (
+        prog.completionPct > bestProg.completionPct ||
+        (prog.completionPct === bestProg.completionPct && prog.completedSetsCount > bestProg.completedSetsCount)
+      ) {
+        bestId = candId;
+        bestProg = prog;
+      }
+    });
+
+    if (bestProg.completedSetsCount > 0) {
+      return {
+        sessionId: bestId,
+        bestWorkoutSessionId: bestId,
+        progress: bestProg
+      };
+    }
+
+    return {
+      sessionId: isPrefValid ? preferredSessionId : "rest",
+      bestWorkoutSessionId: prefId,
+      progress: prefProgress
+    };
+  }
+
   const WORKOUT_SESSIONS = {
     press_day: {
       id: "press_day",
@@ -3110,7 +3182,7 @@
     const opts = options || {};
     const todayISO = opts.todayISO || getTodayISO();
     const tomorrowISO = addDaysISO(todayISO, 1);
-    const startDateISO = opts.startDateISO || tomorrowISO;
+    const startDateISO = opts.startDateISO || todayISO;
     const weeklyPattern = opts.weeklyPattern || buildDefaultWeeklyPattern(todayISO);
     const dateOverrides = opts.dateOverrides || {};
     const logsByDate = opts.logsByDate || {};
@@ -3123,12 +3195,30 @@
     const patternRule = weeklyPattern[dow] || { sessionId: "rest", workoutTime: "06:00" };
     const override = dateOverrides[isoDate] || {};
     const statusRecord = dayStatusByDate[isoDate] || null;
+    const dayLogs = logsByDate[isoDate] || {};
+    const hasAnyLoggedSets = Object.values(dayLogs).some(
+      (sets) => Array.isArray(sets) && sets.some((s) => s && s.done)
+    );
 
-    const isBeforeStart = diffDaysISO(isoDate, startDateISO) < 0;
-    const sessionId =
+    const rawBeforeStart = diffDaysISO(isoDate, startDateISO) < 0;
+    const isBeforeStart =
+      rawBeforeStart &&
+      isoDate !== todayISO &&
+      !override.sessionId &&
+      !statusRecord?.status &&
+      !hasAnyLoggedSets;
+
+    const baseSessionId =
       override.sessionId ||
       statusRecord?.sessionId ||
       (isBeforeStart ? "rest" : patternRule.sessionId || "rest");
+    const resolvedSession = resolveBestLoggedSession(
+      baseSessionId,
+      dayLogs,
+      opts.sessionSwaps,
+      opts.customSessionLists
+    );
+    const sessionId = resolvedSession.sessionId;
     const workoutTime = override.workoutTime || patternRule.workoutTime || "06:00";
     const isWorkoutDay = sessionId !== "rest" && Boolean(WORKOUT_SESSIONS[sessionId]);
 
@@ -3142,27 +3232,7 @@
     const wakeAlertTime = minutesToHHMM(wakeMin);
 
     const sess = WORKOUT_SESSIONS[sessionId];
-    const dayLogs = logsByDate[isoDate] || {};
-    const sessionProgress = isWorkoutDay && sess
-      ? calculateSessionCompletion(sessionId, dayLogs, opts.sessionSwaps, opts.customSessionLists)
-      : {
-          totalExercises: 0,
-          completedExercises: 0,
-          totalSetsCount: 0,
-          completedSetsCount: 0,
-          totalTargetReps: 0,
-          completedRepsCount: 0,
-          totalVolumeKg: 0,
-          exercisePct: 0,
-          setPct: 0,
-          repPct: 0,
-          completionPct: 0,
-          minRequiredPct: MIN_WORKOUT_COMPLETION_PCT,
-          minRequiredExercises: 0,
-          minRequiredSets: 0,
-          minRequiredReps: 0,
-          meetsThreshold: false
-        };
+    const sessionProgress = resolvedSession.progress;
     const totalSetsCount = sessionProgress.totalSetsCount;
     const completedSetsCount = sessionProgress.completedSetsCount;
     const totalVolumeKg = sessionProgress.totalVolumeKg;
@@ -3193,11 +3263,10 @@
     const explicitStatus = statusRecord?.status || null;
     const isCompleted =
       !isFutureDay &&
-      !isBeforeStart &&
       isWorkoutDay &&
       meetsCompletionThreshold &&
       (explicitStatus === "done" ||
-        (explicitStatus !== "missed" && totalSetsCount > 0 && completedSetsCount >= totalSetsCount));
+        (explicitStatus !== "missed" && completionPct >= 100));
     const isMissed =
       !isFutureDay &&
       !isBeforeStart &&
@@ -3205,7 +3274,7 @@
       (explicitStatus === "missed" || (!isCompleted && isPastDay));
     const kcalBurned = isCompleted ? (sess ? sess.durationMin * 7 : 350) : 0;
     const isUnreportedToday = isToday && isWorkoutDay && !isCompleted && !isMissed;
-    const canReportStatus = !isFutureDay && !isBeforeStart && (isWorkoutDay || isCompleted || isMissed);
+    const canReportStatus = !isFutureDay && (isWorkoutDay || isCompleted || isMissed || isToday);
     const lockReason = isFutureDay
       ? `Chưa tới ngày tập (còn ${daysFromToday} ngày) — Không thể chốt Done trước tương lai.`
       : isBeforeStart
@@ -4495,6 +4564,7 @@
     getSwapCandidatesForSlot,
     getSessionAddableExercises,
     calculateSessionCompletion,
+    resolveBestLoggedSession,
     WORKOUT_SESSIONS,
     WORKOUT_SPLITS,
     DEFAULT_WEEKLY_SCHEDULE,

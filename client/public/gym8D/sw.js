@@ -1,9 +1,11 @@
-const CACHE_NAME = "8d-bear-sherpa-pwa-v12";
+const CACHE_NAME = "8d-bear-sherpa-pwa-v13";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./src/vendor-react.js",
   "./src/gym-core.js",
+  "./src/gym-app.js",
   "./manifest.webmanifest",
   "./assets/mascots/app_icon_sherpa_512.png",
   "./assets/mascots/app_icon_512.png",
