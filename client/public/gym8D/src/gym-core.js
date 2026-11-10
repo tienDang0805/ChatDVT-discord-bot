@@ -917,8 +917,1665 @@
         { type: "1", prev: "Dốc 10% × 15 phút", weight: 10, reps: 15, effort: "good", done: false }
       ],
       progressionBadge: "Giữ nhịp tim vùng đốt mỡ Zone 2 (125–140 bpm) suốt 15 phút cuối buổi"
+    },
+    iso_incline_chest_press: {
+      id: "iso_incline_chest_press",
+      name: "Máy Đẩy Ngực Trên Lắp Tạ Rời (Iso-Lateral Incline Press)",
+      shortName: "Máy Ngực Trên Lắp Tạ",
+      muscle: "Ngực Trên & Vai Trước",
+      equipment: "Máy lắp bánh tạ rời (Plate-Loaded)",
+      mascot: "benchPress",
+      tier: "Tier S · Đặc Trưng Ways QL13",
+      priorityRank: 1,
+      slotGroup: "chest_press",
+      availableGyms: ["ways_ql13"],
+      machineBrand: "Hammer / Iso-Lateral Plate-Loaded",
+      gymSetup: {
+        ways_ql13: "Khu Plate-Loaded tầng 4 Ways 361 QL13: Lắp bánh tạ 10–20kg mỗi bên, chỉnh yên ghế nấc 3 để tay cầm ngang xương đòn dưới.",
+        tng_uvk: "Tại TNG 58D UVK không có máy ngực trên lắp tạ rời — dùng Máy Đẩy Ngực Ngồi Chốt Tạ hoặc Đẩy Tạ Đơn Ghế Dốc 30°."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Quỹ đạo hội tụ · Lưng ghim chặt đệm",
+      tempoCue: "Hạ 2.5s — Đẩy hội tụ 1.2s",
+      whyItWorks: "Hai tay đòn độc lập di chuyển theo cung hội tụ tự nhiên giúp cô lập ngực trên cực đại mà không sợ tạ đè.",
+      formSteps: [
+        "Lắp đều bánh tạ hai bên sừng máy, chỉnh ghế sao cho tay cầm ngang ngực trên.",
+        "Khép chặt hai xương bả vai tì vào đệm lưng, đẩy hai tay cầm lên theo quỹ đạo hội tụ.",
+        "Hạ chậm 2.5 giây cho tới khi cơ ngực trên căng sâu rồi phát lực đẩy lên."
+      ],
+      cues: "Tì chặt lưng trên vào đệm, đẩy hai tay đồng đều và kiểm soát nhịp hạ.",
+      mistake: "Không nhấc mông hoặc rụt cổ khi đẩy hiệp cuối.",
+      swapOptions: ["incline_db_press", "machine_chest_press", "smith_incline_press"],
+      swapReason: "Máy chủ lực tại Ways Station 361 Quốc Lộ 13 thay cho đẩy tạ đơn dốc trên.",
+      videoUrl: "https://www.youtube.com/watch?v=xUm0BiZCWlQ",
+      videoId: "xUm0BiZCWlQ",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Iso-Lateral Incline Chest Press Technique",
+      defaultSets: [
+        { type: "W", prev: "Khởi động 15kg/bên", weight: 30, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý 25kg/bên", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý 25kg/bên", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý 25kg/bên", weight: 50, reps: 9, effort: "good", done: false }
+      ],
+      progressionBadge: "Máy Plate-Loaded chủ lực tại Ways Station 361 QL13 (3 hiệp × 8–10 reps)"
+    },
+    smith_incline_press: {
+      id: "smith_incline_press",
+      name: "Đẩy Ngực Dốc 30° Trên Máy Smith (Smith Incline Press)",
+      shortName: "Đẩy Ngực Dốc Máy Smith",
+      muscle: "Ngực Trên & Ngực Giữa",
+      equipment: "Máy Smith + Ghế dốc 30°",
+      mascot: "benchPress",
+      tier: "Tier S · Có Ở Cả 2 Phòng",
+      priorityRank: 1,
+      slotGroup: "chest_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Counter-Balanced Smith Machine",
+      gymSetup: {
+        tng_uvk: "Khu Máy Smith TNG 58D UVK: Kéo ghế đa năng vào giữa khung Smith, chỉnh nấc dốc 30° (nấc 2), thanh đòn xuống ngang ngực trên.",
+        ways_ql13: "Khu Khung Smith Ways 361 QL13: Đặt ghế dốc 30° chính giữa, xoay cổ tay mở chốt an toàn hai bên thanh đòn."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Đòn xuống ngang xương đòn · Chốt khóa an toàn",
+      tempoCue: "Hạ 2.5s — Giữ đáy 0.5s — Đẩy 1.0s",
+      whyItWorks: "Thanh trượt cố định trên máy Smith loại bỏ hoàn toàn công giữ thăng bằng, giúp dồn 100% lực vào sợi cơ ngực trên và có chốt cài bảo hiểm an toàn.",
+      formSteps: [
+        "Đặt ghế dốc 30° ngay tâm máy Smith sao cho khi hạ thanh đòn chạm cách xương đòn 3–4cm.",
+        "Cài hai chốt bảo hiểm bên dưới ở tầm ngực để luôn an toàn khi tập một mình.",
+        "Hạ đòn chậm 2.5 giây mở cùi chỏ góc 45°–60°, sau đó đẩy mạnh lên."
+      ],
+      cues: "Luôn cài chốt bảo hiểm dưới của máy Smith trước khi tập nặng.",
+      mistake: "Không đặt ghế quá xa về phía trước làm đòn hạ xuống bụng hoặc quá cao lên cổ.",
+      swapOptions: ["incline_db_press", "iso_incline_chest_press", "machine_chest_press"],
+      swapReason: "Cực kỳ ổn định tại cả The New Gym UVK lẫn Ways Station QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=ky9eCfvuLRY",
+      videoId: "ky9eCfvuLRY",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Smith Machine Incline Bench Press Setup",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 35, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 55, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 55, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 55, reps: 9, effort: "good", done: false }
+      ],
+      progressionBadge: "An toàn tuyệt đối khi đi tập 1 mình nhờ chốt hãm Máy Smith"
+    },
+    assisted_chest_dip: {
+      id: "assisted_chest_dip",
+      name: "Xà Kép Ngực Dưới Có Máy Trợ Lực (Assisted Chest Dip)",
+      shortName: "Dip Ngực Máy Trợ Lực",
+      muscle: "Ngực Dưới & Tay Sau",
+      equipment: "Máy Dip/Pull-up trợ lực",
+      mascot: "benchPress",
+      tier: "Tier A · Cắt Nét Ngực Dưới",
+      priorityRank: 2,
+      slotGroup: "chest_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Assisted Chin/Dip Pin-Loaded",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Xoay hai tay cầm Dip ra vị trí rộng, cắm chốt trợ lực 35–50kg (càng cắm nặng càng nhẹ).",
+        ways_ql13: "Khu Máy Đa Năng Ways 361 QL13: Hạ đệm quỳ gối trợ lực, hơi đổ người về trước 20° để ăn vào ngực dưới."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 90,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Đổ người về trước 20° · Trợ lực đệm gối",
+      tempoCue: "Hạ 2.0s — Đẩy lên 1.2s",
+      whyItWorks: "Đệm trợ lực giúp người nặng 95–115kg thực hiện động tác Dip cắt nét ngực dưới êm ái mà không quá tải khớp vai.",
+      formSteps: [
+        "Cắm chốt tạ trợ lực khoảng 35–45% trọng lượng cơ thể, quỳ hai gối lên đệm nâng.",
+        "Hơi đổ thân trên về phía trước 20°, hạ người tới khi cánh tay trên song song sàn.",
+        "Ép ngực đẩy người lên mà không khóa cứng khớp khuỷu tay."
+      ],
+      cues: "Lưu ý trên máy Assisted: mức tạ cắm càng lớn thì lực nâng đỡ càng nhiều.",
+      mistake: "Không hạ quá sâu quá 90° ở khuỷu tay.",
+      swapOptions: ["machine_chest_press", "incline_db_press", "pec_deck_fly"],
+      swapReason: "Tạo viền ngực dưới vuông vức với trợ lực bảo vệ vai.",
+      videoUrl: "https://www.youtube.com/watch?v=xUm0BiZCWlQ",
+      videoId: "xUm0BiZCWlQ",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Assisted Machine Chest Dips",
+      defaultSets: [
+        { type: "1", prev: "Trợ lực 40kg", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Trợ lực 40kg", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Trợ lực 35kg", weight: 35, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Giảm dần số kg trợ lực theo từng tuần khi cơ ngực khỏe lên"
+    },
+    cable_crossover_fly: {
+      id: "cable_crossover_fly",
+      name: "Ép Ngực Khung Cáp Đôi Từ Cao Xuống Thấp (Dual Cable Fly)",
+      shortName: "Ép Ngực Khung Cáp Đôi",
+      muscle: "Rãnh Ngực & Ngực Dưới",
+      equipment: "Khung Cáp Đôi (Dual Adjustable Pulley)",
+      mascot: "chestFly",
+      tier: "Tier A · Cô Lập Rãnh Ngực",
+      priorityRank: 3,
+      slotGroup: "chest_fly",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dual Adjustable Pulley / 8-Stack Cable",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi Đa Năng TNG 58D UVK: Chỉnh 2 ròng rọc lên nấc cao ngang đầu (nấc 14–16), bước 1 chân lên trước giữ thăng bằng.",
+        ways_ql13: "Giàn Cáp Chéo 8 Trạm Ways 361 QL13: Dùng 2 tay cầm D-Handle ở ròng rọc trên, ép hai tay gặp nhau trước bụng trên."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Ròng rọc ngang đầu · Bước 1 chân trước",
+      tempoCue: "Mở 2.5s — Ép giữ 1.0s",
+      whyItWorks: "Dây cáp đôi cho phép tùy chỉnh góc kéo linh hoạt theo đúng chiều sợi cơ ngực và giữ sức căng liên tục 100% biên độ.",
+      formSteps: [
+        "Chỉnh hai ròng rọc lên cao ngang đầu, nắm hai tay cầm D-Handle và bước chân trước chân sau.",
+        "Hơi đổ nhẹ thân người, kéo hai tay cầm theo vòng cung xuống gặp nhau trước ngực dưới.",
+        "Giữ siết ngực 1 giây rồi từ từ mở rộng cánh tay về vị trí căng ngực."
+      ],
+      cues: "Giữ góc cong nhẹ cố định ở khuỷu tay suốt động tác như đang ôm thân cây.",
+      mistake: "Không biến động tác ép ngực thành đẩy tạ bằng tay sau.",
+      swapOptions: ["pec_deck_fly", "machine_chest_press"],
+      swapReason: "Thay thế trực tiếp khi máy Pec Deck đang có người ngồi tập.",
+      videoUrl: "https://www.youtube.com/watch?v=iPSsUsShqZs",
+      videoId: "iPSsUsShqZs",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "High-To-Low Cable Chest Fly Form",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý mỗi bên", weight: 15, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý mỗi bên", weight: 15, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý mỗi bên", weight: 15, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Thay thế 1:1 cho Máy Pec Deck tại cả TNG UVK và Ways QL13"
+    },
+    machine_shoulder_press: {
+      id: "machine_shoulder_press",
+      name: "Máy Đẩy Vai Ngồi Có Tựa Lưng (Seated Shoulder Press Machine)",
+      shortName: "Máy Đẩy Vai Ngồi",
+      muscle: "Vai Trước & Vai Ngang",
+      equipment: "Máy đẩy vai Pin-Loaded / Plate-Loaded",
+      mascot: "shoulderPress",
+      tier: "Tier S · Máy Chủ Lực Cả 2 Phòng",
+      priorityRank: 2,
+      slotGroup: "shoulder_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Matrix / Impulse & Iso-Lateral Shoulder",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Máy Shoulder Press rút chốt tạ (Pin-Loaded), chọn tay cầm hướng vào nhau (Neutral Grip) cực êm khớp vai.",
+        ways_ql13: "Khu Vai Ways 361 QL13: Có cả Máy Đẩy Vai rút chốt tạ và Máy Đẩy Vai lắp bánh tạ rời Iso-Lateral."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 105,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Tay cầm ngang cằm · Lưng áp sát đệm",
+      tempoCue: "Hạ 2.0s — Đẩy thẳng 1.0s",
+      whyItWorks: "Không tốn sức nhấc cặp tạ đơn nặng lên vai (kick-up), bảo vệ tuyệt đối cột sống và chóp xoay vai.",
+      formSteps: [
+        "Chỉnh chiều cao yên ghế sao cho tay cầm ở vị trí thấp nhất nằm ngang cằm/tai.",
+        "Tựa sát lưng vào đệm, nắm tay cầm rộng hoặc tay cầm song song (Neutral Grip) và đẩy lên cao.",
+        "Hạ chậm 2 giây về ngang tai mà không để bánh tạ chạm rầm xuống chồng tạ."
+      ],
+      cues: "Dùng tay cầm song song (Neutral Grip) nếu khớp vai dễ mỏi hoặc cứng.",
+      mistake: "Không ưỡn lưng dưới rời khỏi đệm ghế khi đẩy nặng.",
+      swapOptions: ["dumbbell_shoulder_press", "smith_shoulder_press"],
+      swapReason: "Một trong 5 máy kháng lực cốt lõi tại The New Gym UVK & Ways Station QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=oGZbB67Ff6Q",
+      videoId: "oGZbB67Ff6Q",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Machine Overhead Shoulder Press Setup",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 25, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 40, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Máy kháng lực cốt lõi tại cả TNG 58D UVK & Ways 361 QL13"
+    },
+    smith_shoulder_press: {
+      id: "smith_shoulder_press",
+      name: "Đẩy Vai Ngồi Trước Mặt Trên Máy Smith (Smith Overhead Press)",
+      shortName: "Đẩy Vai Máy Smith",
+      muscle: "Vai Trước & Vai Ngang",
+      equipment: "Máy Smith + Ghế tựa 75°",
+      mascot: "shoulderPress",
+      tier: "Tier A · Tải Nặng Ổn Định",
+      priorityRank: 2,
+      slotGroup: "shoulder_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Smith Machine + Adjustable Bench",
+      gymSetup: {
+        tng_uvk: "Khu Máy Smith TNG 58D UVK: Dựng ghế 75° sao cho thanh đòn trượt ngay trước cằm 3cm.",
+        ways_ql13: "Khung Smith Ways 361 QL13: Cài chốt bảo hiểm ngang vai trước khi đẩy."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Ghế 75° · Đòn hạ ngang cằm trước mặt",
+      tempoCue: "Hạ 2.2s — Đẩy 1.0s",
+      whyItWorks: "Giúp kiểm soát đường đi thanh đòn chuẩn xác ngay trước mặt mà không cần giữ thăng bằng trước-sau.",
+      formSteps: [
+        "Dựng ghế tựa lưng 75°–80° trong khung Smith, ngồi thử để thanh đòn đi xuống ngay trước cằm/mũi.",
+        "Nắm đòn rộng hơn vai một chút, cùi chỏ hơi hướng nhẹ về phía trước.",
+        "Hạ thanh đòn ngang cằm rồi đẩy thẳng lên trên đầu."
+      ],
+      cues: "Tuyệt đối đẩy trước mặt, không đẩy thanh đòn sau gáy.",
+      mistake: "Không để cùi chỏ banh ngang hoàn toàn ra sau.",
+      swapOptions: ["dumbbell_shoulder_press", "machine_shoulder_press"],
+      swapReason: "Thay thế tuyệt vời khi khu tạ đơn hoặc máy đẩy vai đang kín chỗ.",
+      videoUrl: "https://www.youtube.com/watch?v=oGZbB67Ff6Q",
+      videoId: "oGZbB67Ff6Q",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Seated Smith Machine Shoulder Press",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 25, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 40, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 40, reps: 9, effort: "good", done: false }
+      ],
+      progressionBadge: "Quỹ đạo cố định giúp tập trung 100% lực vào cơ vai"
+    },
+    cable_lateral_raise_single: {
+      id: "cable_lateral_raise_single",
+      name: "Kéo Cáp Đơn Bay Vai Ngang (Single-Arm Cable Lateral Raise)",
+      shortName: "Bay Vai Ngang Cáp Đơn",
+      muscle: "Vai Ngang (Căng Liên Tục)",
+      equipment: "Ròng rọc cáp thấp (Tay cầm D-Handle)",
+      mascot: "lateralRaise",
+      tier: "Tier S · Căng Cơ Vai Tối Đa",
+      priorityRank: 4,
+      slotGroup: "lateral_delt",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Cable Tower Low Pulley",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi TNG 58D UVK: Hạ ròng rọc xuống nấc ngang cổ tay/đầu gối để cơ vai giữa căng ngay từ đầu biên độ.",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: Một tay vịn trụ sắt, nghiêng nhẹ người ra ngoài và kéo cáp vòng sau lưng hoặc trước đùi."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Ròng rọc ngang cổ tay · Kéo ngang vai",
+      tempoCue: "Nâng 1.2s — Giữ 0.5s — Hạ chậm 2.5s",
+      whyItWorks: "Khác với tạ đơn bị mất lực ở vị trí dưới đùi, dây cáp tạo lực kéo căng cực đại ngay khi bó vai giữa đang duỗi dài nhất.",
+      formSteps: [
+        "Chỉnh ròng rọc cáp ở mức ngang cổ tay hoặc đầu gối, đứng xoay hông vuông góc với máy cáp.",
+        "Tay trong nắm cột máy giữ cố định, tay ngoài kéo tay cầm D-Handle vươn sang ngang lên ngang vai.",
+        "Hạ chậm 2.5 giây có kiểm soát rồi đổi bên."
+      ],
+      cues: "Hạ ròng rọc ngang cổ tay (thay vì sát đất) để lực căng tập trung đúng điểm khỏe nhất của vai ngang.",
+      mistake: "Không chọn mức tạ quá nặng làm co rút cầu vai.",
+      swapOptions: ["lateral_raise", "machine_lateral_raise", "reverse_pec_deck_delt"],
+      swapReason: "Tác động vào cơ vai giữa tốt hơn tạ đơn truyền thống.",
+      videoUrl: "https://www.youtube.com/watch?v=OvH73R0sHWE",
+      videoId: "OvH73R0sHWE",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Cable Lateral Raise at Wrist Height",
+      defaultSets: [
+        { type: "1", prev: "Mỗi bên tay", weight: 7.5, reps: 14, effort: "good", done: false },
+        { type: "2", prev: "Mỗi bên tay", weight: 7.5, reps: 14, effort: "good", done: false },
+        { type: "3", prev: "Mỗi bên tay", weight: 7.5, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Chỉnh ròng rọc ngang cổ tay để cô lập 100% bó vai ngang"
+    },
+    machine_lateral_raise: {
+      id: "machine_lateral_raise",
+      name: "Máy Bay Vai Ngang Đệm Khuỷu Tay (Seated Lateral Raise Machine)",
+      shortName: "Máy Bay Vai Ngang",
+      muscle: "Vai Ngang Cô Lập",
+      equipment: "Máy bay vai ngang có đệm khuỷu tay",
+      mascot: "lateralRaise",
+      tier: "Tier S · Đặc Trưng Ways QL13",
+      priorityRank: 4,
+      slotGroup: "lateral_delt",
+      availableGyms: ["ways_ql13", "tng_uvk"],
+      machineBrand: "Seated Lateral Raise Pin-Loaded",
+      gymSetup: {
+        ways_ql13: "Khu Máy Vai Ways 361 QL13: Đặt mặt ngoài khuỷu tay áp vào đệm nâng, đẩy bằng cùi chỏ thay vì gồng cổ tay.",
+        tng_uvk: "Khu Strength TNG 58D UVK: Chỉnh yên ghế sao cho trục xoay của máy trùng với khớp vai."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Đẩy bằng cùi chỏ vào đệm · Hạ cầu vai",
+      tempoCue: "Nâng 1.2s — Giữ ngang vai 1.0s — Hạ 2.5s",
+      whyItWorks: "Đệm đỡ trực tiếp ở khuỷu tay loại bỏ hoàn toàn mỏi cổ tay và cẳng tay, dồn toàn bộ áp lực vào bó vai giữa.",
+      formSteps: [
+        "Chỉnh ghế sao cho khớp vai ngang trục xoay của máy, ngực tì nhẹ vào đệm (hoặc lưng tựa đệm).",
+        "Đặt cẳng tay/khuỷu tay vào hai đệm mút, dùng lực cùi chỏ nâng hai bên lên ngang vai.",
+        "Giữ 1 giây ở đỉnh rồi hạ chậm 2.5 giây."
+      ],
+      cues: "Thả lỏng bàn tay, chỉ tập trung đẩy hai khuỷu tay sang ngang.",
+      mistake: "Không nhún vai lên tai khi nâng.",
+      swapOptions: ["lateral_raise", "cable_lateral_raise_single"],
+      swapReason: "Máy cô lập vai ngang cực ăn cơ tại Ways Station QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=OvH73R0sHWE",
+      videoId: "OvH73R0sHWE",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Machine Lateral Raise Technique",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 20, reps: 14, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 20, reps: 14, effort: "good", done: false },
+        { type: "D", prev: "Drop Set nhẹ", weight: 15, reps: 15, effort: "max", done: false }
+      ],
+      progressionBadge: "Loại bỏ mỏi cổ tay, cô lập trực diện cơ vai ngang"
+    },
+    reverse_pec_deck_delt: {
+      id: "reverse_pec_deck_delt",
+      name: "Máy Ép Vai Sau Ngược (Reverse Pec Deck Rear Delt Fly)",
+      shortName: "Máy Ép Vai Sau",
+      muscle: "Vai Sau & Lưng Trên (Chống Gù)",
+      equipment: "Máy Pec Deck / Rear Delt 2-in-1",
+      mascot: "chestFly",
+      tier: "Tier A · Có Ở Cả 2 Phòng",
+      priorityRank: 4,
+      slotGroup: "lateral_delt",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "2-in-1 Pec Deck / Rear Delt Machine",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Đưa 2 tay đòn máy Pec Deck về nấc sát nhau nhất (nấc 1), ngồi quay ngực úp vào đệm ghế.",
+        ways_ql13: "Khu Máy Ngực/Vai Ways 361 QL13: Chỉnh tay đòn về vị trí Rear Delt, nắm tay cầm ngang tầm vai."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Ngực tì đệm · Mở rộng cánh tay ra sau",
+      tempoCue: "Mở 1.2s — Giữ 1.0s — Khép 2.0s",
+      whyItWorks: "Làm đầy bó cơ vai sau giúp bờ vai 3D tròn trịa và kéo thẳng hai vai bị gù do ngồi máy tính.",
+      formSteps: [
+        "Chỉnh hai tay đòn máy Pec Deck về sát nhau ở phía trước, ngồi quay ngực áp sát vào đệm tựa.",
+        "Nắm hai tay cầm ngang vai, giữ tay hơi cong nhẹ rồi mở rộng hai cánh tay ra phía sau.",
+        "Dừng lại khi cánh tay ngang thân người mà không ép bả vai quá mức, sau đó trả tạ chậm."
+      ],
+      cues: "Tưởng tượng đẩy hai mu bàn tay ra xa sang hai bên tường thay vì ép hai bả vai vào nhau.",
+      mistake: "Không ngửa cổ hoặc dùng lực giật lưng.",
+      swapOptions: ["lateral_raise", "rope_face_pull", "cable_lateral_raise_single"],
+      swapReason: "Tận dụng ngay máy Pec Deck 2-in-1 sẵn có ở cả TNG UVK & Ways QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=iPSsUsShqZs",
+      videoId: "iPSsUsShqZs",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Reverse Pec Deck For 3D Rear Delts",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 30, reps: 14, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 30, reps: 14, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 30, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Tạo độ tròn 3D cho vai sau & mở ngực chống gù lưng"
+    },
+    overhead_cable_tricep_ext: {
+      id: "overhead_cable_tricep_ext",
+      name: "Duỗi Tay Sau Qua Đầu Với Cáp (Overhead Rope Triceps Extension)",
+      shortName: "Duỗi Tay Sau Qua Đầu",
+      muscle: "Đầu Dài Cơ Tay Sau (Long Head)",
+      equipment: "Máy cáp + Dây thừng",
+      mascot: "tricepPushdown",
+      tier: "Tier A · Phát Triển Độ Dày Tay Sau",
+      priorityRank: 5,
+      slotGroup: "triceps",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Cable Pulley + Rope Attachment",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi TNG 58D UVK: Đặt ròng rọc ngang hông/lưng giữa, quay lưng lại máy cáp và duỗi dây thừng qua đầu.",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: Bước 1 chân lên trước giữ vững trọng tâm, duỗi thẳng cẳng tay về phía trước trên."
+      },
+      repRange: [10, 15],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Quay lưng vào cáp · Cùi chỏ hướng trước",
+      tempoCue: "Hạ sau gáy 2.2s — Duỗi thẳng 1.0s",
+      whyItWorks: "Đưa cánh tay qua đầu kéo giãn tối đa đầu dài cơ tam đầu (chiếm phần lớn khối lượng bắp tay sau), kích thích phát triển cơ vượt trội.",
+      formSteps: [
+        "Gắn dây thừng vào ròng rọc ngang thắt lưng hoặc ngang vai, quay lưng lại với cột cáp.",
+        "Bước 1 chân lên trước, đổ người 30°, giữ cố định hai cùi chỏ ngang tai.",
+        "Duỗi thẳng hai cẳng tay đưa dây thừng vươn qua đầu rồi từ từ hạ sâu ra sau gáy."
+      ],
+      cues: "Cảm nhận cơ tay sau được kéo giãn sâu ở nhịp hạ ra sau đầu.",
+      mistake: "Không để hai cùi chỏ bè rộng quá mức sang hai bên.",
+      swapOptions: ["tricep_rope_pushdown", "seated_dip_tricep_machine"],
+      swapReason: "Tác động sâu vào đầu dài cơ tay sau bổ sung hoàn hảo cho bài Pushdown.",
+      videoUrl: "https://www.youtube.com/watch?v=TZw-AZS-r9M",
+      videoId: "TZw-AZS-r9M",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Overhead Cable Triceps Extension Hypertrophy",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 20, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 20, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 20, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Kéo giãn đầu dài cơ tay sau giúp bắp tay dày khỏe nhanh nhất"
+    },
+    seated_dip_tricep_machine: {
+      id: "seated_dip_tricep_machine",
+      name: "Máy Đẩy Tay Sau Ngồi / Dip Trợ Lực (Seated Triceps Dip Machine)",
+      shortName: "Máy Đẩy Tay Sau Ngồi",
+      muscle: "Tay Sau & Ngực Dưới",
+      equipment: "Máy Seated Dip / Assisted Dip",
+      mascot: "tricepPushdown",
+      tier: "Tier B · Tải Nặng Tay Sau",
+      priorityRank: 5,
+      slotGroup: "triceps",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated Triceps Press / Assisted Dip",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Xoay tay cầm máy Dip vào nấc hẹp, giữ lưng thẳng đứng để lực dồn vào tay sau.",
+        ways_ql13: "Khu Máy Tay Ways 361 QL13: Tựa sát lưng vào ghế, khép cùi chỏ sát sườn và đẩy tay cầm xuống hết cỡ."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Tay cầm hẹp · Giữ thân người thẳng đứng",
+      tempoCue: "Đẩy xuống 1.0s — Giữ đáy 1.0s — Lên 2.0s",
+      whyItWorks: "Cho phép tập cơ tay sau với tải trọng lớn và an toàn tuyệt đối cho cổ tay.",
+      formSteps: [
+        "Xoay hai tay cầm về chế độ hẹp, giữ thân trên thẳng đứng (không đổ người về trước như khi tập ngực).",
+        "Khép sát hai khuỷu tay vào mạn sườn, ấn mạnh tay cầm xuống cho tới khi tay thẳng.",
+        "Hạ chậm có kiểm soát về vị trí khuỷu tay vuông góc 90°."
+      ],
+      cues: "Thân người càng thẳng đứng và cùi chỏ càng khép sát sườn thì lực càng vào tay sau.",
+      mistake: "Không nhún cầu vai lên tai khi trả tạ.",
+      swapOptions: ["tricep_rope_pushdown", "overhead_cable_tricep_ext"],
+      swapReason: "Đổi gió khi giàn cáp đang đông người tập.",
+      videoUrl: "https://www.youtube.com/watch?v=TZw-AZS-r9M",
+      videoId: "TZw-AZS-r9M",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Machine Triceps Dip Technique",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 45, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 45, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 45, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "An toàn khớp khuỷu tay và cổ tay cho người nặng cân"
+    },
+    iso_high_row_pulldown: {
+      id: "iso_high_row_pulldown",
+      name: "Máy Kéo Xô Cao Lắp Tạ Rời (Iso-Lateral High Row / Pulldown)",
+      shortName: "Máy Kéo Xô Lắp Tạ Rời",
+      muscle: "Lưng Xô Rộng & Xô Dưới",
+      equipment: "Máy Kéo Xô Plate-Loaded",
+      mascot: "latPulldown",
+      tier: "Tier S · Đặc Trưng Ways QL13",
+      priorityRank: 1,
+      slotGroup: "vertical_pull",
+      availableGyms: ["ways_ql13"],
+      machineBrand: "Hammer / Iso-Lateral High Row",
+      gymSetup: {
+        ways_ql13: "Khu Plate-Loaded tầng 4 Ways 361 QL13: Ngồi ép ngực vào đệm trước, khóa đùi và kéo hai tay đòn độc lập theo cung chéo xuống hông.",
+        tng_uvk: "Tại TNG 58D UVK dùng Máy Kéo Xô Cáp Cao (Lat Pulldown) hoặc Kéo Xô Tay Cầm Hẹp."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Ngực áp sát đệm · Kéo cùi chỏ xuống hông",
+      tempoCue: "Kéo mạnh 1.2s — Siết xô 1.0s — Thả 2.2s",
+      whyItWorks: "Đệm ngực giữ cố định thân người giúp cô lập từng bên cơ xô theo quỹ đạo hình vòng cung tự nhiên nhất.",
+      formSteps: [
+        "Lắp bánh tạ đều hai bên, chỉnh chiều cao ghế và đệm ngực sao cho tay vươn cao thoải mái.",
+        "Tì ngực vào đệm, kéo hai tay cầm xuống và ra sau bằng lực dẫn của khuỷu tay.",
+        "Giữ siết cơ xô dưới 1 giây rồi thả lên chậm cho tới khi xô giãn hết biên độ."
+      ],
+      cues: "Có thể kéo từng tay một (Unilateral) để cảm nhận cơ xô sâu hơn.",
+      mistake: "Không ngả người rời khỏi đệm ngực để giật tạ.",
+      swapOptions: ["lat_pulldown", "close_neutral_pulldown", "assisted_pull_up"],
+      swapReason: "Máy tập lưng xô ăn cơ bậc nhất tại Ways Station 361 Quốc Lộ 13.",
+      videoUrl: "https://www.youtube.com/watch?v=SALxEARiMkw",
+      videoId: "SALxEARiMkw",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Iso-Lateral High Row & Pulldown Form",
+      defaultSets: [
+        { type: "W", prev: "Khởi động 20kg/bên", weight: 40, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý 30kg/bên", weight: 60, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý 30kg/bên", weight: 60, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý 30kg/bên", weight: 60, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Máy Plate-Loaded cô lập lưng xô đặc trưng tại Ways Station QL13"
+    },
+    close_neutral_pulldown: {
+      id: "close_neutral_pulldown",
+      name: "Kéo Xô Cáp Tay Cầm Hẹp / Chữ V (Close-Grip Neutral Pulldown)",
+      shortName: "Kéo Xô Tay Cầm Hẹp",
+      muscle: "Xô Dưới & Độ Dày Lưng",
+      equipment: "Máy kéo xô + Tay cầm V-Bar / MAG",
+      mascot: "latPulldown",
+      tier: "Tier S · Có Ở Cả 2 Phòng",
+      priorityRank: 1,
+      slotGroup: "vertical_pull",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Lat Pulldown + V-Grip / MAG Grip",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Tháo thanh đòn dài, móc tay cầm đôi chữ V (V-Bar) vào ròng rọc máy Lat Pulldown.",
+        ways_ql13: "Khu Máy Cáp Ways 361 QL13: Dùng thanh cầm hẹp Neutral Grip hoặc V-Bar kéo sát về ngực dưới."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Hai lòng bàn tay hướng vào nhau · Kéo về ức",
+      tempoCue: "Kéo 1.2s — Siết xô dưới 1.0s — Thả 2.2s",
+      whyItWorks: "Tư thế hai lòng bàn tay hướng vào nhau đặt khớp vai ở góc an toàn nhất và kéo dài biên độ co rút của phần cơ xô dưới.",
+      formSteps: [
+        "Gắn tay cầm chữ V (hoặc thanh cầm hẹp song song) vào cáp cao, khóa chặt đùi dưới đệm.",
+        "Ưỡn cao lồng ngực, hơi ngả lưng 15°, kéo tay cầm chạm nhẹ vùng xương ức dưới.",
+        "Ép sát hai cùi chỏ dọc mạn sườn rồi thả chậm lên cao."
+      ],
+      cues: "Giữ cùi chỏ đi sát trước sườn để kích hoạt phần xô dưới sát eo.",
+      mistake: "Không cúi gập vai về phía trước khi kết thúc nhịp kéo.",
+      swapOptions: ["lat_pulldown", "iso_high_row_pulldown", "assisted_pull_up"],
+      swapReason: "Biến thể kéo xô êm khớp vai nhất tại cả 2 phòng tập.",
+      videoUrl: "https://www.youtube.com/watch?v=SALxEARiMkw",
+      videoId: "SALxEARiMkw",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Close-Grip Neutral Lat Pulldown Mechanics",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 35, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 52, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 52, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 52, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Tác động sâu vào phần xô dưới giúp lưng dày và gọn eo"
+    },
+    assisted_pull_up: {
+      id: "assisted_pull_up",
+      name: "Hít Xà Đơn Có Máy Đệm Quỳ Trợ Lực (Assisted Pull-Up)",
+      shortName: "Hít Xà Máy Trợ Lực",
+      muscle: "Toàn Bộ Lưng Xô & Tay Trước",
+      equipment: "Máy Assisted Chin/Dip",
+      mascot: "latPulldown",
+      tier: "Tier A · Luyện Hít Xà Chuẩn",
+      priorityRank: 1,
+      slotGroup: "vertical_pull",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Assisted Chin-Up / Dip Station",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Cắm chốt trợ lực 45–55kg, quỳ gối lên đệm và nắm tay cầm rộng trên đỉnh máy.",
+        ways_ql13: "Khu Đa Năng Ways 361 QL13: Dùng tay cầm song song hoặc rộng vai, kiểm soát nhịp hạ 2.5 giây."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Đệm quỳ nâng đỡ · Kéo ngực chạm xà",
+      tempoCue: "Kéo lên 1.2s — Hạ chậm 2.5s",
+      whyItWorks: "Cho phép người nặng 95–115kg tập chuẩn động tác Hít xà đơn mà không bị quá tải khớp vai và gân khuỷu tay.",
+      formSteps: [
+        "Cắm chốt tạ trợ lực (ví dụ 45kg: máy sẽ nâng bớt 45kg trọng lượng cơ thể).",
+        "Quỳ hai gối lên đệm, nắm thanh xà rộng hơn vai, hạ bả vai rồi kéo ngực lên ngang xà.",
+        "Hạ người xuống chậm 2.5 giây cho tới khi tay duỗi hết biên độ."
+      ],
+      cues: "Mỗi 2 tuần giảm bớt 1 nấc tạ trợ lực để tiến tới hít xà tự do.",
+      mistake: "Không thả rơi người đột ngột ở điểm dưới cùng.",
+      swapOptions: ["lat_pulldown", "iso_high_row_pulldown", "close_neutral_pulldown"],
+      swapReason: "Có sẵn tại cả The New Gym 58D UVK và Ways Station 361 QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=SALxEARiMkw",
+      videoId: "SALxEARiMkw",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "How To Use The Assisted Pull-Up Machine",
+      defaultSets: [
+        { type: "1", prev: "Trợ lực 45kg", weight: 45, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Trợ lực 45kg", weight: 45, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Trợ lực 40kg", weight: 40, reps: 9, effort: "good", done: false }
+      ],
+      progressionBadge: "Rèn sức mạnh hít xà thực tế an toàn cho người >95kg"
+    },
+    chest_supported_tbar_row: {
+      id: "chest_supported_tbar_row",
+      name: "Máy Chèo Lưng T-Bar Có Đệm Tựa Ngực (Chest-Supported T-Bar Row)",
+      shortName: "Chèo Lưng T-Bar Tựa Ngực",
+      muscle: "Lưng Giữa Dày & Xô",
+      equipment: "Máy T-Bar Row có đệm ngực",
+      mascot: "cableRow",
+      tier: "Tier S · Đặc Trưng Ways QL13",
+      priorityRank: 2,
+      slotGroup: "horizontal_row",
+      availableGyms: ["ways_ql13"],
+      machineBrand: "Chest-Supported Plate-Loaded T-Bar Row",
+      gymSetup: {
+        ways_ql13: "Khu Lưng tầng 4 Ways 361 QL13: Nằm tì ngực lên đệm nghiêng, lắp bánh tạ 15–20kg ở đầu máy, chọn tay cầm rộng hoặc hẹp.",
+        tng_uvk: "Tại TNG 58D UVK dùng Máy Chèo Lưng Ngồi Tựa Ngực (Seated Row Machine) hoặc Chèo Tạ Đơn Tựa Ghế Dốc 30°."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Ngực nằm trên đệm · Ép chặt 2 bả vai",
+      tempoCue: "Kéo 1.2s — Giữ đỉnh 1.0s — Thả giãn 2.2s",
+      whyItWorks: "Xây dựng độ dày khối cơ lưng giữa cực mạnh giống Barbell Row nhưng đệm ngực triệt tiêu 100% áp lực dội lên đốt sống L4-L5.",
+      formSteps: [
+        "Đặt hai bàn chân vững trên bệ, nằm áp sát lồng ngực lên đệm nghiêng của máy T-Bar.",
+        "Nắm hai tay cầm, kéo tạ lên cao bằng cách khép chặt hai xương bả vai lại với nhau.",
+        "Thả tạ xuống chậm để hai bả vai mở rộng tối đa ở đáy động tác."
+      ],
+      cues: "Giữ bụng và ngực luôn dính chặt vào đệm, không nhổm người giật tạ.",
+      mistake: "Không lắp quá nặng làm biên độ kéo bị ngắn một nửa.",
+      swapOptions: ["seated_cable_row", "machine_seated_row", "one_arm_db_row"],
+      swapReason: "Máy tập độ dày lưng an toàn cột sống tốt nhất tại Ways Station QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=UCXxvVItLoM",
+      videoId: "UCXxvVItLoM",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Chest-Supported T-Bar Row For Back Thickness",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 20, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 35, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 35, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 35, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "0% áp lực thắt lưng · Tối ưu độ dày lưng giữa tại Ways QL13"
+    },
+    machine_seated_row: {
+      id: "machine_seated_row",
+      name: "Máy Chèo Lưng Ngồi Tựa Ngực Chốt Tạ (Seated Row Machine)",
+      shortName: "Máy Chèo Lưng Tựa Ngực",
+      muscle: "Lưng Giữa & Xô Dưới",
+      equipment: "Máy Seated Row có đệm ngực",
+      mascot: "cableRow",
+      tier: "Tier S · Máy Cốt Lõi Cả 2 Phòng",
+      priorityRank: 2,
+      slotGroup: "horizontal_row",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Selectorized Seated Row Machine",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Một trong 5 máy kháng lực cốt lõi của The New Gym — chỉnh đệm ngực vừa tầm tay vươn thẳng.",
+        ways_ql13: "Khu Máy Lưng Ways 361 QL13: Chỉnh yên ghế để đệm tì ngang xương ức dưới."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 90,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Ngực tì đệm · Kéo cùi chỏ ra sau hông",
+      tempoCue: "Kéo 1.2s — Siết bả vai 1.0s — Thả 2.0s",
+      whyItWorks: "Điểm tựa ngực cố định giúp người mới và người nặng cân cô lập hoàn toàn cơ lưng mà không mỏi lưng dưới.",
+      formSteps: [
+        "Chỉnh chiều cao yên ghế và khoảng cách đệm ngực sao cho khi nắm tay cầm, đầu ngón tay vừa chạm tới.",
+        "Tì ngực vào đệm, kéo tay cầm về phía sau và ép sát hai xương bả vai.",
+        "Thả tạ về trước có kiểm soát 2 giây."
+      ],
+      cues: "Hạ thấp vai khỏi tai trước khi bắt đầu kéo.",
+      mistake: "Không dùng đà ngửa lưng ra khỏi đệm ngực.",
+      swapOptions: ["seated_cable_row", "chest_supported_tbar_row", "one_arm_db_row"],
+      swapReason: "Máy tập lưng an toàn nhất tại Khu Strength The New Gym 58D UVK.",
+      videoUrl: "https://www.youtube.com/watch?v=UCXxvVItLoM",
+      videoId: "UCXxvVItLoM",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Chest-Supported Machine Row Technique",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 45, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 45, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 45, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Thuộc Top 5 máy kháng lực cốt lõi của The New Gym UVK"
+    },
+    one_arm_db_row: {
+      id: "one_arm_db_row",
+      name: "Chèo Tạ Đơn 1 Tay Tựa Ghế (Single-Arm Dumbbell Row)",
+      shortName: "Chèo Tạ Đơn 1 Tay",
+      muscle: "Lưng Xô & Lưng Giữa",
+      equipment: "Tạ đơn + Ghế phẳng",
+      mascot: "cableRow",
+      tier: "Tier A · Có Ở Cả 2 Phòng",
+      priorityRank: 2,
+      slotGroup: "horizontal_row",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack + Flat Bench",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Chống 1 tay và 1 gối lên ghế phẳng, kéo tạ đơn theo đường vòng cung về phía hông.",
+        ways_ql13: "Dàn Tạ Đơn Ways 361 QL13: Tựa tay lên kệ tạ hoặc ghế phẳng, giữ lưng song song mặt sàn."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 90,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Tay chống ghế · Kéo tạ về túi quần",
+      tempoCue: "Kéo vòng cung 1.2s — Hạ giãn 2.2s",
+      whyItWorks: "Tập từng bên giúp cân bằng lực hai bên lưng xô trong khi tay chống ghế đỡ toàn bộ trọng lượng cho cột sống.",
+      formSteps: [
+        "Đặt một đầu gối và bàn tay cùng bên lên ghế phẳng, giữ lưng phẳng song song với sàn.",
+        "Tay kia cầm tạ đơn, kéo cùi chỏ theo đường vòng cung về phía túi quần sau (hông).",
+        "Hạ tạ xuống chậm cho tới khi bả vai được kéo giãn sâu rồi lặp lại."
+      ],
+      cues: "Tưởng tượng cưa gỗ kéo tạ về hông thay vì nhấc thẳng tạ lên ngực.",
+      mistake: "Không xoay vặn cột sống để giật tạ quá nặng.",
+      swapOptions: ["seated_cable_row", "machine_seated_row", "chest_supported_tbar_row"],
+      swapReason: "Luôn tập được ngay tại Khu Free Weight khi các máy cáp đang bận.",
+      videoUrl: "https://www.youtube.com/watch?v=UCXxvVItLoM",
+      videoId: "UCXxvVItLoM",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "How To Do One-Arm Dumbbell Rows Properly",
+      defaultSets: [
+        { type: "1", prev: "Mỗi bên tay", weight: 22, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mỗi bên tay", weight: 22, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mỗi bên tay", weight: 22, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Chống tay lên ghế bảo vệ lưng dưới 100%"
+    },
+    rope_face_pull: {
+      id: "rope_face_pull",
+      name: "Kéo Cáp Dây Thừng Về Mặt (High-Pulley Rope Face Pull)",
+      shortName: "Kéo Cáp Face Pull",
+      muscle: "Vai Sau & Chóp Xoay Vai",
+      equipment: "Máy cáp cao + Dây thừng",
+      mascot: "cableRow",
+      tier: "Tier A · Bảo Vệ Khớp Vai",
+      priorityRank: 3,
+      slotGroup: "horizontal_row",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Adjustable Cable Pulley + Rope",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi TNG 58D UVK: Đặt ròng rọc ngang trán, kéo tách dây thừng về hai bên tai.",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: Nắm ngược dây thừng (ngón cái hướng về sau), kéo xoay ngoài khớp vai."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Ròng rọc ngang trán · Xoay mở hai nắm tay",
+      tempoCue: "Kéo 1.2s — Giữ 1.5s — Thả 2.0s",
+      whyItWorks: "Cân bằng lại khớp vai sau các bài đẩy nặng, làm khỏe nhóm cơ chóp xoay (Rotator Cuff) và chữa tư thế gù vai.",
+      formSteps: [
+        "Chỉnh ròng rọc ngang mặt/trán, nắm hai đầu dây thừng và lùi lại 1.5 bước.",
+        "Kéo dây thừng về phía trán đồng thời tách hai nắm tay ra hai bên tai (như tư thế gồng bắp tay đôi).",
+        "Giữ siết vai sau và lưng trên 1.5 giây rồi thả chậm."
+      ],
+      cues: "Đưa hai nắm tay về ngang tai sao cho cẳng tay vuông góc với sàn ở điểm cuối.",
+      mistake: "Không lắp tạ quá nặng rồi ngả cả người kéo bằng lưng dưới.",
+      swapOptions: ["reverse_pec_deck_delt", "seated_cable_row"],
+      swapReason: "Bài tập vàng bảo vệ khớp vai lâu dài cho mọi gymer.",
+      videoUrl: "https://www.youtube.com/watch?v=UCXxvVItLoM",
+      videoId: "UCXxvVItLoM",
+      videoAuthor: "ATHLEAN-X",
+      videoTitle: "How To Do Face Pulls For Shoulder Health",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 20, reps: 15, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 20, reps: 15, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 20, reps: 15, effort: "good", done: false }
+      ],
+      progressionBadge: "Làm khỏe chóp xoay vai & chống gù lưng dân văn phòng"
+    },
+    preacher_curl_machine: {
+      id: "preacher_curl_machine",
+      name: "Máy Cuốn Tay Trước Tựa Đệm Preacher (Preacher Curl Machine)",
+      shortName: "Máy Cuốn Tay Trước Preacher",
+      muscle: "Đỉnh Bắp Tay Trước (Biceps Peak)",
+      equipment: "Máy Preacher Curl / Ghế Scott EZ",
+      mascot: "dumbbellCurl",
+      tier: "Tier A · Cô Lập Tay Trước Tuyệt Đối",
+      priorityRank: 3,
+      slotGroup: "biceps",
+      availableGyms: ["ways_ql13", "tng_uvk"],
+      machineBrand: "Preacher Curl Machine / Scott Bench",
+      gymSetup: {
+        ways_ql13: "Khu Máy Tay Ways 361 QL13: Có cả Máy Preacher Curl rút chốt tạ lẫn Ghế Scott cuốn thanh đòn cong EZ.",
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Dùng Ghế Preacher Scott Bench với thanh đòn cong EZ hoặc tạ đơn."
+      },
+      repRange: [10, 14],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Nách áp sát đỉnh đệm · Không đung đưa lưng",
+      tempoCue: "Cuốn 1.2s — Siết 1.0s — Hạ chậm 2.5s",
+      whyItWorks: "Đệm nghiêng khóa hoàn toàn bắp tay trên, không cho phép ăn gian bằng đà lưng hay vai, buộc 100% cơ nhị đầu làm việc.",
+      formSteps: [
+        "Chỉnh chiều cao yên ghế sao cho nách và toàn bộ mặt sau cánh tay áp sát lên đệm nghiêng.",
+        "Nắm tay cầm cong (EZ Grip), cuốn lên cao và siết chặt bắp tay trước 1 giây.",
+        "Hạ chậm 2.5 giây có kiểm soát, dừng khi khuỷu tay duỗi khoảng 95%."
+      ],
+      cues: "Giữ bắp tay trên dán chặt vào đệm suốt quá trình hạ và cuốn.",
+      mistake: "Không nhổm mông khỏi ghế khi hạ tạ xuống đáy.",
+      swapOptions: ["dumbbell_curl_lateral", "cable_rope_hammer_curl"],
+      swapReason: "Cô lập bắp tay trước chuẩn xác nhất tại Ways Station QL13 & TNG UVK.",
+      videoUrl: "https://www.youtube.com/watch?v=soxrZlIl35U",
+      videoId: "soxrZlIl35U",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Preacher Curl Mechanics & Bicep Hypertrophy",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 25, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 25, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 25, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Khóa cố định khuỷu tay trên đệm Preacher giúp tạo đỉnh bắp tay"
+    },
+    cable_rope_hammer_curl: {
+      id: "cable_rope_hammer_curl",
+      name: "Cuốn Tay Trước Cáp Dây Thừng Kiểu Búa (Cable Rope Hammer Curl)",
+      shortName: "Cuốn Cáp Dây Thừng Tay Trước",
+      muscle: "Tay Trước & Cơ Cẳng Tay (Brachialis)",
+      equipment: "Ròng rọc cáp thấp + Dây thừng",
+      mascot: "dumbbellCurl",
+      tier: "Tier B · Có Ở Cả 2 Phòng",
+      priorityRank: 3,
+      slotGroup: "biceps",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Low Pulley Cable + Rope",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi TNG 58D UVK: Gắn dây thừng vào ròng rọc sát sàn, hai lòng bàn tay hướng vào nhau.",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: Khóa chặt cùi chỏ sát sườn, cuốn dây thừng lên ngang ngực."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Cầm dọc dây thừng · Khóa cùi chỏ sát sườn",
+      tempoCue: "Cuốn 1.0s — Xoay nhẹ đỉnh 1.0s — Hạ 2.2s",
+      whyItWorks: "Tác động mạnh vào cơ Brachialis nằm dưới cơ nhị đầu, đẩy bắp tay nhìn to dày hơn từ góc nhìn ngang và cực êm cổ tay.",
+      formSteps: [
+        "Gắn dây thừng vào ròng rọc cáp thấp nhất, đứng thẳng cách máy nửa bước.",
+        "Nắm hai đầu dây thừng hướng lòng bàn tay vào nhau, ép sát khuỷu tay vào sườn.",
+        "Cuốn dây thừng lên sát ngực trên, giữ 1 giây rồi hạ chậm."
+      ],
+      cues: "Tư thế cầm dọc (Hammer Grip) loại bỏ hoàn toàn đau mỏi cổ tay.",
+      mistake: "Không đưa khuỷu tay vung về phía trước khi cuốn.",
+      swapOptions: ["dumbbell_curl_lateral", "preacher_curl_machine"],
+      swapReason: "Tập ngay tại giàn cáp sau khi xong các bài kéo lưng.",
+      videoUrl: "https://www.youtube.com/watch?v=soxrZlIl35U",
+      videoId: "soxrZlIl35U",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Cable Rope Hammer Curl Technique",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 22, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 22, reps: 12, effort: "good", done: false },
+        { type: "D", prev: "Drop Set nhẹ", weight: 15, reps: 15, effort: "max", done: false }
+      ],
+      progressionBadge: "Làm dày bắp tay và cẳng tay với áp lực cáp liên tục"
+    },
+    hack_squat_machine: {
+      id: "hack_squat_machine",
+      name: "Máy Squat Nghiêng Tựa Lưng Lắp Tạ (Linear Hack Squat Machine)",
+      shortName: "Máy Hack Squat Tựa Lưng",
+      muscle: "Đùi Trước & Cơ Mông",
+      equipment: "Máy Hack Squat lắp bánh tạ",
+      mascot: "legPress",
+      tier: "Tier S · Đặc Trưng Ways QL13",
+      priorityRank: 1,
+      slotGroup: "quad_compound",
+      availableGyms: ["ways_ql13"],
+      machineBrand: "Linear Hack Squat Plate-Loaded",
+      gymSetup: {
+        ways_ql13: "Khu Chân tầng 4 Ways 361 QL13: Đặt vai dưới hai đệm mút, lưng dưới dán chặt vào mặt đệm trượt, đặt bàn chân hơi cao lên bàn đạp để giảm áp lực gối.",
+        tng_uvk: "Tại TNG 58D UVK thực hiện biến thể Hack Squat Tựa Lưng Trên Máy Smith hoặc Máy Đạp Đùi 45°."
+      },
+      repRange: [8, 12],
+      defaultRestSec: 150,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Lưng dán chặt đệm · Bàn chân đặt giữa-cao",
+      tempoCue: "Hạ 2.5s — Đạp lên 1.2s",
+      whyItWorks: "Mô phỏng hoàn hảo chuyển động Squat nhưng toàn bộ cột sống được khóa cố định trên mặt phẳng đệm nghiêng.",
+      formSteps: [
+        "Tựa toàn bộ lưng và mông vào đệm trượt, đặt vai dưới hai gối đệm, mở chốt an toàn hai bên.",
+        "Đặt hai bàn chân rộng bằng vai ở nửa trên bàn đạp để bảo vệ khớp gối.",
+        "Hạ chậm tới khi đùi vuông góc 90° với cẳng chân rồi đạp mạnh qua gót chân đẩy lên."
+      ],
+      cues: "Giữ lưng dưới ép sát vào đệm suốt từ đầu đến cuối hiệp.",
+      mistake: "Không khóa cứng khớp gối ở đỉnh động tác.",
+      swapOptions: ["leg_press_45", "smith_box_squat", "seated_leg_extension"],
+      swapReason: "Máy tập đùi đỉnh cao tại khu chân Ways Station 361 Quốc Lộ 13.",
+      videoUrl: "https://www.youtube.com/watch?v=yZmx_Ac3880",
+      videoId: "yZmx_Ac3880",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "How To Hack Squat For Quads & Knee Safety",
+      defaultSets: [
+        { type: "W", prev: "Khởi động 20kg/bên", weight: 40, reps: 10, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý 35kg/bên", weight: 70, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý 35kg/bên", weight: 70, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý 35kg/bên", weight: 70, reps: 9, effort: "good", done: false }
+      ],
+      progressionBadge: "Cỗ máy phát triển cơ đùi số 1 tại Ways Station 361 QL13"
+    },
+    smith_box_squat: {
+      id: "smith_box_squat",
+      name: "Squat Máy Smith Chân Đặt Trước (Smith Machine Hack/Box Squat)",
+      shortName: "Squat Máy Smith Êm Gối",
+      muscle: "Đùi Trước & Cơ Mông",
+      equipment: "Máy Smith + Ghế phẳng làm mốc",
+      mascot: "legPress",
+      tier: "Tier S · Chuẩn Giáo Án TNG UVK",
+      priorityRank: 1,
+      slotGroup: "quad_compound",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Counter-Balanced Smith Machine",
+      gymSetup: {
+        tng_uvk: "Khu Máy Smith TNG 58D UVK: Đặt hai bàn chân tiến về phía trước thanh đòn 20–25cm (Smith Hack Squat) và đặt 1 ghế phẳng phía sau mông làm mốc độ sâu an toàn.",
+        ways_ql13: "Khung Smith Ways 361 QL13: Cài chốt bảo hiểm ngang hông, tựa lưng vào thanh đòn và ngồi xuống chạm nhẹ ghế."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 120,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Bàn chân bước lên trước 20cm · Chạm nhẹ ghế",
+      tempoCue: "Hạ 2.5s chạm ghế — Đứng lên 1.2s",
+      whyItWorks: "Đặt bàn chân tiến về trước trên máy Smith giữ ống đồng gần như thẳng đứng, giảm 50% lực cắt lên dây chằng khớp gối.",
+      formSteps: [
+        "Đặt thanh đòn máy Smith lên phần cơ cầu vai, bước hai bàn chân về phía trước khoảng 20cm.",
+        "Đặt một ghế tập phẳng phía sau làm điểm chuẩn độ sâu vuông góc 90°.",
+        "Từ từ hạ hông xuống chạm nhẹ vào mặt ghế rồi đạp gót chân đứng thẳng lên."
+      ],
+      cues: "Tựa nhẹ lưng vào thanh đòn Smith khi hạ xuống để giữ thân người thẳng đứng.",
+      mistake: "Không thả rơi mông đập mạnh xuống ghế.",
+      swapOptions: ["leg_press_45", "hack_squat_machine", "seated_leg_extension"],
+      swapReason: "Bài tập chân trên máy Smith được chính The New Gym khuyến nghị trong giáo án.",
+      videoUrl: "https://www.youtube.com/watch?v=yZmx_Ac3880",
+      videoId: "yZmx_Ac3880",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Smith Machine Squat Foot Placement For Knee Health",
+      defaultSets: [
+        { type: "W", prev: "Khởi động khớp", weight: 30, reps: 12, effort: "easy", done: false },
+        { type: "1", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 50, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Giữ ống đồng thẳng đứng, bảo vệ sụn chêm khớp gối tối đa"
+    },
+    seated_leg_extension: {
+      id: "seated_leg_extension",
+      name: "Máy Đá Đùi Trước Ngồi (Seated Leg Extension Machine)",
+      shortName: "Máy Đá Đùi Trước",
+      muscle: "Đùi Trước & Cơ Giọt Lệ VMO (Bảo Vệ Gối)",
+      equipment: "Máy đá đùi trước chốt tạ",
+      mascot: "legPress",
+      tier: "Tier A · Có Ở Cả 2 Phòng",
+      priorityRank: 2,
+      slotGroup: "quad_compound",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated Leg Extension Pin-Loaded",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Chỉnh đệm lưng sao cho khoeo chân sát mép ghế, đệm cổ chân nằm ngay trên khớp cổ chân.",
+        ways_ql13: "Khu Máy Chân Ways 361 QL13: Nắm chặt hai tay cầm bên hông ghế, giữ mông dính chặt đệm khi đá lên."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 75,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Khớp gối trùng trục xoay máy · Giữ đỉnh 1s",
+      tempoCue: "Đá lên 1.2s — Siết đùi 1.0s — Hạ 2.2s",
+      whyItWorks: "Tăng cường sức mạnh cơ giọt lệ (VMO) bao quanh xương bánh chè, giúp ổn định khớp gối cho người nặng cân.",
+      formSteps: [
+        "Chỉnh đệm tựa lưng sao cho khớp gối nằm ngay trục xoay tròn của máy.",
+        "Đặt đệm mút ở ngay trên cổ chân, nắm chặt tay cầm hai bên hông ghế.",
+        "Duỗi thẳng hai cẳng chân lên, giữ siết cơ đùi trước 1 giây ở đỉnh rồi hạ chậm."
+      ],
+      cues: "Chọn mức tạ vừa phải (12–15 reps) và giữ 1 giây ở đỉnh thay vì đá giật cục.",
+      mistake: "Không đá vung lấy đà làm bật mông khỏi ghế.",
+      swapOptions: ["leg_press_45", "smith_box_squat", "hack_squat_machine"],
+      swapReason: "Có mặt tại cả The New Gym 58D UVK lẫn Ways Station 361 QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=yZmx_Ac3880",
+      videoId: "yZmx_Ac3880",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "Leg Extension Setup & Quad Isolation",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Làm khỏe bó cơ VMO giữ ổn định xương bánh chè"
+    },
+    seated_leg_curl_machine: {
+      id: "seated_leg_curl_machine",
+      name: "Máy Ngồi / Nằm Cuốn Đùi Sau (Seated / Lying Leg Curl)",
+      shortName: "Máy Cuốn Đùi Sau",
+      muscle: "Cơ Đùi Sau (Hamstrings)",
+      equipment: "Máy cuốn đùi sau Pin-Loaded",
+      mascot: "deadliftRdl",
+      tier: "Tier S · Có Ở Cả 2 Phòng",
+      priorityRank: 2,
+      slotGroup: "posterior_chain",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated & Lying Leg Curl Machine",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Máy Seated Leg Curl — khóa đệm đùi trên thật chặt xuống đùi trước trước khi móc gót chân.",
+        ways_ql13: "Khu Máy Chân Ways 361 QL13: Có cả Máy Ngồi Cuốn Đùi Sau (Seated) và Máy Nằm Sấp Cuốn Đùi Sau (Lying Leg Curl)."
+      },
+      repRange: [10, 15],
+      defaultRestSec: 90,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Khóa chặt đệm đùi · Móc sâu gót chân",
+      tempoCue: "Cuốn 1.2s — Giữ đáy 1.0s — Nhả 2.5s",
+      whyItWorks: "Cô lập hoàn toàn cơ đùi sau với 0% áp lực lên thắt lưng, đồng thời gân đùi sau khỏe sẽ giữ chặt khớp gối không bị trượt.",
+      formSteps: [
+        "Ngồi tựa sát lưng vào đệm, chỉnh đệm gót chân nằm ngay dưới bắp chân (sát gót).",
+        "Hạ thanh khóa đùi ép sát mặt trên đùi để cố định hông.",
+        "Móc mạnh gót chân xuống dưới ghế, giữ siết đùi sau 1 giây rồi nhả lên chậm 2.5 giây."
+      ],
+      cues: "Gập cổ chân hướng mũi chân về phía ống đồng (Dorsiflexion) khi cuốn để đùi sau ăn sâu hơn.",
+      mistake: "Không để đệm khóa đùi quá lỏng làm nhổm đùi khi cuốn.",
+      swapOptions: ["dumbbell_rdl", "glute_drive_hip_thrust"],
+      swapReason: "Lựa chọn số 1 thay thế RDL khi muốn giải phóng hoàn toàn lưng dưới.",
+      videoUrl: "https://www.youtube.com/watch?v=_oyxCn2iSjU",
+      videoId: "_oyxCn2iSjU",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "Seated vs Lying Leg Curl Science",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 40, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "0% tải cột sống · Tăng sức bền dây chằng sau khớp gối"
+    },
+    glute_drive_hip_thrust: {
+      id: "glute_drive_hip_thrust",
+      name: "Máy Đẩy Hông Chuyên Biệt (Glute Drive / Hip Thrust Machine)",
+      shortName: "Máy Đẩy Hông Hip Thrust",
+      muscle: "Cơ Mông Lớn & Đùi Sau",
+      equipment: "Máy Hip Thrust / Máy Smith",
+      mascot: "deadliftRdl",
+      tier: "Tier A · Đặc Trưng Ways QL13",
+      priorityRank: 2,
+      slotGroup: "posterior_chain",
+      availableGyms: ["ways_ql13", "tng_uvk"],
+      machineBrand: "Glute Drive Plate-Loaded / Smith Hip Thrust",
+      gymSetup: {
+        ways_ql13: "Khu Mông Đùi tầng 4 Ways 361 QL13: Có Máy Đẩy Hông (Glute Drive) chuyên biệt với dây đai đệm hông êm ái, không cần kê đòn.",
+        tng_uvk: "Khu Máy Smith TNG 58D UVK: Đặt ghế ngang sau lưng, lót mút đệm lên thanh đòn Smith để đẩy hông."
+      },
+      repRange: [10, 12],
+      defaultRestSec: 90,
+      usesBarbell: true,
+      jointSafe: true,
+      angleCue: "Cằm thu nhẹ · Ống đồng thẳng đứng ở đỉnh",
+      tempoCue: "Đẩy lên 1.0s — Siết mông 1.5s — Hạ 2.0s",
+      whyItWorks: "Cơ mông khỏe là động cơ chính nâng đỡ khung chậu và giảm tới 40% tải trọng truyền xuống thắt lưng & đầu gối khi đi bộ.",
+      formSteps: [
+        "Tựa phần lưng trên (dưới xương bả vai) lên đệm tựa, cài đai đệm qua ngang xương hông.",
+        "Đặt hai bàn chân trên bệ sao cho khi đẩy hông lên cao nhất, ống đồng vuông góc 90° với bệ.",
+        "Đẩy mạnh qua gót chân, siết chặt cơ mông ở đỉnh 1.5 giây (mắt nhìn về trước) rồi hạ chậm."
+      ],
+      cues: "Giữ cằm hơi thu về ngực và xương sườn khép để không ưỡn lưng dưới ở đỉnh.",
+      mistake: "Không đặt chân quá gần hoặc quá xa làm mỏi đùi trước.",
+      swapOptions: ["dumbbell_rdl", "seated_leg_curl_machine"],
+      swapReason: "Máy chuyên biệt cực tiện tại Ways Station 361 Quốc Lộ 13.",
+      videoUrl: "https://www.youtube.com/watch?v=_oyxCn2iSjU",
+      videoId: "_oyxCn2iSjU",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "How To Hip Thrust With Perfect Form",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 60, reps: 12, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 60, reps: 12, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 60, reps: 10, effort: "good", done: false }
+      ],
+      progressionBadge: "Làm khỏe cơ mông nâng đỡ khung chậu và cột sống"
+    },
+    ab_crunch_machine: {
+      id: "ab_crunch_machine",
+      name: "Máy Gập Bụng Ngồi / Quỳ Kéo Cáp Bụng (Ab Crunch Machine / Cable)",
+      shortName: "Máy Gập Bụng / Kéo Cáp",
+      muscle: "Cơ Bụng 6 Múi & Core",
+      equipment: "Máy Ab Crunch hoặc Cáp cao",
+      mascot: "plankCore",
+      tier: "Tier A · Có Ở Cả 2 Phòng",
+      priorityRank: 3,
+      slotGroup: "core_stability",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated Ab Crunch / Cable Rope Crunch",
+      gymSetup: {
+        tng_uvk: "Khu Tập Bụng & Giãn Cơ TNG 58D UVK: Dùng Máy Gập Bụng Ngồi hoặc Quỳ Kéo Dây Thừng ở Khung Cáp Đôi.",
+        ways_ql13: "Khu Core Ways 361 QL13: Dùng Máy Ab Crunch hoặc quỳ trên thảm kéo cáp dây thừng."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Cuộn xương ức về rốn · Thở hết hơi ở đáy",
+      tempoCue: "Cuộn 1.5s — Thở cạn siết 1.0s — Mở 2.0s",
+      whyItWorks: "Tạo kháng lực có thể tăng tiến cho cơ bụng thẳng mà không gây giật cổ như gập bụng nằm sàn.",
+      formSteps: [
+        "Ngồi vào máy Ab Crunch (hoặc quỳ dưới cáp cao cầm dây thừng hai bên thái dương).",
+        "Cố định hông, thở mạnh ra đồng thời cuộn tròn phần ngực trên hướng về phía xương mu.",
+        "Giữ siết cơ bụng 1 giây rồi từ từ mở người lên hít sâu."
+      ],
+      cues: "Tập trung cuộn lồng ngực xuống rốn thay vì gập khớp hông.",
+      mistake: "Không dùng lực tay kéo ghì vào cổ.",
+      swapOptions: ["plank_core", "seated_calf_press"],
+      swapReason: "Đổi bài Core linh hoạt ngay tại khu bụng của cả 2 phòng tập.",
+      videoUrl: "https://www.youtube.com/watch?v=pSHjTRCQxIw",
+      videoId: "pSHjTRCQxIw",
+      videoAuthor: "Jeff Nippard",
+      videoTitle: "How To Train Abs Properly (Machine & Cable Crunch)",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 30, reps: 15, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 30, reps: 15, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 30, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Làm dày múi cơ bụng với kháng lực máy/cáp có kiểm soát"
+    },
+    seated_calf_press: {
+      id: "seated_calf_press",
+      name: "Nhón Bắp Chân Máy Ngồi / Bàn Đạp Leg Press (Calf Raise)",
+      shortName: "Nhón Bắp Chân Máy",
+      muscle: "Cơ Bắp Chân (Soleus & Gastrocnemius)",
+      equipment: "Máy Seated Calf / Bàn đạp Leg Press",
+      mascot: "legPress",
+      tier: "Tier B · Bảo Vệ Cổ Chân",
+      priorityRank: 3,
+      slotGroup: "core_stability",
+      availableGyms: ["ways_ql13", "tng_uvk"],
+      machineBrand: "Seated Calf Raise / 45° Leg Press Calf",
+      gymSetup: {
+        ways_ql13: "Khu Chân Ways 361 QL13: Có Máy Nhón Bắp Chân Ngồi (Seated Calf Raise lắp tạ rời) chuyên biệt.",
+        tng_uvk: "Khu Strength TNG 58D UVK: Đặt nửa mũi bàn chân lên mép dưới bàn đạp Máy Leg Press 45° để nhón bắp chân."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Hạ gót căng sâu 2s · Nhón hết tầm mũi chân",
+      tempoCue: "Nhón 1.0s — Giữ đỉnh 1.5s — Hạ căng 2.0s",
+      whyItWorks: "Bắp chân khỏe đóng vai trò như bơm máu thứ hai đẩy máu tĩnh mạch về tim và bảo vệ khớp cổ chân khi mang trọng lượng lớn.",
+      formSteps: [
+        "Đặt phần ức bàn chân lên mép bàn đạp (hoặc ngồi vào máy Seated Calf Raise đặt đệm lên gối).",
+        "Hạ gót chân xuống sâu nhất có thể và giữ 2 giây để triệt tiêu lực đàn hồi của gân Achilles.",
+        "Nhón mạnh mũi chân lên cao nhất, giữ siết bắp chân 1.5 giây."
+      ],
+      cues: "Dừng 2 giây ở điểm thấp nhất là bí quyết để bắp chân phát triển.",
+      mistake: "Không nhấp nhổm nhanh lấy đà bằng gân cổ chân.",
+      swapOptions: ["plank_core", "ab_crunch_machine"],
+      swapReason: "Tăng sức bền cổ chân và bắp chân tại Ways Station QL13 & TNG UVK.",
+      videoUrl: "https://www.youtube.com/watch?v=yZmx_Ac3880",
+      videoId: "yZmx_Ac3880",
+      videoAuthor: "Renaissance Periodization",
+      videoTitle: "How To Train Calves Effectively (Pause At The Bottom)",
+      defaultSets: [
+        { type: "1", prev: "Mức gợi ý", weight: 40, reps: 15, effort: "good", done: false },
+        { type: "2", prev: "Mức gợi ý", weight: 40, reps: 15, effort: "good", done: false },
+        { type: "3", prev: "Mức gợi ý", weight: 40, reps: 15, effort: "good", done: false }
+      ],
+      progressionBadge: "Làm khỏe cổ chân & bơm tuần hoàn máu chi dưới"
+    },
+    stair_stepper_cardio: {
+      id: "stair_stepper_cardio",
+      name: "Máy Leo Cầu Thang Đốt Mỡ Sâu (Stair Stepper / StairMaster)",
+      shortName: "Máy Leo Cầu Thang",
+      muscle: "Tim Mạch, Mông & Đốt Mỡ Cực Mạnh",
+      equipment: "Máy leo cầu thang (Stair Stepper)",
+      mascot: "inclineWalk",
+      tier: "Tier S · Đặc Trưng TNG UVK",
+      priorityRank: 6,
+      slotGroup: "cardio_finisher",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Commercial Stair Stepper / Climber",
+      gymSetup: {
+        tng_uvk: "Khu Cardio TNG 58D UVK: Dàn máy leo cầu thang tự động — chỉnh tốc độ Level 5–7, đặt toàn bộ bàn chân lên bậc thang.",
+        ways_ql13: "Khu Cardio Ways 361 QL13: Nếu máy leo cầu thang bận, dùng Máy Chạy Bộ chỉnh độ dốc tối đa 12%–15%."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Level 5–7 · Lưng thẳng · Không tì người lên tay vịn",
+      tempoCue: "Leo đều nhịp 12–15 phút cuối buổi",
+      whyItWorks: "Được The New Gym xếp hạng là 'sát thủ đốt mỡ' giúp tiêu hao lượng calo cao gấp 1.3 lần đi bộ phẳng trong khi không có pha tiếp đất gây sốc khớp gối.",
+      formSteps: [
+        "Bước lên máy leo cầu thang, chọn chế độ Manual ở mức tốc độ vừa phải (Level 5–7).",
+        "Đặt trọn bàn chân lên từng bậc thang, đạp qua gót chân để kích hoạt cả cơ mông và đùi.",
+        "Chỉ chạm nhẹ đầu ngón tay vào thanh vịn để giữ thăng bằng, giữ lưng thẳng suốt 12–15 phút."
+      ],
+      cues: "Tuyệt đối không chống hai khuỷu tay đổ người lên bảng điều khiển.",
+      mistake: "Không nhón mũi chân liên tục hoặc chỉnh tốc độ quá nhanh làm hụt hơi.",
+      swapOptions: ["incline_treadmill_walk", "rowing_machine_cardio", "elliptical_cross_trainer"],
+      swapReason: "Máy Cardio đốt mỡ đỉnh cao tại Khu Cardio The New Gym 58D Ung Văn Khiêm.",
+      videoUrl: "https://www.youtube.com/watch?v=b5hB5n1T13M",
+      videoId: "b5hB5n1T13M",
+      videoAuthor: "Jeremy Ethier",
+      videoTitle: "StairMaster vs Incline Treadmill For Fat Loss",
+      defaultSets: [
+        { type: "1", prev: "Level 6 × 15 phút", weight: 6, reps: 15, effort: "good", done: false }
+      ],
+      progressionBadge: "Sát thủ đốt mỡ & săn chắc cơ mông tại Khu Cardio TNG 58D UVK"
+    },
+    rowing_machine_cardio: {
+      id: "rowing_machine_cardio",
+      name: "Máy Chèo Thuyền Toàn Thân (Indoor Rowing Machine)",
+      shortName: "Máy Chèo Thuyền 85% Cơ",
+      muscle: "Toàn Thân (Chân, Lưng, Tay & Tim Mạch)",
+      equipment: "Máy chèo thuyền kháng lực gió",
+      mascot: "inclineWalk",
+      tier: "Tier S · Đặc Trưng TNG UVK",
+      priorityRank: 6,
+      slotGroup: "cardio_finisher",
+      availableGyms: ["tng_uvk"],
+      machineBrand: "Concept2 / Air Resistance Rower",
+      gymSetup: {
+        tng_uvk: "Khu Cardio & Functional TNG 58D UVK: Chỉnh cần gió (Damper) ở mức 4–6, khóa đai bàn chân ngang phần rộng nhất của bàn chân.",
+        ways_ql13: "Tại Ways 361 QL13 chuyển sang Đi Bộ Dốc 10% hoặc Xe Đạp Kháng Lực."
+      },
+      repRange: [12, 15],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Nhịp: Đạp Chân -> Ngả Lưng -> Kéo Tay",
+      tempoCue: "Đạp mạnh 1s — Thu về 2s × 12 phút",
+      whyItWorks: "Huy động tới 85% nhóm cơ toàn thân trong tư thế ngồi trượt ngang, giải phóng hoàn toàn trọng lượng cơ thể khỏi khớp gối và cổ chân.",
+      formSteps: [
+        "Chỉnh mức kháng lực gió (Damper) ở số 4–6, cài chặt dây đai qua mu bàn chân.",
+        "Phát lực theo đúng thứ tự: 60% lực Đạp Chân -> 20% Ngả Lưng nhẹ -> 20% Kéo Tay cầm về dưới ngực.",
+        "Trả người về theo thứ tự ngược lại: Duỗi Tay -> Gập Hông -> Co Gối trượt lên."
+      ],
+      cues: "Nhớ khẩu quyết: Chân - Lưng - Tay khi kéo, và Tay - Lưng - Chân khi thu về.",
+      mistake: "Không kéo tay trước khi chân đạp thẳng làm vướng đầu gối.",
+      swapOptions: ["incline_treadmill_walk", "stair_stepper_cardio", "elliptical_cross_trainer"],
+      swapReason: "Đứng số 1 trong bảng máy Cardio đốt calo của The New Gym.",
+      videoUrl: "https://www.youtube.com/watch?v=b5hB5n1T13M",
+      videoId: "b5hB5n1T13M",
+      videoAuthor: "Concept2",
+      videoTitle: "Proper Indoor Rowing Technique",
+      defaultSets: [
+        { type: "1", prev: "Mức gió 5 × 12 phút", weight: 5, reps: 12, effort: "good", done: false }
+      ],
+      progressionBadge: "Huy động 85% cơ bắp toàn thân với 0% áp lực dồn lên khớp gối"
+    },
+    elliptical_cross_trainer: {
+      id: "elliptical_cross_trainer",
+      name: "Máy Trượt Tuyết Elliptical / Xe Đạp Từ Tính (Zero-Impact Cardio)",
+      shortName: "Máy Elliptical Êm Khớp",
+      muscle: "Tim Mạch & Đốt Mỡ Không Xung Lực",
+      equipment: "Máy Elliptical hoặc Xe đạp tại chỗ",
+      mascot: "inclineWalk",
+      tier: "Tier A · Bảo Vệ Khớp Gối 100%",
+      priorityRank: 6,
+      slotGroup: "cardio_finisher",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Elliptical Cross-Trainer / Upright Bike",
+      gymSetup: {
+        tng_uvk: "Khu Cardio TNG 58D UVK: Dàn máy Elliptical trượt tuyết có tay cầm chuyển động toàn thân, chỉnh kháng lực mức 7–9.",
+        ways_ql13: "Khu Cardio Ways 361 QL13: Dùng máy Elliptical hoặc Xe Đạp Tập (Spin Bike) ở kháng lực vừa phải trong 15 phút."
+      },
+      repRange: [15, 20],
+      defaultRestSec: 60,
+      usesBarbell: false,
+      jointSafe: true,
+      angleCue: "Bàn chân luôn dính bàn đạp · Kháng lực 7–9",
+      tempoCue: "Đạp kết hợp kéo đẩy tay đều đặn 15 phút",
+      whyItWorks: "Bàn chân không bao giờ nhấc rời khỏi bàn đạp nên lực va chạm lên sụn khớp gối bằng 0 tuyệt đối, lý tưởng cho ngày chân mỏi hoặc người >105kg.",
+      formSteps: [
+        "Bước lên hai bàn đạp lớn của máy Elliptical, hai tay nắm vào cần chuyển động.",
+        "Chỉnh mức kháng lực (Resistance) từ 7 đến 9 để giữ nhịp tim vùng đốt mỡ 125–140 bpm.",
+        "Phối hợp nhịp nhàng cả chân đạp elip và tay kéo-đẩy liên tục trong 15 phút."
+      ],
+      cues: "Giữ toàn bộ lòng bàn chân tiếp xúc mặt bàn đạp để không bị tê mũi chân.",
+      mistake: "Không để mức kháng lực quá nhẹ (dưới 3) rồi đạp quay tít theo quán tính.",
+      swapOptions: ["incline_treadmill_walk", "stair_stepper_cardio", "rowing_machine_cardio"],
+      swapReason: "Có sẵn tại cả The New Gym 58D UVK và Ways Station 361 QL13.",
+      videoUrl: "https://www.youtube.com/watch?v=b5hB5n1T13M",
+      videoId: "b5hB5n1T13M",
+      videoAuthor: "Jeremy Ethier",
+      videoTitle: "Low Impact Elliptical Cardio For Fat Loss",
+      defaultSets: [
+        { type: "1", prev: "Kháng lực 8 × 15 phút", weight: 8, reps: 15, effort: "good", done: false }
+      ],
+      progressionBadge: "0% xung lực tiếp đất — Lựa chọn êm sụn gối nhất cho người >100kg"
     }
   };
+
+  const BASE_EXERCISE_GYM_META = {
+    incline_db_press: {
+      slotGroup: "chest_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack 2–50kg + Adjustable Incline Bench",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Kệ tạ đơn 2–40kg trước gương lớn, chỉnh ghế đa năng lên nấc 2 (dốc 30°).",
+        ways_ql13: "Khu Free Weight tầng 4 Ways 361 QL13: Dàn tạ đơn bọc cao su 2–50kg + ghế dốc chỉnh nấc 30°."
+      },
+      swapOptions: ["machine_chest_press", "iso_incline_chest_press", "smith_incline_press", "barbell_bench_press", "assisted_chest_dip"]
+    },
+    dumbbell_shoulder_press: {
+      slotGroup: "shoulder_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack + 75° Seated Bench",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Dựng lưng ghế đa năng lên nấc 5 (góc 75°–80°) đối diện gương.",
+        ways_ql13: "Khu Tạ Đơn Ways 361 QL13: Ghế tựa lưng ngắn chuyên đẩy vai hoặc ghế đa năng dựng 75°."
+      },
+      swapOptions: ["machine_shoulder_press", "smith_shoulder_press", "cable_lateral_raise_single"]
+    },
+    pec_deck_fly: {
+      slotGroup: "chest_fly",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "2-in-1 Pec Deck / Rear Delt Fly Pin-Loaded",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Máy Pec Deck 2-in-1 — chỉnh chốt tay đòn về nấc 3–4 (mở ngang ngực), yên ghế nấc 4.",
+        ways_ql13: "Khu Máy Selectorized Ways 361 QL13: Máy ép ngực cánh bướm rút chốt tạ, tay cầm ngang ngực giữa."
+      },
+      swapOptions: ["cable_crossover_fly", "machine_chest_press", "assisted_chest_dip"]
+    },
+    lateral_raise: {
+      slotGroup: "lateral_delt",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack (4kg – 14kg)",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Cặp tạ đơn nhỏ 6–10kg ở tầng trên của kệ tạ.",
+        ways_ql13: "Khu Tạ Đơn Ways 361 QL13: Cặp tạ đơn 6–12kg hoặc chuyển ngay sang Máy Bay Vai Ngang kế bên."
+      },
+      swapOptions: ["cable_lateral_raise_single", "machine_lateral_raise", "reverse_pec_deck_delt", "rope_face_pull"]
+    },
+    tricep_rope_pushdown: {
+      slotGroup: "triceps",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Cable Tower High Pulley + Rope",
+      gymSetup: {
+        tng_uvk: "Khung Cáp Đôi TNG 58D UVK: Móc dây thừng đơn/đôi vào ròng rọc cao nhất (nấc 18).",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: Trạm cáp cao có sẵn dây thừng và thanh V-Bar."
+      },
+      swapOptions: ["overhead_cable_tricep_ext", "seated_dip_tricep_machine", "assisted_chest_dip"]
+    },
+    barbell_bench_press: {
+      slotGroup: "chest_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Olympic Flat Barbell Bench (Đòn 20kg)",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Ghế đẩy ngực ngang Olympic kèm thanh đòn 20kg.",
+        ways_ql13: "Khu Bench & Power Rack Ways 361 QL13: Ghế Bench tiêu chuẩn thi đấu và khung Power Cage có thanh bảo hiểm."
+      },
+      swapOptions: ["incline_db_press", "machine_chest_press", "iso_incline_chest_press", "smith_incline_press"]
+    },
+    machine_chest_press: {
+      slotGroup: "chest_press",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated Chest Press Pin-Loaded (Matrix / Impulse)",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Một trong 5 máy kháng lực cốt lõi tại TNG — có sticker hướng dẫn trên thân máy, chỉnh ghế nấc 4.",
+        ways_ql13: "Khu Máy Ngực Ways 361 QL13: Có cả Máy Đẩy Ngực Ngồi rút chốt tạ và Máy Iso-Lateral lắp bánh tạ rời."
+      },
+      swapOptions: ["incline_db_press", "iso_incline_chest_press", "smith_incline_press", "barbell_bench_press", "assisted_chest_dip"]
+    },
+    lat_pulldown: {
+      slotGroup: "vertical_pull",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Lat Pulldown Station (Pin-Loaded)",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Máy Lat Pulldown cốt lõi — chỉnh đệm khóa đùi ép sát trước khi kéo.",
+        ways_ql13: "Giàn Cáp 8 Trạm Ways 361 QL13: 2 trạm Lat Pulldown đối xứng kèm đủ thanh rộng, V-Bar và MAG Grip."
+      },
+      swapOptions: ["iso_high_row_pulldown", "close_neutral_pulldown", "assisted_pull_up", "machine_seated_row"]
+    },
+    seated_cable_row: {
+      slotGroup: "horizontal_row",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Seated Low Cable Row Station",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Máy kéo cáp ngồi bàn đạp chân rộng, gắn tay cầm chữ V.",
+        ways_ql13: "Giàn 8 Trạm Ways 361 QL13: Trạm Low Row cáp ngồi hoặc chuyển sang Máy T-Bar Row tựa ngực kế bên."
+      },
+      swapOptions: ["chest_supported_tbar_row", "machine_seated_row", "one_arm_db_row", "rope_face_pull"]
+    },
+    dumbbell_curl_lateral: {
+      slotGroup: "biceps",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack + Adjustable Bench",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Ngồi tựa ghế dốc 60° hoặc đứng trước gương với cặp tạ đơn 8–14kg.",
+        ways_ql13: "Khu Tạ Đơn Ways 361 QL13: Cặp tạ đơn 8–16kg hoặc dùng Máy Cuốn Tay Trước Preacher."
+      },
+      swapOptions: ["preacher_curl_machine", "cable_rope_hammer_curl"]
+    },
+    plank_core: {
+      slotGroup: "core_stability",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Khu Thảm Tập & Functional Zone",
+      gymSetup: {
+        tng_uvk: "Khu Giãn Cơ & Tập Bụng Tách Biệt TNG 58D UVK: Thảm tập êm không vướng khu vực tạ nặng.",
+        ways_ql13: "Khu Thảm & Giãn Cơ Ways 361 QL13: Có sẵn thảm tập và con lăn Foam Roller mượn miễn phí."
+      },
+      swapOptions: ["ab_crunch_machine", "seated_calf_press"]
+    },
+    leg_press_45: {
+      slotGroup: "quad_compound",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "45° Linear Leg Press & Seated Leg Press",
+      gymSetup: {
+        tng_uvk: "Khu Strength TNG 58D UVK: Có cả Máy Đạp Đùi Ngang rút chốt tạ (cho người mới) và Máy Đạp Đùi Nghiêng 45° lắp bánh tạ.",
+        ways_ql13: "Khu Chân tầng 4 Ways 361 QL13: Máy Đạp Đùi Nghiêng 45° hạng nặng (Heavy Plate-Loaded) bàn đạp rộng."
+      },
+      swapOptions: ["hack_squat_machine", "smith_box_squat", "seated_leg_extension"]
+    },
+    dumbbell_rdl: {
+      slotGroup: "posterior_chain",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Dumbbell Rack / Deadlift Platform",
+      gymSetup: {
+        tng_uvk: "Khu Free Weight TNG 58D UVK: Cặp tạ đơn 16–30kg hoặc thanh đòn Olympic.",
+        ways_ql13: "Khu Sàn Deadlift & Tạ Đơn Ways 361 QL13: Có sàn giảm chấn chuyên dụng và tạ đơn lên tới 50kg."
+      },
+      swapOptions: ["seated_leg_curl_machine", "glute_drive_hip_thrust"]
+    },
+    incline_treadmill_walk: {
+      slotGroup: "cardio_finisher",
+      availableGyms: ["tng_uvk", "ways_ql13"],
+      machineBrand: "Commercial Incline Treadmill (0% – 15%)",
+      gymSetup: {
+        tng_uvk: "Khu Cardio TNG 58D UVK: Hàng 20+ máy chạy bộ hiện đại — bấm Incline 10%, Speed 4.4 km/h.",
+        ways_ql13: "Khu Cardio tầng 4 Ways 361 QL13: Dàn máy chạy bộ có chỉnh dốc tự động nhìn ra Quốc Lộ 13."
+      },
+      swapOptions: ["stair_stepper_cardio", "rowing_machine_cardio", "elliptical_cross_trainer"]
+    }
+  };
+
+  Object.keys(BASE_EXERCISE_GYM_META).forEach((exId) => {
+    if (EXERCISES[exId]) {
+      Object.assign(EXERCISES[exId], BASE_EXERCISE_GYM_META[exId]);
+    }
+  });
+
+  const SLOT_GROUP_LABELS = {
+    chest_press: "Đẩy Ngực Chính (Chest Press)",
+    shoulder_press: "Đẩy Vai Chính (Overhead Press)",
+    chest_fly: "Ép Ngực Cô Lập (Chest Fly)",
+    lateral_delt: "Vai Ngang & Vai Sau (Side / Rear Delt)",
+    triceps: "Tay Sau Cô Lập (Triceps)",
+    vertical_pull: "Kéo Lưng Xô Dọc (Lat Pulldown / Pull-Up)",
+    horizontal_row: "Chèo Lưng Giữa Ngang (Row / Face Pull)",
+    biceps: "Cuốn Tay Trước (Biceps / Brachialis)",
+    quad_compound: "Đùi Trước & Tổng Hợp Chân (Leg Press / Squat / Extension)",
+    posterior_chain: "Đùi Sau & Cơ Mông (Leg Curl / RDL / Hip Thrust)",
+    core_stability: "Core Bảo Vệ Đĩa Đệm & Bắp Chân",
+    cardio_finisher: "Cardio Đốt Mỡ Êm Khớp Cuối Buổi"
+  };
+
+  const GYM_BRANCHES = {
+    all: {
+      id: "all",
+      shortName: "Cả 2 Phòng Tập",
+      badge: "Tất cả máy (36 bài)",
+      name: "Kết Hợp: The New Gym UVK & Ways Station QL13",
+      address: "58D Ung Văn Khiêm (Bình Thạnh) & 361 Quốc Lộ 13 (Thủ Đức)",
+      hours: "Linh hoạt 24/7 (TNG UVK) & 05:00–22:30 (Ways QL13)",
+      highlights: [
+        "Hiển thị toàn bộ 36 bài tập và thiết bị của cả 2 phòng tập.",
+        "Tự động chỉ dẫn cách setup ghế, chốt tạ và vị trí máy tại từng cơ sở."
+      ],
+      zones: []
+    },
+    tng_uvk: {
+      id: "tng_uvk",
+      shortName: "The New Gym · UVK",
+      badge: "58D Ung Văn Khiêm · 24/7",
+      name: "The New Gym — Chi Nhánh 58D Ung Văn Khiêm",
+      address: "58D Ung Văn Khiêm, P. Thạnh Mỹ Tây (P.25 cũ), Quận Bình Thạnh, TP.HCM",
+      hours: "Mở cửa 24/7 xuyên lễ Tết (Từ 22:00–06:00 dùng tủ locker ngoài; có NV hỗ trợ 06:00–22:00)",
+      highlights: [
+        "Diện tích >1.000m² chia 5 khu riêng biệt: Cardio, Strength (Máy chốt tạ), Free Weight, Functional & khu Giãn cơ tách biệt.",
+        "Thế mạnh: Dàn máy kháng lực rút chốt tạ (Selectorized) có dán nhãn hướng dẫn trực quan, Khung Cáp Đôi, Máy Smith, Máy Leo Cầu Thang (Stair Stepper) & Máy Chèo Thuyền (Rowing)."
+      ],
+      zones: [
+        {
+          zoneName: "Khu Strength (Máy Kháng Lực Chốt Tạ)",
+          machines: [
+            "Máy Đẩy Ngực Ngồi (Seated Chest Press Machine)",
+            "Máy Ép Ngực & Vai Sau 2-in-1 (Pec Deck / Rear Delt)",
+            "Máy Đẩy Vai Ngồi (Seated Shoulder Press)",
+            "Máy Kéo Xô Cao & Kéo Cáp Ngồi (Lat Pulldown & Seated Row)",
+            "Máy Trợ Lực Hít Xà & Xà Kép (Assisted Chin/Dip)",
+            "Máy Đạp Đùi 45° & Đá Đùi Trước / Cuốn Đùi Sau (Leg Press, Extension, Curl)"
+          ]
+        },
+        {
+          zoneName: "Khu Khung Cáp, Máy Smith & Free Weight",
+          machines: [
+            "Khung Cáp Đôi Đa Năng (Dual Adjustable Pulley)",
+            "Máy Smith Quỹ Đạo Cố Định (Counter-Balanced Smith Machine)",
+            "Dàn Tạ Đơn (2kg – 40kg) + Ghế Dốc Đa Năng (0° – 30° – 75°)",
+            "Ghế Đẩy Ngực Tạ Đòn Olympic & Giá Đỡ Squat Rack"
+          ]
+        },
+        {
+          zoneName: "Khu Cardio & Khu Giãn Cơ Riêng",
+          machines: [
+            "Máy Leo Cầu Thang Tự Động (Stair Stepper / StairMaster)",
+            "Máy Chèo Thuyền Kháng Lực Gió (Rowing Machine)",
+            "Dàn Máy Chạy Bộ Dốc (Incline Treadmill) & Máy Trượt Tuyết Elliptical",
+            "Khu Thảm Giãn Cơ, Tạ Ấm Kettlebell, Bục Nhảy & Ghế Tập Bụng"
+          ]
+        }
+      ]
+    },
+    ways_ql13: {
+      id: "ways_ql13",
+      shortName: "Ways Station · QL13",
+      badge: "361 Quốc Lộ 13 · FaceID",
+      name: "Ways Station Gym — Chi Nhánh 361 Quốc Lộ 13",
+      address: "Lầu 4, 361 Quốc Lộ 13 (kế Vạn Phúc City), P. Hiệp Bình Phước, TP. Thủ Đức (Liên thông 165 UVK)",
+      hours: "05:00 – 22:30 hàng ngày tại 361 QL13 (Liên thông 38+ chi nhánh, 165 UVK mở 24/24) · Ra vào bằng FaceID",
+      highlights: [
+        "Miễn phí giữ xe, khăn tập, nước uống, tắm nóng lạnh, đo InBody định kỳ và mượn con lăn giãn cơ (Foam Roller). Không PT/Sale chèo kéo.",
+        "Thế mạnh: Dàn máy lắp bánh tạ rời (Plate-Loaded Iso-Lateral) cực đầm chắc, Máy Hack Squat, Máy Chèo Lưng T-Bar tựa ngực, Máy Đẩy Hông Glute Drive, Máy Bay Vai Ngang & Giàn Cáp 8 Trạm."
+      ],
+      zones: [
+        {
+          zoneName: "Khu Máy Lắp Bánh Tạ Rời (Plate-Loaded / Iso-Lateral)",
+          machines: [
+            "Máy Đẩy Ngực Trên Lắp Tạ Rời (Iso-Lateral Incline Chest Press)",
+            "Máy Kéo Xô Cao Lắp Tạ Rời (Iso-Lateral High Row / Pulldown)",
+            "Máy Chèo Lưng T-Bar Đệm Ngực (Chest-Supported T-Bar Row)",
+            "Máy Squat Nghiêng Tựa Lưng (Linear Hack Squat Machine)",
+            "Máy Đạp Đùi Nghiêng 45° Hạng Nặng (Heavy Plate-Loaded Leg Press)",
+            "Máy Đẩy Hông Chuyên Biệt (Glute Drive / Hip Thrust) & Máy Nhón Bắp Chân Ngồi"
+          ]
+        },
+        {
+          zoneName: "Khu Máy Cô Lập & Giàn Cáp 8 Trạm",
+          machines: [
+            "Giàn Cáp Chéo 8 Trạm Đa Năng (8-Stack Jungle Gym Cable Crossover)",
+            "Máy Bay Vai Ngang Đệm Khuỷu Tay (Seated Lateral Raise Machine)",
+            "Máy Cuốn Tay Trước Ghế Preacher (Preacher Curl Machine & Scott Bench)",
+            "Máy Ép Ngực / Vai Sau (Pec Deck) & Máy Đá Đùi / Nằm Cuốn Đùi Sau"
+          ]
+        },
+        {
+          zoneName: "Khu Power Rack, Tạ Đơn Nặng & Cardio",
+          machines: [
+            "Khung Power Cage Đa Năng & Sàn Deadlift Giảm Chấn",
+            "Dàn Tạ Đơn Nặng (2kg – 50kg) + Máy Smith Đa Năng",
+            "Dàn Máy Chạy Bộ Dốc, Xe Đạp Tập, Máy Đo InBody & Con Lăn Foam Roller"
+          ]
+        }
+      ]
+    }
+  };
+
+  const GYM_SESSION_PRESETS = {
+    default: {
+      id: "default",
+      label: "Khung Chuẩn Mặc Định",
+      shortLabel: "Khung Mặc Định",
+      description: "Bộ khung gốc cân bằng giữa Tạ đơn, Máy cáp và Đi bộ dốc tập được ở mọi phòng.",
+      sessions: {
+        press_day: ["incline_db_press", "dumbbell_shoulder_press", "pec_deck_fly", "lateral_raise", "tricep_rope_pushdown", "incline_treadmill_walk"],
+        pull_day: ["lat_pulldown", "seated_cable_row", "dumbbell_curl_lateral", "plank_core", "incline_treadmill_walk"],
+        legs_day: ["leg_press_45", "dumbbell_rdl", "plank_core", "incline_treadmill_walk"],
+        upper_day: ["machine_chest_press", "lat_pulldown", "pec_deck_fly", "seated_cable_row", "lateral_raise", "tricep_rope_pushdown"]
+      }
+    },
+    tng_uvk: {
+      id: "tng_uvk",
+      label: "Bộ Máy The New Gym · 58D Ung Văn Khiêm",
+      shortLabel: "Bộ Máy TNG UVK",
+      description: "Tối ưu theo dàn máy Selectorized chốt tạ, Máy Smith, Khung Cáp Đôi & Máy Leo Cầu Thang tại 58D Ung Văn Khiêm.",
+      sessions: {
+        press_day: ["smith_incline_press", "machine_shoulder_press", "pec_deck_fly", "cable_lateral_raise_single", "seated_dip_tricep_machine", "stair_stepper_cardio"],
+        pull_day: ["close_neutral_pulldown", "machine_seated_row", "rope_face_pull", "cable_rope_hammer_curl", "ab_crunch_machine", "rowing_machine_cardio"],
+        legs_day: ["leg_press_45", "smith_box_squat", "seated_leg_curl_machine", "seated_leg_extension", "ab_crunch_machine", "stair_stepper_cardio"],
+        upper_day: ["machine_chest_press", "lat_pulldown", "cable_crossover_fly", "machine_seated_row", "reverse_pec_deck_delt", "tricep_rope_pushdown"]
+      }
+    },
+    ways_ql13: {
+      id: "ways_ql13",
+      label: "Bộ Máy Ways Station · 361 Quốc Lộ 13",
+      shortLabel: "Bộ Máy Ways QL13",
+      description: "Tối ưu theo dàn máy lắp bánh tạ rời Iso-Lateral, Hack Squat, T-Bar Row, Glute Drive & Preacher Curl tại 361 Quốc Lộ 13.",
+      sessions: {
+        press_day: ["iso_incline_chest_press", "machine_shoulder_press", "cable_crossover_fly", "machine_lateral_raise", "overhead_cable_tricep_ext", "incline_treadmill_walk"],
+        pull_day: ["iso_high_row_pulldown", "chest_supported_tbar_row", "rope_face_pull", "preacher_curl_machine", "plank_core", "incline_treadmill_walk"],
+        legs_day: ["hack_squat_machine", "leg_press_45", "seated_leg_curl_machine", "glute_drive_hip_thrust", "seated_calf_press", "incline_treadmill_walk"],
+        upper_day: ["iso_incline_chest_press", "iso_high_row_pulldown", "pec_deck_fly", "chest_supported_tbar_row", "machine_lateral_raise", "overhead_cable_tricep_ext"]
+      }
+    }
+  };
+
+  function getEffectiveSessionExerciseIds(sessionId, sessionSwaps, customSessionLists) {
+    const sess = WORKOUT_SESSIONS[sessionId] || WORKOUT_SESSIONS.press_day;
+    const baseList =
+      customSessionLists && Array.isArray(customSessionLists[sessionId]) && customSessionLists[sessionId].length > 0
+        ? customSessionLists[sessionId]
+        : sess.exerciseIds;
+    const swaps = sessionSwaps || {};
+    return baseList.map((slotExId) => {
+      const swappedId = swaps[`${sessionId}__${slotExId}`];
+      return swappedId && EXERCISES[swappedId] ? swappedId : slotExId;
+    });
+  }
+
+  function getSwapCandidatesForSlot(sessionId, slotOriginalId, currentExId, gymBranchId) {
+    const activeEx = EXERCISES[currentExId] || EXERCISES[slotOriginalId] || EXERCISES.incline_db_press;
+    const targetGroup = activeEx.slotGroup || "chest_press";
+    const allExercises = Object.values(EXERCISES);
+
+    const filterByGym = (ex) => {
+      if (!gymBranchId || gymBranchId === "all") return true;
+      return !Array.isArray(ex.availableGyms) || ex.availableGyms.includes(gymBranchId);
+    };
+
+    const scoreForGym = (ex) => {
+      if (!gymBranchId || gymBranchId === "all") return 0;
+      if (Array.isArray(ex.availableGyms) && ex.availableGyms[0] === gymBranchId) return 2;
+      if (Array.isArray(ex.availableGyms) && ex.availableGyms.includes(gymBranchId)) return 1;
+      return -1;
+    };
+
+    const sameGroup = allExercises
+      .filter((ex) => ex.slotGroup === targetGroup && filterByGym(ex))
+      .sort((a, b) => scoreForGym(b) - scoreForGym(a));
+
+    const sessionAllowedGroups =
+      sessionId === "press_day"
+        ? ["chest_press", "shoulder_press", "chest_fly", "lateral_delt", "triceps", "cardio_finisher"]
+        : sessionId === "pull_day"
+        ? ["vertical_pull", "horizontal_row", "biceps", "lateral_delt", "core_stability", "cardio_finisher"]
+        : sessionId === "legs_day"
+        ? ["quad_compound", "posterior_chain", "core_stability", "cardio_finisher"]
+        : ["chest_press", "vertical_pull", "chest_fly", "horizontal_row", "shoulder_press", "lateral_delt", "triceps", "biceps"];
+
+    const otherInSession = allExercises
+      .filter(
+        (ex) =>
+          ex.slotGroup !== targetGroup &&
+          sessionAllowedGroups.includes(ex.slotGroup) &&
+          filterByGym(ex)
+      )
+      .sort((a, b) => scoreForGym(b) - scoreForGym(a));
+
+    return {
+      slotGroup: targetGroup,
+      slotGroupLabel: SLOT_GROUP_LABELS[targetGroup] || activeEx.muscle,
+      sameGroup,
+      otherInSession
+    };
+  }
 
   const WORKOUT_SESSIONS = {
     press_day: {
@@ -1226,7 +2883,12 @@
     let completedSetsCount = 0;
     let totalVolumeKg = 0;
     if (isWorkoutDay && sess) {
-      sess.exerciseIds.forEach((exId) => {
+      const activeExIds = getEffectiveSessionExerciseIds(
+        sessionId,
+        opts.sessionSwaps,
+        opts.customSessionLists
+      );
+      activeExIds.forEach((exId) => {
         const hasCustomLog = Array.isArray(dayLogs[exId]);
         const sets = hasCustomLog ? dayLogs[exId] : (EXERCISES[exId] ? EXERCISES[exId].defaultSets : []);
         totalSetsCount += sets.length;
@@ -1971,6 +3633,11 @@
     PRESET_PROFILES,
     calculateMetrics,
     EXERCISES,
+    GYM_BRANCHES,
+    GYM_SESSION_PRESETS,
+    SLOT_GROUP_LABELS,
+    getEffectiveSessionExerciseIds,
+    getSwapCandidatesForSlot,
     WORKOUT_SESSIONS,
     WORKOUT_SPLITS,
     DEFAULT_WEEKLY_SCHEDULE,

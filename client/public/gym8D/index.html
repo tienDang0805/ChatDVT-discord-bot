@@ -17,11 +17,11 @@
   <link rel="manifest" href="/gym8D/manifest.json" />
   <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
   <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="stylesheet" href="/gym8D/styles.css?v=8" />
+  <link rel="stylesheet" href="/gym8D/styles.css?v=9" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <script src="/gym8D/src/gym-core.js?v=8"></script>
+  <script src="/gym8D/src/gym-core.js?v=9"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -1152,6 +1152,15 @@
       const [weighInDraftKg, setWeighInDraftKg] = useState(
         () => Number(saved?.profileInput?.weightKg || 115)
       );
+      const [selectedGymId, setSelectedGymId] = useState(
+        () => saved?.selectedGymId || 'tng_uvk'
+      );
+      const [customSessionLists, setCustomSessionLists] = useState(
+        () => (saved?.customSessionLists && typeof saved.customSessionLists === 'object' ? saved.customSessionLists : {})
+      );
+      const [activePresetBySession, setActivePresetBySession] = useState(
+        () => (saved?.activePresetBySession && typeof saved.activePresetBySession === 'object' ? saved.activePresetBySession : {})
+      );
 
       const isStandalonePWA = useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -1181,7 +1190,10 @@
               preSleepAlertEnabled,
               icsInstalledAt,
               weighInIntervalDays,
-              weightLogs
+              weightLogs,
+              selectedGymId,
+              customSessionLists,
+              activePresetBySession
             })
           );
         } catch (e) {}
@@ -1201,7 +1213,10 @@
         preSleepAlertEnabled,
         icsInstalledAt,
         weighInIntervalDays,
-        weightLogs
+        weightLogs,
+        selectedGymId,
+        customSessionLists,
+        activePresetBySession
       ]);
 
       useEffect(() => {
@@ -1292,13 +1307,15 @@
           dateOverrides,
           logsByDate,
           dayStatusByDate,
+          sessionSwaps,
+          customSessionLists,
           preSleepLeadMin: profileInput.preSleepLeadMin || 30,
           currentWeightKg: metrics.profile.weightKg,
           targetWeightKg: metrics.profile.targetWeightKg,
           weeklyRateKg: metrics.weeklyRateKg,
           weighInIntervalDays
         }),
-        [todayISO, startDateISO, weeklyPattern, dateOverrides, logsByDate, dayStatusByDate, profileInput.preSleepLeadMin, metrics, weighInIntervalDays]
+        [todayISO, startDateISO, weeklyPattern, dateOverrides, logsByDate, dayStatusByDate, sessionSwaps, customSessionLists, profileInput.preSleepLeadMin, metrics, weighInIntervalDays]
       );
 
       const dynamicWeek = useMemo(
@@ -1347,6 +1364,10 @@
       );
 
       const currentSession = GymCore.WORKOUT_SESSIONS[activeSessionId] || GymCore.WORKOUT_SESSIONS.press_day;
+      const activeSessionSlotIds = useMemo(() => {
+        const customList = customSessionLists[activeSessionId];
+        return Array.isArray(customList) && customList.length > 0 ? customList : currentSession.exerciseIds;
+      }, [customSessionLists, activeSessionId, currentSession]);
 
       function getSetsForDateAndExercise(isoDate, exId) {
         const dayMap = logsByDate[isoDate];
@@ -1791,6 +1812,64 @@
           ...prev,
           [key]: targetExId
         }));
+        const targetEx = GymCore.EXERCISES[targetExId];
+        if (targetEx) {
+          dispatchRealOSNotification(
+            `Đã đổi bài: ${targetEx.shortName || targetEx.name.split('(')[0].trim()}`,
+            targetEx.gymSetup?.[selectedGymId === 'all' ? 'tng_uvk' : selectedGymId] || targetEx.cues,
+            `swap_${sessionId}_${targetExId}_${Date.now()}`
+          );
+        }
+      }
+
+      function handleApplySessionPreset(sessionId, presetId) {
+        const presetObj = GymCore.GYM_SESSION_PRESETS?.[presetId] || GymCore.GYM_SESSION_PRESETS?.default;
+        if (!presetObj) return;
+        const nextList = presetObj.sessions?.[sessionId] || GymCore.WORKOUT_SESSIONS[sessionId]?.exerciseIds || [];
+        setCustomSessionLists((prev) => ({
+          ...prev,
+          [sessionId]: [...nextList]
+        }));
+        setActivePresetBySession((prev) => ({
+          ...prev,
+          [sessionId]: presetId
+        }));
+        setSessionSwaps((prev) => {
+          const next = { ...prev };
+          Object.keys(next).forEach((k) => {
+            if (k.startsWith(`${sessionId}__`)) delete next[k];
+          });
+          return next;
+        });
+        if (presetId === 'tng_uvk' || presetId === 'ways_ql13') {
+          setSelectedGymId(presetId);
+        }
+        setDetailSlotIndex(null);
+        const sessObj = GymCore.WORKOUT_SESSIONS[sessionId] || currentSession;
+        dispatchRealOSNotification(
+          `Đã áp dụng ${presetObj.shortLabel} cho ${sessObj.shortName}`,
+          presetObj.description,
+          `preset_${sessionId}_${presetId}`
+        );
+      }
+
+      function handleAddExerciseToSession(sessionId, newExId) {
+        if (!GymCore.EXERCISES[newExId]) return;
+        setCustomSessionLists((prev) => {
+          const base = Array.isArray(prev[sessionId]) && prev[sessionId].length > 0
+            ? [...prev[sessionId]]
+            : [...(GymCore.WORKOUT_SESSIONS[sessionId]?.exerciseIds || [])];
+          if (!base.includes(newExId)) {
+            base.push(newExId);
+          }
+          return { ...prev, [sessionId]: base };
+        });
+        const exObj = GymCore.EXERCISES[newExId];
+        dispatchRealOSNotification(
+          `Đã thêm bài: ${exObj.shortName || exObj.name.split('(')[0].trim()}`,
+          `Bài tập đã được thêm vào danh sách ${GymCore.WORKOUT_SESSIONS[sessionId]?.shortName || 'buổi tập'}.`,
+          `add_ex_${sessionId}_${newExId}`
+        );
       }
 
       function toggleSetDone(exId, setIdx) {
@@ -3522,6 +3601,10 @@
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                     {Object.values(GymCore.WORKOUT_SESSIONS).map((sess) => {
                       const active = sess.id === activeSessionId;
+                      const sessSlots =
+                        Array.isArray(customSessionLists[sess.id]) && customSessionLists[sess.id].length > 0
+                          ? customSessionLists[sess.id]
+                          : sess.exerciseIds;
                       return (
                         <button
                           key={sess.id}
@@ -3542,11 +3625,113 @@
                         >
                           <div style={{ fontSize: 11, fontWeight: 900 }}>{sess.code}</div>
                           <div style={{ fontSize: 9.5, fontWeight: 700, opacity: 0.9 }}>
-                            {sess.exerciseIds.length} bài · {sess.durationMin}p
+                            {sessSlots.length} bài · {sess.durationMin}p
                           </div>
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* GYM BRANCH SELECTOR & MACHINE PRESET SWITCHER (THE NEW GYM 58D UVK & WAYS STATION 361 QL13) */}
+                  <div
+                    style={{
+                      marginTop: 9,
+                      padding: '9px 10px',
+                      borderRadius: 14,
+                      background: '#FFFDF9',
+                      border: '2px solid #2B2118',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 7
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: 10.5, fontWeight: 900, color: '#2B2118', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ padding: '2px 7px', borderRadius: 999, background: '#2B2118', color: '#FDBA74', fontSize: 9.5 }}>
+                          PHÒNG TẬP HÔM NAY
+                        </span>
+                        <span style={{ color: '#6B5744', fontSize: 10 }}>
+                          {GymCore.GYM_BRANCHES?.[selectedGymId]?.badge || '44 máy thực tế'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPickerSheetConfig({ type: 'gym_equipment_directory' })}
+                        style={{
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                          border: '1.5px solid #2B2118',
+                          background: '#FFEDD5',
+                          color: '#9A3412',
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Sơ đồ máy 2 phòng &gt;
+                      </button>
+                    </div>
+
+                    {/* Row 1: Filter by Gym Location */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.72fr', gap: 5 }}>
+                      {[
+                        { id: 'tng_uvk', label: 'The New Gym UVK', sub: '58D Ung Văn Khiêm' },
+                        { id: 'ways_ql13', label: 'Ways Station QL13', sub: '361 Quốc Lộ 13' },
+                        { id: 'all', label: 'Cả 2 Phòng', sub: 'Đủ 44 bài' }
+                      ].map((g) => {
+                        const active = selectedGymId === g.id;
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => setSelectedGymId(g.id)}
+                            style={{
+                              padding: '6px 5px',
+                              borderRadius: 10,
+                              border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
+                              background: active ? '#2B2118' : '#FAF5EA',
+                              color: active ? '#FFFFFF' : '#2B2118',
+                              textAlign: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ fontSize: 10.5, fontWeight: 900, lineHeight: 1.15 }}>{g.label}</div>
+                            <div style={{ fontSize: 8.5, fontWeight: 700, opacity: active ? 0.85 : 0.75, marginTop: 1 }}>{g.sub}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Row 2: 1-Tap Session Lineup Presets (Default vs TNG UVK Machine Lineup vs Ways QL13 Plate-Loaded Lineup) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                      {[
+                        { id: 'default', label: 'Khung Mặc Định' },
+                        { id: 'tng_uvk', label: 'Bộ Máy TNG UVK' },
+                        { id: 'ways_ql13', label: 'Bộ Máy Ways QL13' }
+                      ].map((pr) => {
+                        const curPreset = activePresetBySession[currentSession.id] || 'default';
+                        const active = curPreset === pr.id;
+                        return (
+                          <button
+                            key={pr.id}
+                            type="button"
+                            onClick={() => handleApplySessionPreset(currentSession.id, pr.id)}
+                            style={{
+                              padding: '5px 4px',
+                              borderRadius: 9,
+                              border: active ? '1.5px solid #E05A2B' : '1.5px dashed #C4B5A2',
+                              background: active ? '#FFEDD5' : '#FFFDF9',
+                              color: active ? '#9A3412' : '#5C4938',
+                              fontSize: 9.5,
+                              fontWeight: 900,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {active ? `✓ ${pr.label}` : pr.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div
@@ -3626,15 +3811,27 @@
                       marginTop: 10
                     }}
                   >
-                    {currentSession.exerciseIds.map((slotExId, index) => {
+                    {activeSessionSlotIds.map((slotExId, index) => {
                       const effectiveId = getEffectiveExerciseId(currentSession.id, slotExId);
                       const ex = GymCore.EXERCISES[effectiveId] || GymCore.EXERCISES[slotExId];
+                      if (!ex) return null;
                       const sets = getSetsForDateAndExercise(selectedDateISO, ex.id);
                       const doneCount = sets.filter((s) => s.done).length;
                       const allDone = !selectedDay.isFutureDay && ((doneCount === sets.length && sets.length > 0) || selectedDay.isCompleted);
+                      const isSwappedSlot = effectiveId !== slotExId || (activePresetBySession[currentSession.id] && activePresetBySession[currentSession.id] !== 'default');
+                      const gymTag =
+                        Array.isArray(ex.availableGyms) && ex.availableGyms.length === 1
+                          ? ex.availableGyms[0] === 'ways_ql13'
+                            ? '★ Máy Ways QL13'
+                            : '★ Máy TNG UVK'
+                          : selectedGymId === 'ways_ql13'
+                          ? '✓ Có tại Ways QL13'
+                          : selectedGymId === 'tng_uvk'
+                          ? '✓ Có tại TNG UVK'
+                          : '✓ Có ở cả 2 phòng';
 
                       return (
-                        <button
+                        <div
                           key={`${currentSession.id}_${slotExId}_${index}`}
                           onClick={() => setDetailSlotIndex(index)}
                           style={{
@@ -3712,6 +3909,9 @@
                               <div style={{ fontSize: 10, fontWeight: 800, color: '#E05A2B', marginTop: 2 }}>
                                 {ex.muscle}
                               </div>
+                              <div style={{ fontSize: 8.5, fontWeight: 800, color: '#059669', marginTop: 1 }}>
+                                {gymTag} {isSwappedSlot ? '· Đã đổi' : ''}
+                              </div>
                             </div>
                           </div>
 
@@ -3723,21 +3923,75 @@
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
+                              gap: 4,
                               fontSize: 10,
                               fontWeight: 900,
                               color: allDone ? '#065F46' : '#5C4938'
                             }}
                           >
-                            <span>
-                              {allDone ? '✓ ĐÃ HOÀN THÀNH' : `${sets.length}×${ex.repRange[0]}–${ex.repRange[1]}`}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPickerSheetConfig({
+                                  type: 'swap_exercise_slot',
+                                  sessionId: currentSession.id,
+                                  slotIndex: index,
+                                  slotOriginalId: slotExId,
+                                  currentExId: ex.id
+                                });
+                              }}
+                              style={{
+                                padding: '2.5px 7px',
+                                borderRadius: 7,
+                                border: '1.5px solid #2B2118',
+                                background: '#FFEDD5',
+                                color: '#9A3412',
+                                fontSize: 9.5,
+                                fontWeight: 900,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 3
+                              }}
+                            >
+                              <SvgIcon name="swap" size={10} color="#9A3412" />
+                              <span>Đổi bài</span>
+                            </button>
                             <span style={{ color: allDone ? '#059669' : '#E05A2B', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                               {allDone ? 'Xem lại' : 'Tập ngay'} <SvgIcon name="chevronRight" size={12} color={allDone ? '#059669' : '#E05A2B'} />
                             </span>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
+                  </div>
+
+                  {/* Add Machine / Reset Default Session Toolbar */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.85fr', gap: 7, marginTop: 9 }}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPickerSheetConfig({
+                          type: 'add_exercise_to_session',
+                          sessionId: currentSession.id
+                        })
+                      }
+                      className="sherpa-btn"
+                      style={{ width: '100%', padding: '8px 9px', fontSize: 10.5, background: '#FAF5EA' }}
+                    >
+                      <SvgIcon name="plus" size={13} color="#E05A2B" />
+                      <span>Thêm Máy Tập Vào Buổi ({activeSessionSlotIds.length} bài)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplySessionPreset(currentSession.id, 'default')}
+                      className="sherpa-btn"
+                      style={{ width: '100%', padding: '8px 8px', fontSize: 10.5, background: '#FFFDF9' }}
+                    >
+                      <SvgIcon name="swap" size={12} color="#2B2118" />
+                      <span>Về Khung Mặc Định</span>
+                    </button>
                   </div>
 
                   {/* 1-Tap Session Complete & Streak Button right inside Workout Overview */}
@@ -3811,13 +4065,19 @@
 
             {/* TAB 2B: TRANG CHI TIẾT BÀI TẬP (DRILL-DOWN VIEW KHI ẤN VÀO THẺ BÀI TẬP) */}
             {activeTab === 'workout' && detailSlotIndex !== null && (() => {
-              const totalSlots = currentSession.exerciseIds.length;
+              const totalSlots = activeSessionSlotIds.length;
               const safeIndex = Math.max(0, Math.min(totalSlots - 1, detailSlotIndex));
-              const slotExId = currentSession.exerciseIds[safeIndex];
+              const slotExId = activeSessionSlotIds[safeIndex];
               const effectiveId = getEffectiveExerciseId(currentSession.id, slotExId);
               const ex = GymCore.EXERCISES[effectiveId] || GymCore.EXERCISES[slotExId];
               const sets = getSetsForDateAndExercise(selectedDateISO, ex.id);
               const isSwapped = effectiveId !== slotExId;
+              const swapCandidates = GymCore.getSwapCandidatesForSlot(
+                currentSession.id,
+                slotExId,
+                ex.id,
+                selectedGymId
+              );
 
               return (
                 <>
@@ -3899,11 +4159,60 @@
                     items={[
                       { id: 'sets', label: `Ghi Hiệp (${sets.filter((s) => s.done).length}/${sets.length})`, icon: 'dumbbell' },
                       { id: 'guide', label: 'Video & Kỹ Thuật', icon: 'play' },
-                      { id: 'swap', label: 'Đổi Bài Khác', icon: 'swap' }
+                      { id: 'swap', label: `Đổi Máy / Đổi Bài (${swapCandidates.sameGroup.length + swapCandidates.otherInSession.length})`, icon: 'swap' }
                     ]}
                     activeId={exerciseSubTab}
                     onChange={setExerciseSubTab}
                   />
+
+                  {/* Real Gym Machine Setup Banner for TNG 58D Ung Văn Khiêm & Ways Station 361 QL13 */}
+                  {ex.gymSetup && (
+                    <section
+                      className="sherpa-card"
+                      style={{
+                        padding: '9px 11px',
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 6
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 10, fontWeight: 900, color: '#2B2118' }}>
+                          📍 THIẾT BỊ & CÁCH SETUP TẠI PHÒNG TẬP ({ex.machineBrand || ex.equipment})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setExerciseSubTab('swap')}
+                          style={{
+                            padding: '2.5px 8px',
+                            borderRadius: 999,
+                            border: '1.5px solid #2B2118',
+                            background: '#FFEDD5',
+                            color: '#9A3412',
+                            fontSize: 9.5,
+                            fontWeight: 900,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ⇄ Đổi sang máy khác
+                        </button>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 5, fontSize: 10.5, lineHeight: 1.38 }}>
+                        {(selectedGymId === 'all' || selectedGymId === 'tng_uvk') && ex.gymSetup.tng_uvk && (
+                          <div style={{ padding: '6px 8px', borderRadius: 9, background: '#FAF5EA', border: '1px solid #D8C8B0' }}>
+                            <strong style={{ color: '#E05A2B' }}>The New Gym (58D Ung Văn Khiêm):</strong> {ex.gymSetup.tng_uvk}
+                          </div>
+                        )}
+                        {(selectedGymId === 'all' || selectedGymId === 'ways_ql13') && ex.gymSetup.ways_ql13 && (
+                          <div style={{ padding: '6px 8px', borderRadius: 9, background: '#F0FDF4', border: '1px solid #86EFAC' }}>
+                            <strong style={{ color: '#15803D' }}>Ways Station (361 Quốc Lộ 13):</strong> {ex.gymSetup.ways_ql13}
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
 
                   {/* Interactive Motion Simulator + YouTube Video Card (Zero Error 153!) */}
                   {exerciseSubTab === 'guide' && <InteractiveVideoAndMotionCoach exercise={ex} />}
@@ -4306,39 +4615,174 @@
                       className="sherpa-card"
                       style={{
                         background: '#FFFBEB',
-                        border: '2px solid #2B2118'
+                        border: '2px solid #2B2118',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 10
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 900, color: '#92400E' }}>
-                        <SvgIcon name="swap" size={15} color="#92400E" />
-                        <span>Nếu kẹt máy / hết ghế thì tập bài nào thay thế?</span>
-                      </div>
-                      <p style={{ fontSize: 11.5, color: '#78350F', marginTop: 4, lineHeight: 1.4 }}>
-                        {ex.swapReason || ex.whyItWorks}
-                      </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 9 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 900, color: '#92400E' }}>
+                          <SvgIcon name="swap" size={15} color="#92400E" />
+                          <span>Đổi Bài & Chọn Máy Cho Vị Trí Bài {safeIndex + 1}</span>
+                        </div>
                         {isSwapped && (
                           <button
+                            type="button"
                             onClick={() => handleSwapExercise(currentSession.id, slotExId, slotExId)}
                             className="sherpa-btn"
-                            style={{ padding: '7px 10px', fontSize: 11.5, background: '#2B2118', color: '#FFFFFF' }}
+                            style={{ padding: '4px 9px', fontSize: 10, background: '#2B2118', color: '#FFFFFF' }}
                           >
-                            Quay lại bài gốc ({GymCore.EXERCISES[slotExId]?.name.split('(')[0]})
+                            ↺ Về bài gốc
                           </button>
                         )}
-                        {(ex.swapOptions || []).map((altId) => {
-                          const altEx = GymCore.EXERCISES[altId];
-                          if (!altEx) return null;
+                      </div>
+
+                      {/* Filter by Gym Branch right inside Swap View */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                        {[
+                          { id: 'tng_uvk', label: 'The New Gym UVK' },
+                          { id: 'ways_ql13', label: 'Ways Station QL13' },
+                          { id: 'all', label: 'Cả 2 Phòng' }
+                        ].map((g) => {
+                          const active = selectedGymId === g.id;
                           return (
                             <button
-                              key={altId}
-                              onClick={() => handleSwapExercise(currentSession.id, slotExId, altId)}
-                              className="sherpa-btn"
-                              style={{ padding: '7px 10px', fontSize: 11.5, background: '#FFFDF9' }}
+                              key={g.id}
+                              type="button"
+                              onClick={() => setSelectedGymId(g.id)}
+                              style={{
+                                padding: '6px 4px',
+                                borderRadius: 9,
+                                border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
+                                background: active ? '#2B2118' : '#FFFDF9',
+                                color: active ? '#FFFFFF' : '#2B2118',
+                                fontSize: 10,
+                                fontWeight: 900,
+                                cursor: 'pointer'
+                              }}
                             >
-                              <SvgIcon name="swap" size={13} />
-                              <span>Đổi sang: {altEx.name.split('(')[0]}</span>
+                              {g.label}
                             </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Group 1: Same Muscle / Slot Group (Direct 1:1 Biomechanical Replacements) */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                          1. Cùng Nhóm Cơ · Thay Thế Chuẩn 1:1 ({swapCandidates.slotGroupLabel}):
+                        </div>
+                        {swapCandidates.sameGroup.map((altEx) => {
+                          const isCurrentEx = altEx.id === ex.id;
+                          const setupNote =
+                            selectedGymId === 'ways_ql13'
+                              ? altEx.gymSetup?.ways_ql13
+                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
+                          return (
+                            <div
+                              key={altEx.id}
+                              style={{
+                                padding: '9px 10px',
+                                borderRadius: 13,
+                                border: isCurrentEx ? '2.5px solid #059669' : '1.5px solid #2B2118',
+                                background: isCurrentEx ? '#ECFDF5' : '#FFFDF9',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 5
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                  <img
+                                    src={GymCore.resolveAsset(altEx.mascot)}
+                                    alt={altEx.shortName || altEx.name}
+                                    style={{ width: 38, height: 38, borderRadius: 9, border: '1.5px solid #2B2118', objectFit: 'cover' }}
+                                  />
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
+                                    <div style={{ fontSize: 10, fontWeight: 800, color: '#E05A2B' }}>
+                                      {altEx.equipment} · {altEx.tier}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleSwapExercise(currentSession.id, slotExId, altEx.id);
+                                    setExerciseSubTab('sets');
+                                  }}
+                                  className="sherpa-btn"
+                                  style={{
+                                    padding: '6px 9px',
+                                    fontSize: 10.5,
+                                    background: isCurrentEx ? '#059669' : '#E05A2B',
+                                    color: '#FFFFFF',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  {isCurrentEx ? '✓ Đang chọn' : 'Chọn bài này'}
+                                </button>
+                              </div>
+                              {setupNote && (
+                                <div style={{ fontSize: 10, color: '#5C4938', fontWeight: 700, lineHeight: 1.35 }}>
+                                  📍 {setupNote}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Group 2: Other Available Machines in This Workout Session */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 4 }}>
+                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                          2. Máy Tập Khác Phù Hợp Với {currentSession.shortName} ({swapCandidates.otherInSession.length} bài):
+                        </div>
+                        {swapCandidates.otherInSession.map((altEx) => {
+                          const setupNote =
+                            selectedGymId === 'ways_ql13'
+                              ? altEx.gymSetup?.ways_ql13
+                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
+                          return (
+                            <div
+                              key={altEx.id}
+                              style={{
+                                padding: '8px 10px',
+                                borderRadius: 12,
+                                border: '1.5px solid #D8C8B0',
+                                background: '#FFFDF9',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                gap: 8
+                              }}
+                            >
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>
+                                  {altEx.shortName || altEx.name.split('(')[0].trim()}
+                                </div>
+                                <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>
+                                  {altEx.muscle} · {altEx.equipment}
+                                </div>
+                                {setupNote && (
+                                  <div style={{ fontSize: 9.5, color: '#5C4938', marginTop: 2 }}>
+                                    📍 {setupNote}
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleSwapExercise(currentSession.id, slotExId, altEx.id);
+                                  setExerciseSubTab('sets');
+                                }}
+                                className="sherpa-btn"
+                                style={{ padding: '6px 9px', fontSize: 10, background: '#FAF5EA', flexShrink: 0 }}
+                              >
+                                Đổi sang
+                              </button>
+                            </div>
                           );
                         })}
                       </div>
@@ -5519,6 +5963,42 @@
                     Cài Đặt Phòng Tập & Thiết Lập Hồ Sơ
                   </h3>
 
+                  <div style={{ marginBottom: 12 }}>
+                    <label style={{ fontSize: 11, fontWeight: 800, color: '#6B5744', display: 'block', marginBottom: 5 }}>
+                      Phòng tập bạn đang theo tập (Đồng bộ danh mục máy & gợi ý đổi bài):
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6 }}>
+                      {Object.values(GymCore.GYM_BRANCHES || {}).map((br) => {
+                        const active = selectedGymId === br.id;
+                        return (
+                          <button
+                            key={br.id}
+                            type="button"
+                            onClick={() => setSelectedGymId(br.id)}
+                            style={{
+                              padding: '9px 10px',
+                              borderRadius: 12,
+                              border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
+                              background: active ? '#FFEDD5' : '#FFFDF9',
+                              color: '#2B2118',
+                              textAlign: 'left',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 12, fontWeight: 900 }}>{br.name}</span>
+                              <span style={{ fontSize: 9.5, fontWeight: 900, padding: '2px 7px', borderRadius: 999, background: active ? '#E05A2B' : '#FAF5EA', color: active ? '#FFF' : '#6B5744' }}>
+                                {active ? '✓ Đang chọn' : 'Chọn'}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: 10, color: '#5C4938', fontWeight: 700, marginTop: 2 }}>{br.address}</div>
+                            <div style={{ fontSize: 9.5, color: '#059669', fontWeight: 800, marginTop: 2 }}>{br.hours}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 800, color: '#6B5744', display: 'block', marginBottom: 5 }}>
                       Trọng lượng thanh đòn Barbell mặc định khi tính bánh tạ:
@@ -6298,6 +6778,292 @@
                     </button>
                   </>
                 )}
+
+                {/* Picker Type 13: 1-Tap Exercise Swapper Bottom-Sheet right from Buổi Tập Overview */}
+                {pickerSheetConfig.type === 'swap_exercise_slot' && (() => {
+                  const { sessionId, slotIndex, slotOriginalId, currentExId } = pickerSheetConfig;
+                  const cands = GymCore.getSwapCandidatesForSlot(sessionId, slotOriginalId, currentExId, selectedGymId);
+                  const curEx = GymCore.EXERCISES[currentExId] || GymCore.EXERCISES[slotOriginalId];
+                  return (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <span style={{ fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 999, background: '#E05A2B', color: '#FFFFFF' }}>
+                            ĐỔI BÀI TẬP VỊ TRÍ BÀI {(slotIndex || 0) + 1} · {GymCore.WORKOUT_SESSIONS[sessionId]?.shortName}
+                          </span>
+                          <h3 className="serif-title" style={{ fontSize: 16, fontWeight: 900, marginTop: 4 }}>
+                            Đang tập: {curEx?.shortName || curEx?.name}
+                          </h3>
+                        </div>
+                        <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                          <SvgIcon name="close" size={16} />
+                        </button>
+                      </div>
+
+                      {/* Gym Filter Pills inside Bottom-Sheet */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginTop: 9 }}>
+                        {[
+                          { id: 'tng_uvk', label: 'The New Gym UVK' },
+                          { id: 'ways_ql13', label: 'Ways Station QL13' },
+                          { id: 'all', label: 'Cả 2 Phòng' }
+                        ].map((g) => {
+                          const active = selectedGymId === g.id;
+                          return (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => setSelectedGymId(g.id)}
+                              style={{
+                                padding: '6px 4px',
+                                borderRadius: 9,
+                                border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
+                                background: active ? '#2B2118' : '#FFFDF9',
+                                color: active ? '#FFFFFF' : '#2B2118',
+                                fontSize: 10,
+                                fontWeight: 900,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {g.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
+                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                          Cùng nhóm cơ ({cands.slotGroupLabel}):
+                        </div>
+                        {cands.sameGroup.map((altEx) => {
+                          const isCur = altEx.id === currentExId;
+                          const setupNote =
+                            selectedGymId === 'ways_ql13'
+                              ? altEx.gymSetup?.ways_ql13
+                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
+                          return (
+                            <div
+                              key={altEx.id}
+                              style={{
+                                padding: '9px 10px',
+                                borderRadius: 13,
+                                border: isCur ? '2.5px solid #059669' : '1.5px solid #2B2118',
+                                background: isCur ? '#ECFDF5' : '#FFFDF9',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 5
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                  <img
+                                    src={GymCore.resolveAsset(altEx.mascot)}
+                                    alt={altEx.shortName || altEx.name}
+                                    style={{ width: 38, height: 38, borderRadius: 9, border: '1.5px solid #2B2118', objectFit: 'cover' }}
+                                  />
+                                  <div>
+                                    <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
+                                    <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
+                                      {altEx.equipment} · {altEx.tier}
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    handleSwapExercise(sessionId, slotOriginalId, altEx.id);
+                                    setPickerSheetConfig(null);
+                                  }}
+                                  className="sherpa-btn"
+                                  style={{
+                                    padding: '6px 9px',
+                                    fontSize: 10.5,
+                                    background: isCur ? '#059669' : '#E05A2B',
+                                    color: '#FFFFFF',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  {isCur ? '✓ Đang tập' : 'Đổi bài'}
+                                </button>
+                              </div>
+                              {setupNote && (
+                                <div style={{ fontSize: 9.5, color: '#5C4938', fontWeight: 700, lineHeight: 1.35 }}>
+                                  📍 {setupNote}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118', marginTop: 4 }}>
+                          Các máy tập khác trong buổi này ({cands.otherInSession.length} bài):
+                        </div>
+                        {cands.otherInSession.map((altEx) => (
+                          <div
+                            key={altEx.id}
+                            style={{
+                              padding: '8px 10px',
+                              borderRadius: 11,
+                              border: '1.5px solid #D8C8B0',
+                              background: '#FFFDF9',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              gap: 8
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
+                              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#6B5744' }}>
+                                {altEx.muscle} · {altEx.equipment}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSwapExercise(sessionId, slotOriginalId, altEx.id);
+                                setPickerSheetConfig(null);
+                              }}
+                              className="sherpa-btn"
+                              style={{ padding: '6px 9px', fontSize: 10, background: '#FAF5EA', flexShrink: 0 }}
+                            >
+                              Chọn
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {/* Picker Type 14: Add Extra Machine Exercise to Current Session */}
+                {pickerSheetConfig.type === 'add_exercise_to_session' && (() => {
+                  const { sessionId } = pickerSheetConfig;
+                  const curSlots = activeSessionSlotIds;
+                  const availableToAdd = Object.values(GymCore.EXERCISES).filter(
+                    (ex) =>
+                      !curSlots.includes(ex.id) &&
+                      (selectedGymId === 'all' || !Array.isArray(ex.availableGyms) || ex.availableGyms.includes(selectedGymId))
+                  );
+                  return (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <span style={{ fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 999, background: '#059669', color: '#FFFFFF' }}>
+                            BỔ SUNG MÁY TẬP VÀO BUỔI ({GymCore.WORKOUT_SESSIONS[sessionId]?.shortName})
+                          </span>
+                          <h3 className="serif-title" style={{ fontSize: 16, fontWeight: 900, marginTop: 4 }}>
+                            Chọn Thêm Máy Tập Hiện Có Tại Phòng
+                          </h3>
+                        </div>
+                        <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                          <SvgIcon name="close" size={16} />
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
+                        {availableToAdd.map((ex) => (
+                          <div
+                            key={ex.id}
+                            style={{
+                              padding: '8px 10px',
+                              borderRadius: 12,
+                              border: '1.5px solid #2B2118',
+                              background: '#FFFDF9',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              gap: 8
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>{ex.name}</div>
+                              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
+                                {ex.muscle} · {ex.equipment}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAddExerciseToSession(sessionId, ex.id);
+                                setPickerSheetConfig(null);
+                              }}
+                              className="sherpa-btn sherpa-btn-green"
+                              style={{ padding: '6px 10px', fontSize: 10.5, flexShrink: 0 }}
+                            >
+                              + Thêm
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  );
+                })()}
+
+                {/* Picker Type 15: Scraped Real Equipment Directory for The New Gym 58D UVK & Ways Station 361 QL13 */}
+                {pickerSheetConfig.type === 'gym_equipment_directory' && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <div>
+                        <span style={{ fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 999, background: '#2B2118', color: '#FDBA74' }}>
+                          DỮ LIỆU THIẾT BỊ THỰC TẾ 2 PHÒNG TẬP
+                        </span>
+                        <h3 className="serif-title" style={{ fontSize: 16, fontWeight: 900, marginTop: 4 }}>
+                          The New Gym UVK & Ways Station QL13
+                        </h3>
+                      </div>
+                      <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                        <SvgIcon name="close" size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+                      {['tng_uvk', 'ways_ql13'].map((gId) => {
+                        const br = GymCore.GYM_BRANCHES?.[gId];
+                        if (!br) return null;
+                        return (
+                          <div
+                            key={gId}
+                            style={{
+                              padding: 11,
+                              borderRadius: 14,
+                              border: '2px solid #2B2118',
+                              background: gId === 'tng_uvk' ? '#FFFDF9' : '#F0FDF4',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 6
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                              <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118' }}>{br.name}</div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleApplySessionPreset(currentSession.id, gId);
+                                  setPickerSheetConfig(null);
+                                }}
+                                className="sherpa-btn sherpa-btn-primary"
+                                style={{ padding: '5px 8px', fontSize: 9.5, flexShrink: 0 }}
+                              >
+                                Áp dụng bộ máy
+                              </button>
+                            </div>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#6B5744' }}>📍 {br.address}</div>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#059669' }}>🕒 {br.hours}</div>
+                            {br.zones.map((z, zIdx) => (
+                              <div key={zIdx} style={{ padding: '6px 8px', borderRadius: 9, background: '#FAF5EA', border: '1px solid #D8C8B0' }}>
+                                <div style={{ fontSize: 10.5, fontWeight: 900, color: '#9A3412' }}>{z.zoneName}:</div>
+                                <ul style={{ margin: '3px 0 0 14px', padding: 0, fontSize: 9.5, color: '#2B2118', lineHeight: 1.4 }}>
+                                  {z.machines.map((m, mIdx) => (
+                                    <li key={mIdx}>{m}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -6748,12 +7514,12 @@
         if ('caches' in window) {
           caches.keys().then((keys) => {
             keys.forEach((k) => {
-              if (k !== '8d-bear-sherpa-pwa-v7') caches.delete(k);
+              if (k !== '8d-bear-sherpa-pwa-v9') caches.delete(k);
             });
           }).catch(() => {});
         }
         const isGym8DSubpath = /^\/gym8d(\/|$)/i.test(location.pathname);
-        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=7' : './sw.js?v=7';
+        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=9' : './sw.js?v=9';
         const swOpts = isGym8DSubpath ? { scope: '/gym8D' } : undefined;
         navigator.serviceWorker.register(swUrl, swOpts).then((reg) => {
           if (reg && reg.update) reg.update();
