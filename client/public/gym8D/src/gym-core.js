@@ -72,10 +72,10 @@
       return raw.replace(/^\.\.\//, cleanPrefix);
     }
     if (typeof window !== "undefined" && window.location && /^\/gym8d(\/|$)/i.test(window.location.pathname)) {
-      return raw.replace(/^\.\.\//, "/gym8D/");
+      return raw.replace(/^\.\.\//, "/gym8D/") + "?v=12";
     }
     if (typeof window !== "undefined" && window.location && !window.location.pathname.includes("/prototypes/")) {
-      return raw.replace(/^\.\.\//, "./");
+      return raw.replace(/^\.\.\//, "./") + "?v=12";
     }
     return raw;
   }
