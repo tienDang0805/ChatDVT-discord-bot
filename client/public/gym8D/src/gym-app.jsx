@@ -5369,9 +5369,11 @@
                         <div style={{ fontSize: 10.5, fontWeight: 700, color: '#4B3B2C', lineHeight: 1.35 }}>
                           {ex.cues}
                         </div>
-                        <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', lineHeight: 1.3 }}>
-                          💨 Nhịp thở: {ex.breathing}
-                        </div>
+                        {(ex.angleCue || ex.tempoCue) && (
+                          <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', lineHeight: 1.3 }}>
+                            ⏱️ Góc & Nhịp tập: {[ex.angleCue, ex.tempoCue].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
                         {ex.gymSetup && (
                           <div
                             style={{
