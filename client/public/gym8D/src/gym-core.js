@@ -1275,7 +1275,7 @@
       mascot: "chestFly",
       tier: "Tier A · Có Ở Cả 2 Phòng",
       priorityRank: 4,
-      slotGroup: "lateral_delt",
+      slotGroup: "rear_delt_pull",
       availableGyms: ["tng_uvk", "ways_ql13"],
       machineBrand: "2-in-1 Pec Deck / Rear Delt Machine",
       gymSetup: {
@@ -1665,7 +1665,7 @@
       mascot: "cableRow",
       tier: "Tier A · Bảo Vệ Khớp Vai",
       priorityRank: 3,
-      slotGroup: "horizontal_row",
+      slotGroup: "rear_delt_pull",
       availableGyms: ["tng_uvk", "ways_ql13"],
       machineBrand: "Adjustable Cable Pulley + Rope",
       gymSetup: {
@@ -2054,7 +2054,7 @@
       mascot: "legPress",
       tier: "Tier B · Bảo Vệ Cổ Chân",
       priorityRank: 3,
-      slotGroup: "core_stability",
+      slotGroup: "calves",
       availableGyms: ["ways_ql13", "tng_uvk"],
       machineBrand: "Seated Calf Raise / 45° Leg Press Calf",
       gymSetup: {
@@ -2322,7 +2322,7 @@
         tng_uvk: "Khu Giãn Cơ & Tập Bụng Tách Biệt TNG 58D UVK: Thảm tập êm không vướng khu vực tạ nặng.",
         ways_ql13: "Khu Thảm & Giãn Cơ Ways 361 QL13: Có sẵn thảm tập và con lăn Foam Roller mượn miễn phí."
       },
-      swapOptions: ["ab_crunch_machine", "seated_calf_press"]
+      swapOptions: ["ab_crunch_machine"]
     },
     leg_press_45: {
       slotGroup: "quad_compound",
@@ -2362,20 +2362,127 @@
     }
   });
 
+  const ZONE_CATEGORY_LABELS = {
+    pin_machine: "Khu Máy Chốt Tạ (Strength)",
+    plate_loaded: "Khu Lắp Tạ Rời (Plate-Loaded)",
+    cable_smith: "Khu Khung Cáp & Máy Smith",
+    free_weight: "Khu Tạ Đơn & Ghế Rời",
+    cardio_core: "Khu Cardio & Thảm Giãn Cơ"
+  };
+
+  const EXERCISE_ZONE_MAP = {
+    incline_db_press: "free_weight",
+    dumbbell_shoulder_press: "free_weight",
+    pec_deck_fly: "pin_machine",
+    lateral_raise: "free_weight",
+    tricep_rope_pushdown: "cable_smith",
+    barbell_bench_press: "free_weight",
+    machine_chest_press: "pin_machine",
+    lat_pulldown: "pin_machine",
+    seated_cable_row: "pin_machine",
+    plank_core: "cardio_core",
+    leg_press_45: "plate_loaded",
+    dumbbell_rdl: "free_weight",
+    dumbbell_curl_lateral: "free_weight",
+    incline_treadmill_walk: "cardio_core",
+    iso_incline_chest_press: "plate_loaded",
+    smith_incline_press: "cable_smith",
+    assisted_chest_dip: "pin_machine",
+    cable_crossover_fly: "cable_smith",
+    machine_shoulder_press: "pin_machine",
+    smith_shoulder_press: "cable_smith",
+    cable_lateral_raise_single: "cable_smith",
+    machine_lateral_raise: "pin_machine",
+    reverse_pec_deck_delt: "pin_machine",
+    overhead_cable_tricep_ext: "cable_smith",
+    seated_dip_tricep_machine: "pin_machine",
+    iso_high_row_pulldown: "plate_loaded",
+    close_neutral_pulldown: "pin_machine",
+    assisted_pull_up: "pin_machine",
+    chest_supported_tbar_row: "plate_loaded",
+    machine_seated_row: "pin_machine",
+    one_arm_db_row: "free_weight",
+    rope_face_pull: "cable_smith",
+    preacher_curl_machine: "pin_machine",
+    cable_rope_hammer_curl: "cable_smith",
+    hack_squat_machine: "plate_loaded",
+    smith_box_squat: "cable_smith",
+    seated_leg_extension: "pin_machine",
+    seated_leg_curl_machine: "pin_machine",
+    glute_drive_hip_thrust: "plate_loaded",
+    ab_crunch_machine: "pin_machine",
+    seated_calf_press: "plate_loaded",
+    stair_stepper_cardio: "cardio_core",
+    rowing_machine_cardio: "cardio_core",
+    elliptical_cross_trainer: "cardio_core"
+  };
+
+  Object.keys(EXERCISES).forEach((exId) => {
+    const zCat = EXERCISE_ZONE_MAP[exId] || "pin_machine";
+    EXERCISES[exId].zoneCategory = zCat;
+    EXERCISES[exId].zoneLabel = ZONE_CATEGORY_LABELS[zCat] || "Khu Máy Tập";
+  });
+
   const SLOT_GROUP_LABELS = {
     chest_press: "Đẩy Ngực Chính (Chest Press)",
     shoulder_press: "Đẩy Vai Chính (Overhead Press)",
     chest_fly: "Ép Ngực Cô Lập (Chest Fly)",
-    lateral_delt: "Vai Ngang & Vai Sau (Side / Rear Delt)",
+    lateral_delt: "Bay Vai Ngang (Side Delt)",
+    rear_delt_pull: "Vai Sau & Chóp Xoay (Rear Delt / Face Pull)",
     triceps: "Tay Sau Cô Lập (Triceps)",
     vertical_pull: "Kéo Lưng Xô Dọc (Lat Pulldown / Pull-Up)",
-    horizontal_row: "Chèo Lưng Giữa Ngang (Row / Face Pull)",
+    horizontal_row: "Chèo Lưng Giữa Ngang (Seated / T-Bar Row)",
     biceps: "Cuốn Tay Trước (Biceps / Brachialis)",
     quad_compound: "Đùi Trước & Tổng Hợp Chân (Leg Press / Squat / Extension)",
     posterior_chain: "Đùi Sau & Cơ Mông (Leg Curl / RDL / Hip Thrust)",
-    core_stability: "Core Bảo Vệ Đĩa Đệm & Bắp Chân",
+    calves: "Nhón Bắp Chân (Seated / Leg Press Calf)",
+    core_stability: "Core & Bụng Bảo Vệ Đĩa Đệm",
     cardio_finisher: "Cardio Đốt Mỡ Êm Khớp Cuối Buổi"
   };
+
+  const SLOT_GROUP_SHORT_LABELS = {
+    chest_press: "Đẩy Ngực",
+    shoulder_press: "Đẩy Vai",
+    chest_fly: "Ép Ngực",
+    lateral_delt: "Vai Ngang",
+    rear_delt_pull: "Vai Sau & Face Pull",
+    triceps: "Tay Sau",
+    vertical_pull: "Kéo Xô Dọc",
+    horizontal_row: "Chèo Lưng Ngang",
+    biceps: "Tay Trước (Biceps)",
+    quad_compound: "Đùi Trước & Squat",
+    posterior_chain: "Đùi Sau & Mông",
+    calves: "Bắp Chân",
+    core_stability: "Core & Bụng",
+    cardio_finisher: "Cardio Đốt Mỡ"
+  };
+
+  const SESSION_ALLOWED_SLOT_GROUPS = {
+    press_day: ["chest_press", "shoulder_press", "chest_fly", "lateral_delt", "triceps", "cardio_finisher"],
+    pull_day: ["vertical_pull", "horizontal_row", "rear_delt_pull", "biceps", "core_stability", "cardio_finisher"],
+    legs_day: ["quad_compound", "posterior_chain", "calves", "core_stability", "cardio_finisher"],
+    upper_day: [
+      "chest_press",
+      "vertical_pull",
+      "chest_fly",
+      "horizontal_row",
+      "shoulder_press",
+      "lateral_delt",
+      "rear_delt_pull",
+      "triceps",
+      "biceps",
+      "cardio_finisher"
+    ]
+  };
+
+  function normalizeVNSearch(str) {
+    return String(str || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .trim();
+  }
 
   const GYM_BRANCHES = {
     all: {
@@ -2552,13 +2659,7 @@
       .sort((a, b) => scoreForGym(b) - scoreForGym(a));
 
     const sessionAllowedGroups =
-      sessionId === "press_day"
-        ? ["chest_press", "shoulder_press", "chest_fly", "lateral_delt", "triceps", "cardio_finisher"]
-        : sessionId === "pull_day"
-        ? ["vertical_pull", "horizontal_row", "biceps", "lateral_delt", "core_stability", "cardio_finisher"]
-        : sessionId === "legs_day"
-        ? ["quad_compound", "posterior_chain", "core_stability", "cardio_finisher"]
-        : ["chest_press", "vertical_pull", "chest_fly", "horizontal_row", "shoulder_press", "lateral_delt", "triceps", "biceps"];
+      SESSION_ALLOWED_SLOT_GROUPS[sessionId] || SESSION_ALLOWED_SLOT_GROUPS.press_day;
 
     const otherInSession = allExercises
       .filter(
@@ -2572,8 +2673,139 @@
     return {
       slotGroup: targetGroup,
       slotGroupLabel: SLOT_GROUP_LABELS[targetGroup] || activeEx.muscle,
+      slotGroupShortLabel: SLOT_GROUP_SHORT_LABELS[targetGroup] || activeEx.muscle,
+      allowedGroups: sessionAllowedGroups.map((g) => ({
+        id: g,
+        label: SLOT_GROUP_LABELS[g] || g,
+        shortLabel: SLOT_GROUP_SHORT_LABELS[g] || g
+      })),
       sameGroup,
       otherInSession
+    };
+  }
+
+  function getSessionAddableExercises(sessionId, currentSlotIds, gymBranchId) {
+    const curSlots = Array.isArray(currentSlotIds) ? currentSlotIds : [];
+    const sessionAllowedGroups =
+      SESSION_ALLOWED_SLOT_GROUPS[sessionId] || SESSION_ALLOWED_SLOT_GROUPS.press_day;
+    const allExercises = Object.values(EXERCISES);
+
+    const filterByGym = (ex) => {
+      if (!gymBranchId || gymBranchId === "all") return true;
+      return !Array.isArray(ex.availableGyms) || ex.availableGyms.includes(gymBranchId);
+    };
+
+    const scoreForGym = (ex) => {
+      if (!gymBranchId || gymBranchId === "all") return 0;
+      if (Array.isArray(ex.availableGyms) && ex.availableGyms[0] === gymBranchId) return 2;
+      if (Array.isArray(ex.availableGyms) && ex.availableGyms.includes(gymBranchId)) return 1;
+      return -1;
+    };
+
+    const candidates = allExercises
+      .filter(
+        (ex) =>
+          !curSlots.includes(ex.id) &&
+          sessionAllowedGroups.includes(ex.slotGroup) &&
+          filterByGym(ex)
+      )
+      .sort((a, b) => scoreForGym(b) - scoreForGym(a));
+
+    return {
+      allowedGroups: sessionAllowedGroups.map((g) => ({
+        id: g,
+        label: SLOT_GROUP_LABELS[g] || g,
+        shortLabel: SLOT_GROUP_SHORT_LABELS[g] || g
+      })),
+      candidates
+    };
+  }
+
+  const MIN_WORKOUT_COMPLETION_PCT = 70;
+
+  function calculateSessionCompletion(sessionId, dayLogs, sessionSwaps, customSessionLists) {
+    const sess = WORKOUT_SESSIONS[sessionId];
+    if (!sess || sessionId === "rest") {
+      return {
+        totalExercises: 0,
+        completedExercises: 0,
+        totalSetsCount: 0,
+        completedSetsCount: 0,
+        totalTargetReps: 0,
+        completedRepsCount: 0,
+        totalVolumeKg: 0,
+        exercisePct: 100,
+        setPct: 100,
+        repPct: 100,
+        completionPct: 100,
+        minRequiredPct: MIN_WORKOUT_COMPLETION_PCT,
+        minRequiredExercises: 0,
+        minRequiredSets: 0,
+        minRequiredReps: 0,
+        meetsThreshold: true
+      };
+    }
+
+    const activeExIds = getEffectiveSessionExerciseIds(sessionId, sessionSwaps, customSessionLists);
+    const logs = dayLogs || {};
+    let totalExercises = activeExIds.length;
+    let completedExercises = 0;
+    let totalSetsCount = 0;
+    let completedSetsCount = 0;
+    let totalTargetReps = 0;
+    let completedRepsCount = 0;
+    let totalVolumeKg = 0;
+
+    activeExIds.forEach((exId) => {
+      const hasCustomLog = Array.isArray(logs[exId]);
+      const sets = hasCustomLog ? logs[exId] : (EXERCISES[exId] ? EXERCISES[exId].defaultSets : []);
+      const exTotalSets = sets.length;
+      let exDoneSets = 0;
+      sets.forEach((s) => {
+        const targetR = Math.max(1, Number(s.reps) || 0);
+        totalSetsCount += 1;
+        totalTargetReps += targetR;
+        if (hasCustomLog && s.done) {
+          exDoneSets += 1;
+          completedSetsCount += 1;
+          completedRepsCount += targetR;
+          const w = Number(s.weight) || 0;
+          if (w > 0 && targetR > 0) {
+            totalVolumeKg += w * targetR;
+          }
+        }
+      });
+      if (exTotalSets > 0 && exDoneSets >= Math.ceil(exTotalSets * 0.7)) {
+        completedExercises += 1;
+      }
+    });
+
+    const exercisePct = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
+    const setPct = totalSetsCount > 0 ? Math.round((completedSetsCount / totalSetsCount) * 100) : 0;
+    const repPct = totalTargetReps > 0 ? Math.round((completedRepsCount / totalTargetReps) * 100) : 0;
+    const completionPct = Math.max(exercisePct, setPct, repPct);
+    const minRequiredExercises = Math.max(1, Math.ceil(totalExercises * (MIN_WORKOUT_COMPLETION_PCT / 100)));
+    const minRequiredSets = Math.max(1, Math.ceil(totalSetsCount * (MIN_WORKOUT_COMPLETION_PCT / 100)));
+    const minRequiredReps = Math.max(1, Math.ceil(totalTargetReps * (MIN_WORKOUT_COMPLETION_PCT / 100)));
+    const meetsThreshold = completionPct >= MIN_WORKOUT_COMPLETION_PCT;
+
+    return {
+      totalExercises,
+      completedExercises,
+      totalSetsCount,
+      completedSetsCount,
+      totalTargetReps,
+      completedRepsCount,
+      totalVolumeKg,
+      exercisePct,
+      setPct,
+      repPct,
+      completionPct,
+      minRequiredPct: MIN_WORKOUT_COMPLETION_PCT,
+      minRequiredExercises,
+      minRequiredSets,
+      minRequiredReps,
+      meetsThreshold
     };
   }
 
@@ -2879,35 +3111,41 @@
 
     const sess = WORKOUT_SESSIONS[sessionId];
     const dayLogs = logsByDate[isoDate] || {};
-    let totalSetsCount = 0;
-    let completedSetsCount = 0;
-    let totalVolumeKg = 0;
-    if (isWorkoutDay && sess) {
-      const activeExIds = getEffectiveSessionExerciseIds(
-        sessionId,
-        opts.sessionSwaps,
-        opts.customSessionLists
-      );
-      activeExIds.forEach((exId) => {
-        const hasCustomLog = Array.isArray(dayLogs[exId]);
-        const sets = hasCustomLog ? dayLogs[exId] : (EXERCISES[exId] ? EXERCISES[exId].defaultSets : []);
-        totalSetsCount += sets.length;
-        sets.forEach((s) => {
-          const setDone = (hasCustomLog && s.done) || statusRecord?.status === "done";
-          if (setDone) {
-            completedSetsCount += 1;
-            const w = Number(s.weight) || 0;
-            const r = Number(s.reps) || 0;
-            if (w > 0 && r > 0) {
-              totalVolumeKg += w * r;
-            }
-          }
-        });
-      });
-    }
-    if (statusRecord?.status === "done" && completedSetsCount < totalSetsCount) {
-      completedSetsCount = totalSetsCount;
-    }
+    const sessionProgress = isWorkoutDay && sess
+      ? calculateSessionCompletion(sessionId, dayLogs, opts.sessionSwaps, opts.customSessionLists)
+      : {
+          totalExercises: 0,
+          completedExercises: 0,
+          totalSetsCount: 0,
+          completedSetsCount: 0,
+          totalTargetReps: 0,
+          completedRepsCount: 0,
+          totalVolumeKg: 0,
+          exercisePct: 0,
+          setPct: 0,
+          repPct: 0,
+          completionPct: 0,
+          minRequiredPct: MIN_WORKOUT_COMPLETION_PCT,
+          minRequiredExercises: 0,
+          minRequiredSets: 0,
+          minRequiredReps: 0,
+          meetsThreshold: false
+        };
+    const totalSetsCount = sessionProgress.totalSetsCount;
+    const completedSetsCount = sessionProgress.completedSetsCount;
+    const totalVolumeKg = sessionProgress.totalVolumeKg;
+    const totalExercisesCount = sessionProgress.totalExercises;
+    const completedExercisesCount = sessionProgress.completedExercises;
+    const totalTargetReps = sessionProgress.totalTargetReps;
+    const completedRepsCount = sessionProgress.completedRepsCount;
+    const completionPct = sessionProgress.completionPct;
+    const exercisePct = sessionProgress.exercisePct;
+    const setPct = sessionProgress.setPct;
+    const repPct = sessionProgress.repPct;
+    const minRequiredExercises = sessionProgress.minRequiredExercises;
+    const minRequiredSets = sessionProgress.minRequiredSets;
+    const minRequiredReps = sessionProgress.minRequiredReps;
+    const meetsCompletionThreshold = sessionProgress.meetsThreshold;
 
     const isToday = isoDate === todayISO;
     const isTomorrow = isoDate === tomorrowISO;
@@ -2923,6 +3161,9 @@
     const explicitStatus = statusRecord?.status || null;
     const isCompleted =
       !isFutureDay &&
+      !isBeforeStart &&
+      isWorkoutDay &&
+      meetsCompletionThreshold &&
       (explicitStatus === "done" ||
         (explicitStatus !== "missed" && totalSetsCount > 0 && completedSetsCount >= totalSetsCount));
     const isMissed =
@@ -3007,6 +3248,18 @@
       wakeAlertTime,
       completedSetsCount,
       totalSetsCount,
+      completedExercisesCount,
+      totalExercisesCount,
+      completedRepsCount,
+      totalTargetReps,
+      completionPct,
+      exercisePct,
+      setPct,
+      repPct,
+      minRequiredExercises,
+      minRequiredSets,
+      minRequiredReps,
+      meetsCompletionThreshold,
       totalVolumeKg,
       kcalBurned,
       explicitStatus,
@@ -3338,86 +3591,651 @@
     };
   }
 
+  const VN_FOOD_CATEGORIES = [
+    { id: "all", label: "Tất cả món", shortLabel: "Tất cả" },
+    { id: "noodle_soup", label: "🍜 Bún · Phở · Hủ Tiếu", shortLabel: "Bún · Phở · Hủ Tiếu" },
+    { id: "rice_carb", label: "🍚 Cơm Tấm · Cơm · Tinh Bột", shortLabel: "Cơm Tấm · Cơm" },
+    { id: "protein_dish", label: "🥩 Đạm Gym · Thịt Cá · Phụ", shortLabel: "Đạm Thịt Cá" },
+    { id: "fruit", label: "🍎 Trái Cây (Táo · Ổi · Nho...)", shortLabel: "Trái Cây Tươi" }
+  ];
+
   const VN_FOODS = [
+    // 1. NHÓM BÚN · PHỞ · HỦ TIẾU · MÌ NƯỚC (10 MÓN CHUẨN VIỆT NAM)
     {
       id: "pho_bo_tai",
       name: "Phở bò tái nạc (Bớt 1/3 bánh, nước trong)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Vừa",
       portion: "1 tô vừa",
       kcal: 430,
       protein: 32,
       carb: 52,
       fat: 10,
-      tip: "Dặn quán không lấy nước béo, bớt bánh phở, gọi thêm 50g thịt bò tái."
+      fiber: 2,
+      tip: "Dặn quán không lấy nước béo, bớt 1/3 bánh phở và gọi thêm 50g thịt bò tái nạc."
     },
     {
-      id: "uc_ga_ap_chao",
-      name: "Ức gà phi lê áp chảo / luộc",
-      portion: "200g chín",
-      kcal: 330,
-      protein: 62,
-      carb: 0,
-      fat: 7,
-      tip: "Nguồn đạm tinh khiết nhất; ướp tiêu chanh hoặc sốt teriyaki ít đường cho dễ ăn."
+      id: "pho_ga_xe",
+      name: "Phở gà ta ức/đùi xé (Bỏ da, nước trong)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sáng / Sau tập",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 410,
+      protein: 34,
+      carb: 50,
+      fat: 8,
+      fiber: 2,
+      tip: "Chọn phần ức hoặc thịt đùi bỏ da; ăn kèm giá trụng để tăng chất xơ và no lâu."
     },
     {
-      id: "whey_isolate",
-      name: "Whey Protein Isolate (1 muỗng)",
-      portion: "1 scoop (30g)",
-      kcal: 120,
-      protein: 25,
-      carb: 2,
-      fat: 1,
-      tip: "Pha với 250ml nước lọc uống ngay sau tập hoặc kèm bữa phụ chiều."
+      id: "bun_bo_hue_nac",
+      name: "Bún bò Huế bắp bò nạc (Không giò heo, ít váng dầu)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 480,
+      protein: 33,
+      carb: 56,
+      fat: 13,
+      fiber: 3,
+      tip: "Gọi bắp bò + chả cua, bỏ móng giò mỡ và dặn quán không múc váng ớt sa tế dầu."
+    },
+    {
+      id: "hu_tieu_nam_vang",
+      name: "Hủ tiếu Nam Vang nước (Tôm, thịt nạc, trứng cút)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 420,
+      protein: 29,
+      carb: 54,
+      fat: 9,
+      fiber: 2.5,
+      tip: "Chọn hủ tiếu nước thay vì hủ tiếu khô trộn dầu tỏi để tiết kiệm ngay 120 kcal mỡ thừa."
+    },
+    {
+      id: "hu_tieu_bo_kho",
+      name: "Hủ tiếu bò kho nạc gân (Hớt mỡ, nhiều cà rốt)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Bữa sáng ngày tập nặng",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 495,
+      protein: 34,
+      carb: 53,
+      fat: 15,
+      fiber: 3,
+      tip: "Phù hợp cho ngày tập Chân (Legs Day) hoặc Kéo nặng nhờ giàu sắt, kẽm và Collagen gân bò."
+    },
+    {
+      id: "bun_thit_nuong_nac",
+      name: "Bún thịt nướng thăn nạc (Không chả giò chiên)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Trưa / Tối",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 510,
+      protein: 28,
+      carb: 62,
+      fat: 15,
+      fiber: 3.5,
+      tip: "Bỏ chả giò chiên ngập dầu, rưới 1/2 chén nước mắm chua ngọt và ăn gấp đôi rau sống, đồ chua."
+    },
+    {
+      id: "bun_rieu_cua",
+      name: "Bún riêu cua đồng (Riêu cua, thịt băm, đậu hũ, huyết)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Thấp",
+      portion: "1 tô vừa",
+      kcal: 440,
+      protein: 26,
+      carb: 52,
+      fat: 12,
+      fiber: 3,
+      tip: "Không bỏ tóp mỡ chiên; riêu cua và đậu hũ cung cấp Canxi và đạm dễ tiêu hóa."
+    },
+    {
+      id: "bun_cha_ha_noi",
+      name: "Bún chả Hà Nội (Chả viên & thịt thăn nướng than)",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 phần chuẩn",
+      kcal: 520,
+      protein: 30,
+      carb: 58,
+      fat: 17,
+      fiber: 3,
+      tip: "Ăn 2/3 đĩa bún, gắp thịt nướng chấm vừa phải nước mắm đường và ăn nhiều đu đủ xanh."
+    },
+    {
+      id: "mien_ga_mang",
+      name: "Miến gà ta nấu măng tươi / nấm hương",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Tối nhẹ bụng / Giảm mỡ",
+      giLevel: "GI Thấp",
+      portion: "1 tô vừa",
+      kcal: 350,
+      protein: 30,
+      carb: 42,
+      fat: 6,
+      fiber: 3.5,
+      tip: "Món nước ít Calo nhất cho bữa tối hoặc ngày nghỉ tập mà vẫn đủ 30g đạm thịt gà."
+    },
+    {
+      id: "banh_canh_cua_tom",
+      name: "Bánh canh cua thịt nạc & tôm bóc vỏ",
+      category: "noodle_soup",
+      categoryLabel: "Bún · Phở · Hủ Tiếu",
+      mealTag: "Sau tập / Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 tô vừa",
+      kcal: 435,
+      protein: 28,
+      carb: 56,
+      fat: 9,
+      fiber: 2,
+      tip: "Tôm và thịt cua giàu đạm nạc; hạn chế húp hết nước súp sánh bột năng khi đang siết mỡ."
+    },
+
+    // 2. NHÓM CƠM TẤM · CƠM VIỆT · TINH BỘT CHUẨN (10 MÓN)
+    {
+      id: "com_tam_suon_nac",
+      name: "Cơm tấm sườn nướng nạc (Bớt 1/3 cơm, không bì/mỡ hành)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 dĩa chuẩn gym",
+      kcal: 580,
+      protein: 36,
+      carb: 66,
+      fat: 17,
+      fiber: 2.5,
+      tip: "Chọn miếng sườn cốt lết nạc, bỏ mỡ hành/tóp mỡ, xin thêm dưa leo cà chua và canh rau."
+    },
+    {
+      id: "com_tam_suon_op_la",
+      name: "Cơm tấm sườn nướng + Trứng ốp la (Full đạm sau tập nặng)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Sau tập nặng",
+      giLevel: "GI Vừa",
+      portion: "1 dĩa đầy đủ",
+      kcal: 670,
+      protein: 42,
+      carb: 68,
+      fat: 23,
+      fiber: 2.5,
+      tip: "Cung cấp tới 42g Protein; phù hợp cho bữa sáng 07:15 ngay sau ca tập tạ 6h sáng."
+    },
+    {
+      id: "com_ga_bo_da",
+      name: "Cơm gà xối mỡ / Cơm gà Hải Nam (Bỏ lớp da chiên)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Trưa",
+      giLevel: "GI Vừa",
+      portion: "1 phần",
+      kcal: 550,
+      protein: 38,
+      carb: 64,
+      fat: 14,
+      fiber: 2,
+      tip: "Chỉ cần lột bỏ lớp da gà chiên giòn là bạn cắt giảm ngay 160 kcal chất béo bão hòa."
     },
     {
       id: "com_van_phong_bo",
-      name: "Cơm trưa văn phòng (1.5 chén cơm + Bò/Cá + Rau)",
+      name: "Cơm trưa văn phòng (1.5 chén cơm + Bò/Cá + Rau luộc)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Trưa chuẩn",
+      giLevel: "GI Vừa",
       portion: "1 phần chuẩn",
       kcal: 640,
       protein: 44,
       carb: 74,
       fat: 16,
+      fiber: 5,
       tip: "Ăn hết đĩa rau luộc trước khi ăn cơm để no lâu và ổn định đường huyết."
     },
     {
-      id: "trung_ga_luoc",
-      name: "Trứng gà luộc / ốp la ít dầu",
-      portion: "2 quả lớn",
-      kcal: 155,
+      id: "com_gao_lut_uc_ga",
+      name: "Cơm gạo lứt + Ức gà áp chảo + Bông cải xanh luộc",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Siết mỡ / Trưa / Tối",
+      giLevel: "GI Thấp",
+      portion: "1 hộp (400g)",
+      kcal: 460,
+      protein: 45,
+      carb: 48,
+      fat: 9,
+      fiber: 6,
+      tip: "Tỷ lệ Macro vàng cho giai đoạn cắt mỡ: no suốt 5 tiếng, không gây buồn ngủ đầu giờ chiều."
+    },
+    {
+      id: "banh_mi_uc_ga_bo",
+      name: "Bánh mì thịt nướng / ức gà xé / bò áp chảo (Không bơ sốt)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Sáng nhanh gọn",
+      giLevel: "GI Vừa",
+      portion: "1 ổ vừa",
+      kcal: 420,
+      protein: 25,
+      carb: 52,
+      fat: 12,
+      fiber: 3,
+      tip: "Dặn không quết bơ và pate béo, rút bớt ruột bánh mì và cho nhiều đồ chua, ngò, dưa leo."
+    },
+    {
+      id: "banh_mi_2_trung",
+      name: "Bánh mì 2 trứng ốp la + Dưa leo đồ chua",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Sáng / Trước tập",
+      giLevel: "GI Vừa",
+      portion: "1 ổ vừa",
+      kcal: 390,
+      protein: 18,
+      carb: 48,
+      fat: 13,
+      fiber: 2.5,
+      tip: "Bữa sáng nhanh rẻ khắp Sài Gòn; uống kèm 1 hộp sữa đậu nành không đường hoặc 1 muỗng Whey."
+    },
+    {
+      id: "xoi_man_ga_xe",
+      name: "Xôi gà xé + Trứng cút (Không lạp xưởng & mỡ hành)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Trước/Sau tập nặng",
+      giLevel: "GI Cao",
+      portion: "1 gói nhỏ",
+      kcal: 450,
+      protein: 21,
+      carb: 64,
+      fat: 12,
+      fiber: 2,
+      tip: "Nếp cung cấp năng lượng bền bỉ cho buổi tập tạ nặng, nhưng chỉ nên ăn gói nhỏ vào buổi sáng."
+    },
+    {
+      id: "khoai_lang_mat_luoc",
+      name: "Khoai lang Nhật / Khoai lang mật luộc nguyên vỏ",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Thay cơm tối / Trước tập",
+      giLevel: "GI Thấp",
+      portion: "1 củ lớn (200g)",
+      kcal: 172,
+      protein: 3.2,
+      carb: 40,
+      fat: 0.3,
+      fiber: 6,
+      tip: "Nguồn tinh bột chậm tuyệt vời thay cơm trắng vào bữa tối giúp giảm mỡ bụng dưới cực nhanh."
+    },
+    {
+      id: "yen_mach_sua_tuoi",
+      name: "Yến mạch cán dẹt nấu sữa tươi không đường (Overnight Oats)",
+      category: "rice_carb",
+      categoryLabel: "Cơm Tấm · Cơm · Tinh Bột",
+      mealTag: "Sáng / Bữa phụ chiều",
+      giLevel: "GI Thấp",
+      portion: "1 bát (50g yến mạch)",
+      kcal: 260,
       protein: 13,
-      carb: 1,
-      fat: 11,
-      tip: "Bữa sáng hoặc bữa phụ giàu choline và chất béo tốt cho hormone."
+      carb: 38,
+      fat: 6,
+      fiber: 5.5,
+      tip: "Giàu Beta-Glucan giảm mỡ máu và giữ đường huyết ổn định; thêm vài lát táo hoặc nho tươi."
+    },
+
+    // 3. NHÓM ĐẠM GYM · THỊT CÁ · BỮA PHỤ CAO ĐẠM (10 MÓN)
+    {
+      id: "uc_ga_ap_chao",
+      name: "Ức gà phi lê áp chảo / luộc",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Đạm chủ lực",
+      giLevel: "GI Thấp",
+      portion: "200g chín",
+      kcal: 330,
+      protein: 62,
+      carb: 0,
+      fat: 7,
+      fiber: 0,
+      tip: "Nguồn đạm tinh khiết nhất; ướp tiêu chanh hoặc sốt teriyaki ít đường cho dễ ăn."
     },
     {
-      id: "chuoi_chin",
-      name: "Chuối chín + Cafe đen (Bữa nhẹ 05:25 trước tập)",
-      portion: "1 quả vừa + 1 ly",
-      kcal: 110,
-      protein: 1,
-      carb: 27,
-      fat: 0,
-      tip: "Nạp đường huyết tức thì cho ca tập 6h sáng mà không gây xóc bụng."
-    },
-    {
-      id: "sua_chua_hy_lap",
-      name: "Sữa chua Hy Lạp không đường",
-      portion: "1 hộp (150g)",
-      kcal: 130,
-      protein: 15,
-      carb: 6,
-      fat: 4,
-      tip: "Ăn lúc 16h chiều giúp cắt cơn thèm ăn vặt lúc tan làm."
+      id: "than_bo_ap_chao",
+      name: "Thăn bò / Bắp bò Úc-Việt áp chảo hoặc nhúng giấm",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Giàu Creatine tự nhiên",
+      giLevel: "GI Thấp",
+      portion: "150g chín",
+      kcal: 310,
+      protein: 42,
+      carb: 0,
+      fat: 15,
+      fiber: 0,
+      tip: "Thịt bò đỏ giàu Sắt, Kẽm và Creatine tự nhiên giúp tăng sức mạnh đẩy/kéo tạ rõ rệt."
     },
     {
       id: "ca_hoi_hoac_ca_thu",
-      name: "Cá áp chảo / kho nhạt + Đậu phụ + Rau",
+      name: "Cá hồi / Cá thu áp chảo + Đậu phụ + Rau luộc",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Bữa tối phục hồi khớp",
+      giLevel: "GI Thấp",
       portion: "180g cá + 100g đậu",
       kcal: 460,
       protein: 46,
       carb: 12,
       fat: 22,
+      fiber: 3,
       tip: "Bữa tối nhẹ bụng giàu Omega-3 giúp giảm viêm khớp và dễ ngủ lúc 21:45."
+    },
+    {
+      id: "ca_ro_phi_hap",
+      name: "Cá diêu hồng / Cá rô phi hấp hành gừng cuốn rau sống",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Trưa / Tối ít béo",
+      giLevel: "GI Thấp",
+      portion: "200g thịt cá",
+      kcal: 255,
+      protein: 50,
+      carb: 2,
+      fat: 5,
+      fiber: 1,
+      tip: "Cá trắng hấp giữ nguyên 50g đạm nạc mà gần như không có mỡ xấu; cực kỳ dễ tiêu hóa."
+    },
+    {
+      id: "tom_hap_sa",
+      name: "Tôm sú / Tôm thẻ hấp sả (Đạm siêu tinh khiết)",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Siết mỡ tối đa",
+      giLevel: "GI Thấp",
+      portion: "150g thịt tôm bóc vỏ",
+      kcal: 150,
+      protein: 34,
+      carb: 1,
+      fat: 1.5,
+      fiber: 0,
+      tip: "Chỉ 150 kcal nhưng chứa tới 34g Protein; món cứu cánh khi bạn lỡ ăn dư Calo vào buổi trưa."
+    },
+    {
+      id: "whey_isolate",
+      name: "Whey Protein Isolate (1 muỗng)",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Ngay sau tập / Phụ chiều",
+      giLevel: "GI Thấp",
+      portion: "1 scoop (30g)",
+      kcal: 120,
+      protein: 25,
+      carb: 2,
+      fat: 1,
+      fiber: 0,
+      tip: "Pha với 250ml nước lọc uống ngay sau tập hoặc kèm bữa phụ chiều."
+    },
+    {
+      id: "trung_ga_luoc",
+      name: "Trứng gà luộc / ốp la ít dầu",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Sáng / Bữa phụ",
+      giLevel: "GI Thấp",
+      portion: "2 quả lớn",
+      kcal: 155,
+      protein: 13,
+      carb: 1,
+      fat: 11,
+      fiber: 0,
+      tip: "Bữa sáng hoặc bữa phụ giàu choline và chất béo tốt cho hormone."
+    },
+    {
+      id: "dau_hu_trang_luoc",
+      name: "Đậu hũ non / Đậu hũ trắng luộc hoặc sốt cà chua",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Đạm thực vật mát gan",
+      giLevel: "GI Thấp",
+      portion: "2 bìa (200g)",
+      kcal: 165,
+      protein: 16,
+      carb: 5,
+      fat: 9,
+      fiber: 2,
+      tip: "Tránh đậu hũ chiên ngập dầu; chọn đậu hũ trắng luộc chấm xì dầu ớt hoặc nấu canh hẹ."
+    },
+    {
+      id: "sua_chua_hy_lap",
+      name: "Sữa chua Hy Lạp không đường",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Bữa phụ 16:00",
+      giLevel: "GI Thấp",
+      portion: "1 hộp (150g)",
+      kcal: 130,
+      protein: 15,
+      carb: 6,
+      fat: 4,
+      fiber: 0,
+      tip: "Ăn lúc 16h chiều giúp cắt cơn thèm ăn vặt lúc tan làm."
+    },
+    {
+      id: "hat_hanh_nhan_dieu",
+      name: "Hạt hạnh nhân / Hạt điều rang mộc không tẩm muối",
+      category: "protein_dish",
+      categoryLabel: "Đạm Gym · Thịt Cá · Phụ",
+      mealTag: "Chất béo tốt",
+      giLevel: "GI Thấp",
+      portion: "1 nắm nhỏ (25g)",
+      kcal: 145,
+      protein: 5,
+      carb: 5,
+      fat: 12,
+      fiber: 3,
+      tip: "Giàu Magie và chất béo tốt giúp chống chuột rút cơ bắp; chỉ ăn đúng 1 nắm nhỏ (15–18 hạt)."
+    },
+
+    // 4. NHÓM TRÁI CÂY TƯƠI VIỆT NAM (12 LOẠI: TÁO, ỔI, NHO, CHUỐI, BƯỞI, ĐU ĐỦ, THANH LONG, DƯA HẤU, CAM, XOÀI, BƠ, DỨA)
+    {
+      id: "trai_oi_le",
+      name: "Ổi lê / Ổi nữ hoàng giòn (Vua Vitamin C, cực ít đường)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Ăn vặt giảm mỡ #1",
+      giLevel: "GI Thấp",
+      portion: "1 quả vừa (200g)",
+      kcal: 136,
+      protein: 5,
+      carb: 28,
+      fat: 1.5,
+      fiber: 9,
+      tip: "Trái cây số 1 cho người tập gym giảm mỡ: lượng Vitamin C gấp 4 lần cam và 9g chất xơ giúp no bụng ngay lập tức (không chấm muối đường)."
+    },
+    {
+      id: "trai_tao_envy",
+      name: "Táo Envy / Táo Fuji đỏ giòn (Giàu chất xơ Pectin)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Trước tập / Phụ chiều",
+      giLevel: "GI Thấp",
+      portion: "1 quả vừa (180g)",
+      kcal: 95,
+      protein: 0.5,
+      carb: 25,
+      fat: 0.3,
+      fiber: 4.4,
+      tip: "Rửa sạch ăn cả vỏ để lấy trọn vẹn Polyphenol và chất xơ Pectin giúp kiểm soát cơn đói buổi chiều."
+    },
+    {
+      id: "trai_nho_xanh_do",
+      name: "Nho xanh / Nho đỏ không hạt (Bù Glycogen nhanh)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Ngay sau buổi tập",
+      giLevel: "GI Vừa",
+      portion: "1 chùm nhỏ (150g ~ 18 quả)",
+      kcal: 104,
+      protein: 1.1,
+      carb: 27,
+      fat: 0.2,
+      fiber: 1.4,
+      tip: "Chứa chất chống oxy hóa Resveratrol và đường tự nhiên giúp phục hồi cơ bắp nhanh sau tập nặng; để ngăn mát ăn cực ngon."
+    },
+    {
+      id: "chuoi_chin",
+      name: "Chuối chín + Cafe đen (Bữa nhẹ 05:25 trước tập)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Trước tập 30 phút",
+      giLevel: "GI Vừa",
+      portion: "1 quả vừa + 1 ly",
+      kcal: 110,
+      protein: 1,
+      carb: 27,
+      fat: 0,
+      fiber: 3,
+      tip: "Nạp đường huyết tức thì cho ca tập 6h sáng mà không gây xóc bụng."
+    },
+    {
+      id: "trai_buoi_da_xanh",
+      name: "Bưởi da xanh / Bưởi năm roi (Hỗ trợ đốt mỡ, giảm kháng Insulin)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Tráng miệng trưa/tối",
+      giLevel: "GI Thấp",
+      portion: "4 múi lớn (250g)",
+      kcal: 95,
+      protein: 1.8,
+      carb: 24,
+      fat: 0.2,
+      fiber: 4,
+      tip: "Hoạt chất Naringenin trong múi bưởi giúp gan chuyển hóa mỡ thừa tốt hơn và không làm tăng đường huyết."
+    },
+    {
+      id: "trai_du_du_chin",
+      name: "Đu đủ chín đỏ (Giàu Enzyme Papain tiêu hóa thịt & Whey)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Sau bữa ăn nhiều đạm",
+      giLevel: "GI Vừa",
+      portion: "1 đĩa vừa (250g)",
+      kcal: 108,
+      protein: 1.2,
+      carb: 27,
+      fat: 0.4,
+      fiber: 4.3,
+      tip: "Ăn 1 đĩa đu đủ sau bữa ăn nhiều ức gà/thịt bò giúp bụng nhẹ tênh, không bao giờ bị đầy hơi khó tiêu."
+    },
+    {
+      id: "trai_thanh_long",
+      name: "Thanh long ruột đỏ / ruột trắng (Mát cơ thể, giàu Magie)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Bữa phụ mát ruột",
+      giLevel: "GI Thấp",
+      portion: "1/2 quả lớn (250g)",
+      kcal: 130,
+      protein: 3,
+      carb: 29,
+      fat: 0.5,
+      fiber: 6,
+      tip: "Hạt thanh long chứa chất béo tốt và chất xơ giúp nhuận tràng khi ăn chế độ giàu Protein."
+    },
+    {
+      id: "trai_dua_hau",
+      name: "Dưa hấu đỏ ướp lạnh (Giàu L-Citrulline giảm đau nhức cơ)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Sau tập / Bù nước",
+      giLevel: "GI Cao (GL Thấp)",
+      portion: "2 miếng vừa (300g)",
+      kcal: 90,
+      protein: 1.8,
+      carb: 22,
+      fat: 0.4,
+      fiber: 1.2,
+      tip: "Chứa axit amin L-Citrulline tự nhiên giúp giãn mạch máu và giảm đau mỏi cơ (DOMS) vào ngày hôm sau."
+    },
+    {
+      id: "trai_cam_sanh",
+      name: "Cam sành / Quýt đường tươi (Bù điện giải & tăng đề kháng)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Sáng / Trưa",
+      giLevel: "GI Thấp",
+      portion: "1 quả lớn (200g)",
+      kcal: 94,
+      protein: 1.8,
+      carb: 23,
+      fat: 0.2,
+      fiber: 4.5,
+      tip: "Ăn nguyên múi cam cả tép xơ (thay vì vắt nước bỏ xác và pha thêm đường) để no lâu gấp 3 lần."
+    },
+    {
+      id: "trai_xoai_chin",
+      name: "Xoài cát chín / Xoài keo giòn (Nạp năng lượng nhanh)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Trước/Sau tập",
+      giLevel: "GI Vừa",
+      portion: "1/2 quả vừa (180g)",
+      kcal: 108,
+      protein: 1.5,
+      carb: 27,
+      fat: 0.6,
+      fiber: 3,
+      tip: "Nếu ăn xoài keo chua giòn thì tuyệt đối tránh chấm mắm đường hoặc muối tôm trộn đường."
+    },
+    {
+      id: "trai_bo_sap",
+      name: "Bơ sáp Đà Lạt tươi (Chất béo tốt, không dầm sữa đặc)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Bữa sáng / Salad",
+      giLevel: "GI Thấp",
+      portion: "1/2 quả vừa (100g)",
+      kcal: 160,
+      protein: 2,
+      carb: 9,
+      fat: 15,
+      fiber: 7,
+      tip: "Ăn bơ cắt lát kèm trứng ốp la hoặc trộn sữa chua Hy Lạp không đường; tránh xay sinh tố bơ nhiều sữa đặc."
+    },
+    {
+      id: "trai_dua_thom",
+      name: "Dứa (Thơm / Khóm) tươi gọt sẵn (Giàu Bromelain kháng viêm)",
+      category: "fruit",
+      categoryLabel: "Trái Cây Tươi",
+      mealTag: "Sau bữa trưa/tối",
+      giLevel: "GI Vừa",
+      portion: "1/2 quả vừa (200g)",
+      kcal: 100,
+      protein: 1.1,
+      carb: 26,
+      fat: 0.2,
+      fiber: 2.8,
+      tip: "Enzyme Bromelain trong quả dứa giúp phân giải đạm thịt cực nhanh và giảm sưng viêm cơ khớp."
     }
   ];
 
@@ -3635,9 +4453,16 @@
     EXERCISES,
     GYM_BRANCHES,
     GYM_SESSION_PRESETS,
+    ZONE_CATEGORY_LABELS,
     SLOT_GROUP_LABELS,
+    SLOT_GROUP_SHORT_LABELS,
+    SESSION_ALLOWED_SLOT_GROUPS,
+    MIN_WORKOUT_COMPLETION_PCT,
+    normalizeVNSearch,
     getEffectiveSessionExerciseIds,
     getSwapCandidatesForSlot,
+    getSessionAddableExercises,
+    calculateSessionCompletion,
     WORKOUT_SESSIONS,
     WORKOUT_SPLITS,
     DEFAULT_WEEKLY_SCHEDULE,
@@ -3659,6 +4484,7 @@
     calculatePlates,
     calculateWeightTrend,
     buildWeightTrackerSummary,
+    VN_FOOD_CATEGORIES,
     VN_FOODS
   };
 })(typeof window !== "undefined" ? window : globalThis);

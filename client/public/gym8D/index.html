@@ -17,11 +17,11 @@
   <link rel="manifest" href="/gym8D/manifest.json" />
   <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
   <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
-  <link rel="stylesheet" href="/gym8D/styles.css?v=9" />
+  <link rel="stylesheet" href="/gym8D/styles.css?v=10" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-  <script src="/gym8D/src/gym-core.js?v=9"></script>
+  <script src="/gym8D/src/gym-core.js?v=10"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -1161,6 +1161,12 @@
       const [activePresetBySession, setActivePresetBySession] = useState(
         () => (saved?.activePresetBySession && typeof saved.activePresetBySession === 'object' ? saved.activePresetBySession : {})
       );
+      const [swapGroupFilter, setSwapGroupFilter] = useState('all');
+      const [swapZoneFilter, setSwapZoneFilter] = useState('all');
+      const [swapSearchQuery, setSwapSearchQuery] = useState('');
+      const [foodCategoryFilter, setFoodCategoryFilter] = useState('all');
+      const [foodGoalFilter, setFoodGoalFilter] = useState('all');
+      const [foodSearchQuery, setFoodSearchQuery] = useState('');
 
       const isStandalonePWA = useMemo(() => {
         if (typeof window === 'undefined') return false;
@@ -1368,6 +1374,17 @@
         const customList = customSessionLists[activeSessionId];
         return Array.isArray(customList) && customList.length > 0 ? customList : currentSession.exerciseIds;
       }, [customSessionLists, activeSessionId, currentSession]);
+
+      const currentSessionCompletion = useMemo(
+        () =>
+          GymCore.calculateSessionCompletion(
+            currentSession.id,
+            logsByDate[selectedDateISO] || {},
+            sessionSwaps,
+            customSessionLists
+          ),
+        [currentSession.id, logsByDate, selectedDateISO, sessionSwaps, customSessionLists]
+      );
 
       function getSetsForDateAndExercise(isoDate, exId) {
         const dayMap = logsByDate[isoDate];
@@ -1738,6 +1755,24 @@
           sessionIdOverride ||
           (dayEntry.sessionId !== 'rest' ? dayEntry.sessionId : activeSessionId || 'press_day');
         const sess = GymCore.WORKOUT_SESSIONS[effSessionId] || GymCore.WORKOUT_SESSIONS.press_day;
+        const progressCheck = GymCore.calculateSessionCompletion(
+          effSessionId,
+          logsByDate[isoDate] || {},
+          sessionSwaps,
+          customSessionLists
+        );
+        if (status === 'done' && !progressCheck.meetsThreshold) {
+          setSelectedDateISO(isoDate);
+          setActiveSessionId(effSessionId);
+          setActiveTab('workout');
+          setDetailSlotIndex(null);
+          dispatchRealOSNotification(
+            `Chưa đạt ≥ 70% khối lượng buổi tập (Đang đạt ${progressCheck.completionPct}%)`,
+            `Bạn mới hoàn thành ${progressCheck.completedExercises}/${progressCheck.totalExercises} bài (${progressCheck.completedSetsCount}/${progressCheck.totalSetsCount} hiệp · ${progressCheck.completedRepsCount}/${progressCheck.totalTargetReps} reps). Cần hoàn thành tối thiểu ≥ 70% (ít nhất ${progressCheck.minRequiredExercises}/${progressCheck.totalExercises} bài hoặc ${progressCheck.minRequiredSets}/${progressCheck.totalSetsCount} hiệp) mới được chốt Done!`,
+            `guard_70pct_${isoDate}_${Date.now()}`
+          );
+          return;
+        }
         const nowHHMM = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
         setDayStatusByDate((prev) => {
@@ -1755,17 +1790,9 @@
         });
 
         if (status === 'done') {
-          setLogsByDate((prev) => {
-            const dayMap = { ...(prev[isoDate] || {}) };
-            sess.exerciseIds.forEach((exId) => {
-              const curSets = dayMap[exId] || (GymCore.EXERCISES[exId]?.defaultSets || []);
-              dayMap[exId] = curSets.map((s) => ({ ...s, done: true }));
-            });
-            return { ...prev, [isoDate]: dayMap };
-          });
           dispatchRealOSNotification(
-            `Đã chốt Hoàn Thành (Done) · ${sess.shortName}`,
-            `Chúc mừng! Ngày ${GymCore.formatVNShortDate(isoDate)} đã được ghi nhận vào chuỗi Streak của bạn.`,
+            `Đã chốt Hoàn Thành (Done ${progressCheck.completionPct}%) · ${sess.shortName}`,
+            `Chúc mừng! Bạn đã hoàn thành ${progressCheck.completedExercises}/${progressCheck.totalExercises} bài (${progressCheck.completedSetsCount}/${progressCheck.totalSetsCount} hiệp · ${progressCheck.totalVolumeKg.toLocaleString('vi-VN')}kg) ngày ${GymCore.formatVNShortDate(isoDate)}.`,
             `done_${isoDate}`
           );
         } else if (status === 'missed') {
@@ -1855,6 +1882,16 @@
 
       function handleAddExerciseToSession(sessionId, newExId) {
         if (!GymCore.EXERCISES[newExId]) return;
+        const allowedGroups = GymCore.SESSION_ALLOWED_SLOT_GROUPS?.[sessionId] || [];
+        const exObj = GymCore.EXERCISES[newExId];
+        if (allowedGroups.length > 0 && !allowedGroups.includes(exObj.slotGroup)) {
+          dispatchRealOSNotification(
+            `Bài tập không thuộc ${GymCore.WORKOUT_SESSIONS[sessionId]?.shortName}`,
+            `Chỉ được thêm các bài tập thuộc nhóm cơ của ${GymCore.WORKOUT_SESSIONS[sessionId]?.shortName} hoặc bài Cardio đốt mỡ!`,
+            `guard_add_session_${sessionId}`
+          );
+          return;
+        }
         setCustomSessionLists((prev) => {
           const base = Array.isArray(prev[sessionId]) && prev[sessionId].length > 0
             ? [...prev[sessionId]]
@@ -1864,12 +1901,422 @@
           }
           return { ...prev, [sessionId]: base };
         });
-        const exObj = GymCore.EXERCISES[newExId];
         dispatchRealOSNotification(
           `Đã thêm bài: ${exObj.shortName || exObj.name.split('(')[0].trim()}`,
           `Bài tập đã được thêm vào danh sách ${GymCore.WORKOUT_SESSIONS[sessionId]?.shortName || 'buổi tập'}.`,
           `add_ex_${sessionId}_${newExId}`
         );
+      }
+
+      function handleRemoveExerciseFromSession(sessionId, slotIdx) {
+        setCustomSessionLists((prev) => {
+          const base = Array.isArray(prev[sessionId]) && prev[sessionId].length > 0
+            ? [...prev[sessionId]]
+            : [...(GymCore.WORKOUT_SESSIONS[sessionId]?.exerciseIds || [])];
+          if (base.length <= 3) {
+            dispatchRealOSNotification(
+              `Giữ tối thiểu 3 bài tập trong buổi`,
+              `Một buổi tập cần ít nhất 3 bài để đảm bảo kích thích cơ bắp. Bạn có thể bấm "⇄ Đổi bài" để thay bằng máy khác!`,
+              `guard_min_ex_${sessionId}`
+            );
+            return prev;
+          }
+          base.splice(slotIdx, 1);
+          return { ...prev, [sessionId]: base };
+        });
+      }
+
+      function handleQuickToggleExerciseDone(isoDate, exId) {
+        if (GymCore.diffDaysISO(isoDate, todayISO) > 0) {
+          dispatchRealOSNotification(
+            `Buổi tập ngày ${GymCore.formatVNShortDate(isoDate)} ở tương lai`,
+            `Bạn không thể tích hoàn thành bài tập cho ngày chưa diễn ra.`,
+            `guard_quick_ex_${isoDate}`
+          );
+          return;
+        }
+        const ex = GymCore.EXERCISES[exId];
+        if (!ex) return;
+        setLogsByDate((prev) => {
+          const dayMap = prev[isoDate] || {};
+          const currentSets = dayMap[exId] || getSetsForDateAndExercise(isoDate, exId);
+          const allCurrentlyDone = currentSets.length > 0 && currentSets.every((s) => s.done);
+          const nextSets = currentSets.map((s) => ({ ...s, done: !allCurrentlyDone }));
+          return {
+            ...prev,
+            [isoDate]: {
+              ...dayMap,
+              [exId]: nextSets
+            }
+          };
+        });
+      }
+
+      function renderRichExerciseCandidateCard(altEx, cardOpts = {}) {
+        const {
+          isCurrent = false,
+          actionLabel = 'Đổi bài',
+          currentLabel = '✓ Đang tập',
+          onSelect
+        } = cardOpts;
+        const hasTng = !Array.isArray(altEx.availableGyms) || altEx.availableGyms.includes('tng_uvk');
+        const hasWays = !Array.isArray(altEx.availableGyms) || altEx.availableGyms.includes('ways_ql13');
+        const groupShort = GymCore.SLOT_GROUP_SHORT_LABELS?.[altEx.slotGroup] || altEx.muscle;
+        const zoneText = altEx.zoneLabel || 'Khu Máy Tập';
+        const defaultSetCount = Array.isArray(altEx.defaultSets) ? altEx.defaultSets.length : 3;
+        const defaultRepSample = altEx.defaultSets?.[0]?.reps || 10;
+        const defaultWeightSample = altEx.defaultSets?.[0]?.weight || 0;
+        const tngNote = altEx.gymSetup?.tng_uvk;
+        const waysNote = altEx.gymSetup?.ways_ql13;
+
+        return (
+          <div
+            key={altEx.id}
+            style={{
+              padding: '10px 11px',
+              borderRadius: 14,
+              border: isCurrent ? '2.5px solid #059669' : '1.8px solid #2B2118',
+              background: isCurrent ? '#ECFDF5' : '#FFFDF9',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              boxShadow: isCurrent ? '2px 2px 0 #064E3B' : '1.5px 1.5px 0 #2B2118'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 9, alignItems: 'center', minWidth: 0 }}>
+                <img
+                  src={GymCore.resolveAsset(altEx.mascot)}
+                  alt={altEx.shortName || altEx.name}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 10,
+                    border: '1.5px solid #2B2118',
+                    objectFit: 'cover',
+                    background: '#FAF5EA',
+                    flexShrink: 0
+                  }}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 2 }}>
+                    <span
+                      style={{
+                        fontSize: 8.5,
+                        fontWeight: 900,
+                        padding: '1.5px 6px',
+                        borderRadius: 999,
+                        background: '#2B2118',
+                        color: '#FDBA74'
+                      }}
+                    >
+                      {groupShort}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 8.5,
+                        fontWeight: 900,
+                        padding: '1.5px 6px',
+                        borderRadius: 999,
+                        background: '#FFEDD5',
+                        color: '#9A3412',
+                        border: '1px solid #FDBA74'
+                      }}
+                    >
+                      {zoneText}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118', lineHeight: 1.25 }}>
+                    {altEx.name}
+                  </div>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B', marginTop: 2 }}>
+                    {altEx.equipment} · {altEx.tier}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onSelect}
+                className="sherpa-btn"
+                style={{
+                  padding: '7px 10px',
+                  fontSize: 10.5,
+                  background: isCurrent ? '#059669' : '#E05A2B',
+                  color: '#FFFFFF',
+                  flexShrink: 0
+                }}
+              >
+                {isCurrent ? currentLabel : actionLabel}
+              </button>
+            </div>
+
+            {/* Detailed Muscle, Set/Rep Volume & Gym Branch Badges */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center' }}>
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  padding: '2px 7px',
+                  borderRadius: 6,
+                  background: '#FAF5EA',
+                  border: '1px solid #D8C8B0',
+                  color: '#5C4938'
+                }}
+              >
+                🎯 {altEx.muscle} · {defaultSetCount} hiệp × {defaultRepSample} reps{defaultWeightSample > 0 ? ` (~${defaultWeightSample}kg)` : ''}
+              </span>
+              {hasTng && (
+                <span
+                  style={{
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    padding: '2px 6px',
+                    borderRadius: 6,
+                    background: '#DCFCE7',
+                    color: '#065F46',
+                    border: '1px solid #86EFAC'
+                  }}
+                >
+                  ✓ TNG 58D UVK
+                </span>
+              )}
+              {hasWays && (
+                <span
+                  style={{
+                    fontSize: 8.5,
+                    fontWeight: 900,
+                    padding: '2px 6px',
+                    borderRadius: 6,
+                    background: '#DBEAFE',
+                    color: '#1E40AF',
+                    border: '1px solid #93C5FD'
+                  }}
+                >
+                  ✓ Ways 361 QL13
+                </span>
+              )}
+            </div>
+
+            {/* Location & Setup Guide Box */}
+            <div
+              style={{
+                padding: '6px 8px',
+                borderRadius: 9,
+                background: '#FAF5EA',
+                border: '1px dashed #D8C8B0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 3
+              }}
+            >
+              {(selectedGymId === 'tng_uvk' || selectedGymId === 'all') && tngNote && (
+                <div style={{ fontSize: 9.5, color: '#2B2118', fontWeight: 700, lineHeight: 1.35 }}>
+                  📍 <strong style={{ color: '#059669' }}>TNG 58D UVK:</strong> {tngNote}
+                </div>
+              )}
+              {(selectedGymId === 'ways_ql13' || selectedGymId === 'all') && waysNote && (
+                <div style={{ fontSize: 9.5, color: '#2B2118', fontWeight: 700, lineHeight: 1.35 }}>
+                  📍 <strong style={{ color: '#1D4ED8' }}>Ways 361 QL13:</strong> {waysNote}
+                </div>
+              )}
+              {selectedGymId === 'tng_uvk' && !tngNote && waysNote && (
+                <div style={{ fontSize: 9.5, color: '#2B2118', fontWeight: 700, lineHeight: 1.35 }}>
+                  📍 <strong>Ways 361 QL13:</strong> {waysNote}
+                </div>
+              )}
+              {selectedGymId === 'ways_ql13' && !waysNote && tngNote && (
+                <div style={{ fontSize: 9.5, color: '#2B2118', fontWeight: 700, lineHeight: 1.35 }}>
+                  📍 <strong>TNG 58D UVK:</strong> {tngNote}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      function renderExerciseFilterToolbar(allowedGroups, options = {}) {
+        const { includeSameGroupOption = false, sameGroupShortLabel = 'Cùng nhóm 1:1', totalCount = 0 } = options;
+        const zoneOptions = [
+          { id: 'all', label: 'Mọi khu vực' },
+          { id: 'pin_machine', label: 'Máy Chốt Tạ' },
+          { id: 'plate_loaded', label: 'Lắp Tạ Rời' },
+          { id: 'cable_smith', label: 'Cáp & Smith' },
+          { id: 'free_weight', label: 'Tạ Đơn/Đòn' },
+          { id: 'cardio_core', label: 'Cardio & Thảm' }
+        ];
+        return (
+          <div
+            style={{
+              marginTop: 8,
+              padding: '9px 10px',
+              borderRadius: 12,
+              background: '#FAF5EA',
+              border: '1.5px solid #2B2118',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 7
+            }}
+          >
+            {/* Search Input */}
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="text"
+                value={swapSearchQuery}
+                onChange={(e) => setSwapSearchQuery(e.target.value)}
+                placeholder="🔍 Tìm bài tập, tên máy, khu vực (VD: T-Bar, Pec Deck, Cáp...)"
+                style={{
+                  width: '100%',
+                  padding: '7px 28px 7px 10px',
+                  borderRadius: 9,
+                  border: '1.5px solid #2B2118',
+                  background: '#FFFDF9',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#2B2118',
+                  outline: 'none'
+                }}
+              />
+              {swapSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSwapSearchQuery('')}
+                  style={{
+                    position: 'absolute',
+                    right: 6,
+                    border: 'none',
+                    background: '#E5D5BE',
+                    color: '#2B2118',
+                    borderRadius: 999,
+                    width: 18,
+                    height: 18,
+                    fontSize: 10,
+                    fontWeight: 900,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Filter Row 1: Muscle / Slot Group strictly for this Session */}
+            <div>
+              <div style={{ fontSize: 9.5, fontWeight: 900, color: '#5C4938', marginBottom: 4 }}>
+                LỌC NHÓM CƠ TRONG BUỔI ({totalCount} bài phù hợp):
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setSwapGroupFilter('all')}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: 999,
+                    border: swapGroupFilter === 'all' ? '1.5px solid #2B2118' : '1px solid #D8C8B0',
+                    background: swapGroupFilter === 'all' ? '#E05A2B' : '#FFFDF9',
+                    color: swapGroupFilter === 'all' ? '#FFFFFF' : '#2B2118',
+                    fontSize: 9.5,
+                    fontWeight: 900,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Tất cả
+                </button>
+                {includeSameGroupOption && (
+                  <button
+                    type="button"
+                    onClick={() => setSwapGroupFilter('same_group')}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: 999,
+                      border: swapGroupFilter === 'same_group' ? '1.5px solid #2B2118' : '1px solid #D8C8B0',
+                      background: swapGroupFilter === 'same_group' ? '#059669' : '#FFFDF9',
+                      color: swapGroupFilter === 'same_group' ? '#FFFFFF' : '#065F46',
+                      fontSize: 9.5,
+                      fontWeight: 900,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cùng nhóm 1:1 ({sameGroupShortLabel})
+                  </button>
+                )}
+                {(allowedGroups || []).map((grp) => {
+                  const active = swapGroupFilter === grp.id;
+                  return (
+                    <button
+                      key={grp.id}
+                      type="button"
+                      onClick={() => setSwapGroupFilter(grp.id)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: 999,
+                        border: active ? '1.5px solid #2B2118' : '1px solid #D8C8B0',
+                        background: active ? '#2B2118' : '#FFFDF9',
+                        color: active ? '#FFFFFF' : '#5C4938',
+                        fontSize: 9.5,
+                        fontWeight: 800,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {grp.shortLabel}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Filter Row 2: Gym Equipment Zone */}
+            <div>
+              <div style={{ fontSize: 9.5, fontWeight: 900, color: '#5C4938', marginBottom: 4 }}>
+                LỌC THEO KHU VỰC THIẾT BỊ:
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {zoneOptions.map((z) => {
+                  const active = swapZoneFilter === z.id;
+                  return (
+                    <button
+                      key={z.id}
+                      type="button"
+                      onClick={() => setSwapZoneFilter(z.id)}
+                      style={{
+                        padding: '3.5px 7px',
+                        borderRadius: 7,
+                        border: active ? '1.5px solid #2B2118' : '1px solid #D8C8B0',
+                        background: active ? '#FDE68A' : '#FFFDF9',
+                        color: '#2B2118',
+                        fontSize: 9,
+                        fontWeight: active ? 900 : 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {z.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function filterExerciseListByToolbar(list) {
+        const q = GymCore.normalizeVNSearch ? GymCore.normalizeVNSearch(swapSearchQuery) : swapSearchQuery.toLowerCase();
+        return (list || []).filter((ex) => {
+          if (swapGroupFilter !== 'all' && swapGroupFilter !== 'same_group' && ex.slotGroup !== swapGroupFilter) {
+            return false;
+          }
+          if (swapZoneFilter !== 'all' && ex.zoneCategory !== swapZoneFilter) {
+            return false;
+          }
+          if (q) {
+            const hay = GymCore.normalizeVNSearch
+              ? GymCore.normalizeVNSearch(
+                  `${ex.name} ${ex.shortName || ''} ${ex.muscle} ${ex.equipment} ${ex.zoneLabel || ''} ${ex.gymSetup?.tng_uvk || ''} ${ex.gymSetup?.ways_ql13 || ''}`
+                )
+              : `${ex.name} ${ex.muscle} ${ex.equipment}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
       }
 
       function toggleSetDone(exId, setIdx) {
@@ -3436,15 +3883,35 @@
                               width: '100%',
                               padding: '9px 8px',
                               fontSize: 11.5,
-                              background: selectedDay.isCompleted ? '#059669' : '#DCFCE7',
-                              color: selectedDay.isCompleted ? '#FFFFFF' : '#065F46'
+                              background: selectedDay.isCompleted
+                                ? '#059669'
+                                : selectedDay.meetsCompletionThreshold
+                                ? '#DCFCE7'
+                                : '#FEF3C7',
+                              color: selectedDay.isCompleted
+                                ? '#FFFFFF'
+                                : selectedDay.meetsCompletionThreshold
+                                ? '#065F46'
+                                : '#92400E'
                             }}
                           >
-                            <SvgIcon name="check" size={14} color={selectedDay.isCompleted ? '#FFFFFF' : '#065F46'} />
+                            <SvgIcon
+                              name={selectedDay.isCompleted || selectedDay.meetsCompletionThreshold ? 'check' : 'lock'}
+                              size={14}
+                              color={
+                                selectedDay.isCompleted
+                                  ? '#FFFFFF'
+                                  : selectedDay.meetsCompletionThreshold
+                                  ? '#065F46'
+                                  : '#D97706'
+                              }
+                            />
                             <span>
                               {selectedDay.isCompleted
-                                ? `✓ Đã Tập Done (${selectedDay.shortDate})`
-                                : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
+                                ? `✓ Đã Tập Done (${selectedDay.completionPct}% · ${selectedDay.shortDate})`
+                                : selectedDay.meetsCompletionThreshold
+                                ? `Chốt Done (${selectedDay.completionPct}% ≥ 70%)`
+                                : `Cần ≥70% để Done (Đang ${selectedDay.completionPct}%)`}
                             </span>
                           </button>
 
@@ -3803,6 +4270,85 @@
                   </div>
 
                   {/* 2x3 Single-Screen Bento Grid of All Exercises in Session */}
+                  {/* >= 70% Workout Completion Progress Gate Bar */}
+                  <div
+                    style={{
+                      marginTop: 9,
+                      padding: '9px 11px',
+                      borderRadius: 13,
+                      background: currentSessionCompletion.meetsThreshold ? '#ECFDF5' : '#FFFBEB',
+                      border: currentSessionCompletion.meetsThreshold
+                        ? '2px solid #059669'
+                        : '2px solid #D97706',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 10.5, fontWeight: 900, color: '#2B2118' }}>
+                        {currentSessionCompletion.meetsThreshold
+                          ? `✅ ĐÃ ĐẠT CHUẨN ≥ 70% (${currentSessionCompletion.completionPct}%) — MỞ KHÓA CHỐT DONE`
+                          : `🎯 TIẾN ĐỘ BUỔI TẬP: ${currentSessionCompletion.completionPct}% (CẦN ĐẠT ≥ 70% ĐỂ CHỐT DONE)`}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          padding: '2px 7px',
+                          borderRadius: 999,
+                          background: currentSessionCompletion.meetsThreshold ? '#059669' : '#D97706',
+                          color: '#FFFFFF'
+                        }}
+                      >
+                        {currentSessionCompletion.completedExercises}/{currentSessionCompletion.totalExercises} bài · {currentSessionCompletion.completedSetsCount}/{currentSessionCompletion.totalSetsCount} hiệp
+                      </span>
+                    </div>
+
+                    {/* Progress Bar with 70% Threshold Marker */}
+                    <div
+                      style={{
+                        position: 'relative',
+                        height: 9,
+                        borderRadius: 999,
+                        background: '#E5D5BE',
+                        border: '1.5px solid #2B2118',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.min(100, currentSessionCompletion.completionPct)}%`,
+                          height: '100%',
+                          background: currentSessionCompletion.meetsThreshold
+                            ? 'linear-gradient(90deg, #059669 0%, #10B981 100%)'
+                            : 'linear-gradient(90deg, #E05A2B 0%, #F59E0B 100%)',
+                          transition: 'width 0.25s ease'
+                        }}
+                      />
+                      <div
+                        title="Mốc 70% mở khóa Chốt Done"
+                        style={{
+                          position: 'absolute',
+                          left: '70%',
+                          top: 0,
+                          bottom: 0,
+                          width: 2.5,
+                          background: '#2B2118'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 9.5, fontWeight: 700, color: '#5C4938' }}>
+                      <span>
+                        {currentSessionCompletion.meetsThreshold
+                          ? `Đã tập ${currentSessionCompletion.completedRepsCount}/${currentSessionCompletion.totalTargetReps} reps (${currentSessionCompletion.totalVolumeKg.toLocaleString('vi-VN')}kg) — Bấm Chốt Done bên dưới!`
+                          : `Tích ít nhất ${currentSessionCompletion.minRequiredExercises}/${currentSessionCompletion.totalExercises} bài (hoặc ${currentSessionCompletion.minRequiredSets}/${currentSessionCompletion.totalSetsCount} hiệp) để chốt Done.`}
+                      </span>
+                      <span style={{ fontWeight: 900, color: '#2B2118' }}>Mốc 70% ↑</span>
+                    </div>
+                  </div>
+
                   <div
                     style={{
                       display: 'grid',
@@ -3817,7 +4363,7 @@
                       if (!ex) return null;
                       const sets = getSetsForDateAndExercise(selectedDateISO, ex.id);
                       const doneCount = sets.filter((s) => s.done).length;
-                      const allDone = !selectedDay.isFutureDay && ((doneCount === sets.length && sets.length > 0) || selectedDay.isCompleted);
+                      const allDone = !selectedDay.isFutureDay && sets.length > 0 && doneCount >= Math.ceil(sets.length * 0.7);
                       const isSwappedSlot = effectiveId !== slotExId || (activePresetBySession[currentSession.id] && activePresetBySession[currentSession.id] !== 'default');
                       const gymTag =
                         Array.isArray(ex.availableGyms) && ex.availableGyms.length === 1
@@ -3933,6 +4479,9 @@
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setSwapGroupFilter('all');
+                                setSwapZoneFilter('all');
+                                setSwapSearchQuery('');
                                 setPickerSheetConfig({
                                   type: 'swap_exercise_slot',
                                   sessionId: currentSession.id,
@@ -3942,12 +4491,12 @@
                                 });
                               }}
                               style={{
-                                padding: '2.5px 7px',
+                                padding: '2.5px 6px',
                                 borderRadius: 7,
                                 border: '1.5px solid #2B2118',
                                 background: '#FFEDD5',
                                 color: '#9A3412',
-                                fontSize: 9.5,
+                                fontSize: 9,
                                 fontWeight: 900,
                                 cursor: 'pointer',
                                 display: 'inline-flex',
@@ -3958,9 +4507,25 @@
                               <SvgIcon name="swap" size={10} color="#9A3412" />
                               <span>Đổi bài</span>
                             </button>
-                            <span style={{ color: allDone ? '#059669' : '#E05A2B', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                              {allDone ? 'Xem lại' : 'Tập ngay'} <SvgIcon name="chevronRight" size={12} color={allDone ? '#059669' : '#E05A2B'} />
-                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickToggleExerciseDone(selectedDateISO, ex.id);
+                              }}
+                              style={{
+                                padding: '2.5px 6px',
+                                borderRadius: 7,
+                                border: '1.5px solid #2B2118',
+                                background: allDone ? '#059669' : '#FAF5EA',
+                                color: allDone ? '#FFFFFF' : '#2B2118',
+                                fontSize: 9,
+                                fontWeight: 900,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {allDone ? '✓ Đã xong' : '✓ Xong bài'}
+                            </button>
                           </div>
                         </div>
                       );
@@ -3971,12 +4536,15 @@
                   <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.85fr', gap: 7, marginTop: 9 }}>
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        setSwapGroupFilter('all');
+                        setSwapZoneFilter('all');
+                        setSwapSearchQuery('');
                         setPickerSheetConfig({
                           type: 'add_exercise_to_session',
                           sessionId: currentSession.id
-                        })
-                      }
+                        });
+                      }}
                       className="sherpa-btn"
                       style={{ width: '100%', padding: '8px 9px', fontSize: 10.5, background: '#FAF5EA' }}
                     >
@@ -4037,15 +4605,25 @@
                         style={{
                           width: '100%',
                           padding: '10px',
-                          fontSize: 12,
-                          background: selectedDay.isCompleted ? '#065F46' : '#16A34A'
+                          fontSize: 11.5,
+                          background: selectedDay.isCompleted
+                            ? '#065F46'
+                            : currentSessionCompletion.meetsThreshold
+                            ? '#16A34A'
+                            : '#D97706'
                         }}
                       >
-                        <SvgIcon name="check" size={15} color="#FFFFFF" />
+                        <SvgIcon
+                          name={selectedDay.isCompleted || currentSessionCompletion.meetsThreshold ? 'check' : 'lock'}
+                          size={15}
+                          color="#FFFFFF"
+                        />
                         <span>
                           {selectedDay.isCompleted
-                            ? `✓ Đã Chốt Done (${selectedDay.shortDate})`
-                            : `Chốt Đã Tập Done (${selectedDay.shortDate})`}
+                            ? `✓ Đã Chốt Done (${currentSessionCompletion.completionPct}% · ${selectedDay.shortDate})`
+                            : currentSessionCompletion.meetsThreshold
+                            ? `Chốt Done Buổi Tập (${currentSessionCompletion.completionPct}% ≥ 70%)`
+                            : `Cần ≥70% Để Chốt Done (Đang ${currentSessionCompletion.completionPct}%)`}
                         </span>
                       </button>
                       <button
@@ -4669,123 +5247,80 @@
                       </div>
 
                       {/* Group 1: Same Muscle / Slot Group (Direct 1:1 Biomechanical Replacements) */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
-                          1. Cùng Nhóm Cơ · Thay Thế Chuẩn 1:1 ({swapCandidates.slotGroupLabel}):
-                        </div>
-                        {swapCandidates.sameGroup.map((altEx) => {
-                          const isCurrentEx = altEx.id === ex.id;
-                          const setupNote =
-                            selectedGymId === 'ways_ql13'
-                              ? altEx.gymSetup?.ways_ql13
-                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
-                          return (
-                            <div
-                              key={altEx.id}
-                              style={{
-                                padding: '9px 10px',
-                                borderRadius: 13,
-                                border: isCurrentEx ? '2.5px solid #059669' : '1.5px solid #2B2118',
-                                background: isCurrentEx ? '#ECFDF5' : '#FFFDF9',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 5
-                              }}
-                            >
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                  <img
-                                    src={GymCore.resolveAsset(altEx.mascot)}
-                                    alt={altEx.shortName || altEx.name}
-                                    style={{ width: 38, height: 38, borderRadius: 9, border: '1.5px solid #2B2118', objectFit: 'cover' }}
-                                  />
-                                  <div>
-                                    <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
-                                    <div style={{ fontSize: 10, fontWeight: 800, color: '#E05A2B' }}>
-                                      {altEx.equipment} · {altEx.tier}
-                                    </div>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleSwapExercise(currentSession.id, slotExId, altEx.id);
-                                    setExerciseSubTab('sets');
-                                  }}
-                                  className="sherpa-btn"
-                                  style={{
-                                    padding: '6px 9px',
-                                    fontSize: 10.5,
-                                    background: isCurrentEx ? '#059669' : '#E05A2B',
-                                    color: '#FFFFFF',
-                                    flexShrink: 0
-                                  }}
-                                >
-                                  {isCurrentEx ? '✓ Đang chọn' : 'Chọn bài này'}
-                                </button>
-                              </div>
-                              {setupNote && (
-                                <div style={{ fontSize: 10, color: '#5C4938', fontWeight: 700, lineHeight: 1.35 }}>
-                                  📍 {setupNote}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                      {renderExerciseFilterToolbar(swapCandidates.allowedGroups, {
+                        includeSameGroupOption: true,
+                        sameGroupShortLabel: swapCandidates.slotGroupShortLabel,
+                        totalCount: swapCandidates.sameGroup.length + swapCandidates.otherInSession.length
+                      })}
 
-                      {/* Group 2: Other Available Machines in This Workout Session */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 4 }}>
-                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
-                          2. Máy Tập Khác Phù Hợp Với {currentSession.shortName} ({swapCandidates.otherInSession.length} bài):
-                        </div>
-                        {swapCandidates.otherInSession.map((altEx) => {
-                          const setupNote =
-                            selectedGymId === 'ways_ql13'
-                              ? altEx.gymSetup?.ways_ql13
-                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
-                          return (
-                            <div
-                              key={altEx.id}
-                              style={{
-                                padding: '8px 10px',
-                                borderRadius: 12,
-                                border: '1.5px solid #D8C8B0',
-                                background: '#FFFDF9',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                gap: 8
-                              }}
-                            >
-                              <div style={{ minWidth: 0 }}>
-                                <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>
-                                  {altEx.shortName || altEx.name.split('(')[0].trim()}
+                      {(() => {
+                        const filteredSame =
+                          swapGroupFilter === 'all' || swapGroupFilter === 'same_group' || swapGroupFilter === swapCandidates.slotGroup
+                            ? filterExerciseListByToolbar(swapCandidates.sameGroup)
+                            : [];
+                        const filteredOther =
+                          swapGroupFilter === 'same_group'
+                            ? []
+                            : filterExerciseListByToolbar(swapCandidates.otherInSession);
+                        return (
+                          <>
+                            {filteredSame.length > 0 && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                                  1. Cùng Nhóm Cơ · Thay Thế Chuẩn 1:1 ({swapCandidates.slotGroupLabel} · {filteredSame.length} máy):
                                 </div>
-                                <div style={{ fontSize: 9.5, fontWeight: 800, color: '#6B5744' }}>
-                                  {altEx.muscle} · {altEx.equipment}
-                                </div>
-                                {setupNote && (
-                                  <div style={{ fontSize: 9.5, color: '#5C4938', marginTop: 2 }}>
-                                    📍 {setupNote}
-                                  </div>
+                                {filteredSame.map((altEx) =>
+                                  renderRichExerciseCandidateCard(altEx, {
+                                    isCurrent: altEx.id === ex.id,
+                                    actionLabel: 'Chọn bài này',
+                                    currentLabel: '✓ Đang chọn',
+                                    onSelect: () => {
+                                      handleSwapExercise(currentSession.id, slotExId, altEx.id);
+                                      setExerciseSubTab('sets');
+                                    }
+                                  })
                                 )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  handleSwapExercise(currentSession.id, slotExId, altEx.id);
-                                  setExerciseSubTab('sets');
+                            )}
+
+                            {filteredOther.length > 0 && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 6 }}>
+                                <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                                  2. Các Máy Tập Khác Trong {currentSession.shortName} & Cardio ({filteredOther.length} máy):
+                                </div>
+                                {filteredOther.map((altEx) =>
+                                  renderRichExerciseCandidateCard(altEx, {
+                                    isCurrent: altEx.id === ex.id,
+                                    actionLabel: 'Đổi sang',
+                                    currentLabel: '✓ Đang chọn',
+                                    onSelect: () => {
+                                      handleSwapExercise(currentSession.id, slotExId, altEx.id);
+                                      setExerciseSubTab('sets');
+                                    }
+                                  })
+                                )}
+                              </div>
+                            )}
+
+                            {filteredSame.length === 0 && filteredOther.length === 0 && (
+                              <div
+                                style={{
+                                  padding: 14,
+                                  borderRadius: 12,
+                                  background: '#FAF5EA',
+                                  border: '1.5px dashed #D8C8B0',
+                                  textAlign: 'center',
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: '#6B5744'
                                 }}
-                                className="sherpa-btn"
-                                style={{ padding: '6px 9px', fontSize: 10, background: '#FAF5EA', flexShrink: 0 }}
                               >
-                                Đổi sang
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                                Không tìm thấy máy tập phù hợp với bộ lọc hiện tại. Hãy bấm "Tất cả" hoặc "Mọi khu vực".
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </section>
                   )}
 
@@ -5426,11 +5961,197 @@
                 {/* Quick Vietnamese Food Logger */}
                 {nutritionSubTab === 'foods' && (
                 <section className="sherpa-card">
-                  <h3 className="serif-title" style={{ fontSize: 15, fontWeight: 900, marginBottom: 8 }}>
-                    Thực Đơn Món Việt Phổ Thông (Chạm Để Ghi Nhận)
-                  </h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <div>
+                      <h3 className="serif-title" style={{ fontSize: 15, fontWeight: 900 }}>
+                        Thực Đơn Món Việt & Trái Cây Chuẩn ({GymCore.VN_FOODS.length} Món)
+                      </h3>
+                      <div style={{ fontSize: 10.5, fontWeight: 700, color: '#6B5744', marginTop: 1 }}>
+                        Bún, phở, hủ tiếu, cơm tấm, đạm gym & trái cây tươi (táo, ổi, nho...)
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 900,
+                        padding: '3px 8px',
+                        borderRadius: 999,
+                        background: '#2B2118',
+                        color: '#FDBA74',
+                        flexShrink: 0
+                      }}
+                    >
+                      Đã chọn {loggedFoodIds.length} món
+                    </span>
+                  </div>
+
+                  {/* Search Input & Filter Pills for Vietnamese Foods + Fruits */}
+                  <div
+                    style={{
+                      padding: '9px 10px',
+                      borderRadius: 12,
+                      background: '#FAF5EA',
+                      border: '1.5px solid #2B2118',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 7,
+                      marginBottom: 10
+                    }}
+                  >
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        value={foodSearchQuery}
+                        onChange={(e) => setFoodSearchQuery(e.target.value)}
+                        placeholder="🔍 Tìm món ăn: phở, bún bò, hủ tiếu, cơm tấm, ổi, táo, nho..."
+                        style={{
+                          width: '100%',
+                          padding: '8px 28px 8px 10px',
+                          borderRadius: 9,
+                          border: '1.5px solid #2B2118',
+                          background: '#FFFDF9',
+                          fontSize: 11.5,
+                          fontWeight: 700,
+                          color: '#2B2118',
+                          outline: 'none'
+                        }}
+                      />
+                      {foodSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setFoodSearchQuery('')}
+                          style={{
+                            position: 'absolute',
+                            right: 7,
+                            border: 'none',
+                            background: '#E5D5BE',
+                            color: '#2B2118',
+                            borderRadius: 999,
+                            width: 19,
+                            height: 19,
+                            fontSize: 10,
+                            fontWeight: 900,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Category Filter Pills */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {[
+                        { id: 'all', label: `Tất cả (${GymCore.VN_FOODS.length})` },
+                        { id: 'selected', label: `✓ Đang chọn (${loggedFoodIds.length})` },
+                        { id: 'noodle_soup', label: '🍜 Bún · Phở · Hủ Tiếu' },
+                        { id: 'rice_carb', label: '🍚 Cơm Tấm · Cơm · Tinh Bột' },
+                        { id: 'protein_dish', label: '🥩 Đạm Gym · Thịt Cá' },
+                        { id: 'fruit', label: '🍎 Trái Cây (Ổi · Táo · Nho...)' }
+                      ].map((cat) => {
+                        const active = foodCategoryFilter === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setFoodCategoryFilter(cat.id)}
+                            style={{
+                              padding: '5px 9px',
+                              borderRadius: 999,
+                              border: active ? '1.8px solid #2B2118' : '1px solid #D8C8B0',
+                              background: active ? '#E05A2B' : '#FFFDF9',
+                              color: active ? '#FFFFFF' : '#2B2118',
+                              fontSize: 10,
+                              fontWeight: 900,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {cat.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Nutritional Goal Filter Pills */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {[
+                        { id: 'all', label: 'Mọi chỉ số' },
+                        { id: 'high_protein', label: '💪 Giàu Đạm (≥25g P)' },
+                        { id: 'low_kcal', label: '🍃 Ít Calo (≤200 kcal)' },
+                        { id: 'low_gi', label: '🩸 Đường huyết GI Thấp' }
+                      ].map((gf) => {
+                        const active = foodGoalFilter === gf.id;
+                        return (
+                          <button
+                            key={gf.id}
+                            type="button"
+                            onClick={() => setFoodGoalFilter(gf.id)}
+                            style={{
+                              padding: '3.5px 8px',
+                              borderRadius: 7,
+                              border: active ? '1.5px solid #2B2118' : '1px solid #D8C8B0',
+                              background: active ? '#2B2118' : '#FFFDF9',
+                              color: active ? '#FDBA74' : '#5C4938',
+                              fontSize: 9.5,
+                              fontWeight: 800,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {gf.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {GymCore.VN_FOODS.map((food) => {
+                    {(() => {
+                      const q = GymCore.normalizeVNSearch
+                        ? GymCore.normalizeVNSearch(foodSearchQuery)
+                        : foodSearchQuery.toLowerCase();
+                      const filteredFoods = GymCore.VN_FOODS.filter((food) => {
+                        if (foodCategoryFilter === 'selected' && !loggedFoodIds.includes(food.id)) return false;
+                        if (
+                          foodCategoryFilter !== 'all' &&
+                          foodCategoryFilter !== 'selected' &&
+                          food.category !== foodCategoryFilter
+                        ) {
+                          return false;
+                        }
+                        if (foodGoalFilter === 'high_protein' && Number(food.protein) < 25) return false;
+                        if (foodGoalFilter === 'low_kcal' && Number(food.kcal) > 200) return false;
+                        if (foodGoalFilter === 'low_gi' && !String(food.giLevel || '').includes('Thấp')) return false;
+                        if (q) {
+                          const hay = GymCore.normalizeVNSearch
+                            ? GymCore.normalizeVNSearch(
+                                `${food.name} ${food.categoryLabel || ''} ${food.mealTag || ''} ${food.tip || ''}`
+                              )
+                            : `${food.name} ${food.tip || ''}`.toLowerCase();
+                          if (!hay.includes(q)) return false;
+                        }
+                        return true;
+                      });
+
+                      if (filteredFoods.length === 0) {
+                        return (
+                          <div
+                            style={{
+                              padding: 14,
+                              borderRadius: 12,
+                              background: '#FAF5EA',
+                              border: '1.5px dashed #D8C8B0',
+                              textAlign: 'center',
+                              fontSize: 11.5,
+                              fontWeight: 800,
+                              color: '#6B5744'
+                            }}
+                          >
+                            Không tìm thấy món ăn phù hợp với từ khóa "{foodSearchQuery}". Hãy bấm "Tất cả" để xem toàn bộ thực đơn.
+                          </div>
+                        );
+                      }
+
+                      return filteredFoods.map((food) => {
                       const selected = loggedFoodIds.includes(food.id);
                       return (
                         <button
@@ -5447,17 +6168,79 @@
                             gap: 10,
                             padding: 10,
                             borderRadius: 13,
-                            border: '2px solid #2B2118',
+                            border: selected ? '2.5px solid #059669' : '2px solid #2B2118',
                             background: selected ? '#DCFCE7' : '#FFFDF9',
                             textAlign: 'left',
                             cursor: 'pointer'
                           }}
                         >
                           <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 3 }}>
+                              <span
+                                style={{
+                                  fontSize: 8.5,
+                                  fontWeight: 900,
+                                  padding: '1.5px 6px',
+                                  borderRadius: 999,
+                                  background:
+                                    food.category === 'fruit'
+                                      ? '#DCFCE7'
+                                      : food.category === 'noodle_soup'
+                                      ? '#FFEDD5'
+                                      : food.category === 'protein_dish'
+                                      ? '#FEE2E2'
+                                      : '#E0E7FF',
+                                  color:
+                                    food.category === 'fruit'
+                                      ? '#065F46'
+                                      : food.category === 'noodle_soup'
+                                      ? '#9A3412'
+                                      : food.category === 'protein_dish'
+                                      ? '#991B1B'
+                                      : '#1E40AF'
+                                }}
+                              >
+                                {food.categoryLabel || 'Món Việt'}
+                              </span>
+                              {food.mealTag && (
+                                <span
+                                  style={{
+                                    fontSize: 8.5,
+                                    fontWeight: 800,
+                                    padding: '1.5px 6px',
+                                    borderRadius: 999,
+                                    background: '#FAF5EA',
+                                    border: '1px solid #D8C8B0',
+                                    color: '#5C4938'
+                                  }}
+                                >
+                                  {food.mealTag}
+                                </span>
+                              )}
+                              {food.giLevel && (
+                                <span
+                                  style={{
+                                    fontSize: 8.5,
+                                    fontWeight: 900,
+                                    padding: '1.5px 6px',
+                                    borderRadius: 999,
+                                    background: '#2B2118',
+                                    color: '#FDBA74'
+                                  }}
+                                >
+                                  {food.giLevel}
+                                </span>
+                              )}
+                            </div>
                             <div style={{ fontSize: 12.5, fontWeight: 900, color: '#2B2118' }}>{food.name}</div>
                             <div style={{ fontSize: 11, color: '#6B5744', marginTop: 2 }}>
-                              {food.portion} · <strong>{food.kcal} kcal</strong> · Đạm {food.protein}g · Tinh bột {food.carb}g
+                              {food.portion} · <strong style={{ color: '#E05A2B' }}>{food.kcal} kcal</strong> · Đạm <strong>{food.protein}g</strong> · Tinh bột {food.carb}g · Béo {food.fat}g{food.fiber ? ` · Xơ ${food.fiber}g` : ''}
                             </div>
+                            {food.tip && (
+                              <div style={{ fontSize: 9.5, color: '#5C4938', marginTop: 3, lineHeight: 1.35 }}>
+                                💡 {food.tip}
+                              </div>
+                            )}
                           </div>
                           <div
                             style={{
@@ -5476,7 +6259,8 @@
                           </div>
                         </button>
                       );
-                    })}
+                      });
+                    })()}
                   </div>
                 </section>
                 )}
@@ -6784,6 +7568,14 @@
                   const { sessionId, slotIndex, slotOriginalId, currentExId } = pickerSheetConfig;
                   const cands = GymCore.getSwapCandidatesForSlot(sessionId, slotOriginalId, currentExId, selectedGymId);
                   const curEx = GymCore.EXERCISES[currentExId] || GymCore.EXERCISES[slotOriginalId];
+                  const filteredSame =
+                    swapGroupFilter === 'all' || swapGroupFilter === 'same_group' || swapGroupFilter === cands.slotGroup
+                      ? filterExerciseListByToolbar(cands.sameGroup)
+                      : [];
+                  const filteredOther =
+                    swapGroupFilter === 'same_group'
+                      ? []
+                      : filterExerciseListByToolbar(cands.otherInSession);
                   return (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -6830,106 +7622,67 @@
                         })}
                       </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
-                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
-                          Cùng nhóm cơ ({cands.slotGroupLabel}):
-                        </div>
-                        {cands.sameGroup.map((altEx) => {
-                          const isCur = altEx.id === currentExId;
-                          const setupNote =
-                            selectedGymId === 'ways_ql13'
-                              ? altEx.gymSetup?.ways_ql13
-                              : altEx.gymSetup?.tng_uvk || altEx.gymSetup?.ways_ql13;
-                          return (
-                            <div
-                              key={altEx.id}
-                              style={{
-                                padding: '9px 10px',
-                                borderRadius: 13,
-                                border: isCur ? '2.5px solid #059669' : '1.5px solid #2B2118',
-                                background: isCur ? '#ECFDF5' : '#FFFDF9',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 5
-                              }}
-                            >
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                  <img
-                                    src={GymCore.resolveAsset(altEx.mascot)}
-                                    alt={altEx.shortName || altEx.name}
-                                    style={{ width: 38, height: 38, borderRadius: 9, border: '1.5px solid #2B2118', objectFit: 'cover' }}
-                                  />
-                                  <div>
-                                    <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
-                                    <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
-                                      {altEx.equipment} · {altEx.tier}
-                                    </div>
-                                  </div>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleSwapExercise(sessionId, slotOriginalId, altEx.id);
-                                    setPickerSheetConfig(null);
-                                  }}
-                                  className="sherpa-btn"
-                                  style={{
-                                    padding: '6px 9px',
-                                    fontSize: 10.5,
-                                    background: isCur ? '#059669' : '#E05A2B',
-                                    color: '#FFFFFF',
-                                    flexShrink: 0
-                                  }}
-                                >
-                                  {isCur ? '✓ Đang tập' : 'Đổi bài'}
-                                </button>
-                              </div>
-                              {setupNote && (
-                                <div style={{ fontSize: 9.5, color: '#5C4938', fontWeight: 700, lineHeight: 1.35 }}>
-                                  📍 {setupNote}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                      {renderExerciseFilterToolbar(cands.allowedGroups, {
+                        includeSameGroupOption: true,
+                        sameGroupShortLabel: cands.slotGroupShortLabel,
+                        totalCount: cands.sameGroup.length + cands.otherInSession.length
+                      })}
 
-                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118', marginTop: 4 }}>
-                          Các máy tập khác trong buổi này ({cands.otherInSession.length} bài):
-                        </div>
-                        {cands.otherInSession.map((altEx) => (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
+                        {filteredSame.length > 0 && (
+                          <>
+                            <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                              Cùng nhóm cơ 1:1 ({cands.slotGroupLabel} · {filteredSame.length} máy):
+                            </div>
+                            {filteredSame.map((altEx) =>
+                              renderRichExerciseCandidateCard(altEx, {
+                                isCurrent: altEx.id === currentExId,
+                                actionLabel: 'Đổi bài',
+                                currentLabel: '✓ Đang tập',
+                                onSelect: () => {
+                                  handleSwapExercise(sessionId, slotOriginalId, altEx.id);
+                                  setPickerSheetConfig(null);
+                                }
+                              })
+                            )}
+                          </>
+                        )}
+
+                        {filteredOther.length > 0 && (
+                          <>
+                            <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118', marginTop: 4 }}>
+                              Các máy tập khác trong {GymCore.WORKOUT_SESSIONS[sessionId]?.shortName} & Cardio ({filteredOther.length} bài):
+                            </div>
+                            {filteredOther.map((altEx) =>
+                              renderRichExerciseCandidateCard(altEx, {
+                                isCurrent: altEx.id === currentExId,
+                                actionLabel: 'Đổi sang',
+                                currentLabel: '✓ Đang tập',
+                                onSelect: () => {
+                                  handleSwapExercise(sessionId, slotOriginalId, altEx.id);
+                                  setPickerSheetConfig(null);
+                                }
+                              })
+                            )}
+                          </>
+                        )}
+
+                        {filteredSame.length === 0 && filteredOther.length === 0 && (
                           <div
-                            key={altEx.id}
                             style={{
-                              padding: '8px 10px',
-                              borderRadius: 11,
-                              border: '1.5px solid #D8C8B0',
-                              background: '#FFFDF9',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              gap: 8
+                              padding: 14,
+                              borderRadius: 12,
+                              background: '#FAF5EA',
+                              border: '1.5px dashed #D8C8B0',
+                              textAlign: 'center',
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: '#6B5744'
                             }}
                           >
-                            <div>
-                              <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>{altEx.name}</div>
-                              <div style={{ fontSize: 9.5, fontWeight: 700, color: '#6B5744' }}>
-                                {altEx.muscle} · {altEx.equipment}
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSwapExercise(sessionId, slotOriginalId, altEx.id);
-                                setPickerSheetConfig(null);
-                              }}
-                              className="sherpa-btn"
-                              style={{ padding: '6px 9px', fontSize: 10, background: '#FAF5EA', flexShrink: 0 }}
-                            >
-                              Chọn
-                            </button>
+                            Không có máy tập nào khớp bộ lọc hiện tại. Hãy bấm "Tất cả" hoặc "Mọi khu vực".
                           </div>
-                        ))}
+                        )}
                       </div>
                     </>
                   );
@@ -6939,11 +7692,10 @@
                 {pickerSheetConfig.type === 'add_exercise_to_session' && (() => {
                   const { sessionId } = pickerSheetConfig;
                   const curSlots = activeSessionSlotIds;
-                  const availableToAdd = Object.values(GymCore.EXERCISES).filter(
-                    (ex) =>
-                      !curSlots.includes(ex.id) &&
-                      (selectedGymId === 'all' || !Array.isArray(ex.availableGyms) || ex.availableGyms.includes(selectedGymId))
-                  );
+                  const addData = GymCore.getSessionAddableExercises
+                    ? GymCore.getSessionAddableExercises(sessionId, curSlots, selectedGymId)
+                    : { allowedGroups: [], candidates: [] };
+                  const filteredAddList = filterExerciseListByToolbar(addData.candidates);
                   return (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -6952,47 +7704,76 @@
                             BỔ SUNG MÁY TẬP VÀO BUỔI ({GymCore.WORKOUT_SESSIONS[sessionId]?.shortName})
                           </span>
                           <h3 className="serif-title" style={{ fontSize: 16, fontWeight: 900, marginTop: 4 }}>
-                            Chọn Thêm Máy Tập Hiện Có Tại Phòng
+                            Chỉ Hiện Bài Thuộc {GymCore.WORKOUT_SESSIONS[sessionId]?.shortName} & Cardio
                           </h3>
                         </div>
                         <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
                           <SvgIcon name="close" size={16} />
                         </button>
                       </div>
+
+                      {/* Gym Filter Pills inside Add Exercise Sheet */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginTop: 9 }}>
+                        {[
+                          { id: 'tng_uvk', label: 'The New Gym UVK' },
+                          { id: 'ways_ql13', label: 'Ways Station QL13' },
+                          { id: 'all', label: 'Cả 2 Phòng' }
+                        ].map((g) => {
+                          const active = selectedGymId === g.id;
+                          return (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => setSelectedGymId(g.id)}
+                              style={{
+                                padding: '6px 4px',
+                                borderRadius: 9,
+                                border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
+                                background: active ? '#2B2118' : '#FFFDF9',
+                                color: active ? '#FFFFFF' : '#2B2118',
+                                fontSize: 10,
+                                fontWeight: 900,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {g.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {renderExerciseFilterToolbar(addData.allowedGroups, {
+                        includeSameGroupOption: false,
+                        totalCount: addData.candidates.length
+                      })}
+
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 10 }}>
-                        {availableToAdd.map((ex) => (
+                        {filteredAddList.map((ex) =>
+                          renderRichExerciseCandidateCard(ex, {
+                            isCurrent: false,
+                            actionLabel: '+ Thêm bài',
+                            onSelect: () => {
+                              handleAddExerciseToSession(sessionId, ex.id);
+                              setPickerSheetConfig(null);
+                            }
+                          })
+                        )}
+                        {filteredAddList.length === 0 && (
                           <div
-                            key={ex.id}
                             style={{
-                              padding: '8px 10px',
+                              padding: 14,
                               borderRadius: 12,
-                              border: '1.5px solid #2B2118',
-                              background: '#FFFDF9',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              gap: 8
+                              background: '#FAF5EA',
+                              border: '1.5px dashed #D8C8B0',
+                              textAlign: 'center',
+                              fontSize: 11,
+                              fontWeight: 800,
+                              color: '#6B5744'
                             }}
                           >
-                            <div>
-                              <div style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118' }}>{ex.name}</div>
-                              <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
-                                {ex.muscle} · {ex.equipment}
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleAddExerciseToSession(sessionId, ex.id);
-                                setPickerSheetConfig(null);
-                              }}
-                              className="sherpa-btn sherpa-btn-green"
-                              style={{ padding: '6px 10px', fontSize: 10.5, flexShrink: 0 }}
-                            >
-                              + Thêm
-                            </button>
+                            Không có bài tập nào khớp bộ lọc hiện tại. Hãy bấm "Tất cả" hoặc "Mọi khu vực".
                           </div>
-                        ))}
+                        )}
                       </div>
                     </>
                   );
@@ -7514,12 +8295,12 @@
         if ('caches' in window) {
           caches.keys().then((keys) => {
             keys.forEach((k) => {
-              if (k !== '8d-bear-sherpa-pwa-v9') caches.delete(k);
+              if (k !== '8d-bear-sherpa-pwa-v10') caches.delete(k);
             });
           }).catch(() => {});
         }
         const isGym8DSubpath = /^\/gym8d(\/|$)/i.test(location.pathname);
-        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=9' : './sw.js?v=9';
+        const swUrl = isGym8DSubpath ? '/gym8D/sw.js?v=10' : './sw.js?v=10';
         const swOpts = isGym8DSubpath ? { scope: '/gym8D' } : undefined;
         navigator.serviceWorker.register(swUrl, swOpts).then((reg) => {
           if (reg && reg.update) reg.update();

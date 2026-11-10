@@ -1,4 +1,4 @@
-const CACHE_NAME = "8d-bear-sherpa-pwa-v9";
+const CACHE_NAME = "8d-bear-sherpa-pwa-v10";
 const CORE_ASSETS = [
   "/gym8D",
   "/gym8D/index.html",
