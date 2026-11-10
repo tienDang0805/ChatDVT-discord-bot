@@ -1188,6 +1188,8 @@
       const [foodGoalFilter, setFoodGoalFilter] = useState('all');
       const [foodSearchQuery, setFoodSearchQuery] = useState('');
       const [showInstallGuideSheet, setShowInstallGuideSheet] = useState(false);
+      const [installGuideTab, setInstallGuideTab] = useState('safari');
+      const [copiedInstallUrl, setCopiedInstallUrl] = useState(false);
       const [installBannerDismissed, setInstallBannerDismissed] = useState(false);
       const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
 
@@ -2698,28 +2700,26 @@
             <div
               style={{
                 margin: '10px 14px 0',
-                padding: '10px 12px',
-                borderRadius: 15,
-                background: browserEnv.isNonSafariIOS
-                  ? 'linear-gradient(135deg, #FEF3C7 0%, #FFEDD5 100%)'
-                  : 'linear-gradient(135deg, #FFEDD5 0%, #FFFDF9 100%)',
+                padding: '12px',
+                borderRadius: 18,
+                background: 'linear-gradient(145deg, #FFF7ED 0%, #FFFDF9 100%)',
                 border: '2px solid #2B2118',
-                boxShadow: '0 3px 0 #2B2118',
+                boxShadow: '0 4px 0 #2B2118',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 8
+                gap: 10
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <img
                     src={GymCore.resolveAsset('calendarNotify')}
                     alt="Cài App"
                     style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 10,
-                      border: '1.5px solid #2B2118',
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      border: '2px solid #2B2118',
                       background: '#FFFDF9',
                       objectFit: 'cover',
                       flexShrink: 0
@@ -2731,24 +2731,22 @@
                         style={{
                           fontSize: 9.5,
                           fontWeight: 900,
-                          padding: '1.5px 7px',
+                          padding: '2px 8px',
                           borderRadius: 999,
                           background: browserEnv.isNonSafariIOS ? '#DC2626' : '#E05A2B',
                           color: '#FFFFFF',
-                          border: '1px solid #2B2118'
+                          border: '1.5px solid #2B2118'
                         }}
                       >
                         {browserEnv.isNonSafariIOS
                           ? `ĐANG MỞ TRÊN ${browserEnv.browserLabel.toUpperCase()}`
-                          : 'CHẾ ĐỘ TRÌNH DUYỆT WEB'}
+                          : 'CHƯA CÀI RA MÀN HÌNH CHÍNH'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12.5, fontWeight: 900, color: '#2B2118', marginTop: 2, lineHeight: 1.25 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 900, color: '#2B2118', marginTop: 3, lineHeight: 1.25 }}>
                       {browserEnv.isNonSafariIOS
-                        ? 'Mở bằng Safari & Thêm vào Màn hình chính để thành App iPhone!'
-                        : browserEnv.isSafariIOS
-                        ? 'Ấn Chia sẻ [↑] → "Thêm vào MH chính" để dùng như App thật!'
-                        : 'Cài Gấu Gym 8D ra Màn hình chính điện thoại để dùng mượt & nhận thông báo!'}
+                        ? 'Mở bằng Safari để cài Gấu Gym 8D thành App iPhone!'
+                        : 'Cài Gấu Gym 8D ra Màn hình chính chỉ với 3 chạm!'}
                     </div>
                   </div>
                 </div>
@@ -2759,8 +2757,8 @@
                     border: '1.5px solid #2B2118',
                     background: '#FFFDF9',
                     borderRadius: 8,
-                    width: 24,
-                    height: 24,
+                    width: 26,
+                    height: 26,
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -2772,15 +2770,122 @@
                   <SvgIcon name="close" size={12} color="#2B2118" />
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.95fr', gap: 7 }}>
+
+              {/* Sơ đồ 3 bước trực quan ngay trên Banner */}
+              <div
+                onClick={() => {
+                  setInstallGuideTab(browserEnv.isNonSafariIOS ? 'inapp' : 'safari');
+                  setShowInstallGuideSheet(true);
+                }}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto 1fr auto 1fr',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '8px 8px',
+                  borderRadius: 13,
+                  background: '#FFFDF9',
+                  border: '1.5px solid #2B2118',
+                  cursor: 'pointer'
+                }}
+              >
+                {/* Step 1 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 7,
+                      background: '#2563EB',
+                      color: '#FFFFFF',
+                      border: '1.5px solid #2B2118',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <SvgIcon name="share" size={13} color="#FFFFFF" />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 8.5, fontWeight: 900, color: '#6B5744' }}>BƯỚC 1</div>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#2B2118', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Ấn Chia sẻ
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 11, fontWeight: 900, color: '#E05A2B' }}>➔</div>
+
+                {/* Step 2 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 7,
+                      background: '#FFF7ED',
+                      color: '#2B2118',
+                      border: '1.5px solid #2B2118',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      fontSize: 14,
+                      flexShrink: 0
+                    }}
+                  >
+                    +
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 8.5, fontWeight: 900, color: '#6B5744' }}>BƯỚC 2</div>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#2B2118', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Thêm MH chính
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: 11, fontWeight: 900, color: '#E05A2B' }}>➔</div>
+
+                {/* Step 3 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 7,
+                      background: '#16A34A',
+                      color: '#FFFFFF',
+                      border: '1.5px solid #2B2118',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <SvgIcon name="check" size={13} color="#FFFFFF" />
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 8.5, fontWeight: 900, color: '#6B5744' }}>BƯỚC 3</div>
+                    <div style={{ fontSize: 10, fontWeight: 900, color: '#2B2118', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Mở App 8D
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.95fr', gap: 8 }}>
                 <button
                   type="button"
-                  onClick={() => setShowInstallGuideSheet(true)}
+                  onClick={() => {
+                    setInstallGuideTab(browserEnv.isNonSafariIOS ? 'inapp' : 'safari');
+                    setShowInstallGuideSheet(true);
+                  }}
                   className="sherpa-btn sherpa-btn-primary"
-                  style={{ width: '100%', padding: '7.5px 9px', fontSize: 11 }}
+                  style={{ width: '100%', padding: '8.5px 10px', fontSize: 11.5 }}
                 >
                   <SvgIcon name="share" size={13} color="#FFFFFF" />
-                  <span>Hướng Dẫn Cài App (3 Bước)</span>
+                  <span>Xem Hình Hướng Dẫn</span>
                 </button>
                 <button
                   type="button"
@@ -2789,6 +2894,8 @@
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                       navigator.clipboard.writeText(appUrl).catch(() => {});
                     }
+                    setCopiedInstallUrl(true);
+                    setTimeout(() => setCopiedInstallUrl(false), 2500);
                     dispatchRealOSNotification(
                       'Đã sao chép Link Gấu Gym 8D!',
                       'Hãy mở ứng dụng Safari trên iPhone, dán link https://devtiendang.blog/gym8D rồi chọn Chia sẻ [↑] → Thêm vào Màn hình chính.',
@@ -2796,9 +2903,15 @@
                     );
                   }}
                   className="sherpa-btn"
-                  style={{ width: '100%', padding: '7.5px 8px', fontSize: 11, background: '#FFFDF9' }}
+                  style={{
+                    width: '100%',
+                    padding: '8.5px 8px',
+                    fontSize: 11.5,
+                    background: copiedInstallUrl ? '#DCFCE7' : '#FFFDF9',
+                    color: copiedInstallUrl ? '#166534' : '#2B2118'
+                  }}
                 >
-                  <span>Copy Link Mở Safari</span>
+                  <span>{copiedInstallUrl ? '✓ Đã Chép Link' : 'Chép Link Safari'}</span>
                 </button>
               </div>
             </div>
@@ -6952,19 +7065,26 @@
                           ? 'Đang chạy độc lập từ Màn hình chính'
                           : 'Trên Safari bấm Share -> Thêm vào MH chính'}
                       </div>
-                      <span
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInstallGuideTab('safari');
+                          setShowInstallGuideSheet(true);
+                        }}
                         style={{
                           fontSize: 9.5,
                           fontWeight: 900,
-                          padding: '2px 7px',
+                          padding: '3px 8px',
                           borderRadius: 999,
-                          background: isStandalonePWA ? '#16A34A' : '#6B5744',
+                          background: isStandalonePWA ? '#16A34A' : '#E05A2B',
                           color: '#FFFFFF',
+                          border: '1.5px solid #2B2118',
+                          cursor: 'pointer',
                           flexShrink: 0
                         }}
                       >
-                        {isStandalonePWA ? 'STANDALONE' : 'TRÌNH DUYỆT'}
-                      </span>
+                        {isStandalonePWA ? 'STANDALONE' : 'XEM HƯỚNG DẪN'}
+                      </button>
                     </div>
                   </div>
 
@@ -8538,7 +8658,7 @@
                 style={{
                   width: '100%',
                   maxWidth: 430,
-                  maxHeight: '88vh',
+                  maxHeight: '90vh',
                   overflowY: 'auto',
                   background: '#FAF5EA',
                   borderTopLeftRadius: 24,
@@ -8561,10 +8681,10 @@
                         border: '1.5px solid #2B2118'
                       }}
                     >
-                      HƯỚNG DẪN CÀI ĐẶT APP TRÊN ĐIỆN THOẠI
+                      CÀI APP RA MÀN HÌNH CHÍNH IPHONE
                     </span>
                     <h3 className="serif-title" style={{ fontSize: 17, fontWeight: 900, color: '#2B2118', marginTop: 3 }}>
-                      Biến Gấu Gym 8D Thành App Màn Hình Chính
+                      Hướng Dẫn Trực Quan Từng Bước
                     </h3>
                   </div>
                   <button
@@ -8577,76 +8697,460 @@
                   </button>
                 </div>
 
-                {/* BƯỚC 0: Nếu đang mở bằng Zalo / Messenger / Chrome / Web khác trên iPhone */}
+                {/* Bộ chuyển Tab: Safari iPhone vs Zalo / Messenger / Chrome */}
                 <div
                   style={{
-                    marginTop: 10,
-                    padding: 11,
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: 8,
+                    marginTop: 12,
+                    padding: 4,
                     borderRadius: 14,
-                    background: '#FEF3C7',
+                    background: '#EFE5D4',
                     border: '2px solid #2B2118'
                   }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 900, color: '#92400E' }}>
-                    ⚠️ Nếu bạn đang mở link từ Zalo, Messenger, Facebook hoặc Chrome:
-                  </div>
-                  <div style={{ fontSize: 11, color: '#5C4938', fontWeight: 700, marginTop: 3, lineHeight: 1.4 }}>
-                    Trình duyệt trong ứng dụng không cho phép cài App và khóa Chuông thông báo iOS. Hãy bấm nút bên dưới để chép link rồi dán vào trình duyệt <strong>Safari</strong> trên iPhone (hoặc ấn dấu <strong>⋯</strong> góc phải chọn <strong>"Mở bằng Safari"</strong>):
-                  </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      const appUrl = 'https://devtiendang.blog/gym8D';
-                      if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(appUrl).catch(() => {});
-                      }
-                      dispatchRealOSNotification(
-                        'Đã sao chép: https://devtiendang.blog/gym8D',
-                        'Mở ứng dụng Safari trên iPhone và dán đường dẫn này vào thanh địa chỉ!',
-                        'copy_guide_url'
-                      );
+                    onClick={() => setInstallGuideTab('safari')}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 10,
+                      border: installGuideTab === 'safari' ? '2px solid #2B2118' : '2px solid transparent',
+                      background: installGuideTab === 'safari' ? '#2B2118' : 'transparent',
+                      color: installGuideTab === 'safari' ? '#FFFFFF' : '#2B2118',
+                      fontSize: 11.5,
+                      fontWeight: 900,
+                      cursor: 'pointer'
                     }}
-                    className="sherpa-btn"
-                    style={{ width: '100%', marginTop: 8, padding: '8px 10px', fontSize: 11.5, background: '#FFFDF9' }}
                   >
-                    <span>Sao chép Link: https://devtiendang.blog/gym8D</span>
+                    🍏 Cài Từ Safari iPhone
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInstallGuideTab('inapp')}
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 10,
+                      border: installGuideTab === 'inapp' ? '2px solid #2B2118' : '2px solid transparent',
+                      background: installGuideTab === 'inapp' ? '#2B2118' : 'transparent',
+                      color: installGuideTab === 'inapp' ? '#FFFFFF' : '#2B2118',
+                      fontSize: 11.5,
+                      fontWeight: 900,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    💬 Mở Từ Zalo / Chrome
                   </button>
                 </div>
 
-                {/* 3 Bước Cài Đặt Trên Safari iPhone */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
-                  {[
-                    {
-                      step: 'BƯỚC 1 · TRONG SAFARI IPHONE',
-                      title: 'Ấn nút Chia sẻ (Share [↑]) ở thanh dưới cùng',
-                      desc: 'Trên trình duyệt Safari của iPhone, nhìn xuống chính giữa thanh công cụ dưới cùng và chạm vào biểu tượng hình vuông có mũi tên hướng lên [↑].'
-                    },
-                    {
-                      step: 'BƯỚC 2 · THÊM VÀO MÀN HÌNH CHÍNH',
-                      title: 'Chọn "Thêm vào MH chính" (Add to Home Screen ➕)',
-                      desc: 'Vuốt bảng menu Chia sẻ lên một chút, chạm vào dòng "Thêm vào Màn hình chính" (Add to Home Screen) có biểu tượng dấu cộng.'
-                    },
-                    {
-                      step: 'BƯỚC 3 · MỞ APP & BẬT CHUÔNG BÁO',
-                      title: 'Ấn "Thêm" (Add) ở góc trên phải & Mở App ngoài màn hình',
-                      desc: 'Icon Gấu Gym 8D sẽ xuất hiện ngay trên màn hình chính iPhone như một App độc lập (không còn thanh địa chỉ web) và hỗ trợ đẩy Thông báo lịch tập!'
-                    }
-                  ].map((item, idx) => (
+                {installGuideTab === 'safari' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 12 }}>
+                    {/* BƯỚC 1: Mô phỏng trực quan thanh Safari dưới cùng */}
                     <div
-                      key={idx}
                       style={{
-                        padding: '10px 12px',
-                        borderRadius: 14,
+                        padding: '12px',
+                        borderRadius: 16,
                         background: '#FFFDF9',
-                        border: '2px solid #2B2118'
+                        border: '2px solid #2B2118',
+                        boxShadow: '0 3px 0 #2B2118'
                       }}
                     >
-                      <div style={{ fontSize: 9.5, fontWeight: 900, color: '#E05A2B' }}>{item.step}</div>
-                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118', marginTop: 2 }}>{item.title}</div>
-                      <div style={{ fontSize: 11, color: '#5C4938', fontWeight: 700, marginTop: 3, lineHeight: 1.4 }}>{item.desc}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: '#DBEAFE',
+                            color: '#1D4ED8',
+                            border: '1.5px solid #2B2118'
+                          }}
+                        >
+                          BƯỚC 1 · THANH SAFARI DƯỚI CÙNG
+                        </span>
+                        <span style={{ fontSize: 10.5, fontWeight: 900, color: '#E05A2B' }}>Chạm chính giữa 👇</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118', marginTop: 5 }}>
+                        Ấn biểu tượng Chia sẻ <span style={{ color: '#2563EB' }}>[↑]</span> trên thanh công cụ Safari
+                      </div>
+
+                      {/* Hình minh hoạ trực quan thanh Safari Bottom Bar */}
+                      <div
+                        style={{
+                          marginTop: 9,
+                          padding: '9px 10px',
+                          borderRadius: 14,
+                          background: '#1C1C1E',
+                          color: '#FFFFFF',
+                          border: '2px solid #2B2118'
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: '5px 10px',
+                            borderRadius: 9,
+                            background: '#2C2C2E',
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: '#E5E5EA',
+                            textAlign: 'center',
+                            marginBottom: 8
+                          }}
+                        >
+                          🔒 devtiendang.blog/gym8D
+                        </div>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr 1.6fr 1fr 1fr',
+                            alignItems: 'center',
+                            textAlign: 'center',
+                            gap: 4
+                          }}
+                        >
+                          <span style={{ fontSize: 16, color: '#8E8E93', fontWeight: 900 }}>‹</span>
+                          <span style={{ fontSize: 16, color: '#8E8E93', fontWeight: 900 }}>›</span>
+                          <div
+                            style={{
+                              padding: '5px 6px',
+                              borderRadius: 10,
+                              background: '#2563EB',
+                              border: '2px solid #FDBA74',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 4,
+                              boxShadow: '0 0 0 3px rgba(37, 99, 235, 0.35)'
+                            }}
+                          >
+                            <SvgIcon name="share" size={14} color="#FFFFFF" />
+                            <span style={{ fontSize: 10, fontWeight: 900, color: '#FFFFFF' }}>Chia sẻ</span>
+                          </div>
+                          <span style={{ fontSize: 13, color: '#8E8E93' }}>📖</span>
+                          <span style={{ fontSize: 13, color: '#8E8E93' }}>❐</span>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
+
+                    {/* BƯỚC 2: Mô phỏng trực quan bảng iOS Share Sheet */}
+                    <div
+                      style={{
+                        padding: '12px',
+                        borderRadius: 16,
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        boxShadow: '0 3px 0 #2B2118'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: '#FFEDD5',
+                            color: '#C2410C',
+                            border: '1.5px solid #2B2118'
+                          }}
+                        >
+                          BƯỚC 2 · MENU CHIA SẺ IOS
+                        </span>
+                        <span style={{ fontSize: 10.5, fontWeight: 900, color: '#E05A2B' }}>Kéo nhẹ xuống 👇</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118', marginTop: 5 }}>
+                        Chọn dòng <span style={{ color: '#E05A2B' }}>"Thêm vào MH chính"</span> (Add to Home Screen)
+                      </div>
+
+                      {/* Hình minh hoạ trực quan dòng Add to Home Screen */}
+                      <div
+                        style={{
+                          marginTop: 9,
+                          padding: '8px',
+                          borderRadius: 14,
+                          background: '#2C2C2E',
+                          border: '2px solid #2B2118',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 6
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: 9,
+                            background: '#3A3A3C',
+                            color: '#AEAEB2',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <span>Sao chép (Copy)</span>
+                          <span>📋</span>
+                        </div>
+                        <div
+                          style={{
+                            padding: '9px 11px',
+                            borderRadius: 10,
+                            background: '#FFF7ED',
+                            border: '2px solid #E05A2B',
+                            color: '#2B2118',
+                            fontSize: 12,
+                            fontWeight: 900,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            boxShadow: '0 0 0 3px rgba(224, 90, 43, 0.28)'
+                          }}
+                        >
+                          <span>👉 Thêm vào MH chính (Add to Home Screen)</span>
+                          <span
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: 6,
+                              border: '2px solid #2B2118',
+                              background: '#FFFFFF',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 15,
+                              fontWeight: 900
+                            }}
+                          >
+                            +
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* BƯỚC 3: Mô phỏng xác nhận Thêm & Icon ngoài màn hình chính */}
+                    <div
+                      style={{
+                        padding: '12px',
+                        borderRadius: 16,
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        boxShadow: '0 3px 0 #2B2118'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 900,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            background: '#DCFCE7',
+                            color: '#166534',
+                            border: '1.5px solid #2B2118'
+                          }}
+                        >
+                          BƯỚC 3 · HOÀN TẤT & MỞ APP
+                        </span>
+                        <span style={{ fontSize: 10.5, fontWeight: 900, color: '#16A34A' }}>Góc trên phải ✓</span>
+                      </div>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118', marginTop: 5 }}>
+                        Ấn nút <span style={{ color: '#2563EB' }}>"Thêm" (Add)</span> & Mở Gấu Gym 8D ngoài màn hình
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 9,
+                          padding: '9px 11px',
+                          borderRadius: 14,
+                          background: '#F4ECE0',
+                          border: '1.5px solid #2B2118',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 10
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          <img
+                            src={GymCore.resolveAsset('hero')}
+                            alt="Gấu Gym 8D Icon"
+                            style={{
+                              width: 42,
+                              height: 42,
+                              borderRadius: 11,
+                              border: '2px solid #2B2118',
+                              background: '#FFFDF9',
+                              objectFit: 'cover'
+                            }}
+                          />
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 900, color: '#2B2118' }}>Gấu Gym 8D</div>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: '#166534' }}>
+                              ✓ Full màn hình · ✓ Bật được chuông báo
+                            </div>
+                          </div>
+                        </div>
+                        <span
+                          style={{
+                            padding: '5px 10px',
+                            borderRadius: 9,
+                            background: '#2563EB',
+                            color: '#FFFFFF',
+                            border: '1.5px solid #2B2118',
+                            fontSize: 11,
+                            fontWeight: 900,
+                            flexShrink: 0
+                          }}
+                        >
+                          Thêm (Add) ✓
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 12 }}>
+                    {/* Hướng dẫn trực quan khi kẹt trong Zalo / Messenger / Chrome */}
+                    <div
+                      style={{
+                        padding: '12px',
+                        borderRadius: 16,
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        boxShadow: '0 3px 0 #2B2118'
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          background: '#FEF3C7',
+                          color: '#92400E',
+                          border: '1.5px solid #2B2118'
+                        }}
+                      >
+                        CÁCH 1 · MỞ SANG SAFARI TỪ ZALO / MESSENGER
+                      </span>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118', marginTop: 6 }}>
+                        Chạm nút <span style={{ color: '#E05A2B' }}>[⋯]</span> góc trên bên phải → chọn <span style={{ color: '#2563EB' }}>"Mở bằng Safari"</span>
+                      </div>
+
+                      {/* Mô phỏng thanh top bar của Zalo / Messenger In-App Browser */}
+                      <div
+                        style={{
+                          marginTop: 9,
+                          padding: '9px 10px',
+                          borderRadius: 14,
+                          background: '#1C1C1E',
+                          color: '#FFFFFF',
+                          border: '2px solid #2B2118'
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                          <span style={{ fontSize: 11, color: '#AEAEB2', fontWeight: 800 }}>✕  devtiendang.blog</span>
+                          <span
+                            style={{
+                              padding: '3px 9px',
+                              borderRadius: 8,
+                              background: '#E05A2B',
+                              border: '1.5px solid #FFFFFF',
+                              fontSize: 11,
+                              fontWeight: 900
+                            }}
+                          >
+                            ⋯ 👈 Chạm
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            padding: '8px 10px',
+                            borderRadius: 9,
+                            background: '#FFF7ED',
+                            color: '#2B2118',
+                            border: '2px solid #E05A2B',
+                            fontSize: 11.5,
+                            fontWeight: 900,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <span>🧭 Mở bằng trình duyệt Safari</span>
+                          <span style={{ color: '#2563EB' }}>Chọn ✓</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '12px',
+                        borderRadius: 16,
+                        background: '#FFFDF9',
+                        border: '2px solid #2B2118',
+                        boxShadow: '0 3px 0 #2B2118'
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          padding: '2px 8px',
+                          borderRadius: 999,
+                          background: '#DBEAFE',
+                          color: '#1D4ED8',
+                          border: '1.5px solid #2B2118'
+                        }}
+                      >
+                        CÁCH 2 · CHÉP LINK DÁN VÀO SAFARI
+                      </span>
+                      <div style={{ fontSize: 12.5, fontWeight: 900, color: '#2B2118', marginTop: 6 }}>
+                        Sao chép đường dẫn bên dưới rồi mở ứng dụng Safari trên iPhone và dán vào thanh địa chỉ:
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: '8px 10px',
+                          borderRadius: 11,
+                          background: '#F4ECE0',
+                          border: '1.5px solid #2B2118',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 8
+                        }}
+                      >
+                        <span style={{ fontSize: 11.5, fontWeight: 900, color: '#2B2118', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          https://devtiendang.blog/gym8D
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const appUrl = 'https://devtiendang.blog/gym8D';
+                            if (navigator.clipboard && navigator.clipboard.writeText) {
+                              navigator.clipboard.writeText(appUrl).catch(() => {});
+                            }
+                            setCopiedInstallUrl(true);
+                            setTimeout(() => setCopiedInstallUrl(false), 2500);
+                            dispatchRealOSNotification(
+                              'Đã sao chép: https://devtiendang.blog/gym8D',
+                              'Mở ứng dụng Safari trên iPhone và dán đường dẫn này vào thanh địa chỉ!',
+                              'copy_guide_url'
+                            );
+                          }}
+                          className="sherpa-btn sherpa-btn-primary"
+                          style={{ padding: '6px 10px', fontSize: 11, flexShrink: 0 }}
+                        >
+                          <span>{copiedInstallUrl ? '✓ Đã chép' : 'Sao chép'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {deferredInstallPrompt && (
                   <button
