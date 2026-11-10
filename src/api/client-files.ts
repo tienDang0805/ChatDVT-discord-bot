@@ -14,6 +14,13 @@ export function createClientFilesRouter(buildPath: string) {
   const router = express.Router();
   const root = path.resolve(buildPath);
 
+  router.use((req, _res, next) => {
+    if (/^\/gym8d(\/|$)/i.test(req.url)) {
+      req.url = req.url.replace(/^\/gym8d/i, '/gym8D');
+    }
+    next();
+  });
+
   router.get('*', (req, res, next) => {
     const relativePath = req.path.replace(/^\/+|\/+$/g, '');
     if (!relativePath || path.extname(relativePath)) return next();
