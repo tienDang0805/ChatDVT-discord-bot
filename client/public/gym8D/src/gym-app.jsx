@@ -1211,6 +1211,8 @@
       const [showInstallGuideSheet, setShowInstallGuideSheet] = useState(false);
       const [installGuideTab, setInstallGuideTab] = useState('safari');
       const [copiedInstallUrl, setCopiedInstallUrl] = useState(false);
+      const [swipeBackDragX, setSwipeBackDragX] = useState(0);
+      const touchStartRef = React.useRef(null);
       const [installBannerDismissed, setInstallBannerDismissed] = useState(false);
       const [deferredInstallPrompt, setDeferredInstallPrompt] = useState(null);
 
@@ -2085,7 +2087,7 @@
         });
       }
 
-      function handleQuickToggleExerciseDone(isoDate, exId) {
+      function handleQuickToggleExerciseDone(isoDate, exId, slotIdx = null, forceConfirm = false) {
         const targetDateISO = GymCore.diffDaysISO(isoDate, todayISO) > 0 ? todayISO : isoDate;
         if (targetDateISO !== selectedDateISO) {
           setSelectedDateISO(targetDateISO);
@@ -2095,11 +2097,38 @@
         }
         const ex = GymCore.EXERCISES[exId];
         if (!ex) return;
+
+        const currentSetsSnapshot = (logsByDate[targetDateISO] && logsByDate[targetDateISO][exId]) || getSetsForDateAndExercise(targetDateISO, exId);
+        const doneSetCount = currentSetsSnapshot.filter((s) => s.done).length;
+        const totalSetsCount = currentSetsSnapshot.length;
+        const totalTargetReps = currentSetsSnapshot.reduce((acc, s) => acc + Math.max(1, Number(s.reps) || 0), 0);
+        const completedRepsCount = currentSetsSnapshot.reduce((acc, s) => acc + (s.done ? Math.max(1, Number(s.reps) || 0) : 0), 0);
+        const setPct = totalSetsCount > 0 ? Math.round((doneSetCount / totalSetsCount) * 100) : 0;
+        const repPct = totalTargetReps > 0 ? Math.round((completedRepsCount / totalTargetReps) * 100) : 0;
+        const exPct = Math.max(setPct, repPct);
+        const alreadyDone70 = exPct >= 70;
+
+        if (!alreadyDone70 && !forceConfirm) {
+          setPickerSheetConfig({
+            type: 'confirm_exercise_done_under_70',
+            isoDate: targetDateISO,
+            exId,
+            slotIndex: slotIdx,
+            doneSetCount,
+            totalSetsCount,
+            completedRepsCount,
+            totalTargetReps,
+            exPct
+          });
+          return;
+        }
+
         setLogsByDate((prev) => {
           const dayMap = prev[targetDateISO] || {};
           const currentSets = dayMap[exId] || getSetsForDateAndExercise(targetDateISO, exId);
           const allCurrentlyDone = currentSets.length > 0 && currentSets.every((s) => s.done);
-          const nextSets = currentSets.map((s) => ({ ...s, done: !allCurrentlyDone }));
+          const nextDoneState = forceConfirm ? true : !allCurrentlyDone;
+          const nextSets = currentSets.map((s) => ({ ...s, done: nextDoneState }));
           const nextDayMap = {
             ...dayMap,
             [exId]: nextSets
@@ -2643,8 +2672,115 @@
         });
       }
 
+      function navigateToDayScreen(isoDate) {
+        setSelectedDateISO(isoDate);
+        const dayEntry = GymCore.buildDayScheduleEntry(isoDate, calendarOptions);
+        if (dayEntry.sessionId && dayEntry.sessionId !== 'rest') {
+          setActiveSessionId(dayEntry.sessionId);
+        }
+        setDetailSlotIndex(null);
+        setActiveTab('workout');
+      }
+
+      function handleNavigateBack() {
+        if (pickerSheetConfig) {
+          setPickerSheetConfig(null);
+          return;
+        }
+        if (setEditorConfig) {
+          setSetEditorConfig(null);
+          return;
+        }
+        if (plateModalConfig) {
+          setPlateModalConfig(null);
+          return;
+        }
+        if (showInstallGuideSheet) {
+          setShowInstallGuideSheet(false);
+          return;
+        }
+        if (detailSlotIndex !== null) {
+          setDetailSlotIndex(null);
+          return;
+        }
+        if (activeTab !== 'schedule') {
+          setActiveTab('schedule');
+        }
+      }
+
+      function handleShellTouchStart(e) {
+        if (!e.touches || e.touches.length !== 1) return;
+        const t = e.touches[0];
+        touchStartRef.current = {
+          x: t.clientX,
+          y: t.clientY,
+          time: Date.now()
+        };
+      }
+
+      function handleShellTouchMove(e) {
+        if (!touchStartRef.current || !e.touches || e.touches.length !== 1) return;
+        const canGoBack = detailSlotIndex !== null || activeTab !== 'schedule';
+        if (!canGoBack) return;
+        const t = e.touches[0];
+        const dx = t.clientX - touchStartRef.current.x;
+        const dy = t.clientY - touchStartRef.current.y;
+        if (dx > 16 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+          setSwipeBackDragX(Math.min(110, dx));
+        } else if (dx <= 0 && swipeBackDragX > 0) {
+          setSwipeBackDragX(0);
+        }
+      }
+
+      function handleShellTouchEnd(e) {
+        if (!touchStartRef.current) return;
+        const canGoBack = detailSlotIndex !== null || activeTab !== 'schedule';
+        const changed = e.changedTouches && e.changedTouches[0];
+        if (canGoBack && changed) {
+          const dx = changed.clientX - touchStartRef.current.x;
+          const dy = changed.clientY - touchStartRef.current.y;
+          if (dx > 65 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+            handleNavigateBack();
+          }
+        }
+        touchStartRef.current = null;
+        if (swipeBackDragX > 0) setSwipeBackDragX(0);
+      }
+
       return (
-        <div className="standalone-shell">
+        <div
+          className="standalone-shell"
+          onTouchStart={handleShellTouchStart}
+          onTouchMove={handleShellTouchMove}
+          onTouchEnd={handleShellTouchEnd}
+        >
+          {/* Chỉ báo vuốt ngang từ trái qua phải (iOS Swipe Back Indicator) */}
+          {swipeBackDragX > 18 && (
+            <div
+              style={{
+                position: 'fixed',
+                left: Math.min(18, swipeBackDragX - 24),
+                top: '46%',
+                zIndex: 90,
+                padding: '7px 12px',
+                borderRadius: 999,
+                background: '#2B2118',
+                color: '#FFFFFF',
+                border: '2px solid #FDBA74',
+                fontSize: 11.5,
+                fontWeight: 900,
+                boxShadow: '0 6px 18px rgba(0,0,0,0.28)',
+                pointerEvents: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5
+              }}
+            >
+              <span>‹</span>
+              <span>{detailSlotIndex !== null ? 'Quay lại Buổi tập' : 'Quay lại Lịch tập'}</span>
+            </div>
+          )}
+
           {/* Top Mobile App Bar */}
           <header
             style={{
@@ -4085,7 +4221,7 @@
                             return (
                               <button
                                 key={day.isoDate}
-                                onClick={() => setSelectedDateISO(day.isoDate)}
+                                onClick={() => navigateToDayScreen(day.isoDate)}
                                 style={{
                                   padding: '7px 5px',
                                   borderRadius: 14,
@@ -4237,7 +4373,7 @@
                           return (
                             <button
                               key={cell.isoDate}
-                              onClick={() => setSelectedDateISO(cell.isoDate)}
+                              onClick={() => navigateToDayScreen(cell.isoDate)}
                               style={{
                                 padding: '5px 2px',
                                 borderRadius: 9,
@@ -4283,282 +4419,25 @@
                     </div>
                   )}
 
-                  {/* Selected Day Editor Box — Symmetrical 2-Column Alignment Fixed */}
-                  {selectedDay && (
-                    <div
-                      style={{
-                        marginTop: 12,
-                        padding: 12,
-                        borderRadius: 14,
-                        background: '#FAF5EA',
-                        border: '2px solid #2B2118'
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                        <div>
-                          <span
-                            style={{
-                              fontSize: 10,
-                              fontWeight: 900,
-                              padding: '2px 7px',
-                              borderRadius: 999,
-                              background: selectedDay.isCompleted
-                                ? '#16A34A'
-                                : selectedDay.isMissed
-                                ? '#DC2626'
-                                : selectedDay.isToday
-                                ? '#0284C7'
-                                : selectedDay.isFirstWorkout
-                                ? '#E05A2B'
-                                : '#2B2118',
-                              color: '#FFF'
-                            }}
-                          >
-                            {selectedDay.badge}
-                          </span>
-                          <div style={{ fontSize: 14, fontWeight: 900, marginTop: 5 }}>
-                            {selectedDay.dayShort} · Ngày {selectedDay.dateLabel}
-                          </div>
-                        </div>
-                        {selectedDay.sessionId !== 'rest' && (
-                          <button
-                            onClick={() => {
-                              setActiveSessionId(selectedDay.sessionId);
-                              setDetailSlotIndex(null);
-                              setActiveTab('workout');
-                            }}
-                            className="sherpa-btn sherpa-btn-green"
-                            style={{ padding: '8px 11px', fontSize: 11, flexShrink: 0 }}
-                          >
-                            <span>Mở giáo án ({selectedDay.shortDate})</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Aligned 2-Column Picker Grid (Single-line Labels + 50px Height Triggers) */}
-                      {selectedDay.isSaturdayOptional && (
-                        <div
-                          style={{
-                            marginTop: 9,
-                            padding: '8px 10px',
-                            borderRadius: 11,
-                            background: selectedDay.sessionId !== 'rest' ? '#EDE9FE' : '#FEF3C7',
-                            border: '1.5px solid #2B2118',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 8
-                          }}
-                        >
-                          <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118', lineHeight: 1.3 }}>
-                            {selectedDay.sessionId !== 'rest'
-                              ? '⚡ Thứ 7 đang Bật Tập Optional (Không tính lỗi nếu nghỉ)'
-                              : '🛋️ Thứ 7 mặc định Nghỉ Cuối Tuần (Optional tập thêm)'}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const enableSat = selectedDay.sessionId === 'rest';
-                              handleUpdateRecurringWeekday(6, {
-                                sessionId: enableSat ? 'upper_day' : 'rest',
-                                isOptionalDay: true
-                              });
-                            }}
-                            className="sherpa-btn"
-                            style={{
-                              padding: '6px 10px',
-                              fontSize: 10.5,
-                              background: selectedDay.sessionId !== 'rest' ? '#FFFDF9' : '#7C3AED',
-                              color: selectedDay.sessionId !== 'rest' ? '#2B2118' : '#FFFFFF',
-                              flexShrink: 0
-                            }}
-                          >
-                            <span>{selectedDay.sessionId !== 'rest' ? 'Đổi về Off' : '+ Bật Tập T7'}</span>
-                          </button>
-                        </div>
-                      )}
-
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1.15fr 0.85fr',
-                          gap: 8,
-                          marginTop: 10,
-                          alignItems: 'end'
-                        }}
-                      >
-                        <div style={{ minWidth: 0 }}>
-                          <label
-                            style={{
-                              fontSize: 10.5,
-                              fontWeight: 800,
-                              color: '#6B5744',
-                              display: 'block',
-                              height: 15,
-                              lineHeight: '15px',
-                              marginBottom: 5,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            Giáo án mỗi {selectedDay.dayShort}
-                          </label>
-                          {(() => {
-                            const curOpt =
-                              SESSION_PICKER_OPTIONS.find((o) => o.value === selectedDay.sessionId) ||
-                              SESSION_PICKER_OPTIONS[0];
-                            return (
-                              <MobilePickerTrigger
-                                mascotKey={curOpt.mascot}
-                                label={curOpt.shortLabel}
-                                sublabel={curOpt.badge}
-                                onClick={() => {
-                                  setSessionApplyScope('recurring');
-                                  setPickerSheetConfig({ type: 'session_schedule' });
-                                }}
-                              />
-                            );
-                          })()}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <label
-                            style={{
-                              fontSize: 10.5,
-                              fontWeight: 800,
-                              color: '#6B5744',
-                              display: 'block',
-                              height: 15,
-                              lineHeight: '15px',
-                              marginBottom: 5,
-                              whiteSpace: 'nowrap',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis'
-                            }}
-                          >
-                            Giờ bắt đầu tập
-                          </label>
-                          <MobilePickerTrigger
-                            iconName="clock"
-                            label={selectedDay.workoutTime}
-                            sublabel={`Báo ngủ ${selectedDay.preSleepAlertTime}`}
-                            onClick={() => setPickerSheetConfig({ type: 'workout_time', context: 'schedule' })}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Symmetrical 2-Column Action Buttons: Mark Done vs Mark Missed / Busy */}
-                      {selectedDay.isFutureDay ? (
-                        <div
-                          style={{
-                            marginTop: 10,
-                            padding: '10px 11px',
-                            borderRadius: 12,
-                            background: '#FEF3C7',
-                            border: '2px dashed #D97706',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 7
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, fontWeight: 900, color: '#92400E' }}>
-                            <SvgIcon name="lock" size={15} color="#D97706" />
-                            <span>
-                              Buổi tập tương lai (còn {selectedDay.daysFromToday} ngày) — Chưa thể chốt Done
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 10.5, color: '#78350F', lineHeight: 1.35 }}>
-                            Hệ thống khóa nút Chốt Done ở ngày tương lai để tránh sai lệch chuỗi Streak. Nếu hôm nay bạn đi tập luôn, bấm nút bên dưới để mở màn từ Hôm nay ({GymCore.formatVNShortDate(todayISO)}):
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleStartTrainingToday}
-                            className="sherpa-btn sherpa-btn-primary"
-                            style={{ width: '100%', padding: '9px 10px', fontSize: 11.5 }}
-                          >
-                            <SvgIcon name="check" size={14} color="#FFFFFF" />
-                            <span>Đổi Ngày Bắt Đầu Sang Hôm Nay ({GymCore.formatVNShortDate(todayISO)}) & Tập Ngay</span>
-                          </button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 9 }}>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleSetDayStatus(
-                                selectedDay.isoDate,
-                                selectedDay.isCompleted ? null : 'done',
-                                selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                              )
-                            }
-                            className="sherpa-btn"
-                            style={{
-                              width: '100%',
-                              padding: '9px 8px',
-                              fontSize: 11.5,
-                              background: selectedDay.isCompleted
-                                ? '#059669'
-                                : selectedDay.meetsCompletionThreshold
-                                ? '#DCFCE7'
-                                : '#FEF3C7',
-                              color: selectedDay.isCompleted
-                                ? '#FFFFFF'
-                                : selectedDay.meetsCompletionThreshold
-                                ? '#065F46'
-                                : '#92400E'
-                            }}
-                          >
-                            <SvgIcon
-                              name={selectedDay.isCompleted || selectedDay.meetsCompletionThreshold ? 'check' : 'lock'}
-                              size={14}
-                              color={
-                                selectedDay.isCompleted
-                                  ? '#FFFFFF'
-                                  : selectedDay.meetsCompletionThreshold
-                                  ? '#065F46'
-                                  : '#D97706'
-                              }
-                            />
-                            <span>
-                              {selectedDay.isCompleted
-                                ? `✓ Đã Tập Done (${selectedDay.completionPct}% · ${selectedDay.shortDate})`
-                                : selectedDay.meetsCompletionThreshold
-                                ? `Chốt Done (${selectedDay.completionPct}% ≥ 70%)`
-                                : `Cần ≥70% để Done (Đang ${selectedDay.completionPct}%)`}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleSetDayStatus(
-                                selectedDay.isoDate,
-                                selectedDay.isMissed ? null : 'missed',
-                                selectedDay.sessionId !== 'rest' ? selectedDay.sessionId : 'press_day'
-                              )
-                            }
-                            className="sherpa-btn"
-                            style={{
-                              width: '100%',
-                              padding: '9px 8px',
-                              fontSize: 11.5,
-                              background: selectedDay.isMissed ? '#DC2626' : '#FFFDF9',
-                              color: selectedDay.isMissed ? '#FFFFFF' : '#2B2118',
-                              opacity: selectedDay.sessionId === 'rest' ? 0.5 : 1
-                            }}
-                          >
-                            <span>
-                              {selectedDay.isMissed
-                                ? `Đang báo Bỏ tập (${selectedDay.shortDate})`
-                                : selectedDay.sessionId === 'rest'
-                                ? 'Ngày Nghỉ Hồi Phục'
-                                : `Báo Bỏ Tập / Bận (${selectedDay.shortDate})`}
-                            </span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* Gợi ý chạm trực tiếp vào Thứ/Ngày trên Lịch để mở màn hình Hôm đó */}
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: '8px 11px',
+                      borderRadius: 12,
+                      background: '#FAF5EA',
+                      border: '1.5px dashed #C4B5A2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: '#5C4938'
+                    }}
+                  >
+                    <span>👆 Ấn vào bất kỳ Thứ/Ngày nào trên lịch để vào thẳng màn hình hôm đó</span>
+                  </div>
                 </section>
                   </>
                 )}
@@ -4677,158 +4556,223 @@
             {/* TAB 2A: TỔNG QUAN 6 BÀI TẬP TRÊN 1 MÀN HÌNH (KHÔNG CẦN CUỘN) */}
             {activeTab === 'workout' && detailSlotIndex === null && (
               <>
+                {/* Thanh Điều Hướng Mobile & Cài Đặt Ngày Tập (Đổi Giáo Án, Giờ Tập, Phòng Tập bằng Popup) */}
                 <section className="sherpa-card" style={{ padding: 11 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-                    {Object.values(GymCore.WORKOUT_SESSIONS).map((sess) => {
-                      const active = sess.id === activeSessionId;
-                      const sessSlots =
-                        Array.isArray(customSessionLists[sess.id]) && customSessionLists[sess.id].length > 0
-                          ? customSessionLists[sess.id]
-                          : sess.exerciseIds;
-                      const pillTitle =
-                        sess.id === 'press_day'
-                          ? '1. ĐẨY'
-                          : sess.id === 'pull_day'
-                          ? '2. KÉO'
-                          : sess.id === 'legs_day'
-                          ? '3. CHÂN'
-                          : 'T7 TỰ CHỌN';
-                      const pillSub =
-                        sess.id === 'press_day'
-                          ? 'Ngực·Vai·Tay'
-                          : sess.id === 'pull_day'
-                          ? 'Vai·Xô·Tay'
-                          : sess.id === 'legs_day'
-                          ? 'Đùi·Mông'
-                          : 'Optional';
-                      return (
-                        <button
-                          key={sess.id}
-                          onClick={() => {
-                            setActiveSessionId(sess.id);
-                            setDetailSlotIndex(null);
-                          }}
-                          style={{
-                            padding: '7px 4px',
-                            borderRadius: 11,
-                            border: '2px solid #2B2118',
-                            background: active ? '#E05A2B' : '#FAF5EA',
-                            color: active ? '#FFFFFF' : '#2B2118',
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            boxShadow: active ? '2px 2px 0 #2B2118' : 'none'
-                          }}
-                        >
-                          <div style={{ fontSize: 10.5, fontWeight: 900 }}>{pillTitle}</div>
-                          <div style={{ fontSize: 9.5, fontWeight: 700, opacity: 0.9 }}>
-                            {pillSub} ({sessSlots.length})
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* GYM BRANCH SELECTOR & MACHINE PRESET SWITCHER (THE NEW GYM 58D UVK & WAYS STATION 361 QL13) */}
+                  {/* Hàng 1: Nút Quay Lại Lịch + Tiêu Đề Thứ/Ngày + Chuyển Nhanh Ngày Trước/Sau */}
                   <div
                     style={{
-                      marginTop: 9,
-                      padding: '9px 10px',
-                      borderRadius: 14,
-                      background: '#FFFDF9',
-                      border: '2px solid #2B2118',
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: 7
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      paddingBottom: 9,
+                      borderBottom: '1.5px dashed #D8C8B0'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 900, color: '#2B2118', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ padding: '2px 7px', borderRadius: 999, background: '#2B2118', color: '#FDBA74', fontSize: 9.5 }}>
-                          PHÒNG TẬP HÔM NAY
-                        </span>
-                        <span style={{ color: '#6B5744', fontSize: 10 }}>
-                          {GymCore.GYM_BRANCHES?.[selectedGymId]?.badge || '44 máy thực tế'}
-                        </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('schedule')}
+                      className="sherpa-btn"
+                      style={{ padding: '6px 10px', fontSize: 11, background: '#FFFDF9', flexShrink: 0 }}
+                    >
+                      <SvgIcon name="arrowLeft" size={13} />
+                      <span>Lịch tuần</span>
+                    </button>
+
+                    <div style={{ textAlign: 'center', minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 900, color: '#2B2118', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {selectedDay.dayShort} · {selectedDay.dateLabel}
                       </div>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: '#E05A2B' }}>
+                        {selectedDay.badge} · Vuốt phải để quay lại
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                       <button
                         type="button"
-                        onClick={() => setPickerSheetConfig({ type: 'gym_equipment_directory' })}
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: 999,
-                          border: '1.5px solid #2B2118',
-                          background: '#FFEDD5',
-                          color: '#9A3412',
-                          fontSize: 9.5,
-                          fontWeight: 900,
-                          cursor: 'pointer'
-                        }}
+                        onClick={() => navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, -1))}
+                        className="sherpa-btn"
+                        style={{ padding: '6px 8px', fontSize: 11, background: '#FFFDF9' }}
+                        aria-label="Ngày trước"
                       >
-                        Sơ đồ máy 2 phòng &gt;
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigateToDayScreen(GymCore.addDaysISO(selectedDateISO, 1))}
+                        className="sherpa-btn"
+                        style={{ padding: '6px 8px', fontSize: 11, background: '#FFFDF9' }}
+                        aria-label="Ngày kế tiếp"
+                      >
+                        ›
                       </button>
                     </div>
+                  </div>
 
-                    {/* Row 1: Filter by Gym Location */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 0.72fr', gap: 5 }}>
-                      {[
-                        { id: 'tng_uvk', label: 'The New Gym UVK', sub: '58D Ung Văn Khiêm' },
-                        { id: 'ways_ql13', label: 'Ways Station QL13', sub: '361 Quốc Lộ 13' },
-                        { id: 'all', label: 'Cả 2 Phòng', sub: 'Đủ 44 bài' }
-                      ].map((g) => {
-                        const active = selectedGymId === g.id;
+                  {/* Hàng 2: 3 Nút Cài Đặt Gọn Chuẩn App Mobile (Đổi Giáo Án · Đổi Giờ Tập · Chọn Phòng Tập Popup) */}
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1.15fr 0.85fr',
+                      gap: 7,
+                      marginTop: 9
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <label style={{ fontSize: 9.5, fontWeight: 900, color: '#6B5744', display: 'block', marginBottom: 4 }}>
+                        GIÁO ÁN ({selectedDay.dayShort.toUpperCase()})
+                      </label>
+                      {(() => {
+                        const curOpt =
+                          SESSION_PICKER_OPTIONS.find((o) => o.value === selectedDay.sessionId) ||
+                          SESSION_PICKER_OPTIONS[0];
                         return (
-                          <button
-                            key={g.id}
-                            type="button"
-                            onClick={() => setSelectedGymId(g.id)}
-                            style={{
-                              padding: '6px 5px',
-                              borderRadius: 10,
-                              border: active ? '2px solid #2B2118' : '1.5px solid #D8C8B0',
-                              background: active ? '#2B2118' : '#FAF5EA',
-                              color: active ? '#FFFFFF' : '#2B2118',
-                              textAlign: 'center',
-                              cursor: 'pointer'
+                          <MobilePickerTrigger
+                            mascotKey={curOpt.mascot}
+                            label={curOpt.shortLabel}
+                            sublabel={curOpt.badge}
+                            onClick={() => {
+                              setSessionApplyScope('recurring');
+                              setPickerSheetConfig({ type: 'session_schedule' });
                             }}
-                          >
-                            <div style={{ fontSize: 10.5, fontWeight: 900, lineHeight: 1.15 }}>{g.label}</div>
-                            <div style={{ fontSize: 8.5, fontWeight: 700, opacity: active ? 0.85 : 0.75, marginTop: 1 }}>{g.sub}</div>
-                          </button>
+                          />
                         );
-                      })}
+                      })()}
                     </div>
-
-                    {/* Row 2: 1-Tap Session Lineup Presets (Default vs TNG UVK Machine Lineup vs Ways QL13 Plate-Loaded Lineup) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
-                      {[
-                        { id: 'default', label: 'Khung Mặc Định' },
-                        { id: 'tng_uvk', label: 'Bộ Máy TNG UVK' },
-                        { id: 'ways_ql13', label: 'Bộ Máy Ways QL13' }
-                      ].map((pr) => {
-                        const curPreset = activePresetBySession[currentSession.id] || 'default';
-                        const active = curPreset === pr.id;
-                        return (
-                          <button
-                            key={pr.id}
-                            type="button"
-                            onClick={() => handleApplySessionPreset(currentSession.id, pr.id)}
-                            style={{
-                              padding: '5px 4px',
-                              borderRadius: 9,
-                              border: active ? '1.5px solid #E05A2B' : '1.5px dashed #C4B5A2',
-                              background: active ? '#FFEDD5' : '#FFFDF9',
-                              color: active ? '#9A3412' : '#5C4938',
-                              fontSize: 9.5,
-                              fontWeight: 900,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            {active ? `✓ ${pr.label}` : pr.label}
-                          </button>
-                        );
-                      })}
+                    <div style={{ minWidth: 0 }}>
+                      <label style={{ fontSize: 9.5, fontWeight: 900, color: '#6B5744', display: 'block', marginBottom: 4 }}>
+                        GIỜ TẬP & BÁO NGỦ
+                      </label>
+                      <MobilePickerTrigger
+                        iconName="clock"
+                        label={selectedDay.workoutTime}
+                        sublabel={`Ngủ ${selectedDay.preSleepAlertTime}`}
+                        onClick={() => setPickerSheetConfig({ type: 'workout_time', context: 'schedule' })}
+                      />
                     </div>
                   </div>
+
+                  {/* Hàng 3: Nút Gọn Chọn Phòng Tập Hôm Nay (Mở Popup Chuẩn Mobile) */}
+                  {selectedDay.sessionId !== 'rest' && (
+                    <button
+                      type="button"
+                      onClick={() => setPickerSheetConfig({ type: 'gym_and_preset_picker' })}
+                      style={{
+                        width: '100%',
+                        marginTop: 7,
+                        padding: '8px 11px',
+                        borderRadius: 12,
+                        border: '2px solid #2B2118',
+                        background: '#FFFDF9',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                        cursor: 'pointer',
+                        boxShadow: '1.5px 1.5px 0 #2B2118'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+                        <span
+                          style={{
+                            fontSize: 9.5,
+                            fontWeight: 900,
+                            padding: '2px 7px',
+                            borderRadius: 999,
+                            background: '#2B2118',
+                            color: '#FDBA74',
+                            flexShrink: 0
+                          }}
+                        >
+                          📍 PHÒNG TẬP
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 11.5,
+                            fontWeight: 900,
+                            color: '#2B2118',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }}
+                        >
+                          {GymCore.GYM_BRANCHES?.[selectedGymId]?.shortName || 'The New Gym UVK'} ·{' '}
+                          {GymCore.GYM_SESSION_PRESETS?.[activePresetBySession[currentSession.id] || 'default']?.shortLabel || 'Khung Mặc Định'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 900, color: '#E05A2B', flexShrink: 0 }}>
+                        <span>Đổi phòng</span>
+                        <SvgIcon name="chevronDown" size={13} color="#E05A2B" />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* Nếu ngày đang chọn là Ngày Nghỉ / Cuối Tuần Off */}
+                  {selectedDay.sessionId === 'rest' ? (
+                    <div
+                      style={{
+                        marginTop: 10,
+                        padding: 14,
+                        borderRadius: 16,
+                        background: selectedDay.isSaturdayOptional ? '#FEF3C7' : '#FAF5EA',
+                        border: '2px solid #2B2118',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 8
+                      }}
+                    >
+                      <img
+                        src={GymCore.resolveAsset('restHydration')}
+                        alt="Ngày nghỉ hồi phục"
+                        style={{
+                          width: 68,
+                          height: 68,
+                          borderRadius: 16,
+                          border: '2px solid #2B2118',
+                          background: '#FFFDF9',
+                          objectFit: 'cover'
+                        }}
+                      />
+                      <div className="serif-title" style={{ fontSize: 15.5, fontWeight: 900, color: '#2B2118' }}>
+                        {selectedDay.isSaturdayOptional
+                          ? 'Thứ 7 Nghỉ Cuối Tuần (Optional Tập Thêm)'
+                          : `${selectedDay.dayShort} (${selectedDay.shortDate}) — Ngày Nghỉ Hồi Phục Cơ`}
+                      </div>
+                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#5C4938', lineHeight: 1.4 }}>
+                        {selectedDay.note}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: selectedDay.isSaturdayOptional ? '1fr 1fr' : '1fr', gap: 8, width: '100%', marginTop: 4 }}>
+                        {selectedDay.isSaturdayOptional && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdateRecurringWeekday(6, { sessionId: 'upper_day', isOptionalDay: true });
+                              setActiveSessionId('upper_day');
+                            }}
+                            className="sherpa-btn sherpa-btn-primary"
+                            style={{ width: '100%', padding: '9px 10px', fontSize: 11.5 }}
+                          >
+                            <span>⚡ Bật Tập Thứ 7 (Optional)</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSessionApplyScope('single');
+                            setPickerSheetConfig({ type: 'session_schedule' });
+                          }}
+                          className="sherpa-btn"
+                          style={{ width: '100%', padding: '9px 10px', fontSize: 11.5, background: '#FFFDF9' }}
+                        >
+                          <span>Chọn Giáo Án Tập Cho Ngày {selectedDay.shortDate}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
 
                   <div
                     style={{
@@ -5140,7 +5084,7 @@
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleQuickToggleExerciseDone(selectedDateISO, ex.id);
+                                handleQuickToggleExerciseDone(selectedDateISO, ex.id, index, false);
                               }}
                               style={{
                                 padding: '2.5px 6px',
@@ -5257,14 +5201,27 @@
                       </button>
                       <button
                         type="button"
-                        onClick={() => setActiveTab('streak')}
+                        onClick={() =>
+                          handleSetDayStatus(
+                            selectedDay.isoDate,
+                            selectedDay.isMissed ? null : 'missed',
+                            currentSession.id
+                          )
+                        }
                         className="sherpa-btn"
-                        style={{ width: '100%', padding: '10px', fontSize: 11.5, background: '#FFFDF9' }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          fontSize: 11.5,
+                          background: selectedDay.isMissed ? '#DC2626' : '#FFFDF9',
+                          color: selectedDay.isMissed ? '#FFFFFF' : '#2B2118'
+                        }}
                       >
-                        <SvgIcon name="flame" size={15} color="#E05A2B" />
-                        <span>Streak ({streakSummary.currentStreak})</span>
+                        <span>{selectedDay.isMissed ? 'Đang báo Bỏ tập' : 'Báo Bận / Bỏ Tập'}</span>
                       </button>
                     </div>
+                  )}
+                    </>
                   )}
                 </section>
               </>
@@ -5336,6 +5293,7 @@
                     </div>
                   </div>
 
+                  {/* Thẻ Giới Thiệu Trực Quan Máy Tập & Tư Thế Chuẩn (Có Hình Minh Hoạ Máy & Tư Thế Lớn) */}
                   <section className="sherpa-card" style={{ padding: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                       <span
@@ -5360,66 +5318,94 @@
                     <div style={{ fontSize: 11, fontWeight: 800, color: '#E05A2B', marginTop: 2 }}>
                       {ex.muscle} · {ex.equipment}
                     </div>
+
+                    {/* Khung Hình Minh Hoạ Máy Tập, Tư Thế & Cách Setup Ngay Tại Màn Hình Bài Tập */}
+                    <div
+                      style={{
+                        marginTop: 9,
+                        padding: 10,
+                        borderRadius: 14,
+                        background: '#FAF5EA',
+                        border: '1.5px solid #2B2118',
+                        display: 'flex',
+                        gap: 10,
+                        alignItems: 'flex-start'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                        <img
+                          src={GymCore.resolveAsset(ex.mascot)}
+                          alt={ex.name}
+                          style={{
+                            width: 86,
+                            height: 86,
+                            borderRadius: 14,
+                            border: '2px solid #2B2118',
+                            objectFit: 'cover',
+                            background: '#FFFDF9'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setExerciseSubTab('guide')}
+                          style={{
+                            padding: '3px 7px',
+                            borderRadius: 999,
+                            border: '1.5px solid #2B2118',
+                            background: '#FFEDD5',
+                            color: '#9A3412',
+                            fontSize: 9,
+                            fontWeight: 900,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ▶ Xem mô phỏng
+                        </button>
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ fontSize: 11, fontWeight: 900, color: '#2B2118' }}>
+                          🎯 Tư thế & Kỹ thuật chuẩn:
+                        </div>
+                        <div style={{ fontSize: 10.5, fontWeight: 700, color: '#4B3B2C', lineHeight: 1.35 }}>
+                          {ex.cues}
+                        </div>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#059669', lineHeight: 1.3 }}>
+                          💨 Nhịp thở: {ex.breathing}
+                        </div>
+                        {ex.gymSetup && (
+                          <div
+                            style={{
+                              marginTop: 2,
+                              padding: '5px 7px',
+                              borderRadius: 8,
+                              background: '#FFFDF9',
+                              border: '1px solid #D8C8B0',
+                              fontSize: 10,
+                              color: '#2B2118',
+                              lineHeight: 1.32
+                            }}
+                          >
+                            <strong style={{ color: '#E05A2B' }}>
+                              📍 {selectedGymId === 'ways_ql13' ? 'Ways 361 QL13:' : 'TNG 58D UVK:'}
+                            </strong>{' '}
+                            {selectedGymId === 'ways_ql13'
+                              ? ex.gymSetup.ways_ql13 || ex.gymSetup.tng_uvk
+                              : ex.gymSetup.tng_uvk || ex.gymSetup.ways_ql13}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </section>
 
                   <SubTabPills
                     items={[
                       { id: 'sets', label: `Ghi Hiệp (${sets.filter((s) => s.done).length}/${sets.length})`, icon: 'dumbbell' },
-                      { id: 'guide', label: 'Video & Kỹ Thuật', icon: 'play' },
-                      { id: 'swap', label: `Đổi Máy / Đổi Bài (${swapCandidates.sameGroup.length + swapCandidates.otherInSession.length})`, icon: 'swap' }
+                      { id: 'guide', label: 'Video & Mô Phỏng', icon: 'play' },
+                      { id: 'swap', label: `Đổi Bài (${swapCandidates.sameGroup.length + swapCandidates.otherInSession.length})`, icon: 'swap' }
                     ]}
                     activeId={exerciseSubTab}
                     onChange={setExerciseSubTab}
                   />
-
-                  {/* Real Gym Machine Setup Banner for TNG 58D Ung Văn Khiêm & Ways Station 361 QL13 */}
-                  {ex.gymSetup && (
-                    <section
-                      className="sherpa-card"
-                      style={{
-                        padding: '9px 11px',
-                        background: '#FFFDF9',
-                        border: '2px solid #2B2118',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 6
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 10, fontWeight: 900, color: '#2B2118' }}>
-                          📍 THIẾT BỊ & CÁCH SETUP TẠI PHÒNG TẬP ({ex.machineBrand || ex.equipment})
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setExerciseSubTab('swap')}
-                          style={{
-                            padding: '2.5px 8px',
-                            borderRadius: 999,
-                            border: '1.5px solid #2B2118',
-                            background: '#FFEDD5',
-                            color: '#9A3412',
-                            fontSize: 9.5,
-                            fontWeight: 900,
-                            cursor: 'pointer'
-                          }}
-                        >
-                          ⇄ Đổi sang máy khác
-                        </button>
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 5, fontSize: 10.5, lineHeight: 1.38 }}>
-                        {(selectedGymId === 'all' || selectedGymId === 'tng_uvk') && ex.gymSetup.tng_uvk && (
-                          <div style={{ padding: '6px 8px', borderRadius: 9, background: '#FAF5EA', border: '1px solid #D8C8B0' }}>
-                            <strong style={{ color: '#E05A2B' }}>The New Gym (58D Ung Văn Khiêm):</strong> {ex.gymSetup.tng_uvk}
-                          </div>
-                        )}
-                        {(selectedGymId === 'all' || selectedGymId === 'ways_ql13') && ex.gymSetup.ways_ql13 && (
-                          <div style={{ padding: '6px 8px', borderRadius: 9, background: '#F0FDF4', border: '1px solid #86EFAC' }}>
-                            <strong style={{ color: '#15803D' }}>Ways Station (361 Quốc Lộ 13):</strong> {ex.gymSetup.ways_ql13}
-                          </div>
-                        )}
-                      </div>
-                    </section>
-                  )}
 
                   {/* Interactive Motion Simulator + YouTube Video Card (Zero Error 153!) */}
                   {exerciseSubTab === 'guide' && <InteractiveVideoAndMotionCoach exercise={ex} />}
@@ -7602,6 +7588,9 @@
                               } else {
                                 handleUpdateRecurringWeekday(selectedDay.dayOfWeek, { sessionId: opt.value });
                               }
+                              if (opt.value !== 'rest') {
+                                setActiveSessionId(opt.value);
+                              }
                               setPickerSheetConfig(null);
                             }}
                             style={{
@@ -8481,6 +8470,256 @@
                     </div>
                   </>
                 )}
+
+                {/* Picker Type 16: Mobile Bottom-Sheet Popup Chọn Phòng Tập Hôm Nay & Bộ Khung Máy */}
+                {pickerSheetConfig.type === 'gym_and_preset_picker' && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                      <div>
+                        <span style={{ fontSize: 10, fontWeight: 900, padding: '2px 8px', borderRadius: 999, background: '#E05A2B', color: '#FFFFFF' }}>
+                          CHỌN PHÒNG TẬP & BỘ MÁY HÔM NAY
+                        </span>
+                        <h3 className="serif-title" style={{ fontSize: 17, fontWeight: 900, marginTop: 4 }}>
+                          Đồng Bộ Máy Tập Theo Cơ Sở Bạn Đến
+                        </h3>
+                      </div>
+                      <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                        <SvgIcon name="close" size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: 11, fontWeight: 900, color: '#6B5744', marginTop: 12, marginBottom: 6 }}>
+                      1. Chọn chi nhánh phòng tập hôm nay:
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {[
+                        {
+                          id: 'tng_uvk',
+                          title: 'The New Gym — 58D Ung Văn Khiêm',
+                          sub: 'Bình Thạnh · Mở cửa 24/7 · Thế mạnh máy rút chốt tạ, Khung Cáp Đôi, Máy Smith & Cầu thang bộ'
+                        },
+                        {
+                          id: 'ways_ql13',
+                          title: 'Ways Station — 361 Quốc Lộ 13',
+                          sub: 'Thủ Đức (Kế Vạn Phúc) · 05:00–22:30 · Thế mạnh máy lắp tạ rời Iso-Lateral, Hack Squat, T-Bar Row'
+                        },
+                        {
+                          id: 'all',
+                          title: 'Kết Hợp Cả 2 Phòng Tập (Đủ 44 Máy)',
+                          sub: 'Hiển thị toàn bộ danh mục 44 máy tập và hướng dẫn setup của cả hai cơ sở'
+                        }
+                      ].map((g) => {
+                        const active = selectedGymId === g.id;
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => setSelectedGymId(g.id)}
+                            style={{
+                              padding: 11,
+                              borderRadius: 14,
+                              border: '2px solid #2B2118',
+                              background: active ? '#FFEDD5' : '#FFFDF9',
+                              textAlign: 'left',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 10,
+                              cursor: 'pointer',
+                              boxShadow: active ? '2px 2px 0 #2B2118' : 'none'
+                            }}
+                          >
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118' }}>{g.title}</div>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: '#5C4938', marginTop: 2, lineHeight: 1.35 }}>
+                                {g.sub}
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                width: 24,
+                                height: 24,
+                                borderRadius: 999,
+                                border: '2px solid #2B2118',
+                                background: active ? '#E05A2B' : '#FAF5EA',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0
+                              }}
+                            >
+                              {active && <SvgIcon name="check" size={13} color="#FFFFFF" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ fontSize: 11, fontWeight: 900, color: '#6B5744', marginTop: 12, marginBottom: 6 }}>
+                      2. Áp dụng nhanh bộ khung máy cho {currentSession.shortName}:
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                      {[
+                        { id: 'default', label: 'Khung Mặc Định' },
+                        { id: 'tng_uvk', label: 'Bộ Máy TNG UVK' },
+                        { id: 'ways_ql13', label: 'Bộ Máy Ways QL13' }
+                      ].map((pr) => {
+                        const curPreset = activePresetBySession[currentSession.id] || 'default';
+                        const active = curPreset === pr.id;
+                        return (
+                          <button
+                            key={pr.id}
+                            type="button"
+                            onClick={() => {
+                              handleApplySessionPreset(currentSession.id, pr.id);
+                              setPickerSheetConfig(null);
+                            }}
+                            style={{
+                              padding: '9px 6px',
+                              borderRadius: 11,
+                              border: '2px solid #2B2118',
+                              background: active ? '#2B2118' : '#FFFDF9',
+                              color: active ? '#FFFFFF' : '#2B2118',
+                              fontSize: 10.5,
+                              fontWeight: 900,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {active ? `✓ ${pr.label}` : pr.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+                      <button
+                        type="button"
+                        onClick={() => setPickerSheetConfig({ type: 'gym_equipment_directory' })}
+                        className="sherpa-btn"
+                        style={{ width: '100%', padding: '9px', fontSize: 11, background: '#FFFDF9' }}
+                      >
+                        <span>Xem Sơ Đồ Máy 2 Phòng</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPickerSheetConfig(null)}
+                        className="sherpa-btn sherpa-btn-primary"
+                        style={{ width: '100%', padding: '9px', fontSize: 11.5 }}
+                      >
+                        <SvgIcon name="check" size={14} color="#FFFFFF" />
+                        <span>Xác Nhận</span>
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Picker Type 17: Popup Cảnh Báo Khi Ấn "Xong Bài" Nhưng Chưa Đủ 70% Số Rep / Hiệp Tập */}
+                {pickerSheetConfig.type === 'confirm_exercise_done_under_70' && (() => {
+                  const targetEx = GymCore.EXERCISES[pickerSheetConfig.exId];
+                  if (!targetEx) return null;
+                  return (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 900,
+                              padding: '2px 8px',
+                              borderRadius: 999,
+                              background: '#D97706',
+                              color: '#FFFFFF'
+                            }}
+                          >
+                            CẢNH BÁO CHƯA ĐỦ 70% SỐ REP / HIỆP
+                          </span>
+                          <h3 className="serif-title" style={{ fontSize: 16.5, fontWeight: 900, marginTop: 4, color: '#2B2118' }}>
+                            Bạn chưa đủ 70% số rep tập, có chắc chắn xong bài chứ?
+                          </h3>
+                        </div>
+                        <button onClick={() => setPickerSheetConfig(null)} className="sherpa-btn" style={{ padding: 6 }}>
+                          <SvgIcon name="close" size={16} />
+                        </button>
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 11,
+                          padding: 12,
+                          borderRadius: 15,
+                          background: '#FFFBEB',
+                          border: '2px solid #D97706',
+                          display: 'flex',
+                          gap: 10,
+                          alignItems: 'center'
+                        }}
+                      >
+                        <img
+                          src={GymCore.resolveAsset(targetEx.mascot)}
+                          alt={targetEx.name}
+                          style={{
+                            width: 58,
+                            height: 58,
+                            borderRadius: 12,
+                            border: '2px solid #2B2118',
+                            objectFit: 'cover',
+                            background: '#FFFDF9',
+                            flexShrink: 0
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 900, color: '#2B2118' }}>
+                            {targetEx.shortName || targetEx.name}
+                          </div>
+                          <div style={{ fontSize: 11, fontWeight: 900, color: '#B45309', marginTop: 2 }}>
+                            Tiến độ hiện tại: {pickerSheetConfig.doneSetCount}/{pickerSheetConfig.totalSetsCount} hiệp ({pickerSheetConfig.completedRepsCount}/{pickerSheetConfig.totalTargetReps} reps — {pickerSheetConfig.exPct}%)
+                          </div>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: '#78350F', marginTop: 3, lineHeight: 1.35 }}>
+                            Chuẩn hoàn thành bài tập cần tích ít nhất <strong>70% số hiệp/rep</strong> ở bên trong. Nếu bạn đã tập xong ở ngoài mà quên tích từng hiệp thì bấm xác nhận bên dưới:
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const idx = pickerSheetConfig.slotIndex;
+                            setPickerSheetConfig(null);
+                            if (typeof idx === 'number') {
+                              setDetailSlotIndex(idx);
+                              setExerciseSubTab('sets');
+                            }
+                          }}
+                          className="sherpa-btn sherpa-btn-primary"
+                          style={{ width: '100%', padding: '10px 12px', fontSize: 12 }}
+                        >
+                          <SvgIcon name="dumbbell" size={15} color="#FFFFFF" />
+                          <span>Vào Trong Bài Tập Để Tích Từng Hiệp (Khuyên dùng)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const { isoDate: dIso, exId: targetId, slotIndex: sIdx } = pickerSheetConfig;
+                            setPickerSheetConfig(null);
+                            handleQuickToggleExerciseDone(dIso, targetId, sIdx, true);
+                          }}
+                          className="sherpa-btn"
+                          style={{
+                            width: '100%',
+                            padding: '10px 12px',
+                            fontSize: 11.5,
+                            background: '#DCFCE7',
+                            color: '#166534'
+                          }}
+                        >
+                          <SvgIcon name="check" size={15} color="#166534" />
+                          <span>Chắc Chắn Đã Xong Bài (Đánh dấu đủ {pickerSheetConfig.totalSetsCount}/{pickerSheetConfig.totalSetsCount} hiệp)</span>
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}
