@@ -204,6 +204,14 @@
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           );
+        case 'share':
+          return (
+            <svg style={s} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+          );
         default:
           return null;
       }
@@ -2840,7 +2848,7 @@
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 8.5, fontWeight: 900, color: '#6B5744' }}>BƯỚC 2</div>
                     <div style={{ fontSize: 10, fontWeight: 900, color: '#2B2118', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      Thêm MH chính
+                      Thêm vào MH
                     </div>
                   </div>
                 </div>
