@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -6,6 +7,10 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        gym8D: resolve(__dirname, 'gym8D/index.html'),
+      },
       output: {
         manualChunks(id) {
           if (id.includes('node_modules/lucide-react')) {

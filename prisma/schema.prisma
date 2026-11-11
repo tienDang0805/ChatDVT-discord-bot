@@ -308,3 +308,29 @@ model BlogPost {
 
   @@index([status, publishedAt])
 }
+
+model GymUserState {
+  id            Int      @id @default(autoincrement())
+  code          String   @unique
+  schemaVersion Int      @default(10)
+  data          String   @default("{}")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([code])
+}
+
+model GymPushSubscription {
+  id        Int      @id @default(autoincrement())
+  code      String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String   @default("")
+  prefsJson String   @default("{}")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}

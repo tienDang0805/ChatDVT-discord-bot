@@ -1,7 +1,8 @@
 {
-  "name": "Gấu Tập Gym 8D — Trợ Lý Tập Luyện, Dinh Dưỡng & Sinh Học",
+  "id": "/gym8D",
+  "name": "Gấu Gym 8D — Trợ Lý Tập Luyện & Dinh Dưỡng",
   "short_name": "Gấu Gym 8D",
-  "description": "Ứng dụng theo dõi tập gym, máy tính thể trạng động BMI/LBM/TDEE, thực đơn món Việt, Streak kỷ luật và đồng hồ sinh học 24h trên iPhone.",
+  "description": "Trợ lý ghi mức tạ Progressive Overload, lịch ngủ sinh học 06:00 và thực đơn giảm mỡ giữ cơ.",
   "start_url": "/gym8D",
   "scope": "/gym8D",
   "display": "standalone",

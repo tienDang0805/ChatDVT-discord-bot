@@ -1,0 +1,385 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { CompactHeader } from './components/CompactHeader';
+import { FloatingRestBar } from './components/FloatingRestBar';
+import { SvgIcon } from './components/Icons';
+import { useChatDvtAvatar } from './hooks/useChatDvtAvatar';
+import { useGymStore } from './hooks/useGymStore';
+import { useNativeWebPush } from './hooks/useNativeWebPush';
+import { useUltraMode } from './hooks/useUltraMode';
+import { useWallClockRestTimer } from './hooks/useWallClockRestTimer';
+import type { ActiveTabId, WorkoutSessionId } from './types/gym';
+import { BodyAndSettingsView } from './views/BodyAndSettingsView';
+import { ChatDvtCoachView } from './views/ChatDvtCoachView';
+import { NutritionView } from './views/NutritionView';
+import { ScheduleView } from './views/ScheduleView';
+import { StreakAndPrView } from './views/StreakAndPrView';
+import { WorkoutView } from './views/WorkoutView';
+
+function resolveInitialTab(): ActiveTabId {
+  if (typeof window === 'undefined') return 'coach';
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('tab');
+  if (
+    t === 'coach' ||
+    t === 'schedule' ||
+    t === 'workout' ||
+    t === 'streak' ||
+    t === 'nutrition' ||
+    t === 'profile'
+  ) {
+    return t;
+  }
+  return 'coach';
+}
+
+export const Gym8dApp: React.FC = () => {
+  const store = useGymStore();
+  const { avatarUrl, fallbackUrl } = useChatDvtAvatar();
+  const [activeTab, setActiveTab] = useState<ActiveTabId>(() => resolveInitialTab());
+  const [profileSection, setProfileSection] = useState<'push' | 'body'>('push');
+  const [coachDraft, setCoachDraft] = useState<string>('');
+  const [returnTarget, setReturnTarget] = useState<{
+    tab: ActiveTabId;
+    label: string;
+  } | null>(null);
+
+  const push = useNativeWebPush(store.state.syncCode, store.state.pushPrefs);
+  const ultra = useUltraMode();
+
+  const rest = useWallClockRestTimer(
+    store.state.syncCode,
+    push.pushStatus === 'subscribed' && store.state.pushPrefs.restTimerPush
+  );
+
+  useEffect(() => {
+    const splash = document.getElementById('app-splash');
+    if (splash) {
+      splash.style.opacity = '0';
+      const t = setTimeout(() => splash.remove(), 260);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!store.toast) return;
+    const t = setTimeout(() => store.dismissToast(), 3200);
+    return () => clearTimeout(t);
+  }, [store.dismissToast, store.toast]);
+
+  const openWorkoutForDate = (isoDate: string, sessionId?: WorkoutSessionId) => {
+    store.setSelectedDateISO(isoDate);
+    if (sessionId) {
+      store.updateState((prev) => ({ ...prev, activeSessionId: sessionId }));
+    }
+    setActiveTab('workout');
+  };
+
+  const openPushSettings = () => {
+    setProfileSection('push');
+    setActiveTab('profile');
+  };
+
+  const openCoachFromContext = useCallback(
+    (prefill?: string, returnLabel?: string) => {
+      if (activeTab !== 'coach' && returnLabel) {
+        setReturnTarget({ tab: activeTab, label: returnLabel });
+      }
+      if (prefill) {
+        setCoachDraft(prefill);
+      }
+      setActiveTab('coach');
+    },
+    [activeTab]
+  );
+
+  const consumeCoachDraft = useCallback(() => {
+    setCoachDraft('');
+  }, []);
+
+  const showInstallStrip =
+    !push.env.isStandalonePWA &&
+    (push.env.isMobile || push.env.isInAppBrowser) &&
+    !store.state.installBannerDismissed;
+
+  return (
+    <div className={`g8d-shell ${activeTab === 'coach' ? 'is-coach-mode' : ''}`}>
+      <CompactHeader
+        streakCount={store.streakSummary.currentStreak}
+        syncStatus={store.syncStatus}
+        syncCode={store.state.syncCode}
+        pushStatus={push.pushStatus}
+        env={push.env}
+        showInstallStrip={showInstallStrip}
+        canPromptNativeInstall={push.canPromptNativeInstall}
+        onPromptNativeInstall={push.promptNativeInstall}
+        onDismissInstallStrip={() =>
+          store.updateState((prev) => ({ ...prev, installBannerDismissed: true }))
+        }
+        onOpenStreak={() => setActiveTab('streak')}
+        onOpenPushSettings={openPushSettings}
+        onQuickSync={() => store.pushToCloud(store.state, store.state.syncCode, true, true)}
+      />
+
+      {store.toast && (
+        <div
+          className={`g8d-toast ${
+            store.toast.tone === 'gold'
+              ? 'is-gold'
+              : store.toast.tone === 'green'
+              ? 'is-green'
+              : ''
+          }`}
+          onClick={store.dismissToast}
+        >
+          <div className="g8d-toast-title">{store.toast.title}</div>
+          <div className="g8d-toast-body">{store.toast.body}</div>
+        </div>
+      )}
+
+      <main className={`g8d-main ${activeTab === 'coach' ? 'is-coach-main' : ''}`}>
+        {activeTab === 'coach' && (
+          <ChatDvtCoachView
+            initialDraft={coachDraft}
+            onConsumeDraft={consumeCoachDraft}
+            returnTab={returnTarget}
+            onReturnToTab={
+              returnTarget
+                ? () => {
+                    const dest = returnTarget.tab;
+                    setReturnTarget(null);
+                    setActiveTab(dest);
+                  }
+                : undefined
+            }
+            todayISO={store.todayISO}
+            selectedDay={store.selectedDay}
+            effectiveSessionId={store.effectiveSessionId}
+            state={store.state}
+            metrics={store.metrics}
+            timeline14={store.streakSummary.timeline14}
+            currentStreak={store.streakSummary.currentStreak}
+            bestStreak={store.streakSummary.bestStreak}
+            personalRecords={store.personalRecords}
+            nutritionTotals={store.nutritionTotalsForSelectedDate}
+            messages={store.state.agentMessages || []}
+            onSetMessages={store.setAgentMessages}
+            onToggleAutoApply={(enabled) =>
+              store.updateState((prev) => ({ ...prev, agentAutoApply: enabled }))
+            }
+            onApplyProposals={store.applyAgentProposals}
+            onRestoreSnapshot={store.restoreSnapshot}
+            ultra={ultra}
+            onOpenUltraSettings={() => {
+              setProfileSection('push');
+              setActiveTab('profile');
+            }}
+          />
+        )}
+
+        {activeTab === 'schedule' && (
+          <ScheduleView
+            todayISO={store.todayISO}
+            selectedDay={store.selectedDay}
+            tomorrowEntry={store.tomorrowEntry}
+            weeklyPattern={store.state.weeklyPattern}
+            dayNotesByDate={store.state.dayNotesByDate || {}}
+            nextRestDayForMakeup={store.streakSummary.nextRestDayForMakeup}
+            dynamicWeek={store.dynamicWeek}
+            dynamicMonth={store.dynamicMonth}
+            metrics={store.metrics}
+            weightTracker={store.weightTracker}
+            weighInIntervalDays={store.state.weighInIntervalDays}
+            pushSubscribed={push.pushStatus === 'subscribed'}
+            onSelectDate={store.setSelectedDateISO}
+            onChangeWeekOffset={store.setWeekOffset}
+            onChangeMonthOffset={store.setMonthOffset}
+            onOpenWorkoutForDate={openWorkoutForDate}
+            onSetDayStatus={(isoDate, st, pref) => {
+              store.setDayStatus(isoDate, st, pref);
+            }}
+            onMarkDayOff={store.markDayOff}
+            onRestoreDayWorkout={store.restoreDayWorkout}
+            onSetDayNote={store.setDayNote}
+            onApplyWeeklySplitPreset={store.applyWeeklySplitPreset}
+            onMakeupMissed={store.makeupMissedSession}
+            onUpdateDaySchedule={store.updateScheduleForDay}
+            onLogWeight={store.logNewWeight}
+            onChangeWeighInterval={(days) =>
+              store.updateState((prev) => ({ ...prev, weighInIntervalDays: days }))
+            }
+            onOpenPushSettings={openPushSettings}
+            onOpenCoach={openCoachFromContext}
+          />
+        )}
+
+        {activeTab === 'workout' && (
+          <WorkoutView
+            todayISO={store.todayISO}
+            selectedDay={store.selectedDay}
+            weekDays={store.dynamicWeek.days}
+            effectiveSessionId={store.effectiveSessionId}
+            selectedGymId={store.state.selectedGymId}
+            barbellWeightKg={store.state.profileInput.barbellWeightKg || 20}
+            logsByDate={store.state.logsByDate}
+            sessionSwaps={store.state.sessionSwaps}
+            customSessionLists={store.state.customSessionLists}
+            activePresetBySession={store.state.activePresetBySession}
+            personalRecords={store.personalRecords}
+            onSelectDate={store.setSelectedDateISO}
+            onSelectSession={(sid) =>
+              store.updateState((prev) => ({ ...prev, activeSessionId: sid }))
+            }
+            onSelectGymBranch={(gid) =>
+              store.updateState((prev) => ({ ...prev, selectedGymId: gid }))
+            }
+            onApplyGymPreset={store.applyGymPreset}
+            onMutateSets={store.mutateExerciseSets}
+            onSwapExercise={store.swapExerciseInSlot}
+            onAddExercise={store.addExerciseToSession}
+            onRemoveExercise={store.removeExerciseFromSession}
+            onFinishDayDone={(isoDate, sid) => {
+              store.setDayStatus(isoDate, 'done', sid);
+            }}
+            onUndoDayDone={(isoDate) => {
+              store.setDayStatus(isoDate, null);
+            }}
+            onMarkDayOff={store.markDayOff}
+            onRestoreDayWorkout={store.restoreDayWorkout}
+            onOpenCoach={openCoachFromContext}
+            onStartRestTimer={rest.startRestTimer}
+          />
+        )}
+
+        {activeTab === 'streak' && (
+          <StreakAndPrView
+            streakSummary={store.streakSummary}
+            personalRecords={store.personalRecords}
+            dayNotesByDate={store.state.dayNotesByDate || {}}
+            onOpenWorkoutForDate={openWorkoutForDate}
+            onMakeupMissed={store.makeupMissedSession}
+            onOpenCoach={openCoachFromContext}
+          />
+        )}
+
+        {activeTab === 'nutrition' && (
+          <NutritionView
+            todayISO={store.todayISO}
+            nutritionDateISO={store.nutritionDateISO}
+            metrics={store.metrics}
+            totals={store.nutritionTotalsForSelectedDate}
+            onChangeDate={store.setNutritionDateISO}
+            onAddWater={store.addWaterMl}
+            onAdjustFoodServing={store.adjustFoodServing}
+            onAddCustomMacro={store.addCustomMacroEntry}
+            onRemoveCustomMacro={store.removeCustomMacroEntry}
+            onOpenCoach={openCoachFromContext}
+          />
+        )}
+
+        {activeTab === 'profile' && (
+          <BodyAndSettingsView
+            initialSection={profileSection}
+            metrics={store.metrics}
+            syncCode={store.state.syncCode}
+            lastSyncedAt={store.state.lastSyncedAt}
+            syncStatus={store.syncStatus}
+            selectedGymId={store.state.selectedGymId}
+            pushPrefs={store.state.pushPrefs}
+            pushStatus={push.pushStatus}
+            activeDevicesCount={push.activeDevicesCount}
+            testPushCountdown={push.testPushCountdown}
+            pushStatusMessage={push.pushStatusMessage}
+            env={push.env}
+            canPromptNativeInstall={push.canPromptNativeInstall}
+            onPromptNativeInstall={push.promptNativeInstall}
+            weekDays={store.dynamicWeek.days}
+            onUpdateProfileField={store.updateProfileField}
+            onUpdatePushPref={store.updatePushPref}
+            onSubscribePush={push.subscribeNativePush}
+            onUnsubscribePush={push.unsubscribeNativePush}
+            onTriggerTestPush={push.triggerLockScreenTestPush}
+            onSelectGymBranch={(gid) =>
+              store.updateState((prev) => ({ ...prev, selectedGymId: gid }))
+            }
+            onSyncNow={() => store.pushToCloud(store.state, store.state.syncCode, true, true)}
+            onPullCloud={() => store.pullFromCloud(store.state.syncCode, true)}
+            onChangeSyncCode={store.setSyncCodeAndPull}
+            onExportJSON={store.exportBackupJSON}
+            onImportJSON={store.importBackupJSON}
+            onResetConfirmed={store.resetAllDataConfirmed}
+            onOpenCoach={openCoachFromContext}
+            ultra={ultra}
+          />
+        )}
+      </main>
+
+      <FloatingRestBar
+        timer={rest.restTimer}
+        onAdjust={rest.adjustRestTimer}
+        onStop={rest.stopRestTimer}
+      />
+
+      <nav className="g8d-bottom-nav" aria-label="Điều hướng chính">
+        <button
+          type="button"
+          className={activeTab === 'schedule' || activeTab === 'streak' ? 'is-active' : ''}
+          onClick={() => setActiveTab('schedule')}
+        >
+          <SvgIcon name="calendar" size={19} />
+          <span>Lịch</span>
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === 'workout' ? 'is-active' : ''}
+          onClick={() => setActiveTab('workout')}
+        >
+          <SvgIcon name="dumbbell" size={19} />
+          <span>Buổi Tập</span>
+        </button>
+
+        <button
+          type="button"
+          className={`g8d-nav-coach-btn ${activeTab === 'coach' ? 'is-active' : ''}`}
+          onClick={() => {
+            setReturnTarget(null);
+            setActiveTab('coach');
+          }}
+        >
+          <span className="g8d-nav-coach-avatar-wrap">
+            <img
+              src={avatarUrl}
+              alt="ChatDVT"
+              width={23}
+              height={23}
+              onError={(e) => {
+                if (!e.currentTarget.src.endsWith(fallbackUrl)) {
+                  e.currentTarget.src = fallbackUrl;
+                }
+              }}
+            />
+          </span>
+          <span>ChatDVT</span>
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === 'nutrition' ? 'is-active' : ''}
+          onClick={() => setActiveTab('nutrition')}
+        >
+          <SvgIcon name="utensils" size={19} />
+          <span>Dinh Dưỡng</span>
+        </button>
+
+        <button
+          type="button"
+          className={activeTab === 'profile' ? 'is-active' : ''}
+          onClick={() => setActiveTab('profile')}
+        >
+          <SvgIcon name="user" size={19} />
+          <span>Hồ Sơ</span>
+        </button>
+      </nav>
+    </div>
+  );
+};

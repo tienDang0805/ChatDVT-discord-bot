@@ -39,12 +39,15 @@ export function createClientFilesRouter(buildPath: string) {
       let policy = 'public, max-age=3600';
       if (relativePath.startsWith('hbd/')) {
         policy = 'private, no-store';
-      } else if (/\.html$/i.test(relativePath) || /(^|\/)(sw\.js|manifest\.json)$/.test(relativePath)) {
+      } else if (/\.html$/i.test(relativePath) || /(^|\/)(sw\.js|manifest\.(json|webmanifest))$/i.test(relativePath)) {
         policy = REVALIDATE;
       } else if (relativePath.startsWith('assets/') && /-[a-f0-9]{8,}\.[^.]+$/i.test(relativePath)) {
         policy = 'public, max-age=31536000, immutable';
       }
       res.setHeader('Cache-Control', policy);
+      if (/^gym8D\/sw\.js$/i.test(relativePath)) {
+        res.setHeader('Service-Worker-Allowed', '/gym8D');
+      }
     },
   }));
 
