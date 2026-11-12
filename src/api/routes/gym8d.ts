@@ -768,9 +768,14 @@ function maskProxyUrl(urlStr: string): string {
   }
 }
 
-async function probeCliProxyOnline(baseUrl: string, apiKey: string): Promise<boolean> {
+async function probeCliProxyStatus(
+  baseUrl: string,
+  apiKey: string
+): Promise<{ online: boolean; reason: string; models: string[] }> {
   const nodeFetch: any = (globalThis as any).fetch;
-  if (typeof nodeFetch !== 'function') return false;
+  if (typeof nodeFetch !== 'function') {
+    return { online: false, reason: 'no_fetch_runtime', models: [] };
+  }
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 2500);
   try {
@@ -779,9 +784,21 @@ async function probeCliProxyOnline(baseUrl: string, apiKey: string): Promise<boo
       headers: { Authorization: `Bearer ${apiKey}` },
       signal: ctrl.signal,
     });
-    return res.ok;
-  } catch {
-    return false;
+    if (!res.ok) {
+      return { online: false, reason: `HTTP ${res.status}`, models: [] };
+    }
+    const body: any = await res.json().catch(() => ({}));
+    const models: string[] = Array.isArray(body?.data)
+      ? body.data.map((m: any) => String(m?.id || '').trim()).filter(Boolean)
+      : [];
+    return { online: true, reason: 'CLIProxyAPI trực tuyến', models };
+  } catch (err: any) {
+    const code = err?.cause?.code || err?.code || (err?.name === 'AbortError' ? 'TIMEOUT' : '');
+    return {
+      online: false,
+      reason: String(code || err?.message || 'ECONNREFUSED').slice(0, 60),
+      models: [],
+    };
   } finally {
     clearTimeout(timer);
   }
@@ -807,10 +824,12 @@ router.get('/gym8d/ultra/status', preventResponseCaching, async (req, res) => {
     return res.json({ unlocked: false });
   }
   const cfg = await resolveCliProxySettings();
-  const proxyOnline = await probeCliProxyOnline(cfg.baseUrl, cfg.apiKey);
+  const probe = await probeCliProxyStatus(cfg.baseUrl, cfg.apiKey);
   return res.json({
     unlocked: true,
-    proxyOnline,
+    proxyOnline: probe.online,
+    proxyReason: probe.reason,
+    availableModels: probe.models,
     proxyUrlMasked: maskProxyUrl(cfg.baseUrl),
   });
 });
@@ -840,12 +859,14 @@ router.post('/gym8d/ultra/unlock', preventResponseCaching, async (req, res) => {
   }
 
   const cfg = await resolveCliProxySettings();
-  const proxyOnline = await probeCliProxyOnline(cfg.baseUrl, cfg.apiKey);
+  const probe = await probeCliProxyStatus(cfg.baseUrl, cfg.apiKey);
   const token = jwt.sign({ role: 'gym8d_ultra_owner', v: 1 }, JWT_SECRET, { expiresIn: '365d' });
   return res.json({
     ok: true,
     token,
-    proxyOnline,
+    proxyOnline: probe.online,
+    proxyReason: probe.reason,
+    availableModels: probe.models,
     proxyUrlMasked: maskProxyUrl(cfg.baseUrl),
   });
 });
@@ -921,7 +942,9 @@ async function generateGymAgentJsonWithFallback(params: {
   temperature?: number;
   maxOutputTokens?: number;
   ultra?: { enabled: boolean; preferredModel?: string };
-}): Promise<{ text: string; model: string; tier: 'ultra' | 'free' }> {
+}): Promise<{ text: string; model: string; tier: 'ultra' | 'free'; fallbackNote?: string }> {
+  let ultraFailReason = '';
+
   // 1. Exclusive Owner Ultra Path via CLIProxyAPI (locked by signed JWT)
   if (params.ultra?.enabled && params.ultra.preferredModel !== 'free') {
     const { baseUrl, apiKey } = await resolveCliProxySettings();
@@ -931,20 +954,24 @@ async function generateGymAgentJsonWithFallback(params: {
       : 'gemini-4-carbon-high';
     const ultraChain = Array.from(new Set([pref, ...allowedUltra]));
 
-    const openAiMessages = [
-      { role: 'system', content: params.systemInstruction },
-      ...params.history.map((h) => ({
-        role: h.role === 'user' ? 'user' : 'assistant',
-        content: h.role === 'model' ? normalizeHistoryModelContent(h.content) : h.content.slice(0, 1400),
-      })),
-      { role: 'user', content: params.message },
-    ];
-
     for (const ultraModel of ultraChain) {
       const nodeFetch: any = (globalThis as any).fetch;
       if (typeof nodeFetch !== 'function') break;
+      const ultraSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy trực tiếp bằng model "${ultraModel}" (${formatEngineLabel(
+        ultraModel,
+        'ultra'
+      )}) qua CLIProxyAPI riêng của Tiến. Nếu Tiến hỏi đang chạy model gì, hãy báo chính xác tên model này.]`;
+      const openAiMessages = [
+        { role: 'system', content: ultraSys },
+        ...params.history.map((h) => ({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content:
+            h.role === 'model' ? normalizeHistoryModelContent(h.content) : h.content.slice(0, 1400),
+        })),
+        { role: 'user', content: params.message },
+      ];
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 28_000);
+      const timer = setTimeout(() => ctrl.abort(), 20_000);
       try {
         const res = await nodeFetch(`${baseUrl}/chat/completions`, {
           method: 'POST',
@@ -954,6 +981,7 @@ async function generateGymAgentJsonWithFallback(params: {
           },
           body: JSON.stringify({
             model: ultraModel,
+            reasoning_effort: 'low',
             temperature: params.temperature ?? 0.25,
             response_format: { type: 'json_object' },
             messages: openAiMessages,
@@ -969,9 +997,15 @@ async function generateGymAgentJsonWithFallback(params: {
             return { text, model: ultraModel, tier: 'ultra' };
           }
         } else {
+          ultraFailReason = `HTTP ${res.status}`;
           console.warn(`[Gym8D Ultra CLIProxy] ${ultraModel} returned HTTP ${res.status}`);
+          if (res.status === 401 || res.status === 403) {
+            break;
+          }
         }
       } catch (uErr: any) {
+        const code = uErr?.cause?.code || uErr?.code || (uErr?.name === 'AbortError' ? 'TIMEOUT' : '');
+        ultraFailReason = String(code || uErr?.message || 'ECONNREFUSED').slice(0, 48);
         console.warn(`[Gym8D Ultra CLIProxy] ${ultraModel} unreachable: ${uErr?.message || uErr}`);
         break; // If proxy host is unreachable, fall through immediately to Free API
       } finally {
@@ -1001,6 +1035,12 @@ async function generateGymAgentJsonWithFallback(params: {
   for (const model of WEB_CHAT_MODEL_FALLBACKS) {
     try {
       const isGemma = model.toLowerCase().startsWith('gemma');
+      const freeSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy bằng model "${model}" (${formatEngineLabel(
+        model,
+        'free'
+      )})${
+        ultraFailReason ? ` do CLIProxyAPI trên Server chưa phản hồi (${ultraFailReason})` : ''
+      }. Nếu Tiến hỏi đang chạy model gì, hãy báo trung thực tên model thực tế này.]`;
       const contents = isGemma
         ? [
             ...normalizedHistory,
@@ -1008,7 +1048,7 @@ async function generateGymAgentJsonWithFallback(params: {
               role: 'user' as const,
               parts: [
                 {
-                  text: `${params.systemInstruction}\n\n---\nTin nhắn người dùng (TRẢ VỀ DUY NHẤT 1 JSON OBJECT):\n${params.message}`,
+                  text: `${freeSys}\n\n---\nTin nhắn người dùng (TRẢ VỀ DUY NHẤT 1 JSON OBJECT):\n${params.message}`,
                 },
               ],
             },
@@ -1024,7 +1064,7 @@ async function generateGymAgentJsonWithFallback(params: {
             model,
             contents,
             config: {
-              ...(isGemma ? {} : { systemInstruction: params.systemInstruction }),
+              ...(isGemma ? {} : { systemInstruction: freeSys }),
               ...(isGemma ? {} : { responseMimeType: 'application/json' }),
               temperature: params.temperature ?? 0.25,
               topP: 0.9,
@@ -1040,7 +1080,14 @@ async function generateGymAgentJsonWithFallback(params: {
       const text = response.text?.trim();
       if (!text) throw new Error('Empty JSON response');
       console.info(`[Gym8D Agent JSON] Response generated by ${model}`);
-      return { text, model, tier: 'free' };
+      return {
+        text,
+        model,
+        tier: 'free',
+        fallbackNote: ultraFailReason
+          ? `CLIProxyAPI Server chưa thông (${ultraFailReason})`
+          : undefined,
+      };
     } catch (err: any) {
       lastError = err;
       console.warn(`[Gym8D Agent JSON] ${model} failed: ${err?.message || err}`);
@@ -1670,11 +1717,20 @@ ${JSON.stringify(catalog.exercises || [])}
 
     const engineLabel = formatEngineLabel(aiRes.model, aiRes.tier);
     const enrichedAudit = audited.selfAudit
-      ? { ...audited.selfAudit, engineLabel }
+      ? {
+          ...audited.selfAudit,
+          engineLabel,
+          modelId: aiRes.model,
+          tier: aiRes.tier,
+          fallbackNote: aiRes.fallbackNote,
+        }
       : {
           passed: true,
-          safetyCheck: 'Phản hồi đã qua kiểm tra tính nhất quán dữ liệu.',
+          safetyCheck: '',
           engineLabel,
+          modelId: aiRes.model,
+          tier: aiRes.tier,
+          fallbackNote: aiRes.fallbackNote,
         };
 
     return res.json({
@@ -1684,6 +1740,7 @@ ${JSON.stringify(catalog.exercises || [])}
       selfAudit: enrichedAudit,
       model: aiRes.model,
       tier: aiRes.tier,
+      fallbackNote: aiRes.fallbackNote,
     });
   } catch (err: any) {
     console.error('[Gym8D Agent] Error:', err?.message || err);

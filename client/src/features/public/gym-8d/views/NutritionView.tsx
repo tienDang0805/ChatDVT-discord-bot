@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { BottomSheet } from '../components/BottomSheet';
 import { SvgIcon } from '../components/Icons';
-import { VN_FOOD_CATEGORIES, VN_FOODS } from '../data/foods';
-import { addDaysISO, diffDaysISO, formatVNShortDate, normalizeVNSearch } from '../domain/dateUtils';
+import { resolveMascotAsset } from '../data/assets';
+import { VN_FOODS } from '../data/foods';
+import { addDaysISO, diffDaysISO, formatVNShortDate } from '../domain/dateUtils';
 import type { CalculatedMetrics } from '../domain/metrics';
 import type { CustomMacroItem } from '../types/gym';
 
@@ -50,9 +51,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
   onRemoveCustomMacro,
   onOpenCoach,
 }) => {
-  const [category, setCategory] = useState<string>('all');
-  const [search, setSearch] = useState<string>('');
-  const [onlyLogged, setOnlyLogged] = useState<boolean>(false);
+  const [aiMealText, setAiMealText] = useState<string>('');
   const [quickAddOpen, setQuickAddOpen] = useState<boolean>(false);
   const [mealPlanOpen, setMealPlanOpen] = useState<boolean>(false);
 
@@ -72,21 +71,49 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
 
   const kcalPct = Math.min(100, Math.round((totals.kcal / Math.max(1, metrics.targetKcal)) * 100));
   const proteinPct = Math.min(100, Math.round((totals.protein / Math.max(1, metrics.proteinG)) * 100));
+  const carbPct = Math.min(100, Math.round((totals.carb / Math.max(1, metrics.carbG)) * 100));
+  const fatPct = Math.min(100, Math.round((totals.fat / Math.max(1, metrics.fatG)) * 100));
   const waterPct = Math.min(100, Math.round((totals.waterMl / Math.max(1, metrics.waterMl)) * 100));
+  const remainingKcal = metrics.targetKcal - totals.kcal;
 
-  const filteredFoods = useMemo(() => {
-    const q = normalizeVNSearch(search);
-    return VN_FOODS.filter((f) => {
-      if (onlyLogged && !(totals.servingsMap[f.id] > 0)) return false;
-      if (category !== 'all' && f.category !== category) return false;
-      if (!q) return true;
-      return (
-        normalizeVNSearch(f.name).includes(q) ||
-        normalizeVNSearch(f.portion).includes(q) ||
-        normalizeVNSearch(f.mealTag).includes(q)
+  const loggedCatalogItems = useMemo(
+    () =>
+      VN_FOODS.filter((f) => (totals.servingsMap[f.id] || 0) > 0).map((f) => {
+        const qty = totals.servingsMap[f.id] || 0;
+        return {
+          food: f,
+          qty,
+          kcal: Math.round(f.kcal * qty),
+          protein: Math.round(f.protein * qty),
+          carb: Math.round(f.carb * qty),
+          fat: Math.round(f.fat * qty),
+        };
+      }),
+    [totals.servingsMap]
+  );
+
+  const totalLoggedRows = totals.customList.length + loggedCatalogItems.length;
+
+  const handleAskAiMeal = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const clean = aiMealText.trim();
+    if (!clean) {
+      onOpenCoach(
+        dayDiff === 0
+          ? 'Hôm nay tao ăn uống gồm: '
+          : `Ngày ${formatVNShortDate(nutritionDateISO)} tao ăn uống gồm: `,
+        'Dinh Dưỡng'
       );
-    });
-  }, [category, onlyLogged, search, totals.servingsMap]);
+      return;
+    }
+    setAiMealText('');
+    const dateContext =
+      dayDiff === 0 ? 'Hôm nay' : `Ngày ${formatVNShortDate(nutritionDateISO)}`;
+    onOpenCoach(
+      `__AUTO_SEND__:${dateContext} tao vừa ăn uống gồm: ${clean}. Hãy tự ước lượng calo, đạm, tinh bột, béo và tạo đề xuất cập nhật dinh dưỡng giúp tao.`,
+      'Dinh Dưỡng'
+    );
+  };
 
   const handleSaveCustom = () => {
     const cleanName = customName.trim() || 'Món ăn ngoài';
@@ -140,39 +167,24 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
       <div className="g8d-card">
         <div className="g8d-row-between">
           <div>
-            <div className="g8d-kicker">ƯỚC LƯỢNG 75–80% · {metrics.profile.weightKg}KG</div>
+            <div className="g8d-kicker">MỤC TIÊU NGÀY · {metrics.profile.weightKg}KG</div>
             <div className="g8d-kcal-hero-num">
               <strong>{totals.kcal.toLocaleString('vi-VN')}</strong>
               <span>/ {metrics.targetKcal.toLocaleString('vi-VN')} kcal</span>
             </div>
           </div>
-          <span className={`g8d-badge ${kcalPct >= 80 ? 'is-green' : 'is-orange'}`}>
-            {kcalPct}% mục tiêu
+          <span
+            className={`g8d-badge ${
+              remainingKcal >= 0 ? (kcalPct >= 75 ? 'is-green' : 'is-orange') : 'is-orange'
+            }`}
+          >
+            {remainingKcal >= 0
+              ? `Còn ${remainingKcal.toLocaleString('vi-VN')} kcal`
+              : `Vượt ${Math.abs(remainingKcal).toLocaleString('vi-VN')} kcal`}
           </span>
         </div>
 
-        <div className="g8d-nutri-cta-row">
-          <button
-            type="button"
-            className="g8d-btn-primary"
-            onClick={() => onOpenCoach('Hôm nay tao ăn uống gồm: ', 'Dinh Dưỡng')}
-          >
-            Kể cho ChatDVT
-          </button>
-          <button
-            type="button"
-            className="g8d-btn-outline"
-            onClick={() => setQuickAddOpen(true)}
-          >
-            + Nhập tay nhanh
-          </button>
-        </div>
-
-        <div className="g8d-tiny-meta" style={{ marginTop: 8 }}>
-          Tối nằm nghỉ chỉ cần kể lại cho ChatDVT ước lượng khoảng 75–80% là đủ giữ nhịp giảm mỡ.
-        </div>
-
-        <div className="g8d-macro-bars" style={{ marginTop: 12 }}>
+        <div className="g8d-macro-bars-3" style={{ marginTop: 12 }}>
           <div className="g8d-macro-col">
             <div className="g8d-row-between g8d-tiny-meta">
               <strong>Đạm</strong>
@@ -187,21 +199,25 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
 
           <div className="g8d-macro-col">
             <div className="g8d-row-between g8d-tiny-meta">
-              <strong>Carb · Béo</strong>
+              <strong>Tinh bột</strong>
               <span>
-                {totals.carb}/{metrics.carbG}C · {totals.fat}/{metrics.fatG}F
+                {totals.carb}/{metrics.carbG}g
               </span>
             </div>
             <div className="g8d-progress-track">
-              <div
-                className="g8d-progress-fill"
-                style={{
-                  width: `${Math.min(
-                    100,
-                    Math.round((totals.carb / Math.max(1, metrics.carbG)) * 100)
-                  )}%`,
-                }}
-              />
+              <div className="g8d-progress-fill" style={{ width: `${carbPct}%` }} />
+            </div>
+          </div>
+
+          <div className="g8d-macro-col">
+            <div className="g8d-row-between g8d-tiny-meta">
+              <strong>Chất béo</strong>
+              <span>
+                {totals.fat}/{metrics.fatG}g
+              </span>
+            </div>
+            <div className="g8d-progress-track">
+              <div className="g8d-progress-fill is-gold" style={{ width: `${fatPct}%` }} />
             </div>
           </div>
         </div>
@@ -227,24 +243,125 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
             <div className="g8d-progress-fill is-blue" style={{ width: `${waterPct}%` }} />
           </div>
         </div>
+      </div>
 
-        {totals.customList.length > 0 && (
-          <div className="g8d-custom-macro-list">
-            <div className="g8d-kicker" style={{ marginBottom: 4 }}>
-              MÓN ĐÃ THÊM HÔM NAY
+      <div className="g8d-card">
+        <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+          <div>
+            <div className="g8d-kicker">GHI BỮA ĂN BẰNG AI CHATDVT</div>
+            <div className="g8d-card-title">Kể tự nhiên — ChatDVT tự tính Calo & Đạm</div>
+          </div>
+        </div>
+
+        <form className="g8d-ai-meal-form" onSubmit={handleAskAiMeal}>
+          <input
+            type="text"
+            enterKeyHint="send"
+            value={aiMealText}
+            onChange={(e) => setAiMealText(e.target.value)}
+            placeholder="VD: 1 tô phở bò tái + 2 trứng luộc..."
+            className="g8d-search-input"
+            style={{ marginBottom: 0, flex: 1 }}
+          />
+          <button type="submit" className="g8d-btn-primary">
+            {aiMealText.trim() ? 'Gửi AI' : 'Mở ChatDVT'}
+          </button>
+        </form>
+
+        <div className="g8d-row-between" style={{ marginTop: 10 }}>
+          <span className="g8d-tiny-meta">Chỉ cần ước lượng 75–80% thực tế cuối ngày.</span>
+          <button
+            type="button"
+            className="g8d-pill-btn g8d-pill-btn-touch"
+            onClick={() => setQuickAddOpen(true)}
+          >
+            + Nhập tay nhanh
+          </button>
+        </div>
+      </div>
+
+      <div className="g8d-card">
+        <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+          <div>
+            <div className="g8d-kicker">NHẬT KÝ ĐÃ ĂN TRONG NGÀY</div>
+            <div className="g8d-card-title">
+              {totalLoggedRows > 0 ? `${totalLoggedRows} món đã ghi nhận` : 'Chưa có món ăn nào'}
             </div>
+          </div>
+          {totalLoggedRows > 0 && (
+            <button
+              type="button"
+              className="g8d-pill-btn g8d-pill-btn-touch"
+              onClick={() =>
+                onOpenCoach(
+                  `Kiểm tra lại danh sách ăn uống ngày ${formatVNShortDate(
+                    nutritionDateISO
+                  )} của tao và chỉnh lại nếu có món trùng hoặc lệch calo`,
+                  'Dinh Dưỡng'
+                )
+              }
+            >
+              Nhờ AI rà lại
+            </button>
+          )}
+        </div>
+
+        {totalLoggedRows === 0 ? (
+          <div className="g8d-empty-box">
+            <img
+              src={resolveMascotAsset('nutritionVn')}
+              alt=""
+              width={56}
+              height={56}
+              className="g8d-empty-mascot"
+            />
+            <div className="g8d-tiny-meta">
+              Không cần dò tìm từng món lẻ — cứ nhắn bữa ăn ở ô trên hoặc kể cho ChatDVT, món đã ăn sẽ tự lưu gọn tại đây.
+            </div>
+          </div>
+        ) : (
+          <div className="g8d-logged-meals-stack">
+            {loggedCatalogItems.map(({ food, qty, kcal, protein, carb, fat }) => (
+              <div key={food.id} className="g8d-logged-meal-row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">
+                    {food.name} {qty !== 1 ? `(${qty}×)` : ''}
+                  </div>
+                  <div className="g8d-tiny-meta">
+                    <strong>{kcal} kcal</strong> ·{' '}
+                    <span style={{ color: '#1E8754', fontWeight: 700 }}>{protein}g Đạm</span> ·{' '}
+                    {carb}C · {fat}F
+                  </div>
+                </div>
+                <div className="g8d-food-stepper">
+                  <button
+                    type="button"
+                    onClick={() => onAdjustFoodServing(food.id, -qty)}
+                    aria-label={`Xoá ${food.name}`}
+                  >
+                    <SvgIcon name="trash" size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
+
             {totals.customList.map((c) => (
-              <div key={c.id} className="g8d-custom-macro-item">
-                <span>
-                  <strong>{c.name}</strong> · {c.kcal} kcal · {c.protein}g Đạm
-                </span>
+              <div key={c.id} className="g8d-logged-meal-row">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">{c.name}</div>
+                  <div className="g8d-tiny-meta">
+                    <strong>{c.kcal} kcal</strong> ·{' '}
+                    <span style={{ color: '#1E8754', fontWeight: 700 }}>{c.protein}g Đạm</span> ·{' '}
+                    {c.carb}C · {c.fat}F
+                  </div>
+                </div>
                 <button
                   type="button"
                   className="g8d-icon-close"
                   onClick={() => onRemoveCustomMacro(c.id)}
                   aria-label="Xóa món"
                 >
-                  <SvgIcon name="x" size={14} />
+                  <SvgIcon name="trash" size={15} />
                 </button>
               </div>
             ))}
@@ -258,7 +375,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
           className="g8d-accordion-trigger"
           onClick={() => setMealPlanOpen((v) => !v)}
         >
-          <span>Khung giờ 5 bữa tham khảo theo ca tập {metrics.profile.workoutTime}</span>
+          <span>Khung giờ 5 bữa gợi ý theo ca tập {metrics.profile.workoutTime}</span>
           <SvgIcon name="chevronDown" size={17} />
         </button>
         {mealPlanOpen && (
@@ -275,93 +392,10 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
         )}
       </div>
 
-      <div className="g8d-card">
-        <div className="g8d-row-between" style={{ marginBottom: 10 }}>
-          <div className="g8d-kicker">THỰC ĐƠN MÓN VIỆT (NHÂN KHẨU PHẦN)</div>
-          <button
-            type="button"
-            className={`g8d-pill-btn g8d-pill-btn-touch ${onlyLogged ? 'is-synced' : ''}`}
-            onClick={() => setOnlyLogged((v) => !v)}
-          >
-            {onlyLogged ? `Đã chọn (${totals.itemCount})` : 'Lọc món đã ăn'}
-          </button>
-        </div>
-
-        <input
-          type="search"
-          enterKeyHint="search"
-          placeholder="Tìm phở bò, ức gà, trứng, whey, cơm..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="g8d-search-input"
-        />
-
-        <div className="g8d-cat-strip">
-          {VN_FOOD_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              className={category === cat.id ? 'is-active' : ''}
-              onClick={() => setCategory(cat.id)}
-            >
-              {cat.shortLabel}
-            </button>
-          ))}
-        </div>
-
-        <div className="g8d-food-list">
-          {filteredFoods.map((food) => {
-            const qty = totals.servingsMap[food.id] || 0;
-            return (
-              <div key={food.id} className={`g8d-food-row ${qty > 0 ? 'is-logged' : ''}`}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="g8d-choice-title">{food.name}</div>
-                  <div className="g8d-tiny-meta">
-                    {food.portion} · <strong>{food.kcal} kcal</strong> ·{' '}
-                    <span style={{ color: '#1E8754', fontWeight: 700 }}>{food.protein}g Đạm</span> ·{' '}
-                    {food.carb}g C · {food.fat}g F
-                  </div>
-                </div>
-
-                <div className="g8d-food-stepper">
-                  {qty > 0 ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => onAdjustFoodServing(food.id, -0.5)}
-                        aria-label="Giảm khẩu phần"
-                      >
-                        −
-                      </button>
-                      <span className="g8d-food-qty">{qty}×</span>
-                      <button
-                        type="button"
-                        onClick={() => onAdjustFoodServing(food.id, 0.5)}
-                        aria-label="Tăng khẩu phần"
-                      >
-                        +
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className="g8d-food-add-btn"
-                      onClick={() => onAdjustFoodServing(food.id, 1)}
-                    >
-                      + Cộng
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       <BottomSheet
         open={quickAddOpen}
-        title="Cộng Nhanh Món Ăn Ngoài"
-        subtitle="Chọn món ăn sẵn hoặc nhập khoảng ước lượng tương đối"
+        title="Nhập Tay Nhanh Món Ăn"
+        subtitle="Dành cho Whey, trứng hoặc món bạn đã nhớ sẵn số Calo"
         onClose={() => setQuickAddOpen(false)}
       >
         <div className="g8d-stack-sm">

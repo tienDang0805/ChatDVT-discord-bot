@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { BottomSheet } from '../components/BottomSheet';
 import { SvgIcon } from '../components/Icons';
 import { InstallAppGuideContent } from '../components/InstallAppGuide';
+import { resolveMascotAsset } from '../data/assets';
 import { GYM_BRANCHES } from '../data/gyms';
+import { WORKOUT_SESSIONS } from '../data/workouts';
+import { DAY_TINY_NAMES } from '../domain/dateUtils';
 import type { CalculatedMetrics } from '../domain/metrics';
 import { generateICSCalendar } from '../domain/schedule';
 import type { CloudSyncStatus } from '../hooks/useGymStore';
@@ -10,14 +14,34 @@ import type { UltraModeController } from '../hooks/useUltraMode';
 import type {
   DayScheduleEntry,
   GymBranchId,
+  PersonalRecordEntry,
   ProfileInput,
   PushPrefs,
+  SessionId,
   UltraModelChoice,
+  WorkoutSessionId,
 } from '../types/gym';
+
+interface ProfileStreakSummary {
+  currentStreak: number;
+  bestStreak: number;
+  doneCount: number;
+  missedCount: number;
+  totalVolumeKg: number;
+  totalKcalBurned: number;
+  totalSetsDone: number;
+  doneDays: DayScheduleEntry[];
+  missedDays: DayScheduleEntry[];
+  timeline14: DayScheduleEntry[];
+  nextRestDayForMakeup: DayScheduleEntry | null;
+}
 
 interface BodyAndSettingsViewProps {
   initialSection?: 'push' | 'body';
   metrics: CalculatedMetrics;
+  streakSummary: ProfileStreakSummary;
+  personalRecords: Record<string, PersonalRecordEntry>;
+  dayNotesByDate: Record<string, string>;
   syncCode: string;
   lastSyncedAt: string | null;
   syncStatus: CloudSyncStatus;
@@ -43,6 +67,8 @@ interface BodyAndSettingsViewProps {
   onExportJSON: () => void;
   onImportJSON: (file: File) => void;
   onResetConfirmed: () => void;
+  onOpenWorkoutForDate: (isoDate: string, sessionId?: WorkoutSessionId) => void;
+  onMakeupMissed: (missedDateISO: string, missedSessionId: SessionId) => void;
   onOpenCoach: (prefill?: string, returnLabel?: string) => void;
   ultra: UltraModeController;
 }
@@ -50,6 +76,9 @@ interface BodyAndSettingsViewProps {
 export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   initialSection = 'body',
   metrics,
+  streakSummary,
+  personalRecords,
+  dayNotesByDate,
   syncCode,
   lastSyncedAt,
   syncStatus,
@@ -75,6 +104,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   onExportJSON,
   onImportJSON,
   onResetConfirmed,
+  onOpenWorkoutForDate,
+  onMakeupMissed,
   onOpenCoach,
   ultra,
 }) => {
@@ -85,6 +116,18 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   const [showAdvancedProxy, setShowAdvancedProxy] = useState<boolean>(false);
   const [customProxyUrl, setCustomProxyUrl] = useState<string>('');
   const [customProxyKey, setCustomProxyKey] = useState<string>('');
+  const [probingUltra, setProbingUltra] = useState<boolean>(false);
+
+  const p = metrics.profile;
+  const [editBodyOpen, setEditBodyOpen] = useState<boolean>(false);
+  const [draftWeight, setDraftWeight] = useState<string>(String(p.weightKg));
+  const [draftTargetWeight, setDraftTargetWeight] = useState<string>(String(p.targetWeightKg));
+  const [draftHeight, setDraftHeight] = useState<string>(String(p.heightCm));
+  const [draftAge, setDraftAge] = useState<string>(String(p.age));
+  const [draftWorkoutTime, setDraftWorkoutTime] = useState<string>(p.workoutTime || '06:00');
+  const [draftPreSleep, setDraftPreSleep] = useState<string>(String(p.preSleepLeadMin));
+  const [draftGoal, setDraftGoal] = useState<'cut' | 'recomp' | 'bulk'>(p.goal);
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -94,6 +137,34 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   useEffect(() => {
     setDraftCode(syncCode);
   }, [syncCode]);
+
+  const openEditBodySheet = () => {
+    setDraftWeight(String(p.weightKg));
+    setDraftTargetWeight(String(p.targetWeightKg));
+    setDraftHeight(String(p.heightCm));
+    setDraftAge(String(p.age));
+    setDraftWorkoutTime(p.workoutTime || '06:00');
+    setDraftPreSleep(String(p.preSleepLeadMin));
+    setDraftGoal(p.goal);
+    setEditBodyOpen(true);
+  };
+
+  const handleSaveBodyMetrics = () => {
+    const w = Math.min(260, Math.max(35, Number(draftWeight) || p.weightKg));
+    const tw = Math.min(220, Math.max(35, Number(draftTargetWeight) || p.targetWeightKg));
+    const h = Math.min(230, Math.max(120, Math.round(Number(draftHeight) || p.heightCm)));
+    const a = Math.min(90, Math.max(14, Math.round(Number(draftAge) || p.age)));
+    const lead = Math.min(180, Math.max(5, Math.round(Number(draftPreSleep) || p.preSleepLeadMin)));
+
+    onUpdateProfileField('weightKg', w);
+    onUpdateProfileField('targetWeightKg', tw);
+    onUpdateProfileField('heightCm', h);
+    onUpdateProfileField('age', a);
+    onUpdateProfileField('workoutTime', draftWorkoutTime || '06:00');
+    onUpdateProfileField('preSleepLeadMin', lead);
+    onUpdateProfileField('goal', draftGoal);
+    setEditBodyOpen(false);
+  };
 
   const downloadICS = () => {
     const icsText = generateICSCalendar(weekDays, metrics.profile);
@@ -108,56 +179,344 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const p = metrics.profile;
+  const goalLabel =
+    p.goal === 'cut'
+      ? 'Giảm mỡ giữ cơ'
+      : p.goal === 'recomp'
+      ? 'Siết nét'
+      : 'Tăng cơ';
+
+  const prList = Object.values(personalRecords).sort(
+    (a, b) => b.bestE1RM - a.bestE1RM || b.maxWeight - a.maxWeight
+  );
+  const latestMissed = streakSummary.missedDays[0] || null;
+  const kgDelta = Number(Math.abs(p.weightKg - p.targetWeightKg).toFixed(1));
 
   return (
     <div className="g8d-view-stack">
       <div className="g8d-subtabs">
         <button
           type="button"
-          className={section === 'push' ? 'is-active' : ''}
-          onClick={() => setSection('push')}
-        >
-          Cài App & Thông Báo
-        </button>
-        <button
-          type="button"
           className={section === 'body' ? 'is-active' : ''}
           onClick={() => setSection('body')}
         >
-          Thể Trạng ({p.weightKg}kg)
+          Thể Trạng & PR
+        </button>
+        <button
+          type="button"
+          className={section === 'push' ? 'is-active' : ''}
+          onClick={() => setSection('push')}
+        >
+          AI & Cài Đặt
         </button>
       </div>
+
+      {section === 'body' && (
+        <>
+          <div className="g8d-card g8d-profile-hero-card">
+            <div className="g8d-profile-hero-top">
+              <img
+                src={resolveMascotAsset('bodyCalc')}
+                alt=""
+                width={52}
+                height={52}
+                className="g8d-profile-hero-avatar"
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="g8d-row-between" style={{ gap: 6 }}>
+                  <span className="g8d-kicker">MÃ HỒ SƠ: {syncCode}</span>
+                  <span className="g8d-badge is-orange">{goalLabel}</span>
+                </div>
+                <div className="g8d-profile-weight-headline">
+                  <strong>{p.weightKg}kg</strong>
+                  <span className="g8d-profile-arrow">→</span>
+                  <span className="g8d-profile-target">{p.targetWeightKg}kg</span>
+                </div>
+                <div className="g8d-tiny-meta">
+                  Cao {p.heightCm}cm · {p.age} tuổi · BMI {metrics.bmi} (~{metrics.bodyFatPct}% mỡ,{' '}
+                  {metrics.lbm}kg cơ nạc)
+                </div>
+              </div>
+            </div>
+
+            <div className="g8d-profile-goal-banner">
+              <span>
+                Còn <strong>{kgDelta}kg</strong> tới đích · Nhịp{' '}
+                <strong>{metrics.weeklyRateKg}kg/tuần</strong> (~{metrics.weeksToGoal} tuần) · Ca tập{' '}
+                <strong>{p.workoutTime}</strong>
+              </span>
+            </div>
+
+            <div className="g8d-stat-grid-4" style={{ marginTop: 10 }}>
+              <div className="g8d-stat-box is-orange">
+                <span className="g8d-stat-val">{metrics.targetKcal}</span>
+                <span className="g8d-stat-lbl">Calo mục tiêu</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">{metrics.proteinG}g</span>
+                <span className="g8d-stat-lbl">Đạm giữ cơ</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">{metrics.tdee}</span>
+                <span className="g8d-stat-lbl">TDEE tiêu hao</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">{metrics.bmr}</span>
+                <span className="g8d-stat-lbl">BMR nền</span>
+              </div>
+            </div>
+
+            <div className="g8d-overload-reason" style={{ marginTop: 10 }}>
+              <strong>Đi bộ dốc Zone 2 bảo vệ khớp:</strong> Giữ nhịp tim{' '}
+              <strong>
+                {metrics.zone2Min}–{metrics.zone2Max} bpm
+              </strong>{' '}
+              (dốc 8–10%, tốc độ 4.5 km/h sau buổi tạ).
+            </div>
+
+            <div className="g8d-grid-2" style={{ marginTop: 12 }}>
+              <button type="button" className="g8d-btn-outline" onClick={openEditBodySheet}>
+                Chỉnh thông số
+              </button>
+              <button
+                type="button"
+                className="g8d-btn-primary"
+                onClick={() =>
+                  onOpenCoach(
+                    'Hãy phân tích thể trạng hiện tại của tao (cân nặng, BMI, TDEE, tỷ lệ mỡ), đánh giá chiến lược Giảm mỡ giữ cơ, Siết nét và Tăng cơ rồi đề xuất lộ trình phù hợp nhất để tao bấm áp dụng',
+                    'Hồ Sơ'
+                  )
+                }
+              >
+                ChatDVT tư vấn
+              </button>
+            </div>
+          </div>
+
+          {latestMissed && streakSummary.nextRestDayForMakeup && (
+            <div className="g8d-card g8d-rescue-card">
+              <div className="g8d-row-between">
+                <div>
+                  <div className="g8d-kicker">BẢO TOÀN CHUỖI KỶ LUẬT</div>
+                  <div className="g8d-card-title">
+                    Bù buổi {latestMissed.dayShort} ({latestMissed.shortDate})
+                  </div>
+                  <div className="g8d-tiny-meta">
+                    Dời sang ngày nghỉ gần nhất:{' '}
+                    <strong>
+                      {streakSummary.nextRestDayForMakeup.dayShort} (
+                      {streakSummary.nextRestDayForMakeup.shortDate})
+                    </strong>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="g8d-btn-primary"
+                  onClick={() => onMakeupMissed(latestMissed.isoDate, latestMissed.sessionId)}
+                >
+                  Dời tập bù
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="g8d-card">
+            <div className="g8d-row-between" style={{ marginBottom: 10 }}>
+              <div>
+                <div className="g8d-kicker">KỶ LUẬT 14 NGÀY & THÀNH TÍCH</div>
+                <div className="g8d-card-title">Chuỗi Tập Luyện & Khối Lượng</div>
+              </div>
+              <span className="g8d-tiny-meta">{streakSummary.totalSetsDone} hiệp đã chốt</span>
+            </div>
+
+            <div className="g8d-stat-grid-4" style={{ marginBottom: 12 }}>
+              <div className="g8d-stat-box is-orange">
+                <span className="g8d-stat-val">{streakSummary.currentStreak}</span>
+                <span className="g8d-stat-lbl">Chuỗi hiện tại</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">{streakSummary.bestStreak}</span>
+                <span className="g8d-stat-lbl">Kỷ lục chuỗi</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">{streakSummary.doneCount}</span>
+                <span className="g8d-stat-lbl">Buổi xong</span>
+              </div>
+              <div className="g8d-stat-box">
+                <span className="g8d-stat-val">
+                  {streakSummary.totalVolumeKg >= 1000
+                    ? `${(streakSummary.totalVolumeKg / 1000).toFixed(1)}t`
+                    : `${streakSummary.totalVolumeKg}kg`}
+                </span>
+                <span className="g8d-stat-lbl">Tổng khối lượng</span>
+              </div>
+            </div>
+
+            <div className="g8d-chain-14">
+              {streakSummary.timeline14.map((d) => (
+                <button
+                  key={d.isoDate}
+                  type="button"
+                  onClick={() =>
+                    d.sessionId !== 'rest'
+                      ? onOpenWorkoutForDate(d.isoDate, d.sessionId as WorkoutSessionId)
+                      : undefined
+                  }
+                  className={`g8d-chain-cell ${
+                    d.isCompleted
+                      ? 'is-done'
+                      : d.isMissed
+                      ? 'is-missed'
+                      : d.isWorkoutDay
+                      ? 'is-workout'
+                      : 'is-rest'
+                  } ${d.isToday ? 'is-today' : ''}`}
+                >
+                  <span className="g8d-chain-dow">{DAY_TINY_NAMES[d.dayOfWeek]}</span>
+                  <strong>{d.dayNumber}</strong>
+                  <span className="g8d-chain-mark">
+                    {d.isCompleted ? 'Xong' : d.isMissed ? 'Bận' : d.isWorkoutDay ? 'Tập' : '–'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="g8d-card">
+            <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+              <div>
+                <div className="g8d-kicker">TĂNG TẢI TUẦN TIẾN</div>
+                <div className="g8d-card-title">Kỷ Lục Cá Nhân (PR)</div>
+              </div>
+              <span className="g8d-badge is-orange">{prList.length} bài</span>
+            </div>
+
+            {prList.length === 0 ? (
+              <div className="g8d-empty-box">
+                <img
+                  src={resolveMascotAsset('prTrophy')}
+                  alt=""
+                  width={54}
+                  height={54}
+                  className="g8d-empty-mascot"
+                />
+                <div className="g8d-tiny-meta">
+                  Chốt hiệp ở màn Buổi Tập hoặc báo mức tạ cho ChatDVT để tự lưu mốc kỷ lục cá nhân.
+                </div>
+              </div>
+            ) : (
+              <div className="g8d-stack-xs">
+                {prList.slice(0, 8).map((rec) => (
+                  <div key={rec.exerciseId} className="g8d-pr-row">
+                    <img
+                      src={resolveMascotAsset(rec.mascot)}
+                      alt=""
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      className="g8d-mini-avatar"
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="g8d-choice-title">{rec.exerciseName}</div>
+                      <div className="g8d-tiny-meta">
+                        Đạt {rec.maxWeightDateShort} · {rec.totalDoneSetsAllTime} hiệp
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="g8d-pr-weight">
+                        {rec.maxWeight}kg × {rec.repsAtMaxWeight}
+                      </div>
+                      <div className="g8d-tiny-meta">1RM ~{rec.bestE1RM}kg</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {streakSummary.doneDays.length > 0 && (
+            <div className="g8d-card">
+              <div className="g8d-kicker">BUỔI TẬP ĐÃ HOÀN THÀNH GẦN ĐÂY</div>
+              <div className="g8d-stack-xs" style={{ marginTop: 8 }}>
+                {streakSummary.doneDays.slice(0, 5).map((d) => {
+                  const sess = WORKOUT_SESSIONS[d.sessionId as WorkoutSessionId];
+                  return (
+                    <div
+                      key={d.isoDate}
+                      className="g8d-history-item g8d-row-between"
+                      onClick={() =>
+                        d.sessionId !== 'rest' &&
+                        onOpenWorkoutForDate(d.isoDate, d.sessionId as WorkoutSessionId)
+                      }
+                    >
+                      <div>
+                        <div>
+                          <strong>
+                            {d.dayShort} ({d.shortDate})
+                          </strong>{' '}
+                          · {sess?.shortName || d.sessionId}
+                        </div>
+                        {dayNotesByDate[d.isoDate] && (
+                          <div className="g8d-tiny-meta">Ghi chú: {dayNotesByDate[d.isoDate]}</div>
+                        )}
+                      </div>
+                      <span className="g8d-badge is-green">
+                        {d.totalVolumeKg.toLocaleString('vi-VN')}kg
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {section === 'push' && (
         <>
           <div className="g8d-card g8d-ultra-card">
             <div className="g8d-row-between">
               <div>
-                <div className="g8d-kicker">AI CÁ NHÂN ĐỘC QUYỀN TRÊN ĐIỆN THOẠI NÀY</div>
+                <div className="g8d-kicker">MÁY CHỦ AI & CLIPROXYAPI (:8317)</div>
                 <div className="g8d-card-title">
                   {ultra.unlocked ? 'Đã mở khoá Ultra (CLIProxyAPI)' : 'Mở khoá tài khoản Ultra riêng'}
                 </div>
               </div>
-              <span className={`g8d-status-badge ${ultra.unlocked ? 'is-on' : ''}`}>
+              <span
+                className={`g8d-status-badge ${
+                  ultra.unlocked && ultra.proxyOnline
+                    ? 'is-on'
+                    : ultra.unlocked
+                    ? 'is-warn'
+                    : ''
+                }`}
+              >
                 {ultra.unlocked
                   ? ultra.proxyOnline
                     ? 'Ultra Trực tuyến'
-                    : 'Dự phòng Free'
+                    : 'Dự phòng Free · Proxy tắt'
                   : 'Đang dùng Free'}
               </span>
             </div>
 
             <p className="g8d-push-explain" style={{ marginTop: 6 }}>
               {ultra.unlocked
-                ? `Chỉ điện thoại này giữ mã xác thực chủ sở hữu để gọi thẳng CLIProxyAPI (${ultra.proxyUrlMasked}). Mọi thiết bị của người khác đều chỉ chạy tầng Free.`
-                : 'Nhập mật khẩu chủ sở hữu 1 lần trên iPhone để mở khoá mô hình Carbon / Flash 3.8 qua CLIProxyAPI riêng của mày. Mã khoá lưu độc lập trên máy này, người khác không thể dùng chung.'}
+                ? ultra.proxyOnline
+                  ? `Đang nối thông suốt tới ${ultra.proxyUrlMasked}${
+                      ultra.availableModels.length > 0
+                        ? ` (${ultra.availableModels.length} model sẵn sàng)`
+                        : ''
+                    }.`
+                  : `Điện thoại đã mở khoá chủ sở hữu, nhưng cổng ${ultra.proxyUrlMasked} trên Server EC2 hiện chưa bật (${
+                      ultra.proxyReason || 'ECONNREFUSED'
+                    }) nên tin nhắn đang tự chuyển về Flash 3.5 Lite (Free).`
+                : 'Nhập mật khẩu chủ sở hữu 1 lần trên iPhone để mở khoá Carbon High / Flash 3.8 qua CLIProxyAPI riêng trên Server.'}
             </p>
 
             {ultra.unlocked ? (
               <div style={{ marginTop: 12 }}>
                 <div className="g8d-kicker" style={{ marginBottom: 6 }}>
-                  MÔ HÌNH ƯU TIÊN KHI CHAT TRÊN ĐIỆN THOẠI
+                  MÔ HÌNH ƯU TIÊN KHI CHAT
                 </div>
                 <div className="g8d-seg-mini g8d-w-full" style={{ flexWrap: 'wrap' }}>
                   {(
@@ -184,16 +543,28 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                     type="button"
                     className="g8d-btn-outline"
                     style={{ flex: 1 }}
+                    disabled={probingUltra}
+                    onClick={async () => {
+                      setProbingUltra(true);
+                      await ultra.refreshUltraStatus();
+                      setProbingUltra(false);
+                    }}
+                  >
+                    {probingUltra ? 'Đang kiểm tra...' : 'Kiểm tra kết nối'}
+                  </button>
+                  <button
+                    type="button"
+                    className="g8d-btn-outline"
                     onClick={() => setShowAdvancedProxy((v) => !v)}
                   >
-                    {showAdvancedProxy ? 'Ẩn Proxy URL' : 'Cấu hình Proxy URL'}
+                    {showAdvancedProxy ? 'Ẩn URL' : 'Đổi URL'}
                   </button>
                   <button
                     type="button"
                     className="g8d-btn-outline"
                     onClick={ultra.lockOnThisDevice}
                   >
-                    Khoá lại
+                    Khoá
                   </button>
                 </div>
               </div>
@@ -292,26 +663,30 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             )}
           </div>
 
-          <div className="g8d-card">
-            <div className="g8d-row-between" style={{ marginBottom: 8 }}>
-              <div>
-                <div className="g8d-kicker">TRÌNH DUYỆT HIỆN TẠI: {env.browserLabel.toUpperCase()}</div>
-                <div className="g8d-card-title">Cài Đặt Ngoài Màn Hình Chính</div>
+          {!env.isStandalonePWA && (
+            <div className="g8d-card">
+              <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+                <div>
+                  <div className="g8d-kicker">TRÌNH DUYỆT HIỆN TẠI: {env.browserLabel.toUpperCase()}</div>
+                  <div className="g8d-card-title">Cài Đặt Ngoài Màn Hình Chính</div>
+                </div>
               </div>
-            </div>
 
-            <InstallAppGuideContent
-              env={env}
-              syncCode={syncCode}
-              canPromptNativeInstall={canPromptNativeInstall}
-              onPromptNativeInstall={onPromptNativeInstall}
-            />
-          </div>
+              <InstallAppGuideContent
+                env={env}
+                syncCode={syncCode}
+                canPromptNativeInstall={canPromptNativeInstall}
+                onPromptNativeInstall={onPromptNativeInstall}
+              />
+            </div>
+          )}
 
           <div className="g8d-card g8d-push-hero">
             <div className="g8d-row-between">
               <div>
-                <div className="g8d-kicker">APPLE WEB PUSH (APNs) · ĐỘC LẬP 100%</div>
+                <div className="g8d-kicker">
+                  {env.isStandalonePWA ? 'APP MÀN HÌNH CHÍNH iOS · APNs' : 'APPLE WEB PUSH (APNs)'}
+                </div>
                 <div className="g8d-card-title">Thông Báo Trên Màn Hình Khóa iOS</div>
               </div>
               <span
@@ -465,7 +840,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
           <div className="g8d-card">
             <div className="g8d-row-between">
               <div>
-                <div className="g8d-kicker">ĐỒNG BỘ ĐÁM MÂY (SAFARI ⇄ MÀN HÌNH CHÍNH ⇄ MAC)</div>
+                <div className="g8d-kicker">ĐỒNG BỘ ĐÁM MÂY & SAO LƯU</div>
                 <div className="g8d-card-title">Mã cá nhân: {syncCode}</div>
               </div>
               <span className="g8d-tiny-meta">
@@ -602,156 +977,91 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
         </>
       )}
 
-      {section === 'body' && (
-        <>
-          <div className="g8d-card">
-            <div className="g8d-row-between">
-              <div>
-                <div className="g8d-kicker">CHỈ SỐ SINH HỌC CÁ NHÂN</div>
-                <div className="g8d-card-title">
-                  BMI {metrics.bmi} · Cơ nạc {metrics.lbm}kg (~{metrics.bodyFatPct}% mỡ)
-                </div>
-              </div>
-              <span className="g8d-badge is-orange">{metrics.weeklyRateKg}kg/tuần</span>
-            </div>
+      <BottomSheet
+        open={editBodyOpen}
+        title="Cập Nhật Chỉ Số Cơ Thể"
+        subtitle="Tự động tính lại BMR, TDEE, Calo mục tiêu và nhịp Zone 2"
+        onClose={() => setEditBodyOpen(false)}
+      >
+        <div className="g8d-stack-sm">
+          <div className="g8d-grid-2">
+            <label className="g8d-field-lbl">
+              Cân nặng hiện tại (kg)
+              <input
+                type="number"
+                inputMode="decimal"
+                enterKeyHint="done"
+                step="0.5"
+                value={draftWeight}
+                onChange={(e) => setDraftWeight(e.target.value)}
+                className="g8d-num-input"
+              />
+            </label>
 
-            <div className="g8d-stat-grid-4" style={{ marginTop: 12 }}>
-              <div className="g8d-stat-box">
-                <span className="g8d-stat-val">{metrics.bmr}</span>
-                <span className="g8d-stat-lbl">BMR nền</span>
-              </div>
-              <div className="g8d-stat-box">
-                <span className="g8d-stat-val">{metrics.tdee}</span>
-                <span className="g8d-stat-lbl">TDEE tiêu hao</span>
-              </div>
-              <div className="g8d-stat-box is-orange">
-                <span className="g8d-stat-val">{metrics.targetKcal}</span>
-                <span className="g8d-stat-lbl">Calo mục tiêu</span>
-              </div>
-              <div className="g8d-stat-box">
-                <span className="g8d-stat-val">{metrics.proteinG}g</span>
-                <span className="g8d-stat-lbl">Đạm giữ cơ</span>
-              </div>
-            </div>
+            <label className="g8d-field-lbl">
+              Cân nặng đích (kg)
+              <input
+                type="number"
+                inputMode="decimal"
+                enterKeyHint="done"
+                step="0.5"
+                value={draftTargetWeight}
+                onChange={(e) => setDraftTargetWeight(e.target.value)}
+                className="g8d-num-input"
+              />
+            </label>
 
-            <div className="g8d-overload-reason" style={{ marginTop: 10 }}>
-              <strong>Đi bộ dốc đốt mỡ bảo vệ khớp gối:</strong> Nhịp tim tối ưu Zone 2 là{' '}
-              <strong>
-                {metrics.zone2Min}–{metrics.zone2Max} bpm
-              </strong>{' '}
-              (Dốc 8–10%, tốc độ 4.5 km/h sau buổi tạ · Dự kiến ~{metrics.weeksToGoal} tuần về mốc{' '}
-              {p.targetWeightKg}kg).
-            </div>
+            <label className="g8d-field-lbl">
+              Chiều cao (cm)
+              <input
+                type="number"
+                inputMode="numeric"
+                enterKeyHint="done"
+                value={draftHeight}
+                onChange={(e) => setDraftHeight(e.target.value)}
+                className="g8d-num-input"
+              />
+            </label>
 
-            <button
-              type="button"
-              className="g8d-btn-primary g8d-w-full"
-              style={{ marginTop: 12 }}
-              onClick={() =>
-                onOpenCoach(
-                  'Hãy phân tích thể trạng hiện tại của tao (cân nặng, BMI, TDEE, tỷ lệ mỡ), đánh giá ưu nhược điểm của 3 chiến lược Giảm mỡ giữ cơ, Siết nét và Tăng cơ rồi đề xuất chiến lược + lịch tập tham khảo phù hợp nhất để tao bấm áp dụng',
-                  'Thể Trạng'
-                )
-              }
-            >
-              Nhờ ChatDVT phân tích thể trạng & chiến lược
-            </button>
+            <label className="g8d-field-lbl">
+              Tuổi
+              <input
+                type="number"
+                inputMode="numeric"
+                enterKeyHint="done"
+                value={draftAge}
+                onChange={(e) => setDraftAge(e.target.value)}
+                className="g8d-num-input"
+              />
+            </label>
+
+            <label className="g8d-field-lbl">
+              Giờ tập chính
+              <input
+                type="time"
+                value={draftWorkoutTime}
+                onChange={(e) => setDraftWorkoutTime(e.target.value || '06:00')}
+                className="g8d-num-input g8d-time-input"
+              />
+            </label>
+
+            <label className="g8d-field-lbl">
+              Báo trước giờ ngủ (phút)
+              <input
+                type="number"
+                inputMode="numeric"
+                enterKeyHint="done"
+                step="5"
+                value={draftPreSleep}
+                onChange={(e) => setDraftPreSleep(e.target.value)}
+                className="g8d-num-input"
+              />
+            </label>
           </div>
 
-          <div className="g8d-card">
-            <div className="g8d-kicker" style={{ marginBottom: 10 }}>
-              CẬP NHẬT THÔNG SỐ CƠ THỂ & CA TẬP
-            </div>
-
-            <div className="g8d-grid-2">
-              <label className="g8d-field-lbl">
-                Cân nặng hiện tại (kg)
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  enterKeyHint="done"
-                  step="0.5"
-                  value={p.weightKg}
-                  onChange={(e) =>
-                    onUpdateProfileField('weightKg', Number(e.target.value) || 115)
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-
-              <label className="g8d-field-lbl">
-                Cân nặng đích (kg)
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  enterKeyHint="done"
-                  step="0.5"
-                  value={p.targetWeightKg}
-                  onChange={(e) =>
-                    onUpdateProfileField('targetWeightKg', Number(e.target.value) || 95)
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-
-              <label className="g8d-field-lbl">
-                Chiều cao (cm)
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  enterKeyHint="done"
-                  value={p.heightCm}
-                  onChange={(e) =>
-                    onUpdateProfileField('heightCm', Number(e.target.value) || 182)
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-
-              <label className="g8d-field-lbl">
-                Tuổi
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  enterKeyHint="done"
-                  value={p.age}
-                  onChange={(e) =>
-                    onUpdateProfileField('age', Number(e.target.value) || 27)
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-
-              <label className="g8d-field-lbl">
-                Giờ tập chính
-                <input
-                  type="time"
-                  value={p.workoutTime}
-                  onChange={(e) =>
-                    onUpdateProfileField('workoutTime', e.target.value || '06:00')
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-
-              <label className="g8d-field-lbl">
-                Báo trước giờ ngủ (phút)
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  enterKeyHint="done"
-                  step="5"
-                  value={p.preSleepLeadMin}
-                  onChange={(e) =>
-                    onUpdateProfileField('preSleepLeadMin', Number(e.target.value) || 30)
-                  }
-                  className="g8d-num-input"
-                />
-              </label>
-            </div>
-
-            <div className="g8d-kicker" style={{ marginTop: 14, marginBottom: 8 }}>
-              CHIẾN LƯỢC DINH DƯỠNG HIỆN TẠI
+          <div>
+            <div className="g8d-kicker" style={{ marginBottom: 8 }}>
+              CHIẾN LƯỢC DINH DƯỠNG
             </div>
             <div className="g8d-seg-mini g8d-w-full">
               {(
@@ -764,16 +1074,24 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 <button
                   key={g.id}
                   type="button"
-                  className={p.goal === g.id ? 'is-active' : ''}
-                  onClick={() => onUpdateProfileField('goal', g.id)}
+                  className={draftGoal === g.id ? 'is-active' : ''}
+                  onClick={() => setDraftGoal(g.id)}
                 >
                   {g.label}
                 </button>
               ))}
             </div>
           </div>
-        </>
-      )}
+
+          <button
+            type="button"
+            className="g8d-btn-primary g8d-w-full"
+            onClick={handleSaveBodyMetrics}
+          >
+            Lưu thông số cơ thể
+          </button>
+        </div>
+      </BottomSheet>
     </div>
   );
 };

@@ -32,16 +32,28 @@ function resolveInitialTab(): ActiveTabId {
   return 'coach';
 }
 
+function isTextEntryElement(el: Element | null): boolean {
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === 'TEXTAREA') return true;
+  if (tag === 'INPUT') {
+    const type = ((el as HTMLInputElement).type || 'text').toLowerCase();
+    return !['checkbox', 'radio', 'button', 'submit', 'reset', 'file', 'range'].includes(type);
+  }
+  return (el as HTMLElement).isContentEditable === true;
+}
+
 export const Gym8dApp: React.FC = () => {
   const store = useGymStore();
   const { avatarUrl, fallbackUrl } = useChatDvtAvatar();
   const [activeTab, setActiveTab] = useState<ActiveTabId>(() => resolveInitialTab());
-  const [profileSection, setProfileSection] = useState<'push' | 'body'>('push');
+  const [profileSection, setProfileSection] = useState<'push' | 'body'>('body');
   const [coachDraft, setCoachDraft] = useState<string>('');
   const [returnTarget, setReturnTarget] = useState<{
     tab: ActiveTabId;
     label: string;
   } | null>(null);
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState<boolean>(false);
 
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
@@ -52,6 +64,76 @@ export const Gym8dApp: React.FC = () => {
     store.state.syncCode,
     push.pushStatus === 'subscribed' && store.state.pushPrefs.restTimerPush
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    let blurTimer: number | null = null;
+
+    const isTouchDevice =
+      push.env.isMobile ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+
+    const syncViewport = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+      const fullH = window.innerHeight;
+      const curH = vv ? vv.height : fullH;
+      const curTop = vv ? Math.max(0, vv.offsetTop) : 0;
+      root.style.setProperty('--g8d-vv-height', `${Math.round(curH)}px`);
+      root.style.setProperty('--g8d-vv-top', `${Math.round(curTop)}px`);
+
+      const inset = Math.max(0, fullH - curH - curTop);
+      const focusedText = isTextEntryElement(document.activeElement);
+      setIsKeyboardOpen(inset > 44 || (isTouchDevice && focusedText));
+    };
+
+    const handleFocusIn = (ev: FocusEvent) => {
+      if (blurTimer !== null) {
+        window.clearTimeout(blurTimer);
+        blurTimer = null;
+      }
+      if (isTextEntryElement(ev.target as Element | null) && isTouchDevice) {
+        setIsKeyboardOpen(true);
+      }
+      window.requestAnimationFrame(syncViewport);
+      window.setTimeout(syncViewport, 120);
+      window.setTimeout(syncViewport, 320);
+    };
+
+    const handleFocusOut = () => {
+      if (blurTimer !== null) window.clearTimeout(blurTimer);
+      blurTimer = window.setTimeout(() => {
+        if (!isTextEntryElement(document.activeElement)) {
+          window.scrollTo(0, 0);
+        }
+        syncViewport();
+      }, 90);
+    };
+
+    syncViewport();
+    vv?.addEventListener('resize', syncViewport);
+    vv?.addEventListener('scroll', syncViewport);
+    window.addEventListener('resize', syncViewport);
+    window.addEventListener('scroll', syncViewport, { passive: true });
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      if (blurTimer !== null) window.clearTimeout(blurTimer);
+      vv?.removeEventListener('resize', syncViewport);
+      vv?.removeEventListener('scroll', syncViewport);
+      window.removeEventListener('resize', syncViewport);
+      window.removeEventListener('scroll', syncViewport);
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+      root.style.removeProperty('--g8d-vv-height');
+      root.style.removeProperty('--g8d-vv-top');
+    };
+  }, [push.env.isMobile]);
 
   useEffect(() => {
     const splash = document.getElementById('app-splash');
@@ -112,7 +194,11 @@ export const Gym8dApp: React.FC = () => {
   const isScheduleGroup = activeTab === 'schedule' || activeTab === 'streak';
 
   return (
-    <div className={`g8d-shell ${activeTab === 'coach' ? 'is-coach-mode' : ''}`}>
+    <div
+      className={`g8d-shell ${activeTab === 'coach' ? 'is-coach-mode' : ''} ${
+        isKeyboardOpen ? 'is-keyboard-open' : ''
+      }`}
+    >
       <CompactHeader
         streakCount={store.streakSummary.currentStreak}
         syncStatus={store.syncStatus}
@@ -152,6 +238,7 @@ export const Gym8dApp: React.FC = () => {
       >
         {activeTab === 'coach' && (
           <ChatDvtCoachView
+            isKeyboardOpen={isKeyboardOpen}
             initialDraft={coachDraft}
             onConsumeDraft={consumeCoachDraft}
             returnTab={returnTarget}
@@ -293,6 +380,9 @@ export const Gym8dApp: React.FC = () => {
           <BodyAndSettingsView
             initialSection={profileSection}
             metrics={store.metrics}
+            streakSummary={store.streakSummary}
+            personalRecords={store.personalRecords}
+            dayNotesByDate={store.state.dayNotesByDate || {}}
             syncCode={store.state.syncCode}
             lastSyncedAt={store.state.lastSyncedAt}
             syncStatus={store.syncStatus}
@@ -320,6 +410,8 @@ export const Gym8dApp: React.FC = () => {
             onExportJSON={store.exportBackupJSON}
             onImportJSON={store.importBackupJSON}
             onResetConfirmed={store.resetAllDataConfirmed}
+            onOpenWorkoutForDate={openWorkoutForDate}
+            onMakeupMissed={store.makeupMissedSession}
             onOpenCoach={openCoachFromContext}
             ultra={ultra}
           />
@@ -398,7 +490,10 @@ export const Gym8dApp: React.FC = () => {
           type="button"
           className={activeTab === 'profile' ? 'is-active' : ''}
           aria-current={activeTab === 'profile' ? 'page' : undefined}
-          onClick={() => setActiveTab('profile')}
+          onClick={() => {
+            setProfileSection('body');
+            setActiveTab('profile');
+          }}
         >
           <span className="g8d-tab-icon-slot">
             <SvgIcon name="user" size={22} filled={activeTab === 'profile'} />

@@ -287,6 +287,9 @@ export interface AgentSelfAudit {
   habitCheck?: string;
   autoAdjustments?: string[];
   engineLabel?: string;
+  modelId?: string;
+  tier?: 'ultra' | 'free';
+  fallbackNote?: string;
 }
 
 export type AgentActionProposal =
@@ -431,6 +434,10 @@ export interface AgentChatMessage {
   undone?: boolean;
   quickReplies?: string[];
   selfAudit?: AgentSelfAudit | null;
+  modelId?: string;
+  tier?: 'ultra' | 'free';
+  engineLabel?: string;
+  fallbackNote?: string;
 }
 
 export interface GymStateV10 {

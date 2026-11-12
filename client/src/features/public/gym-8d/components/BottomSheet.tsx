@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SvgIcon } from './Icons';
 
 interface BottomSheetProps {
@@ -168,7 +169,12 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     }
   };
 
-  return (
+  const portalTarget =
+    typeof document !== 'undefined'
+      ? document.querySelector('.g8d-shell') || document.body
+      : null;
+
+  const sheetContent = (
     <div
       ref={backdropRef}
       className={`g8d-sheet-backdrop ${entered ? 'is-open' : ''}`}
@@ -212,4 +218,6 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       </div>
     </div>
   );
+
+  return portalTarget ? createPortal(sheetContent, portalTarget) : sheetContent;
 };

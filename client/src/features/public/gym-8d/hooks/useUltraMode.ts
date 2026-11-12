@@ -46,9 +46,23 @@ export interface UltraModeController {
   preferredModel: UltraModelChoice;
   proxyOnline: boolean;
   proxyUrlMasked: string;
+  proxyReason: string;
+  availableModels: string[];
+  lastUsedEngine: {
+    model: string;
+    tier: 'ultra' | 'free';
+    label: string;
+    fallbackNote?: string;
+  } | null;
   busy: boolean;
   statusMessage: string;
   setPreferredModel: (model: UltraModelChoice) => void;
+  recordUsedEngine: (info: {
+    model: string;
+    tier: 'ultra' | 'free';
+    label: string;
+    fallbackNote?: string;
+  }) => void;
   unlockOnThisDevice: (params: {
     passkey: string;
     customProxyUrl?: string;
@@ -66,6 +80,14 @@ export function useUltraMode(): UltraModeController {
   );
   const [proxyOnline, setProxyOnline] = useState<boolean>(false);
   const [proxyUrlMasked, setProxyUrlMasked] = useState<string>('http://127.0.0.1:8317/v1');
+  const [proxyReason, setProxyReason] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [lastUsedEngine, setLastUsedEngine] = useState<{
+    model: string;
+    tier: 'ultra' | 'free';
+    label: string;
+    fallbackNote?: string;
+  } | null>(null);
   const [busy, setBusy] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<string>('');
 
@@ -73,6 +95,8 @@ export function useUltraMode(): UltraModeController {
     const activeTok = overrideToken !== undefined ? overrideToken : token;
     if (!activeTok) {
       setProxyOnline(false);
+      setProxyReason('');
+      setAvailableModels([]);
       return;
     }
     try {
@@ -86,12 +110,16 @@ export function useUltraMode(): UltraModeController {
         setToken(null);
         saveStoredUltra(null);
         setProxyOnline(false);
+        setProxyReason('');
+        setAvailableModels([]);
         return;
       }
       setProxyOnline(Boolean(body.proxyOnline));
       if (typeof body.proxyUrlMasked === 'string') {
         setProxyUrlMasked(body.proxyUrlMasked);
       }
+      setProxyReason(typeof body.proxyReason === 'string' ? body.proxyReason : '');
+      setAvailableModels(Array.isArray(body.availableModels) ? body.availableModels : []);
     } catch {}
   }, [token]);
 
@@ -109,6 +137,16 @@ export function useUltraMode(): UltraModeController {
       }
     },
     [token]
+  );
+
+  const recordUsedEngine = useCallback(
+    (info: { model: string; tier: 'ultra' | 'free'; label: string; fallbackNote?: string }) => {
+      setLastUsedEngine(info);
+      if (info.tier === 'ultra') {
+        setProxyOnline(true);
+      }
+    },
+    []
   );
 
   const unlockOnThisDevice = useCallback(
@@ -137,11 +175,13 @@ export function useUltraMode(): UltraModeController {
         setToken(data.token);
         setProxyOnline(Boolean(data.proxyOnline));
         if (data.proxyUrlMasked) setProxyUrlMasked(data.proxyUrlMasked);
+        setProxyReason(typeof data.proxyReason === 'string' ? data.proxyReason : '');
+        setAvailableModels(Array.isArray(data.availableModels) ? data.availableModels : []);
         saveStoredUltra({ token: data.token, preferredModel });
         setStatusMessage(
           data.proxyOnline
-            ? 'Đã mở khoá tài khoản Ultra riêng trên điện thoại này (CLIProxyAPI đang trực tuyến).'
-            : 'Đã mở khoá quyền chủ sở hữu trên điện thoại này (khi Proxy chưa bật sẽ tự dùng Free dự phòng).'
+            ? `Đã mở khoá Ultra trực tuyến (${Array.isArray(data.availableModels) ? data.availableModels.length : 0} model sẵn sàng).`
+            : `Đã mở khoá quyền chủ sở hữu, nhưng CLIProxyAPI trên Server hiện chưa phản hồi (${data.proxyReason || 'đang chạy Free dự phòng'}).`
         );
         return true;
       } catch {
@@ -157,6 +197,9 @@ export function useUltraMode(): UltraModeController {
   const lockOnThisDevice = useCallback(() => {
     setToken(null);
     setProxyOnline(false);
+    setProxyReason('');
+    setAvailableModels([]);
+    setLastUsedEngine(null);
     saveStoredUltra(null);
     setStatusMessage('Đã khoá chế độ Ultra trên thiết bị này.');
   }, []);
@@ -167,9 +210,13 @@ export function useUltraMode(): UltraModeController {
     preferredModel,
     proxyOnline,
     proxyUrlMasked,
+    proxyReason,
+    availableModels,
+    lastUsedEngine,
     busy,
     statusMessage,
     setPreferredModel,
+    recordUsedEngine,
     unlockOnThisDevice,
     lockOnThisDevice,
     refreshUltraStatus: () => refreshUltraStatus(),
