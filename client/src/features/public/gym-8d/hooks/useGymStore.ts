@@ -22,8 +22,10 @@ import {
 import {
   CANONICAL_STORAGE_KEY,
   CURRENT_SCHEMA_VERSION,
+  DEVICE_SYNC_CODE_STORAGE_KEY,
   countStateActivityScore,
   createFreshDefaultState,
+  generateRandomSyncCode,
   loadAndMigrateLocalState,
   mergeGymStates,
   migrateRawState,
@@ -33,6 +35,7 @@ import {
 import type {
   AgentActionProposal,
   AgentChatMessage,
+  CoachPersonaId,
   CustomMacroItem,
   GymBranchId,
   GymStateV10,
@@ -46,6 +49,19 @@ import type {
 import { playGymChime } from './useWallClockRestTimer';
 
 export type CloudSyncStatus = 'idle' | 'syncing' | 'synced' | 'offline';
+
+export interface OnboardingSetupPayload {
+  name: string;
+  gender: 'male' | 'female';
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  targetWeightKg: number;
+  goal: 'cut' | 'recomp' | 'bulk';
+  workoutTime: string;
+  coachPersona: CoachPersonaId;
+  customSyncCode?: string;
+}
 
 export interface ToastBanner {
   title: string;
@@ -168,7 +184,7 @@ export function useGymStore() {
   );
 
   const pullFromCloud = useCallback(
-    async (targetCode?: string, notify = false) => {
+    async (targetCode?: string, notify = false, replaceLocalIfDifferentCode = false) => {
       if (typeof window === 'undefined' || window.location.protocol === 'file:') {
         initialCloudDoneRef.current = true;
         setSyncStatus('offline');
@@ -190,22 +206,32 @@ export function useGymStore() {
         const payload = await res.json();
         if (payload?.data) {
           const localSnap = latestStateRef.current;
-          const merged = mergeGymStates(localSnap, payload.data, todayISO);
+          const merged = replaceLocalIfDifferentCode
+            ? migrateRawState(payload.data, todayISO) || mergeGymStates(localSnap, payload.data, todayISO)
+            : mergeGymStates(localSnap, payload.data, todayISO);
           const hhmm = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
-          const withStamp = { ...merged, syncCode: cleanCode, lastSyncedAt: hhmm };
+          const withStamp: GymStateV10 = {
+            ...merged,
+            hasOnboarded: true,
+            syncCode: cleanCode,
+            lastSyncedAt: hhmm,
+          };
+          try {
+            localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, cleanCode);
+          } catch {}
           suppressNextAutoPushRef.current = true;
           latestStateRef.current = withStamp;
           saveLocalStateSafely(withStamp);
           setState(withStamp);
           initialCloudDoneRef.current = true;
           setSyncStatus('synced');
-          if (countStateActivityScore(localSnap) > countStateActivityScore(payload.data)) {
+          if (!replaceLocalIfDifferentCode && countStateActivityScore(localSnap) > countStateActivityScore(payload.data)) {
             await pushToCloud(withStamp, cleanCode, false, true);
           }
           if (notify) {
             showToast(
               `Đồng bộ hoàn tất (${cleanCode})`,
-              `Đã gộp ${Object.keys(withStamp.dayStatusByDate).length} buổi tập và ${withStamp.weightLogs.length} mốc cân.`,
+              `Đã tải ${Object.keys(withStamp.dayStatusByDate).length} buổi tập và ${withStamp.weightLogs.length} mốc cân.`,
               'green'
             );
           }
@@ -227,11 +253,12 @@ export function useGymStore() {
   );
 
   useEffect(() => {
+    if (!state.hasOnboarded) return;
     pullFromCloud(latestStateRef.current.syncCode, false);
-  }, [pullFromCloud]);
+  }, [pullFromCloud, state.hasOnboarded]);
 
   useEffect(() => {
-    if (!initialCloudDoneRef.current) return;
+    if (!state.hasOnboarded || !initialCloudDoneRef.current) return;
     if (suppressNextAutoPushRef.current) {
       suppressNextAutoPushRef.current = false;
       return;
@@ -244,7 +271,11 @@ export function useGymStore() {
 
   useEffect(() => {
     const onVisChange = () => {
-      if (document.visibilityState === 'hidden' && initialCloudDoneRef.current) {
+      if (
+        document.visibilityState === 'hidden' &&
+        latestStateRef.current.hasOnboarded &&
+        initialCloudDoneRef.current
+      ) {
         pushToCloud(latestStateRef.current, latestStateRef.current.syncCode, false, true);
       }
     };
@@ -1246,11 +1277,183 @@ export function useGymStore() {
 
   const setSyncCodeAndPull = useCallback(
     async (rawNewCode: string) => {
-      const clean = normalizeSyncCode(rawNewCode);
-      updateState((prev) => ({ ...prev, syncCode: clean }));
-      await pullFromCloud(clean, true);
+      const trimmed = String(rawNewCode || '')
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, '')
+        .slice(0, 32);
+      if (trimmed.length < 2) {
+        showToast('Mã chưa hợp lệ', 'Vui lòng nhập từ 2 ký tự chữ hoặc số trở lên.', 'orange');
+        return;
+      }
+      const prevCode = latestStateRef.current.syncCode;
+      const isDifferentCode = trimmed !== prevCode;
+      try {
+        localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, trimmed);
+      } catch {}
+      updateState((prev) => ({ ...prev, syncCode: trimmed, hasOnboarded: true }));
+      await pullFromCloud(trimmed, true, isDifferentCode);
     },
-    [pullFromCloud, updateState]
+    [pullFromCloud, showToast, updateState]
+  );
+
+  const restoreExistingCodeOnOnboarding = useCallback(
+    async (rawCode: string): Promise<boolean> => {
+      const trimmed = String(rawCode || '')
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, '')
+        .slice(0, 32);
+      if (trimmed.length < 2) {
+        showToast('Mã chưa hợp lệ', 'Nhập đúng mã đồng bộ (tối thiểu 2 ký tự chữ/số).', 'orange');
+        return false;
+      }
+      try {
+        setSyncStatus('syncing');
+        const res = await fetch(`/api/gym8d/load/${encodeURIComponent(trimmed)}`, {
+          cache: 'no-store',
+        });
+        if (res.status === 404) {
+          setSyncStatus('idle');
+          showToast(
+            `Chưa tìm thấy mã ${trimmed}`,
+            'Kiểm tra lại mã đồng bộ từ máy cũ hoặc thiết lập hồ sơ mới bên dưới.',
+            'orange'
+          );
+          return false;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const payload = await res.json();
+        const migrated = migrateRawState(payload?.data || {}, todayISO);
+        if (!migrated) throw new Error('Invalid state');
+        const hhmm = `${String(new Date().getHours()).padStart(2, '0')}:${String(
+          new Date().getMinutes()
+        ).padStart(2, '0')}`;
+        const restored: GymStateV10 = {
+          ...migrated,
+          syncCode: trimmed,
+          hasOnboarded: true,
+          lastSyncedAt: hhmm,
+        };
+        try {
+          localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, trimmed);
+        } catch {}
+        suppressNextAutoPushRef.current = true;
+        initialCloudDoneRef.current = true;
+        latestStateRef.current = restored;
+        saveLocalStateSafely(restored);
+        setState(restored);
+        setSyncStatus('synced');
+        showToast(
+          `Đã khôi phục hồ sơ (${trimmed})`,
+          `Tải thành công ${Object.keys(restored.dayStatusByDate).length} buổi tập và dữ liệu thể trạng.`,
+          'green'
+        );
+        return true;
+      } catch {
+        setSyncStatus('offline');
+        showToast('Không tải được máy chủ', 'Kiểm tra kết nối mạng rồi thử lại nhé.', 'orange');
+        return false;
+      }
+    },
+    [showToast, todayISO]
+  );
+
+  const completeOnboarding = useCallback(
+    async (setup: OnboardingSetupPayload): Promise<boolean> => {
+      const cleanName = setup.name.trim().slice(0, 40);
+      const w = Math.min(260, Math.max(35, Number(setup.weightKg) || 72));
+      const tw = Math.min(220, Math.max(35, Number(setup.targetWeightKg) || 66));
+      const h = Math.min(230, Math.max(120, Math.round(Number(setup.heightCm) || 172)));
+      const a = Math.min(90, Math.max(14, Math.round(Number(setup.age) || 26)));
+      const cleanCode = normalizeSyncCode(
+        setup.customSyncCode || latestStateRef.current.syncCode
+      );
+
+      // Prevent accidentally overwriting an existing user's cloud profile when creating a brand-new profile
+      if (typeof window !== 'undefined' && window.location.protocol !== 'file:') {
+        try {
+          const checkRes = await fetch(`/api/gym8d/load/${encodeURIComponent(cleanCode)}`, {
+            cache: 'no-store',
+          });
+          if (checkRes.ok) {
+            showToast(
+              `Mã ${cleanCode} đã có người dùng`,
+              'Hãy đổi sang mã cá nhân khác hoặc bấm Khôi phục nếu đây là mã cũ của bạn.',
+              'orange'
+            );
+            return false;
+          }
+        } catch {
+          // Offline mode: proceed with local profile creation
+        }
+      }
+
+      try {
+        localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, cleanCode);
+      } catch {}
+
+      const nextState: GymStateV10 = {
+        ...latestStateRef.current,
+        syncCode: cleanCode,
+        hasOnboarded: true,
+        coachPersona: setup.coachPersona,
+        agentMessages: [],
+        profileInput: {
+          ...latestStateRef.current.profileInput,
+          name: cleanName,
+          gender: setup.gender,
+          age: a,
+          heightCm: h,
+          weightKg: w,
+          targetWeightKg: tw,
+          goal: setup.goal,
+          workoutTime: setup.workoutTime || '18:00',
+          shortLabel: `${w}kg · ${h}cm`,
+          label: `${cleanName || 'Hồ sơ'} · ${w}kg · ${h}cm`,
+        },
+        weightLogs: [
+          {
+            isoDate: todayISO,
+            dateLabel: formatVNShortDate(todayISO),
+            weight: w,
+            note: 'Cân nặng khởi điểm',
+          },
+        ],
+        schemaVersion: CURRENT_SCHEMA_VERSION,
+        updatedAt: new Date().toISOString(),
+      };
+
+      suppressNextAutoPushRef.current = true;
+      initialCloudDoneRef.current = true;
+      latestStateRef.current = nextState;
+      saveLocalStateSafely(nextState);
+      setState(nextState);
+      await pushToCloud(nextState, cleanCode, false, true);
+      showToast(
+        `Chào ${cleanName || 'bạn'} · Mã ${cleanCode}`,
+        'Hồ sơ cá nhân đã tạo riêng biệt và lưu đồng bộ an toàn.',
+        'green'
+      );
+      return true;
+    },
+    [pushToCloud, showToast, todayISO]
+  );
+
+  const setCoachPersona = useCallback(
+    (persona: CoachPersonaId) => {
+      updateState((prev) => ({ ...prev, coachPersona: persona }));
+      showToast(
+        persona === 'savage'
+          ? 'Đã bật giọng Cà Khịa ChatDVT'
+          : 'Đã chuyển về giọng Chuẩn PT',
+        persona === 'savage'
+          ? 'Chuẩn mỏ hỗn Discord 8D — lười tập hay ăn bậy là bị bóc phốt thẳng mặt.'
+          : 'Chuyên nghiệp, thẳng thắn và khích lệ kỷ luật bền bỉ.',
+        persona === 'savage' ? 'orange' : 'green'
+      );
+    },
+    [showToast, updateState]
   );
 
   const exportBackupJSON = useCallback(() => {
@@ -1288,17 +1491,20 @@ export function useGymStore() {
   );
 
   const resetAllDataConfirmed = useCallback(async () => {
-    const fresh = createFreshDefaultState(todayISO);
-    fresh.syncCode = latestStateRef.current.syncCode;
+    const newDeviceCode = generateRandomSyncCode();
     try {
+      localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, newDeviceCode);
       localStorage.removeItem(CANONICAL_STORAGE_KEY);
     } catch {}
+    const fresh = createFreshDefaultState(todayISO);
+    fresh.syncCode = newDeviceCode;
+    fresh.hasOnboarded = false;
+    initialCloudDoneRef.current = false;
     latestStateRef.current = fresh;
     saveLocalStateSafely(fresh);
     setState(fresh);
-    await pushToCloud(fresh, fresh.syncCode, false, true);
-    showToast('Đã đặt lại dữ liệu gốc', 'Toàn bộ lịch tập đã về trạng thái khởi đầu.', 'orange');
-  }, [pushToCloud, showToast, todayISO]);
+    showToast('Đã tạo mới hồ sơ thiết bị', 'Bạn có thể thiết lập hồ sơ mới hoặc nhập lại mã đồng bộ cũ.', 'orange');
+  }, [showToast, todayISO]);
 
   return {
     state,
@@ -1353,6 +1559,9 @@ export function useGymStore() {
     pushToCloud,
     pullFromCloud,
     setSyncCodeAndPull,
+    restoreExistingCodeOnOnboarding,
+    completeOnboarding,
+    setCoachPersona,
     exportBackupJSON,
     importBackupJSON,
     resetAllDataConfirmed,

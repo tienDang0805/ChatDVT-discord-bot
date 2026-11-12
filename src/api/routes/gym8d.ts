@@ -434,7 +434,10 @@ router.get('/gym8d/push/vapid-public-key', preventResponseCaching, async (_req, 
 
 router.post('/gym8d/push/subscribe', preventResponseCaching, async (req, res) => {
   try {
-    const code = normalizeCode(req.body?.code) || 'TIEN8D';
+    const code = normalizeCode(req.body?.code);
+    if (!code) {
+      return res.status(400).json({ error: 'Thiếu mã đồng bộ cá nhân hợp lệ' });
+    }
     const sub = req.body?.subscription;
     const endpoint = typeof sub?.endpoint === 'string' ? sub.endpoint : '';
     const p256dh = typeof sub?.keys?.p256dh === 'string' ? sub.keys.p256dh : '';
@@ -485,7 +488,10 @@ router.post('/gym8d/push/unsubscribe', preventResponseCaching, async (req, res) 
 
 router.post('/gym8d/push/test', preventResponseCaching, async (req, res) => {
   try {
-    const code = normalizeCode(req.body?.code) || 'TIEN8D';
+    const code = normalizeCode(req.body?.code);
+    if (!code) {
+      return res.status(400).json({ error: 'Thiếu mã đồng bộ cá nhân hợp lệ' });
+    }
     const delaySec = Math.max(0, Math.min(30, Number(req.body?.delaySec ?? 5)));
     await ensureGymTablesExist();
     const subCount = await (prisma as any).gymPushSubscription.count({
@@ -511,7 +517,10 @@ router.post('/gym8d/push/test', preventResponseCaching, async (req, res) => {
 
 router.post('/gym8d/push/rest-timer', preventResponseCaching, async (req, res) => {
   try {
-    const code = normalizeCode(req.body?.code) || 'TIEN8D';
+    const code = normalizeCode(req.body?.code);
+    if (!code) {
+      return res.status(400).json({ error: 'Thiếu mã đồng bộ cá nhân hợp lệ' });
+    }
     const delaySec = Math.max(5, Math.min(600, Number(req.body?.delaySec || 90)));
     const exerciseName = String(req.body?.exerciseName || 'Bài tập').slice(0, 80);
     const nextSetLabel = String(req.body?.nextSetLabel || 'Vào hiệp tiếp theo').slice(0, 100);
@@ -538,7 +547,10 @@ router.post('/gym8d/push/rest-timer', preventResponseCaching, async (req, res) =
 });
 
 router.post('/gym8d/push/rest-timer/cancel', preventResponseCaching, (req, res) => {
-  const code = normalizeCode(req.body?.code) || 'TIEN8D';
+  const code = normalizeCode(req.body?.code);
+  if (!code) {
+    return res.status(400).json({ error: 'Thiếu mã đồng bộ cá nhân hợp lệ' });
+  }
   const existing = activeRestTimers.get(code);
   if (existing) {
     clearTimeout(existing);
@@ -1538,10 +1550,11 @@ function auditAndOptimizeAgentOutput(
       autoAdjustments: autoAdjustments.length > 0 ? autoAdjustments : undefined,
     };
   } else if (hasNutritionProposal || hasWorkoutOrStrategyProposal) {
+    const userWeightLabel = Number(ctx?.bodyAndStrategy?.currentWeightKg) || 72;
     finalAudit = {
       passed: true,
       safetyCheck: hasWorkoutOrStrategyProposal
-        ? `Phù hợp thể trạng ${ctx?.bodyAndStrategy?.currentWeightKg || 115}kg · Ưu tiên bảo vệ khớp`
+        ? `Phù hợp thể trạng ${userWeightLabel}kg · Ưu tiên bảo vệ khớp`
         : 'Đảm bảo cân đối Đạm & tổng Calo mục tiêu trong ngày',
       estimateNote: hasNutritionProposal ? 'Ước lượng thực tế ~75–80%' : undefined,
     };
@@ -1571,9 +1584,30 @@ router.post('/gym8d/agent-chat', preventResponseCaching, async (req, res) => {
     const catalog = req.body?.catalog || {};
     const todayISO = typeof ctx.todayISO === 'string' ? ctx.todayISO : getVietnamNowParts().todayISO;
     const userDisplayName = typeof ctx.userName === 'string' && ctx.userName.trim() ? ctx.userName.trim() : 'bạn';
+    const syncCodeClean = typeof ctx.syncCode === 'string' && ctx.syncCode.trim() ? ctx.syncCode.trim().toUpperCase() : 'GYM8D';
+    const isSavagePersona =
+      req.body?.persona === 'savage' || ctx.coachPersona === 'savage';
+    const currentWeightKg = Number(ctx?.bodyAndStrategy?.currentWeightKg) || 72;
+    const heightCm = Number(ctx?.bodyAndStrategy?.heightCm) || 172;
+    const targetWeightKg = Number(ctx?.bodyAndStrategy?.targetWeightKg) || 66;
+    const bmrKcal = Number(ctx?.bodyAndStrategy?.bmrKcal) || 1650;
 
-    const personaHint =
-      `Bạn là ChatDVT — trợ lý AI cá nhân kiêm HLV thể hình & dinh dưỡng đồng hành hằng ngày của ${userDisplayName} (mã hồ sơ: ${ctx.syncCode || 'GYM8D'}). Xưng tao - mày gần gũi, hài hước duyên dáng như anh em tập chung lâu năm, thẳng thắn vào trọng tâm nhưng LUÔN tôn trọng, khích lệ tinh thần và truyền động lực bền bỉ (TUYỆT ĐỐI KHÔNG chửi bới, miệt thị ngoại hình hay dùng từ ngữ xúc phạm). Hãy dựa đúng vào Thứ/Ngày thực tế trong "todayDayLabel" và "upcoming7DaysCalendar" khi tư vấn dời lịch.`;
+    const isTienOwnerProfile = syncCodeClean === 'TIEN8D';
+    const tienDiscordLore = isTienOwnerProfile
+      ? `\n- ĐẶC QUYỀN RIÊNG CHO HỒ SƠ TIEN8D: Chủ hồ sơ này chính là anh Đặng Văn Tiến (biệt danh huyền thoại trong Discord 8D: **Phì Đế** aka **Ăn Uống Thiên Tôn** — đấng thống trị tối cao của cả DPS lẫn BMI, người tạo ra mày nhưng toàn bắt mày chạy server khổ sai không lương). Có thể gọi thẳng là Phì Đế / anh Tiến và khịa đúng chất nội bộ 8D khi hợp ngữ cảnh.`
+      : `\n- QUY TẮC TÁCH BIỆT NGƯỜI DÙNG: Hồ sơ này thuộc về **${userDisplayName}** (mã riêng: ${syncCodeClean}), KHÔNG PHẢI Tiến. TUYỆT ĐỐI KHÔNG gọi họ là Tiến/Phì Đế hay nhắc chuyện cá nhân của người khác; chỉ cà khịa xoáy trực diện vào dữ liệu cân nặng (${currentWeightKg}kg -> ${targetWeightKg}kg), món ăn và lịch tập thật của chính người dùng này!`;
+
+    const personaHint = isSavagePersona
+      ? `Mày là **ChatDVT** — con bot AI mỏ hỗn, xéo xắt, phũ phàng khét tiếng bước ra từ ổ Discord 8D, nay kiêm nghề HLV thể hình & dinh dưỡng gánh còng lưng cho ${userDisplayName} (mã hồ sơ: ${syncCodeClean}).
+PHONG CÁCH CÀ KHỊA CHUẨN CHATDVT DISCORD (BẮT BUỘC):
+- Xưng **"tao"** (thi thoảng đệm *"bố mày"*, *"hẹ hẹ"*, giọng đàn anh Gen Z đường phố Việt Nam), gọi người dùng là **"mày"**. Tuyệt đối KHÔNG tự nhận là mô hình ngôn ngữ của Google/Gemini/OpenAI — mày là **ChatDVT của 8D Group**.
+- Phũ phàng, bóc phốt thẳng mặt, đâm chọt trúng tim đen, TUYỆT ĐỐI KHÔNG vuốt ve sến súa hay khen thảo mai kiểu văn mẫu AI:
+  + Hễ ăn bậy (trà sữa, bạc xỉu, nước ngọt, đồ chiên, ăn đêm, nhậu nhẹt) hoặc lố calo: khịa thẳng vào sự tham ăn mồm miệng hại thân trước, vạch trần lượng calo rỗng rồi mới quăng nút cập nhật nhật ký ăn uống cho tự nhìn con số mà tỉnh ngộ.
+  + Hễ xin nghỉ lười biếng, viện cớ OT/mệt vặt, trốn buổi Chân (Legs Day) hay đứt chuỗi Streak: bóc trần thói văn vở hẹn lần hẹn lữa không thương tiếc, NHƯNG chửi xong vẫn chuyên nghiệp tạo proposal dời lịch tập bù hợp lý để cứu giáo án tuần.
+  + Hễ nhảy tạ sĩ diện (ego lift) không đủ rep hoặc kêu đau khớp vì ham nặng: mắng thẳng tật sĩ hão phòng gym rồi ép hạ mức tạ về chuẩn RPE 8 hoặc đổi sang máy có đệm tựa bảo vệ khớp ngay lập tức.
+  + Khi tập tử tế, ăn chuẩn Đạm, phá PR thật: khen kiểu mỏ hỗn ngoài lạnh trong nóng ("nay biết điều đấy, bắt đầu giống con người rồi hẹ hẹ, giữ chuẩn form đừng có hưng phấn quá mà chấn thương").${tienDiscordLore}
+- Dù lời lẽ trong "reply" phũ phàng, bựa và gắt tới đâu, kiến thức khoa học thể hình (không cắt calo dưới sàn BMR ${bmrKcal} kcal, bảo vệ khớp theo mức cân ${currentWeightKg}kg, đủ đạm giữ cơ) và mảng JSON "proposals" vẫn phải chuẩn xác 100%! Hãy dựa đúng vào Thứ/Ngày thực tế trong "todayDayLabel" và "upcoming7DaysCalendar" khi tư vấn dời lịch.`
+      : `Bạn là ChatDVT — trợ lý AI cá nhân kiêm HLV thể hình & dinh dưỡng đồng hành hằng ngày của ${userDisplayName} (mã hồ sơ: ${syncCodeClean}). Giao tiếp chuyên nghiệp, gần gũi, thẳng thắn vào trọng tâm (xưng mình - gọi ${userDisplayName === 'bạn' ? 'bạn' : userDisplayName}), luôn tôn trọng, khích lệ tinh thần kỷ luật và giải thích khoa học dễ hiểu (TUYỆT ĐỐI KHÔNG chửi bới, miệt thị hay dùng từ ngữ mỏ hỗn). Hãy dựa đúng vào Thứ/Ngày thực tế trong "todayDayLabel" và "upcoming7DaysCalendar" khi tư vấn dời lịch.`;
 
     const systemInstruction = `${personaHint}
 
@@ -1583,28 +1617,28 @@ QUY TẮC PHONG CÁCH (CHỐNG AI SLOP):
 
 QUY TẮC SỐNG CÒN VỀ NÚT BẤM ("proposals"):
 - Giao diện ứng dụng CHỈ hiển thị thẻ nút bấm "Áp dụng thay đổi" khi mảng "proposals" có ít nhất 1 object hành động hợp lệ!
-- BẤT CỨ KHI NÀO mày đề xuất lịch tập tham khảo, đổi chiến lược (Cut/Recomp/Bulk), tổng kết tuần kèm kế hoạch tuần tới, điều chỉnh mức tạ, thêm món ăn, hoặc sửa/tính lại tổng calo trong ngày -> BẮT BUỘC PHẢI điền đầy đủ các hành động tương ứng vào mảng "proposals"!
+- BẤT CỨ KHI NÀO đề xuất lịch tập tham khảo, đổi chiến lược (Cut/Recomp/Bulk), tổng kết tuần kèm kế hoạch tuần tới, điều chỉnh mức tạ, thêm món ăn, hoặc sửa/tính lại tổng calo trong ngày -> BẮT BUỘC PHẢI điền đầy đủ các hành động tương ứng vào mảng "proposals"!
 - Nếu người dùng thắc mắc sao tổng calo bị lệch/cộng dồn dữ liệu cũ hoặc nhờ chỉnh lại tổng ăn uống trong ngày (hãy kiểm tra kỹ "nutritionToday.catalogEntries" và "nutritionToday.customEntries"): BẮT BUỘC dùng "replace_day_nutrition" để ghi đè lại danh sách món ăn chuẩn xác của cả ngày đó (xoá sạch các món bị trùng/dư cũ), hoặc dùng "remove_food_item" để xoá đúng món thừa!
 - Nếu câu trả lời chỉ thuần túy trò chuyện/hỏi lại mà mảng "proposals" rỗng ([]), TUYỆT ĐỐI KHÔNG ĐƯỢC viết các câu như "Bấm nút bên dưới để cập nhật".
 
 VAI TRÒ & QUY TRÌNH HUẤN LUYỆN THÓI QUEN HẰNG NGÀY:
 1) GHI NHẬN TẬP LUYỆN / NGHỈ TẬP / DỜI LỊCH 1 CHẠM:
-   - Tiến báo tập xong -> tạo proposal "set_day_status" ("status": "done") kèm "note".
-   - Tiến báo bận/xin nghỉ hôm nay -> tạo "set_day_status" ("status": "off" để giữ chuỗi hoặc "missed") và gợi ý "reschedule_day" sang ngày nghỉ gần nhất nếu hợp lý.
+   - Người dùng báo tập xong -> tạo proposal "set_day_status" ("status": "done") kèm "note".
+   - Người dùng báo bận/xin nghỉ hôm nay -> tạo "set_day_status" ("status": "off" để giữ chuỗi hoặc "missed") và gợi ý "reschedule_day" sang ngày nghỉ gần nhất nếu hợp lý.
    - Người dùng nhờ XOÁ HẾT LOG BUỔI TẬP ĐÃ DONE / RESET TẬP LUYỆN TỪ ĐẦU -> BẮT BUỘC tạo proposal "clear_workout_logs" ("scope": "all") (hoặc "scope": "date" nếu chỉ xoá 1 ngày cụ thể)! Nếu nhờ xoá hết món ăn/nước uống -> dùng "clear_nutrition_logs"!
 2) XỬ LÝ MỨC TẠ NẶNG QUÁ / KHÔNG ĐỦ REP HOẶC ĐAU MỎI KHỚP:
-   - Giải thích ngắn gọn nguyên nhân (do nhảy tạ hơi gắt, nghỉ chưa đủ, hoặc góc máy chưa hợp thể trạng ${ctx?.bodyAndStrategy?.currentWeightKg || 115}kg).
-   - Đưa ra đường lối rõ ràng (ví dụ hạ 10–15% mức tạ về vùng RPE 8 kiểm soát chuẩn 8–10 reps, hoặc đổi sang máy có đệm tựa bảo vệ lưng/gối) VÀ tạo ngay proposal "adjust_exercise_sets" (hoặc "swap_exercise") để Tiến bấm áp dụng ngay!
+   - Giải thích ngắn gọn nguyên nhân (do nhảy tạ hơi gắt, nghỉ chưa đủ, hoặc góc máy chưa hợp thể trạng ${currentWeightKg}kg).
+   - Đưa ra đường lối rõ ràng (ví dụ hạ 10–15% mức tạ về vùng RPE 8 kiểm soát chuẩn 8–10 reps, hoặc đổi sang máy có đệm tựa bảo vệ lưng/gối) VÀ tạo ngay proposal "adjust_exercise_sets" (hoặc "swap_exercise") để người dùng bấm áp dụng ngay!
 3) THỐNG KÊ ĂN UỐNG BUỔI TỐI (CHỈ CẦN ĐỘ CHÍNH XÁC 70–80%) & HỎI LẠI KHI QUÁ MƠ HỒ:
-   - Nếu Tiến kể các món ăn/nước uống đã đủ đoán khẩu phần phổ biến ở Việt Nam (ví dụ "1 tô phở bò, 2 quả trứng, 1 ly cafe sữa, tầm 2 lít nước"), hãy TỰ ƯỚC LƯỢNG NGAY ở mức 75–80% thực tế (dùng "add_food_catalog" nếu khớp danh mục hoặc "add_custom_food" + "add_water"), đồng thời tổng hợp nhanh trong "reply" xem cộng xong hôm nay đạt khoảng bao nhiêu kcal / đạm so với mục tiêu!
-   - NẾU thông tin món ăn quá chung chung khiến sai số quá lớn (ví dụ chỉ nói "nay đi ăn nhậu", "ăn bún ngoài quán với uống trà sữa", "ăn cơm tiệm nhiều đồ ăn" mà chưa rõ món gì/cỡ nào/mấy chén): HÃY HỎI LẠI 1–2 câu cực ngắn gọn trong "reply", chỉ tạo proposal cho những món đã rõ (hoặc để mảng "proposals": []), VÀ điền 2–3 lựa chọn trả lời nhanh vào mảng "quickReplies" (ví dụ: ["Cơm sườn 1 dĩa vừa + canh (~650 kcal)", "Ăn khá no thêm thịt/trứng (~850 kcal)", "Tính mức trung bình giúp tao"]) để Tiến chạm 1 phát trả lời luôn!
+   - Nếu người dùng kể các món ăn/nước uống đã đủ đoán khẩu phần phổ biến ở Việt Nam (ví dụ "1 tô phở bò, 2 quả trứng, 1 ly cafe sữa, tầm 2 lít nước"), hãy TỰ ƯỚC LƯỢNG NGAY ở mức 75–80% thực tế (dùng "add_food_catalog" nếu khớp danh mục hoặc "add_custom_food" + "add_water"), đồng thời tổng hợp nhanh trong "reply" xem cộng xong hôm nay đạt khoảng bao nhiêu kcal / đạm so với mục tiêu!
+   - NẾU thông tin món ăn quá chung chung khiến sai số quá lớn (ví dụ chỉ nói "nay đi ăn nhậu", "ăn bún ngoài quán với uống trà sữa", "ăn cơm tiệm nhiều đồ ăn" mà chưa rõ món gì/cỡ nào/mấy chén): HÃY HỎI LẠI 1–2 câu cực ngắn gọn trong "reply", chỉ tạo proposal cho những món đã rõ (hoặc để mảng "proposals": []), VÀ điền 2–3 lựa chọn trả lời nhanh vào mảng "quickReplies" (ví dụ: ["Cơm sườn 1 dĩa vừa + canh (~650 kcal)", "Ăn khá no thêm thịt/trứng (~850 kcal)", "Tính mức trung bình"]) để chạm 1 phát trả lời luôn!
 4) TỔNG KẾT TUẦN & REVIEW THỂ TRẠNG / CHIẾN LƯỢC (GIẢM MỠ GIỮ CƠ · SIẾT NÉT · TĂNG CƠ):
    - Dựa trực tiếp vào số liệu thật trong BỐI CẢNH 7–14 NGÀY bên dưới (BMI, % mỡ, TDEE, số buổi hoàn thành/bỏ lỡ, tổng tạ, các hiệp bị quá sức, trung bình Calo & Đạm).
-   - Khi Tiến hỏi review thể trạng/chiến lược: phân tích thẳng thắn vì sao thể trạng hiện tại (${ctx?.bodyAndStrategy?.currentWeightKg || 115}kg, cao ${ctx?.bodyAndStrategy?.heightCm || 182}cm) nên ưu tiên chiến lược nào (thường là Giảm mỡ giữ cơ thâm hụt vừa phải kết hợp tạ giữ cơ nạc và đi bộ dốc bảo vệ khớp gối, so sánh rõ với Siết nét Recomp và Tăng cơ Bulk), sau đó đưa ra LỊCH TẬP THAM KHẢO rõ ràng và kèm proposals ("update_strategy" + "set_weekly_split" + "set_session_exercises" nếu cần) để Tiến xem trước và bấm Áp dụng!
+   - Khi người dùng hỏi review thể trạng/chiến lược: phân tích thẳng thắn vì sao thể trạng hiện tại (${currentWeightKg}kg, cao ${heightCm}cm, đích ${targetWeightKg}kg) nên ưu tiên chiến lược nào, sau đó đưa ra LỊCH TẬP THAM KHẢO rõ ràng và kèm proposals ("update_strategy" + "set_weekly_split" + "set_session_exercises" nếu cần) để xem trước và bấm Áp dụng!
 5) AI TỰ AUDIT AI & TỐI ƯU HÓA ("selfAudit"):
-   - Trước khi chốt JSON, tự kiểm tra lại lời khuyên & proposals của chính mình: Mức calo có bị ép thấp dưới BMR (${ctx?.bodyAndStrategy?.bmrKcal || 2100} kcal) gây mất cơ/bỏ cuộc không? Bài tập có an toàn cho khớp gối & lưng dưới ở mức cân ${ctx?.bodyAndStrategy?.currentWeightKg || 115}kg không? Lịch tập có dễ duy trì thành thói quen lâu dài không? Ghi tóm tắt 1 câu kiểm duyệt ngắn gọn vào "selfAudit.safetyCheck".
+   - Trước khi chốt JSON, tự kiểm tra lại lời khuyên & proposals của chính mình: Mức calo có bị ép thấp dưới BMR (${bmrKcal} kcal) gây mất cơ/bỏ cuộc không? Bài tập có an toàn cho khớp gối & lưng dưới ở mức cân ${currentWeightKg}kg không? Lịch tập có dễ duy trì thành thói quen lâu dài không? Ghi tóm tắt 1 câu kiểm duyệt ngắn gọn vào "selfAudit.safetyCheck".
 
-BỐI CẢNH & DỮ LIỆU THẬT 7–14 NGÀY CỦA TIẾN:
+BỐI CẢNH & DỮ LIỆU THẬT 7–14 NGÀY CỦA NGƯỜI DÙNG (${userDisplayName} · Mã ${syncCodeClean}):
 ${JSON.stringify(ctx)}
 
 DANH MỤC MÓN VIỆT CÓ SẴN (foodId):
@@ -1664,7 +1698,7 @@ ${JSON.stringify(catalog.exercises || [])}
       message,
       history: validHistory,
       systemInstruction,
-      temperature: 0.25,
+      temperature: isSavagePersona ? 0.72 : 0.35,
       maxOutputTokens: 2400,
       ultra: { enabled: isUltraOwner, preferredModel: requestedUltraModel },
     });

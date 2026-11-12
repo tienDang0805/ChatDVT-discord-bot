@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CompactHeader } from './components/CompactHeader';
 import { FloatingRestBar } from './components/FloatingRestBar';
 import { SvgIcon } from './components/Icons';
+import { OnboardingModal } from './components/OnboardingModal';
 import { useChatDvtAvatar } from './hooks/useChatDvtAvatar';
 import { useGymStore } from './hooks/useGymStore';
 import { useNativeWebPush } from './hooks/useNativeWebPush';
@@ -187,6 +188,7 @@ export const Gym8dApp: React.FC = () => {
   }, []);
 
   const showInstallStrip =
+    store.state.hasOnboarded &&
     !push.env.isStandalonePWA &&
     (push.env.isMobile || push.env.isInAppBrowser) &&
     !store.state.installBannerDismissed;
@@ -266,6 +268,7 @@ export const Gym8dApp: React.FC = () => {
             onToggleAutoApply={(enabled) =>
               store.updateState((prev) => ({ ...prev, agentAutoApply: enabled }))
             }
+            onChangePersona={store.setCoachPersona}
             onApplyProposals={store.applyAgentProposals}
             onRestoreSnapshot={store.restoreSnapshot}
             ultra={ultra}
@@ -387,6 +390,7 @@ export const Gym8dApp: React.FC = () => {
             lastSyncedAt={store.state.lastSyncedAt}
             syncStatus={store.syncStatus}
             selectedGymId={store.state.selectedGymId}
+            coachPersona={store.state.coachPersona === 'savage' ? 'savage' : 'standard'}
             pushPrefs={store.state.pushPrefs}
             pushStatus={push.pushStatus}
             activeDevicesCount={push.activeDevicesCount}
@@ -397,6 +401,7 @@ export const Gym8dApp: React.FC = () => {
             onPromptNativeInstall={push.promptNativeInstall}
             weekDays={store.dynamicWeek.days}
             onUpdateProfileField={store.updateProfileField}
+            onChangePersona={store.setCoachPersona}
             onUpdatePushPref={store.updatePushPref}
             onSubscribePush={push.subscribeNativePush}
             onUnsubscribePush={push.unsubscribeNativePush}
@@ -422,6 +427,13 @@ export const Gym8dApp: React.FC = () => {
         timer={rest.restTimer}
         onAdjust={rest.adjustRestTimer}
         onStop={rest.stopRestTimer}
+      />
+
+      <OnboardingModal
+        open={!store.state.hasOnboarded}
+        syncCode={store.state.syncCode}
+        onCompleteSetup={store.completeOnboarding}
+        onRestoreCode={store.restoreExistingCodeOnOnboarding}
       />
 
       <nav className="g8d-bottom-nav" aria-label="Điều hướng chính">

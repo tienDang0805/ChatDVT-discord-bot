@@ -280,6 +280,8 @@ export type UltraModelChoice =
   | 'gemini-4-argon-high'
   | 'free';
 
+export type CoachPersonaId = 'standard' | 'savage';
+
 export interface AgentSelfAudit {
   passed: boolean;
   safetyCheck: string;
@@ -446,6 +448,7 @@ export interface GymStateV10 {
   syncCode: string;
   lastSyncedAt: string | null;
   hasOnboarded: boolean;
+  coachPersona?: CoachPersonaId;
   installBannerDismissed: boolean;
   profileInput: ProfileInput;
   startDateISO: string;

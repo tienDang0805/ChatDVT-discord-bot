@@ -1,12 +1,67 @@
 import { DEFAULT_USER_PROFILE } from '../data/workouts';
-import type { AgentChatMessage, CustomMacroItem, GymStateV10, PushPrefs, SetEntry } from '../types/gym';
+import type {
+  AgentChatMessage,
+  CoachPersonaId,
+  CustomMacroItem,
+  GymStateV10,
+  PushPrefs,
+  SetEntry,
+} from '../types/gym';
 import { diffDaysISO, formatVNShortDate, getTodayISO } from './dateUtils';
 import { buildDefaultWeeklyPattern } from './schedule';
 
 export const CANONICAL_STORAGE_KEY = '8d_gym_state';
 export const BACKUP_STORAGE_KEY = '8d_gym_state_backup';
+export const DEVICE_SYNC_CODE_STORAGE_KEY = '8d_gym_device_sync_code_v1';
 export const CURRENT_SCHEMA_VERSION = 10;
-export const DEFAULT_SYNC_CODE = 'TIEN8D';
+
+const SYNC_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+export function generateRandomSyncCode(): string {
+  let suffix = '';
+  const cryptoObj = typeof globalThis !== 'undefined' ? (globalThis as any).crypto : undefined;
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const arr = new Uint8Array(5);
+    cryptoObj.getRandomValues(arr);
+    for (let i = 0; i < arr.length; i += 1) {
+      suffix += SYNC_ALPHABET[arr[i] % SYNC_ALPHABET.length];
+    }
+  } else {
+    for (let i = 0; i < 5; i += 1) {
+      suffix += SYNC_ALPHABET[Math.floor(Math.random() * SYNC_ALPHABET.length)];
+    }
+  }
+  return `G8D${suffix}`;
+}
+
+export function getOrCreateDeviceSyncCode(): string {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return 'G8DLOCAL';
+  }
+  try {
+    const urlCode = new URLSearchParams(window.location.search).get('code');
+    if (urlCode) {
+      const cleanUrl = String(urlCode)
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9_-]/g, '')
+        .slice(0, 32);
+      if (cleanUrl.length >= 2) {
+        localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, cleanUrl);
+        return cleanUrl;
+      }
+    }
+    const saved = localStorage.getItem(DEVICE_SYNC_CODE_STORAGE_KEY);
+    if (saved && saved.trim().length >= 2) {
+      return saved.trim().toUpperCase();
+    }
+    const created = generateRandomSyncCode();
+    localStorage.setItem(DEVICE_SYNC_CODE_STORAGE_KEY, created);
+    return created;
+  } catch {
+    return generateRandomSyncCode();
+  }
+}
 
 export const HISTORICAL_STORAGE_KEYS = [
   '8d_gym_mobile_v8_ppl_1011',
@@ -28,13 +83,17 @@ export const DEFAULT_PUSH_PREFS: PushPrefs = {
   restTimerPush: true,
 };
 
-export function normalizeSyncCode(rawCode?: string | null): string {
+export function normalizeSyncCode(rawCode?: string | null, fallbackCode?: string): string {
   const cleaned = String(rawCode || '')
     .trim()
     .toUpperCase()
     .replace(/[^A-Z0-9_-]/g, '')
     .slice(0, 32);
-  return cleaned.length >= 2 ? cleaned : DEFAULT_SYNC_CODE;
+  if (cleaned.length >= 2) return cleaned;
+  if (fallbackCode && fallbackCode.trim().length >= 2) {
+    return fallbackCode.trim().toUpperCase();
+  }
+  return getOrCreateDeviceSyncCode();
 }
 
 export function countDoneSetsInDayMap(dayMap?: Record<string, SetEntry[]>): number {
@@ -189,12 +248,17 @@ function sanitizeAgentMessages(raw: unknown, nowISO = getTodayISO()): AgentChatM
 
 export function createFreshDefaultState(todayOverride?: string): GymStateV10 {
   const nowISO = todayOverride || getTodayISO();
+  const starterWeight = Number(DEFAULT_USER_PROFILE.weightKg) || 72;
+  const hasExplicitUrlCode =
+    typeof window !== 'undefined' &&
+    Boolean(new URLSearchParams(window.location.search).get('code')?.trim());
   return {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     updatedAt: new Date().toISOString(),
-    syncCode: DEFAULT_SYNC_CODE,
+    syncCode: getOrCreateDeviceSyncCode(),
     lastSyncedAt: null,
-    hasOnboarded: true,
+    hasOnboarded: hasExplicitUrlCode,
+    coachPersona: 'standard',
     installBannerDismissed: false,
     profileInput: { ...(DEFAULT_USER_PROFILE as any), barbellWeightKg: 20 },
     startDateISO: nowISO,
@@ -219,7 +283,7 @@ export function createFreshDefaultState(todayOverride?: string): GymStateV10 {
       {
         isoDate: nowISO,
         dateLabel: formatVNShortDate(nowISO),
-        weight: 115,
+        weight: starterWeight,
         note: 'Cân nặng khởi điểm',
       },
     ],
@@ -309,9 +373,10 @@ export function migrateRawState(rawObj: any, todayOverride?: string): GymStateV1
     ...base,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     updatedAt: typeof rawObj.updatedAt === 'string' ? rawObj.updatedAt : base.updatedAt,
-    syncCode: normalizeSyncCode(rawObj.syncCode || DEFAULT_SYNC_CODE),
+    syncCode: normalizeSyncCode(rawObj.syncCode),
     lastSyncedAt: rawObj.lastSyncedAt || null,
-    hasOnboarded: true,
+    hasOnboarded: rawObj.hasOnboarded !== undefined ? Boolean(rawObj.hasOnboarded) : true,
+    coachPersona: (rawObj.coachPersona === 'savage' ? 'savage' : 'standard') as CoachPersonaId,
     installBannerDismissed: Boolean(rawObj.installBannerDismissed),
     profileInput: { ...base.profileInput, ...(rawObj.profileInput || {}) },
     startDateISO,
@@ -342,7 +407,7 @@ export function migrateRawState(rawObj: any, todayOverride?: string): GymStateV1
             {
               isoDate: nowISO,
               dateLabel: formatVNShortDate(nowISO),
-              weight: Number(rawObj.profileInput?.weightKg || 115),
+              weight: Number(rawObj.profileInput?.weightKg || DEFAULT_USER_PROFILE.weightKg || 72),
               note: 'Cân nặng khởi điểm',
             },
           ],

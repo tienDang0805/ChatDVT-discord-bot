@@ -13,6 +13,7 @@ import type {
   AgentActionProposal,
   AgentChatMessage,
   AgentSelfAudit,
+  CoachPersonaId,
   DayScheduleEntry,
   GymStateV10,
   PersonalRecordEntry,
@@ -47,18 +48,35 @@ interface ChatDvtCoachViewProps {
     updater: AgentChatMessage[] | ((prev: AgentChatMessage[]) => AgentChatMessage[])
   ) => void;
   onToggleAutoApply: (enabled: boolean) => void;
+  onChangePersona: (persona: CoachPersonaId) => void;
   onApplyProposals: (proposals: AgentActionProposal[]) => GymStateV10;
   onRestoreSnapshot: (snapshot: GymStateV10, preserveMessages?: AgentChatMessage[]) => void;
   ultra: UltraModeController;
   onOpenUltraSettings: () => void;
 }
 
-const WELCOME_MESSAGE: AgentChatMessage = {
-  id: 'welcome_habit_v6',
-  role: 'assistant',
-  text: 'Chào Tiến. Tao là ChatDVT — trợ lý tập luyện và dinh dưỡng hằng ngày của mày đây.\n\nMỗi ngày cứ nhắn tự nhiên cho tao như thói quen:\n- Tập xong buổi nào, nghỉ buổi nào, hay đẩy mức tạ thấy quá nặng không đủ rep.\n- Tối nằm nghỉ kể lại hôm nay ăn uống gì, tao tự ước lượng khoảng 75–80% thực tế rồi cộng tổng giúp mày (chỗ nào chưa rõ khẩu phần tao sẽ hỏi lại ngắn gọn).\n- Cuối tuần nhờ tao tổng kết tiến độ hoặc review chiến lược giảm mỡ giữ cơ, siết nét để tự tối ưu lịch tuần tới.',
-  createdAt: new Date().toISOString(),
-};
+function buildWelcomeMessage(userName: string, persona: CoachPersonaId): AgentChatMessage {
+  const cleanName =
+    userName && userName.trim() && userName.trim().toLowerCase() !== 'bạn'
+      ? userName.trim()
+      : '';
+
+  if (persona === 'savage') {
+    return {
+      id: 'welcome_savage_v7',
+      role: 'assistant',
+      text: `Hề lố ${cleanName || 'mày'}! Bố mày là ChatDVT — trợ lý thể hình kiêm máy chửi chống lười bước ra từ Discord 8D đây hẹ hẹ.\n\nMỗi ngày cứ khai thật vào đây:\n- Tập xong buổi nào hay lại văn vở OT trốn buổi chân, nâng tạ sĩ diện hụt rep thì khai ra tao chỉnh giáo án.\n- Tối ăn vụng trà sữa, gà rán, nhậu nhẹt gì kể hết, tao bóc trần calo rồi cộng sổ thẳng tay cho tỉnh.\n- Cuối tuần vào tao tổng kết xem tiến bộ thật hay chỉ giỏi hứa lèo!`,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  return {
+    id: 'welcome_standard_v7',
+    role: 'assistant',
+    text: `Chào ${cleanName || 'bạn'}! Mình là ChatDVT — trợ lý tập luyện và dinh dưỡng đồng hành hằng ngày cùng bạn.\n\nMỗi ngày cứ nhắn tự nhiên để cập nhật nhanh:\n- Báo hoàn thành buổi tập, dời lịch khi bận hoặc điều chỉnh mức tạ khi thấy quá sức.\n- Kể lại bữa ăn và lượng nước trong ngày để mình tự ước lượng calo, đạm rồi cộng vào nhật ký.\n- Nhờ tổng kết tuần hoặc rà soát lại chiến lược giảm mỡ, siết nét và bảo vệ khớp bất cứ lúc nào.`,
+    createdAt: new Date().toISOString(),
+  };
+}
 
 const HABIT_QUICK_ACTIONS: Array<{ label: string; prompt: string; mode: 'send' | 'prefill' }> = [
   {
@@ -244,6 +262,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   messages,
   onSetMessages,
   onToggleAutoApply,
+  onChangePersona,
   onApplyProposals,
   onRestoreSnapshot,
   ultra,
@@ -260,7 +279,20 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const displayMessages = messages.length > 0 ? messages : [WELCOME_MESSAGE];
+  const activePersona: CoachPersonaId = state.coachPersona === 'savage' ? 'savage' : 'standard';
+  const resolvedGreetingName =
+    (metrics.profile.name &&
+    metrics.profile.name.trim() &&
+    metrics.profile.name.trim() !== 'Gym Bro (115kg)'
+      ? metrics.profile.name.trim()
+      : '') || (state.syncCode === 'TIEN8D' ? 'Tiến' : 'bạn');
+
+  const welcomeMsg = useMemo(
+    () => buildWelcomeMessage(resolvedGreetingName, activePersona),
+    [activePersona, resolvedGreetingName]
+  );
+
+  const displayMessages = messages.length > 0 ? messages : [welcomeMsg];
 
   const scrollToLatest = useCallback(() => {
     if (scrollRef.current) {
@@ -355,7 +387,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
   const handleToggleProposalSelection = (msgId: string, idx: number) => {
     onSetMessages((prev) => {
-      const base = prev.length > 0 ? prev : [WELCOME_MESSAGE];
+      const base = prev.length > 0 ? prev : [welcomeMsg];
       return base.map((m) => {
         if (m.id !== msgId || m.applied) return m;
         const cur = m.selectedIndices || [];
@@ -380,7 +412,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
     snapshotsRef.current[msgId] = snap;
 
     onSetMessages((prev) => {
-      const base = prev.length > 0 ? prev : [WELCOME_MESSAGE];
+      const base = prev.length > 0 ? prev : [welcomeMsg];
       return base.map((m) => (m.id === msgId ? { ...m, applied: true, undone: false } : m));
     });
   };
@@ -415,6 +447,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
     const requestPayload = JSON.stringify({
       message: text,
+      persona: activePersona,
       ultraModel: ultra.unlocked ? ultra.preferredModel : 'free',
       history: historyBefore.slice(-8).map((m) => ({
         role: m.role === 'user' ? 'user' : 'model',
@@ -581,7 +614,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   };
 
   const handleClearConversation = () => {
-    onSetMessages([WELCOME_MESSAGE]);
+    onSetMessages([]);
   };
 
   const todaySessLabel = selectedDay.isCompleted
@@ -655,6 +688,22 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   <span className="g8d-model-pill-label">{headerModelBadgeText}</span>
                   <SvgIcon name="chevronDown" size={12} />
                 </button>
+
+                {!isKeyboardOpen && (
+                  <button
+                    type="button"
+                    className={`g8d-persona-pill-btn ${
+                      activePersona === 'savage' ? 'is-savage' : ''
+                    }`}
+                    onClick={() => {
+                      inputRef.current?.blur();
+                      setModelSheetOpen(true);
+                    }}
+                    title="Đổi giọng điệu huấn luyện viên ChatDVT"
+                  >
+                    <span>{activePersona === 'savage' ? 'Cà khịa DVT' : 'Chuẩn PT'}</span>
+                  </button>
+                )}
               </div>
               {!isKeyboardOpen && (
                 <div className="g8d-coach-subline">
@@ -966,11 +1015,46 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
       <BottomSheet
         open={modelSheetOpen}
-        title="Mô Hình AI & CLIProxyAPI"
-        subtitle="Trạng thái thực tế của máy chủ AI đang trả lời bạn"
+        title="Tính Cách & Mô Hình ChatDVT"
+        subtitle="Tuỳ chỉnh giọng huấn luyện viên và kiểm tra máy chủ AI thực tế"
         onClose={() => setModelSheetOpen(false)}
       >
         <div className="g8d-stack-sm">
+          <div>
+            <div className="g8d-kicker" style={{ marginBottom: 6 }}>
+              GIỌNG ĐIỆU TRẢ LỜI (AI PERSONA)
+            </div>
+            <div className="g8d-stack-xs">
+              <button
+                type="button"
+                className={`g8d-choice-row ${activePersona === 'standard' ? 'is-selected' : ''}`}
+                onClick={() => onChangePersona('standard')}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">Chuẩn PT Đồng Hành (Mặc định)</div>
+                  <div className="g8d-tiny-meta">
+                    Chuyên nghiệp, thẳng thắn, tôn trọng và khích lệ kỷ luật bền bỉ.
+                  </div>
+                </div>
+                {activePersona === 'standard' && <SvgIcon name="check" size={17} color="#E85D1A" />}
+              </button>
+
+              <button
+                type="button"
+                className={`g8d-choice-row ${activePersona === 'savage' ? 'is-selected' : ''}`}
+                onClick={() => onChangePersona('savage')}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">Cà Khịa Chuẩn ChatDVT (Discord 8D)</div>
+                  <div className="g8d-tiny-meta">
+                    Mỏ hỗn, phũ phàng, bóc phốt thẳng mặt khi lười tập, trốn buổi chân hay ăn bậy.
+                  </div>
+                </div>
+                {activePersona === 'savage' && <SvgIcon name="check" size={17} color="#E85D1A" />}
+              </button>
+            </div>
+          </div>
+
           <div
             className={`g8d-proxy-status-box ${
               ultra.unlocked && ultra.proxyOnline

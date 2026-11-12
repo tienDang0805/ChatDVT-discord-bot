@@ -93,7 +93,7 @@ export const WORKOUT_SPLITS: Record<string, WorkoutSplitDef> = {
   "joint_safe_4d": {
     "id": "joint_safe_4d",
     "name": "Lịch 4 Buổi: Upper / Lower Bảo Vệ Khớp (Tối ưu cho BMI >= 28 / >95kg)",
-    "badge": "Khuyên dùng cho 115kg",
+    "badge": "Bảo vệ khớp tối đa",
     "daysPerWeek": 4,
     "description": "Loại bỏ hoàn toàn bài chạy nhảy chèn ép sụn gối & cột sống. Kết hợp 40p Tạ có điểm tựa + 15p Đi bộ dốc.",
     "sessions": [
@@ -223,18 +223,18 @@ export const SESSION_ALLOWED_SLOT_GROUPS: Record<string, string[]> = {
 };
 
 export const DEFAULT_USER_PROFILE = {
-  "id": "user_115kg",
-  "label": "Nam 115kg · 1m82 · 27 tuổi · Tập 06:00 (Giảm mỡ bảo vệ khớp)",
-  "shortLabel": "115kg · 1m82",
-  "name": "Gym Bro (115kg)",
+  "id": "user_default",
+  "label": "Hồ sơ tập luyện cá nhân",
+  "shortLabel": "72kg · 1m72",
+  "name": "",
   "gender": "male",
-  "age": 27,
-  "heightCm": 182,
-  "weightKg": 115,
-  "targetWeightKg": 95,
+  "age": 26,
+  "heightCm": 172,
+  "weightKg": 72,
+  "targetWeightKg": 66,
   "activity": 1.41,
   "goal": "cut",
-  "workoutTime": "06:00",
+  "workoutTime": "18:00",
   "preSleepLeadMin": 30,
   "daysPerWeek": 4,
   "barbellWeightKg": 20

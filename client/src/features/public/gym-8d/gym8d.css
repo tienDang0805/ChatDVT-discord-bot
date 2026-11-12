@@ -3692,6 +3692,170 @@ p,
   inset: -3px 0;
 }
 
+/* Persona Pill & Native Onboarding Sheet */
+.g8d-persona-pill-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(43, 33, 24, 0.14);
+  background: #FFFDF9;
+  color: #5C4D3F;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.g8d-persona-pill-btn::before {
+  content: '';
+  position: absolute;
+  inset: -9px -3px;
+}
+
+.g8d-persona-pill-btn.is-savage {
+  border-color: rgba(232, 93, 26, 0.45);
+  background: linear-gradient(135deg, #FFF1E6 0%, #FFE4D1 100%);
+  color: #C2410C;
+}
+
+.g8d-onboard-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--g8d-vv-top, 0px);
+  height: var(--g8d-vv-height, 100dvh);
+  z-index: 98;
+  background: var(--g8d-bg, #FAF5EC);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.g8d-onboard-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px
+    calc(env(safe-area-inset-bottom, 0px) + 24px);
+}
+
+.g8d-onboard-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #FFFDF9;
+  border: 1px solid rgba(43, 33, 24, 0.1);
+  border-radius: 22px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(43, 33, 24, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.g8d-onboard-restore-strip {
+  background: #FAF3E6;
+  border: 1px solid rgba(43, 33, 24, 0.09);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.g8d-onboard-restore-toggle {
+  width: 100%;
+  min-height: 36px;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: #5C4D3F;
+  cursor: pointer;
+  text-align: left;
+}
+
+.g8d-onboard-restore-toggle strong {
+  color: var(--g8d-orange, #E85D1A);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.g8d-onboard-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.g8d-onboard-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  object-fit: cover;
+  border: 1px solid rgba(43, 33, 24, 0.1);
+  flex-shrink: 0;
+}
+
+.g8d-onboard-title {
+  margin: 2px 0;
+  font-size: 19px;
+  font-weight: 800;
+  color: #2B2118;
+  letter-spacing: -0.02em;
+}
+
+.g8d-onboard-name-box {
+  background: linear-gradient(180deg, #FFF9F0 0%, #FFFDF9 100%);
+  border: 1.5px solid rgba(232, 93, 26, 0.26);
+  border-radius: 16px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.g8d-onboard-name-input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(43, 33, 24, 0.16);
+  background: #FFFFFF;
+  color: #2B2118;
+  font-size: 16px;
+  font-weight: 700;
+  outline: none;
+}
+
+.g8d-onboard-name-input:focus {
+  border-color: var(--g8d-orange, #E85D1A);
+  box-shadow: 0 0 0 3px rgba(232, 93, 26, 0.14);
+}
+
+.g8d-onboard-name-input.is-error {
+  border-color: #DC2626;
+  background: #FEF2F2;
+}
+
+.g8d-onboard-err-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #DC2626;
+}
+
+.g8d-onboard-plan-box {
+  background: linear-gradient(180deg, #FFF8EE 0%, #FFFDF9 100%);
+  border: 1px solid rgba(232, 93, 26, 0.22);
+  border-radius: 16px;
+  padding: 13px;
+}
+
 /* Capability-Gated Hover Rules (Mouse/Trackpad Only — Never Sticky on Touch) */
 @media (hover: hover) and (pointer: fine) {
   .g8d-header-brand-btn:hover {

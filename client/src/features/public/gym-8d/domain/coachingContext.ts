@@ -233,12 +233,17 @@ export function buildCoachingDigest({
     }));
 
   const resolvedUserName =
-    metrics.profile.name?.trim() ||
+    (metrics.profile.name &&
+    metrics.profile.name.trim() &&
+    metrics.profile.name.trim() !== 'Gym Bro (115kg)'
+      ? metrics.profile.name.trim()
+      : '') ||
     (state.syncCode === 'TIEN8D' ? 'Tiến' : 'bạn');
 
   return {
     userName: resolvedUserName,
     syncCode: state.syncCode,
+    coachPersona: state.coachPersona === 'savage' ? 'savage' : 'standard',
     todayISO,
     todayDayLabel: todayEntryInTimeline
       ? `${todayEntryInTimeline.dayShort} (${todayEntryInTimeline.shortDate})`

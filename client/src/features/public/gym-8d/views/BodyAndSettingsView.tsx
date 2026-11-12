@@ -12,6 +12,7 @@ import type { CloudSyncStatus } from '../hooks/useGymStore';
 import type { DeviceEnvironmentInfo, NativePushStatus } from '../hooks/useNativeWebPush';
 import type { UltraModeController } from '../hooks/useUltraMode';
 import type {
+  CoachPersonaId,
   DayScheduleEntry,
   GymBranchId,
   PersonalRecordEntry,
@@ -46,6 +47,7 @@ interface BodyAndSettingsViewProps {
   lastSyncedAt: string | null;
   syncStatus: CloudSyncStatus;
   selectedGymId: GymBranchId;
+  coachPersona: CoachPersonaId;
   pushPrefs: PushPrefs;
   pushStatus: NativePushStatus;
   activeDevicesCount: number;
@@ -56,6 +58,7 @@ interface BodyAndSettingsViewProps {
   onPromptNativeInstall: () => Promise<boolean>;
   weekDays: DayScheduleEntry[];
   onUpdateProfileField: <K extends keyof ProfileInput>(field: K, value: ProfileInput[K]) => void;
+  onChangePersona: (persona: CoachPersonaId) => void;
   onUpdatePushPref: <K extends keyof PushPrefs>(key: K, val: PushPrefs[K]) => void;
   onSubscribePush: () => Promise<boolean>;
   onUnsubscribePush: () => Promise<void>;
@@ -83,6 +86,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   lastSyncedAt,
   syncStatus,
   selectedGymId,
+  coachPersona,
   pushPrefs,
   pushStatus,
   activeDevicesCount,
@@ -93,6 +97,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   onPromptNativeInstall,
   weekDays,
   onUpdateProfileField,
+  onChangePersona,
   onUpdatePushPref,
   onSubscribePush,
   onUnsubscribePush,
@@ -120,6 +125,10 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
 
   const p = metrics.profile;
   const [editBodyOpen, setEditBodyOpen] = useState<boolean>(false);
+  const [draftName, setDraftName] = useState<string>(
+    p.name && p.name !== 'Gym Bro (115kg)' ? p.name : ''
+  );
+  const [draftGender, setDraftGender] = useState<'male' | 'female'>(p.gender);
   const [draftWeight, setDraftWeight] = useState<string>(String(p.weightKg));
   const [draftTargetWeight, setDraftTargetWeight] = useState<string>(String(p.targetWeightKg));
   const [draftHeight, setDraftHeight] = useState<string>(String(p.heightCm));
@@ -139,6 +148,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   }, [syncCode]);
 
   const openEditBodySheet = () => {
+    setDraftName(p.name && p.name !== 'Gym Bro (115kg)' ? p.name : '');
+    setDraftGender(p.gender);
     setDraftWeight(String(p.weightKg));
     setDraftTargetWeight(String(p.targetWeightKg));
     setDraftHeight(String(p.heightCm));
@@ -156,6 +167,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
     const a = Math.min(90, Math.max(14, Math.round(Number(draftAge) || p.age)));
     const lead = Math.min(180, Math.max(5, Math.round(Number(draftPreSleep) || p.preSleepLeadMin)));
 
+    onUpdateProfileField('name', draftName.trim().slice(0, 40));
+    onUpdateProfileField('gender', draftGender);
     onUpdateProfileField('weightKg', w);
     onUpdateProfileField('targetWeightKg', tw);
     onUpdateProfileField('heightCm', h);
@@ -224,7 +237,11 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="g8d-row-between" style={{ gap: 6 }}>
-                  <span className="g8d-kicker">MÃ HỒ SƠ: {syncCode}</span>
+                  <span className="g8d-kicker">
+                    {p.name && p.name !== 'Gym Bro (115kg)'
+                      ? `${p.name.toUpperCase()} · MÃ ${syncCode}`
+                      : `MÃ HỒ SƠ: ${syncCode}`}
+                  </span>
                   <span className="g8d-badge is-orange">{goalLabel}</span>
                 </div>
                 <div className="g8d-profile-weight-headline">
@@ -474,6 +491,47 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
 
       {section === 'push' && (
         <>
+          <div className="g8d-card">
+            <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+              <div>
+                <div className="g8d-kicker">TÍNH CÁCH TRỢ LÝ AI</div>
+                <div className="g8d-card-title">Giọng điệu HLV ChatDVT</div>
+              </div>
+              <span className={`g8d-badge ${coachPersona === 'savage' ? 'is-orange' : 'is-green'}`}>
+                {coachPersona === 'savage' ? 'Cà khịa Discord' : 'Chuẩn PT'}
+              </span>
+            </div>
+            <div className="g8d-stack-xs">
+              <button
+                type="button"
+                className={`g8d-choice-row ${coachPersona === 'standard' ? 'is-selected' : ''}`}
+                onClick={() => onChangePersona('standard')}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">Chuẩn PT Đồng Hành (Mặc định)</div>
+                  <div className="g8d-tiny-meta">
+                    Lịch sự, rõ ràng, khích lệ kỷ luật — mặc định an toàn khi chia sẻ ứng dụng.
+                  </div>
+                </div>
+                {coachPersona === 'standard' && <SvgIcon name="check" size={16} color="#E85D1A" />}
+              </button>
+
+              <button
+                type="button"
+                className={`g8d-choice-row ${coachPersona === 'savage' ? 'is-selected' : ''}`}
+                onClick={() => onChangePersona('savage')}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="g8d-choice-title">Cà Khịa Chuẩn ChatDVT (Discord 8D)</div>
+                  <div className="g8d-tiny-meta">
+                    Mỏ hỗn, phũ phàng, bóc phốt thẳng mặt mỗi khi lười tập hay ăn uống thả cửa.
+                  </div>
+                </div>
+                {coachPersona === 'savage' && <SvgIcon name="check" size={16} color="#E85D1A" />}
+              </button>
+            </div>
+          </div>
+
           <div className="g8d-card g8d-ultra-card">
             <div className="g8d-row-between">
               <div>
@@ -861,7 +919,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 enterKeyHint="done"
                 value={draftCode}
                 onChange={(e) => setDraftCode(e.target.value.toUpperCase())}
-                placeholder="VD: TIEN8D"
+                placeholder="VD: G8D7K4MP"
                 className="g8d-search-input"
                 style={{ flex: 1, marginBottom: 0 }}
               />
@@ -985,6 +1043,39 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
       >
         <div className="g8d-stack-sm">
           <div className="g8d-grid-2">
+            <label className="g8d-field-lbl">
+              Tên gọi / Biệt danh
+              <input
+                type="text"
+                enterKeyHint="done"
+                value={draftName}
+                onChange={(e) => setDraftName(e.target.value)}
+                placeholder="VD: Minh, Huy..."
+                className="g8d-num-input"
+                style={{ textAlign: 'left', fontWeight: 600 }}
+              />
+            </label>
+
+            <div className="g8d-field-lbl">
+              <span>Giới tính</span>
+              <div className="g8d-seg-mini g8d-w-full" style={{ height: 44 }}>
+                <button
+                  type="button"
+                  className={draftGender === 'male' ? 'is-active' : ''}
+                  onClick={() => setDraftGender('male')}
+                >
+                  Nam
+                </button>
+                <button
+                  type="button"
+                  className={draftGender === 'female' ? 'is-active' : ''}
+                  onClick={() => setDraftGender('female')}
+                >
+                  Nữ
+                </button>
+              </div>
+            </div>
+
             <label className="g8d-field-lbl">
               Cân nặng hiện tại (kg)
               <input
