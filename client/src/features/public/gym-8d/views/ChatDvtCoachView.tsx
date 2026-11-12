@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SvgIcon } from '../components/Icons';
 import { EXERCISES } from '../data/exercises';
 import { VN_FOODS } from '../data/foods';
@@ -66,22 +66,26 @@ const HABIT_QUICK_ACTIONS: Array<{ label: string; prompt: string; mode: 'send' |
   },
   {
     label: 'Tạ nặng / Thiếu rep',
-    prompt: 'Hôm nay lúc tập có bài mức tạ hơi nặng tao đẩy không đủ rep mục tiêu, tư vấn hướng điều chỉnh mức tạ và số hiệp giúp tao',
+    prompt:
+      'Hôm nay lúc tập có bài mức tạ hơi nặng tao đẩy không đủ rep mục tiêu, tư vấn hướng điều chỉnh mức tạ và số hiệp giúp tao',
     mode: 'send',
   },
   {
     label: 'Tổng kết tuần',
-    prompt: 'Tổng kết giúp tao tuần này về lịch tập, khối lượng tạ và ăn uống, từ đó suy ra kế hoạch tuần tiếp theo',
+    prompt:
+      'Tổng kết giúp tao tuần này về lịch tập, khối lượng tạ và ăn uống, từ đó suy ra kế hoạch tuần tiếp theo',
     mode: 'send',
   },
   {
     label: 'Review chiến lược',
-    prompt: 'Review giúp tao thể trạng hiện tại, lịch tập và so sánh chiến lược giảm mỡ giữ cơ, siết nét hay tăng cơ rồi đưa ra lịch tham khảo tối ưu nhất',
+    prompt:
+      'Review giúp tao thể trạng hiện tại, lịch tập và so sánh chiến lược giảm mỡ giữ cơ, siết nét hay tăng cơ rồi đưa ra lịch tham khảo tối ưu nhất',
     mode: 'send',
   },
   {
     label: 'AI tự Audit lộ trình',
-    prompt: 'Hãy tự audit toàn bộ lộ trình tập, mức calo, độ an toàn khớp và thói quen hiện tại của tao xem có điểm nào chưa hợp lý cần tối ưu không',
+    prompt:
+      'Hãy tự audit toàn bộ lộ trình tập, mức calo, độ an toàn khớp và thói quen hiện tại của tao xem có điểm nào chưa hợp lý cần tối ưu không',
     mode: 'send',
   },
 ];
@@ -138,7 +142,10 @@ const FormattedMessageText: React.FC<{ text: string }> = ({ text }) => {
   return (
     <div className="g8d-msg-prose">
       {blocks.map((block, bIdx) => {
-        const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+        const lines = block
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean);
         if (lines.length === 0) return null;
         const segments: Array<{ kind: 'p' | 'ul'; items: string[] }> = [];
         for (const l of lines) {
@@ -213,15 +220,32 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
   const displayMessages = messages.length > 0 ? messages : [WELCOME_MESSAGE];
 
+  const syncTextareaHeight = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    if (!el.value) {
+      el.style.height = '44px';
+      return;
+    }
+    el.style.height = '0px';
+    const next = Math.max(44, Math.min(108, el.scrollHeight));
+    el.style.height = `${next}px`;
+  }, []);
+
+  useEffect(() => {
+    syncTextareaHeight();
+  }, [input, syncTextareaHeight]);
+
   useEffect(() => {
     if (initialDraft && initialDraft.trim()) {
       setInput(initialDraft);
       onConsumeDraft?.();
       setTimeout(() => {
         inputRef.current?.focus();
+        syncTextareaHeight();
       }, 60);
     }
-  }, [initialDraft, onConsumeDraft]);
+  }, [initialDraft, onConsumeDraft, syncTextareaHeight]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -303,9 +327,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
     onSetMessages((prev) => {
       const base = prev.length > 0 ? prev : [WELCOME_MESSAGE];
-      return base.map((m) =>
-        m.id === msgId ? { ...m, applied: true, undone: false } : m
-      );
+      return base.map((m) => (m.id === msgId ? { ...m, applied: true, undone: false } : m));
     });
   };
 
@@ -372,7 +394,9 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
         ? data.proposals
         : [];
       const quickReplies: string[] = Array.isArray(data?.quickReplies)
-        ? data.quickReplies.filter((x: unknown) => typeof x === 'string' && x.trim()).slice(0, 4)
+        ? data.quickReplies
+            .filter((x: unknown) => typeof x === 'string' && x.trim())
+            .slice(0, 4)
         : [];
       const selfAudit: AgentSelfAudit | null =
         data?.selfAudit && typeof data.selfAudit === 'object' ? data.selfAudit : null;
@@ -460,20 +484,19 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
     <div className="g8d-coach-page">
       {returnTab && onReturnToTab && (
         <button type="button" className="g8d-coach-return-bar" onClick={onReturnToTab}>
-          <SvgIcon name="arrowLeft" size={14} />
+          <SvgIcon name="arrowLeft" size={15} />
           <span>Quay lại {returnTab.label}</span>
         </button>
       )}
 
-      {/* Top Live Habit HUD */}
       <div className="g8d-coach-hud">
         <div className="g8d-row-between">
           <div className="g8d-row-gap" style={{ minWidth: 0 }}>
             <img
               src={avatarUrl}
               alt="ChatDVT"
-              width={38}
-              height={38}
+              width={36}
+              height={36}
               className="g8d-chatdvt-avatar"
               onError={(e) => {
                 if (!e.currentTarget.src.endsWith(fallbackUrl)) {
@@ -503,28 +526,28 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                     onClick={onOpenUltraSettings}
                     title="Mở khoá tài khoản AI Ultra riêng trên điện thoại này"
                   >
-                    Free · Mở Ultra
+                    Free · Ultra
                   </button>
                 )}
               </div>
-              <div className="g8d-tiny-meta">
+              <div className="g8d-coach-subline">
                 {selectedDay.shortDate} · {todaySessLabel}
               </div>
             </div>
           </div>
 
-          <div className="g8d-row-gap">
-            <label
+          <div className="g8d-coach-hud-actions">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={Boolean(state.agentAutoApply)}
               className={`g8d-auto-toggle ${state.agentAutoApply ? 'is-on' : ''}`}
+              onClick={() => onToggleAutoApply(!state.agentAutoApply)}
               title="Tự động áp dụng đề xuất không cần bấm xác nhận"
             >
-              <input
-                type="checkbox"
-                checked={Boolean(state.agentAutoApply)}
-                onChange={(e) => onToggleAutoApply(e.target.checked)}
-              />
-              <span>Tự áp dụng</span>
-            </label>
+              <span className="g8d-auto-toggle-dot" />
+              <span>Tự áp</span>
+            </button>
 
             {messages.length > 1 && (
               <button
@@ -534,28 +557,25 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                 title="Làm mới đoạn hội thoại"
                 aria-label="Làm mới đoạn hội thoại"
               >
-                <SvgIcon name="trash" size={15} />
+                <SvgIcon name="trash" size={16} />
               </button>
             )}
           </div>
         </div>
 
         <div className="g8d-coach-metrics-strip">
-          <span>
-            Calo: <strong>{nutritionTotals.kcal}</strong>/{metrics.targetKcal}
+          <span className="g8d-metric-pill">
+            Calo <strong>{nutritionTotals.kcal}</strong>/{metrics.targetKcal}
           </span>
-          <span className="g8d-dot-sep" />
-          <span>
-            Đạm: <strong>{nutritionTotals.protein}</strong>/{metrics.proteinG}g
+          <span className="g8d-metric-pill">
+            Đạm <strong>{nutritionTotals.protein}</strong>/{metrics.proteinG}g
           </span>
-          <span className="g8d-dot-sep" />
-          <span>
-            Nước: <strong>{(nutritionTotals.waterMl / 1000).toFixed(1)}</strong>/{metrics.waterLiters}L
+          <span className="g8d-metric-pill">
+            Nước <strong>{(nutritionTotals.waterMl / 1000).toFixed(1)}</strong>/{metrics.waterLiters}L
           </span>
         </div>
       </div>
 
-      {/* Native Conversation Stream */}
       <div className="g8d-coach-stream" ref={scrollRef}>
         {displayMessages.map((msg) => {
           const hasProposals = Boolean(msg.proposals && msg.proposals.length > 0);
@@ -584,10 +604,9 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   <FormattedMessageText text={msg.text} />
                 </div>
 
-                {/* AI Self-Audit Note */}
                 {isAssistant && msg.selfAudit?.safetyCheck && (
                   <div className="g8d-self-audit-pill">
-                    <SvgIcon name="shield" size={13} color="#059669" />
+                    <SvgIcon name="shield" size={14} color="#059669" />
                     <span>
                       <strong>Tự kiểm duyệt:</strong> {msg.selfAudit.safetyCheck}
                       {msg.selfAudit.estimateNote ? ` · ${msg.selfAudit.estimateNote}` : ''}
@@ -596,7 +615,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   </div>
                 )}
 
-                {/* Clarifying Quick-Reply Chips */}
                 {isAssistant && msg.quickReplies && msg.quickReplies.length > 0 && (
                   <div className="g8d-quick-reply-wrap">
                     {msg.quickReplies.map((qr, qIdx) => (
@@ -613,7 +631,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   </div>
                 )}
 
-                {/* Codex-Style Preview & Apply Card */}
                 {hasProposals && (
                   <div className={`g8d-action-card ${msg.applied ? 'is-applied' : ''}`}>
                     <div className="g8d-action-head">
@@ -642,7 +659,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                             />
                             <SvgIcon
                               name={proposalIconName(prop.type)}
-                              size={14}
+                              size={15}
                               color="#5C4D3F"
                             />
                             <span className="g8d-action-lbl">{prop.labelSummary}</span>
@@ -669,7 +686,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                             className="g8d-undo-btn"
                             onClick={() => handleUndoMessage(msg.id)}
                           >
-                            <SvgIcon name="undo" size={12} />
+                            <SvgIcon name="undo" size={13} />
                             <span>Hoàn tác</span>
                           </button>
                         </div>
@@ -703,7 +720,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
         )}
       </div>
 
-      {/* Clean Habit Mode Bar (Zero Emoji) */}
       <div className="g8d-agent-chips">
         {HABIT_QUICK_ACTIONS.map((item) => (
           <button
@@ -724,7 +740,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
         ))}
       </div>
 
-      {/* Sticky Native Mobile Input Bar */}
       <form
         className="g8d-agent-inputbar"
         onSubmit={(e) => {
@@ -739,12 +754,13 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           title="Đọc bằng giọng nói tiếng Việt"
           aria-label="Nhập giọng nói"
         >
-          <SvgIcon name="mic" size={17} />
+          <SvgIcon name="mic" size={19} />
         </button>
 
         <textarea
           ref={inputRef}
           rows={1}
+          enterKeyHint="send"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -753,7 +769,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
               sendPrompt();
             }
           }}
-          placeholder="Nhắn ChatDVT: hôm nay tập sao, ăn gì, hay nhờ review..."
+          placeholder="Nhắn ChatDVT..."
           className="g8d-agent-textinput"
           disabled={loading}
         />
@@ -764,7 +780,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           disabled={loading || !input.trim()}
           aria-label="Gửi tin nhắn"
         >
-          <SvgIcon name="send" size={16} color="#FFFDF9" />
+          <SvgIcon name="send" size={18} color="#FFFDF9" />
         </button>
       </form>
     </div>

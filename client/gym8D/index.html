@@ -2,19 +2,65 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="color-scheme" content="light" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Gấu Gym 8D" />
-  <meta name="theme-color" content="#FAF5EA" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF5EA" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#FAF5EA" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Gấu Gym 8D — Lịch Tập, Progressive Overload & Dinh Dưỡng</title>
   <link rel="manifest" href="/gym8D/manifest.webmanifest" />
   <link rel="icon" type="image/png" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
   <link rel="apple-touch-icon" href="/gym8D/assets/mascots/app_icon_sherpa_512.png" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #FAF5EA;
+      color: #2B2118;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-text-size-adjust: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    }
+    #app-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #FAF5EA;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: opacity 0.18s ease-out;
+    }
+    #app-splash img {
+      width: 84px;
+      height: 84px;
+      border-radius: 21px;
+      box-shadow: 0 10px 28px rgba(43, 33, 24, 0.12), 0 1px 3px rgba(43, 33, 24, 0.08);
+      background: #FFFDF9;
+      object-fit: cover;
+    }
+    #app-splash strong {
+      margin-top: 14px;
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #2B2118;
+    }
+  </style>
 </head>
 <body>
+  <div id="app-splash" aria-hidden="true">
+    <img src="/gym8D/assets/mascots/app_icon_sherpa_256.webp" alt="" />
+    <strong>Gấu Gym 8D</strong>
+  </div>
   <div id="root"></div>
   <script type="module" src="/src/features/public/gym-8d/main.tsx"></script>
 </body>

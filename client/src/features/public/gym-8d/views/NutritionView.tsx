@@ -110,7 +110,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
           onClick={() => onChangeDate(addDaysISO(nutritionDateISO, -1))}
           aria-label="Ngày trước"
         >
-          <SvgIcon name="chevronLeft" size={16} />
+          <SvgIcon name="chevronLeft" size={18} />
         </button>
 
         <div className="g8d-date-nav-center">
@@ -133,48 +133,49 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
           disabled={dayDiff >= 0}
           aria-label="Ngày kế"
         >
-          <SvgIcon name="chevronRight" size={16} />
+          <SvgIcon name="chevronRight" size={18} />
         </button>
       </div>
 
       <div className="g8d-card">
         <div className="g8d-row-between">
           <div>
-            <div className="g8d-kicker">ƯỚC LƯỢNG THỰC TẾ 70–80% ({metrics.profile.weightKg}KG)</div>
-            <div className="g8d-card-title">
-              {totals.kcal} / {metrics.targetKcal} kcal{' '}
-              <span className="g8d-muted-inline">({kcalPct}%)</span>
+            <div className="g8d-kicker">ƯỚC LƯỢNG 75–80% · {metrics.profile.weightKg}KG</div>
+            <div className="g8d-kcal-hero-num">
+              <strong>{totals.kcal.toLocaleString('vi-VN')}</strong>
+              <span>/ {metrics.targetKcal.toLocaleString('vi-VN')} kcal</span>
             </div>
           </div>
-
-          <div className="g8d-row-gap">
-            <button
-              type="button"
-              className="g8d-btn-primary"
-              onClick={() =>
-                onOpenCoach('Hôm nay tao ăn uống gồm: ', 'Dinh Dưỡng')
-              }
-            >
-              Kể cho ChatDVT
-            </button>
-            <button
-              type="button"
-              className="g8d-btn-outline"
-              onClick={() => setQuickAddOpen(true)}
-            >
-              + Nhập tay
-            </button>
-          </div>
+          <span className={`g8d-badge ${kcalPct >= 80 ? 'is-green' : 'is-orange'}`}>
+            {kcalPct}% mục tiêu
+          </span>
         </div>
 
-        <div className="g8d-tiny-meta" style={{ marginTop: 4 }}>
-          Không cần cân đo từng gam — tối nằm nghỉ chỉ cần kể lại cho ChatDVT ước lượng sát 75–80% là đủ duy trì thói quen.
+        <div className="g8d-nutri-cta-row">
+          <button
+            type="button"
+            className="g8d-btn-primary"
+            onClick={() => onOpenCoach('Hôm nay tao ăn uống gồm: ', 'Dinh Dưỡng')}
+          >
+            Kể cho ChatDVT
+          </button>
+          <button
+            type="button"
+            className="g8d-btn-outline"
+            onClick={() => setQuickAddOpen(true)}
+          >
+            + Nhập tay nhanh
+          </button>
         </div>
 
-        <div className="g8d-macro-bars" style={{ marginTop: 10 }}>
+        <div className="g8d-tiny-meta" style={{ marginTop: 8 }}>
+          Tối nằm nghỉ chỉ cần kể lại cho ChatDVT ước lượng khoảng 75–80% là đủ giữ nhịp giảm mỡ.
+        </div>
+
+        <div className="g8d-macro-bars" style={{ marginTop: 12 }}>
           <div className="g8d-macro-col">
             <div className="g8d-row-between g8d-tiny-meta">
-              <strong>Đạm (Protein)</strong>
+              <strong>Đạm</strong>
               <span>
                 {totals.protein}/{metrics.proteinG}g
               </span>
@@ -186,16 +187,19 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
 
           <div className="g8d-macro-col">
             <div className="g8d-row-between g8d-tiny-meta">
-              <strong>Tinh bột · Béo</strong>
+              <strong>Carb · Béo</strong>
               <span>
-                {totals.carb}/{metrics.carbG}g C · {totals.fat}/{metrics.fatG}g F
+                {totals.carb}/{metrics.carbG}C · {totals.fat}/{metrics.fatG}F
               </span>
             </div>
             <div className="g8d-progress-track">
               <div
                 className="g8d-progress-fill"
                 style={{
-                  width: `${Math.min(100, Math.round((totals.carb / Math.max(1, metrics.carbG)) * 100))}%`,
+                  width: `${Math.min(
+                    100,
+                    Math.round((totals.carb / Math.max(1, metrics.carbG)) * 100)
+                  )}%`,
                 }}
               />
             </div>
@@ -203,9 +207,9 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
         </div>
 
         <div className="g8d-water-box">
-          <div className="g8d-row-between">
+          <div className="g8d-row-between" style={{ flexWrap: 'wrap', gap: 8 }}>
             <span className="g8d-water-label">
-              Nước uống: <strong>{(totals.waterMl / 1000).toFixed(2)}L</strong> / {metrics.waterLiters}L ({waterPct}%)
+              Nước: <strong>{(totals.waterMl / 1000).toFixed(2)}L</strong> / {metrics.waterLiters}L ({waterPct}%)
             </span>
             <div className="g8d-water-btns">
               <button type="button" onClick={() => onAddWater(-250)}>
@@ -219,7 +223,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               </button>
             </div>
           </div>
-          <div className="g8d-progress-track" style={{ marginTop: 6 }}>
+          <div className="g8d-progress-track" style={{ marginTop: 8 }}>
             <div className="g8d-progress-fill is-blue" style={{ width: `${waterPct}%` }} />
           </div>
         </div>
@@ -240,7 +244,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
                   onClick={() => onRemoveCustomMacro(c.id)}
                   aria-label="Xóa món"
                 >
-                  <SvgIcon name="x" size={13} />
+                  <SvgIcon name="x" size={14} />
                 </button>
               </div>
             ))}
@@ -255,7 +259,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
           onClick={() => setMealPlanOpen((v) => !v)}
         >
           <span>Khung giờ 5 bữa tham khảo theo ca tập {metrics.profile.workoutTime}</span>
-          <SvgIcon name="chevronDown" size={16} />
+          <SvgIcon name="chevronDown" size={17} />
         </button>
         {mealPlanOpen && (
           <div className="g8d-accordion-body">
@@ -272,11 +276,11 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
       </div>
 
       <div className="g8d-card">
-        <div className="g8d-row-between" style={{ marginBottom: 8 }}>
-          <div className="g8d-kicker">THỰC ĐƠN MÓN VIỆT (NHÂN KHẨU PHẦN ×1, ×2, ×3)</div>
+        <div className="g8d-row-between" style={{ marginBottom: 10 }}>
+          <div className="g8d-kicker">THỰC ĐƠN MÓN VIỆT (NHÂN KHẨU PHẦN)</div>
           <button
             type="button"
-            className={`g8d-pill-btn ${onlyLogged ? 'is-synced' : ''}`}
+            className={`g8d-pill-btn g8d-pill-btn-touch ${onlyLogged ? 'is-synced' : ''}`}
             onClick={() => setOnlyLogged((v) => !v)}
           >
             {onlyLogged ? `Đã chọn (${totals.itemCount})` : 'Lọc món đã ăn'}
@@ -285,6 +289,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
 
         <input
           type="search"
+          enterKeyHint="search"
           placeholder="Tìm phở bò, ức gà, trứng, whey, cơm..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -313,7 +318,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
                   <div className="g8d-choice-title">{food.name}</div>
                   <div className="g8d-tiny-meta">
                     {food.portion} · <strong>{food.kcal} kcal</strong> ·{' '}
-                    <span style={{ color: '#228B57', fontWeight: 700 }}>{food.protein}g Đạm</span> ·{' '}
+                    <span style={{ color: '#1E8754', fontWeight: 700 }}>{food.protein}g Đạm</span> ·{' '}
                     {food.carb}g C · {food.fat}g F
                   </div>
                 </div>
@@ -378,7 +383,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
                     +{p.kcal} kcal · +{p.protein}g Đạm · {p.carb}g C · {p.fat}g F
                   </div>
                 </div>
-                <SvgIcon name="plus" size={16} />
+                <SvgIcon name="plus" size={17} />
               </button>
             ))}
           </div>
@@ -386,6 +391,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
           <div className="g8d-kicker">HOẶC TỰ NHẬP CALO & ĐẠM ƯỚC LƯỢNG</div>
           <input
             type="text"
+            enterKeyHint="done"
             placeholder="Tên món (VD: Bún bò, Cơm gà...)"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
@@ -398,6 +404,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               <input
                 type="number"
                 inputMode="numeric"
+                enterKeyHint="done"
                 value={customKcal}
                 onChange={(e) => setCustomKcal(e.target.value)}
                 className="g8d-num-input"
@@ -408,6 +415,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               <input
                 type="number"
                 inputMode="numeric"
+                enterKeyHint="done"
                 value={customProtein}
                 onChange={(e) => setCustomProtein(e.target.value)}
                 className="g8d-num-input"
@@ -418,6 +426,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               <input
                 type="number"
                 inputMode="numeric"
+                enterKeyHint="done"
                 value={customCarb}
                 onChange={(e) => setCustomCarb(e.target.value)}
                 className="g8d-num-input"
@@ -428,6 +437,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               <input
                 type="number"
                 inputMode="numeric"
+                enterKeyHint="done"
                 value={customFat}
                 onChange={(e) => setCustomFat(e.target.value)}
                 className="g8d-num-input"

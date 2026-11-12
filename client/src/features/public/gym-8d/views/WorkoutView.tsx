@@ -67,9 +67,9 @@ const SESSION_TABS: Array<{ id: WorkoutSessionId; short: string }> = [
 
 const EFFORT_OPTIONS = [
   { id: 'warmup', label: 'Khởi động' },
-  { id: 'easy', label: 'Nhẹ (RPE 6)' },
-  { id: 'good', label: 'Chuẩn (RPE 8)' },
-  { id: 'hard', label: 'Nặng (RPE 9)' },
+  { id: 'easy', label: 'Nhẹ · RPE 6' },
+  { id: 'good', label: 'Chuẩn · RPE 8' },
+  { id: 'hard', label: 'Nặng · RPE 9' },
   { id: 'max', label: 'Quá sức' },
 ];
 
@@ -111,7 +111,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
   const [openSetupAcc, setOpenSetupAcc] = useState(false);
   const [openFormAcc, setOpenFormAcc] = useState(false);
 
-  const touchStartXRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const sessionDef = WORKOUT_SESSIONS[effectiveSessionId] || WORKOUT_SESSIONS.press_day;
   const baseIds =
@@ -136,14 +136,18 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
   );
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0]?.clientX ?? null;
+    const t = e.touches[0];
+    touchStartRef.current = t ? { x: t.clientX, y: t.clientY } : null;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current === null || focusedExSlot) return;
-    const dx = (e.changedTouches[0]?.clientX ?? 0) - touchStartXRef.current;
-    touchStartXRef.current = null;
-    if (Math.abs(dx) < 68) return;
+    if (!touchStartRef.current || focusedExSlot) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    if (Math.abs(dx) < 72 || Math.abs(dx) < Math.abs(dy) * 1.6) return;
     const nextDate = addDaysISO(selectedDay.isoDate, dx < 0 ? 1 : -1);
     onSelectDate(nextDate);
   };
@@ -232,17 +236,19 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
               setOpenFormAcc(false);
             }}
           >
-            <SvgIcon name="chevronLeft" size={16} /> Danh sách bài ({progress.completionPct}%)
+            <SvgIcon name="chevronLeft" size={17} />
+            <span>Danh sách bài ({progress.completionPct}%)</span>
           </button>
 
           <button
             type="button"
-            className="g8d-pill-btn"
+            className="g8d-pill-btn g8d-pill-btn-touch"
             onClick={() =>
               setSwapTarget({ origId: focusedExSlot.origId, exId: focusedExSlot.exId })
             }
           >
-            <SvgIcon name="swap" size={14} /> Đổi máy khác
+            <SvgIcon name="swap" size={15} />
+            <span>Đổi máy khác</span>
           </button>
         </div>
 
@@ -251,23 +257,29 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             <img
               src={resolveMascotAsset(ex.mascot)}
               alt={ex.shortName}
-              width={54}
-              height={54}
+              width={56}
+              height={56}
               className="g8d-ex-mascot-lg"
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="g8d-ex-badges-line">
-                <span className="g8d-mini-tag is-orange">Bài #{focusedExSlot.index + 1} · {ex.tier}</span>
-                <span className="g8d-mini-tag">Mục tiêu {ex.repRange[0]}–{ex.repRange[1]} reps</span>
+                <span className="g8d-mini-tag is-orange">
+                  Bài #{focusedExSlot.index + 1} · {ex.tier}
+                </span>
+                <span className="g8d-mini-tag">
+                  {ex.repRange[0]}–{ex.repRange[1]} reps
+                </span>
                 <span className="g8d-mini-tag">Nghỉ {ex.defaultRestSec}s</span>
               </div>
               <h2 className="g8d-ex-detail-title">{ex.name}</h2>
-              <div className="g8d-tiny-meta">{ex.muscle} · {ex.equipment}</div>
+              <div className="g8d-tiny-meta">
+                {ex.muscle} · {ex.equipment}
+              </div>
             </div>
           </div>
 
           <div className="g8d-overload-banner">
-            <div>
+            <div style={{ minWidth: 0 }}>
               {prevPerf ? (
                 <div className="g8d-overload-line">
                   <strong>Kỳ trước ({prevPerf.lastDateShort}):</strong> Đỉnh{' '}
@@ -302,9 +314,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
         </div>
 
         <div className="g8d-card">
-          <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+          <div className="g8d-row-between" style={{ marginBottom: 10 }}>
             <div className="g8d-kicker">GHI NHẬN HIỆP TẬP ({selectedDay.shortDate})</div>
-            <span className="g8d-tiny-meta">Chốt hiệp để tự đếm nghỉ {ex.defaultRestSec}s</span>
+            <span className="g8d-tiny-meta">Chốt hiệp tự đếm nghỉ {ex.defaultRestSec}s</span>
           </div>
 
           <div className="g8d-set-list">
@@ -323,17 +335,29 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                   className={`g8d-set-row ${s.done ? 'is-done' : ''} ${isWarmup ? 'is-warmup' : ''}`}
                 >
                   <div className="g8d-set-top">
-                    <span className={`g8d-set-badge ${isWarmup ? 'is-w' : ''}`}>
-                      {isWarmup ? 'Khởi động' : `Hiệp ${s.type}`}
-                    </span>
-                    <span className="g8d-tiny-meta">{s.prev}</span>
-                    {isSetPR && <span className="g8d-pr-chip">PR mới</span>}
+                    <div className="g8d-set-meta-left">
+                      <span className={`g8d-set-badge ${isWarmup ? 'is-w' : ''}`}>
+                        {isWarmup ? 'Khởi động' : `Hiệp ${s.type}`}
+                      </span>
+                      <span className="g8d-tiny-meta">{s.prev}</span>
+                      {isSetPR && <span className="g8d-pr-chip">PR mới</span>}
+                    </div>
+
+                    <button
+                      type="button"
+                      className={`g8d-check-btn ${s.done ? 'is-done' : ''}`}
+                      onClick={() => updateSingleSet(idx, { done: !s.done })}
+                    >
+                      <SvgIcon name="check" size={14} strokeWidth={2.7} />
+                      <span>{s.done ? 'Đã chốt' : 'Chốt hiệp'}</span>
+                    </button>
                   </div>
 
                   <div className="g8d-set-controls">
                     <div className="g8d-stepper">
                       <button
                         type="button"
+                        aria-label="Giảm mức tạ"
                         onClick={() =>
                           updateSingleSet(idx, {
                             weight: Math.max(0, Math.round((s.weight - weightStep) * 10) / 10),
@@ -346,6 +370,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                         <input
                           type="number"
                           inputMode="decimal"
+                          enterKeyHint="done"
                           step="0.5"
                           value={s.weight}
                           onChange={(e) =>
@@ -359,6 +384,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                       </div>
                       <button
                         type="button"
+                        aria-label="Tăng mức tạ"
                         onClick={() =>
                           updateSingleSet(idx, {
                             weight: Math.round((s.weight + weightStep) * 10) / 10,
@@ -372,6 +398,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                     <div className="g8d-stepper">
                       <button
                         type="button"
+                        aria-label="Giảm số lần lặp"
                         onClick={() =>
                           updateSingleSet(idx, { reps: Math.max(1, (Number(s.reps) || 1) - 1) })
                         }
@@ -382,6 +409,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                         <input
                           type="number"
                           inputMode="numeric"
+                          enterKeyHint="done"
                           value={s.reps}
                           onChange={(e) =>
                             updateSingleSet(idx, {
@@ -394,6 +422,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                       </div>
                       <button
                         type="button"
+                        aria-label="Tăng số lần lặp"
                         onClick={() =>
                           updateSingleSet(idx, { reps: (Number(s.reps) || 0) + 1 })
                         }
@@ -401,14 +430,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                         +
                       </button>
                     </div>
-
-                    <button
-                      type="button"
-                      className={`g8d-check-btn ${s.done ? 'is-done' : ''}`}
-                      onClick={() => updateSingleSet(idx, { done: !s.done })}
-                    >
-                      {s.done ? 'Đã chốt' : 'Chốt'}
-                    </button>
                   </div>
 
                   {!isWarmup && (
@@ -431,11 +452,15 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
           </div>
 
           <div className="g8d-set-footer">
-            <button type="button" className="g8d-pill-btn" onClick={addSetRow}>
+            <button type="button" className="g8d-pill-btn g8d-pill-btn-touch" onClick={addSetRow}>
               + Thêm hiệp
             </button>
             {sets.length > 1 && (
-              <button type="button" className="g8d-pill-btn" onClick={removeLastSetRow}>
+              <button
+                type="button"
+                className="g8d-pill-btn g8d-pill-btn-touch"
+                onClick={removeLastSetRow}
+              >
                 − Bớt hiệp cuối
               </button>
             )}
@@ -450,8 +475,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             </div>
           )}
 
-          {/* Contextual Heavy Weight / Missed Reps Coach Strip */}
-          <div className="g8d-workout-ai-strip" style={{ marginTop: 10 }}>
+          <div className="g8d-workout-ai-strip" style={{ marginTop: 12 }}>
             <span className="g8d-tiny-meta">
               Mức tạ {currentWorkWeight}kg thấy quá nặng, hụt rep hay mỏi khớp?
             </span>
@@ -465,7 +489,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                 )
               }
             >
-              Hỏi ChatDVT điều chỉnh
+              Hỏi ChatDVT
             </button>
           </div>
         </div>
@@ -477,7 +501,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             onClick={() => setOpenSetupAcc((v) => !v)}
           >
             <span>Vị trí & Setup máy tại Phòng Tập</span>
-            <SvgIcon name="chevronDown" size={16} />
+            <SvgIcon name="chevronDown" size={17} />
           </button>
           {openSetupAcc && (
             <div className="g8d-accordion-body">
@@ -505,7 +529,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             onClick={() => setOpenFormAcc((v) => !v)}
           >
             <span>Tư thế chuẩn, lỗi cần tránh & video mẫu</span>
-            <SvgIcon name="chevronDown" size={16} />
+            <SvgIcon name="chevronDown" size={17} />
           </button>
           {openFormAcc && (
             <div className="g8d-accordion-body">
@@ -523,7 +547,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="g8d-btn-outline g8d-w-full"
-                  style={{ marginTop: 8, textAlign: 'center', textDecoration: 'none', display: 'block' }}
+                  style={{ marginTop: 10, textAlign: 'center', textDecoration: 'none', display: 'block' }}
                 >
                   Xem video kỹ thuật ({ex.videoAuthor})
                 </a>
@@ -566,6 +590,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
         <div className="g8d-stack-sm">
           <input
             type="search"
+            enterKeyHint="search"
             placeholder="Tìm tên máy hoặc nhóm cơ..."
             value={swapSearch}
             onChange={(e) => setSwapSearch(e.target.value)}
@@ -590,13 +615,22 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                 }}
               >
                 <div className="g8d-row-gap">
-                  <img src={resolveMascotAsset(cand.mascot)} alt="" width={36} height={36} className="g8d-mini-avatar" loading="lazy" />
+                  <img
+                    src={resolveMascotAsset(cand.mascot)}
+                    alt=""
+                    width={38}
+                    height={38}
+                    className="g8d-mini-avatar"
+                    loading="lazy"
+                  />
                   <div>
                     <div className="g8d-choice-title">{cand.shortName}</div>
-                    <div className="g8d-tiny-meta">{cand.equipment} · {cand.tier}</div>
+                    <div className="g8d-tiny-meta">
+                      {cand.equipment} · {cand.tier}
+                    </div>
                   </div>
                 </div>
-                {cand.id === swapTarget?.exId && <span>Đang chọn</span>}
+                {cand.id === swapTarget?.exId && <span className="g8d-mini-tag is-orange">Đang chọn</span>}
               </button>
             ))}
           </div>
@@ -621,7 +655,14 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                     }}
                   >
                     <div className="g8d-row-gap">
-                      <img src={resolveMascotAsset(cand.mascot)} alt="" width={36} height={36} className="g8d-mini-avatar" loading="lazy" />
+                      <img
+                        src={resolveMascotAsset(cand.mascot)}
+                        alt=""
+                        width={38}
+                        height={38}
+                        className="g8d-mini-avatar"
+                        loading="lazy"
+                      />
                       <div>
                         <div className="g8d-choice-title">{cand.shortName}</div>
                         <div className="g8d-tiny-meta">{cand.muscle}</div>
@@ -657,7 +698,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
               key={d.isoDate}
               type="button"
               onClick={() => onSelectDate(d.isoDate)}
-              className={`g8d-day-pill ${d.isCompleted ? 'is-done-pill' : d.isMissed ? 'is-missed-pill' : ''} ${isSel ? 'is-selected' : ''} ${d.isToday ? 'is-today' : ''}`}
+              className={`g8d-day-pill ${
+                d.isCompleted ? 'is-done-pill' : d.isMissed ? 'is-missed-pill' : ''
+              } ${isSel ? 'is-selected' : ''} ${d.isToday ? 'is-today' : ''}`}
             >
               <span className="g8d-day-pill-dow">{DAY_TINY_NAMES[d.dayOfWeek]}</span>
               <strong className="g8d-day-pill-num">{d.dayNumber}</strong>
@@ -675,7 +718,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             <div>
               <div className="g8d-kicker">NGÀY ĐANG CHỌN ({selectedDay.shortDate})</div>
               <div className="g8d-card-title">Đang là ngày nghỉ hồi phục cơ</div>
-              <div className="g8d-tiny-meta">Nghỉ ngơi giữ chuỗi kỷ luật, hoặc bấm mở tập nếu hôm nay muốn vào bài.</div>
+              <div className="g8d-tiny-meta">
+                Nghỉ ngơi giữ chuỗi kỷ luật, hoặc bấm mở tập nếu hôm nay muốn vào bài.
+              </div>
             </div>
             <button
               type="button"
@@ -708,7 +753,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             className="g8d-gym-chip"
             onClick={() => setGymSheetOpen(true)}
           >
-            {GYM_BRANCHES[selectedGymId]?.shortName || 'Phòng tập'} ▾
+            <span>{GYM_BRANCHES[selectedGymId]?.shortName || 'Phòng tập'}</span>
+            <SvgIcon name="chevronDown" size={14} />
           </button>
         </div>
 
@@ -717,13 +763,13 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             <div className="g8d-workout-title-compact">
               {sessionDef.shortName} · <span className="g8d-orange-txt">{progress.completionPct}%</span>
             </div>
-            <div className="g8d-progress-track" style={{ marginTop: 4 }}>
+            <div className="g8d-progress-track" style={{ marginTop: 6 }}>
               <div
                 className={`g8d-progress-fill ${progress.meetsThreshold ? 'is-green' : ''}`}
                 style={{ width: `${progress.completionPct}%` }}
               />
             </div>
-            <div className="g8d-tiny-meta" style={{ marginTop: 3 }}>
+            <div className="g8d-tiny-meta" style={{ marginTop: 4 }}>
               {progress.completedSetsCount}/{progress.totalSetsCount} hiệp · Tổng{' '}
               {progress.totalVolumeKg.toLocaleString('vi-VN')}kg
             </div>
@@ -765,7 +811,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
           <span className="g8d-tiny-meta">
             {selectedDay.isCompleted
               ? 'Đã tính vào chuỗi kỷ luật tuần này.'
-              : 'Kẹt máy, mỏi vai/lưng hoặc muốn chỉnh nhanh giáo án?'}
+              : 'Kẹt máy, mỏi vai/lưng hoặc muốn chỉnh giáo án?'}
           </span>
           <button
             type="button"
@@ -798,13 +844,21 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             <div
               key={`${origId}-${exId}-${index}`}
               className={`g8d-ex-card ${isAllDone ? 'is-done' : ''}`}
+              role="button"
+              tabIndex={0}
               onClick={() => setFocusedExSlot({ origId, exId: ex.id, index })}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setFocusedExSlot({ origId, exId: ex.id, index });
+                }
+              }}
             >
               <img
                 src={resolveMascotAsset(ex.mascot)}
                 alt={ex.shortName}
-                width={48}
-                height={48}
+                width={52}
+                height={52}
                 loading={index < 4 ? 'eager' : 'lazy'}
                 className="g8d-ex-avatar"
               />
@@ -841,8 +895,11 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
               <div className="g8d-ex-right" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
-                  className={`g8d-ex-count-pill ${isAllDone ? 'is-done' : doneSets > 0 ? 'is-part' : ''}`}
+                  className={`g8d-ex-count-pill ${
+                    isAllDone ? 'is-done' : doneSets > 0 ? 'is-part' : ''
+                  }`}
                   onClick={() => setFocusedExSlot({ origId, exId: ex.id, index })}
+                  aria-label={`Mở bài ${ex.shortName}, đã chốt ${doneSets} trên ${sets.length} hiệp`}
                 >
                   {doneSets}/{sets.length}
                 </button>
@@ -851,8 +908,9 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                   className="g8d-ex-swap-mini"
                   onClick={() => setSwapTarget({ origId, exId: ex.id })}
                   title="Đổi máy tập"
+                  aria-label={`Đổi máy cho bài ${ex.shortName}`}
                 >
-                  <SvgIcon name="swap" size={13} />
+                  <SvgIcon name="swap" size={16} />
                 </button>
               </div>
             </div>
@@ -861,7 +919,12 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
       </div>
 
       <div className="g8d-row-gap" style={{ justifyContent: 'space-between' }}>
-        <button type="button" className="g8d-btn-outline" style={{ flex: 1 }} onClick={() => setAddOpen(true)}>
+        <button
+          type="button"
+          className="g8d-btn-outline"
+          style={{ flex: 1 }}
+          onClick={() => setAddOpen(true)}
+        >
           + Thêm bài vào buổi ({effectiveIds.length})
         </button>
         {effectiveIds.length > 4 && (
@@ -895,13 +958,22 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
               }}
             >
               <div className="g8d-row-gap">
-                <img src={resolveMascotAsset(cand.mascot)} alt="" width={36} height={36} className="g8d-mini-avatar" loading="lazy" />
+                <img
+                  src={resolveMascotAsset(cand.mascot)}
+                  alt=""
+                  width={38}
+                  height={38}
+                  className="g8d-mini-avatar"
+                  loading="lazy"
+                />
                 <div>
                   <div className="g8d-choice-title">{cand.shortName}</div>
-                  <div className="g8d-tiny-meta">{cand.muscle} · {cand.equipment}</div>
+                  <div className="g8d-tiny-meta">
+                    {cand.muscle} · {cand.equipment}
+                  </div>
                 </div>
               </div>
-              <SvgIcon name="plus" size={16} />
+              <SvgIcon name="plus" size={17} />
             </button>
           ))}
         </div>
@@ -929,7 +1001,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                     <div className="g8d-choice-title">{br.shortName}</div>
                     <div className="g8d-tiny-meta">{br.address}</div>
                   </div>
-                  {selectedGymId === gid && <SvgIcon name="check" size={15} />}
+                  {selectedGymId === gid && <SvgIcon name="check" size={16} color="#E85D1A" />}
                 </button>
               );
             })}
@@ -953,7 +1025,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                     <div className="g8d-choice-title">{preset.label}</div>
                     <div className="g8d-tiny-meta">{preset.description}</div>
                   </div>
-                  {curPreset === preset.id && <SvgIcon name="check" size={15} />}
+                  {curPreset === preset.id && <SvgIcon name="check" size={16} color="#E85D1A" />}
                 </button>
               );
             })}

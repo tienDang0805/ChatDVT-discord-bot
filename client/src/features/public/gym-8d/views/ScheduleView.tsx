@@ -54,7 +54,11 @@ interface ScheduleViewProps {
   onChangeWeekOffset: (next: number) => void;
   onChangeMonthOffset: (next: number) => void;
   onOpenWorkoutForDate: (isoDate: string, sessionId?: WorkoutSessionId) => void;
-  onSetDayStatus: (isoDate: string, status: 'done' | 'missed' | null, preferred?: WorkoutSessionId) => void;
+  onSetDayStatus: (
+    isoDate: string,
+    status: 'done' | 'missed' | null,
+    preferred?: WorkoutSessionId
+  ) => void;
   onMarkDayOff: (isoDate: string) => void;
   onRestoreDayWorkout: (isoDate: string) => void;
   onSetDayNote: (isoDate: string, note: string) => void;
@@ -181,7 +185,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
       {subTab === 'calendar' && (
         <>
-          {/* 1. Tactile Day Check-In & Highlight Card */}
           <div
             className={`g8d-card g8d-checkin-card ${
               selectedDay.isCompleted
@@ -198,8 +201,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 <img
                   src={resolveMascotAsset(selectedSess ? selectedSess.mascot : 'restHydration')}
                   alt=""
-                  width={44}
-                  height={44}
+                  width={48}
+                  height={48}
                   className="g8d-ex-avatar"
                 />
                 <div style={{ minWidth: 0 }}>
@@ -207,7 +210,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                     {selectedDay.isToday ? 'HÔM NAY · ' : ''}
                     {selectedDay.dayShort.toUpperCase()} ({selectedDay.shortDate})
                   </div>
-                  <div className="g8d-card-title" style={{ fontSize: 14.5 }}>
+                  <div className="g8d-card-title" style={{ fontSize: 15 }}>
                     {selectedDay.isCompleted
                       ? 'Đã hoàn thành buổi tập · +1 chuỗi'
                       : selectedDay.isMissed
@@ -221,7 +224,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
               <button
                 type="button"
-                className="g8d-pill-btn"
+                className="g8d-pill-btn g8d-pill-btn-touch"
                 onClick={() => openEditSheet(selectedDay)}
               >
                 Đổi lịch
@@ -313,17 +316,17 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
               <span className="g8d-note-tag">Ghi chú</span>
               <input
                 type="text"
+                enterKeyHint="done"
                 value={selectedNote}
                 onChange={(e) => onSetDayNote(selectedDay.isoDate, e.target.value)}
-                placeholder={`Ghi chú ngày ${selectedDay.shortDate} (cảm giác cơ, mức tạ, bận việc...)`}
+                placeholder={`Ghi chú ngày ${selectedDay.shortDate} (cảm giác cơ, mức tạ...)`}
                 className="g8d-note-input"
               />
             </div>
           </div>
 
-          {/* 2. High-Contrast 7-Day Bento Calendar Card */}
           <div className="g8d-card g8d-calendar-card">
-            <div className="g8d-row-between" style={{ marginBottom: 8 }}>
+            <div className="g8d-row-between" style={{ marginBottom: 10 }}>
               <div className="g8d-cal-nav">
                 <button
                   type="button"
@@ -335,7 +338,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                   }
                   aria-label="Lùi"
                 >
-                  <SvgIcon name="chevronLeft" size={16} />
+                  <SvgIcon name="chevronLeft" size={18} />
                 </button>
                 <div>
                   <div className="g8d-cal-range">
@@ -353,7 +356,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                   }
                   aria-label="Tiến"
                 >
-                  <SvgIcon name="chevronRight" size={16} />
+                  <SvgIcon name="chevronRight" size={18} />
                 </button>
               </div>
 
@@ -395,14 +398,14 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                     className={isSpacedPPL ? 'is-active' : ''}
                     onClick={() => onApplyWeeklySplitPreset('spaced')}
                   >
-                    T3 Đẩy · T4 Kéo · T6 Chân
+                    T3 · T4 · T6 Giãn
                   </button>
                   <button
                     type="button"
                     className={isConsecutivePPL ? 'is-active' : ''}
                     onClick={() => onApplyWeeklySplitPreset('consecutive')}
                   >
-                    T3 · T4 · T5 Liên Tiếp
+                    T3 · T4 · T5 Liền
                   </button>
                   <button
                     type="button"
@@ -428,70 +431,76 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                   </span>
                 </div>
 
-                {[dynamicWeek.days.slice(0, 4), dynamicWeek.days.slice(4, 7)].map((rowDays, rIdx) => (
-                  <div
-                    key={rIdx}
-                    className={`g8d-bento-row ${rIdx === 0 ? 'cols-4' : 'cols-3'}`}
-                  >
-                    {rowDays.map((d) => {
-                      const isSel = d.isoDate === selectedDay.isoDate;
-                      const isTmr = d.isoDate === tomorrowEntry.isoDate;
-                      const sess =
-                        d.sessionId !== 'rest'
-                          ? WORKOUT_SESSIONS[d.sessionId as WorkoutSessionId]
-                          : null;
-                      const hasNote = Boolean(dayNotesByDate[d.isoDate]);
-                      const stateCls = d.isCompleted
-                        ? 'is-done'
-                        : d.isMissed
-                        ? 'is-missed'
-                        : !sess
-                        ? 'is-off'
-                        : isTmr
-                        ? 'is-tomorrow'
-                        : 'is-workout';
+                {[dynamicWeek.days.slice(0, 4), dynamicWeek.days.slice(4, 7)].map(
+                  (rowDays, rIdx) => (
+                    <div
+                      key={rIdx}
+                      className={`g8d-bento-row ${rIdx === 0 ? 'cols-4' : 'cols-3'}`}
+                    >
+                      {rowDays.map((d) => {
+                        const isSel = d.isoDate === selectedDay.isoDate;
+                        const isTmr = d.isoDate === tomorrowEntry.isoDate;
+                        const sess =
+                          d.sessionId !== 'rest'
+                            ? WORKOUT_SESSIONS[d.sessionId as WorkoutSessionId]
+                            : null;
+                        const hasNote = Boolean(dayNotesByDate[d.isoDate]);
+                        const stateCls = d.isCompleted
+                          ? 'is-done'
+                          : d.isMissed
+                          ? 'is-missed'
+                          : !sess
+                          ? 'is-off'
+                          : isTmr
+                          ? 'is-tomorrow'
+                          : 'is-workout';
 
-                      return (
-                        <button
-                          key={d.isoDate}
-                          type="button"
-                          onClick={() => onSelectDate(d.isoDate)}
-                          className={`g8d-bento-day ${stateCls} ${isSel ? 'is-selected' : ''} ${
-                            d.isToday ? 'is-today' : ''
-                          }`}
-                        >
-                          <div className="g8d-bento-top">
-                            <span>{DAY_TINY_NAMES[d.dayOfWeek]}</span>
-                            <strong>{d.dayNumber}</strong>
-                          </div>
+                        return (
+                          <button
+                            key={d.isoDate}
+                            type="button"
+                            onClick={() => onSelectDate(d.isoDate)}
+                            className={`g8d-bento-day ${stateCls} ${
+                              isSel ? 'is-selected' : ''
+                            } ${d.isToday ? 'is-today' : ''}`}
+                          >
+                            <div className="g8d-bento-top">
+                              <span>{DAY_TINY_NAMES[d.dayOfWeek]}</span>
+                              <strong>{d.dayNumber}</strong>
+                            </div>
 
-                          <img
-                            src={resolveMascotAsset(sess ? sess.mascot : 'restHydration')}
-                            alt=""
-                            width={34}
-                            height={34}
-                            className="g8d-bento-mascot"
-                            loading="lazy"
-                          />
+                            <img
+                              src={resolveMascotAsset(sess ? sess.mascot : 'restHydration')}
+                              alt=""
+                              width={36}
+                              height={36}
+                              className="g8d-bento-mascot"
+                              loading="lazy"
+                            />
 
-                          <div className="g8d-bento-label">
-                            {d.isCompleted
-                              ? 'ĐÃ XONG'
-                              : d.isMissed
-                              ? 'BÁO BẬN'
-                              : sess
-                              ? sess.calendarLabel
-                              : 'NGHỈ CƠ'}
-                          </div>
+                            <div className="g8d-bento-label">
+                              {d.isCompleted
+                                ? 'ĐÃ XONG'
+                                : d.isMissed
+                                ? 'BÁO BẬN'
+                                : sess
+                                ? sess.calendarLabel
+                                : 'NGHỈ CƠ'}
+                            </div>
 
-                          <div className="g8d-bento-sub">
-                            {hasNote ? 'Có ghi chú' : sess ? d.workoutTime : `Ngủ ${d.sleepTargetTime}`}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
+                            <div className="g8d-bento-sub">
+                              {hasNote
+                                ? 'Có ghi chú'
+                                : sess
+                                ? d.workoutTime
+                                : `Ngủ ${d.sleepTargetTime}`}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )
+                )}
               </>
             )}
 
@@ -538,7 +547,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             )}
           </div>
 
-          {/* 3. Compact Tomorrow Preview + ChatDVT Schedule Review */}
           <div className="g8d-smart-strip">
             <div className="g8d-smart-strip-text">
               <strong>Ngủ trước {selectedDay.sleepTargetTime}</strong> · Mai ({tomorrowEntry.dayShort}):{' '}
@@ -578,8 +586,12 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
               <div className="g8d-kicker">ĐỒNG HỒ SINH HỌC CA TẬP {metrics.profile.workoutTime}</div>
               <div className="g8d-card-title">Lịch Ngủ & Phục Hồi 24 Giờ</div>
             </div>
-            <button type="button" className="g8d-pill-btn" onClick={onOpenPushSettings}>
-              {pushSubscribed ? 'Thông báo iOS: Bật' : 'Bật thông báo iOS'}
+            <button
+              type="button"
+              className="g8d-pill-btn g8d-pill-btn-touch"
+              onClick={onOpenPushSettings}
+            >
+              {pushSubscribed ? 'Thông báo: Bật' : 'Bật thông báo'}
             </button>
           </div>
 
@@ -592,8 +604,8 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 <img
                   src={resolveMascotAsset(item.mascot)}
                   alt=""
-                  width={38}
-                  height={38}
+                  width={40}
+                  height={40}
                   loading="lazy"
                   className="g8d-timeline-mascot"
                 />
@@ -647,7 +659,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                   <div className="g8d-choice-title">{opt.label}</div>
                   <div className="g8d-tiny-meta">{opt.sub}</div>
                 </div>
-                {draftSession === opt.id && <SvgIcon name="check" size={15} />}
+                {draftSession === opt.id && <SvgIcon name="check" size={16} color="#E85D1A" />}
               </button>
             ))}
           </div>

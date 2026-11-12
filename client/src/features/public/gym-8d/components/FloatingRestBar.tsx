@@ -14,13 +14,16 @@ export const FloatingRestBar: React.FC<FloatingRestBarProps> = ({ timer, onAdjus
 
   const mins = Math.floor(timer.remainingSec / 60);
   const secs = timer.remainingSec % 60;
-  const pct = Math.max(0, Math.min(100, Math.round((timer.remainingSec / Math.max(1, timer.totalSec)) * 100)));
+  const pct = Math.max(
+    0,
+    Math.min(100, Math.round((timer.remainingSec / Math.max(1, timer.totalSec)) * 100))
+  );
 
   return (
     <div className="g8d-floating-rest" role="status" aria-live="polite">
       <div className="g8d-floating-rest-top">
         <div className="g8d-floating-rest-clock">
-          <SvgIcon name="clock" size={14} color="#FDBA74" />
+          <SvgIcon name="clock" size={15} color="#FDBA74" />
           <span>{pad2(mins)}:{pad2(secs)}</span>
         </div>
         <div className="g8d-floating-rest-meta">

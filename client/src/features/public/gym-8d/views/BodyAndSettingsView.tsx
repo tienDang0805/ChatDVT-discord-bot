@@ -131,7 +131,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
 
       {section === 'push' && (
         <>
-          {/* 0. Private Owner Ultra AI Card (Phone-Exclusive Unlock) */}
           <div className="g8d-card g8d-ultra-card">
             <div className="g8d-row-between">
               <div>
@@ -149,22 +148,22 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </span>
             </div>
 
-            <p className="g8d-card-sub" style={{ marginTop: 6 }}>
+            <p className="g8d-push-explain" style={{ marginTop: 6 }}>
               {ultra.unlocked
                 ? `Chỉ điện thoại này giữ mã xác thực chủ sở hữu để gọi thẳng CLIProxyAPI (${ultra.proxyUrlMasked}). Mọi thiết bị của người khác đều chỉ chạy tầng Free.`
                 : 'Nhập mật khẩu chủ sở hữu 1 lần trên iPhone để mở khoá mô hình Carbon / Flash 3.8 qua CLIProxyAPI riêng của mày. Mã khoá lưu độc lập trên máy này, người khác không thể dùng chung.'}
             </p>
 
             {ultra.unlocked ? (
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 12 }}>
                 <div className="g8d-kicker" style={{ marginBottom: 6 }}>
                   MÔ HÌNH ƯU TIÊN KHI CHAT TRÊN ĐIỆN THOẠI
                 </div>
                 <div className="g8d-seg-mini g8d-w-full" style={{ flexWrap: 'wrap' }}>
                   {(
                     [
-                      { id: 'gemini-4-carbon-high', label: 'Carbon High (Sâu nhất)' },
-                      { id: 'gemini-3.8-flash-high', label: 'Flash 3.8 (Siêu nhanh)' },
+                      { id: 'gemini-4-carbon-high', label: 'Carbon High' },
+                      { id: 'gemini-3.8-flash-high', label: 'Flash 3.8' },
                       { id: 'gemini-4-argon-high', label: 'Argon High' },
                       { id: 'free', label: 'Tầng Free' },
                     ] as Array<{ id: UltraModelChoice; label: string }>
@@ -184,29 +183,31 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                   <button
                     type="button"
                     className="g8d-btn-outline"
+                    style={{ flex: 1 }}
                     onClick={() => setShowAdvancedProxy((v) => !v)}
                   >
-                    {showAdvancedProxy ? 'Ẩn cấu hình Proxy' : 'Cấu hình Proxy URL (nếu đổi VPS)'}
+                    {showAdvancedProxy ? 'Ẩn Proxy URL' : 'Cấu hình Proxy URL'}
                   </button>
                   <button
                     type="button"
                     className="g8d-btn-outline"
                     onClick={ultra.lockOnThisDevice}
                   >
-                    Khoá lại trên máy này
+                    Khoá lại
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 12 }}>
                 <div className="g8d-row-gap">
                   <input
                     type="password"
+                    enterKeyHint="done"
                     value={ultraPasskey}
                     onChange={(e) => setUltraPasskey(e.target.value)}
                     placeholder="Nhập mật khẩu chủ sở hữu..."
                     className="g8d-search-input"
-                    style={{ flex: 1, marginBottom: 0, fontSize: 16 }}
+                    style={{ flex: 1, marginBottom: 0 }}
                   />
                   <button
                     type="button"
@@ -227,23 +228,27 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 <button
                   type="button"
                   className="g8d-link-btn"
-                  style={{ marginTop: 6 }}
+                  style={{ marginTop: 8 }}
                   onClick={() => setShowAdvancedProxy((v) => !v)}
                 >
-                  {showAdvancedProxy ? 'Ẩn tuỳ chỉnh CLIProxyAPI URL' : 'Tuỳ chỉnh CLIProxyAPI URL từ xa (tuỳ chọn)'}
+                  {showAdvancedProxy
+                    ? 'Ẩn tuỳ chỉnh CLIProxyAPI URL'
+                    : 'Tuỳ chỉnh CLIProxyAPI URL từ xa (tuỳ chọn)'}
                 </button>
               </div>
             )}
 
             {showAdvancedProxy && (
-              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <input
                   type="url"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={customProxyUrl}
                   onChange={(e) => setCustomProxyUrl(e.target.value)}
                   placeholder="Mặc định: http://127.0.0.1:8317/v1"
                   className="g8d-search-input"
-                  style={{ marginBottom: 0, fontSize: 16 }}
                 />
                 <input
                   type="password"
@@ -251,7 +256,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                   onChange={(e) => setCustomProxyKey(e.target.value)}
                   placeholder="Bearer key (mặc định: sk-local-ultra-key)"
                   className="g8d-search-input"
-                  style={{ marginBottom: 0, fontSize: 16 }}
                 />
                 {ultra.unlocked && (
                   <input
@@ -260,7 +264,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                     onChange={(e) => setUltraPasskey(e.target.value)}
                     placeholder="Xác nhận mật khẩu chủ sở hữu để lưu URL mới"
                     className="g8d-search-input"
-                    style={{ marginBottom: 0, fontSize: 16 }}
                   />
                 )}
                 {ultra.unlocked && (
@@ -289,12 +292,11 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             )}
           </div>
 
-          {/* 1. Browser-Aware Web-to-App Guide (Safari / Chrome iOS / Android) */}
           <div className="g8d-card">
             <div className="g8d-row-between" style={{ marginBottom: 8 }}>
               <div>
                 <div className="g8d-kicker">TRÌNH DUYỆT HIỆN TẠI: {env.browserLabel.toUpperCase()}</div>
-                <div className="g8d-card-title">Biến Web Thành App Ngoài Màn Hình Chính</div>
+                <div className="g8d-card-title">Cài Đặt Ngoài Màn Hình Chính</div>
               </div>
             </div>
 
@@ -306,7 +308,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             />
           </div>
 
-          {/* 2. Native iOS Web Push Card */}
           <div className="g8d-card g8d-push-hero">
             <div className="g8d-row-between">
               <div>
@@ -325,7 +326,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             </div>
 
             <p className="g8d-push-explain">
-              Hoạt động trực tiếp qua <strong>Apple Push Notification service (APNs)</strong> trên iOS 16.4+ — tự động hiện banner kèm âm báo trên màn hình khóa iPhone mà không cần dùng Discord.
+              Hoạt động trực tiếp qua <strong>Apple Push Notification service (APNs)</strong> trên iOS 16.4+ — tự động hiện banner kèm âm báo trên màn hình khóa iPhone độc lập hoàn toàn.
             </p>
 
             {pushStatus === 'denied' && (
@@ -334,7 +335,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </div>
             )}
 
-            <div className="g8d-stack-xs" style={{ marginTop: 10 }}>
+            <div className="g8d-stack-xs" style={{ marginTop: 12 }}>
               {pushStatus !== 'subscribed' ? (
                 <button
                   type="button"
@@ -356,7 +357,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                     disabled={testPushCountdown > 0}
                   >
                     {testPushCountdown > 0
-                      ? `Khóa màn hình ngay — Gửi sau ${testPushCountdown}s...`
+                      ? `Khóa màn hình — Gửi sau ${testPushCountdown}s...`
                       : 'Gửi thử thông báo sau 5 giây'}
                   </button>
                   <button
@@ -370,9 +371,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               )}
             </div>
 
-            {pushStatusMessage && (
-              <div className="g8d-push-msg">{pushStatusMessage}</div>
-            )}
+            {pushStatusMessage && <div className="g8d-push-msg">{pushStatusMessage}</div>}
 
             <div className="g8d-push-toggles">
               <label className="g8d-toggle-row">
@@ -386,6 +385,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 </div>
                 <input
                   type="checkbox"
+                  className="g8d-ios-switch"
                   checked={pushPrefs.sleepReminder}
                   onChange={(e) => onUpdatePushPref('sleepReminder', e.target.checked)}
                 />
@@ -402,6 +402,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 </div>
                 <input
                   type="checkbox"
+                  className="g8d-ios-switch"
                   checked={pushPrefs.morningWake}
                   onChange={(e) => onUpdatePushPref('morningWake', e.target.checked)}
                 />
@@ -416,6 +417,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 </div>
                 <input
                   type="checkbox"
+                  className="g8d-ios-switch"
                   checked={pushPrefs.restTimerPush}
                   onChange={(e) => onUpdatePushPref('restTimerPush', e.target.checked)}
                 />
@@ -430,6 +432,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 </div>
                 <input
                   type="checkbox"
+                  className="g8d-ios-switch"
                   checked={pushPrefs.streakGuard}
                   onChange={(e) => onUpdatePushPref('streakGuard', e.target.checked)}
                 />
@@ -442,6 +445,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 </div>
                 <input
                   type="checkbox"
+                  className="g8d-ios-switch"
                   checked={pushPrefs.weighInReminder}
                   onChange={(e) => onUpdatePushPref('weighInReminder', e.target.checked)}
                 />
@@ -451,14 +455,13 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             <button
               type="button"
               className="g8d-btn-outline g8d-w-full"
-              style={{ marginTop: 10 }}
+              style={{ marginTop: 12 }}
               onClick={downloadICS}
             >
               Tải lịch nhắc vào Apple Calendar (.ics)
             </button>
           </div>
 
-          {/* 3. Cloud Sync & Backup Card */}
           <div className="g8d-card">
             <div className="g8d-row-between">
               <div>
@@ -474,9 +477,13 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </span>
             </div>
 
-            <div className="g8d-row-gap" style={{ marginTop: 8 }}>
+            <div className="g8d-row-gap" style={{ marginTop: 10 }}>
               <input
                 type="text"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="done"
                 value={draftCode}
                 onChange={(e) => setDraftCode(e.target.value.toUpperCase())}
                 placeholder="VD: TIEN8D"
@@ -492,7 +499,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </button>
             </div>
 
-            <div className="g8d-grid-2" style={{ marginTop: 8 }}>
+            <div className="g8d-grid-2" style={{ marginTop: 10 }}>
               <button type="button" className="g8d-btn-primary" onClick={onSyncNow}>
                 Lưu đồng bộ ngay
               </button>
@@ -524,7 +531,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             />
           </div>
 
-          {/* 4. Gym Branch & Safe Reset */}
           <div className="g8d-card">
             <div className="g8d-kicker">PHÒNG TẬP & ĐÒN TẠ MẶC ĐỊNH</div>
             <div className="g8d-stack-xs" style={{ marginTop: 8 }}>
@@ -539,12 +545,12 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                     <div className="g8d-choice-title">{GYM_BRANCHES[gid].shortName}</div>
                     <div className="g8d-tiny-meta">{GYM_BRANCHES[gid].badge}</div>
                   </div>
-                  {selectedGymId === gid && <SvgIcon name="check" size={15} />}
+                  {selectedGymId === gid && <SvgIcon name="check" size={16} color="#E85D1A" />}
                 </button>
               ))}
             </div>
 
-            <div className="g8d-row-between" style={{ marginTop: 10 }}>
+            <div className="g8d-row-between" style={{ marginTop: 12 }}>
               <span className="g8d-tiny-meta">Khối lượng thanh đòn Olympic:</span>
               <div className="g8d-seg-mini">
                 {[20, 15].map((bw) => (
@@ -560,7 +566,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </div>
             </div>
 
-            <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1.5px dashed #E6D8C5' }}>
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(43, 33, 24, 0.08)' }}>
               {!confirmReset ? (
                 <button
                   type="button"
@@ -609,7 +615,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               <span className="g8d-badge is-orange">{metrics.weeklyRateKg}kg/tuần</span>
             </div>
 
-            <div className="g8d-stat-grid-4" style={{ marginTop: 10 }}>
+            <div className="g8d-stat-grid-4" style={{ marginTop: 12 }}>
               <div className="g8d-stat-box">
                 <span className="g8d-stat-val">{metrics.bmr}</span>
                 <span className="g8d-stat-lbl">BMR nền</span>
@@ -628,7 +634,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </div>
             </div>
 
-            <div className="g8d-overload-reason" style={{ marginTop: 8 }}>
+            <div className="g8d-overload-reason" style={{ marginTop: 10 }}>
               <strong>Đi bộ dốc đốt mỡ bảo vệ khớp gối:</strong> Nhịp tim tối ưu Zone 2 là{' '}
               <strong>
                 {metrics.zone2Min}–{metrics.zone2Max} bpm
@@ -640,7 +646,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
             <button
               type="button"
               className="g8d-btn-primary g8d-w-full"
-              style={{ marginTop: 10 }}
+              style={{ marginTop: 12 }}
               onClick={() =>
                 onOpenCoach(
                   'Hãy phân tích thể trạng hiện tại của tao (cân nặng, BMI, TDEE, tỷ lệ mỡ), đánh giá ưu nhược điểm của 3 chiến lược Giảm mỡ giữ cơ, Siết nét và Tăng cơ rồi đề xuất chiến lược + lịch tập tham khảo phù hợp nhất để tao bấm áp dụng',
@@ -648,12 +654,12 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 )
               }
             >
-              Nhờ ChatDVT phân tích thể trạng & đề xuất chiến lược
+              Nhờ ChatDVT phân tích thể trạng & chiến lược
             </button>
           </div>
 
           <div className="g8d-card">
-            <div className="g8d-kicker" style={{ marginBottom: 8 }}>
+            <div className="g8d-kicker" style={{ marginBottom: 10 }}>
               CẬP NHẬT THÔNG SỐ CƠ THỂ & CA TẬP
             </div>
 
@@ -662,6 +668,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 Cân nặng hiện tại (kg)
                 <input
                   type="number"
+                  inputMode="decimal"
+                  enterKeyHint="done"
                   step="0.5"
                   value={p.weightKg}
                   onChange={(e) =>
@@ -675,6 +683,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 Cân nặng đích (kg)
                 <input
                   type="number"
+                  inputMode="decimal"
+                  enterKeyHint="done"
                   step="0.5"
                   value={p.targetWeightKg}
                   onChange={(e) =>
@@ -688,6 +698,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 Chiều cao (cm)
                 <input
                   type="number"
+                  inputMode="numeric"
+                  enterKeyHint="done"
                   value={p.heightCm}
                   onChange={(e) =>
                     onUpdateProfileField('heightCm', Number(e.target.value) || 182)
@@ -700,6 +712,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 Tuổi
                 <input
                   type="number"
+                  inputMode="numeric"
+                  enterKeyHint="done"
                   value={p.age}
                   onChange={(e) =>
                     onUpdateProfileField('age', Number(e.target.value) || 27)
@@ -724,6 +738,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 Báo trước giờ ngủ (phút)
                 <input
                   type="number"
+                  inputMode="numeric"
+                  enterKeyHint="done"
                   step="5"
                   value={p.preSleepLeadMin}
                   onChange={(e) =>
@@ -734,14 +750,14 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </label>
             </div>
 
-            <div className="g8d-kicker" style={{ marginTop: 12, marginBottom: 6 }}>
+            <div className="g8d-kicker" style={{ marginTop: 14, marginBottom: 8 }}>
               CHIẾN LƯỢC DINH DƯỠNG HIỆN TẠI
             </div>
             <div className="g8d-seg-mini g8d-w-full">
               {(
                 [
                   { id: 'cut', label: 'Giảm mỡ giữ cơ' },
-                  { id: 'recomp', label: 'Siết nét (Recomp)' },
+                  { id: 'recomp', label: 'Siết nét' },
                   { id: 'bulk', label: 'Tăng cơ' },
                 ] as const
               ).map((g) => (

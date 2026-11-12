@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CompactHeader } from './components/CompactHeader';
 import { FloatingRestBar } from './components/FloatingRestBar';
 import { SvgIcon } from './components/Icons';
@@ -43,6 +43,8 @@ export const Gym8dApp: React.FC = () => {
     label: string;
   } | null>(null);
 
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+
   const push = useNativeWebPush(store.state.syncCode, store.state.pushPrefs);
   const ultra = useUltraMode();
 
@@ -55,10 +57,16 @@ export const Gym8dApp: React.FC = () => {
     const splash = document.getElementById('app-splash');
     if (splash) {
       splash.style.opacity = '0';
-      const t = setTimeout(() => splash.remove(), 260);
+      const t = setTimeout(() => splash.remove(), 200);
       return () => clearTimeout(t);
     }
   }, []);
+
+  useEffect(() => {
+    if (mainScrollRef.current && activeTab !== 'coach') {
+      mainScrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (!store.toast) return;
@@ -101,6 +109,8 @@ export const Gym8dApp: React.FC = () => {
     (push.env.isMobile || push.env.isInAppBrowser) &&
     !store.state.installBannerDismissed;
 
+  const isScheduleGroup = activeTab === 'schedule' || activeTab === 'streak';
+
   return (
     <div className={`g8d-shell ${activeTab === 'coach' ? 'is-coach-mode' : ''}`}>
       <CompactHeader
@@ -136,7 +146,10 @@ export const Gym8dApp: React.FC = () => {
         </div>
       )}
 
-      <main className={`g8d-main ${activeTab === 'coach' ? 'is-coach-main' : ''}`}>
+      <main
+        ref={mainScrollRef}
+        className={`g8d-main ${activeTab === 'coach' ? 'is-coach-main' : ''}`}
+      >
         {activeTab === 'coach' && (
           <ChatDvtCoachView
             initialDraft={coachDraft}
@@ -322,25 +335,32 @@ export const Gym8dApp: React.FC = () => {
       <nav className="g8d-bottom-nav" aria-label="Điều hướng chính">
         <button
           type="button"
-          className={activeTab === 'schedule' || activeTab === 'streak' ? 'is-active' : ''}
+          className={isScheduleGroup ? 'is-active' : ''}
+          aria-current={isScheduleGroup ? 'page' : undefined}
           onClick={() => setActiveTab('schedule')}
         >
-          <SvgIcon name="calendar" size={19} />
+          <span className="g8d-tab-icon-slot">
+            <SvgIcon name="calendar" size={22} filled={isScheduleGroup} />
+          </span>
           <span>Lịch</span>
         </button>
 
         <button
           type="button"
           className={activeTab === 'workout' ? 'is-active' : ''}
+          aria-current={activeTab === 'workout' ? 'page' : undefined}
           onClick={() => setActiveTab('workout')}
         >
-          <SvgIcon name="dumbbell" size={19} />
+          <span className="g8d-tab-icon-slot">
+            <SvgIcon name="dumbbell" size={22} filled={activeTab === 'workout'} />
+          </span>
           <span>Buổi Tập</span>
         </button>
 
         <button
           type="button"
           className={`g8d-nav-coach-btn ${activeTab === 'coach' ? 'is-active' : ''}`}
+          aria-current={activeTab === 'coach' ? 'page' : undefined}
           onClick={() => {
             setReturnTarget(null);
             setActiveTab('coach');
@@ -350,8 +370,8 @@ export const Gym8dApp: React.FC = () => {
             <img
               src={avatarUrl}
               alt="ChatDVT"
-              width={23}
-              height={23}
+              width={26}
+              height={26}
               onError={(e) => {
                 if (!e.currentTarget.src.endsWith(fallbackUrl)) {
                   e.currentTarget.src = fallbackUrl;
@@ -365,18 +385,24 @@ export const Gym8dApp: React.FC = () => {
         <button
           type="button"
           className={activeTab === 'nutrition' ? 'is-active' : ''}
+          aria-current={activeTab === 'nutrition' ? 'page' : undefined}
           onClick={() => setActiveTab('nutrition')}
         >
-          <SvgIcon name="utensils" size={19} />
+          <span className="g8d-tab-icon-slot">
+            <SvgIcon name="utensils" size={22} filled={activeTab === 'nutrition'} />
+          </span>
           <span>Dinh Dưỡng</span>
         </button>
 
         <button
           type="button"
           className={activeTab === 'profile' ? 'is-active' : ''}
+          aria-current={activeTab === 'profile' ? 'page' : undefined}
           onClick={() => setActiveTab('profile')}
         >
-          <SvgIcon name="user" size={19} />
+          <span className="g8d-tab-icon-slot">
+            <SvgIcon name="user" size={22} filled={activeTab === 'profile'} />
+          </span>
           <span>Hồ Sơ</span>
         </button>
       </nav>

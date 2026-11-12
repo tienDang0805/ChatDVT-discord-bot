@@ -80,7 +80,7 @@ export const WeightChartCard: React.FC<WeightChartCardProps> = ({
       <div className="g8d-progress-track" style={{ marginTop: 8 }}>
         <div className="g8d-progress-fill is-green" style={{ width: `${summary.progressPct}%` }} />
       </div>
-      <div className="g8d-row-between g8d-tiny-meta" style={{ marginTop: 4 }}>
+      <div className="g8d-row-between g8d-tiny-meta" style={{ marginTop: 5 }}>
         <span>Đạt {summary.progressPct}% chặng đường</span>
         <span>Còn {summary.remainingToGoal} kg · Kỳ cân tới: {summary.nextWeighInShort}</span>
       </div>
@@ -92,11 +92,11 @@ export const WeightChartCard: React.FC<WeightChartCardProps> = ({
             y1={targetY}
             x2={svgW - padX}
             y2={targetY}
-            stroke="#228B57"
+            stroke="#1E8754"
             strokeWidth="1.5"
             strokeDasharray="4 4"
           />
-          <text x={svgW - padX} y={Math.max(12, targetY - 4)} textAnchor="end" fontSize="9.5" fill="#228B57" fontWeight="700">
+          <text x={svgW - padX} y={Math.max(12, targetY - 4)} textAnchor="end" fontSize="9.5" fill="#1E8754" fontWeight="700">
             Đích {summary.targetWeightKg}kg
           </text>
 
@@ -116,7 +116,7 @@ export const WeightChartCard: React.FC<WeightChartCardProps> = ({
             const cy = toY(pt.weight);
             return (
               <g key={`${pt.isoDate}-${idx}`}>
-                <circle cx={cx} cy={cy} r="4.5" fill="#FFFDF9" stroke="#2B2118" strokeWidth="2.2" />
+                <circle cx={cx} cy={cy} r="4.5" fill="#FFFDF9" stroke="#2B2118" strokeWidth="2" />
                 <text x={cx} y={Math.max(11, cy - 8)} textAnchor="middle" fontSize="9.5" fontWeight="800" fill="#2B2118">
                   {pt.weight}
                 </text>
@@ -131,11 +131,12 @@ export const WeightChartCard: React.FC<WeightChartCardProps> = ({
 
       <div className="g8d-weigh-input-row">
         <button type="button" className="g8d-step-btn" onClick={() => stepDraft(-0.5)}>
-          -0.5
+          −0.5
         </button>
         <input
           type="number"
           inputMode="decimal"
+          enterKeyHint="done"
           step="0.1"
           value={draftKg}
           onChange={(e) => setDraftKg(e.target.value)}
@@ -146,11 +147,11 @@ export const WeightChartCard: React.FC<WeightChartCardProps> = ({
           +0.5
         </button>
         <button type="button" className="g8d-btn-primary" onClick={handleSave}>
-          Lưu cân nặng
+          Lưu
         </button>
       </div>
 
-      <div className="g8d-row-between" style={{ marginTop: 10 }}>
+      <div className="g8d-row-between" style={{ marginTop: 12 }}>
         <span className="g8d-tiny-meta">Chu kỳ nhắc cân buổi sáng:</span>
         <div className="g8d-seg-mini">
           <button

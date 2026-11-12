@@ -5,13 +5,15 @@ export interface IconProps {
   size?: number;
   color?: string;
   strokeWidth?: number;
+  filled?: boolean;
 }
 
 export const SvgIcon: React.FC<IconProps> = ({
   name,
   size = 18,
   color = 'currentColor',
-  strokeWidth = 2.1,
+  strokeWidth = 2.0,
+  filled = false,
 }) => {
   const common = {
     width: size,
@@ -27,52 +29,93 @@ export const SvgIcon: React.FC<IconProps> = ({
 
   switch (name) {
     case 'calendar':
+      if (filled) {
+        return (
+          <svg {...common}>
+            <rect x="3" y="4.5" width="18" height="16.5" rx="4" fill={color} stroke={color} strokeWidth={1.6} />
+            <line x1="8" y1="2.5" x2="8" y2="6" stroke={color} strokeWidth={2.2} />
+            <line x1="16" y1="2.5" x2="16" y2="6" stroke={color} strokeWidth={2.2} />
+            <line x1="3.8" y1="9.5" x2="20.2" y2="9.5" stroke="#FFFDF9" strokeWidth={1.8} />
+            <circle cx="8.5" cy="14.2" r="1.2" fill="#FFFDF9" stroke="none" />
+            <circle cx="12" cy="14.2" r="1.2" fill="#FFFDF9" stroke="none" />
+            <circle cx="15.5" cy="14.2" r="1.2" fill="#FFFDF9" stroke="none" />
+          </svg>
+        );
+      }
       return (
         <svg {...common}>
-          <rect x="3" y="4" width="18" height="18" rx="3" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
+          <rect x="3" y="4.5" width="18" height="16.5" rx="4" />
+          <line x1="16" y1="2.5" x2="16" y2="6" />
+          <line x1="8" y1="2.5" x2="8" y2="6" />
+          <line x1="3" y1="9.5" x2="21" y2="9.5" />
         </svg>
       );
     case 'dumbbell':
+      if (filled) {
+        return (
+          <svg {...common}>
+            <rect x="2" y="8.5" width="3" height="7" rx="1.3" fill={color} stroke={color} strokeWidth={1.4} />
+            <rect x="5" y="6" width="3.5" height="12" rx="1.5" fill={color} stroke={color} strokeWidth={1.4} />
+            <line x1="8.5" y1="12" x2="15.5" y2="12" stroke={color} strokeWidth={2.8} />
+            <rect x="15.5" y="6" width="3.5" height="12" rx="1.5" fill={color} stroke={color} strokeWidth={1.4} />
+            <rect x="19" y="8.5" width="3" height="7" rx="1.3" fill={color} stroke={color} strokeWidth={1.4} />
+          </svg>
+        );
+      }
       return (
         <svg {...common}>
-          <path d="M6.5 6.5 17.5 17.5" />
-          <path d="M21 21l-1-1" />
-          <path d="M3 3l1 1" />
-          <path d="M18 22l4-4" />
-          <path d="M2 6l4-4" />
-          <path d="M3 10l7-7" />
-          <path d="M14 21l7-7" />
+          <rect x="2" y="9" width="2.8" height="6" rx="1.1" />
+          <rect x="4.8" y="6.5" width="3.4" height="11" rx="1.3" />
+          <line x1="8.2" y1="12" x2="15.8" y2="12" />
+          <rect x="15.8" y="6.5" width="3.4" height="11" rx="1.3" />
+          <rect x="19.2" y="9" width="2.8" height="6" rx="1.1" />
         </svg>
       );
     case 'flame':
       return (
-        <svg {...common}>
+        <svg {...common} fill={filled ? color : 'none'}>
           <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
         </svg>
       );
     case 'utensils':
+      if (filled) {
+        return (
+          <svg {...common}>
+            <path d="M4 3v6a3 3 0 0 0 3 3h0a3 3 0 0 0 3-3V3" strokeWidth={2} />
+            <path d="M7 3v18" strokeWidth={2.2} />
+            <path d="M19 3c-2.8 0-4.5 2.4-4.5 6.2 0 2.1 1.1 3.3 2.5 3.6h2V3Z" fill={color} stroke={color} strokeWidth={1.6} />
+            <path d="M19 12.8V21" strokeWidth={2.2} />
+          </svg>
+        );
+      }
       return (
         <svg {...common}>
-          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" />
-          <path d="M7 2v20" />
-          <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+          <path d="M4 3v6a3 3 0 0 0 3 3h0a3 3 0 0 0 3-3V3" />
+          <path d="M7 3v18" />
+          <path d="M19 3c-2.6 0-4.2 2.3-4.2 6 0 2 1 3.2 2.4 3.5H19V3Z" />
+          <path d="M19 12.5V21" />
         </svg>
       );
     case 'user':
+      if (filled) {
+        return (
+          <svg {...common}>
+            <circle cx="12" cy="8" r="4.3" fill={color} stroke={color} strokeWidth={1.5} />
+            <path d="M5 19.5c0-3.4 3.1-5.8 7-5.8s7 2.4 7 5.8c0 .8-.6 1.5-1.4 1.5H6.4c-.8 0-1.4-.7-1.4-1.5Z" fill={color} stroke={color} strokeWidth={1.5} />
+          </svg>
+        );
+      }
       return (
         <svg {...common}>
-          <circle cx="12" cy="8" r="5" />
-          <path d="M20 21a8 8 0 0 0-16 0" />
+          <circle cx="12" cy="8" r="4.3" />
+          <path d="M5 20a7 7 0 0 1 14 0" />
         </svg>
       );
     case 'bell':
       return (
-        <svg {...common}>
+        <svg {...common} fill={filled ? color : 'none'}>
           <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" fill="none" />
         </svg>
       );
     case 'check':
@@ -109,10 +152,10 @@ export const SvgIcon: React.FC<IconProps> = ({
     case 'swap':
       return (
         <svg {...common}>
-          <polyline points="17 1 21 5 17 9" />
-          <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-          <polyline points="7 23 3 19 7 15" />
-          <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+          <polyline points="17 2 21 6 17 10" />
+          <path d="M3 11V9a3 3 0 0 1 3-3h15" />
+          <polyline points="7 22 3 18 7 14" />
+          <path d="M21 13v2a3 3 0 0 1-3 3H3" />
         </svg>
       );
     case 'undo':
@@ -179,8 +222,8 @@ export const SvgIcon: React.FC<IconProps> = ({
     case 'send':
       return (
         <svg {...common}>
-          <line x1="22" y1="2" x2="11" y2="13" />
-          <polygon points="22 2 15 22 11 13 2 9 22 2" />
+          <line x1="12" y1="19" x2="12" y2="5" strokeWidth={2.4} />
+          <polyline points="5 12 12 5 19 12" strokeWidth={2.4} />
         </svg>
       );
     case 'spark':
