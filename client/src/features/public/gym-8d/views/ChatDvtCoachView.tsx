@@ -835,8 +835,12 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   <span className="g8d-model-pill-label">{headerModelBadgeText}</span>
                   <SvgIcon name="chevronDown" size={12} />
                 </button>
-
-                {!isKeyboardOpen && (
+              </div>
+              {!isKeyboardOpen && (
+                <div className="g8d-coach-subline-row">
+                  <span className="g8d-coach-subline">
+                    {selectedDay.shortDate} · {todaySessLabel}
+                  </span>
                   <button
                     type="button"
                     className={`g8d-persona-pill-btn ${
@@ -850,11 +854,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   >
                     <span>{activePersona === 'savage' ? 'Cà khịa DVT' : 'Chuẩn PT'}</span>
                   </button>
-                )}
-              </div>
-              {!isKeyboardOpen && (
-                <div className="g8d-coach-subline">
-                  {selectedDay.shortDate} · {todaySessLabel}
                 </div>
               )}
             </div>
