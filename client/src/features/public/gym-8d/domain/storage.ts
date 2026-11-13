@@ -234,12 +234,26 @@ function sanitizeAgentMessages(raw: unknown, nowISO = getTodayISO()): AgentChatM
           role: m.role === 'user' ? 'user' : 'assistant',
           text: m.text,
           createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date().toISOString(),
+          images: Array.isArray(m.images)
+            ? m.images
+                .filter(
+                  (img: unknown) =>
+                    typeof img === 'string' &&
+                    img.startsWith('data:image/') &&
+                    img.length <= 65_000
+                )
+                .slice(0, 3)
+            : undefined,
           proposals: Array.isArray(m.proposals) ? m.proposals : undefined,
           selectedIndices: Array.isArray(m.selectedIndices) ? m.selectedIndices : undefined,
           applied: Boolean(m.applied),
           undone: Boolean(m.undone),
           quickReplies: Array.isArray(m.quickReplies) ? m.quickReplies : undefined,
           selfAudit: m.selfAudit && typeof m.selfAudit === 'object' ? m.selfAudit : null,
+          modelId: typeof m.modelId === 'string' ? m.modelId : undefined,
+          tier: m.tier === 'ultra' || m.tier === 'free' ? m.tier : undefined,
+          engineLabel: typeof m.engineLabel === 'string' ? m.engineLabel : undefined,
+          fallbackNote: typeof m.fallbackNote === 'string' ? m.fallbackNote : undefined,
         },
         nowISO
       )

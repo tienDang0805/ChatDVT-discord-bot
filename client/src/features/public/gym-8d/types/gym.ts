@@ -415,7 +415,11 @@ export type AgentActionProposal =
   | {
       type: 'update_strategy';
       goal: 'cut' | 'recomp' | 'bulk';
+      weightKg?: number;
       targetWeightKg?: number;
+      heightCm?: number;
+      age?: number;
+      gender?: 'male' | 'female';
       workoutTime?: string;
       labelSummary: string;
     }
@@ -430,6 +434,7 @@ export interface AgentChatMessage {
   role: 'user' | 'assistant';
   text: string;
   createdAt: string;
+  images?: string[];
   proposals?: AgentActionProposal[];
   selectedIndices?: number[];
   applied?: boolean;

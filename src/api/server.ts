@@ -53,7 +53,12 @@ const largeJsonParser = bodyParser.json({ limit: '15mb' });
 
 app.use((req, res, next) => {
   const reqPath = req.path;
-  if (reqPath.startsWith('/api/admin/blog-posts') || reqPath === '/api/handsome-analyzer') {
+  if (
+    reqPath.startsWith('/api/admin/blog-posts') ||
+    reqPath === '/api/handsome-analyzer' ||
+    reqPath === '/api/gym8d/agent-chat' ||
+    reqPath === '/api/gym8d/sync'
+  ) {
     return largeJsonParser(req, res, next);
   }
   return defaultJsonParser(req, res, next);

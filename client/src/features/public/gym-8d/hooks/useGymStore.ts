@@ -1194,12 +1194,37 @@ export function useGymStore() {
             next.weeklyPattern = nextPattern;
           } else if (act.type === 'update_strategy') {
             const nextProfile = { ...next.profileInput, goal: act.goal };
-            if (act.targetWeightKg && act.targetWeightKg >= 45 && act.targetWeightKg <= 180) {
+            if (act.gender === 'male' || act.gender === 'female') {
+              nextProfile.gender = act.gender;
+            }
+            if (act.age && act.age >= 14 && act.age <= 90) {
+              nextProfile.age = Math.round(act.age);
+            }
+            if (act.heightCm && act.heightCm >= 120 && act.heightCm <= 230) {
+              nextProfile.heightCm = Math.round(act.heightCm);
+            }
+            if (act.weightKg && act.weightKg >= 35 && act.weightKg <= 260) {
+              const cleanCurrentW = Math.round(act.weightKg * 10) / 10;
+              nextProfile.weightKg = cleanCurrentW;
+              const wList = [...next.weightLogs];
+              const wIdx = wList.findIndex((x) => x.isoDate === todayISO);
+              const wEntry = {
+                isoDate: todayISO,
+                dateLabel: formatVNShortDate(todayISO),
+                weight: cleanCurrentW,
+                note: `Cập nhật từ InBody / ChatDVT (${formatVNShortDate(todayISO)})`,
+              };
+              if (wIdx >= 0) wList[wIdx] = wEntry;
+              else wList.push(wEntry);
+              next.weightLogs = wList;
+            }
+            if (act.targetWeightKg && act.targetWeightKg >= 35 && act.targetWeightKg <= 220) {
               nextProfile.targetWeightKg = Math.round(act.targetWeightKg * 10) / 10;
             }
             if (act.workoutTime && /^\d{2}:\d{2}$/.test(act.workoutTime)) {
               nextProfile.workoutTime = act.workoutTime;
             }
+            nextProfile.shortLabel = `${nextProfile.weightKg}kg · ${nextProfile.heightCm}cm`;
             next.profileInput = nextProfile;
           } else if (act.type === 'log_weight') {
             const cleanW = Math.max(38, Math.min(200, Math.round((Number(act.weightKg) || 115) * 10) / 10));

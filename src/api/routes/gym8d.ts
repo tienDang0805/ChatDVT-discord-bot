@@ -947,15 +947,47 @@ function normalizeHistoryModelContent(rawContent: string): string {
   });
 }
 
+interface AgentVisionImage {
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+  base64Data: string;
+}
+
+function sanitizeIncomingImages(raw: unknown): AgentVisionImage[] {
+  if (!Array.isArray(raw)) return [];
+  const out: AgentVisionImage[] = [];
+  for (const item of raw.slice(0, 3)) {
+    if (!item || typeof item !== 'object') continue;
+    const rawMime = String((item as any).mimeType || 'image/jpeg').trim().toLowerCase();
+    const mimeType: AgentVisionImage['mimeType'] =
+      rawMime === 'image/png'
+        ? 'image/png'
+        : rawMime === 'image/webp'
+        ? 'image/webp'
+        : 'image/jpeg';
+    let rawData = typeof (item as any).base64Data === 'string' ? (item as any).base64Data.trim() : '';
+    if (!rawData) continue;
+    const commaIdx = rawData.indexOf(',');
+    if (rawData.startsWith('data:image/') && commaIdx >= 0) {
+      rawData = rawData.slice(commaIdx + 1).trim();
+    }
+    if (rawData.length < 64 || rawData.length > 4_200_000) continue;
+    out.push({ mimeType, base64Data: rawData });
+  }
+  return out;
+}
+
 async function generateGymAgentJsonWithFallback(params: {
   message: string;
   history: WebChatHistoryMessage[];
   systemInstruction: string;
+  images?: AgentVisionImage[];
   temperature?: number;
   maxOutputTokens?: number;
   ultra?: { enabled: boolean; preferredModel?: string };
 }): Promise<{ text: string; model: string; tier: 'ultra' | 'free'; fallbackNote?: string }> {
   let ultraFailReason = '';
+  const incomingImages = Array.isArray(params.images) ? params.images : [];
+  const hasImages = incomingImages.length > 0;
 
   // 1. Exclusive Owner Ultra Path via CLIProxyAPI (locked by signed JWT)
   if (params.ultra?.enabled && params.ultra.preferredModel !== 'free') {
@@ -973,6 +1005,17 @@ async function generateGymAgentJsonWithFallback(params: {
         ultraModel,
         'ultra'
       )}) qua CLIProxyAPI riêng của Tiến. Nếu Tiến hỏi đang chạy model gì, hãy báo chính xác tên model này.]`;
+      const userContent: any = hasImages
+        ? [
+            { type: 'text', text: params.message },
+            ...incomingImages.map((img) => ({
+              type: 'image_url',
+              image_url: {
+                url: `data:${img.mimeType};base64,${img.base64Data}`,
+              },
+            })),
+          ]
+        : params.message;
       const openAiMessages = [
         { role: 'system', content: ultraSys },
         ...params.history.map((h) => ({
@@ -980,10 +1023,10 @@ async function generateGymAgentJsonWithFallback(params: {
           content:
             h.role === 'model' ? normalizeHistoryModelContent(h.content) : h.content.slice(0, 1400),
         })),
-        { role: 'user', content: params.message },
+        { role: 'user', content: userContent },
       ];
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 20_000);
+      const timer = setTimeout(() => ctrl.abort(), hasImages ? 38_000 : 20_000);
       try {
         const res = await nodeFetch(`${baseUrl}/chat/completions`, {
           method: 'POST',
@@ -1047,12 +1090,26 @@ async function generateGymAgentJsonWithFallback(params: {
   for (const model of WEB_CHAT_MODEL_FALLBACKS) {
     try {
       const isGemma = model.toLowerCase().startsWith('gemma');
+      if (hasImages && isGemma) {
+        continue;
+      }
       const freeSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy bằng model "${model}" (${formatEngineLabel(
         model,
         'free'
       )})${
         ultraFailReason ? ` do CLIProxyAPI trên Server chưa phản hồi (${ultraFailReason})` : ''
       }. Nếu Tiến hỏi đang chạy model gì, hãy báo trung thực tên model thực tế này.]`;
+      const userParts: any[] = hasImages
+        ? [
+            { text: params.message },
+            ...incomingImages.map((img) => ({
+              inlineData: {
+                mimeType: img.mimeType,
+                data: img.base64Data,
+              },
+            })),
+          ]
+        : [{ text: params.message }];
       const contents = isGemma
         ? [
             ...normalizedHistory,
@@ -1067,9 +1124,10 @@ async function generateGymAgentJsonWithFallback(params: {
           ]
         : [
             ...normalizedHistory,
-            { role: 'user' as const, parts: [{ text: params.message }] },
+            { role: 'user' as const, parts: userParts },
           ];
 
+      const freeTimeoutMs = hasImages ? 36_000 : 22_000;
       const response = await retryWithBackoff(
         () =>
           ai.models.generateContent({
@@ -1080,13 +1138,13 @@ async function generateGymAgentJsonWithFallback(params: {
               ...(isGemma ? {} : { responseMimeType: 'application/json' }),
               temperature: params.temperature ?? 0.25,
               topP: 0.9,
-              maxOutputTokens: params.maxOutputTokens ?? 2400,
-              httpOptions: { timeout: 22_000 },
+              maxOutputTokens: params.maxOutputTokens ?? (hasImages ? 3200 : 2400),
+              httpOptions: { timeout: freeTimeoutMs },
             },
           }),
         1,
         600,
-        22_000
+        freeTimeoutMs
       );
 
       const text = response.text?.trim();
@@ -1115,7 +1173,7 @@ function replyPromisesActionButton(replyText: string): boolean {
 }
 
 function userRequestsActionOrSchedule(msgText: string): boolean {
-  return /(?:chỉnh|sửa|tính|cập\s*nhật)\s*lại|xoá|xóa|reset|làm\s*lại\s*từ\s*đầu|ghi\s*đè|đưa\s*ra\s*lịch|lịch\s*(?:tập\s*)?tham\s*khảo|kế\s*hoạch\s*(?:tuần\s*)?tiếp\s*theo|review\s*(?:giúp\s*tao\s*)?(?:thể\s*trạng|chiến\s*lược|lịch)|tổng\s*kết\s*(?:giúp\s*tao\s*)?tuần|nút\s*nào\s*để\s*bấm|không\s*có\s*nút|đổi\s*bài|hạ\s*tạ|tạ\s*nặng/i.test(
+  return /(?:chỉnh|sửa|tính|cập\s*nhật)\s*lại|xoá|xóa|reset|làm\s*lại\s*từ\s*đầu|ghi\s*đè|đưa\s*ra\s*lịch|lịch\s*(?:tập\s*)?tham\s*khảo|kế\s*hoạch\s*(?:tuần\s*)?tiếp\s*theo|review\s*(?:giúp\s*tao\s*)?(?:thể\s*trạng|chiến\s*lược|lịch)|tổng\s*kết\s*(?:giúp\s*tao\s*)?tuần|nút\s*nào\s*để\s*bấm|không\s*có\s*nút|đổi\s*bài|hạ\s*tạ|tạ\s*nặng|inbody|phiếu\s*đo|thiết\s*kế\s*(?:lộ\s*trình|lịch\s*tập|chế\s*độ\s*ăn)/i.test(
     String(msgText || '')
   );
 }
@@ -1197,7 +1255,7 @@ function auditAndOptimizeAgentOutput(
 
   const rawList = Array.isArray(parsed.proposals) ? parsed.proposals : [];
 
-  for (const item of rawList.slice(0, 14)) {
+  for (const item of rawList.slice(0, 16)) {
     if (!item || typeof item !== 'object' || typeof item.type !== 'string') continue;
     const labelSummary = stripLeadingEmoji(item.labelSummary || '');
     if (!labelSummary) continue;
@@ -1212,6 +1270,10 @@ function auditAndOptimizeAgentOutput(
           rawType === 'delete_food_logs' ||
           rawType === 'clear_foods'
         ? 'clear_nutrition_logs'
+        : rawType === 'update_body_profile' ||
+          rawType === 'sync_inbody' ||
+          rawType === 'set_body_stats'
+        ? 'update_strategy'
         : rawType;
 
     switch (normalizedType) {
@@ -1505,24 +1567,57 @@ function auditAndOptimizeAgentOutput(
         }
         break;
 
-      case 'update_strategy':
-        if (['cut', 'recomp', 'bulk'].includes(item.goal)) {
+      case 'update_strategy': {
+        const validGoal = ['cut', 'recomp', 'bulk'].includes(item.goal)
+          ? item.goal
+          : undefined;
+        const weightKg =
+          Number(item.weightKg) >= 35 && Number(item.weightKg) <= 220
+            ? Math.round(Number(item.weightKg) * 10) / 10
+            : undefined;
+        const targetWeightKg =
+          Number(item.targetWeightKg) >= 35 && Number(item.targetWeightKg) <= 220
+            ? Math.round(Number(item.targetWeightKg) * 10) / 10
+            : undefined;
+        const heightCm =
+          Number(item.heightCm) >= 130 && Number(item.heightCm) <= 220
+            ? Math.round(Number(item.heightCm))
+            : undefined;
+        const age =
+          Number(item.age) >= 12 && Number(item.age) <= 90
+            ? Math.round(Number(item.age))
+            : undefined;
+        const gender =
+          item.gender === 'female' ? 'female' : item.gender === 'male' ? 'male' : undefined;
+        const workoutTime =
+          typeof item.workoutTime === 'string' && /^\d{2}:\d{2}$/.test(item.workoutTime)
+            ? item.workoutTime
+            : undefined;
+
+        if (
+          validGoal ||
+          weightKg !== undefined ||
+          targetWeightKg !== undefined ||
+          heightCm !== undefined ||
+          age !== undefined ||
+          gender !== undefined ||
+          workoutTime !== undefined
+        ) {
           hasWorkoutOrStrategyProposal = true;
           outProposals.push({
             type: 'update_strategy',
-            goal: item.goal,
-            targetWeightKg:
-              Number(item.targetWeightKg) >= 50 && Number(item.targetWeightKg) <= 160
-                ? Math.round(Number(item.targetWeightKg) * 10) / 10
-                : undefined,
-            workoutTime:
-              typeof item.workoutTime === 'string' && /^\d{2}:\d{2}$/.test(item.workoutTime)
-                ? item.workoutTime
-                : undefined,
+            goal: validGoal || (['cut', 'recomp', 'bulk'].includes(ctx?.bodyAndStrategy?.goal) ? ctx.bodyAndStrategy.goal : 'cut'),
+            weightKg,
+            targetWeightKg,
+            heightCm,
+            age,
+            gender,
+            workoutTime,
             labelSummary,
           });
         }
         break;
+      }
 
       case 'log_weight':
         if (Number(item.weightKg) > 38 && Number(item.weightKg) < 220) {
@@ -1576,9 +1671,13 @@ router.post('/gym8d/agent-chat', preventResponseCaching, async (req, res) => {
     }
 
     const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
-    if (!message || message.length > 2000) {
+    const incomingImages = sanitizeIncomingImages(req.body?.images);
+    if ((!message && incomingImages.length === 0) || message.length > 2400) {
       return res.status(400).json({ error: 'Tin nhắn không hợp lệ (tối đa 2000 ký tự).' });
     }
+    const effectiveMessage =
+      message ||
+      'Hãy phân tích chi tiết hình ảnh đính kèm (phiếu đo InBody, bữa ăn hoặc máy tập), thiết kế lịch tập + chế độ ăn uống phù hợp nhất và tạo sẵn các nút proposals cập nhật vào ứng dụng.';
 
     const ctx = req.body?.context || {};
     const catalog = req.body?.catalog || {};
@@ -1637,6 +1736,19 @@ VAI TRÒ & QUY TRÌNH HUẤN LUYỆN THÓI QUEN HẰNG NGÀY:
    - Khi người dùng hỏi review thể trạng/chiến lược: phân tích thẳng thắn vì sao thể trạng hiện tại (${currentWeightKg}kg, cao ${heightCm}cm, đích ${targetWeightKg}kg) nên ưu tiên chiến lược nào, sau đó đưa ra LỊCH TẬP THAM KHẢO rõ ràng và kèm proposals ("update_strategy" + "set_weekly_split" + "set_session_exercises" nếu cần) để xem trước và bấm Áp dụng!
 5) AI TỰ AUDIT AI & TỐI ƯU HÓA ("selfAudit"):
    - Trước khi chốt JSON, tự kiểm tra lại lời khuyên & proposals của chính mình: Mức calo có bị ép thấp dưới BMR (${bmrKcal} kcal) gây mất cơ/bỏ cuộc không? Bài tập có an toàn cho khớp gối & lưng dưới ở mức cân ${currentWeightKg}kg không? Lịch tập có dễ duy trì thành thói quen lâu dài không? Ghi tóm tắt 1 câu kiểm duyệt ngắn gọn vào "selfAudit.safetyCheck".
+6) CHẾ ĐỘ ĐỌC HÌNH ẢNH MULTIMODAL (PHIẾU ĐO INBODY · BỮA ĂN · MÁY TẬP) — ĐANG ĐÍNH KÈM ${incomingImages.length} HÌNH ẢNH:
+   - NẾU HÌNH ẢNH LÀ PHIẾU ĐO INBODY (HOẶC CÂN THÔNG MINH / BẢNG CHỈ SỐ CƠ THỂ):
+     + Đọc chính xác từng con số thực tế trên phiếu: Cân nặng (Weight kg), Khối lượng cơ xương (SMM kg), Tỷ lệ mỡ cơ thể (PBF %), Mức mỡ nội tạng (Visceral Fat), Chuyển hoá cơ bản (BMR kcal), Chiều cao, Tuổi, Giới tính và độ cân bằng cơ tay/thân/chân (nếu có).
+     + Nhận xét thẳng thắn cấu trúc cơ - mỡ (dạng chữ C, I hay D), chỉ rõ điểm nghẽn lớn nhất và chốt chiến lược tối ưu ("cut" Giảm mỡ giữ cơ, "recomp" Tái cấu trúc cơ - mỡ, hoặc "bulk" Tăng cơ sạch) kèm cân nặng mục tiêu thực tế.
+     + Thiết kế rõ ràng trong "reply" gồm 2 phần cụ thể: (1) **Chế độ ăn uống & Macro hằng ngày** (Tổng Kcal không thấp hơn sàn BMR trên phiếu, mục tiêu Đạm g/ngày, Nước uống L/ngày + gợi ý khung 3 bữa sáng/trưa/tối kiểu Việt Nam dễ theo) và (2) **Lịch tập các buổi trong tuần** (ưu tiên cải thiện vùng cơ yếu trên phiếu và bảo vệ khớp).
+     + BẮT BUỘC phát sinh trọn bộ "proposals" 1 chạm để người dùng bấm Áp dụng toàn bộ vào hệ thống ngay:
+       * 1 lệnh "update_strategy" cập nhật các chỉ số đọc từ phiếu InBody ("goal", "weightKg", "targetWeightKg", và "heightCm", "age", "gender" nếu có trên phiếu).
+       * 1 lệnh "set_weekly_split" phân bổ lịch tập các thứ trong tuần (3–5 buổi tập + ngày nghỉ phục hồi).
+       * 2–4 lệnh "set_session_exercises" chọn đúng "exId" trong danh mục chuẩn cho các buổi tập chính ("press_day", "pull_day", "legs_day", "upper_day").
+   - NẾU HÌNH ẢNH LÀ ĐĨA ĐỒ ĂN / ĐỒ UỐNG / BẢNG NUTRITION FACTS:
+     + Nhận diện từng món và khẩu phần ước tính trên ảnh, tính tổng Calo, Đạm, Tinh bột, Chất béo (~75–85% thực tế) trong "reply" và tạo ngay proposal "add_custom_food" (hoặc "add_food_catalog" + "add_water") để bấm ghi vào nhật ký hôm nay!
+   - NẾU HÌNH ẢNH LÀ MÁY TẬP / DỤNG CỤ PHÒNG GYM:
+     + Nhận diện tên máy, nhóm cơ tác động chính, hướng dẫn ngắn gọn 2–3 điểm chỉnh ghế / cầm tay bảo vệ khớp và tạo proposal "swap_exercise" hoặc "log_exercise_sets" nếu khớp bài trong danh mục.
 
 BỐI CẢNH & DỮ LIỆU THẬT 7–14 NGÀY CỦA NGƯỜI DÙNG (${userDisplayName} · Mã ${syncCodeClean}):
 ${JSON.stringify(ctx)}
@@ -1672,7 +1784,7 @@ ${JSON.stringify(catalog.exercises || [])}
     // { "type": "clear_nutrition_logs", "scope": "date", "dateISO": "${todayISO}", "labelSummary": "Xoá sạch dữ liệu ăn uống & nước ngày hôm nay" }
     // { "type": "reschedule_day", "dateISO": "${todayISO}", "sessionId": "pull_day", "workoutTime": "06:00", "scope": "single", "labelSummary": "Dời Buổi Kéo sang ngày ... lúc 06:00" }
     // { "type": "set_weekly_split", "days": { "1": { "sessionId": "rest" }, "2": { "sessionId": "press_day", "workoutTime": "06:00" }, "3": { "sessionId": "pull_day", "workoutTime": "06:00" }, "4": { "sessionId": "rest" }, "5": { "sessionId": "legs_day", "workoutTime": "06:00" }, "6": { "sessionId": "upper_day", "workoutTime": "07:00" }, "0": { "sessionId": "rest" } }, "labelSummary": "Áp dụng lịch tập 4 buổi/tuần (T3 Đẩy · T4 Kéo · T6 Chân · T7 Thân trên)" }
-    // { "type": "update_strategy", "goal": "cut", "targetWeightKg": 95, "workoutTime": "06:00", "labelSummary": "Chuyển chiến lược sang Giảm mỡ giữ cơ (đích 95kg)" }
+    // { "type": "update_strategy", "goal": "cut", "weightKg": 84.5, "targetWeightKg": 74, "heightCm": 172, "age": 26, "gender": "male", "workoutTime": "18:00", "labelSummary": "Đồng bộ chỉ số InBody (84.5kg · cao 172cm) & chiến lược Giảm mỡ giữ cơ (đích 74kg)" }
     // { "type": "log_weight", "weightKg": 114.2, "labelSummary": "Cập nhật cân nặng hôm nay: 114.2 kg" }
   ]
 }`;
@@ -1695,11 +1807,12 @@ ${JSON.stringify(catalog.exercises || [])}
       typeof req.body?.ultraModel === 'string' ? req.body.ultraModel : 'gemini-4-carbon-high';
 
     const aiRes = await generateGymAgentJsonWithFallback({
-      message,
+      message: effectiveMessage,
       history: validHistory,
       systemInstruction,
+      images: incomingImages,
       temperature: isSavagePersona ? 0.72 : 0.35,
-      maxOutputTokens: 2400,
+      maxOutputTokens: incomingImages.length > 0 ? 3200 : 2400,
       ultra: { enabled: isUltraOwner, preferredModel: requestedUltraModel },
     });
 
@@ -1711,15 +1824,17 @@ ${JSON.stringify(catalog.exercises || [])}
     if (
       audited.proposals.length === 0 &&
       audited.quickReplies.length === 0 &&
-      (replyPromisesActionButton(audited.reply) || userRequestsActionOrSchedule(message))
+      (replyPromisesActionButton(audited.reply) ||
+        userRequestsActionOrSchedule(effectiveMessage) ||
+        incomingImages.length > 0)
     ) {
       try {
         const repairRes = await generateGymAgentJsonWithFallback({
-          message: `TIN NHẮN NGƯỜI DÙNG: ${message}\n\nNỘI DUNG PHÂN TÍCH VỪA TẠO:\n${audited.reply}\n\nNHIỆM VỤ BẮT BUỘC: Hãy chuyển hóa chính xác yêu cầu/nội dung trên thành mảng "proposals" hợp lệ (dùng clear_workout_logs nếu xoá hết log buổi tập done, clear_nutrition_logs nếu xoá hết ăn uống, replace_day_nutrition nếu chỉnh/ghi đè lại tổng calo ngày hôm nay, update_strategy + set_weekly_split nếu đề xuất chiến lược & lịch tập tuần, adjust_exercise_sets nếu chỉnh mức tạ/rep, add_custom_food/add_food_catalog nếu thêm món ăn). Giữ nguyên "reply".`,
+          message: `TIN NHẮN NGƯỜI DÙNG: ${effectiveMessage}\n\nNỘI DUNG PHÂN TÍCH VỪA TẠO:\n${audited.reply}\n\nNHIỆM VỤ BẮT BUỘC: Hãy chuyển hóa chính xác yêu cầu/nội dung trên thành mảng "proposals" hợp lệ (nếu đọc phiếu InBody thì dùng update_strategy kèm weightKg/targetWeightKg/heightCm/age/gender + set_weekly_split + set_session_exercises; nếu ảnh món ăn thì dùng add_custom_food/add_food_catalog; nếu xoá log dùng clear_workout_logs/clear_nutrition_logs; nếu chỉnh tổng calo ngày dùng replace_day_nutrition; nếu chỉnh mức tạ dùng adjust_exercise_sets). Giữ nguyên "reply".`,
           history: [],
           systemInstruction,
           temperature: 0.1,
-          maxOutputTokens: 1800,
+          maxOutputTokens: 2200,
           ultra: { enabled: isUltraOwner, preferredModel: requestedUltraModel },
         });
         const repairedParsed = parseAgentJsonResponse(repairRes.text);

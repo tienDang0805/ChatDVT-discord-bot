@@ -55,6 +55,70 @@ interface ChatDvtCoachViewProps {
   onOpenUltraSettings: () => void;
 }
 
+interface PendingChatImage {
+  id: string;
+  mimeType: 'image/jpeg';
+  aiBase64: string;
+  thumbDataUrl: string;
+  previewDataUrl: string;
+}
+
+function renderScaledJpeg(
+  img: HTMLImageElement,
+  maxEdge: number,
+  quality: number
+): string {
+  const srcW = img.naturalWidth || img.width || 800;
+  const srcH = img.naturalHeight || img.height || 800;
+  const scale = Math.min(1, maxEdge / Math.max(srcW, srcH));
+  const w = Math.max(1, Math.round(srcW * scale));
+  const h = Math.max(1, Math.round(srcH * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx2d = canvas.getContext('2d');
+  if (!ctx2d) return '';
+  ctx2d.fillStyle = '#FFFFFF';
+  ctx2d.fillRect(0, 0, w, h);
+  ctx2d.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+function compressImageFileForChat(file: File): Promise<PendingChatImage> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Không đọc được ảnh'));
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) {
+        reject(new Error('Ảnh trống'));
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const fullJpeg = renderScaledJpeg(img, 1440, 0.84);
+          const thumbJpeg = renderScaledJpeg(img, 240, 0.68);
+          const commaIdx = fullJpeg.indexOf(',');
+          const aiBase64 = commaIdx >= 0 ? fullJpeg.slice(commaIdx + 1) : fullJpeg;
+          resolve({
+            id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+            mimeType: 'image/jpeg',
+            aiBase64,
+            thumbDataUrl: thumbJpeg || fullJpeg,
+            previewDataUrl: fullJpeg,
+          });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error('Định dạng ảnh không hỗ trợ'));
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function buildWelcomeMessage(userName: string, persona: CoachPersonaId): AgentChatMessage {
   const cleanName =
     userName && userName.trim() && userName.trim().toLowerCase() !== 'bạn'
@@ -65,7 +129,7 @@ function buildWelcomeMessage(userName: string, persona: CoachPersonaId): AgentCh
     return {
       id: 'welcome_savage_v7',
       role: 'assistant',
-      text: `Hề lố ${cleanName || 'mày'}! Bố mày là ChatDVT — trợ lý thể hình kiêm máy chửi chống lười bước ra từ Discord 8D đây hẹ hẹ.\n\nMỗi ngày cứ khai thật vào đây:\n- Tập xong buổi nào hay lại văn vở OT trốn buổi chân, nâng tạ sĩ diện hụt rep thì khai ra tao chỉnh giáo án.\n- Tối ăn vụng trà sữa, gà rán, nhậu nhẹt gì kể hết, tao bóc trần calo rồi cộng sổ thẳng tay cho tỉnh.\n- Cuối tuần vào tao tổng kết xem tiến bộ thật hay chỉ giỏi hứa lèo!`,
+      text: `Hề lố ${cleanName || 'mày'}! Bố mày là ChatDVT — trợ lý thể hình kiêm máy chửi chống lười bước ra từ Discord 8D đây hẹ hẹ.\n\nMỗi ngày cứ khai thật vào đây:\n- Chụp thẳng **tờ giấy đo InBody** quăng vào đây để tao soi mỡ nội tạng, cơ xương rồi lên trọn gói lịch tập + thực đơn ăn uống.\n- Tập xong hay lại văn vở OT trốn buổi chân, nâng tạ sĩ diện hụt rep thì khai ra tao chỉnh.\n- Chụp đĩa đồ ăn hoặc kể tối nay hốc trà sữa, gà rán gì tao bóc trần calo cộng sổ thẳng tay cho tỉnh!`,
       createdAt: new Date().toISOString(),
     };
   }
@@ -73,12 +137,21 @@ function buildWelcomeMessage(userName: string, persona: CoachPersonaId): AgentCh
   return {
     id: 'welcome_standard_v7',
     role: 'assistant',
-    text: `Chào ${cleanName || 'bạn'}! Mình là ChatDVT — trợ lý tập luyện và dinh dưỡng đồng hành hằng ngày cùng bạn.\n\nMỗi ngày cứ nhắn tự nhiên để cập nhật nhanh:\n- Báo hoàn thành buổi tập, dời lịch khi bận hoặc điều chỉnh mức tạ khi thấy quá sức.\n- Kể lại bữa ăn và lượng nước trong ngày để mình tự ước lượng calo, đạm rồi cộng vào nhật ký.\n- Nhờ tổng kết tuần hoặc rà soát lại chiến lược giảm mỡ, siết nét và bảo vệ khớp bất cứ lúc nào.`,
+    text: `Chào ${cleanName || 'bạn'}! Mình là ChatDVT — trợ lý tập luyện và dinh dưỡng đồng hành hằng ngày cùng bạn.\n\nMỗi ngày bạn có thể nhắn chữ hoặc gửi ảnh trực tiếp:\n- Gửi ảnh **phiếu đo InBody** để mình đọc chỉ số cơ - mỡ - BMR và thiết kế trọn bộ lịch tập kèm chế độ ăn uống cá nhân hoá.\n- Chụp ảnh bữa ăn hoặc kể lại các món trong ngày để tự ước lượng Calo, Đạm vào nhật ký.\n- Báo hoàn thành buổi tập, dời lịch khi bận hoặc nhờ điều chỉnh mức tạ bảo vệ khớp.`,
     createdAt: new Date().toISOString(),
   };
 }
 
-const HABIT_QUICK_ACTIONS: Array<{ label: string; prompt: string; mode: 'send' | 'prefill' }> = [
+const HABIT_QUICK_ACTIONS: Array<{
+  label: string;
+  prompt: string;
+  mode: 'send' | 'prefill' | 'pick_image';
+}> = [
+  {
+    label: 'Quét giấy InBody / Ảnh',
+    prompt: '',
+    mode: 'pick_image',
+  },
   {
     label: 'Thống kê ăn hôm nay',
     prompt: 'Tối rồi, hôm nay tao ăn uống gồm: ',
@@ -102,11 +175,23 @@ const HABIT_QUICK_ACTIONS: Array<{ label: string; prompt: string; mode: 'send' |
       'Review giúp tao thể trạng hiện tại, lịch tập và so sánh chiến lược giảm mỡ giữ cơ, siết nét hay tăng cơ rồi đưa ra lịch tham khảo tối ưu nhất',
     mode: 'send',
   },
+];
+
+const IMAGE_CONTEXT_ACTIONS: Array<{ label: string; prompt: string }> = [
   {
-    label: 'AI tự Audit lộ trình',
+    label: 'Đọc phiếu InBody · Lên lịch tập & ăn uống',
     prompt:
-      'Hãy tự audit toàn bộ lộ trình tập, mức calo, độ an toàn khớp và thói quen hiện tại của tao xem có điểm nào chưa hợp lý cần tối ưu không',
-    mode: 'send',
+      'Hãy đọc chi tiết các chỉ số trên tờ phiếu đo InBody này (cân nặng, cơ xương SMM, phần trăm mỡ PBF, mỡ nội tạng, BMR, cân bằng cơ các vùng), từ đó thiết kế trọn bộ chế độ ăn uống hằng ngày + lịch tập các buổi trong tuần tối ưu nhất và tạo sẵn nút áp dụng toàn bộ giúp tao.',
+  },
+  {
+    label: 'Tính Calo & Đạm bữa ăn này',
+    prompt:
+      'Nhận diện các món trong ảnh này, ước lượng thực tế lượng Calo, Đạm, Tinh bột, Chất béo và tạo nút cộng vào nhật ký dinh dưỡng hôm nay giúp tao.',
+  },
+  {
+    label: 'Xem máy tập & gợi ý bài',
+    prompt:
+      'Nhận diện máy tập trong ảnh này tác động nhóm cơ nào, chỉ cách chỉnh ghế và cầm tay bảo vệ khớp rồi gợi ý đưa vào buổi tập phù hợp.',
   },
 ];
 
@@ -204,8 +289,12 @@ const FormattedMessageText: React.FC<{ text: string }> = ({ text }) => {
           .map((l) => l.trim())
           .filter(Boolean);
         if (lines.length === 0) return null;
-        const segments: Array<{ kind: 'p' | 'ul'; items: string[] }> = [];
+        const segments: Array<{ kind: 'p' | 'ul' | 'h'; items: string[] }> = [];
         for (const l of lines) {
+          if (/^#{1,4}\s+/.test(l)) {
+            segments.push({ kind: 'h', items: [l.replace(/^#{1,4}\s+/, '').trim()] });
+            continue;
+          }
           const isBullet = /^[-*•]\s+/.test(l);
           const clean = isBullet ? l.replace(/^[-*•]\s+/, '') : l;
           const kind = isBullet ? 'ul' : 'p';
@@ -219,7 +308,11 @@ const FormattedMessageText: React.FC<{ text: string }> = ({ text }) => {
         return (
           <React.Fragment key={bIdx}>
             {segments.map((seg, sIdx) =>
-              seg.kind === 'ul' ? (
+              seg.kind === 'h' ? (
+                <div key={`${bIdx}_${sIdx}`} className="g8d-msg-subhead">
+                  {renderInlineBold(seg.items[0] || '')}
+                </div>
+              ) : seg.kind === 'ul' ? (
                 <ul key={`${bIdx}_${sIdx}`} className="g8d-msg-list">
                   {seg.items.map((item, i) => (
                     <li key={i}>{renderInlineBold(item)}</li>
@@ -274,10 +367,15 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   const [listening, setListening] = useState(false);
   const [modelSheetOpen, setModelSheetOpen] = useState(false);
   const [probingProxy, setProbingProxy] = useState(false);
+  const [pendingImages, setPendingImages] = useState<PendingChatImage[]>([]);
+  const [compressingImage, setCompressingImage] = useState(false);
+  const [previewLightboxSrc, setPreviewLightboxSrc] = useState<string | null>(null);
 
   const snapshotsRef = useRef<Record<string, GymStateV10>>({});
+  const hiResSessionMapRef = useRef<Record<string, string[]>>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const activePersona: CoachPersonaId = state.coachPersona === 'savage' ? 'savage' : 'standard';
   const resolvedGreetingName =
@@ -426,15 +524,52 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
     onRestoreSnapshot(snap, updatedMsgs);
   };
 
+  const handleFilesSelected = async (files: FileList | File[]) => {
+    const list = Array.from(files || []).filter((f) => f.type.startsWith('image/'));
+    if (list.length === 0) return;
+    setCompressingImage(true);
+    try {
+      const remainingSlots = Math.max(0, 3 - pendingImages.length);
+      const toProcess = list.slice(0, remainingSlots || 1);
+      const compressed = await Promise.all(toProcess.map((f) => compressImageFileForChat(f)));
+      setPendingImages((prev) => [...prev, ...compressed].slice(-3));
+    } catch {
+      // Ignore unreadable image files gracefully
+    } finally {
+      setCompressingImage(false);
+    }
+  };
+
+  const removePendingImage = (id: string) => {
+    setPendingImages((prev) => prev.filter((item) => item.id !== id));
+  };
+
   const sendPrompt = async (rawPrompt?: string) => {
-    const text = (rawPrompt !== undefined ? rawPrompt : input).trim();
-    if (!text || loading) return;
+    const typedText = (rawPrompt !== undefined ? rawPrompt : input).trim();
+    const attachedNow = [...pendingImages];
+    if ((!typedText && attachedNow.length === 0) || loading || compressingImage) return;
+
+    const displayBubbleText =
+      typedText ||
+      (attachedNow.length > 1
+        ? `Phân tích ${attachedNow.length} hình ảnh & tư vấn lộ trình`
+        : 'Phân tích hình ảnh & thiết kế lộ trình');
+
+    const effectiveApiPrompt =
+      typedText ||
+      'Hãy phân tích kỹ hình ảnh đính kèm: nếu là phiếu đo InBody hãy đọc toàn bộ chỉ số cân nặng, khối cơ xương SMM, tỷ lệ mỡ PBF, mỡ nội tạng, BMR và cân bằng cơ từng vùng, sau đó thiết kế trọn bộ chế độ ăn uống hằng ngày + lịch tập các buổi trong tuần phù hợp nhất kèm đầy đủ nút proposals để cập nhật vào app; nếu là ảnh bữa ăn hãy ước lượng Calo & Đạm và tạo nút cộng món; nếu là ảnh máy tập hãy hướng dẫn tập chuẩn và gợi ý bài.';
+
+    const msgId = `u_${Date.now()}`;
+    if (attachedNow.length > 0) {
+      hiResSessionMapRef.current[msgId] = attachedNow.map((x) => x.previewDataUrl);
+    }
 
     const userMsg: AgentChatMessage = {
-      id: `u_${Date.now()}`,
+      id: msgId,
       role: 'user',
-      text,
+      text: displayBubbleText,
       createdAt: new Date().toISOString(),
+      images: attachedNow.length > 0 ? attachedNow.map((x) => x.thumbDataUrl) : undefined,
     };
 
     const historyBefore = displayMessages;
@@ -443,12 +578,22 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
       setInput('');
       inputRef.current?.blur();
     }
+    if (attachedNow.length > 0) {
+      setPendingImages([]);
+    }
     setLoading(true);
 
     const requestPayload = JSON.stringify({
-      message: text,
+      message: effectiveApiPrompt,
       persona: activePersona,
       ultraModel: ultra.unlocked ? ultra.preferredModel : 'free',
+      images:
+        attachedNow.length > 0
+          ? attachedNow.map((img) => ({
+              mimeType: img.mimeType,
+              base64Data: img.aiBase64,
+            }))
+          : undefined,
       history: historyBefore.slice(-8).map((m) => ({
         role: m.role === 'user' ? 'user' : 'model',
         content:
@@ -469,7 +614,8 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
 
     const executeFetchOnce = async () => {
       const ctrl = new AbortController();
-      const timer = window.setTimeout(() => ctrl.abort(), 32_000);
+      const timeoutMs = attachedNow.length > 0 ? 48_000 : 32_000;
+      const timer = window.setTimeout(() => ctrl.abort(), timeoutMs);
       try {
         return await fetch('/api/gym8d/agent-chat', {
           method: 'POST',
@@ -640,7 +786,8 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
       : 'Free · Proxy tắt'
     : 'Flash 3.5 · Free';
 
-  const showQuickChips = !isKeyboardOpen && !input.trim();
+  const showQuickChips = !isKeyboardOpen && !input.trim() && pendingImages.length === 0;
+  const canSubmitNow = Boolean(input.trim() || pendingImages.length > 0) && !loading && !compressingImage;
 
   return (
     <div className={`g8d-coach-page ${isKeyboardOpen ? 'is-kb-active' : ''}`}>
@@ -807,6 +954,25 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
               )}
 
               <div className="g8d-chat-col">
+                {msg.images && msg.images.length > 0 && (
+                  <div className={`g8d-msg-images-row is-${msg.role}`}>
+                    {msg.images.map((thumbSrc, imgIdx) => {
+                      const hiRes = hiResSessionMapRef.current[msg.id]?.[imgIdx] || thumbSrc;
+                      return (
+                        <button
+                          key={imgIdx}
+                          type="button"
+                          className="g8d-msg-image-thumb-btn"
+                          onClick={() => setPreviewLightboxSrc(hiRes)}
+                          aria-label="Phóng to hình ảnh đính kèm"
+                        >
+                          <img src={hiRes} alt="Ảnh đính kèm" className="g8d-msg-image-thumb" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <div className={`g8d-msg-bubble is-${msg.role}`}>
                   <FormattedMessageText text={msg.text} />
                 </div>
@@ -941,6 +1107,71 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
       </div>
 
       <div className="g8d-composer-dock">
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              void handleFilesSelected(e.target.files);
+            }
+            e.target.value = '';
+          }}
+        />
+
+        {pendingImages.length > 0 && (
+          <div className="g8d-pending-images-panel">
+            <div className="g8d-pending-thumbs-row">
+              {pendingImages.map((img) => (
+                <div key={img.id} className="g8d-pending-thumb-card">
+                  <img
+                    src={img.previewDataUrl}
+                    alt="Ảnh chuẩn bị gửi"
+                    onClick={() => setPreviewLightboxSrc(img.previewDataUrl)}
+                  />
+                  <button
+                    type="button"
+                    className="g8d-pending-thumb-remove"
+                    onClick={() => removePendingImage(img.id)}
+                    aria-label="Xoá ảnh này"
+                  >
+                    <SvgIcon name="x" size={12} color="#FFFDF9" />
+                  </button>
+                </div>
+              ))}
+
+              {pendingImages.length < 3 && (
+                <button
+                  type="button"
+                  className="g8d-pending-add-more"
+                  onClick={() => imageInputRef.current?.click()}
+                  title="Thêm ảnh (tối đa 3 ảnh)"
+                >
+                  <SvgIcon name="plus" size={16} />
+                  <span>{pendingImages.length}/3</span>
+                </button>
+              )}
+            </div>
+
+            {!isKeyboardOpen && !input.trim() && (
+              <div className="g8d-agent-chips is-image-context">
+                {IMAGE_CONTEXT_ACTIONS.map((act) => (
+                  <button
+                    key={act.label}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => sendPrompt(act.prompt)}
+                  >
+                    {act.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {showQuickChips && (
           <div className="g8d-agent-chips">
             {HABIT_QUICK_ACTIONS.map((item) => (
@@ -949,7 +1180,9 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                 type="button"
                 disabled={loading}
                 onClick={() => {
-                  if (item.mode === 'prefill') {
+                  if (item.mode === 'pick_image') {
+                    imageInputRef.current?.click();
+                  } else if (item.mode === 'prefill') {
                     setInput(item.prompt);
                     inputRef.current?.focus();
                   } else {
@@ -973,6 +1206,17 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           <div className="g8d-composer-capsule">
             <button
               type="button"
+              className={`g8d-attach-img-btn ${pendingImages.length > 0 ? 'has-images' : ''}`}
+              onClick={() => imageInputRef.current?.click()}
+              disabled={loading || compressingImage}
+              title="Chụp hoặc tải ảnh phiếu InBody / bữa ăn"
+              aria-label="Đính kèm hình ảnh"
+            >
+              <SvgIcon name="image" size={18} />
+            </button>
+
+            <button
+              type="button"
               className={`g8d-mic-btn ${listening ? 'is-listening' : ''}`}
               onClick={toggleVoiceInput}
               title="Đọc bằng giọng nói tiếng Việt"
@@ -987,6 +1231,17 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
               enterKeyHint="send"
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onPaste={(e) => {
+                const items = Array.from(e.clipboardData?.items || []);
+                const imgFiles = items
+                  .filter((it) => it.type.startsWith('image/'))
+                  .map((it) => it.getAsFile())
+                  .filter((f): f is File => Boolean(f));
+                if (imgFiles.length > 0) {
+                  e.preventDefault();
+                  void handleFilesSelected(imgFiles);
+                }
+              }}
               onFocus={() => {
                 window.setTimeout(scrollToLatest, 120);
               }}
@@ -996,15 +1251,21 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   sendPrompt();
                 }
               }}
-              placeholder="Nhắn ChatDVT..."
+              placeholder={
+                compressingImage
+                  ? 'Đang tối ưu ảnh...'
+                  : pendingImages.length > 0
+                  ? 'Thêm lời nhắn hoặc bấm gửi ngay...'
+                  : 'Nhắn hoặc gửi ảnh InBody...'
+              }
               className="g8d-agent-textinput"
               disabled={loading}
             />
 
             <button
               type="submit"
-              className={`g8d-agent-sendbtn ${input.trim() ? 'is-ready' : ''}`}
-              disabled={loading || !input.trim()}
+              className={`g8d-agent-sendbtn ${canSubmitNow ? 'is-ready' : ''}`}
+              disabled={!canSubmitNow}
               aria-label="Gửi tin nhắn"
             >
               <SvgIcon name="send" size={16} color="#FFFDF9" />
@@ -1012,6 +1273,19 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           </div>
         </form>
       </div>
+
+      <BottomSheet
+        open={Boolean(previewLightboxSrc)}
+        title="Hình Ảnh Đính Kèm"
+        subtitle="Ảnh phiếu InBody / bữa ăn đã gửi cho ChatDVT"
+        onClose={() => setPreviewLightboxSrc(null)}
+      >
+        {previewLightboxSrc && (
+          <div className="g8d-lightbox-wrap">
+            <img src={previewLightboxSrc} alt="Xem chi tiết ảnh" className="g8d-lightbox-img" />
+          </div>
+        )}
+      </BottomSheet>
 
       <BottomSheet
         open={modelSheetOpen}
