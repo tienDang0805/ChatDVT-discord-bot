@@ -1,4 +1,4 @@
-const CACHE_NAME = "8d-bear-sherpa-pwa-v21";
+const CACHE_NAME = "8d-bear-sherpa-pwa-v22";
 const PRECACHE_ICONS = [
   "/gym8D/manifest.webmanifest",
   "/gym8D/assets/mascots/app_icon_sherpa_512.png",

@@ -85,6 +85,7 @@ export function useGymStore() {
   latestStateRef.current = state;
   const initialCloudDoneRef = useRef(false);
   const suppressNextAutoPushRef = useRef(false);
+  const forceNextAutoPushRef = useRef(false);
 
   const showToast = useCallback((title: string, body: string, tone: ToastBanner['tone'] = 'orange') => {
     setToast({ title, body, tone });
@@ -125,6 +126,7 @@ export function useGymStore() {
         updatedAt: new Date().toISOString(),
       };
       latestStateRef.current = restored;
+      forceNextAutoPushRef.current = true;
       saveLocalStateSafely(restored);
       setState(restored);
       showToast('Đã hoàn tác thay đổi', 'Dữ liệu đã khôi phục về trạng thái trước khi áp dụng.', 'orange');
@@ -226,7 +228,7 @@ export function useGymStore() {
           initialCloudDoneRef.current = true;
           setSyncStatus('synced');
           if (!replaceLocalIfDifferentCode && countStateActivityScore(localSnap) > countStateActivityScore(payload.data)) {
-            await pushToCloud(withStamp, cleanCode, false, true);
+            await pushToCloud(withStamp, cleanCode, false, false);
           }
           if (notify) {
             showToast(
@@ -264,7 +266,9 @@ export function useGymStore() {
       return;
     }
     const timer = setTimeout(() => {
-      pushToCloud(state, state.syncCode, false, true);
+      const shouldForce = forceNextAutoPushRef.current;
+      forceNextAutoPushRef.current = false;
+      pushToCloud(state, state.syncCode, false, shouldForce);
     }, 900);
     return () => clearTimeout(timer);
   }, [pushToCloud, state]);
@@ -276,7 +280,9 @@ export function useGymStore() {
         latestStateRef.current.hasOnboarded &&
         initialCloudDoneRef.current
       ) {
-        pushToCloud(latestStateRef.current, latestStateRef.current.syncCode, false, true);
+        const shouldForce = forceNextAutoPushRef.current;
+        forceNextAutoPushRef.current = false;
+        pushToCloud(latestStateRef.current, latestStateRef.current.syncCode, false, shouldForce);
       }
     };
     document.addEventListener('visibilitychange', onVisChange);
@@ -337,8 +343,8 @@ export function useGymStore() {
       updateState((prev) => {
         const nextProfile = { ...prev.profileInput, [field]: value };
         if (field === 'weightKg' || field === 'targetWeightKg') {
-          const w = Number(nextProfile.weightKg) || 115;
-          const tw = Number(nextProfile.targetWeightKg) || 95;
+          const w = Number(nextProfile.weightKg) || 72;
+          const tw = Number(nextProfile.targetWeightKg) || 66;
           if (tw < w - 1 && nextProfile.goal === 'bulk') nextProfile.goal = 'cut';
           else if (tw > w + 1 && nextProfile.goal === 'cut') nextProfile.goal = 'bulk';
         }
@@ -531,6 +537,7 @@ export function useGymStore() {
         }
 
         if (!status) {
+          forceNextAutoPushRef.current = true;
           delete nextStatuses[isoDate];
           if (nextLogsByDate[isoDate]) {
             const resetDayLogs: Record<string, SetEntry[]> = {};
@@ -635,6 +642,7 @@ export function useGymStore() {
 
   const markDayOff = useCallback(
     (isoDate: string, note?: string) => {
+      forceNextAutoPushRef.current = true;
       updateState((prev) => {
         const nextStatuses = { ...prev.dayStatusByDate };
         delete nextStatuses[isoDate];
@@ -747,6 +755,7 @@ export function useGymStore() {
     (missedDateISO: string, missedSessionId: SessionId) => {
       const restTarget = streakSummary.nextRestDayForMakeup;
       if (!restTarget || missedSessionId === 'rest') return;
+      forceNextAutoPushRef.current = true;
       updateState((prev) => {
         const nextStatuses = { ...prev.dayStatusByDate };
         delete nextStatuses[missedDateISO];
@@ -945,6 +954,19 @@ export function useGymStore() {
     (proposals: AgentActionProposal[]): GymStateV10 => {
       const snapshotBefore: GymStateV10 = JSON.parse(JSON.stringify(latestStateRef.current));
       const hhmm = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+
+      if (
+        proposals.some(
+          (p) =>
+            p.type === 'clear_workout_logs' ||
+            p.type === 'clear_nutrition_logs' ||
+            p.type === 'replace_day_nutrition' ||
+            p.type === 'remove_food_item' ||
+            (p.type === 'set_day_status' && (p.status === 'off' || p.status === 'clear'))
+        )
+      ) {
+        forceNextAutoPushRef.current = true;
+      }
 
       updateState((prev) => {
         const next: GymStateV10 = JSON.parse(JSON.stringify(prev));
@@ -1227,7 +1249,10 @@ export function useGymStore() {
             nextProfile.shortLabel = `${nextProfile.weightKg}kg · ${nextProfile.heightCm}cm`;
             next.profileInput = nextProfile;
           } else if (act.type === 'log_weight') {
-            const cleanW = Math.max(38, Math.min(200, Math.round((Number(act.weightKg) || 115) * 10) / 10));
+            const cleanW = Math.max(
+              38,
+              Math.min(200, Math.round((Number(act.weightKg) || Number(next.profileInput.weightKg) || 72) * 10) / 10)
+            );
             const list = [...next.weightLogs];
             const idx = list.findIndex((x) => x.isoDate === todayISO);
             const entry = {

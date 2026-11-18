@@ -11,11 +11,46 @@ export interface RestTimerState {
   nextSetLabel: string;
 }
 
+let sharedAudioCtx: AudioContext | null = null;
+
+function getOrCreateAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+    sharedAudioCtx = new AudioCtx();
+  }
+  return sharedAudioCtx;
+}
+
+export function unlockGymAudio(): void {
+  try {
+    const ctx = getOrCreateAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      void ctx.resume();
+    }
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.01);
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+  } catch {}
+}
+
 export function playGymChime(type: 'rest' | 'notify' | 'pr' = 'rest'): void {
   try {
-    const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    const ctx = getOrCreateAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      void ctx.resume();
+    }
     const notes =
       type === 'pr'
         ? [523.25, 659.25, 783.99, 1046.5]
@@ -33,6 +68,10 @@ export function playGymChime(type: 'rest' | 'notify' | 'pr' = 'rest'): void {
       gain.connect(ctx.destination);
       osc.start(ctx.currentTime + idx * 0.1);
       osc.stop(ctx.currentTime + idx * 0.1 + 0.36);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
     });
     if ('vibrate' in navigator) {
       navigator.vibrate([200, 90, 200]);
@@ -106,6 +145,7 @@ export function useWallClockRestTimer(syncCode: string, enableServerPush: boolea
 
   const startRestTimer = useCallback(
     (durationSec: number, exerciseName: string, nextSetLabel: string) => {
+      unlockGymAudio();
       const cleanSec = Math.max(10, Math.min(600, Math.round(durationSec || 90)));
       const endsAtMs = Date.now() + cleanSec * 1000;
       const nextState: RestTimerState = {

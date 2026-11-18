@@ -259,7 +259,7 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
             enterKeyHint="send"
             value={aiMealText}
             onChange={(e) => setAiMealText(e.target.value)}
-            placeholder="VD: 1 tô phở bò tái + 2 trứng luộc..."
+            placeholder="VD: 1 tô phở bò + 2 trứng..."
             className="g8d-search-input"
             style={{ marginBottom: 0, flex: 1 }}
           />
@@ -288,22 +288,6 @@ export const NutritionView: React.FC<NutritionViewProps> = ({
               {totalLoggedRows > 0 ? `${totalLoggedRows} món đã ghi nhận` : 'Chưa có món ăn nào'}
             </div>
           </div>
-          {totalLoggedRows > 0 && (
-            <button
-              type="button"
-              className="g8d-pill-btn g8d-pill-btn-touch"
-              onClick={() =>
-                onOpenCoach(
-                  `Kiểm tra lại danh sách ăn uống ngày ${formatVNShortDate(
-                    nutritionDateISO
-                  )} của tao và chỉnh lại nếu có món trùng hoặc lệch calo`,
-                  'Dinh Dưỡng'
-                )
-              }
-            >
-              Nhờ AI rà lại
-            </button>
-          )}
         </div>
 
         {totalLoggedRows === 0 ? (

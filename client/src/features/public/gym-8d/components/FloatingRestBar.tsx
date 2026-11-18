@@ -7,9 +7,15 @@ interface FloatingRestBarProps {
   timer: RestTimerState;
   onAdjust: (deltaSec: number) => void;
   onStop: () => void;
+  variant?: 'floating' | 'inline-coach';
 }
 
-export const FloatingRestBar: React.FC<FloatingRestBarProps> = ({ timer, onAdjust, onStop }) => {
+export const FloatingRestBar: React.FC<FloatingRestBarProps> = ({
+  timer,
+  onAdjust,
+  onStop,
+  variant = 'floating',
+}) => {
   if (!timer.active || timer.remainingSec <= 0) return null;
 
   const mins = Math.floor(timer.remainingSec / 60);
@@ -20,7 +26,11 @@ export const FloatingRestBar: React.FC<FloatingRestBarProps> = ({ timer, onAdjus
   );
 
   return (
-    <div className="g8d-floating-rest" role="status" aria-live="polite">
+    <div
+      className={`g8d-floating-rest ${variant === 'inline-coach' ? 'is-inline-coach' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="g8d-floating-rest-top">
         <div className="g8d-floating-rest-clock">
           <SvgIcon name="clock" size={15} color="#FDBA74" />

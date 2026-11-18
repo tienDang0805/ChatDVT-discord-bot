@@ -2,7 +2,7 @@
   "id": "/gym8D",
   "name": "Gấu Gym 8D — Trợ Lý Tập Luyện & Dinh Dưỡng",
   "short_name": "Gấu Gym 8D",
-  "description": "Trợ lý ghi mức tạ Progressive Overload, lịch ngủ sinh học 06:00 và thực đơn giảm mỡ giữ cơ.",
+  "description": "Ghi mức tạ Progressive Overload, đếm giờ nghỉ, lịch tập & thực đơn AI cá nhân hoá.",
   "start_url": "/gym8D",
   "scope": "/gym8D",
   "display": "standalone",

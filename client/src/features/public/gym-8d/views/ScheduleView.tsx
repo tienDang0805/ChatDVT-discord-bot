@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BottomSheet } from '../components/BottomSheet';
 import { SvgIcon } from '../components/Icons';
-import { WeightChartCard } from '../components/WeightChartCard';
 import { resolveMascotAsset } from '../data/assets';
 import { WORKOUT_SESSIONS } from '../data/workouts';
 import { DAY_TINY_NAMES } from '../domain/dateUtils';
@@ -10,7 +9,6 @@ import type {
   DayScheduleEntry,
   SessionId,
   WeekdayRule,
-  WeightLogEntry,
   WorkoutSessionId,
 } from '../types/gym';
 
@@ -35,20 +33,6 @@ interface ScheduleViewProps {
     cells: Array<{ inCurrentMonth: boolean; entry: DayScheduleEntry }>;
   };
   metrics: CalculatedMetrics;
-  weightTracker: {
-    effectiveLogs: WeightLogEntry[];
-    firstWeightKg: number;
-    latestWeightKg: number;
-    targetWeightKg: number;
-    deltaFromStart: number;
-    remainingToGoal: number;
-    progressPct: number;
-    nextWeighInShort: string;
-    daysUntilNextWeighIn: number;
-    hasLoggedToday: boolean;
-    isWeighInDueToday: boolean;
-  };
-  weighInIntervalDays: 7 | 14;
   pushSubscribed: boolean;
   onSelectDate: (isoDate: string) => void;
   onChangeWeekOffset: (next: number) => void;
@@ -70,10 +54,7 @@ interface ScheduleViewProps {
     patch: Partial<WeekdayRule>,
     scope: 'recurring' | 'single'
   ) => void;
-  onLogWeight: (kg: number) => void;
-  onChangeWeighInterval: (days: 7 | 14) => void;
   onOpenPushSettings: () => void;
-  onOpenCoach: (prefill?: string, returnLabel?: string) => void;
 }
 
 const WORKOUT_TIME_OPTIONS = ['05:30', '06:00', '06:30', '07:00', '17:00', '18:00', '19:00'];
@@ -95,8 +76,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   dynamicWeek,
   dynamicMonth,
   metrics,
-  weightTracker,
-  weighInIntervalDays,
   pushSubscribed,
   onSelectDate,
   onChangeWeekOffset,
@@ -109,13 +88,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onApplyWeeklySplitPreset,
   onMakeupMissed,
   onUpdateDaySchedule,
-  onLogWeight,
-  onChangeWeighInterval,
   onOpenPushSettings,
-  onOpenCoach,
 }) => {
-  const [subTab, setSubTab] = useState<'calendar' | 'weight' | 'sleep'>('calendar');
   const [calendarMode, setCalendarMode] = useState<'week' | 'month'>('week');
+  const [sleepAccOpen, setSleepAccOpen] = useState(false);
   const [editingDay, setEditingDay] = useState<DayScheduleEntry | null>(null);
   const [editScope, setEditScope] = useState<'single' | 'recurring'>('single');
   const [draftSession, setDraftSession] = useState<SessionId>('press_day');
@@ -157,45 +133,21 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
       : null;
   const selectedNote = dayNotesByDate[selectedDay.isoDate] || '';
 
+  const compactWeekTitle = dynamicWeek.weekRangeLabel.replace(/^Tuần\s+/i, '');
+
   return (
     <div className="g8d-view-stack">
-      <div className="g8d-subtabs">
-        <button
-          type="button"
-          className={subTab === 'calendar' ? 'is-active' : ''}
-          onClick={() => setSubTab('calendar')}
-        >
-          Lịch Tập
-        </button>
-        <button
-          type="button"
-          className={subTab === 'weight' ? 'is-active' : ''}
-          onClick={() => setSubTab('weight')}
-        >
-          Cân Nặng ({weightTracker.latestWeightKg}kg)
-        </button>
-        <button
-          type="button"
-          className={subTab === 'sleep' ? 'is-active' : ''}
-          onClick={() => setSubTab('sleep')}
-        >
-          Nhịp Ngủ
-        </button>
-      </div>
-
-      {subTab === 'calendar' && (
-        <>
-          <div
-            className={`g8d-card g8d-checkin-card ${
-              selectedDay.isCompleted
-                ? 'is-done'
-                : selectedDay.isMissed
-                ? 'is-missed'
-                : selectedDay.sessionId === 'rest'
-                ? 'is-off'
-                : 'is-pending'
-            }`}
-          >
+      <div
+        className={`g8d-card g8d-checkin-card ${
+          selectedDay.isCompleted
+            ? 'is-done'
+            : selectedDay.isMissed
+            ? 'is-missed'
+            : selectedDay.sessionId === 'rest'
+            ? 'is-off'
+            : 'is-pending'
+        }`}
+      >
             <div className="g8d-row-between">
               <div className="g8d-row-gap" style={{ minWidth: 0 }}>
                 <img
@@ -319,7 +271,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 enterKeyHint="done"
                 value={selectedNote}
                 onChange={(e) => onSetDayNote(selectedDay.isoDate, e.target.value)}
-                placeholder={`Ghi chú ngày ${selectedDay.shortDate} (cảm giác cơ, mức tạ...)`}
+                placeholder={`Ghi chú buổi tập ${selectedDay.shortDate}...`}
                 className="g8d-note-input"
               />
             </div>
@@ -340,11 +292,14 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 >
                   <SvgIcon name="chevronLeft" size={18} />
                 </button>
-                <div>
+                <div className="g8d-cal-title-wrap">
                   <div className="g8d-cal-range">
-                    {calendarMode === 'week' ? dynamicWeek.weekRangeLabel : dynamicMonth.monthTitle}
+                    {calendarMode === 'week' ? compactWeekTitle : dynamicMonth.monthTitle}
                   </div>
-                  <div className="g8d-tiny-meta">{dynamicWeek.mesocycleTitle}</div>
+                  <div className="g8d-cal-sub">
+                    Tuần {dynamicWeek.programWeekNumber}
+                    {dynamicWeek.isDeloadWeek ? ' · Giảm tải' : ''}
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -547,80 +502,65 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
             )}
           </div>
 
-          <div className="g8d-smart-strip">
-            <div className="g8d-smart-strip-text">
-              <strong>Ngủ trước {selectedDay.sleepTargetTime}</strong> · Mai ({tomorrowEntry.dayShort}):{' '}
-              {tomorrowEntry.sessionId !== 'rest'
-                ? WORKOUT_SESSIONS[tomorrowEntry.sessionId as WorkoutSessionId]?.shortName
-                : 'Nghỉ hồi phục cơ'}
-            </div>
+          <div className="g8d-card g8d-accordion-card">
             <button
               type="button"
-              className="g8d-smart-strip-btn"
-              onClick={() =>
-                onOpenCoach(
-                  'Review lịch tập tuần này giúp tao và sắp xếp lại sao cho hợp lý nhất:',
-                  'Lịch Tập'
-                )
-              }
+              className="g8d-accordion-trigger"
+              onClick={() => setSleepAccOpen((v) => !v)}
             >
-              Nhờ ChatDVT xếp
+              <span>
+                Nhịp ngủ & phục hồi ({metrics.profile.workoutTime}) · Ngủ trước{' '}
+                {selectedDay.sleepTargetTime}
+              </span>
+              <SvgIcon name="chevronDown" size={17} />
             </button>
-          </div>
-        </>
-      )}
+            {sleepAccOpen && (
+              <div className="g8d-accordion-body">
+                <div className="g8d-row-between" style={{ marginTop: 10, marginBottom: 10 }}>
+                  <span className="g8d-tiny-meta">
+                    Mai ({tomorrowEntry.dayShort}):{' '}
+                    <strong>
+                      {tomorrowEntry.sessionId !== 'rest'
+                        ? WORKOUT_SESSIONS[tomorrowEntry.sessionId as WorkoutSessionId]?.shortName
+                        : 'Nghỉ hồi phục cơ'}
+                    </strong>
+                  </span>
+                  <button
+                    type="button"
+                    className="g8d-pill-btn"
+                    onClick={onOpenPushSettings}
+                  >
+                    {pushSubscribed ? 'Thông báo: Bật' : 'Bật thông báo'}
+                  </button>
+                </div>
 
-      {subTab === 'weight' && (
-        <WeightChartCard
-          summary={weightTracker}
-          weighInIntervalDays={weighInIntervalDays}
-          onLogWeight={onLogWeight}
-          onChangeInterval={onChangeWeighInterval}
-        />
-      )}
-
-      {subTab === 'sleep' && (
-        <div className="g8d-card">
-          <div className="g8d-row-between">
-            <div>
-              <div className="g8d-kicker">ĐỒNG HỒ SINH HỌC CA TẬP {metrics.profile.workoutTime}</div>
-              <div className="g8d-card-title">Lịch Ngủ & Phục Hồi 24 Giờ</div>
-            </div>
-            <button
-              type="button"
-              className="g8d-pill-btn g8d-pill-btn-touch"
-              onClick={onOpenPushSettings}
-            >
-              {pushSubscribed ? 'Thông báo: Bật' : 'Bật thông báo'}
-            </button>
-          </div>
-
-          <div className="g8d-timeline-list" style={{ marginTop: 12 }}>
-            {metrics.circadianSchedule.timelineItems.map((item) => (
-              <div
-                key={`${item.time}-${item.title}`}
-                className={`g8d-timeline-row ${item.highlight ? 'is-highlight' : ''}`}
-              >
-                <img
-                  src={resolveMascotAsset(item.mascot)}
-                  alt=""
-                  width={40}
-                  height={40}
-                  loading="lazy"
-                  className="g8d-timeline-mascot"
-                />
-                <div className="g8d-timeline-body">
-                  <div className="g8d-timeline-head">
-                    <span className="g8d-time-chip">{item.time}</span>
-                    <strong>{item.title}</strong>
-                  </div>
-                  <div className="g8d-tiny-meta">{item.detail}</div>
+                <div className="g8d-timeline-list">
+                  {metrics.circadianSchedule.timelineItems.map((item) => (
+                    <div
+                      key={`${item.time}-${item.title}`}
+                      className={`g8d-timeline-row ${item.highlight ? 'is-highlight' : ''}`}
+                    >
+                      <img
+                        src={resolveMascotAsset(item.mascot)}
+                        alt=""
+                        width={40}
+                        height={40}
+                        loading="lazy"
+                        className="g8d-timeline-mascot"
+                      />
+                      <div className="g8d-timeline-body">
+                        <div className="g8d-timeline-head">
+                          <span className="g8d-time-chip">{item.time}</span>
+                          <strong>{item.title}</strong>
+                        </div>
+                        <div className="g8d-tiny-meta">{item.detail}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      )}
 
       <BottomSheet
         open={Boolean(editingDay)}

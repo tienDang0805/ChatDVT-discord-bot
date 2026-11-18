@@ -6,31 +6,29 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { useChatDvtAvatar } from './hooks/useChatDvtAvatar';
 import { useGymStore } from './hooks/useGymStore';
 import { useNativeWebPush } from './hooks/useNativeWebPush';
-import { useUltraMode } from './hooks/useUltraMode';
 import { useWallClockRestTimer } from './hooks/useWallClockRestTimer';
 import type { ActiveTabId, WorkoutSessionId } from './types/gym';
 import { BodyAndSettingsView } from './views/BodyAndSettingsView';
 import { ChatDvtCoachView } from './views/ChatDvtCoachView';
 import { NutritionView } from './views/NutritionView';
 import { ScheduleView } from './views/ScheduleView';
-import { StreakAndPrView } from './views/StreakAndPrView';
 import { WorkoutView } from './views/WorkoutView';
 
 function resolveInitialTab(): ActiveTabId {
-  if (typeof window === 'undefined') return 'coach';
+  if (typeof window === 'undefined') return 'workout';
   const params = new URLSearchParams(window.location.search);
   const t = params.get('tab');
+  if (t === 'streak' || t === 'settings') return 'profile';
   if (
     t === 'coach' ||
     t === 'schedule' ||
     t === 'workout' ||
-    t === 'streak' ||
     t === 'nutrition' ||
     t === 'profile'
   ) {
     return t;
   }
-  return 'coach';
+  return 'workout';
 }
 
 function isTextEntryElement(el: Element | null): boolean {
@@ -49,6 +47,11 @@ export const Gym8dApp: React.FC = () => {
   const { avatarUrl, fallbackUrl } = useChatDvtAvatar();
   const [activeTab, setActiveTab] = useState<ActiveTabId>(() => resolveInitialTab());
   const [profileSection, setProfileSection] = useState<'push' | 'body'>('body');
+  const [focusedExSlot, setFocusedExSlot] = useState<{
+    origId: string;
+    exId: string;
+    index: number;
+  } | null>(null);
   const [coachDraft, setCoachDraft] = useState<string>('');
   const [returnTarget, setReturnTarget] = useState<{
     tab: ActiveTabId;
@@ -59,7 +62,6 @@ export const Gym8dApp: React.FC = () => {
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
   const push = useNativeWebPush(store.state.syncCode, store.state.pushPrefs);
-  const ultra = useUltraMode();
 
   const rest = useWallClockRestTimer(
     store.state.syncCode,
@@ -146,6 +148,10 @@ export const Gym8dApp: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    setFocusedExSlot(null);
+  }, [store.selectedDateISO, store.effectiveSessionId]);
+
+  useEffect(() => {
     if (mainScrollRef.current && activeTab !== 'coach') {
       mainScrollRef.current.scrollTop = 0;
     }
@@ -193,13 +199,13 @@ export const Gym8dApp: React.FC = () => {
     (push.env.isMobile || push.env.isInAppBrowser) &&
     !store.state.installBannerDismissed;
 
-  const isScheduleGroup = activeTab === 'schedule' || activeTab === 'streak';
+  const isRestTimerActive = rest.restTimer.active && rest.restTimer.remainingSec > 0;
 
   return (
     <div
       className={`g8d-shell ${activeTab === 'coach' ? 'is-coach-mode' : ''} ${
         isKeyboardOpen ? 'is-keyboard-open' : ''
-      }`}
+      } ${isRestTimerActive ? 'is-rest-active' : ''}`}
     >
       <CompactHeader
         streakCount={store.streakSummary.currentStreak}
@@ -213,9 +219,12 @@ export const Gym8dApp: React.FC = () => {
         onDismissInstallStrip={() =>
           store.updateState((prev) => ({ ...prev, installBannerDismissed: true }))
         }
-        onOpenStreak={() => setActiveTab('streak')}
+        onOpenStreak={() => {
+          setProfileSection('body');
+          setActiveTab('profile');
+        }}
         onOpenPushSettings={openPushSettings}
-        onQuickSync={() => store.pushToCloud(store.state, store.state.syncCode, true, true)}
+        onQuickSync={() => store.pushToCloud(store.state, store.state.syncCode, true, false)}
       />
 
       {store.toast && (
@@ -241,6 +250,14 @@ export const Gym8dApp: React.FC = () => {
         {activeTab === 'coach' && (
           <ChatDvtCoachView
             isKeyboardOpen={isKeyboardOpen}
+            restBarNode={
+              <FloatingRestBar
+                variant="inline-coach"
+                timer={rest.restTimer}
+                onAdjust={rest.adjustRestTimer}
+                onStop={rest.stopRestTimer}
+              />
+            }
             initialDraft={coachDraft}
             onConsumeDraft={consumeCoachDraft}
             returnTab={returnTarget}
@@ -271,11 +288,6 @@ export const Gym8dApp: React.FC = () => {
             onChangePersona={store.setCoachPersona}
             onApplyProposals={store.applyAgentProposals}
             onRestoreSnapshot={store.restoreSnapshot}
-            ultra={ultra}
-            onOpenUltraSettings={() => {
-              setProfileSection('push');
-              setActiveTab('profile');
-            }}
           />
         )}
 
@@ -290,8 +302,6 @@ export const Gym8dApp: React.FC = () => {
             dynamicWeek={store.dynamicWeek}
             dynamicMonth={store.dynamicMonth}
             metrics={store.metrics}
-            weightTracker={store.weightTracker}
-            weighInIntervalDays={store.state.weighInIntervalDays}
             pushSubscribed={push.pushStatus === 'subscribed'}
             onSelectDate={store.setSelectedDateISO}
             onChangeWeekOffset={store.setWeekOffset}
@@ -306,12 +316,7 @@ export const Gym8dApp: React.FC = () => {
             onApplyWeeklySplitPreset={store.applyWeeklySplitPreset}
             onMakeupMissed={store.makeupMissedSession}
             onUpdateDaySchedule={store.updateScheduleForDay}
-            onLogWeight={store.logNewWeight}
-            onChangeWeighInterval={(days) =>
-              store.updateState((prev) => ({ ...prev, weighInIntervalDays: days }))
-            }
             onOpenPushSettings={openPushSettings}
-            onOpenCoach={openCoachFromContext}
           />
         )}
 
@@ -328,6 +333,8 @@ export const Gym8dApp: React.FC = () => {
             customSessionLists={store.state.customSessionLists}
             activePresetBySession={store.state.activePresetBySession}
             personalRecords={store.personalRecords}
+            focusedExSlot={focusedExSlot}
+            onChangeFocusedExSlot={setFocusedExSlot}
             onSelectDate={store.setSelectedDateISO}
             onSelectSession={(sid) =>
               store.updateState((prev) => ({ ...prev, activeSessionId: sid }))
@@ -353,17 +360,6 @@ export const Gym8dApp: React.FC = () => {
           />
         )}
 
-        {activeTab === 'streak' && (
-          <StreakAndPrView
-            streakSummary={store.streakSummary}
-            personalRecords={store.personalRecords}
-            dayNotesByDate={store.state.dayNotesByDate || {}}
-            onOpenWorkoutForDate={openWorkoutForDate}
-            onMakeupMissed={store.makeupMissedSession}
-            onOpenCoach={openCoachFromContext}
-          />
-        )}
-
         {activeTab === 'nutrition' && (
           <NutritionView
             todayISO={store.todayISO}
@@ -383,6 +379,8 @@ export const Gym8dApp: React.FC = () => {
           <BodyAndSettingsView
             initialSection={profileSection}
             metrics={store.metrics}
+            weightTracker={store.weightTracker}
+            weighInIntervalDays={store.state.weighInIntervalDays}
             streakSummary={store.streakSummary}
             personalRecords={store.personalRecords}
             dayNotesByDate={store.state.dayNotesByDate || {}}
@@ -401,6 +399,10 @@ export const Gym8dApp: React.FC = () => {
             onPromptNativeInstall={push.promptNativeInstall}
             weekDays={store.dynamicWeek.days}
             onUpdateProfileField={store.updateProfileField}
+            onLogWeight={store.logNewWeight}
+            onChangeWeighInterval={(days) =>
+              store.updateState((prev) => ({ ...prev, weighInIntervalDays: days }))
+            }
             onChangePersona={store.setCoachPersona}
             onUpdatePushPref={store.updatePushPref}
             onSubscribePush={push.subscribeNativePush}
@@ -409,7 +411,7 @@ export const Gym8dApp: React.FC = () => {
             onSelectGymBranch={(gid) =>
               store.updateState((prev) => ({ ...prev, selectedGymId: gid }))
             }
-            onSyncNow={() => store.pushToCloud(store.state, store.state.syncCode, true, true)}
+            onSyncNow={() => store.pushToCloud(store.state, store.state.syncCode, true, false)}
             onPullCloud={() => store.pullFromCloud(store.state.syncCode, true)}
             onChangeSyncCode={store.setSyncCodeAndPull}
             onExportJSON={store.exportBackupJSON}
@@ -418,16 +420,17 @@ export const Gym8dApp: React.FC = () => {
             onOpenWorkoutForDate={openWorkoutForDate}
             onMakeupMissed={store.makeupMissedSession}
             onOpenCoach={openCoachFromContext}
-            ultra={ultra}
           />
         )}
       </main>
 
-      <FloatingRestBar
-        timer={rest.restTimer}
-        onAdjust={rest.adjustRestTimer}
-        onStop={rest.stopRestTimer}
-      />
+      {activeTab !== 'coach' && (
+        <FloatingRestBar
+          timer={rest.restTimer}
+          onAdjust={rest.adjustRestTimer}
+          onStop={rest.stopRestTimer}
+        />
+      )}
 
       <OnboardingModal
         open={!store.state.hasOnboarded}
@@ -439,12 +442,12 @@ export const Gym8dApp: React.FC = () => {
       <nav className="g8d-bottom-nav" aria-label="Điều hướng chính">
         <button
           type="button"
-          className={isScheduleGroup ? 'is-active' : ''}
-          aria-current={isScheduleGroup ? 'page' : undefined}
+          className={activeTab === 'schedule' ? 'is-active' : ''}
+          aria-current={activeTab === 'schedule' ? 'page' : undefined}
           onClick={() => setActiveTab('schedule')}
         >
           <span className="g8d-tab-icon-slot">
-            <SvgIcon name="calendar" size={22} filled={isScheduleGroup} />
+            <SvgIcon name="calendar" size={22} filled={activeTab === 'schedule'} />
           </span>
           <span>Lịch</span>
         </button>

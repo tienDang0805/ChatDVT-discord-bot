@@ -3,20 +3,20 @@ import type { GymBranch, GymBranchId, GymSessionPreset } from '../types/gym';
 export const GYM_BRANCHES: Record<GymBranchId, GymBranch> = {
   "all": {
     "id": "all",
-    "shortName": "Cả 2 Phòng Tập",
-    "badge": "Tất cả máy (36 bài)",
-    "name": "Kết Hợp: The New Gym UVK & Ways Station QL13",
-    "address": "58D Ung Văn Khiêm (Bình Thạnh) & 361 Quốc Lộ 13 (Thủ Đức)",
-    "hours": "Linh hoạt 24/7 (TNG UVK) & 05:00–22:30 (Ways QL13)",
+    "shortName": "Máy Tiêu Chuẩn",
+    "badge": "Đủ 36 bài phổ biến · Phù hợp mọi phòng gym",
+    "name": "Phòng Gym Tiêu Chuẩn (Tạ Đơn, Cáp & Máy Cơ Bản)",
+    "address": "Áp dụng chung cho mọi phòng tập thương mại",
+    "hours": "Linh hoạt theo giờ tập cá nhân",
     "highlights": [
-      "Hiển thị toàn bộ 36 bài tập và thiết bị của cả 2 phòng tập.",
-      "Tự động chỉ dẫn cách setup ghế, chốt tạ và vị trí máy tại từng cơ sở."
+      "Hiển thị đầy đủ 36 bài tập đa khớp và cô lập phổ biến nhất.",
+      "Tự động gợi ý bài thay thế cùng nhóm cơ khi kẹt máy giờ cao điểm."
     ],
     "zones": []
   },
   "tng_uvk": {
     "id": "tng_uvk",
-    "shortName": "The New Gym · UVK",
+    "shortName": "TNG · 58D UVK",
     "badge": "58D Ung Văn Khiêm · 24/7",
     "name": "The New Gym — Chi Nhánh 58D Ung Văn Khiêm",
     "address": "58D Ung Văn Khiêm, P. Thạnh Mỹ Tây (P.25 cũ), Quận Bình Thạnh, TP.HCM",
@@ -59,7 +59,7 @@ export const GYM_BRANCHES: Record<GymBranchId, GymBranch> = {
   },
   "ways_ql13": {
     "id": "ways_ql13",
-    "shortName": "Ways Station · QL13",
+    "shortName": "Ways · 361 QL13",
     "badge": "361 Quốc Lộ 13 · FaceID",
     "name": "Ways Station Gym — Chi Nhánh 361 Quốc Lộ 13",
     "address": "Lầu 4, 361 Quốc Lộ 13 (kế Vạn Phúc City), P. Hiệp Bình Phước, TP. Thủ Đức (Liên thông 165 UVK)",

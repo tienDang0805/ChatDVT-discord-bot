@@ -37,6 +37,8 @@ interface WorkoutViewProps {
   customSessionLists: Record<string, string[]>;
   activePresetBySession: Record<string, string>;
   personalRecords: Record<string, PersonalRecordEntry>;
+  focusedExSlot: { origId: string; exId: string; index: number } | null;
+  onChangeFocusedExSlot: (next: { origId: string; exId: string; index: number } | null) => void;
   onSelectDate: (isoDate: string) => void;
   onSelectSession: (sessionId: WorkoutSessionId) => void;
   onSelectGymBranch: (gymId: GymBranchId) => void;
@@ -65,12 +67,11 @@ const SESSION_TABS: Array<{ id: WorkoutSessionId; short: string }> = [
   { id: 'upper_day', short: 'T7' },
 ];
 
-const EFFORT_OPTIONS = [
-  { id: 'warmup', label: 'Khởi động' },
-  { id: 'easy', label: 'Nhẹ · RPE 6' },
-  { id: 'good', label: 'Chuẩn · RPE 8' },
-  { id: 'hard', label: 'Nặng · RPE 9' },
-  { id: 'max', label: 'Quá sức' },
+const EFFORT_CYCLE: Array<{ id: string; shortLabel: string; toneClass: string }> = [
+  { id: 'good', shortLabel: 'Chuẩn · RPE 8', toneClass: '' },
+  { id: 'hard', shortLabel: 'Nặng · RPE 9', toneClass: 'is-hard' },
+  { id: 'max', shortLabel: 'Quá sức', toneClass: 'is-max' },
+  { id: 'easy', shortLabel: 'Nhẹ · RPE 6', toneClass: 'is-easy' },
 ];
 
 export const WorkoutView: React.FC<WorkoutViewProps> = ({
@@ -84,6 +85,8 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
   customSessionLists,
   activePresetBySession,
   personalRecords,
+  focusedExSlot,
+  onChangeFocusedExSlot,
   onSelectDate,
   onSelectSession,
   onSelectGymBranch,
@@ -99,11 +102,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
   onOpenCoach,
   onStartRestTimer,
 }) => {
-  const [focusedExSlot, setFocusedExSlot] = useState<{
-    origId: string;
-    exId: string;
-    index: number;
-  } | null>(null);
+  const setFocusedExSlot = onChangeFocusedExSlot;
   const [swapTarget, setSwapTarget] = useState<{ origId: string; exId: string } | null>(null);
   const [swapSearch, setSwapSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
@@ -339,7 +338,22 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                       <span className={`g8d-set-badge ${isWarmup ? 'is-w' : ''}`}>
                         {isWarmup ? 'Khởi động' : `Hiệp ${s.type}`}
                       </span>
-                      <span className="g8d-tiny-meta">{s.prev}</span>
+                      {!isWarmup && (() => {
+                        const curIdx = EFFORT_CYCLE.findIndex((x) => x.id === (s.effort || 'good'));
+                        const curEf = EFFORT_CYCLE[curIdx >= 0 ? curIdx : 0];
+                        const nextEf = EFFORT_CYCLE[(curIdx >= 0 ? curIdx + 1 : 1) % EFFORT_CYCLE.length];
+                        return (
+                          <button
+                            type="button"
+                            className={`g8d-effort-cycle-pill ${curEf.toneClass}`}
+                            onClick={() => updateSingleSet(idx, { effort: nextEf.id })}
+                            title="Chạm để đổi cảm nhận mức tạ (RPE)"
+                          >
+                            {curEf.shortLabel}
+                          </button>
+                        );
+                      })()}
+                      {isWarmup && <span className="g8d-tiny-meta">{s.prev}</span>}
                       {isSetPR && <span className="g8d-pr-chip">PR mới</span>}
                     </div>
 
@@ -431,21 +445,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                       </button>
                     </div>
                   </div>
-
-                  {!isWarmup && (
-                    <div className="g8d-effort-row">
-                      {EFFORT_OPTIONS.slice(1).map((ef) => (
-                        <button
-                          key={ef.id}
-                          type="button"
-                          className={`g8d-effort-chip ${s.effort === ef.id ? 'is-active' : ''}`}
-                          onClick={() => updateSingleSet(idx, { effort: ef.id })}
-                        >
-                          {ef.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -464,6 +463,52 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
                 − Bớt hiệp cuối
               </button>
             )}
+          </div>
+
+          <div className="g8d-ex-nav-bar">
+            <button
+              type="button"
+              className="g8d-ex-nav-btn"
+              disabled={focusedExSlot.index <= 0}
+              onClick={() => {
+                const prevIdx = focusedExSlot.index - 1;
+                const prevExId = effectiveIds[prevIdx];
+                if (!prevExId) return;
+                setFocusedExSlot({
+                  origId: baseIds[prevIdx] || prevExId,
+                  exId: prevExId,
+                  index: prevIdx,
+                });
+                setOpenSetupAcc(false);
+                setOpenFormAcc(false);
+              }}
+            >
+              ← Bài trước
+            </button>
+            <span className="g8d-ex-nav-pos">
+              Bài {focusedExSlot.index + 1}/{effectiveIds.length}
+            </span>
+            <button
+              type="button"
+              className="g8d-ex-nav-btn is-next"
+              onClick={() => {
+                const nextIdx = focusedExSlot.index + 1;
+                if (nextIdx < effectiveIds.length) {
+                  const nextExId = effectiveIds[nextIdx];
+                  setFocusedExSlot({
+                    origId: baseIds[nextIdx] || nextExId,
+                    exId: nextExId,
+                    index: nextIdx,
+                  });
+                } else {
+                  setFocusedExSlot(null);
+                }
+                setOpenSetupAcc(false);
+                setOpenFormAcc(false);
+              }}
+            >
+              {focusedExSlot.index + 1 < effectiveIds.length ? 'Bài tiếp →' : 'Xong danh sách'}
+            </button>
           </div>
 
           {plateBreakdown && (
@@ -712,27 +757,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
         })}
       </div>
 
-      {selectedDay.sessionId === 'rest' && !selectedDay.isCompleted && (
-        <div className="g8d-card g8d-off-banner">
-          <div className="g8d-row-between">
-            <div>
-              <div className="g8d-kicker">NGÀY ĐANG CHỌN ({selectedDay.shortDate})</div>
-              <div className="g8d-card-title">Đang là ngày nghỉ hồi phục cơ</div>
-              <div className="g8d-tiny-meta">
-                Nghỉ ngơi giữ chuỗi kỷ luật, hoặc bấm mở tập nếu hôm nay muốn vào bài.
-              </div>
-            </div>
-            <button
-              type="button"
-              className="g8d-btn-primary"
-              onClick={() => onRestoreDayWorkout(selectedDay.isoDate, effectiveSessionId)}
-            >
-              Mở tập
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className={`g8d-card g8d-workout-topcard ${selectedDay.isCompleted ? 'is-done-card' : ''}`}>
         <div className="g8d-session-switch-row">
           <div className="g8d-session-tabs">
@@ -753,10 +777,27 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
             className="g8d-gym-chip"
             onClick={() => setGymSheetOpen(true)}
           >
-            <span>{GYM_BRANCHES[selectedGymId]?.shortName || 'Phòng tập'}</span>
-            <SvgIcon name="chevronDown" size={14} />
+            <span className="g8d-gym-chip-label">
+              {GYM_BRANCHES[selectedGymId]?.shortName || 'Máy Tiêu Chuẩn'}
+            </span>
+            <SvgIcon name="chevronDown" size={13} />
           </button>
         </div>
+
+        {selectedDay.sessionId === 'rest' && !selectedDay.isCompleted && (
+          <div className="g8d-inline-rest-day">
+            <span>
+              <strong>{selectedDay.shortDate}:</strong> Đang là ngày nghỉ hồi phục cơ
+            </span>
+            <button
+              type="button"
+              className="g8d-pill-btn is-orange-pill"
+              onClick={() => onRestoreDayWorkout(selectedDay.isoDate, effectiveSessionId)}
+            >
+              Mở tập
+            </button>
+          </div>
+        )}
 
         <div className="g8d-workout-progress-row">
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -805,26 +846,6 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
               </button>
             )}
           </div>
-        </div>
-
-        <div className="g8d-workout-ai-strip">
-          <span className="g8d-tiny-meta">
-            {selectedDay.isCompleted
-              ? 'Đã tính vào chuỗi kỷ luật tuần này.'
-              : 'Kẹt máy, mỏi vai/lưng hoặc muốn chỉnh giáo án?'}
-          </span>
-          <button
-            type="button"
-            className="g8d-ai-inline-btn"
-            onClick={() =>
-              onOpenCoach(
-                `Đổi các bài trong ${sessionDef.shortName} hôm nay giúp tao cho phù hợp với: `,
-                'Buổi Tập'
-              )
-            }
-          >
-            Nhờ ChatDVT đổi bài
-          </button>
         </div>
       </div>
 
@@ -988,7 +1009,7 @@ export const WorkoutView: React.FC<WorkoutViewProps> = ({
         <div className="g8d-stack-sm">
           <div className="g8d-kicker">CƠ SỞ ĐANG TẬP HÔM NAY</div>
           <div className="g8d-stack-xs">
-            {(['tng_uvk', 'ways_ql13', 'all'] as GymBranchId[]).map((gid) => {
+            {(['all', 'tng_uvk', 'ways_ql13'] as GymBranchId[]).map((gid) => {
               const br = GYM_BRANCHES[gid];
               return (
                 <button

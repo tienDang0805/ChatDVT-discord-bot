@@ -260,7 +260,7 @@ export function buildCoachingDigest({
       : 'scheduled',
     effectiveSessionId,
     effectiveSessionName: WORKOUT_SESSIONS[effectiveSessionId]?.shortName || effectiveSessionId,
-    selectedGym: GYM_BRANCHES[state.selectedGymId]?.shortName || 'The New Gym 58D UVK',
+    selectedGym: GYM_BRANCHES[state.selectedGymId]?.shortName || 'Máy Tiêu Chuẩn',
     bodyAndStrategy: {
       gender: metrics.profile.gender,
       age: metrics.profile.age,

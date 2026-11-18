@@ -7,7 +7,6 @@ import { WORKOUT_SESSIONS } from '../data/workouts';
 import { buildCoachingDigest } from '../domain/coachingContext';
 import type { CalculatedMetrics } from '../domain/metrics';
 import { useChatDvtAvatar } from '../hooks/useChatDvtAvatar';
-import type { UltraModeController } from '../hooks/useUltraMode';
 import type {
   ActiveTabId,
   AgentActionProposal,
@@ -17,12 +16,12 @@ import type {
   DayScheduleEntry,
   GymStateV10,
   PersonalRecordEntry,
-  UltraModelChoice,
   WorkoutSessionId,
 } from '../types/gym';
 
 interface ChatDvtCoachViewProps {
   isKeyboardOpen?: boolean;
+  restBarNode?: React.ReactNode;
   initialDraft?: string;
   onConsumeDraft?: () => void;
   returnTab?: { tab: ActiveTabId; label: string } | null;
@@ -51,8 +50,6 @@ interface ChatDvtCoachViewProps {
   onChangePersona: (persona: CoachPersonaId) => void;
   onApplyProposals: (proposals: AgentActionProposal[]) => GymStateV10;
   onRestoreSnapshot: (snapshot: GymStateV10, preserveMessages?: AgentChatMessage[]) => void;
-  ultra: UltraModeController;
-  onOpenUltraSettings: () => void;
 }
 
 interface PendingChatImage {
@@ -195,43 +192,6 @@ const IMAGE_CONTEXT_ACTIONS: Array<{ label: string; prompt: string }> = [
   },
 ];
 
-const ULTRA_MODEL_OPTIONS: Array<{
-  id: UltraModelChoice;
-  shortLabel: string;
-  title: string;
-  desc: string;
-}> = [
-  {
-    id: 'gemini-4-carbon-high',
-    shortLabel: 'Carbon High',
-    title: 'Gemini 4 Carbon High (Ultra)',
-    desc: 'Suy luận sâu nhất cho giáo án, điều chỉnh tạ và phân tích thể trạng.',
-  },
-  {
-    id: 'gemini-3.8-flash-high',
-    shortLabel: 'Flash 3.8',
-    title: 'Gemini 3.8 Flash High (Ultra)',
-    desc: 'Phản hồi rất nhanh, phù hợp ghi món ăn và chốt buổi tập hằng ngày.',
-  },
-  {
-    id: 'gemini-4-argon-high',
-    shortLabel: 'Argon High',
-    title: 'Gemini 4 Argon High (Ultra)',
-    desc: 'Cân bằng giữa tốc độ phản hồi và phân tích dữ liệu đa ngày.',
-  },
-  {
-    id: 'free',
-    shortLabel: 'Tầng Free',
-    title: 'Gemini Flash 3.5 Lite (Free)',
-    desc: 'Chạy trực tiếp qua Gemini API mặc định, không đi qua CLIProxyAPI.',
-  },
-];
-
-function shortPreferredName(choice: UltraModelChoice): string {
-  const found = ULTRA_MODEL_OPTIONS.find((o) => o.id === choice);
-  return found ? found.shortLabel : 'Carbon High';
-}
-
 function proposalIconName(type: AgentActionProposal['type']): string {
   switch (type) {
     case 'add_food_catalog':
@@ -338,6 +298,7 @@ const FormattedMessageText: React.FC<{ text: string }> = ({ text }) => {
 
 export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   isKeyboardOpen = false,
+  restBarNode,
   initialDraft,
   onConsumeDraft,
   returnTab,
@@ -358,15 +319,11 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   onChangePersona,
   onApplyProposals,
   onRestoreSnapshot,
-  ultra,
-  onOpenUltraSettings,
 }) => {
   const { avatarUrl, fallbackUrl } = useChatDvtAvatar();
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [modelSheetOpen, setModelSheetOpen] = useState(false);
-  const [probingProxy, setProbingProxy] = useState(false);
+  const [personaSheetOpen, setPersonaSheetOpen] = useState(false);
   const [pendingImages, setPendingImages] = useState<PendingChatImage[]>([]);
   const [compressingImage, setCompressingImage] = useState(false);
   const [previewLightboxSrc, setPreviewLightboxSrc] = useState<string | null>(null);
@@ -586,7 +543,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
     const requestPayload = JSON.stringify({
       message: effectiveApiPrompt,
       persona: activePersona,
-      ultraModel: ultra.unlocked ? ultra.preferredModel : 'free',
       images:
         attachedNow.length > 0
           ? attachedNow.map((img) => ({
@@ -621,7 +577,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(ultra.token ? { 'x-gym8d-ultra-token': ultra.token } : {}),
           },
           body: requestPayload,
           signal: ctrl.signal,
@@ -661,22 +616,8 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
       const selfAudit: AgentSelfAudit | null =
         data?.selfAudit && typeof data.selfAudit === 'object' ? data.selfAudit : null;
 
-      const resolvedTier: 'ultra' | 'free' = data?.tier === 'ultra' ? 'ultra' : 'free';
       const resolvedModel = typeof data?.model === 'string' ? data.model : 'gemini-3.5-flash-lite';
-      const resolvedEngineLabel =
-        selfAudit?.engineLabel ||
-        (resolvedTier === 'ultra' ? `${resolvedModel} · Ultra` : 'Flash 3.5 Lite · Free');
-      const resolvedFallbackNote =
-        typeof data?.fallbackNote === 'string' && data.fallbackNote.trim()
-          ? data.fallbackNote.trim()
-          : selfAudit?.fallbackNote;
-
-      ultra.recordUsedEngine({
-        model: resolvedModel,
-        tier: resolvedTier,
-        label: resolvedEngineLabel,
-        fallbackNote: resolvedFallbackNote,
-      });
+      const resolvedEngineLabel = selfAudit?.engineLabel || resolvedModel;
 
       const botMsgId = `a_${Date.now()}`;
       const allIndices = proposals.map((_, idx) => idx);
@@ -700,9 +641,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
         quickReplies,
         selfAudit,
         modelId: resolvedModel,
-        tier: resolvedTier,
         engineLabel: resolvedEngineLabel,
-        fallbackNote: resolvedFallbackNote,
       };
 
       onSetMessages((prev) => [...prev, assistantMsg]);
@@ -731,34 +670,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
   const sendPromptRef = useRef(sendPrompt);
   sendPromptRef.current = sendPrompt;
 
-  const toggleVoiceInput = () => {
-    const SpeechRec =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRec) {
-      setInput((prev) => prev || 'Tối nay tao ăn ');
-      return;
-    }
-    if (listening) return;
-    try {
-      const rec = new SpeechRec();
-      rec.lang = 'vi-VN';
-      rec.interimResults = false;
-      rec.maxAlternatives = 1;
-      setListening(true);
-      rec.onresult = (ev: any) => {
-        const transcript = ev?.results?.[0]?.[0]?.transcript || '';
-        if (transcript) {
-          setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        }
-      };
-      rec.onerror = () => setListening(false);
-      rec.onend = () => setListening(false);
-      rec.start();
-    } catch {
-      setListening(false);
-    }
-  };
-
   const handleClearConversation = () => {
     onSetMessages([]);
   };
@@ -770,21 +681,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
     : selectedDay.sessionId !== 'rest'
     ? WORKOUT_SESSIONS[selectedDay.sessionId as WorkoutSessionId]?.shortName || 'Ngày tập'
     : 'Ngày nghỉ cơ';
-
-  const isUltraTrulyActive =
-    ultra.unlocked && ultra.proxyOnline && ultra.preferredModel !== 'free';
-  const isUltraFallback =
-    ultra.unlocked && !ultra.proxyOnline && ultra.preferredModel !== 'free';
-
-  const headerModelBadgeText = isUltraTrulyActive
-    ? isKeyboardOpen
-      ? `${shortPreferredName(ultra.preferredModel)} · Ultra`
-      : `${shortPreferredName(ultra.preferredModel).replace(' High', '')} · Ultra`
-    : isUltraFallback
-    ? isKeyboardOpen
-      ? 'Dự phòng Free · Proxy tắt'
-      : 'Free · Proxy tắt'
-    : 'Flash 3.5 · Free';
 
   const showQuickChips = !isKeyboardOpen && !input.trim() && pendingImages.length === 0;
   const canSubmitNow = Boolean(input.trim() || pendingImages.length > 0) && !loading && !compressingImage;
@@ -818,21 +714,16 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                 <strong>ChatDVT</strong>
                 <button
                   type="button"
-                  className={`g8d-model-pill-btn ${
-                    isUltraTrulyActive
-                      ? 'is-ultra-live'
-                      : isUltraFallback
-                      ? 'is-ultra-fallback'
-                      : ''
+                  className={`g8d-persona-pill-btn ${
+                    activePersona === 'savage' ? 'is-savage' : ''
                   }`}
                   onClick={() => {
                     inputRef.current?.blur();
-                    void ultra.refreshUltraStatus();
-                    setModelSheetOpen(true);
+                    setPersonaSheetOpen(true);
                   }}
+                  title="Đổi giọng điệu huấn luyện viên ChatDVT"
                 >
-                  <span className="g8d-model-live-dot" />
-                  <span className="g8d-model-pill-label">{headerModelBadgeText}</span>
+                  <span>{activePersona === 'savage' ? 'Cà khịa DVT' : 'Chuẩn PT'}</span>
                   <SvgIcon name="chevronDown" size={12} />
                 </button>
               </div>
@@ -841,19 +732,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                   <span className="g8d-coach-subline">
                     {selectedDay.shortDate} · {todaySessLabel}
                   </span>
-                  <button
-                    type="button"
-                    className={`g8d-persona-pill-btn ${
-                      activePersona === 'savage' ? 'is-savage' : ''
-                    }`}
-                    onClick={() => {
-                      inputRef.current?.blur();
-                      setModelSheetOpen(true);
-                    }}
-                    title="Đổi giọng điệu huấn luyện viên ChatDVT"
-                  >
-                    <span>{activePersona === 'savage' ? 'Cà khịa DVT' : 'Chuẩn PT'}</span>
-                  </button>
                 </div>
               )}
             </div>
@@ -913,6 +791,8 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
         )}
       </div>
 
+      {restBarNode}
+
       <div
         className="g8d-coach-stream"
         ref={scrollRef}
@@ -928,12 +808,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
           const hasProposals = Boolean(msg.proposals && msg.proposals.length > 0);
           const selectedCount = msg.selectedIndices?.length || 0;
           const isAssistant = msg.role === 'assistant';
-          const msgEngine = msg.engineLabel || msg.selfAudit?.engineLabel;
-          const msgIsUltra =
-            msg.tier === 'ultra' ||
-            msg.selfAudit?.tier === 'ultra' ||
-            Boolean(msgEngine && /ultra/i.test(msgEngine));
-          const msgFallback = msg.fallbackNote || msg.selfAudit?.fallbackNote;
 
           return (
             <div key={msg.id} className={`g8d-chat-row is-${msg.role}`}>
@@ -975,20 +849,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
                 <div className={`g8d-msg-bubble is-${msg.role}`}>
                   <FormattedMessageText text={msg.text} />
                 </div>
-
-                {isAssistant && msgEngine && (
-                  <div className="g8d-msg-meta-row">
-                    <span
-                      className={`g8d-msg-model-tag ${
-                        msgIsUltra ? 'is-ultra' : msgFallback ? 'is-fallback' : ''
-                      }`}
-                    >
-                      <span className="g8d-msg-model-dot" />
-                      <span>{msgEngine}</span>
-                    </span>
-                    {msgFallback && <span className="g8d-msg-fallback-hint">{msgFallback}</span>}
-                  </div>
-                )}
 
                 {isAssistant && msg.selfAudit?.safetyCheck && (
                   <div className="g8d-self-audit-pill">
@@ -1099,7 +959,7 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
               }}
             />
             <div className="g8d-msg-bubble is-assistant is-typing">
-              ChatDVT đang xử lý ({isUltraTrulyActive ? shortPreferredName(ultra.preferredModel) : 'Flash 3.5 Lite'})...
+              ChatDVT đang phân tích...
             </div>
           </div>
         )}
@@ -1214,16 +1074,6 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
               <SvgIcon name="image" size={18} />
             </button>
 
-            <button
-              type="button"
-              className={`g8d-mic-btn ${listening ? 'is-listening' : ''}`}
-              onClick={toggleVoiceInput}
-              title="Đọc bằng giọng nói tiếng Việt"
-              aria-label="Nhập giọng nói"
-            >
-              <SvgIcon name="mic" size={18} />
-            </button>
-
             <textarea
               ref={inputRef}
               rows={1}
@@ -1287,139 +1137,47 @@ export const ChatDvtCoachView: React.FC<ChatDvtCoachViewProps> = ({
       </BottomSheet>
 
       <BottomSheet
-        open={modelSheetOpen}
-        title="Tính Cách & Mô Hình ChatDVT"
-        subtitle="Tuỳ chỉnh giọng huấn luyện viên và kiểm tra máy chủ AI thực tế"
-        onClose={() => setModelSheetOpen(false)}
+        open={personaSheetOpen}
+        title="Phong Cách Huấn Luyện ChatDVT"
+        subtitle="Tuỳ chỉnh giọng điệu trợ lý AI phù hợp gu tập luyện của bạn"
+        onClose={() => setPersonaSheetOpen(false)}
       >
         <div className="g8d-stack-sm">
-          <div>
-            <div className="g8d-kicker" style={{ marginBottom: 6 }}>
-              GIỌNG ĐIỆU TRẢ LỜI (AI PERSONA)
-            </div>
-            <div className="g8d-stack-xs">
-              <button
-                type="button"
-                className={`g8d-choice-row ${activePersona === 'standard' ? 'is-selected' : ''}`}
-                onClick={() => onChangePersona('standard')}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="g8d-choice-title">Chuẩn PT Đồng Hành (Mặc định)</div>
-                  <div className="g8d-tiny-meta">
-                    Chuyên nghiệp, thẳng thắn, tôn trọng và khích lệ kỷ luật bền bỉ.
-                  </div>
+          <div className="g8d-stack-xs">
+            <button
+              type="button"
+              className={`g8d-choice-row ${activePersona === 'standard' ? 'is-selected' : ''}`}
+              onClick={() => {
+                onChangePersona('standard');
+                setPersonaSheetOpen(false);
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="g8d-choice-title">Chuẩn PT Đồng Hành (Mặc định)</div>
+                <div className="g8d-tiny-meta">
+                  Chuyên nghiệp, thẳng thắn, tôn trọng và khích lệ kỷ luật bền bỉ.
                 </div>
-                {activePersona === 'standard' && <SvgIcon name="check" size={17} color="#E85D1A" />}
-              </button>
+              </div>
+              {activePersona === 'standard' && <SvgIcon name="check" size={17} color="#E85D1A" />}
+            </button>
 
-              <button
-                type="button"
-                className={`g8d-choice-row ${activePersona === 'savage' ? 'is-selected' : ''}`}
-                onClick={() => onChangePersona('savage')}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="g8d-choice-title">Cà Khịa Chuẩn ChatDVT (Discord 8D)</div>
-                  <div className="g8d-tiny-meta">
-                    Mỏ hỗn, phũ phàng, bóc phốt thẳng mặt khi lười tập, trốn buổi chân hay ăn bậy.
-                  </div>
+            <button
+              type="button"
+              className={`g8d-choice-row ${activePersona === 'savage' ? 'is-selected' : ''}`}
+              onClick={() => {
+                onChangePersona('savage');
+                setPersonaSheetOpen(false);
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="g8d-choice-title">Cà Khịa Chuẩn ChatDVT (Discord 8D)</div>
+                <div className="g8d-tiny-meta">
+                  Mỏ hỗn, phũ phàng, bóc phốt thẳng mặt khi lười tập, trốn buổi chân hay ăn bậy.
                 </div>
-                {activePersona === 'savage' && <SvgIcon name="check" size={17} color="#E85D1A" />}
-              </button>
-            </div>
-          </div>
-
-          <div
-            className={`g8d-proxy-status-box ${
-              ultra.unlocked && ultra.proxyOnline
-                ? 'is-online'
-                : ultra.unlocked
-                ? 'is-offline'
-                : ''
-            }`}
-          >
-            <div className="g8d-row-between">
-              <strong>
-                {!ultra.unlocked
-                  ? 'Chưa mở khoá Ultra trên máy này'
-                  : ultra.proxyOnline
-                  ? 'CLIProxyAPI đang Trực Tuyến (:8317)'
-                  : 'CLIProxyAPI trên Server đang Tắt'}
-              </strong>
-              {ultra.unlocked && (
-                <button
-                  type="button"
-                  className="g8d-pill-btn g8d-pill-btn-touch"
-                  disabled={probingProxy}
-                  onClick={async () => {
-                    setProbingProxy(true);
-                    await ultra.refreshUltraStatus();
-                    setProbingProxy(false);
-                  }}
-                >
-                  {probingProxy ? 'Đang dò...' : 'Kiểm tra lại'}
-                </button>
-              )}
-            </div>
-
-            <div className="g8d-tiny-meta" style={{ marginTop: 6 }}>
-              {!ultra.unlocked
-                ? 'Đang chạy Gemini Flash 3.5 Lite (Free). Mở khoá mật khẩu chủ sở hữu trong mục Hồ Sơ ➔ AI & Cài Đặt để dùng Carbon High riêng.'
-                : ultra.proxyOnline
-                ? `Đang kết nối tới ${ultra.proxyUrlMasked}. Máy chủ phản hồi sẵn sàng ${
-                    ultra.availableModels.length > 0
-                      ? `(${ultra.availableModels.slice(0, 4).join(', ')})`
-                      : ''
-                  }.`
-                : `Đã mở khoá mật khẩu chủ sở hữu, nhưng cổng ${ultra.proxyUrlMasked} trên Server EC2 chưa phản hồi (${
-                    ultra.proxyReason || 'ECONNREFUSED'
-                  }). Hệ thống tự động chuyển về Flash 3.5 Lite (Free) để không gián đoạn chat.`}
-            </div>
-
-            {ultra.lastUsedEngine && (
-              <div className="g8d-tiny-meta" style={{ marginTop: 6, fontWeight: 700 }}>
-                Tin nhắn gần nhất chạy bằng: {ultra.lastUsedEngine.label}
               </div>
-            )}
+              {activePersona === 'savage' && <SvgIcon name="check" size={17} color="#E85D1A" />}
+            </button>
           </div>
-
-          {ultra.unlocked ? (
-            <>
-              <div className="g8d-kicker">CHỌN MÔ HÌNH ƯU TIÊN</div>
-              <div className="g8d-stack-xs">
-                {ULTRA_MODEL_OPTIONS.map((opt) => {
-                  const selected = ultra.preferredModel === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className={`g8d-choice-row ${selected ? 'is-selected' : ''}`}
-                      onClick={() => {
-                        ultra.setPreferredModel(opt.id);
-                        setModelSheetOpen(false);
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="g8d-choice-title">{opt.title}</div>
-                        <div className="g8d-tiny-meta">{opt.desc}</div>
-                      </div>
-                      {selected && <SvgIcon name="check" size={17} color="#E85D1A" />}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : null}
-
-          <button
-            type="button"
-            className="g8d-btn-outline g8d-w-full"
-            onClick={() => {
-              setModelSheetOpen(false);
-              onOpenUltraSettings();
-            }}
-          >
-            {ultra.unlocked ? 'Mở cài đặt CLIProxyAPI chi tiết' : 'Nhập mật khẩu mở khoá Ultra'}
-          </button>
         </div>
       </BottomSheet>
     </div>

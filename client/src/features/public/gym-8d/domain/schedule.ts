@@ -511,7 +511,11 @@ export function buildStreakSummary(opts: ScheduleBuilderOptions = {}) {
   };
 }
 
-export function generateICSCalendar(scheduleList: DayScheduleEntry[], profile: ProfileInput): string {
+export function generateICSCalendar(
+  scheduleList: DayScheduleEntry[],
+  _profile: ProfileInput,
+  weighInIntervalDays: 7 | 14 = 7
+): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -549,7 +553,7 @@ export function generateICSCalendar(scheduleList: DayScheduleEntry[], profile: P
 
   const firstDay = scheduleList[0]?.isoDate || getTodayISO();
   const weighCompact = firstDay.replace(/-/g, '');
-  const intervalWeeks = Number(profile.daysPerWeek) === 14 ? 2 : 1;
+  const intervalWeeks = Number(weighInIntervalDays) === 14 ? 2 : 1;
   lines.push(
     'BEGIN:VEVENT',
     `UID:gym8d-weighin-${weighCompact}@devtiendang.blog`,

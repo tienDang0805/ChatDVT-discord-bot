@@ -2,7 +2,7 @@ export type SessionId = 'press_day' | 'pull_day' | 'legs_day' | 'upper_day' | 'r
 export type WorkoutSessionId = Exclude<SessionId, 'rest'>;
 export type GymBranchId = 'all' | 'tng_uvk' | 'ways_ql13';
 export type EffortKey = 'warmup' | 'easy' | 'good' | 'hard' | 'max';
-export type ActiveTabId = 'coach' | 'schedule' | 'workout' | 'streak' | 'nutrition' | 'profile' | 'settings';
+export type ActiveTabId = 'coach' | 'schedule' | 'workout' | 'nutrition' | 'profile';
 
 export interface SetEntry {
   type: string;
@@ -274,12 +274,6 @@ export interface DayScheduleEntry {
   note: string;
 }
 
-export type UltraModelChoice =
-  | 'gemini-4-carbon-high'
-  | 'gemini-3.8-flash-high'
-  | 'gemini-4-argon-high'
-  | 'free';
-
 export type CoachPersonaId = 'standard' | 'savage';
 
 export interface AgentSelfAudit {
@@ -290,8 +284,6 @@ export interface AgentSelfAudit {
   autoAdjustments?: string[];
   engineLabel?: string;
   modelId?: string;
-  tier?: 'ultra' | 'free';
-  fallbackNote?: string;
 }
 
 export type AgentActionProposal =
@@ -442,9 +434,7 @@ export interface AgentChatMessage {
   quickReplies?: string[];
   selfAudit?: AgentSelfAudit | null;
   modelId?: string;
-  tier?: 'ultra' | 'free';
   engineLabel?: string;
-  fallbackNote?: string;
 }
 
 export interface GymStateV10 {

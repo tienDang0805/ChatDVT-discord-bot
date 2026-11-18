@@ -42,6 +42,7 @@ export interface RouteMeta {
 
 const ROUTE_META: Record<string, RouteMeta> = {
   '/cicd-visualizer': { title: 'CI/CD Visualizer', description: 'Import hoặc paste YAML GitHub Actions để khám phá jobs, steps và quan hệ phụ thuộc trên sơ đồ tương tác ngay trong trình duyệt.', pageType: 'webapp', indexable: false, lastmod: '2026-10-13' },
+  '/tdworkspace': { title: 'TD Workspace — Codex & Antigravity Atlas', description: 'Mô hình hóa trực quan kiến trúc Codex Desktop, CLIProxyAPI v8, điều phối Hydrogen/Carbon, Sandbox Seatbelt và 5 lớp System Prompt.', pageType: 'webapp', indexable: false, lastmod: '2026-11-13' },
   '/apps': {
     title: 'Ứng dụng & phần mềm | Đặng Văn Tiến',
     description: 'Các app và phần mềm Đặng Văn Tiến tự làm. TD-WallpaperEngine cho Windows, kèm ảnh giao diện, bản tải và source code.',

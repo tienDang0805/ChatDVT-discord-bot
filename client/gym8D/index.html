@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
-  <meta name="color-scheme" content="light" />
+  <meta name="color-scheme" content="light dark" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Gấu Gym 8D" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FAF5EA" />
-  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#FAF5EA" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14110F" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Gấu Gym 8D — Lịch Tập, Progressive Overload & Dinh Dưỡng</title>
   <link rel="manifest" href="/gym8D/manifest.webmanifest" />
@@ -53,6 +53,18 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       color: #2B2118;
+    }
+    @media (prefers-color-scheme: dark) {
+      html, body, #app-splash {
+        background: #14110F;
+        color: #F5EFE6;
+      }
+      #app-splash img {
+        background: #1E1916;
+      }
+      #app-splash strong {
+        color: #F5EFE6;
+      }
     }
   </style>
 </head>

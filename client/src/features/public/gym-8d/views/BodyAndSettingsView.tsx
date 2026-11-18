@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BottomSheet } from '../components/BottomSheet';
 import { SvgIcon } from '../components/Icons';
 import { InstallAppGuideContent } from '../components/InstallAppGuide';
+import { WeightChartCard } from '../components/WeightChartCard';
 import { resolveMascotAsset } from '../data/assets';
 import { GYM_BRANCHES } from '../data/gyms';
 import { WORKOUT_SESSIONS } from '../data/workouts';
@@ -10,7 +11,6 @@ import type { CalculatedMetrics } from '../domain/metrics';
 import { generateICSCalendar } from '../domain/schedule';
 import type { CloudSyncStatus } from '../hooks/useGymStore';
 import type { DeviceEnvironmentInfo, NativePushStatus } from '../hooks/useNativeWebPush';
-import type { UltraModeController } from '../hooks/useUltraMode';
 import type {
   CoachPersonaId,
   DayScheduleEntry,
@@ -19,7 +19,7 @@ import type {
   ProfileInput,
   PushPrefs,
   SessionId,
-  UltraModelChoice,
+  WeightLogEntry,
   WorkoutSessionId,
 } from '../types/gym';
 
@@ -40,6 +40,20 @@ interface ProfileStreakSummary {
 interface BodyAndSettingsViewProps {
   initialSection?: 'push' | 'body';
   metrics: CalculatedMetrics;
+  weightTracker: {
+    effectiveLogs: WeightLogEntry[];
+    firstWeightKg: number;
+    latestWeightKg: number;
+    targetWeightKg: number;
+    deltaFromStart: number;
+    remainingToGoal: number;
+    progressPct: number;
+    nextWeighInShort: string;
+    daysUntilNextWeighIn: number;
+    hasLoggedToday: boolean;
+    isWeighInDueToday: boolean;
+  };
+  weighInIntervalDays: 7 | 14;
   streakSummary: ProfileStreakSummary;
   personalRecords: Record<string, PersonalRecordEntry>;
   dayNotesByDate: Record<string, string>;
@@ -58,6 +72,8 @@ interface BodyAndSettingsViewProps {
   onPromptNativeInstall: () => Promise<boolean>;
   weekDays: DayScheduleEntry[];
   onUpdateProfileField: <K extends keyof ProfileInput>(field: K, value: ProfileInput[K]) => void;
+  onLogWeight: (kg: number) => void;
+  onChangeWeighInterval: (days: 7 | 14) => void;
   onChangePersona: (persona: CoachPersonaId) => void;
   onUpdatePushPref: <K extends keyof PushPrefs>(key: K, val: PushPrefs[K]) => void;
   onSubscribePush: () => Promise<boolean>;
@@ -73,12 +89,13 @@ interface BodyAndSettingsViewProps {
   onOpenWorkoutForDate: (isoDate: string, sessionId?: WorkoutSessionId) => void;
   onMakeupMissed: (missedDateISO: string, missedSessionId: SessionId) => void;
   onOpenCoach: (prefill?: string, returnLabel?: string) => void;
-  ultra: UltraModeController;
 }
 
 export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   initialSection = 'body',
   metrics,
+  weightTracker,
+  weighInIntervalDays,
   streakSummary,
   personalRecords,
   dayNotesByDate,
@@ -97,6 +114,8 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   onPromptNativeInstall,
   weekDays,
   onUpdateProfileField,
+  onLogWeight,
+  onChangeWeighInterval,
   onChangePersona,
   onUpdatePushPref,
   onSubscribePush,
@@ -112,16 +131,10 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   onOpenWorkoutForDate,
   onMakeupMissed,
   onOpenCoach,
-  ultra,
 }) => {
   const [section, setSection] = useState<'push' | 'body'>(initialSection);
   const [draftCode, setDraftCode] = useState<string>(syncCode);
   const [confirmReset, setConfirmReset] = useState<boolean>(false);
-  const [ultraPasskey, setUltraPasskey] = useState<string>('');
-  const [showAdvancedProxy, setShowAdvancedProxy] = useState<boolean>(false);
-  const [customProxyUrl, setCustomProxyUrl] = useState<string>('');
-  const [customProxyKey, setCustomProxyKey] = useState<string>('');
-  const [probingUltra, setProbingUltra] = useState<boolean>(false);
 
   const p = metrics.profile;
   const [editBodyOpen, setEditBodyOpen] = useState<boolean>(false);
@@ -180,7 +193,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
   };
 
   const downloadICS = () => {
-    const icsText = generateICSCalendar(weekDays, metrics.profile);
+    const icsText = generateICSCalendar(weekDays, metrics.profile, weighInIntervalDays);
     const blob = new Blob([icsText], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -309,6 +322,13 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
               </button>
             </div>
           </div>
+
+          <WeightChartCard
+            summary={weightTracker}
+            weighInIntervalDays={weighInIntervalDays}
+            onLogWeight={onLogWeight}
+            onChangeInterval={onChangeWeighInterval}
+          />
 
           {latestMissed && streakSummary.nextRestDayForMakeup && (
             <div className="g8d-card g8d-rescue-card">
@@ -530,195 +550,6 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
                 {coachPersona === 'savage' && <SvgIcon name="check" size={16} color="#E85D1A" />}
               </button>
             </div>
-          </div>
-
-          <div className="g8d-card g8d-ultra-card">
-            <div className="g8d-row-between">
-              <div>
-                <div className="g8d-kicker">MÁY CHỦ AI & CLIPROXYAPI (:8317)</div>
-                <div className="g8d-card-title">
-                  {ultra.unlocked ? 'Đã mở khoá Ultra (CLIProxyAPI)' : 'Mở khoá tài khoản Ultra riêng'}
-                </div>
-              </div>
-              <span
-                className={`g8d-status-badge ${
-                  ultra.unlocked && ultra.proxyOnline
-                    ? 'is-on'
-                    : ultra.unlocked
-                    ? 'is-warn'
-                    : ''
-                }`}
-              >
-                {ultra.unlocked
-                  ? ultra.proxyOnline
-                    ? 'Ultra Trực tuyến'
-                    : 'Dự phòng Free · Proxy tắt'
-                  : 'Đang dùng Free'}
-              </span>
-            </div>
-
-            <p className="g8d-push-explain" style={{ marginTop: 6 }}>
-              {ultra.unlocked
-                ? ultra.proxyOnline
-                  ? `Đang nối thông suốt tới ${ultra.proxyUrlMasked}${
-                      ultra.availableModels.length > 0
-                        ? ` (${ultra.availableModels.length} model sẵn sàng)`
-                        : ''
-                    }.`
-                  : `Điện thoại đã mở khoá chủ sở hữu, nhưng cổng ${ultra.proxyUrlMasked} trên Server EC2 hiện chưa bật (${
-                      ultra.proxyReason || 'ECONNREFUSED'
-                    }) nên tin nhắn đang tự chuyển về Flash 3.5 Lite (Free).`
-                : 'Nhập mật khẩu chủ sở hữu 1 lần trên iPhone để mở khoá Carbon High / Flash 3.8 qua CLIProxyAPI riêng trên Server.'}
-            </p>
-
-            {ultra.unlocked ? (
-              <div style={{ marginTop: 12 }}>
-                <div className="g8d-kicker" style={{ marginBottom: 6 }}>
-                  MÔ HÌNH ƯU TIÊN KHI CHAT
-                </div>
-                <div className="g8d-seg-mini g8d-w-full" style={{ flexWrap: 'wrap' }}>
-                  {(
-                    [
-                      { id: 'gemini-4-carbon-high', label: 'Carbon High' },
-                      { id: 'gemini-3.8-flash-high', label: 'Flash 3.8' },
-                      { id: 'gemini-4-argon-high', label: 'Argon High' },
-                      { id: 'free', label: 'Tầng Free' },
-                    ] as Array<{ id: UltraModelChoice; label: string }>
-                  ).map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      className={ultra.preferredModel === opt.id ? 'is-active' : ''}
-                      onClick={() => ultra.setPreferredModel(opt.id)}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="g8d-row-gap" style={{ marginTop: 10 }}>
-                  <button
-                    type="button"
-                    className="g8d-btn-outline"
-                    style={{ flex: 1 }}
-                    disabled={probingUltra}
-                    onClick={async () => {
-                      setProbingUltra(true);
-                      await ultra.refreshUltraStatus();
-                      setProbingUltra(false);
-                    }}
-                  >
-                    {probingUltra ? 'Đang kiểm tra...' : 'Kiểm tra kết nối'}
-                  </button>
-                  <button
-                    type="button"
-                    className="g8d-btn-outline"
-                    onClick={() => setShowAdvancedProxy((v) => !v)}
-                  >
-                    {showAdvancedProxy ? 'Ẩn URL' : 'Đổi URL'}
-                  </button>
-                  <button
-                    type="button"
-                    className="g8d-btn-outline"
-                    onClick={ultra.lockOnThisDevice}
-                  >
-                    Khoá
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ marginTop: 12 }}>
-                <div className="g8d-row-gap">
-                  <input
-                    type="password"
-                    enterKeyHint="done"
-                    value={ultraPasskey}
-                    onChange={(e) => setUltraPasskey(e.target.value)}
-                    placeholder="Nhập mật khẩu chủ sở hữu..."
-                    className="g8d-search-input"
-                    style={{ flex: 1, marginBottom: 0 }}
-                  />
-                  <button
-                    type="button"
-                    className="g8d-btn-primary"
-                    disabled={ultra.busy}
-                    onClick={async () => {
-                      const ok = await ultra.unlockOnThisDevice({
-                        passkey: ultraPasskey,
-                        customProxyUrl,
-                        customProxyKey,
-                      });
-                      if (ok) setUltraPasskey('');
-                    }}
-                  >
-                    {ultra.busy ? 'Đang mở...' : 'Mở khoá'}
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="g8d-link-btn"
-                  style={{ marginTop: 8 }}
-                  onClick={() => setShowAdvancedProxy((v) => !v)}
-                >
-                  {showAdvancedProxy
-                    ? 'Ẩn tuỳ chỉnh CLIProxyAPI URL'
-                    : 'Tuỳ chỉnh CLIProxyAPI URL từ xa (tuỳ chọn)'}
-                </button>
-              </div>
-            )}
-
-            {showAdvancedProxy && (
-              <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <input
-                  type="url"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  value={customProxyUrl}
-                  onChange={(e) => setCustomProxyUrl(e.target.value)}
-                  placeholder="Mặc định: http://127.0.0.1:8317/v1"
-                  className="g8d-search-input"
-                />
-                <input
-                  type="password"
-                  value={customProxyKey}
-                  onChange={(e) => setCustomProxyKey(e.target.value)}
-                  placeholder="Bearer key (mặc định: sk-local-ultra-key)"
-                  className="g8d-search-input"
-                />
-                {ultra.unlocked && (
-                  <input
-                    type="password"
-                    value={ultraPasskey}
-                    onChange={(e) => setUltraPasskey(e.target.value)}
-                    placeholder="Xác nhận mật khẩu chủ sở hữu để lưu URL mới"
-                    className="g8d-search-input"
-                  />
-                )}
-                {ultra.unlocked && (
-                  <button
-                    type="button"
-                    className="g8d-btn-primary"
-                    disabled={ultra.busy}
-                    onClick={() =>
-                      ultra.unlockOnThisDevice({
-                        passkey: ultraPasskey,
-                        customProxyUrl,
-                        customProxyKey,
-                      })
-                    }
-                  >
-                    Lưu cấu hình CLIProxyAPI lên Server
-                  </button>
-                )}
-              </div>
-            )}
-
-            {ultra.statusMessage && (
-              <div className="g8d-push-msg" style={{ marginTop: 8 }}>
-                {ultra.statusMessage}
-              </div>
-            )}
           </div>
 
           {!env.isStandalonePWA && (
@@ -967,7 +798,7 @@ export const BodyAndSettingsView: React.FC<BodyAndSettingsViewProps> = ({
           <div className="g8d-card">
             <div className="g8d-kicker">PHÒNG TẬP & ĐÒN TẠ MẶC ĐỊNH</div>
             <div className="g8d-stack-xs" style={{ marginTop: 8 }}>
-              {(['tng_uvk', 'ways_ql13', 'all'] as GymBranchId[]).map((gid) => (
+              {(['all', 'tng_uvk', 'ways_ql13'] as GymBranchId[]).map((gid) => (
                 <button
                   key={gid}
                   type="button"

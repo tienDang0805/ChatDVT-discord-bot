@@ -33,6 +33,12 @@ export const FEATURE_CATALOG: FeatureDefinition[] = [
     tags: ['GitHub Actions', 'YAML', 'Workflow'], requirements: ['Xử lý trong trình duyệt'], surfaces: ['projects'],
   },
   {
+    id: 'tdworkspace', path: '/tdworkspace', title: 'TD Workspace Atlas',
+    description: 'Sơ đồ mô hình hóa kiến trúc Codex, CLIProxyAPI v8, Google Antigravity Hydrogen/Carbon, Seatbelt Sandbox và 5 lớp System Prompt.',
+    section: 'developer', visibility: 'unlisted', status: 'beta', indexable: false,
+    tags: ['Codex', 'CLIProxyAPI', 'Antigravity', 'Architecture'], requirements: ['Chạy trực tiếp trong trình duyệt'], surfaces: [],
+  },
+  {
     id: 'mobile-toolkit', path: '/mobile', title: 'Mobile Developer Toolkit',
     description: 'Bộ công cụ test Android, deep link, WebView, QR và tài liệu React Native dùng trong công việc hằng ngày.',
     section: 'developer', visibility: 'unlisted', status: 'stable', indexable: false,

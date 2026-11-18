@@ -113,109 +113,7 @@ export function countStateActivityScore(stateObj?: Partial<GymStateV10> | null):
   return doneSetsTotal * 10 + Object.keys(statuses).length * 25 + Math.max(0, weights.length - 1) * 5;
 }
 
-import { addDaysISO } from './dateUtils';
-
-function backfillMissingProposalsOnLegacyMessage(msg: AgentChatMessage, nowISO: string): AgentChatMessage {
-  if (msg.role !== 'assistant' || (msg.proposals && msg.proposals.length > 0)) return msg;
-  const txt = msg.text || '';
-  if (/reset\s*trạng\s*thái\s*buổi\s*tập/i.test(txt)) {
-    return {
-      ...msg,
-      proposals: [
-        {
-          type: 'clear_workout_logs',
-          scope: 'all',
-          labelSummary: 'Xoá toàn bộ log buổi tập đã hoàn thành (reset chuỗi về 0)',
-        },
-      ],
-      selectedIndices: [0],
-    };
-  }
-  if (/dồn\s*Buổi\s*Kéo[\s\S]*Thứ\s*5/i.test(txt)) {
-    const thuISO = addDaysISO(nowISO, 1);
-    return {
-      ...msg,
-      proposals: [
-        {
-          type: 'reschedule_day',
-          dateISO: thuISO,
-          sessionId: 'pull_day',
-          workoutTime: '06:00',
-          scope: 'single',
-          labelSummary: 'Dời Buổi Kéo (Vai · Xô · Tay trước) sang Thứ 5 lúc 06:00',
-        },
-      ],
-      selectedIndices: [0],
-      selfAudit: msg.selfAudit || {
-        passed: true,
-        safetyCheck: 'Bố trí Buổi Kéo vào Thứ 5 giúp giữ nhịp 4 buổi/tuần mà vẫn nghỉ hồi phục hôm nay.',
-      },
-    };
-  }
-  if (
-    /1\.230\s*kcal/i.test(txt) &&
-    /(?:bấm|nhấn)\s*(?:ngay\s*)?nút\s*(?:bên\s*)?dưới/i.test(txt)
-  ) {
-    return {
-      ...msg,
-      proposals: [
-        {
-          type: 'replace_day_nutrition',
-          dateISO: nowISO,
-          items: [
-            { name: 'Sáng: 1 ly bạc xỉu + Pocari', kcal: 230, protein: 4, carb: 42, fat: 5 },
-            { name: 'Trưa: Cơm mực rim, top mỡ, chả trứng, canh chua cá + nước mía', kcal: 1000, protein: 41, carb: 138, fat: 30 },
-          ],
-          labelSummary: 'Ghi đè lại thực đơn hôm nay chuẩn 1.230 kcal · 45g Đạm (xoá dữ liệu thừa cũ)',
-        },
-      ],
-      selectedIndices: [0],
-      selfAudit: msg.selfAudit || {
-        passed: true,
-        safetyCheck: 'Đã gọt bỏ phần cộng trùng dữ liệu cũ để khớp chuẩn 1.230 kcal thực tế.',
-        estimateNote: 'Ước lượng thực tế ~75–80%',
-      },
-    };
-  }
-  if (
-    /4\s*buổi/i.test(txt) &&
-    /(?:bấm|nhấn)\s*(?:ngay\s*)?nút\s*(?:bên\s*)?dưới/i.test(txt)
-  ) {
-    return {
-      ...msg,
-      proposals: [
-        {
-          type: 'update_strategy',
-          goal: 'cut',
-          targetWeightKg: 95,
-          workoutTime: '06:00',
-          labelSummary: 'Áp dụng chiến lược Giảm mỡ giữ cơ (đích 95kg · 2.290 kcal · 175g Đạm)',
-        },
-        {
-          type: 'set_weekly_split',
-          days: {
-            '1': { sessionId: 'rest', workoutTime: '06:00' },
-            '2': { sessionId: 'press_day', workoutTime: '06:00' },
-            '3': { sessionId: 'pull_day', workoutTime: '06:00' },
-            '4': { sessionId: 'rest', workoutTime: '06:00' },
-            '5': { sessionId: 'legs_day', workoutTime: '06:00' },
-            '6': { sessionId: 'upper_day', workoutTime: '07:00' },
-            '0': { sessionId: 'rest', workoutTime: '07:00' },
-          },
-          labelSummary: 'Áp dụng lịch tập 4 buổi/tuần (T3 Đẩy · T4 Kéo · T6 Chân · T7 Thân trên)',
-        },
-      ],
-      selectedIndices: [0, 1],
-      selfAudit: msg.selfAudit || {
-        passed: true,
-        safetyCheck: 'Tần suất 4 buổi/tuần xen kẽ ngày nghỉ bảo vệ khớp gối ở mức 115kg.',
-      },
-    };
-  }
-  return msg;
-}
-
-function sanitizeAgentMessages(raw: unknown, nowISO = getTodayISO()): AgentChatMessage[] {
+function sanitizeAgentMessages(raw: unknown): AgentChatMessage[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter(
@@ -227,37 +125,30 @@ function sanitizeAgentMessages(raw: unknown, nowISO = getTodayISO()): AgentChatM
         !String(m.text).includes('Unexpected token \'<\'')
     )
     .slice(-28)
-    .map((m) =>
-      backfillMissingProposalsOnLegacyMessage(
-        {
-          id: m.id,
-          role: m.role === 'user' ? 'user' : 'assistant',
-          text: m.text,
-          createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date().toISOString(),
-          images: Array.isArray(m.images)
-            ? m.images
-                .filter(
-                  (img: unknown) =>
-                    typeof img === 'string' &&
-                    img.startsWith('data:image/') &&
-                    img.length <= 65_000
-                )
-                .slice(0, 3)
-            : undefined,
-          proposals: Array.isArray(m.proposals) ? m.proposals : undefined,
-          selectedIndices: Array.isArray(m.selectedIndices) ? m.selectedIndices : undefined,
-          applied: Boolean(m.applied),
-          undone: Boolean(m.undone),
-          quickReplies: Array.isArray(m.quickReplies) ? m.quickReplies : undefined,
-          selfAudit: m.selfAudit && typeof m.selfAudit === 'object' ? m.selfAudit : null,
-          modelId: typeof m.modelId === 'string' ? m.modelId : undefined,
-          tier: m.tier === 'ultra' || m.tier === 'free' ? m.tier : undefined,
-          engineLabel: typeof m.engineLabel === 'string' ? m.engineLabel : undefined,
-          fallbackNote: typeof m.fallbackNote === 'string' ? m.fallbackNote : undefined,
-        },
-        nowISO
-      )
-    );
+    .map((m) => ({
+      id: m.id,
+      role: m.role === 'user' ? 'user' : 'assistant',
+      text: m.text,
+      createdAt: typeof m.createdAt === 'string' ? m.createdAt : new Date().toISOString(),
+      images: Array.isArray(m.images)
+        ? m.images
+            .filter(
+              (img: unknown) =>
+                typeof img === 'string' &&
+                img.startsWith('data:image/') &&
+                img.length <= 65_000
+            )
+            .slice(0, 3)
+        : undefined,
+      proposals: Array.isArray(m.proposals) ? m.proposals : undefined,
+      selectedIndices: Array.isArray(m.selectedIndices) ? m.selectedIndices : undefined,
+      applied: Boolean(m.applied),
+      undone: Boolean(m.undone),
+      quickReplies: Array.isArray(m.quickReplies) ? m.quickReplies : undefined,
+      selfAudit: m.selfAudit && typeof m.selfAudit === 'object' ? m.selfAudit : null,
+      modelId: typeof m.modelId === 'string' ? m.modelId : undefined,
+      engineLabel: typeof m.engineLabel === 'string' ? m.engineLabel : undefined,
+    }));
 }
 
 export function createFreshDefaultState(todayOverride?: string): GymStateV10 {
@@ -301,7 +192,7 @@ export function createFreshDefaultState(todayOverride?: string): GymStateV10 {
         note: 'Cân nặng khởi điểm',
       },
     ],
-    selectedGymId: 'tng_uvk',
+    selectedGymId: 'all',
     customSessionLists: {},
     activePresetBySession: {},
   };
@@ -402,7 +293,7 @@ export function migrateRawState(rawObj: any, todayOverride?: string): GymStateV1
     dayNotesByDate:
       rawObj.dayNotesByDate && typeof rawObj.dayNotesByDate === 'object' ? rawObj.dayNotesByDate : {},
     agentAutoApply: Boolean(rawObj.agentAutoApply),
-    agentMessages: sanitizeAgentMessages(rawObj.agentMessages, nowISO),
+    agentMessages: sanitizeAgentMessages(rawObj.agentMessages),
     activeSessionId:
       rawObj.activeSessionId && rawObj.activeSessionId !== 'rest' ? rawObj.activeSessionId : 'press_day',
     sessionSwaps: rawObj.sessionSwaps && typeof rawObj.sessionSwaps === 'object' ? rawObj.sessionSwaps : {},
@@ -425,7 +316,7 @@ export function migrateRawState(rawObj: any, todayOverride?: string): GymStateV1
               note: 'Cân nặng khởi điểm',
             },
           ],
-    selectedGymId: rawObj.selectedGymId || 'tng_uvk',
+    selectedGymId: rawObj.selectedGymId || 'all',
     customSessionLists:
       rawObj.customSessionLists && typeof rawObj.customSessionLists === 'object' ? rawObj.customSessionLists : {},
     activePresetBySession:
@@ -456,6 +347,9 @@ export function saveLocalStateSafely(stateObj: GymStateV10): void {
 export function loadAndMigrateLocalState(todayOverride?: string): GymStateV10 {
   const nowISO = todayOverride || getTodayISO();
   if (typeof localStorage === 'undefined') return createFreshDefaultState(nowISO);
+  try {
+    localStorage.removeItem('8d_gym_ultra_owner_v1');
+  } catch {}
 
   const candidateKeys = [CANONICAL_STORAGE_KEY, ...HISTORICAL_STORAGE_KEYS, BACKUP_STORAGE_KEY];
   let bestState: GymStateV10 | null = null;
@@ -505,13 +399,22 @@ export function mergeGymStates(localRaw: any, remoteRaw: any, todayOverride?: st
   const primary = preferRemote ? remote : local;
   const secondary = preferRemote ? local : remote;
 
-  const mergedLogsByDate: GymStateV10['logsByDate'] = !isFreshLocalInstall
-    ? { ...primary.logsByDate }
-    : { ...secondary.logsByDate, ...primary.logsByDate };
+  const mergedLogsByDate: GymStateV10['logsByDate'] = {};
+  const allLogDates = new Set([
+    ...Object.keys(secondary.logsByDate || {}),
+    ...Object.keys(primary.logsByDate || {}),
+  ]);
+  for (const dISO of allLogDates) {
+    mergedLogsByDate[dISO] = {
+      ...(secondary.logsByDate?.[dISO] || {}),
+      ...(primary.logsByDate?.[dISO] || {}),
+    };
+  }
 
-  const mergedStatusByDate: GymStateV10['dayStatusByDate'] = !isFreshLocalInstall
-    ? { ...primary.dayStatusByDate }
-    : { ...secondary.dayStatusByDate, ...primary.dayStatusByDate };
+  const mergedStatusByDate: GymStateV10['dayStatusByDate'] = {
+    ...secondary.dayStatusByDate,
+    ...primary.dayStatusByDate,
+  };
 
   const weightByDate: Record<string, GymStateV10['weightLogs'][number]> = {};
   for (const w of secondary.weightLogs) if (w?.isoDate) weightByDate[w.isoDate] = w;

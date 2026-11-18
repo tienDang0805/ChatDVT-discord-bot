@@ -1,7 +1,10 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useInView } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
+import { useSiteMotion } from './Mascot';
 import { MobileStackIllustration, type TechnologyId } from './MobileStackIllustration';
+
 type TranslatedText = [vi: string, en: string];
 
 interface OrbSpec {
@@ -23,8 +26,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'rn',
     label: 'React Native',
-    description: ['Dùng chung giao diện cho iOS và Android.', 'Share the same interface across iOS and Android.'],
-    caption: ['Một bộ component, hai nền tảng', 'One component, two platforms'],
+    description: ['Mình làm giao diện CRM bằng React Native.', 'I build CRM interfaces with React Native.'],
+    caption: ['Cùng một component trên iOS và Android', 'One component across iOS and Android'],
     color: '#65c7ef',
     size: 'lg',
     cx: 47,
@@ -35,8 +38,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'ts',
     label: 'TypeScript',
-    description: ['Phát hiện lỗi kiểu dữ liệu ngay khi viết code.', 'Catch type errors while writing code.'],
-    caption: ['Ví dụ khai báo kiểu', 'A type declaration'],
+    description: ['Khai báo kiểu cho dữ liệu app nhận từ SDK.', 'Define the shape of data an app receives from an SDK.'],
+    caption: ['Ví dụ dữ liệu khi quét mã', 'Example scan result'],
     color: '#80a6f4',
     size: 'md',
     cx: 44,
@@ -47,8 +50,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'java',
     label: 'Java · Bridge',
-    description: ['Nối giao diện React Native với SDK thiết bị.', 'Connect React Native to the device SDK.'],
-    caption: ['Gọi SDK qua native bridge', 'Calling an SDK through a bridge'],
+    description: ['Mình viết bridge Java để app gọi SDK của robot.', 'Java connects the app to the robot SDK.'],
+    caption: ['React Native → Java → SDK robot', 'React Native → Java → robot SDK'],
     color: '#e7a37d',
     size: 'md',
     cx: 44,
@@ -59,8 +62,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'nodejs',
     label: 'Node.js · API',
-    description: ['Xử lý yêu cầu từ ứng dụng và bot.', 'Handle requests from apps and bots.'],
-    caption: ['Luồng yêu cầu và phản hồi', 'Request and response'],
+    description: ['ChatDVT nhận tin nhắn Discord rồi gọi Gemini.', 'ChatDVT sends Discord chats to Gemini.'],
+    caption: ['Discord ↔ ChatDVT ↔ Gemini', 'Discord ↔ ChatDVT ↔ Gemini'],
     color: '#8bbe91',
     size: 'md',
     cx: 47,
@@ -72,8 +75,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'kotlin',
     label: 'Kotlin',
-    description: ['Dùng coroutine cho tác vụ chạy nền trên Android.', 'Use coroutines to coordinate background tasks on Android.'],
-    caption: ['Hai tác vụ chạy song song', 'Two concurrent tasks'],
+    description: ['Mình viết SDK quét mã trên Android bằng Kotlin.', 'I built an Android scanning SDK in Kotlin.'],
+    caption: ['Ví dụ coroutine tách hai tác vụ', 'Example of two concurrent tasks'],
     color: '#c2a2ef',
     size: 'lg',
     cx: 492,
@@ -84,8 +87,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'android',
     label: 'Android',
-    description: ['Kết nối ứng dụng với tính năng của thiết bị.', 'Connect an app to device capabilities.'],
-    caption: ['Ứng dụng gọi API hệ thống', 'An app calls system APIs'],
+    description: ['Android cấp quyền và cung cấp API để app dùng camera.', 'Android manages permissions and gives apps camera access.'],
+    caption: ['App → Android → camera', 'App → Android → camera'],
     color: '#a4cd7e',
     size: 'lg',
     cx: 500,
@@ -96,8 +99,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'camerax',
     label: 'CameraX',
-    description: ['Lấy hình từ camera để quét mã vạch.', 'Capture camera frames for barcode scanning.'],
-    caption: ['Từ khung hình đến mã vạch', 'From camera frame to barcode'],
+    description: ['CameraX cấp hình, ML Kit đọc mã vạch.', 'CameraX supplies frames. ML Kit reads the barcodes.'],
+    caption: ['Hai mã trong cùng một khung hình', 'Two barcodes in one frame'],
     color: '#76d1bf',
     size: 'md',
     cx: 500,
@@ -108,8 +111,8 @@ const ORBS: OrbSpec[] = [
   {
     id: 'maven',
     label: 'Native SDK',
-    description: ['Đóng gói tính năng để app khác dùng.', 'Package features for other apps to use.'],
-    caption: ['Phát hành qua Maven', 'Distributed via Maven'],
+    description: ['Mình đóng gói SDK để các team tích hợp qua Maven.', 'I package the SDK so other teams can integrate it via Maven.'],
+    caption: ['Một thư viện, nhiều ứng dụng', 'One library, multiple apps'],
     color: '#e5c173',
     size: 'md',
     cx: 500,
@@ -189,10 +192,21 @@ function TechLogo({ id }: { id: TechnologyId }) {
 
 export function MobileStack() {
   const { locale } = useLanguage();
+  const { enabled } = useSiteMotion();
   const en = locale === 'en';
   const languageIndex = en ? 1 : 0;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [foreground, setForeground] = useState(false);
+  const device = useRef<HTMLDivElement>(null);
+  const visible = useInView(device, { amount: .25 });
   const activeOrb = ORBS[activeIndex];
+
+  useEffect(() => {
+    const update = () => setForeground(!document.hidden);
+    update();
+    document.addEventListener('visibilitychange', update);
+    return () => document.removeEventListener('visibilitychange', update);
+  }, []);
 
   return (
     <div className="mobile-stack mobile-stack--constellation" style={{ '--msc-accent': activeOrb.color } as CSSProperties}>
@@ -205,17 +219,16 @@ export function MobileStack() {
           })}
         </svg>
 
-        <div className="msc-device-wrap">
+        <div className="msc-device-wrap" ref={device} data-running={enabled && visible && foreground}>
           <div className="msc-device">
             <div className="msc-screen">
               <div className="msc-camera" aria-hidden="true" />
               <div id="mobile-tech-detail" className="msc-screen__content" aria-live="polite" aria-atomic="true">
-                <div className="msc-screen__intro">
-                  <span className="msc-screen__mark"><TechLogo id={activeOrb.id} /></span>
+                <div>
                   <h3>{activeOrb.label}</h3>
                   <p>{activeOrb.description[languageIndex]}</p>
                 </div>
-                <figure className="msc-art">
+                <figure className="msc-art" key={activeOrb.id}>
                   <div className="msc-art__canvas">
                     <MobileStackIllustration technology={activeOrb.id} />
                   </div>

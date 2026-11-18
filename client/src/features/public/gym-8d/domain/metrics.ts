@@ -138,13 +138,16 @@ export function calculateMetrics(input?: Partial<ProfileInput>): CalculatedMetri
     ...(input || {}),
   };
   const gender = p.gender === 'female' ? 'female' : 'male';
-  const age = Math.max(14, Math.min(80, Number(p.age) || 27));
-  const heightCm = Math.max(140, Math.min(215, Number(p.heightCm) || 182));
-  const weightKg = Math.max(35, Math.min(200, Number(p.weightKg) || 115));
-  const targetWeightKg = Math.max(35, Math.min(180, Number(p.targetWeightKg) || 95));
-  const activity = Math.max(1.2, Math.min(1.9, Number(p.activity) || 1.375));
+  const age = Math.max(14, Math.min(80, Number(p.age) || DEFAULT_USER_PROFILE.age));
+  const heightCm = Math.max(140, Math.min(215, Number(p.heightCm) || DEFAULT_USER_PROFILE.heightCm));
+  const weightKg = Math.max(35, Math.min(200, Number(p.weightKg) || DEFAULT_USER_PROFILE.weightKg));
+  const targetWeightKg = Math.max(
+    35,
+    Math.min(180, Number(p.targetWeightKg) || DEFAULT_USER_PROFILE.targetWeightKg)
+  );
+  const activity = Math.max(1.2, Math.min(1.9, Number(p.activity) || DEFAULT_USER_PROFILE.activity));
   const goal = ['cut', 'recomp', 'bulk'].includes(p.goal) ? p.goal : 'cut';
-  const workoutTime = p.workoutTime || '06:00';
+  const workoutTime = p.workoutTime || DEFAULT_USER_PROFILE.workoutTime;
   const preSleepLeadMin = Math.max(15, Math.min(90, Number(p.preSleepLeadMin) || 30));
 
   const heightM = heightCm / 100;

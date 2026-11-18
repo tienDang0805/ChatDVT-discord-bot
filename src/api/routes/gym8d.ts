@@ -1,13 +1,10 @@
 import { Router } from 'express';
-import crypto from 'node:crypto';
 import https from 'node:https';
-import jwt from 'jsonwebtoken';
 import cron from 'node-cron';
 import { GoogleGenAI } from '@google/genai';
 import { WEB_CHAT_MODEL_FALLBACKS } from '../../config/constants';
 import { prisma } from '../../database/prisma';
 import { geminiCore, retryWithBackoff, type WebChatHistoryMessage } from '../../shared/services/gemini-core';
-import { JWT_SECRET } from '../middleware/auth';
 import { preventResponseCaching } from '../client-files';
 import {
   generateVapidKeys,
@@ -19,10 +16,8 @@ import {
 const router = Router();
 const MAX_PAYLOAD_CHARS = 2 * 1024 * 1024;
 const VAPID_BOT_CONFIG_KEY = 'gym8d-vapid-keys';
-const ULTRA_PROXY_CONFIG_KEY = 'gym8d-ultra-proxy';
+const LEGACY_ULTRA_PROXY_CONFIG_KEY = 'gym8d-ultra-proxy';
 const DEFAULT_CHATDVT_AVATAR = '/images/chibi/chatdvt.jpg';
-const DEFAULT_CLIPROXY_BASE_URL = process.env.CLIPROXY_BASE_URL || 'http://127.0.0.1:8317/v1';
-const DEFAULT_CLIPROXY_API_KEY = process.env.CLIPROXY_API_KEY || 'sk-local-ultra-key';
 
 let tablesEnsured = false;
 let cachedVapidKeys: VapidKeys | null = null;
@@ -131,6 +126,7 @@ export async function ensureGymTablesExist(): Promise<void> {
   await prisma.$executeRawUnsafe(`
     CREATE INDEX IF NOT EXISTS "GymPushSubscription_code_idx" ON "GymPushSubscription"("code");
   `);
+  await prisma.botConfig.deleteMany({ where: { key: LEGACY_ULTRA_PROXY_CONFIG_KEY } }).catch(() => {});
   tablesEnsured = true;
 }
 
@@ -213,11 +209,13 @@ function mergeServerAndClientState(existing: Record<string, any>, incoming: Reco
       if (eSets && !iSets) mergedDay[exId] = eSets;
       else if (iSets && !eSets) mergedDay[exId] = iSets;
       else if (eSets && iSets) {
-        const eDone = eSets.filter((s: any) => s && s.done).length;
-        const iDone = iSets.filter((s: any) => s && s.done).length;
-        if (iDone > eDone) mergedDay[exId] = iSets;
-        else if (eDone > iDone) mergedDay[exId] = eSets;
-        else mergedDay[exId] = primary === incoming ? iSets : eSets;
+        if (incomingTime >= existingTime) {
+          mergedDay[exId] = iSets;
+        } else {
+          const eDone = eSets.filter((s: any) => s && s.done).length;
+          const iDone = iSets.filter((s: any) => s && s.done).length;
+          mergedDay[exId] = iDone > eDone ? iSets : eSets;
+        }
       }
     }
     if (Object.keys(mergedDay).length > 0) {
@@ -236,9 +234,13 @@ function mergeServerAndClientState(existing: Record<string, any>, incoming: Reco
     if (eSt && !iSt) mergedStatusByDate[dISO] = eSt;
     else if (iSt && !eSt) mergedStatusByDate[dISO] = iSt;
     else if (eSt && iSt) {
-      if (iSt.status === 'done' && eSt.status !== 'done') mergedStatusByDate[dISO] = iSt;
-      else if (eSt.status === 'done' && iSt.status !== 'done') mergedStatusByDate[dISO] = eSt;
-      else mergedStatusByDate[dISO] = primary === incoming ? iSt : eSt;
+      if (incomingTime >= existingTime) {
+        mergedStatusByDate[dISO] = iSt;
+      } else if (iSt.status === 'done' && eSt.status !== 'done') {
+        mergedStatusByDate[dISO] = iSt;
+      } else {
+        mergedStatusByDate[dISO] = eSt;
+      }
     }
   }
 
@@ -720,168 +722,14 @@ export async function runGym8dPushTick(now = new Date()): Promise<void> {
 }
 
 const agentRateMap = new Map<string, { count: number; resetAt: number }>();
-const ultraUnlockRateMap = new Map<string, { count: number; resetAt: number }>();
 
-function checkUltraUnlockRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const cur = ultraUnlockRateMap.get(ip);
-  if (!cur || now > cur.resetAt) {
-    if (ultraUnlockRateMap.size > 300) ultraUnlockRateMap.clear();
-    ultraUnlockRateMap.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
-    return true;
-  }
-  if (cur.count >= 8) return false;
-  cur.count += 1;
-  return true;
-}
-
-function safeVerifyOwnerPasskey(candidate: unknown): boolean {
-  const expected = (process.env.GYM8D_ULTRA_PASSKEY || process.env.ADMIN_PASSWORD || '').trim();
-  if (!expected || typeof candidate !== 'string' || !candidate.trim()) return false;
-  const a = crypto.createHash('sha256').update(candidate.trim(), 'utf8').digest();
-  const b = crypto.createHash('sha256').update(expected, 'utf8').digest();
-  return crypto.timingSafeEqual(a, b);
-}
-
-function verifyUltraOwnerJwt(rawHeader: unknown): boolean {
-  if (typeof rawHeader !== 'string' || !rawHeader.trim()) return false;
-  try {
-    const decoded: any = jwt.verify(rawHeader.trim(), JWT_SECRET);
-    return Boolean(decoded && decoded.role === 'gym8d_ultra_owner');
-  } catch {
-    return false;
-  }
-}
-
-async function resolveCliProxySettings(): Promise<{ baseUrl: string; apiKey: string }> {
-  let baseUrl = DEFAULT_CLIPROXY_BASE_URL;
-  let apiKey = DEFAULT_CLIPROXY_API_KEY;
-  try {
-    const row = await prisma.botConfig.findUnique({ where: { key: ULTRA_PROXY_CONFIG_KEY } });
-    if (row?.systemPrompts) {
-      const parsed = JSON.parse(row.systemPrompts);
-      if (typeof parsed.baseUrl === 'string' && parsed.baseUrl.startsWith('http')) {
-        baseUrl = parsed.baseUrl.replace(/\/+$/, '');
-      }
-      if (typeof parsed.apiKey === 'string' && parsed.apiKey.trim()) {
-        apiKey = parsed.apiKey.trim();
-      }
-    }
-  } catch {}
-  return { baseUrl: baseUrl.replace(/\/+$/, ''), apiKey };
-}
-
-function maskProxyUrl(urlStr: string): string {
-  try {
-    const u = new URL(urlStr);
-    return `${u.protocol}//${u.host}${u.pathname}`;
-  } catch {
-    return 'CLIProxyAPI';
-  }
-}
-
-async function probeCliProxyStatus(
-  baseUrl: string,
-  apiKey: string
-): Promise<{ online: boolean; reason: string; models: string[] }> {
-  const nodeFetch: any = (globalThis as any).fetch;
-  if (typeof nodeFetch !== 'function') {
-    return { online: false, reason: 'no_fetch_runtime', models: [] };
-  }
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 2500);
-  try {
-    const res = await nodeFetch(`${baseUrl}/models`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${apiKey}` },
-      signal: ctrl.signal,
-    });
-    if (!res.ok) {
-      return { online: false, reason: `HTTP ${res.status}`, models: [] };
-    }
-    const body: any = await res.json().catch(() => ({}));
-    const models: string[] = Array.isArray(body?.data)
-      ? body.data.map((m: any) => String(m?.id || '').trim()).filter(Boolean)
-      : [];
-    return { online: true, reason: 'CLIProxyAPI trực tuyến', models };
-  } catch (err: any) {
-    const code = err?.cause?.code || err?.code || (err?.name === 'AbortError' ? 'TIMEOUT' : '');
-    return {
-      online: false,
-      reason: String(code || err?.message || 'ECONNREFUSED').slice(0, 60),
-      models: [],
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function formatEngineLabel(model: string, tier: 'ultra' | 'free'): string {
+function formatEngineLabel(model: string): string {
   const m = String(model || '').toLowerCase();
-  if (tier === 'ultra') {
-    if (m.includes('carbon')) return 'Carbon High · Ultra';
-    if (m.includes('argon')) return 'Argon High · Ultra';
-    if (m.includes('3.8-flash')) return 'Flash 3.8 · Ultra';
-    return `${model} · Ultra`;
-  }
-  if (m.includes('3.5-flash-lite')) return 'Flash 3.5 Lite · Free';
-  if (m.includes('3.1-flash-lite')) return 'Flash 3.1 Lite · Free';
-  if (m.includes('gemma')) return 'Gemma 4 · Free';
-  return `${model} · Free`;
+  if (m.includes('3.5-flash-lite')) return 'Gemini 3.5 Flash Lite';
+  if (m.includes('3.1-flash-lite')) return 'Gemini 3.1 Flash Lite';
+  if (m.includes('gemma')) return 'Gemma 4';
+  return model;
 }
-
-router.get('/gym8d/ultra/status', preventResponseCaching, async (req, res) => {
-  const isOwner = verifyUltraOwnerJwt(req.headers['x-gym8d-ultra-token']);
-  if (!isOwner) {
-    return res.json({ unlocked: false });
-  }
-  const cfg = await resolveCliProxySettings();
-  const probe = await probeCliProxyStatus(cfg.baseUrl, cfg.apiKey);
-  return res.json({
-    unlocked: true,
-    proxyOnline: probe.online,
-    proxyReason: probe.reason,
-    availableModels: probe.models,
-    proxyUrlMasked: maskProxyUrl(cfg.baseUrl),
-  });
-});
-
-router.post('/gym8d/ultra/unlock', preventResponseCaching, async (req, res) => {
-  const ip = String(req.headers['cf-connecting-ip'] || req.ip || 'local');
-  if (!checkUltraUnlockRateLimit(ip)) {
-    return res.status(429).json({ error: 'Thử sai quá nhiều lần, vui lòng đợi 15 phút.' });
-  }
-  if (!safeVerifyOwnerPasskey(req.body?.passkey)) {
-    return res.status(401).json({ error: 'Mật khẩu chủ sở hữu không chính xác.' });
-  }
-
-  const customUrl = typeof req.body?.customProxyUrl === 'string' ? req.body.customProxyUrl.trim() : '';
-  const customKey = typeof req.body?.customProxyKey === 'string' ? req.body.customProxyKey.trim() : '';
-  if (customUrl || customKey) {
-    const cur = await resolveCliProxySettings();
-    const payload = JSON.stringify({
-      baseUrl: customUrl && /^https?:\/\//i.test(customUrl) ? customUrl.replace(/\/+$/, '') : cur.baseUrl,
-      apiKey: customKey || cur.apiKey,
-    });
-    await prisma.botConfig.upsert({
-      where: { key: ULTRA_PROXY_CONFIG_KEY },
-      update: { systemPrompts: payload },
-      create: { key: ULTRA_PROXY_CONFIG_KEY, systemPrompts: payload, features: '{}' },
-    });
-  }
-
-  const cfg = await resolveCliProxySettings();
-  const probe = await probeCliProxyStatus(cfg.baseUrl, cfg.apiKey);
-  const token = jwt.sign({ role: 'gym8d_ultra_owner', v: 1 }, JWT_SECRET, { expiresIn: '365d' });
-  return res.json({
-    ok: true,
-    token,
-    proxyOnline: probe.online,
-    proxyReason: probe.reason,
-    availableModels: probe.models,
-    proxyUrlMasked: maskProxyUrl(cfg.baseUrl),
-  });
-});
 
 function checkAgentRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -983,93 +831,10 @@ async function generateGymAgentJsonWithFallback(params: {
   images?: AgentVisionImage[];
   temperature?: number;
   maxOutputTokens?: number;
-  ultra?: { enabled: boolean; preferredModel?: string };
-}): Promise<{ text: string; model: string; tier: 'ultra' | 'free'; fallbackNote?: string }> {
-  let ultraFailReason = '';
+}): Promise<{ text: string; model: string }> {
   const incomingImages = Array.isArray(params.images) ? params.images : [];
   const hasImages = incomingImages.length > 0;
 
-  // 1. Exclusive Owner Ultra Path via CLIProxyAPI (locked by signed JWT)
-  if (params.ultra?.enabled && params.ultra.preferredModel !== 'free') {
-    const { baseUrl, apiKey } = await resolveCliProxySettings();
-    const allowedUltra = ['gemini-4-carbon-high', 'gemini-3.8-flash-high', 'gemini-4-argon-high'];
-    const pref = allowedUltra.includes(String(params.ultra.preferredModel))
-      ? String(params.ultra.preferredModel)
-      : 'gemini-4-carbon-high';
-    const ultraChain = Array.from(new Set([pref, ...allowedUltra]));
-
-    for (const ultraModel of ultraChain) {
-      const nodeFetch: any = (globalThis as any).fetch;
-      if (typeof nodeFetch !== 'function') break;
-      const ultraSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy trực tiếp bằng model "${ultraModel}" (${formatEngineLabel(
-        ultraModel,
-        'ultra'
-      )}) qua CLIProxyAPI riêng của Tiến. Nếu Tiến hỏi đang chạy model gì, hãy báo chính xác tên model này.]`;
-      const userContent: any = hasImages
-        ? [
-            { type: 'text', text: params.message },
-            ...incomingImages.map((img) => ({
-              type: 'image_url',
-              image_url: {
-                url: `data:${img.mimeType};base64,${img.base64Data}`,
-              },
-            })),
-          ]
-        : params.message;
-      const openAiMessages = [
-        { role: 'system', content: ultraSys },
-        ...params.history.map((h) => ({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content:
-            h.role === 'model' ? normalizeHistoryModelContent(h.content) : h.content.slice(0, 1400),
-        })),
-        { role: 'user', content: userContent },
-      ];
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), hasImages ? 38_000 : 20_000);
-      try {
-        const res = await nodeFetch(`${baseUrl}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: ultraModel,
-            reasoning_effort: 'low',
-            temperature: params.temperature ?? 0.25,
-            response_format: { type: 'json_object' },
-            messages: openAiMessages,
-          }),
-          signal: ctrl.signal,
-        });
-        if (res.ok) {
-          const data: any = await res.json();
-          const content = data?.choices?.[0]?.message?.content;
-          const text = typeof content === 'string' ? content.trim() : '';
-          if (text) {
-            console.info(`[Gym8D Ultra CLIProxy] Response generated by ${ultraModel}`);
-            return { text, model: ultraModel, tier: 'ultra' };
-          }
-        } else {
-          ultraFailReason = `HTTP ${res.status}`;
-          console.warn(`[Gym8D Ultra CLIProxy] ${ultraModel} returned HTTP ${res.status}`);
-          if (res.status === 401 || res.status === 403) {
-            break;
-          }
-        }
-      } catch (uErr: any) {
-        const code = uErr?.cause?.code || uErr?.code || (uErr?.name === 'AbortError' ? 'TIMEOUT' : '');
-        ultraFailReason = String(code || uErr?.message || 'ECONNREFUSED').slice(0, 48);
-        console.warn(`[Gym8D Ultra CLIProxy] ${ultraModel} unreachable: ${uErr?.message || uErr}`);
-        break; // If proxy host is unreachable, fall through immediately to Free API
-      } finally {
-        clearTimeout(timer);
-      }
-    }
-  }
-
-  // 2. Standard 3-Tier Free Gemini API Fallback
   const apiKey = await geminiCore.getApiKey('global');
   if (!apiKey) throw new Error('Missing Gemini API key');
 
@@ -1093,12 +858,9 @@ async function generateGymAgentJsonWithFallback(params: {
       if (hasImages && isGemma) {
         continue;
       }
-      const freeSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy bằng model "${model}" (${formatEngineLabel(
-        model,
-        'free'
-      )})${
-        ultraFailReason ? ` do CLIProxyAPI trên Server chưa phản hồi (${ultraFailReason})` : ''
-      }. Nếu Tiến hỏi đang chạy model gì, hãy báo trung thực tên model thực tế này.]`;
+      const modelSys = `${params.systemInstruction}\n\n[THÔNG TIN HỆ THỐNG THỰC TẾ: Lượt này đang chạy bằng model "${model}" (${formatEngineLabel(
+        model
+      )}). Nếu người dùng hỏi đang chạy model gì, hãy báo trung thực tên model thực tế này.]`;
       const userParts: any[] = hasImages
         ? [
             { text: params.message },
@@ -1117,7 +879,7 @@ async function generateGymAgentJsonWithFallback(params: {
               role: 'user' as const,
               parts: [
                 {
-                  text: `${freeSys}\n\n---\nTin nhắn người dùng (TRẢ VỀ DUY NHẤT 1 JSON OBJECT):\n${params.message}`,
+                  text: `${modelSys}\n\n---\nTin nhắn người dùng (TRẢ VỀ DUY NHẤT 1 JSON OBJECT):\n${params.message}`,
                 },
               ],
             },
@@ -1127,24 +889,24 @@ async function generateGymAgentJsonWithFallback(params: {
             { role: 'user' as const, parts: userParts },
           ];
 
-      const freeTimeoutMs = hasImages ? 36_000 : 22_000;
+      const requestTimeoutMs = hasImages ? 36_000 : 22_000;
       const response = await retryWithBackoff(
         () =>
           ai.models.generateContent({
             model,
             contents,
             config: {
-              ...(isGemma ? {} : { systemInstruction: freeSys }),
+              ...(isGemma ? {} : { systemInstruction: modelSys }),
               ...(isGemma ? {} : { responseMimeType: 'application/json' }),
               temperature: params.temperature ?? 0.25,
               topP: 0.9,
               maxOutputTokens: params.maxOutputTokens ?? (hasImages ? 3200 : 2400),
-              httpOptions: { timeout: freeTimeoutMs },
+              httpOptions: { timeout: requestTimeoutMs },
             },
           }),
         1,
         600,
-        freeTimeoutMs
+        requestTimeoutMs
       );
 
       const text = response.text?.trim();
@@ -1153,10 +915,6 @@ async function generateGymAgentJsonWithFallback(params: {
       return {
         text,
         model,
-        tier: 'free',
-        fallbackNote: ultraFailReason
-          ? `CLIProxyAPI Server chưa thông (${ultraFailReason})`
-          : undefined,
       };
     } catch (err: any) {
       lastError = err;
@@ -1802,10 +1560,6 @@ ${JSON.stringify(catalog.exercises || [])}
       validHistory.pop();
     }
 
-    const isUltraOwner = verifyUltraOwnerJwt(req.headers['x-gym8d-ultra-token']);
-    const requestedUltraModel =
-      typeof req.body?.ultraModel === 'string' ? req.body.ultraModel : 'gemini-4-carbon-high';
-
     const aiRes = await generateGymAgentJsonWithFallback({
       message: effectiveMessage,
       history: validHistory,
@@ -1813,7 +1567,6 @@ ${JSON.stringify(catalog.exercises || [])}
       images: incomingImages,
       temperature: isSavagePersona ? 0.72 : 0.35,
       maxOutputTokens: incomingImages.length > 0 ? 3200 : 2400,
-      ultra: { enabled: isUltraOwner, preferredModel: requestedUltraModel },
     });
 
     const parsed = parseAgentJsonResponse(aiRes.text);
@@ -1835,7 +1588,6 @@ ${JSON.stringify(catalog.exercises || [])}
           systemInstruction,
           temperature: 0.1,
           maxOutputTokens: 2200,
-          ultra: { enabled: isUltraOwner, preferredModel: requestedUltraModel },
         });
         const repairedParsed = parseAgentJsonResponse(repairRes.text);
         const repairedAudited = auditAndOptimizeAgentOutput(
@@ -1864,22 +1616,18 @@ ${JSON.stringify(catalog.exercises || [])}
       };
     }
 
-    const engineLabel = formatEngineLabel(aiRes.model, aiRes.tier);
+    const engineLabel = formatEngineLabel(aiRes.model);
     const enrichedAudit = audited.selfAudit
       ? {
           ...audited.selfAudit,
           engineLabel,
           modelId: aiRes.model,
-          tier: aiRes.tier,
-          fallbackNote: aiRes.fallbackNote,
         }
       : {
           passed: true,
           safetyCheck: '',
           engineLabel,
           modelId: aiRes.model,
-          tier: aiRes.tier,
-          fallbackNote: aiRes.fallbackNote,
         };
 
     return res.json({
@@ -1888,8 +1636,6 @@ ${JSON.stringify(catalog.exercises || [])}
       quickReplies: audited.quickReplies,
       selfAudit: enrichedAudit,
       model: aiRes.model,
-      tier: aiRes.tier,
-      fallbackNote: aiRes.fallbackNote,
     });
   } catch (err: any) {
     console.error('[Gym8D Agent] Error:', err?.message || err);

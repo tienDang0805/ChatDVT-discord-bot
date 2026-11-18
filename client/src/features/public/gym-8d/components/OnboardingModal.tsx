@@ -171,7 +171,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                 </div>
               </div>
 
-              <form className="g8d-stack-sm" onSubmit={handleGoToPlanStep}>
+              <form id="g8d-onboard-step1-form" className="g8d-stack-sm" onSubmit={handleGoToPlanStep}>
                 <div className="g8d-onboard-name-box">
                   <label className="g8d-field-lbl" htmlFor="g8d-onboard-name">
                     Bạn tên gì để ChatDVT tiện xưng hô? *
@@ -187,7 +187,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       setName(e.target.value);
                       if (nameError && e.target.value.trim()) setNameError(false);
                     }}
-                    placeholder="Nhập tên hoặc biệt danh (VD: Minh, Huy, Lan...)"
+                    placeholder="VD: Minh, Huy, Lan..."
                     className={`g8d-onboard-name-input ${nameError ? 'is-error' : ''}`}
                   />
                   {nameError && (
@@ -301,10 +301,6 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     className="g8d-num-input"
                   />
                 </label>
-
-                <button type="submit" className="g8d-btn-primary g8d-w-full">
-                  Tiếp tục · Xem phác đồ cá nhân →
-                </button>
               </form>
 
               <div className="g8d-onboard-restore-strip">
@@ -313,8 +309,8 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   className="g8d-onboard-restore-toggle"
                   onClick={() => setShowRestoreBox((v) => !v)}
                 >
-                  <span>Đã dùng Gấu Gym 8D trên máy khác?</span>
-                  <strong>{showRestoreBox ? 'Thu gọn' : 'Nhập mã đồng bộ ›'}</strong>
+                  <span>Đã dùng trên máy khác?</span>
+                  <strong>{showRestoreBox ? 'Thu gọn' : 'Nhập mã ›'}</strong>
                 </button>
 
                 {showRestoreBox && (
@@ -327,7 +323,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                       enterKeyHint="go"
                       value={existingCode}
                       onChange={(e) => setExistingCode(e.target.value.toUpperCase())}
-                      placeholder="Nhập mã đồng bộ có sẵn..."
+                      placeholder="Mã đồng bộ..."
                       className="g8d-search-input"
                       style={{ flex: 1, marginBottom: 0 }}
                     />
@@ -343,7 +339,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
               </div>
             </>
           ) : (
-            <form className="g8d-stack-sm" onSubmit={handleSubmit}>
+            <form id="g8d-onboard-step2-form" className="g8d-stack-sm" onSubmit={handleSubmit}>
               <div className="g8d-row-between">
                 <button
                   type="button"
@@ -455,14 +451,29 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   style={{ marginBottom: 4, fontWeight: 800, letterSpacing: '0.04em' }}
                 />
                 <div className="g8d-tiny-meta">
-                  Lưu lại mã này để đồng bộ dữ liệu sang máy khác hoặc ngoài Màn hình chính (có thể giữ nguyên hoặc đổi thành mã riêng dễ nhớ).
+                  Lưu lại mã này để đồng bộ sang thiết bị khác hoặc ngoài Màn hình chính.
                 </div>
               </div>
-
-              <button type="submit" className="g8d-btn-primary g8d-w-full" disabled={submitting}>
-                {submitting ? 'Đang tạo hồ sơ...' : `Áp dụng & Bắt đầu cùng ${name.trim()}`}
-              </button>
             </form>
+          )}
+        </div>
+      </div>
+
+      <div className="g8d-onboard-footer">
+        <div className="g8d-onboard-footer-inner">
+          {step === 'form' ? (
+            <button type="submit" form="g8d-onboard-step1-form" className="g8d-btn-primary g8d-w-full">
+              Tiếp tục · Xem phác đồ cá nhân →
+            </button>
+          ) : (
+            <button
+              type="submit"
+              form="g8d-onboard-step2-form"
+              className="g8d-btn-primary g8d-w-full"
+              disabled={submitting}
+            >
+              {submitting ? 'Đang tạo hồ sơ...' : `Áp dụng & Bắt đầu cùng ${name.trim()}`}
+            </button>
           )}
         </div>
       </div>

@@ -37,7 +37,7 @@ function SiteFrame({ children, hideFooter = false, hideFooterContact = false }: 
   const { locale, pathFor } = useLanguage();
   const { enabled } = useSiteMotion();
   const path = pathname.replace(/^\/en(?=\/|$)/, '') || '/';
-  const page = path === '/' ? 'home' : path.startsWith('/apps') ? 'apps' : path.startsWith('/blog') ? 'blog' : path === '/me' ? 'me' : path === '/chat' ? 'chat' : path === '/discord' ? 'discord' : path === '/ecosystem' ? 'ecosystem' : path === '/playground' || path === '/cicd-visualizer' ? 'playground' : 'other';
+  const page = path === '/' ? 'home' : path.startsWith('/apps') ? 'apps' : path.startsWith('/blog') ? 'blog' : path === '/me' ? 'me' : path === '/chat' ? 'chat' : path === '/discord' ? 'discord' : path === '/ecosystem' ? 'ecosystem' : path === '/playground' || path === '/cicd-visualizer' || path === '/tdworkspace' ? 'playground' : 'other';
   const nav = [
     { label: 'Playground', href: '/playground' },
     { label: locale === 'en' ? 'Apps' : 'Ứng dụng', href: '/apps' },

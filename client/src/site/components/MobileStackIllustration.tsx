@@ -7,9 +7,26 @@ function AppPreview({ x, y, inset }: { x: number; y: number; inset: ReactNode })
     <g transform={`translate(${x} ${y})`}>
       <rect className="msc-art__surface" width="42" height="52" rx="6" />
       {inset}
-      <rect className="msc-art__wash" x="7" y="15" width="28" height="15" rx="3" />
-      <path className="msc-art__quiet" d="M8 35h20m-20 4h14" />
-      <rect className="msc-art__ink" x="7" y="44" width="12" height="3" rx="1.5" />
+      <rect className="msc-art__wash msc-art__preview-row" x="6" y="14" width="30" height="12" rx="3" />
+      <path d="M11 20h3m4 0h11" />
+      <path className="msc-art__quiet" d="M11 33h3m4 0h11m-18 10h3m4 0h11" />
+    </g>
+  );
+}
+
+function BranchSignals({ y }: { y: number }) {
+  return <>
+    <circle className="msc-art__signal msc-art__branch" cx="88" cy={y} r="2.6" />
+    <circle className="msc-art__signal msc-art__branch" data-right cx="88" cy={y} r="2.6" />
+  </>;
+}
+
+function Barcode({ x, y }: { x: number; y: number }) {
+  return (
+    <g transform={`translate(${x} ${y})`}>
+      <rect className="msc-art__wash" width="58" height="35" rx="3" />
+      <path d="M8 8v19m9-19v19m10-19v19m8-19v19m13-19v19" strokeWidth="2.5" />
+      <path d="M12 8v19m10-19v19m9-19v19m9-19v19m4-19v19m8-19v19" />
     </g>
   );
 }
@@ -21,6 +38,7 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <path d="M88 17v8m-40 9v-4h80v4" />
       <AppPreview x={27} y={34} inset={<path className="msc-art__quiet" d="M18 6h6" />} />
       <AppPreview x={107} y={34} inset={<circle className="msc-art__ink" cx="21" cy="7" r="1.2" />} />
+      <BranchSignals y={17} />
     </>
   ),
   java: (
@@ -30,17 +48,23 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <rect className="msc-art__surface" x="9" y="39" width="40" height="30" rx="5" />
       <path d="M23 49l-5 5 5 5m12-10 5 5-5 5m-4-12-4 14" />
       <rect className="msc-art__surface" x="127" y="39" width="40" height="30" rx="5" />
-      <path d="M141 48h12v12h-12zm-3 3h3m-3 6h3m12-6h3m-3 6h3m-12-12v3m6-3v3m-6 12v3m6-3v3" />
+      <rect x="138" y="47" width="18" height="15" rx="3" />
+      <path d="M147 43v4m-5 11h10" />
+      <path className="msc-art__robot-eyes" d="M143 53h.1m8 0h.1" strokeWidth="2.7" />
+      <circle className="msc-art__signal msc-art__bridge" cx="49" cy="54" r="2.8" />
     </>
   ),
   nodejs: (
     <>
-      <path className="msc-art__quiet" d="M10 38h50m56 18h50" />
-      <path d="M33 38h20l-5-5m5 5-5 5m76 13h19l-5-5m5 5-5 5" />
-      <path className="msc-art__surface" d="M88 18l23 14v27L88 73 65 59V32z" />
-      <path d="M78 61V37l20 24V36" />
-      <circle className="msc-art__ink" cx="17" cy="38" r="3.5" />
-      <circle className="msc-art__ink" cx="159" cy="56" r="3.5" />
+      <path className="msc-art__quiet" d="M36 38h104M36 56h104" />
+      <path className="msc-art__surface" d="M88 20l21 12v26L88 70 67 58V32z" />
+      <path d="M80 54V36l16 18V36" />
+      <rect className="msc-art__surface" x="10" y="32" width="26" height="30" rx="5" />
+      <path d="M17 41h12v9h-7l-3 3v-3h-2z" />
+      <rect className="msc-art__surface" x="140" y="32" width="26" height="30" rx="5" />
+      <path d="M153 40c0 4 2 6 6 6-4 0-6 2-6 6 0-4-2-6-6-6 4 0 6-2 6-6z" />
+      <circle className="msc-art__signal msc-art__request" cx="38" cy="38" r="2.6" />
+      <circle className="msc-art__signal msc-art__reply" cx="138" cy="56" r="2.6" />
     </>
   ),
   kotlin: (
@@ -52,6 +76,8 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <rect className="msc-art__surface" x="77" y="16" width="14" height="12" rx="3" />
       <rect className="msc-art__surface msc-art__secondary" x="77" y="60" width="14" height="12" rx="3" />
       <circle className="msc-art__ink" cx="154" cy="44" r="7" />
+      <circle className="msc-art__signal msc-art__worker" cx="29" cy="44" r="2.6" />
+      <circle className="msc-art__signal msc-art__worker" data-lower cx="29" cy="44" r="2.6" />
     </>
   ),
   android: (
@@ -61,24 +87,25 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <path className="msc-art__ink" d="M73 37a15 13 0 0 1 30 0z" />
       <path d="M79 28l-4-5m22 5 4-5" />
       <path className="msc-art__cutout" d="M82 33h.1m12 0h.1" />
+      <path className="msc-art__layer-signal" d="M46 54l42 19 42-19" />
     </>
   ),
   camerax: (
     <>
       <path className="msc-art__quiet" d="M17 26V13h17m108 0h17v13M17 65v13h17m108 0h17V65" />
-      <rect className="msc-art__wash" x="43" y="24" width="90" height="44" rx="3" />
-      <path d="M55 32v28m7-28v28m10-28v28m8-28v28m8-28v28m12-28v28m8-28v28m10-28v28" strokeWidth="2.7" />
-      <path d="M48 32v28m19-28v28m29-28v28m17-28v28m11-28v28" />
-      <path className="msc-art__scanline" d="M28 46h120" />
+      <Barcode x={25} y={24} />
+      <Barcode x={94} y={33} />
+      <path className="msc-art__scanline" d="M23 46h130" />
     </>
   ),
   maven: (
     <>
-      <path className="msc-art__quiet" d="M88 56v14m0 0H42v8m46-8h46v8" />
+      <path className="msc-art__quiet" d="M88 61v13m0 0H48v4m40-4h40v4" />
       <path className="msc-art__surface" d="M88 12l26 13v23L88 61 62 48V25z" />
       <path d="M62 25l26 13 26-13m-26 13v23M75 18l26 13v9" />
-      <rect className="msc-art__ink" x="31" y="77" width="22" height="8" rx="2" />
-      <rect className="msc-art__ink" x="123" y="77" width="22" height="8" rx="2" />
+      <rect className="msc-art__ink" x="37" y="78" width="22" height="8" rx="2" />
+      <rect className="msc-art__ink" x="117" y="78" width="22" height="8" rx="2" />
+      <BranchSignals y={61} />
     </>
   ),
 };
@@ -86,7 +113,7 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
 export function MobileStackIllustration({ technology }: { technology: TechnologyId }) {
   if (technology === 'ts') {
     return (
-      <pre className="msc-art__code"><code><b>type</b>{' Frame = {\n  width: '}<b>number</b>{'\n}'}</code></pre>
+      <pre className="msc-art__code"><code><b>type</b>{' Scan = {\n'}<span className="msc-art__code-field">{'  code: '}<b>string</b></span>{'\n}'}</code></pre>
     );
   }
 

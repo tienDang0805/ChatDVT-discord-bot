@@ -96,10 +96,10 @@ export const InstallAppGuideContent: React.FC<InstallAppGuideContentProps> = ({
             <div className="g8d-step-num">1</div>
             <div>
               <div className="g8d-step-title">
-                Bấm nút Chia sẻ <SvgIcon name="iosShare" size={14} /> ở thanh dưới cùng Safari
+                Mở menu Chia sẻ <SvgIcon name="iosShare" size={14} /> trên Safari
               </div>
               <div className="g8d-step-desc">
-                Mở trang này trực tiếp trên <strong>Safari</strong> của iPhone (iOS 16.4 trở lên để hỗ trợ thông báo màn hình khóa).
+                Trên iOS 26+, chạm nút <strong>•••</strong> góc phải dưới thanh Safari ➔ chọn <strong>Chia sẻ</strong> (trên iOS cũ, chạm thẳng nút <strong>Chia sẻ</strong> ở thanh dưới cùng).
               </div>
             </div>
           </div>
