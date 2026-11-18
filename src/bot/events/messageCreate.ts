@@ -58,6 +58,21 @@ export const messageCreate = async (message: Message) => {
     });
   }
 
+  if (ADMIN_ID && message.mentions.users.has(ADMIN_ID)) {
+    const stopTyping = startTypingLoop(message.channel);
+    try {
+      const replyContent = await geminiService.generateAutoReply(message);
+      if (replyContent) {
+        await message.reply({ content: replyContent, allowedMentions: { parse: [], repliedUser: false } });
+      }
+    } catch (error) {
+      console.error('[AutoReply] Failed to send an admin reply:', error);
+    } finally {
+      stopTyping();
+    }
+    return;
+  }
+
   // --- LEGACY LOGIC RESTORATION ---
   const lowerContent = message.content.toLowerCase();
   if (lowerContent === 'hi' || lowerContent === 'hello' || lowerContent === 'hé lô') {
@@ -69,20 +84,6 @@ export const messageCreate = async (message: Message) => {
       }
   }
 
-  if (ADMIN_ID && message.mentions.users.has(ADMIN_ID)) {
-      try {
-          if ('sendTyping' in message.channel) await message.channel.sendTyping();
-          const replyContent = await geminiService.generateAutoReply(
-              message.content,
-              message.author.username,
-              message.guild?.id
-          );
-          await message.reply(replyContent);
-          return;
-      } catch (error) {
-          console.error("Lỗi Auto-reply:", error);
-      }
-  }
   // --------------------------------
 
   if (IGNORE_PREFIXES.some(prefix => message.content.startsWith(prefix))) return;
