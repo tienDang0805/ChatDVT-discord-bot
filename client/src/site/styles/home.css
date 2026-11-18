@@ -1047,1033 +1047,285 @@
   }
 }
 
-/* ==========================================================================
-   Artistic 3D Tech Constellation & Live Visual Device Hub (Unboxed, Zero-Text-Wall)
-   ========================================================================== */
+/* Interactive technology illustration in the homepage hero. */
 .mobile-stack--constellation {
-  --msc-accent: #38bdf8;
-  padding-top: 0;
-  padding-right: 22px;
-  display: flex;
+  padding: 0 34px 0 0;
   align-items: center;
-  justify-content: center;
 }
-.mobile-stack--constellation.is-scene-rn { --msc-accent: #38bdf8; }
-.mobile-stack--constellation.is-scene-sdk { --msc-accent: #2dd4bf; }
-.mobile-stack--constellation.is-scene-backend { --msc-accent: #e5b869; }
 
 .msc-stage {
   position: relative;
+  display: grid;
+  place-items: center;
   width: 100%;
   max-width: 540px;
   height: 460px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  user-select: none;
 }
 
-/* Soft Breathing Aurora Glow in Open Space */
-.msc-aurora {
-  position: absolute;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--msc-accent), transparent 76%) 0%,
-    color-mix(in srgb, var(--label-mint), transparent 88%) 45%,
-    transparent 72%
-  );
-  filter: blur(28px);
-  pointer-events: none;
-  transition: background .6s ease;
-  animation: msc-aurora-breathe 5s ease-in-out infinite;
-}
-@keyframes msc-aurora-breathe {
-  0%, 100% { transform: scale(0.95); opacity: .8; }
-  50% { transform: scale(1.08); opacity: 1; }
-}
-
-/* Curved SVG Energy Streams & Orbital Rings */
 .msc-streams {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 1;
-}
-.msc-orbit-ring {
-  fill: none;
-  stroke: color-mix(in srgb, var(--site-line), transparent 20%);
-  stroke-width: 1;
-  stroke-dasharray: 4 7;
-  transform-origin: 260px 230px;
-  animation: msc-ring-spin 54s linear infinite;
-}
-.msc-orbit-ring.is-outer {
-  stroke: color-mix(in srgb, var(--site-line), transparent 48%);
-  stroke-dasharray: 2 10;
-  animation-direction: reverse;
-  animation-duration: 72s;
-}
-@keyframes msc-ring-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
-.msc-stream-base {
+.msc-stream {
   fill: none;
-  stroke: color-mix(in srgb, var(--orb-c, #38bdf8), transparent 82%);
-  stroke-width: 1.4;
-  stroke-dasharray: 3 5;
-  transition: stroke .35s ease, stroke-width .35s ease;
+  stroke: var(--site-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 6;
+  vector-effect: non-scaling-stroke;
 }
-.msc-stream-group.is-lit .msc-stream-base {
-  stroke: color-mix(in srgb, var(--orb-c, #38bdf8), transparent 42%);
-  stroke-width: 1.8;
+
+.msc-stream.is-lit {
+  stroke: color-mix(in srgb, var(--msc-accent), var(--site-line) 44%);
+  stroke-width: 1.5;
   stroke-dasharray: none;
 }
-.msc-stream-pulse {
-  fill: none;
-  stroke: var(--orb-c, #38bdf8);
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  stroke-dasharray: 18 220;
-  opacity: .35;
-  animation: msc-pulse-flow 2.4s linear infinite;
-}
-.msc-stream-group.is-lit .msc-stream-pulse {
-  opacity: 1;
-  stroke-width: 3.2;
-  filter: drop-shadow(0 0 6px var(--orb-c, #38bdf8));
-  animation-duration: 1.45s;
-}
-@keyframes msc-pulse-flow {
-  from { stroke-dashoffset: 238; }
-  to { stroke-dashoffset: 0; }
-}
 
-/* Central 3D Tilted Smartphone Showcase */
 .msc-device-wrap {
   position: relative;
-  z-index: 4;
-  transition: transform .18s ease-out;
+  z-index: 1;
+  transform: rotate(-1.8deg);
 }
+
 .msc-device {
-  position: relative;
-  width: 214px;
-  height: 392px;
-  border-radius: 42px;
-  padding: 6px;
-  background: linear-gradient(155deg, #64748b 0%, #273244 26%, #0f1622 65%, #334155 100%);
-  border: 1px solid rgb(255 255 255 / .24);
-  box-shadow:
-    inset 0 0 0 1.5px #03060a,
-    inset 0 1px 1px rgb(255 255 255 / .32),
-    0 36px 72px -14px rgb(0 0 0 / .92),
-    0 0 44px -12px color-mix(in srgb, var(--msc-accent), transparent 68%);
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  animation: msc-device-float 4.8s ease-in-out infinite;
-  transition: border-color .35s ease, box-shadow .35s ease;
-}
-/* Flagship Titanium Side Hardware Buttons */
-.msc-device::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: 76px;
-  width: 2.5px;
-  height: 28px;
-  border-radius: 2px 0 0 2px;
-  background: linear-gradient(180deg, #94a3b8, #334155);
-  box-shadow: 0 38px 0 #64748b, 0 72px 0 #475569;
-}
-.msc-device::after {
-  content: "";
-  position: absolute;
-  right: -3px;
-  top: 102px;
-  width: 2.5px;
-  height: 46px;
-  border-radius: 0 2px 2px 0;
-  background: linear-gradient(180deg, #94a3b8, #334155);
-}
-.msc-device__glare {
-  position: absolute;
-  inset: 5px;
-  border-radius: 34px;
-  background: linear-gradient(125deg, rgb(255 255 255 / .11) 0%, rgb(255 255 255 / .02) 32%, transparent 52%);
-  pointer-events: none;
-  z-index: 5;
-}
-@keyframes msc-device-float {
-  0%, 100% { transform: translateY(0) rotate(-2.2deg); }
-  50% { transform: translateY(-6px) rotate(-1deg); }
-}
-
-/* Edge-to-Edge Full-Bleed OLED Display */
-.msc-oled {
-  position: relative;
-  flex: 1;
-  border-radius: 36px;
-  background:
-    radial-gradient(110% 42% at 50% 0%, color-mix(in srgb, var(--msc-accent), transparent 82%) 0%, transparent 68%),
-    linear-gradient(180deg, #070b11 0%, #04070b 65%, #030508 100%);
-  border: 1px solid rgb(255 255 255 / .06);
-  padding: 9px 11px 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-  overflow: hidden;
-}
-
-/* Flagship Status Bar & Dynamic Island Embedded Inside OLED */
-.msc-statusbar {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1px 4px 0;
-  color: #f1f5f9;
-}
-.msc-statusbar__time {
-  font: 700 8.5px/1 'Be Vietnam Pro', sans-serif;
-  letter-spacing: 0.02em;
-}
-.msc-device__notch {
-  width: 68px;
-  height: 16px;
-  border-radius: 99px;
-  background: #000;
-  border: 1px solid rgb(255 255 255 / .12);
-  box-shadow: 0 2px 8px rgb(0 0 0 / .6);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 6px;
-}
-.msc-notch-cam {
-  width: 5.5px;
-  height: 5.5px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #38bdf8, #1e1b4b 70%);
-}
-.msc-notch-wave {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.msc-notch-wave b {
-  width: 2px;
-  height: 6px;
-  border-radius: 99px;
-  background: var(--msc-accent);
-  animation: msc-wave-bar 1.1s ease-in-out infinite;
-}
-.msc-notch-wave b:nth-child(2) { height: 9px; animation-delay: .2s; }
-.msc-notch-wave b:nth-child(3) { height: 5px; animation-delay: .4s; }
-.msc-device__notch i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--msc-accent);
-  box-shadow: 0 0 6px var(--msc-accent);
-}
-.msc-statusbar__icons {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.msc-status-svg {
-  width: 11px;
-  height: 8px;
-  color: #f8fafc;
-}
-.msc-battery {
-  width: 14px;
-  height: 7.5px;
-  border-radius: 2.5px;
-  border: 1px solid rgb(226 232 240 / .65);
-  padding: 1px;
-  display: flex;
-  align-items: center;
-}
-.msc-battery i {
-  width: 100%;
-  height: 100%;
-  border-radius: 1px;
-  background: #3ddc84;
-}
-
-/* Rich Mobile OS Screen Content */
-.msc-scene {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
-  overflow: hidden;
-  position: relative;
-  z-index: 2;
-}
-
-/* Unboxed Editorial Screen Header */
-.msc-screen-head {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 2px 2px 6px;
-  border-bottom: 1px solid rgb(255 255 255 / .07);
-}
-.msc-screen-head__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.msc-screen-kicker {
-  font: 700 6.8px/1 var(--layered-mono);
-  letter-spacing: 0.08em;
-  color: var(--msc-accent);
-}
-.msc-screen-badge {
-  font: 700 7px/1 var(--layered-mono);
-  padding: 2.5px 5.5px;
-  border-radius: 99px;
-  color: var(--msc-accent);
-  background: color-mix(in srgb, var(--msc-accent), transparent 88%);
-  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 68%);
-}
-.msc-screen-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.msc-screen-brand__logo {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: rgb(255 255 255 / .04);
-  border: 1px solid rgb(255 255 255 / .08);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.msc-screen-brand__logo svg {
-  width: 18px;
-  height: 18px;
-}
-.msc-screen-brand__text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.msc-screen-brand__text strong {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 11.5px !important;
-  font-weight: 700;
-  line-height: 1.15;
-  color: #f8fafc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.msc-screen-brand__text span {
-  font-family: var(--layered-mono);
-  font-size: 7.2px !important;
-  font-weight: 500;
-  line-height: 1.15;
-  color: #94a3b8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Open Vector Canvas Centerpiece Inside OLED */
-.msc-canvas {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 0;
-}
-.msc-canvas-svg {
-  width: 100%;
-  height: 100%;
-  max-height: 156px;
-  display: block;
-  overflow: visible;
-}
-.msc-svg-float {
-  animation: msc-orb-float 4.2s ease-in-out infinite;
-}
-.msc-svg-float-slow {
-  animation: msc-orb-float 5.6s ease-in-out infinite reverse;
-}
-.msc-svg-laser {
-  animation: msc-svg-laser-sweep 2.2s ease-in-out infinite alternate;
-}
-@keyframes msc-svg-laser-sweep {
-  from { transform: translateY(18px); }
-  to { transform: translateY(126px); }
-}
-
-/* Hero Glassmorphic App Card Inside Phone */
-.msc-hero-card {
-  border-radius: 16px;
-  padding: 8px 9px;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--msc-accent), transparent 84%), rgb(15 23 42 / .82));
-  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 56%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .12),
-    0 10px 22px -8px rgb(0 0 0 / .6);
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-.msc-hero-card__top {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.msc-hero-card__logo {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  background: rgb(9 14 23 / .9);
-  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 45%);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.msc-hero-card__logo svg {
-  width: 20px;
-  height: 20px;
-}
-.msc-hero-card__logo.is-spin-slow svg {
-  animation: msc-ring-spin 11s linear infinite;
-}
-.msc-hero-card__titles {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.msc-hero-card__titles strong {
-  font-family: 'Be Vietnam Pro', sans-serif;
-  font-size: 10.5px !important;
-  font-weight: 700;
-  line-height: 1.15;
-  color: #f8fafc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.msc-hero-card__titles span {
-  font-family: var(--layered-mono);
-  font-size: 7.2px !important;
-  font-weight: 500;
-  line-height: 1.15;
-  color: #cbd5e1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.msc-hero-card__badge {
-  font: 700 7.5px/1 var(--layered-mono);
-  padding: 4px 6px;
-  border-radius: 99px;
-  white-space: nowrap;
-  background: color-mix(in srgb, var(--msc-accent), transparent 78%);
-  color: var(--msc-accent);
-  border: 1px solid color-mix(in srgb, var(--msc-accent), transparent 48%);
-}
-
-/* Live SVG Area Wave Inside Hero Card */
-.msc-hero-wave {
-  position: relative;
-  height: 42px;
-  border-radius: 10px;
-  background: rgb(2 6 23 / .55);
-  border: 1px solid rgb(255 255 255 / .07);
-  overflow: hidden;
-}
-.msc-hero-wave svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-.msc-hero-wave__overlay {
-  position: absolute;
-  inset: 0;
-  padding: 5px 8px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  font: 600 7.2px/1 var(--layered-mono);
-  color: #94a3b8;
-}
-.msc-hero-wave__overlay b {
-  color: #f8fafc;
-  font-weight: 700;
-}
-
-/* Interactive Stack List Rows with Logos & Progress Meters */
-.msc-stack-list {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-}
-.msc-stack-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6.5px 8px;
-  border-radius: 12px;
-  background: rgb(15 23 42 / .75);
-  border: 1px solid rgb(255 255 255 / .08);
-}
-.msc-stack-item.is-active {
-  border-color: color-mix(in srgb, var(--msc-accent), transparent 55%);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--msc-accent), transparent 90%), rgb(15 23 42 / .8));
-}
-.msc-stack-item__ico {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  background: rgb(2 6 23 / .8);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.msc-stack-item__ico svg {
-  width: 15px;
-  height: 15px;
-}
-.msc-stack-item__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.msc-stack-item__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
-.msc-stack-item__row b {
-  font: 700 8.5px/1 'Be Vietnam Pro', sans-serif;
-  color: #f1f5f9;
-}
-.msc-stack-item__row em {
-  font: 600 6.8px/1 var(--layered-mono);
-  font-style: normal;
-  color: #94a3b8;
-}
-.msc-progress {
-  height: 4px;
-  border-radius: 99px;
-  background: rgb(255 255 255 / .08);
-  overflow: hidden;
-}
-.msc-progress i {
-  display: block;
-  height: 100%;
-  border-radius: 99px;
-}
-
-/* Scene 2: Kotlin + CameraX + Native SDK AR Scanner */
-.msc-scanner-frame {
-  position: relative;
-  flex: 1;
-  border-radius: 14px;
-  border: 1px solid rgb(168 85 247 / .42);
-  background:
-    radial-gradient(circle at 50% 50%, rgb(168 85 247 / .16), rgb(2 6 23 / .85));
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-}
-.msc-scanner-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgb(255 255 255 / .04) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / .04) 1px, transparent 1px);
-  background-size: 16px 16px;
-  pointer-events: none;
-}
-.msc-laser-line {
-  position: absolute;
-  left: 4px;
-  right: 4px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #3ddc84, #a855f7, transparent);
-  box-shadow: 0 0 10px #3ddc84;
-  animation: msc-laser-y 1.8s ease-in-out infinite alternate;
-}
-@keyframes msc-laser-y {
-  from { top: 8px; }
-  to { top: calc(100% - 10px); }
-}
-.msc-target-box {
-  position: relative;
-  border-radius: 7px;
-  border: 1.5px solid #3ddc84;
-  background: rgb(61 220 132 / .12);
-  padding: 6px 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.msc-target-box.is-box2 {
-  width: 72%;
-  align-self: flex-end;
-  border-color: #f59e0b;
-  background: rgb(245 158 11 / .14);
-  padding: 4px 7px;
-}
-.msc-scanner-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-  position: relative;
-  z-index: 1;
-}
-.msc-ar-box {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 5px;
-  padding: 5px 7px;
-  border-radius: 8px;
-  background: rgb(245 158 11 / .16);
-  border: 1px solid rgb(245 158 11 / .48);
-  font: 700 7.2px/1 var(--layered-mono);
-  color: #fde68a;
-}
-.msc-ar-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #f59e0b;
-  box-shadow: 0 0 6px #f59e0b;
-}
-.msc-ar-box b {
-  color: #fff;
-}
-.msc-native-flow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 7px;
-  border-radius: 10px;
-  background: rgb(15 23 42 / .8);
-  border: 1px solid rgb(168 85 247 / .28);
-  font: 700 7px/1 var(--layered-mono);
-  color: #e2e8f0;
-}
-.msc-native-flow i {
-  font-style: normal;
-  color: #a855f7;
-}
-.msc-native-flow b.is-amber {
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: rgb(234 179 8 / .2);
-  color: #fde047;
-}
-.msc-target-box b {
-  font: 700 8px/1 var(--layered-mono);
-  color: #fff;
-}
-.msc-barcode-bars {
-  display: flex;
-  gap: 2px;
-  height: 16px;
-  flex: 1;
-}
-.msc-barcode-bars i {
-  flex: 1;
-  background: #e2f1ee;
-  border-radius: 1px;
-}
-.msc-barcode-bars i:nth-child(even) {
-  opacity: .45;
-}
-
-/* Scene 3: Node.js · REST API & ChatDVT Stream */
-.msc-api-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 5px;
-  padding: 6px 7px;
-  border-radius: 12px;
-  background: rgb(15 23 42 / .72);
-  border: 1px solid rgb(34 197 94 / .28);
-}
-.msc-api-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 6px;
-  border-radius: 8px;
-  background: rgb(255 255 255 / .04);
-  border: 1px solid rgb(255 255 255 / .07);
-}
-.msc-http-method {
-  font: 700 6.8px/1 var(--layered-mono);
-  padding: 2.5px 4px;
-  border-radius: 4px;
-}
-.msc-http-method.is-post {
-  background: rgb(34 197 94 / .2);
-  color: #4ade80;
-}
-.msc-http-method.is-ws {
-  background: rgb(56 189 248 / .2);
-  color: #38bdf8;
-}
-.msc-http-path {
-  flex: 1;
-  font: 600 7.5px/1 var(--layered-mono);
-  color: #e2e8f0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.msc-http-status {
-  font: 700 7px/1 var(--layered-mono);
-  color: #4ade80;
-}
-.msc-api-metrics {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font: 600 7.2px/1 var(--layered-mono);
-  color: #94a3b8;
-  padding: 0 2px;
-}
-.msc-api-metrics b {
-  color: #3ddc84;
-}
-
-/* Spec Chips Footer Inside Phone Screen */
-.msc-spec-chips {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-}
-.msc-spec-chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 4.5px 3px;
-  border-radius: 6px;
-  background: rgb(255 255 255 / .03);
-  border: 1px solid rgb(255 255 255 / .07);
-  font: 700 6.8px/1 var(--layered-mono);
-  color: #cbd5e1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.msc-spec-chip i {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--msc-accent);
-  flex-shrink: 0;
-}
-
-/* Frosted Glass Mobile Dock + Home Indicator Bar Inside OLED Screen */
-.msc-device__bottom {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-.msc-dock {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+  --msc-screen: #192120;
+  --msc-ink: #edf2ee;
+  --msc-subtle: #b4c3bd;
+  --msc-rule: #3e504a;
+  --msc-art-accent: color-mix(in srgb, var(--msc-accent), #d4e2dd 24%);
+  width: 222px;
+  height: 408px;
   padding: 4px;
-  border-radius: 14px;
-  background: rgb(15 23 42 / .78);
-  border: 1px solid rgb(255 255 255 / .1);
-  backdrop-filter: blur(10px);
-}
-.msc-dock__btn {
-  border: 0;
-  padding: 4px 3px;
-  border-radius: 10px;
-  background: transparent;
-  color: #94a3b8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: background .22s ease, color .22s ease;
-}
-.msc-dock__btn.is-on {
-  background: color-mix(in srgb, var(--msc-accent), transparent 80%);
-  color: #f8fafc;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--msc-accent), transparent 52%);
-}
-.msc-dock__ico {
-  width: 12px;
-  height: 12px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.msc-dock__ico svg {
-  width: 12px;
-  height: 12px;
-}
-.msc-dock__btn b {
-  font: 700 7px/1 var(--layered-mono);
-  white-space: nowrap;
-}
-.msc-device__homebar {
-  width: 68px;
-  height: 3.5px;
-  border-radius: 99px;
-  background: rgb(248 250 252 / .48);
-}
-.msc-typing-wave {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.msc-typing-wave i {
-  width: 5px;
-  height: 12px;
-  border-radius: 99px;
-  background: #818cf8;
-  animation: msc-wave-bar 1s ease-in-out infinite;
-}
-.msc-typing-wave i:nth-child(2) { animation-delay: .15s; height: 18px; }
-.msc-typing-wave i:nth-child(3) { animation-delay: .3s; height: 14px; }
-.msc-typing-wave i:nth-child(4) { animation-delay: .45s; height: 9px; }
-@keyframes msc-wave-bar {
-  0%, 100% { transform: scaleY(.55); opacity: .5; }
-  50% { transform: scaleY(1); opacity: 1; }
+  border: 1px solid #596662;
+  border-radius: 31px;
+  background: #303b37;
+  box-shadow: 0 18px 30px -16px rgb(0 0 0 / .45);
 }
 
-/* Scene 4: Desktop TD-Wallpaper Monitor */
-.msc-monitor {
-  flex: 1;
+.msc-screen {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-.msc-monitor__screen {
-  width: 100%;
-  height: 86px;
-  border-radius: 10px;
-  border: 1.5px solid #a78bfa;
-  background: linear-gradient(125deg, #1e1b4b, #311042, #0f172a);
-  position: relative;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-}
-.msc-aurora-wave {
-  position: absolute;
-  inset: -20%;
-  background: radial-gradient(circle at 30% 40%, rgb(56 189 248 / .45), transparent 55%),
-              radial-gradient(circle at 70% 60%, rgb(168 85 247 / .55), transparent 55%);
-  animation: msc-ring-spin 8s linear infinite;
-}
-.msc-play-orb {
-  position: relative;
-  z-index: 1;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / .18);
-  backdrop-filter: blur(4px);
-  color: #fff;
-  font-size: 10px;
-  display: grid;
-  place-items: center;
-}
-.msc-monitor__stand {
-  width: 36px;
-  height: 7px;
-  border-radius: 0 0 6px 6px;
-  background: #64748b;
-  margin-top: 3px;
+  height: 100%;
+  padding: 9px 15px 5px;
+  border-radius: 26px;
+  background: var(--msc-screen);
+  color: var(--msc-ink);
 }
 
-.msc-device__dots {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-}
-.msc-device__dots button {
+.msc-camera {
+  align-self: center;
   width: 6px;
   height: 6px;
-  padding: 0;
-  border: 0;
-  border-radius: 99px;
-  background: rgb(148 163 184 / .3);
-  cursor: pointer;
-  transition: width .25s ease, background .25s ease;
-}
-.msc-device__dots button.is-on {
-  width: 18px;
-  background: var(--msc-accent);
+  flex: none;
+  border-radius: 50%;
+  background: #080c0a;
+  box-shadow: 0 0 0 1px #394842;
 }
 
-/* FLOATING 3D GLASS ORBS AROUND THE PHONE */
+.msc-screen__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: 17px;
+  min-height: 0;
+}
+
+.msc-screen__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--msc-art-accent), var(--msc-screen) 86%);
+}
+
+.msc-screen__mark svg { width: 20px; height: 20px; }
+
+.layered-home .msc-screen__content h3 {
+  margin: 0 0 8px;
+  font-size: 26px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+
+.layered-home .msc-screen__content p {
+  margin: 0;
+  color: var(--msc-subtle);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.msc-art { margin: 0; flex: none; }
+
+.msc-art__canvas {
+  display: grid;
+  place-items: center;
+  height: 100px;
+  padding: 5px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--msc-accent), var(--msc-screen) 91%);
+  color: var(--msc-art-accent);
+}
+
+.msc-art figcaption {
+  margin-top: 7px;
+  color: var(--msc-subtle);
+  font-size: 11.5px;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+
+.msc-art__diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.msc-art__surface { fill: var(--msc-screen); }
+.msc-art__ink { fill: currentColor; stroke: none; }
+.msc-art__wash { fill: currentColor; fill-opacity: .17; stroke: none; }
+.msc-art__quiet { opacity: .65; }
+.msc-art__secondary { stroke: #f2a78a; }
+.msc-art__cutout { stroke: var(--msc-screen); stroke-width: 2.1; }
+.msc-art__scanline { stroke: var(--msc-ink); stroke-width: 1.2; stroke-dasharray: 3 3; }
+
+.layered-home .msc-art__code {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--msc-ink);
+  font: 12px/1.6 var(--layered-mono);
+}
+
+.msc-art__code code { font: inherit; color: inherit; background: none; padding: 0; }
+.msc-art__code b { color: var(--msc-art-accent); }
+
+.msc-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex: none;
+  width: 100%;
+  min-height: 46px;
+  padding: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--msc-rule);
+  background: transparent;
+  text-align: left;
+  color: var(--msc-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.msc-next > svg { flex: none; color: var(--msc-art-accent); }
+.msc-next:hover { text-decoration: underline; text-underline-offset: 3px; }
+.msc-next:focus-visible { outline: 2px solid var(--msc-art-accent); outline-offset: 2px; }
+
+.msc-home-indicator {
+  align-self: center;
+  width: 48px;
+  height: 2px;
+  margin-bottom: 1px;
+  border-radius: 2px;
+  background: #879991;
+}
+
 .msc-orbs {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
-  z-index: 5;
 }
+
 .msc-orb {
-  --orb-c: #38bdf8;
   position: absolute;
-  transform: translate3d(calc(-50% + var(--orb-px, 0px)), calc(-50% + var(--orb-py, 0px)), 0);
-  border: 0;
-  padding: 0;
-  background: transparent;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 5px 11px;
+  border: 1px solid var(--site-line);
+  border-radius: 10px;
+  background: var(--site-surface);
+  color: var(--site-muted);
   pointer-events: auto;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  transition: transform .22s ease-out;
+  transition: border-color .2s, background-color .2s, color .2s;
 }
-.msc-orb__halo {
-  position: absolute;
-  top: -8px;
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--orb-c), transparent 62%), transparent 70%);
-  opacity: 0;
-  transform: scale(0.8);
-  transition: opacity .3s ease, transform .3s ease;
-  pointer-events: none;
-}
-.msc-orb__core {
-  position: relative;
-  width: 56px;
-  height: 56px;
-  border-radius: 18px;
-  background: linear-gradient(155deg, #131922 0%, #090d13 100%);
-  border: 1px solid rgb(255 255 255 / .12);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .12),
-    0 16px 30px -10px rgb(0 0 0 / .75);
+
+.msc-orb__logo {
   display: grid;
   place-items: center;
-  animation: msc-orb-float 4.6s ease-in-out infinite;
-  animation-delay: var(--orb-delay, 0s);
-  transition:
-    transform .3s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color .28s ease,
-    box-shadow .3s ease;
-}
-.msc-orb--lg .msc-orb__core {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-}
-@keyframes msc-orb-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-.msc-orb__core svg {
-  width: 32px;
-  height: 32px;
-  display: block;
-}
-.msc-orb--lg .msc-orb__core svg {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
+  flex: none;
 }
 
-.msc-orb__label {
-  font-family: var(--layered-mono);
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--site-surface), transparent 10%);
-  border: 1px solid var(--site-line);
-  color: var(--site-ink);
+.msc-orb__logo svg { width: 19px; height: 19px; }
+.msc-orb--lg .msc-orb__logo svg { width: 21px; height: 21px; }
+
+.msc-orb__name {
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.15;
   white-space: nowrap;
-  box-shadow: 0 6px 14px -6px rgb(0 0 0 / .45);
-  transition: border-color .25s ease, color .25s ease, transform .25s ease;
 }
 
-.msc-orb.is-lit .msc-orb__halo,
-.msc-orb:hover .msc-orb__halo {
-  opacity: 1;
-  transform: scale(1.15);
+.msc-orb[aria-pressed=true] {
+  border-color: color-mix(in srgb, var(--orb-c), var(--site-line) 42%);
+  background: var(--site-surface-2);
+  color: var(--site-ink);
 }
-.msc-orb.is-lit .msc-orb__core,
-.msc-orb:hover .msc-orb__core {
-  border-color: color-mix(in srgb, var(--orb-c), rgb(255 255 255 / .45) 35%);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / .22),
-    0 0 22px -6px color-mix(in srgb, var(--orb-c), transparent 45%),
-    0 18px 32px -10px rgb(0 0 0 / .82);
-  transform: scale(1.06) translateY(-2px);
+
+@media (hover: hover) and (pointer: fine) {
+  .msc-orb:hover { color: var(--site-ink); }
 }
-.msc-orb.is-lit .msc-orb__label,
-.msc-orb:hover .msc-orb__label {
-  border-color: color-mix(in srgb, var(--orb-c), transparent 35%);
-  color: var(--orb-c);
+
+@media (max-width: 1140px) {
+  .msc-device { width: 204px; height: 390px; }
+  .msc-orb { flex-direction: column; gap: 3px; padding: 5px; }
+  .msc-orb__name { font-size: 10px; }
 }
 
 @media (max-width: 960px) {
-  .mobile-stack--constellation {
-    padding-right: 0;
-  }
-  .msc-stage {
-    transform: scale(0.9);
-  }
+  .mobile-stack--constellation { padding-right: 0; }
+  .msc-device { width: 190px; height: 374px; }
 }
 
 @media (max-width: 740px) {
-  .msc-stage {
-    height: 390px;
-    transform: scale(0.78);
-  }
+  .msc-stage { height: 390px; }
+  .msc-device-wrap { transform: none; }
+  .msc-device { width: clamp(146px, calc(100vw - 174px), 204px); height: 366px; }
+  .msc-screen { padding-inline: 12px; }
+  .layered-home .msc-screen__content h3 { font-size: 22px; }
+  .msc-art__canvas { height: 92px; }
+}
+
+@media (max-width: 380px) {
+  .msc-device { height: 350px; }
+  .msc-screen { padding-inline: 10px; }
+  .msc-screen__mark { display: none; }
+  .msc-screen__content { gap: 14px; }
+  .msc-art__canvas { height: 76px; }
+  .layered-home .msc-art__code { font-size: 11px; }
+  .msc-orb { padding-inline: 4px; }
 }
