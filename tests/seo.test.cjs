@@ -51,10 +51,11 @@ test('public identity and ChatDVT history remain readable and agree with structu
     const home = renderPublicHtml(template, prefix || '/');
     const about = renderPublicHtml(template, `${prefix}/me`);
     const bot = renderPublicHtml(template, `${prefix}/discord`);
-    for (const fact of ['Đặng Văn Tiến', 'South Telecom', '2023', 'Multi-barcode &amp; Multi-box SDK', 'Kotlin', 'TensorFlow Lite', 'CameraX', 'React Native', 'Robot App &amp; SDK Integration', 'Android/Java', 'ChatDVT', 'Node.js']) {
+    for (const fact of ['Đặng Văn Tiến', 'South Telecom', '2023', 'Multi-barcode &amp; Multi-box SDK', 'Kotlin', 'TensorFlow Lite', 'CameraX', 'React Native', 'Android Tablet', 'Java Bridge', 'Vendor SDK', 'ChatDVT', 'Node.js']) {
       assert.ok(rootContent(about).includes(fact), `Visible profile is missing ${fact}`);
     }
-    assert.doesNotMatch(rootContent(about), /Woni|Vikki/);
+    assert.ok(rootContent(about).includes(prefix ? 'Woni Robot SDK Integration' : 'Tích hợp SDK robot Woni'));
+    assert.doesNotMatch(rootContent(about), /Vikki/);
     assert.match(rootContent(home), /Mobile Developer/);
     assert.match(rootContent(home), /React Native/);
     for (const fact of ['discord.js', 'Gemini API', 'AWS EC2', 'Antigravity', 'Codex']) {
