@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useInView } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BatteryFull, Signal, Wifi } from 'lucide-react';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { useSiteMotion } from './Mascot';
 import { MobileStackIllustration, type TechnologyId } from './MobileStackIllustration';
@@ -10,6 +10,7 @@ type TranslatedText = [vi: string, en: string];
 interface OrbSpec {
   id: TechnologyId;
   label: string;
+  title?: string;
   description: TranslatedText;
   caption: TranslatedText;
   color: string;
@@ -28,7 +29,7 @@ const ORBS: OrbSpec[] = [
     label: 'React Native',
     description: ['Mình làm giao diện CRM bằng React Native.', 'I build CRM interfaces with React Native.'],
     caption: ['Cùng một component trên iOS và Android', 'One component across iOS and Android'],
-    color: '#65c7ef',
+    color: '#61dafb',
     size: 'lg',
     cx: 47,
     cy: 86,
@@ -38,9 +39,9 @@ const ORBS: OrbSpec[] = [
   {
     id: 'ts',
     label: 'TypeScript',
-    description: ['Khai báo kiểu cho dữ liệu app nhận từ SDK.', 'Define the shape of data an app receives from an SDK.'],
-    caption: ['Ví dụ dữ liệu khi quét mã', 'Example scan result'],
-    color: '#80a6f4',
+    description: ['Mình dùng TypeScript cho blog và ChatDVT.', 'I use TypeScript for my blog and ChatDVT.'],
+    caption: ['Kiểu chuyên mục dùng chung cho blog và API', 'Blog categories shared by the client and API'],
+    color: '#3178c6',
     size: 'md',
     cx: 44,
     cy: 182,
@@ -50,9 +51,10 @@ const ORBS: OrbSpec[] = [
   {
     id: 'java',
     label: 'Java · Bridge',
-    description: ['Mình viết bridge Java để app gọi SDK của robot.', 'Java connects the app to the robot SDK.'],
-    caption: ['React Native → Java → SDK robot', 'React Native → Java → robot SDK'],
-    color: '#e7a37d',
+    title: 'Woni Robot',
+    description: ['Debug SDK hãng và bridge trên tablet Woni.', 'I debugged the vendor SDK on Woni’s tablet.'],
+    caption: ['Tablet → Java → SDK hãng', 'Tablet → Java → vendor SDK'],
+    color: '#f89820',
     size: 'md',
     cx: 44,
     cy: 278,
@@ -61,10 +63,11 @@ const ORBS: OrbSpec[] = [
   },
   {
     id: 'nodejs',
-    label: 'Node.js · API',
-    description: ['ChatDVT nhận tin nhắn Discord rồi gọi Gemini.', 'ChatDVT sends Discord chats to Gemini.'],
+    label: 'Node.js · Bot',
+    title: 'ChatDVT',
+    description: ['Bot Discord mình viết bằng Node.js và Discord.js.', 'My Discord bot built with Node.js and Discord.js.'],
     caption: ['Discord ↔ ChatDVT ↔ Gemini', 'Discord ↔ ChatDVT ↔ Gemini'],
-    color: '#8bbe91',
+    color: '#5fa04e',
     size: 'md',
     cx: 47,
     cy: 374,
@@ -75,9 +78,9 @@ const ORBS: OrbSpec[] = [
   {
     id: 'kotlin',
     label: 'Kotlin',
-    description: ['Mình viết SDK quét mã trên Android bằng Kotlin.', 'I built an Android scanning SDK in Kotlin.'],
-    caption: ['Ví dụ coroutine tách hai tác vụ', 'Example of two concurrent tasks'],
-    color: '#c2a2ef',
+    description: ['Chỉ chạy nhận diện lúc chụp để preview mượt hơn.', 'Run inference at capture time to keep the preview responsive.'],
+    caption: ['Kết quả đọc mã được gom theo từng hộp', 'Barcode results are grouped by box'],
+    color: '#7f52ff',
     size: 'lg',
     cx: 492,
     cy: 86,
@@ -87,9 +90,9 @@ const ORBS: OrbSpec[] = [
   {
     id: 'android',
     label: 'Android',
-    description: ['Android cấp quyền và cung cấp API để app dùng camera.', 'Android manages permissions and gives apps camera access.'],
-    caption: ['App → Android → camera', 'App → Android → camera'],
-    color: '#a4cd7e',
+    description: ['Nâng cấp app Android cũ để hỗ trợ trang nhớ 16 KB.', 'I upgraded a legacy app for 16 KB page sizes.'],
+    caption: ['Gradle, NDK và thư viện native', 'Gradle, NDK and native libraries'],
+    color: '#3ddc84',
     size: 'lg',
     cx: 500,
     cy: 182,
@@ -99,9 +102,9 @@ const ORBS: OrbSpec[] = [
   {
     id: 'camerax',
     label: 'CameraX',
-    description: ['CameraX cấp hình, ML Kit đọc mã vạch.', 'CameraX supplies frames. ML Kit reads the barcodes.'],
-    caption: ['Hai mã trong cùng một khung hình', 'Two barcodes in one frame'],
-    color: '#76d1bf',
+    description: ['CameraX chụp ảnh, TFLite tìm hộp, ML Kit đọc mã.', 'CameraX captures, TFLite finds boxes, and ML Kit reads codes.'],
+    caption: ['Nhiều mã trong từng hộp, cùng một ảnh', 'Multiple barcodes per box in one image'],
+    color: '#2dd4bf',
     size: 'md',
     cx: 500,
     cy: 278,
@@ -111,9 +114,9 @@ const ORBS: OrbSpec[] = [
   {
     id: 'maven',
     label: 'Native SDK',
-    description: ['Mình đóng gói SDK để các team tích hợp qua Maven.', 'I package the SDK so other teams can integrate it via Maven.'],
-    caption: ['Một thư viện, nhiều ứng dụng', 'One library, multiple apps'],
-    color: '#e5c173',
+    description: ['Maven Publish phát hành từng phiên bản SDK.', 'Maven Publish releases each SDK version.'],
+    caption: ['Team chọn phiên bản trong Gradle', 'Teams select the version in Gradle'],
+    color: '#edc777',
     size: 'md',
     cx: 500,
     cy: 374,
@@ -127,10 +130,10 @@ function TechLogo({ id }: { id: TechnologyId }) {
     case 'rn':
       return (
         <svg viewBox="0 0 36 36" aria-hidden="true">
-          <circle cx="18" cy="18" r="3.2" fill="#38bdf8" />
-          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" />
-          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" transform="rotate(60 18 18)" />
-          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="#38bdf8" strokeWidth="2" transform="rotate(120 18 18)" />
+          <circle cx="18" cy="18" r="3.2" fill="var(--orb-c)" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="var(--orb-c)" strokeWidth="2" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="var(--orb-c)" strokeWidth="2" transform="rotate(60 18 18)" />
+          <ellipse cx="18" cy="18" rx="13.5" ry="5.2" fill="none" stroke="var(--orb-c)" strokeWidth="2" transform="rotate(120 18 18)" />
         </svg>
       );
     case 'kotlin':
@@ -181,12 +184,7 @@ function TechLogo({ id }: { id: TechnologyId }) {
         </svg>
       );
     case 'maven':
-      return (
-        <svg viewBox="0 0 36 36" aria-hidden="true">
-          <path d="M18 5l12 7v12l-12 7-12-7V12l12-7z" fill="#ca8a04" />
-          <path d="M6 12l12 7 12-7M18 19v12" stroke="#fef08a" strokeWidth="2.1" fill="none" />
-        </svg>
-      );
+      return null;
   }
 }
 
@@ -222,28 +220,31 @@ export function MobileStack() {
         <div className="msc-device-wrap" ref={device} data-running={enabled && visible && foreground}>
           <div className="msc-device">
             <div className="msc-screen">
-              <div className="msc-camera" aria-hidden="true" />
+              <div className="msc-system-bar" aria-hidden="true">
+                <span>10:24</span>
+                <span className="msc-camera" />
+                <span className="msc-system-bar__icons"><Wifi /><Signal /><BatteryFull /></span>
+              </div>
               <div id="mobile-tech-detail" className="msc-screen__content" aria-live="polite" aria-atomic="true">
                 <div>
-                  <h3>{activeOrb.label}</h3>
+                  <h3>{activeOrb.title ?? activeOrb.label}</h3>
                   <p>{activeOrb.description[languageIndex]}</p>
                 </div>
                 <figure className="msc-art" key={activeOrb.id}>
                   <div className="msc-art__canvas">
-                    <MobileStackIllustration technology={activeOrb.id} />
+                    <MobileStackIllustration technology={activeOrb.id} en={en} />
                   </div>
                   <figcaption>{activeOrb.caption[languageIndex]}</figcaption>
                 </figure>
               </div>
-              <button
-                type="button"
-                className="msc-next"
-                aria-controls="mobile-tech-detail"
-                onClick={() => setActiveIndex(index => (index + 1) % ORBS.length)}
-              >
-                {en ? 'Next' : 'Tiếp theo'}
-                <ArrowRight size={16} aria-hidden="true" />
-              </button>
+              <div className="msc-screen-nav" role="group" aria-label={en ? 'Technology navigation' : 'Điều hướng công nghệ'}>
+                <button type="button" aria-controls="mobile-tech-detail" onClick={() => setActiveIndex(index => (index + ORBS.length - 1) % ORBS.length)}>
+                  <ArrowLeft size={14} aria-hidden="true" />{en ? 'Back' : 'Trước'}
+                </button>
+                <button type="button" aria-controls="mobile-tech-detail" onClick={() => setActiveIndex(index => (index + 1) % ORBS.length)}>
+                  {en ? 'Next' : 'Tiếp'}<ArrowRight size={14} aria-hidden="true" />
+                </button>
+              </div>
               <div className="msc-home-indicator" aria-hidden="true" />
             </div>
           </div>

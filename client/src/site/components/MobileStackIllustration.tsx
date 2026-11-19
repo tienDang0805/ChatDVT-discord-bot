@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { BLOG_CATEGORY_IDS } from '../../shared/types/blog';
+import { MultiBoxScan, TabletRobot } from './MobileWorkIllustrations';
 
 export type TechnologyId = 'rn' | 'kotlin' | 'android' | 'ts' | 'java' | 'camerax' | 'maven' | 'nodejs';
 
@@ -21,17 +23,7 @@ function BranchSignals({ y }: { y: number }) {
   </>;
 }
 
-function Barcode({ x, y }: { x: number; y: number }) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <rect className="msc-art__wash" width="58" height="35" rx="3" />
-      <path d="M8 8v19m9-19v19m10-19v19m8-19v19m13-19v19" strokeWidth="2.5" />
-      <path d="M12 8v19m10-19v19m9-19v19m9-19v19m4-19v19m8-19v19" />
-    </g>
-  );
-}
-
-const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
+const diagrams: Record<'rn' | 'java' | 'nodejs' | 'android', ReactNode> = {
   rn: (
     <>
       <rect className="msc-art__ink" x="78" y="5" width="20" height="12" rx="3" />
@@ -43,15 +35,12 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
   ),
   java: (
     <>
-      <path className="msc-art__quiet" d="M9 72h158M57 73V54m62 19V54" />
-      <path d="M50 54h76M55 53a33 23 0 0 1 66 0M66 54V37m22 17V31m22 23V37" />
-      <rect className="msc-art__surface" x="9" y="39" width="40" height="30" rx="5" />
-      <path d="M23 49l-5 5 5 5m12-10 5 5-5 5m-4-12-4 14" />
-      <rect className="msc-art__surface" x="127" y="39" width="40" height="30" rx="5" />
-      <rect x="138" y="47" width="18" height="15" rx="3" />
-      <path d="M147 43v4m-5 11h10" />
-      <path className="msc-art__robot-eyes" d="M143 53h.1m8 0h.1" strokeWidth="2.7" />
-      <circle className="msc-art__signal msc-art__bridge" cx="49" cy="54" r="2.8" />
+      <path className="msc-art__quiet" d="M19 77h132" strokeDasharray="3 4" />
+      <path className="msc-art__surface" d="M11 77v-8h9v8M151 77V55h15v22z" />
+      <path className="msc-art__quiet" d="M154 60h9m-9 4h7" />
+      <g transform="translate(45 76)">
+        <g className="msc-art__robot-drive"><TabletRobot /></g>
+      </g>
     </>
   ),
   nodejs: (
@@ -59,25 +48,14 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <path className="msc-art__quiet" d="M36 38h104M36 56h104" />
       <path className="msc-art__surface" d="M88 20l21 12v26L88 70 67 58V32z" />
       <path d="M80 54V36l16 18V36" />
-      <rect className="msc-art__surface" x="10" y="32" width="26" height="30" rx="5" />
-      <path d="M17 41h12v9h-7l-3 3v-3h-2z" />
+      <g className="msc-art__discord">
+        <rect x="10" y="32" width="26" height="30" rx="5" />
+        <path d="M17 41h12v9h-7l-3 3v-3h-2z" />
+      </g>
       <rect className="msc-art__surface" x="140" y="32" width="26" height="30" rx="5" />
       <path d="M153 40c0 4 2 6 6 6-4 0-6 2-6 6 0-4-2-6-6-6 4 0 6-2 6-6z" />
       <circle className="msc-art__signal msc-art__request" cx="38" cy="38" r="2.6" />
       <circle className="msc-art__signal msc-art__reply" cx="138" cy="56" r="2.6" />
-    </>
-  ),
-  kotlin: (
-    <>
-      <path className="msc-art__quiet" d="M22 44h24m84 0h24" />
-      <path d="M38 44h13l22-22h26l26 22h13" />
-      <path className="msc-art__secondary" d="M38 44h13l22 22h26l26-22h13" />
-      <circle className="msc-art__surface" cx="22" cy="44" r="7" />
-      <rect className="msc-art__surface" x="77" y="16" width="14" height="12" rx="3" />
-      <rect className="msc-art__surface msc-art__secondary" x="77" y="60" width="14" height="12" rx="3" />
-      <circle className="msc-art__ink" cx="154" cy="44" r="7" />
-      <circle className="msc-art__signal msc-art__worker" cx="29" cy="44" r="2.6" />
-      <circle className="msc-art__signal msc-art__worker" data-lower cx="29" cy="44" r="2.6" />
     </>
   ),
   android: (
@@ -90,36 +68,44 @@ const diagrams: Record<Exclude<TechnologyId, 'ts'>, ReactNode> = {
       <path className="msc-art__layer-signal" d="M46 54l42 19 42-19" />
     </>
   ),
-  camerax: (
-    <>
-      <path className="msc-art__quiet" d="M17 26V13h17m108 0h17v13M17 65v13h17m108 0h17V65" />
-      <Barcode x={25} y={24} />
-      <Barcode x={94} y={33} />
-      <path className="msc-art__scanline" d="M23 46h130" />
-    </>
-  ),
-  maven: (
-    <>
-      <path className="msc-art__quiet" d="M88 61v13m0 0H48v4m40-4h40v4" />
-      <path className="msc-art__surface" d="M88 12l26 13v23L88 61 62 48V25z" />
-      <path d="M62 25l26 13 26-13m-26 13v23M75 18l26 13v9" />
-      <rect className="msc-art__ink" x="37" y="78" width="22" height="8" rx="2" />
-      <rect className="msc-art__ink" x="117" y="78" width="22" height="8" rx="2" />
-      <BranchSignals y={61} />
-    </>
-  ),
 };
 
-export function MobileStackIllustration({ technology }: { technology: TechnologyId }) {
-  if (technology === 'ts') {
-    return (
-      <pre className="msc-art__code"><code><b>type</b>{' Scan = {\n'}<span className="msc-art__code-field">{'  code: '}<b>string</b></span>{'\n}'}</code></pre>
-    );
+export function MobileStackIllustration({ technology, en }: { technology: TechnologyId; en: boolean }) {
+  switch (technology) {
+    case 'ts':
+      return (
+        <div className="msc-art__type">
+          <code>BlogCategoryId</code>
+          <ul>{BLOG_CATEGORY_IDS.map(category => (
+            <li key={category}><code>{category}</code></li>
+          ))}</ul>
+        </div>
+      );
+    case 'kotlin':
+      return (
+        <ol className="msc-art__steps">
+          <li>{en ? 'Capture image' : 'Chụp ảnh'}</li>
+          <li>{en ? 'Detect · TFLite' : 'TFLite tìm hộp'}</li>
+          <li>{en ? 'Decode · ML Kit' : 'ML Kit đọc mã'}</li>
+        </ol>
+      );
+    case 'camerax':
+      return <MultiBoxScan />;
+    case 'maven':
+      return (
+        <dl className="msc-art__release">
+          <div className="msc-art__registry"><dt>{en ? 'Private Maven' : 'Maven riêng'}</dt><dd>Repsy</dd></div>
+          <div className="msc-art__dependency">
+            <dt><code>implementation(</code></dt>
+            <dd><code>{'"groupId:'}<wbr />artifactId:<wbr /><strong>version</strong>{'")'}</code></dd>
+          </div>
+        </dl>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 176 92" className="msc-art__diagram" aria-hidden="true">
+          {diagrams[technology]}
+        </svg>
+      );
   }
-
-  return (
-    <svg viewBox="0 0 176 92" className="msc-art__diagram" aria-hidden="true">
-      {diagrams[technology]}
-    </svg>
-  );
 }

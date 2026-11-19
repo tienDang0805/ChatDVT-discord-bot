@@ -27,9 +27,9 @@ import { contributions, profile } from '../content/profileData';
 import { WALLPAPER_APP } from '../../../../src/shared/desktopApps';
 
 const workSummaries = [
-  ['SDK Android bằng Kotlin: model TensorFlow Lite nhận diện nhiều hộp sản phẩm, ML Kit đọc nhiều barcode trong cùng một ảnh. Đóng gói qua Maven để các team tích hợp.', 'An Android SDK in Kotlin: a TensorFlow Lite model detects multiple product boxes, while ML Kit reads multiple barcodes in the same image. Distributed through Maven for other teams to integrate.'],
+  ['TensorFlow Lite tìm nhiều hộp trong một ảnh, ML Kit đọc nhiều mã trong từng hộp. Team tích hợp SDK Kotlin bằng dependency Gradle có phiên bản từ kho Maven riêng trên Repsy.', 'TensorFlow Lite finds multiple boxes in one image and ML Kit decodes multiple barcodes per box. Teams integrate the Kotlin SDK as a versioned Gradle dependency from a private Maven repository on Repsy.'],
   ['Ứng dụng CRM B2B, analytics SDK hỗ trợ offline và những lần nâng cấp React Native.', 'B2B CRM apps, an analytics SDK with offline support and upgrades to existing React Native applications.'],
-  ['React Native làm UI, bridge Android/Java kết nối với SDK của nhà sản xuất robot. Tích hợp và debug SDK, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.', 'React Native UI with an Android/Java bridge to the robot manufacturer’s SDK. SDK integration and debugging, customer deployment, user training and operational support.'],
+  ['Tích hợp và debug SDK của hãng trên tablet Android gắn trước ngực Woni. Sửa lỗi khởi tạo SDK và bridge Java, kiểm thử luồng đi đến quầy và quay về đế sạc.', 'Integrated and debugged the vendor SDK on Woni’s chest-mounted Android tablet. Fixed SDK initialization and Java bridge issues, then tested counter navigation and dock return.'],
 ];
 const workIcons = [ScanLine, Braces, Bot];
 
@@ -46,7 +46,7 @@ function formatHomeDate(value: string | null, locale: 'vi' | 'en'): string {
 }
 
 function WorkSummary({ text }: { text: string }) {
-  return <p className="lh-work-summary">{text.split(/(Kotlin|TensorFlow Lite|ML Kit|Android\/Java|React Native|offline)/g).map((part, index) => index % 2 ? <strong key={index}>{part}</strong> : part)}</p>;
+  return <p className="lh-work-summary">{text.split(/(Kotlin|TensorFlow Lite|ML Kit|Repsy|React Native|offline|Woni)/g).map((part, index) => index % 2 ? <strong key={index}>{part}</strong> : part)}</p>;
 }
 
 function HomeContent() {

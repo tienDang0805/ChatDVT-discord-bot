@@ -30,9 +30,9 @@ export const contributions = [
   {
     title: ['Multi-barcode & Multi-box SDK', 'Multi-barcode & Multi-box SDK'], category: 'Android · On-device AI',
     description: [
-      'Từng phát triển một SDK Android bằng Kotlin từ bản thử nghiệm ban đầu, sử dụng CameraX, model TensorFlow Lite và ML Kit để nhận diện nhiều hộp sản phẩm cùng nhiều barcode trong một ảnh. Sau đó đóng gói thành thư viện để team khác tích hợp qua Maven.',
-      'Developed an Android SDK in Kotlin from an initial prototype, using CameraX, a TensorFlow Lite model and ML Kit to recognize multiple product boxes and multiple barcodes in one image. Packaged it as a library for other teams to integrate through Maven.',
-    ], tags: ['Kotlin', 'TensorFlow Lite', 'ML Kit', 'CameraX', 'Maven'],
+      'Mình làm SDK Android bằng Kotlin. CameraX chụp ảnh, TensorFlow Lite tìm các hộp, rồi ML Kit đọc nhiều mã trong mỗi hộp. SDK trả kết quả theo từng hộp. Sau khi đo độ trễ trên máy Android, mình chuyển sang chỉ chạy nhận diện khi chụp để preview phản hồi tốt hơn. Mình dùng Maven Publish để phát hành bản release lên kho Maven riêng trên Repsy. Các team khai báo dependency Gradle theo groupId, artifactId và phiên bản.',
+      'I built an Android SDK in Kotlin. CameraX captures the image, TensorFlow Lite locates boxes, and ML Kit reads multiple barcodes per box. The SDK groups results by box. After measuring latency on Android devices, I moved inference to capture time to keep the preview responsive. I use Maven Publish to release the library to a private Maven repository on Repsy. Teams declare the Gradle dependency by group ID, artifact ID and version.',
+    ], tags: ['Kotlin', 'TensorFlow Lite', 'ML Kit', 'CameraX', 'Repsy Maven'],
   },
   {
     title: ['React Native & Mobile Systems', 'React Native & Mobile Systems'], category: 'Mobile · Systems',
@@ -42,11 +42,11 @@ export const contributions = [
     ], tags: ['React Native', 'API', 'Database'],
   },
   {
-    title: ['Robot App & SDK Integration', 'Robot App & SDK Integration'], category: 'Android · Robot',
+    title: ['Tích hợp SDK robot Woni', 'Woni Robot SDK Integration'], category: 'Android Tablet · Robot',
     description: [
-      'Phát triển giao diện ứng dụng robot bằng React Native, làm bridge kết nối UI với Android/Java để gọi SDK của nhà sản xuất robot. Công việc gồm đọc tài liệu và debug SDK, xử lý các vấn đề tích hợp, triển khai cho khách hàng, hướng dẫn sử dụng và hỗ trợ vận hành.',
-      'Developed the robot application UI in React Native and an Android/Java bridge to call the robot manufacturer’s SDK. The work included reading and debugging the SDK, resolving integration issues, deploying for customers, user training and operational support.',
-    ], tags: ['React Native UI', 'Android / Java', 'Native Bridge', 'Vendor SDK'],
+      'Mình phụ trách tích hợp và debug SDK của hãng trên app React Native chạy ở tablet Android gắn trước ngực Woni. Mình lần theo log và callback qua bridge Java, sửa lỗi khởi tạo SDK và mô phỏng phản hồi khi thiếu robot thật. Mình cũng cấu hình luồng đi đến quầy, về đế sạc, hỗ trợ triển khai tại chỗ và bàn giao cho đội FSE.',
+      'I integrated and debugged the vendor SDK in the React Native app on Woni’s chest-mounted Android tablet. I traced logs and callbacks through the Java bridge, fixed SDK initialization, and simulated responses when hardware was unavailable. I also configured counter navigation and dock return, supported on-site rollout, and handed over to the field service team.',
+    ], tags: ['Android Tablet', 'React Native', 'Java Bridge', 'Vendor SDK'],
   },
 ];
 export const skillFamilies = [
