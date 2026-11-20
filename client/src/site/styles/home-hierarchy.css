@@ -69,22 +69,93 @@
 .vision-bound { stroke: var(--vision-ink); stroke-width: 2; stroke-opacity: .6; }
 .vision-barcode-bound { fill: var(--vision-label-surface, var(--site-bg)); stroke: var(--vision-ink); stroke-opacity: .52; }
 .vision-barcode { stroke: var(--vision-ink); }
-.vision-capture { fill: var(--vision-ink); opacity: 0; }
+.vision-shutter-ring { stroke: var(--vision-ink); stroke-opacity: .78; stroke-width: 1.5; }
+.vision-shutter { fill: var(--vision-ink); }
+.vision-capture { fill: var(--site-ink); opacity: 0; }
+.vision-check { opacity: 0; }
+.vision-check circle { fill: var(--vision-ink); }
+.vision-check path { stroke: var(--vision-label-surface, var(--site-bg)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.vision-results { opacity: 0; }
+.vision-results-title { fill: var(--site-ink); font-size: 21px; font-weight: 700; }
+.vision-results-note, .vision-results-label { fill: var(--site-muted); font-size: 16px; }
+.vision-results-box { fill: var(--vision-ink); font-size: 15px; font-weight: 600; }
+.vision-results-value { fill: var(--site-ink); font: 14px var(--layered-mono); }
+.vision-result-row { fill: var(--vision-box-surface, var(--site-surface-2)); stroke: var(--vision-box-outline, var(--site-line)); }
+.vision-diagram { --vision-cycle: 8s; overflow: hidden; }
 @media (prefers-reduced-motion: no-preference) {
-  [data-running=true] .vision-capture { animation: vision-capture 5.4s var(--layered-ease) infinite; }
-  [data-running=true] .vision-bound { animation: vision-detect 5.4s var(--layered-ease) infinite; }
+  [data-running=true] .vision-preview { animation: vision-preview var(--vision-cycle) var(--layered-ease) infinite; }
+  [data-running=true] .vision-capture { animation: vision-capture var(--vision-cycle) var(--layered-ease) infinite; }
+  [data-running=true] .vision-bound { animation: vision-detect var(--vision-cycle) var(--layered-ease) infinite; }
+  [data-running=true] .vision-check { animation: vision-check var(--vision-cycle) var(--layered-ease) var(--vision-check-delay) infinite; }
+  [data-running=true] .vision-results { animation: vision-results var(--vision-cycle) var(--layered-ease) infinite; }
 }
-@keyframes vision-capture { 0%, 8%, 25%, 100% { opacity: 0; } 12% { opacity: .17; } }
-@keyframes vision-detect { 0%, 12%, 100% { opacity: .65; } 23%, 65% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .vision-preview { opacity: 0; }
+  .vision-results { opacity: 1; }
+}
+@keyframes vision-preview {
+  0%, 43%, 100% { opacity: 1; transform: translateX(0); }
+  46%, 96% { opacity: 0; transform: translateX(-14px); }
+  97% { opacity: 0; transform: translateX(0); }
+}
+@keyframes vision-capture {
+  0%, 12%, 16%, 100% { opacity: 0; }
+  13.5% { opacity: .36; }
+}
+@keyframes vision-detect {
+  0%, 14%, 100% { opacity: .2; }
+  19%, 43% { opacity: 1; }
+}
+@keyframes vision-check {
+  0%, 20%, 46%, 100% { opacity: 0; }
+  22%, 43% { opacity: 1; }
+}
+@keyframes vision-results {
+  0%, 43% { opacity: 0; transform: translateX(18px); }
+  46%, 95% { opacity: 1; transform: translateX(0); }
+  98%, 100% { opacity: 0; transform: translateX(0); }
+}
 .map-grid { stroke: var(--site-line); stroke-width: .6; }
 .map-border { stroke: var(--site-line); }
-.map-wall { fill: var(--site-surface-2); stroke: var(--site-muted); stroke-width: 1.5; opacity: .5; }
 .map-route-base { stroke: var(--layered-glass-line); stroke-width: 3; stroke-linejoin: round; }
 .map-route-ink { stroke: var(--site-cool); stroke-width: 1.5; stroke-dasharray: 5 5; stroke-linejoin: round; animation: robot-route 3s linear infinite; }
+.map-route-ink--planned { opacity: .65; animation: none; }
 .map-dock { fill: var(--site-cool-soft); stroke: var(--layered-glass-line); }
 .map-label { fill: var(--site-muted); font: 8px var(--layered-mono); }
-.map-checkpoint { fill: var(--site-bg); stroke: var(--site-cool); stroke-width: 1.5; }
-.map-checkpoint--target { fill: var(--site-cool-soft); }
+.map-counter { fill: color-mix(in srgb, var(--site-cool) 8%, var(--site-surface-2)); stroke: var(--site-line); }
+.map-counter-trim { stroke: var(--site-muted); stroke-opacity: .46; stroke-linecap: round; }
+.map-counter-light { fill: var(--site-muted); }
+.woni-lobby-map [data-selected=true] .map-counter-light { fill: var(--site-cool); }
+.map-route-ink--second { stroke: var(--site-amber, var(--site-ink)); opacity: .72; }
+.woni-lobby-map [data-selected=true] .map-counter { fill: var(--site-cool-soft); stroke: var(--site-cool); }
+.woni-lobby-map .map-label { font-size: 11px; }
+.map-obstacle { fill: var(--site-surface-2); stroke: var(--site-muted); stroke-opacity: .63; }
+.map-furniture-detail { fill: none; stroke: var(--site-muted); stroke-linecap: round; stroke-opacity: .55; }
+.map-plant { fill: var(--site-cool-soft); stroke: var(--site-cool); stroke-opacity: .58; }
+.map-laser-zone { fill: var(--site-cool-soft); stroke: var(--site-cool); stroke-dasharray: 2 3; }
+.map-laser-beam { stroke: var(--site-cool); stroke-width: 1.4; stroke-dasharray: 2 3; }
+.woni-lobby-queue { color: var(--site-cool); }
+.map-ticket { fill: var(--site-bg); stroke: var(--site-cool); }
+.map-ticket-lines, .map-customer { stroke: var(--site-cool); stroke-linecap: round; stroke-linejoin: round; }
+.woni-lobby-controls { display: grid; gap: 6px; padding: 0 9px 9px; }
+.woni-lobby-schedule, .woni-lobby-services { display: flex; flex-wrap: wrap; gap: 5px; }
+.woni-lobby-controls button {
+  flex: 1 1 auto;
+  min-height: 44px;
+  padding: 4px 6px;
+  border: 1px solid var(--site-line);
+  border-radius: 5px;
+  background: var(--site-surface-2);
+  color: var(--site-ink);
+  font-size: 11px;
+}
+.woni-lobby-controls button strong { color: var(--site-cool); font-family: var(--layered-mono); }
+.woni-lobby-controls button:disabled { color: var(--site-muted); }
+.woni-lobby-controls button[data-queued=true],
+.woni-lobby-controls button[data-selected=true],
+.woni-lobby-controls button:focus-visible { border-color: var(--site-cool); }
+.woni-lobby-controls button[data-selected=true] { background: var(--site-cool-soft); }
+.woni-lobby-status { margin: 2px 0 0; min-height: 2.8em; color: var(--site-muted); font-size: 11px; line-height: 1.4; }
 .tablet-robot {
   --robot-ink: var(--msc-art-accent, var(--site-cool));
   --robot-surface: var(--msc-art-surface, var(--site-bg));

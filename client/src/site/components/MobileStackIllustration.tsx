@@ -90,7 +90,7 @@ export function MobileStackIllustration({ technology, en }: { technology: Techno
         </ol>
       );
     case 'camerax':
-      return <MultiBoxScan />;
+      return <MultiBoxScan en={en} />;
     case 'maven':
       return (
         <dl className="msc-art__release">

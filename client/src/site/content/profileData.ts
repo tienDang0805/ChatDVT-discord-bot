@@ -44,8 +44,8 @@ export const contributions = [
   {
     title: ['Tích hợp SDK robot Woni', 'Woni Robot SDK Integration'], category: 'Android Tablet · Robot',
     description: [
-      'Mình phụ trách tích hợp và debug SDK của hãng trên app React Native chạy ở tablet Android gắn trước ngực Woni. Mình lần theo log và callback qua bridge Java, sửa lỗi khởi tạo SDK và mô phỏng phản hồi khi thiếu robot thật. Mình cũng cấu hình luồng đi đến quầy, về đế sạc, hỗ trợ triển khai tại chỗ và bàn giao cho đội FSE.',
-      'I integrated and debugged the vendor SDK in the React Native app on Woni’s chest-mounted Android tablet. I traced logs and callbacks through the Java bridge, fixed SDK initialization, and simulated responses when hardware was unavailable. I also configured counter navigation and dock return, supported on-site rollout, and handed over to the field service team.',
+      'Mình phát triển app React Native trên tablet Android gắn trước ngực Woni, tích hợp và debug SDK hãng qua bridge Java. App cho khách chọn dịch vụ, in phiếu và điều robot dẫn khách đến quầy tương ứng. Hai robot có dock riêng và chạy theo lịch 08:00–17:00. Mình triển khai robot tại ngân hàng, hỗ trợ vận hành và sự kiện, đồng thời bàn giao và hướng dẫn đội FSE.',
+      'I developed the React Native app on Woni’s chest-mounted Android tablet and integrated and debugged the vendor SDK through a Java bridge. Customers choose a service, get a printed ticket, and are guided to the corresponding counter. The two robots have separate docks and run on an 08:00–17:00 schedule. I deployed the robots at the bank, supported operations and events, and trained the field service engineering team during handover.',
     ], tags: ['Android Tablet', 'React Native', 'Java Bridge', 'Vendor SDK'],
   },
 ];

@@ -29,7 +29,7 @@ import { WALLPAPER_APP } from '../../../../src/shared/desktopApps';
 const workSummaries = [
   ['TensorFlow Lite tìm nhiều hộp trong một ảnh, ML Kit đọc nhiều mã trong từng hộp. Team tích hợp SDK Kotlin bằng dependency Gradle có phiên bản từ kho Maven riêng trên Repsy.', 'TensorFlow Lite finds multiple boxes in one image and ML Kit decodes multiple barcodes per box. Teams integrate the Kotlin SDK as a versioned Gradle dependency from a private Maven repository on Repsy.'],
   ['Ứng dụng CRM B2B, analytics SDK hỗ trợ offline và những lần nâng cấp React Native.', 'B2B CRM apps, an analytics SDK with offline support and upgrades to existing React Native applications.'],
-  ['Tích hợp và debug SDK của hãng trên tablet Android gắn trước ngực Woni. Sửa lỗi khởi tạo SDK và bridge Java, kiểm thử luồng đi đến quầy và quay về đế sạc.', 'Integrated and debugged the vendor SDK on Woni’s chest-mounted Android tablet. Fixed SDK initialization and Java bridge issues, then tested counter navigation and dock return.'],
+  ['Phát triển app trên tablet Android của Woni, tích hợp SDK hãng để in phiếu và dẫn khách đến quầy. Triển khai robot tại ngân hàng, hỗ trợ vận hành và sự kiện, bàn giao và hướng dẫn đội FSE.', 'Developed Woni’s Android tablet app and integrated the vendor SDK for ticket printing and counter guidance. Deployed the robots at the bank, supported operations and events, and trained the field service team during handover.'],
 ];
 const workIcons = [ScanLine, Braces, Bot];
 

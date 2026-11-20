@@ -1,26 +1,58 @@
-const parcels = [{ x: 27, y: 60 }, { x: 136, y: 37 }, { x: 245, y: 66 }];
+import type { CSSProperties } from 'react';
+
+const parcels = [
+  { x: 27, y: 53, serial: 'SN-DangVanTien', pid: '2000000000015' },
+  { x: 136, y: 36, serial: 'SN-ChatDVT', pid: '2000000000022' },
+  { x: 245, y: 57, serial: 'SN-MobileEngineer', pid: '2000000000039' },
+];
 const bars = [2, 6, 9, 14, 17, 22, 26, 29, 34, 37, 41, 45, 49, 54];
 
-export function MultiBoxScan() {
+export function MultiBoxScan({ en }: { en: boolean }) {
   return (
-    <svg className="vision-diagram" viewBox="0 0 360 210" fill="none" aria-hidden="true">
-      <path d="M14 43V25h18m296 0h18v18m0 122v18h-18m-296 0H14v-18" className="vision-frame" />
-      {parcels.map(({ x, y }) => (
-        <g key={x} transform={`translate(${x} ${y})`}>
-          <rect className="vision-package" x="4" y="7" width="80" height="101" rx="4" />
-          <path className="vision-seam" d="m4 23 80 0M35 7v16h17V7" />
-          <rect className="vision-bound" width="88" height="112" rx="5" />
-          {[39, 75].map((top, index) => (
-            <g className="vision-barcode-label" key={top} transform={`translate(13 ${top})`}>
-              <rect className="vision-barcode-bound" width="62" height="25" rx="2" />
-              {bars.map((bar, barIndex) => (
-                <path className="vision-barcode" key={bar} d={`M${bar + 3} 5v15`} strokeWidth={(barIndex + index) % 3 ? 1.3 : 2.5} />
-              ))}
+    <svg className="vision-diagram" viewBox="0 0 360 210" fill="none" role="img"
+      aria-label={en ? 'Scan illustration: capture three boxes, confirm six barcodes, then show the serial number and PID for each box.' : 'Minh hoạ quét: chụp ba hộp, xác nhận sáu mã vạch, rồi xem Serial Number và PID theo từng hộp.'}>
+      <g className="vision-preview" aria-hidden="true">
+        <path d="M14 43V25h18m296 0h18v18m0 122v18h-18m-296 0H14v-18" className="vision-frame" />
+        {parcels.map(({ x, y }, boxIndex) => (
+          <g key={x} transform={`translate(${x} ${y})`}>
+            <rect className="vision-package" x="4" y="7" width="80" height="101" rx="4" />
+            <path className="vision-seam" d="m4 23 80 0M35 7v16h17V7" />
+            <rect className="vision-bound" width="88" height="112" rx="5" />
+            {[39, 75].map((top, index) => (
+              <g key={top} transform={`translate(13 ${top})`}>
+                <rect className="vision-barcode-bound" width="62" height="25" rx="2" />
+                {bars.map((bar, barIndex) => (
+                  <path className="vision-barcode" key={bar} d={`M${bar + 3} 5v15`} strokeWidth={(barIndex + index) % 3 ? 1.3 : 2.5} />
+                ))}
+                <g className="vision-check" style={{ '--vision-check-delay': `${(boxIndex * 2 + index) * 110}ms` } as CSSProperties}>
+                  <circle cx="62" cy="4" r="10" />
+                  <path d="m57.5 4 3 3 5.5-6" />
+                </g>
+              </g>
+            ))}
+          </g>
+        ))}
+        <circle className="vision-shutter-ring" cx="180" cy="193" r="11" />
+        <circle className="vision-shutter" cx="180" cy="193" r="7" />
+        <rect className="vision-capture" x="15" y="26" width="330" height="156" rx="9" />
+      </g>
+      <g className="vision-results" aria-hidden="true">
+        <text className="vision-results-title" x="15" y="27">{en ? 'Results' : 'Kết quả'}</text>
+        <text className="vision-results-note" x="345" y="26" textAnchor="end">{en ? 'Sample data' : 'Dữ liệu mẫu'}</text>
+        <text className="vision-results-label" x="80" y="57">Serial Number</text>
+        <text className="vision-results-label" x="230" y="57">PID (EAN)</text>
+        {parcels.map(({ serial, pid }, index) => {
+          const row = 67 + index * 43;
+          return (
+            <g key={serial}>
+              <rect className="vision-result-row" x="15" y={row} width="330" height="37" rx="5" />
+              <text className="vision-results-box" x="26" y={row + 24}>{en ? 'Box' : 'Hộp'} {index + 1}</text>
+              <text className="vision-results-value" x="80" y={row + 24}>{serial}</text>
+              <text className="vision-results-value" x="230" y={row + 24}>{pid}</text>
             </g>
-          ))}
-        </g>
-      ))}
-      <rect className="vision-capture" x="15" y="26" width="330" height="156" rx="9" />
+          );
+        })}
+      </g>
     </svg>
   );
 }
