@@ -30,27 +30,27 @@ export const contributions = [
   {
     title: ['Multi-barcode & Multi-box SDK', 'Multi-barcode & Multi-box SDK'], category: 'Android · On-device AI',
     description: [
-      'Mình làm SDK Android bằng Kotlin. CameraX chụp ảnh, TensorFlow Lite tìm các hộp, rồi ML Kit đọc nhiều mã trong mỗi hộp. SDK trả kết quả theo từng hộp. Sau khi đo độ trễ trên máy Android, mình chuyển sang chỉ chạy nhận diện khi chụp để preview phản hồi tốt hơn. Mình dùng Maven Publish để phát hành bản release lên kho Maven riêng trên Repsy. Các team khai báo dependency Gradle theo groupId, artifactId và phiên bản.',
-      'I built an Android SDK in Kotlin. CameraX captures the image, TensorFlow Lite locates boxes, and ML Kit reads multiple barcodes per box. The SDK groups results by box. After measuring latency on Android devices, I moved inference to capture time to keep the preview responsive. I use Maven Publish to release the library to a private Maven repository on Repsy. Teams declare the Gradle dependency by group ID, artifact ID and version.',
+      'Xây dựng SDK Kotlin trả mã vạch theo từng hộp. Sau khi đo độ trễ, mình chuyển inference sang lúc chụp để preview phản hồi tốt hơn. Phát hành SDK theo phiên bản qua kho Maven riêng trên Repsy để các team tích hợp bằng Gradle.',
+      'Built a Kotlin SDK that groups decoded barcodes by box. After measuring latency, I moved inference to capture time to keep the preview responsive. I publish versioned releases to private Maven on Repsy for other teams to integrate through Gradle.',
     ], tags: ['Kotlin', 'TensorFlow Lite', 'ML Kit', 'CameraX', 'Repsy Maven'],
   },
   {
     title: ['React Native & Mobile Systems', 'React Native & Mobile Systems'], category: 'Mobile · Systems',
     description: [
-      'Phát triển và bảo trì ứng dụng CRM B2B, làm analytics SDK hỗ trợ lưu dữ liệu offline, và nâng cấp ứng dụng React Native cũ lên phiên bản mới. Công việc còn liên quan đến API, database và hệ thống quản lý bản cập nhật ứng dụng.',
-      'Developed and maintained B2B CRM applications, built an analytics SDK with offline storage, and upgraded legacy React Native applications. The work also involved APIs, databases and systems for managing application updates.',
+      'Phát triển ứng dụng CRM B2B và SDK analytics hỗ trợ offline. Nâng ứng dụng từ React Native 0.62.2 lên 0.77.3 và xử lý tương thích trang nhớ 16 KB trên Android.',
+      'Developed B2B CRM apps and an offline-first analytics SDK. Upgraded a production app from React Native 0.62.2 to 0.77.3 and addressed 16 KB page-size compatibility on Android.',
     ], tags: ['React Native', 'API', 'Database'],
   },
   {
     title: ['Tích hợp SDK robot Woni', 'Woni Robot SDK Integration'], category: 'Android Tablet · Robot',
     description: [
-      'Mình phát triển app React Native trên tablet Android gắn trước ngực Woni, tích hợp và debug SDK hãng qua bridge Java. App cho khách chọn dịch vụ, in phiếu và điều robot dẫn khách đến quầy tương ứng. Hai robot có dock riêng và chạy theo lịch 08:00–17:00. Mình triển khai robot tại ngân hàng, hỗ trợ vận hành và sự kiện, đồng thời bàn giao và hướng dẫn đội FSE.',
-      'I developed the React Native app on Woni’s chest-mounted Android tablet and integrated and debugged the vendor SDK through a Java bridge. Customers choose a service, get a printed ticket, and are guided to the corresponding counter. The two robots have separate docks and run on an 08:00–17:00 schedule. I deployed the robots at the bank, supported operations and events, and trained the field service engineering team during handover.',
+      'Phát triển app trên tablet Android 6.0 (API 23) gắn trước ngực Woni. Tích hợp SDK hãng qua Java bridge để robot in phiếu và dẫn khách đến đúng quầy. Triển khai tại ngân hàng, hỗ trợ vận hành và sự kiện, bàn giao và hướng dẫn đội FSE.',
+      'Developed the app for Woni’s chest-mounted Android 6.0 (API 23) tablet. Integrated the vendor SDK through a Java bridge so the robots could print tickets and guide customers to their counters. Deployed at the bank, supported operations and events, and trained the field service team.',
     ], tags: ['Android Tablet', 'React Native', 'Java Bridge', 'Vendor SDK'],
   },
 ];
 export const skillFamilies = [
-  { title: 'Mobile', items: 'Kotlin, Java, React Native, TypeScript' },
-  { title: 'Android & SDK', items: 'CameraX, TensorFlow Lite, ML Kit, Native Modules, Gradle, Maven' },
+  { title: 'Native Android', items: 'Kotlin, Java, CameraX, TensorFlow Lite, ML Kit, Gradle, Maven' },
+  { title: 'React Native', items: 'TypeScript, Redux, Native Modules, Hermes, MMKV' },
   { title: 'Backend & Tools', items: 'Node.js, Express, REST API, MySQL, Git' },
 ];

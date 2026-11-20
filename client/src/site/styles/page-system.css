@@ -85,16 +85,12 @@
 .site-root.site-layered .me-profile .me-hero { padding-block: 72px 64px; }
 .site-root.site-layered .me-profile .me-hero-grid { align-items: start; gap: 64px; }
 .site-root.site-layered .me-profile h1.page-title { font-size: clamp(44px, 4.7vw, 68px); letter-spacing: -.06em; line-height: 1.15; margin-bottom: 25px; }
-.site-root.site-layered .me-profile .me-eyebrow { font: 11px/1.8 var(--layered-mono); color: var(--page-accent); letter-spacing: .07em; margin-bottom: 22px; }
 .site-root.site-layered .me-profile .me-role { color: var(--site-ink); font-weight: 600; }
 .site-root.site-layered .me-profile .me-role span { color: var(--page-accent); font: 12px/1.8 var(--layered-mono); margin-top: 5px; }
 .site-root.site-layered .me-profile .me-facts { padding: 22px; }
-.site-root.site-layered .me-profile .me-card-top { font: 10px/1.8 var(--layered-mono); margin-bottom: 22px; }
-.site-root.site-layered .me-profile .me-card-type { font-size: 10px; }
 .site-root.site-layered .me-profile .me-work-card:nth-child(1) { --card-accent: var(--label-mint); }
 .site-root.site-layered .me-profile .me-work-card:nth-child(2) { --card-accent: var(--label-blue); }
 .site-root.site-layered .me-profile .me-work-card:nth-child(3) { --card-accent: var(--label-amber); }
-.site-root.site-layered .me-profile .me-card-number { color: var(--card-accent); }
 .site-root.site-layered .me-profile .me-work-card h3 { transition: color .25s; }
 .site-root.site-layered .me-profile .me-work-card:hover h3 { color: var(--card-accent); }
 .site-root.site-layered .me-profile .me-tech-column { border-top-width: 1px; }
@@ -104,9 +100,7 @@
 .site-root.site-layered .me-profile .me-edu-card { background: var(--site-surface); border-color: var(--site-line); border-radius: 10px; transition: border-color .3s, transform .4s var(--layered-ease); }
 .site-root.site-layered .me-profile .me-edu-card:hover { border-color: color-mix(in srgb, var(--page-accent), transparent 55%); }
 .site-root.site-layered .me-profile .me-edu-degree { color: var(--page-accent); }
-.site-root.site-layered .me-profile .me-contact p { color: var(--site-muted); }
-.site-root.site-layered .me-profile .me-contact .me-button-secondary { color: var(--site-ink); border-color: var(--site-line); }
-.site-root.site-layered :is(.me-contact, #experience, #discord-proof) { scroll-margin-top: 100px; }
+.site-root.site-layered :is(#experience, #discord-proof) { scroll-margin-top: 100px; }
 
 /* Discord product evidence: one primary action, readable command examples. */
 .site-root.site-layered .selected-discord :is(.proof-section, .capability-strip, .commands, .getting-started) { width: min(1180px, calc(100% - 96px)); margin-inline: auto; padding-inline: 0; }

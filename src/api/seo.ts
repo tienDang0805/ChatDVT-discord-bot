@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import path from 'path';
 import { prisma } from '../database/prisma';
 import { isFeatureIndexable } from '../shared/featureCatalog';
-import { AUTHOR_SCHEMA, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL } from '../shared/siteIdentity';
+import { AUTHOR_SCHEMA, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL, ME_PAGE_META } from '../shared/siteIdentity';
 import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../shared/desktopApps';
 import { CHATDVT_META, CHATDVT_HISTORY_PATH, CHATDVT_HISTORY_DESCRIPTION, CHATDVT_ARTICLE_SUBJECT } from '../shared/chatdvt';
 
@@ -112,8 +112,7 @@ const ROUTE_META: Record<string, RouteMeta> = {
     changefreq: 'weekly',
   },
   '/me': {
-    title: 'Đặng Văn Tiến — Mobile Developer React Native & Android',
-    description: 'Đặng Văn Tiến là Mobile Developer tại South Telecom ở TP.HCM, làm React Native và Android/Kotlin, cựu sinh viên PTIT HCM (2017–2022) và là người làm bot ChatDVT.',
+    ...ME_PAGE_META.vi,
     keywords: 'Đặng Văn Tiến, Tiến Đặng, Tien Dang, mobile developer, React Native developer, Android developer, Kotlin developer',
     pageType: 'profile',
     lastmod: '2026-10-09',
@@ -576,7 +575,7 @@ const EN_ROUTE_META: Record<string, RouteMeta> = {
   '/mobile': { indexable: false, title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
   '/discord': { title: `${CHATDVT_META.en.title} | Đặng Văn Tiến`, description: CHATDVT_META.en.description, schemaName: 'ChatDVT', pageType: 'software', lastmod: '2026-10-09', priority: 0.8, changefreq: 'weekly' },
   '/chat': { title: 'ChatDVT Chat — Talk directly with AI', description: 'Chat with ChatDVT, an AI bot built by Đặng Văn Tiến using Google Gemini. Ask about Tiến and his projects, or have a conversation on the web.', schemaName: 'ChatDVT Chat', pageType: 'webapp', lastmod: '2026-10-06', priority: 0.9, changefreq: 'weekly' },
-  '/me': { title: 'Đặng Văn Tiến — React Native & Android Developer', description: 'Đặng Văn Tiến is a Mobile Developer at South Telecom in Ho Chi Minh City, a PTIT Ho Chi Minh City alumnus (2017–2022), working on React Native, Android/Kotlin and ChatDVT.', pageType: 'profile', lastmod: '2026-10-09', priority: 0.8, changefreq: 'monthly' },
+  '/me': { ...ME_PAGE_META.en, pageType: 'profile', lastmod: '2026-10-09', priority: 0.8, changefreq: 'monthly' },
 };
 
 function normalizePathname(pathname: string): string {

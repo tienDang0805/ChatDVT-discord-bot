@@ -1,3 +1,14 @@
+export const ME_PAGE_META = {
+  vi: {
+    title: 'Về Đặng Văn Tiến — Mobile Software Engineer · Android & React Native',
+    description: 'Đặng Văn Tiến là Mobile Software Engineer tại South Telecom, phát triển Android native, SDK Kotlin và ứng dụng đa nền tảng bằng React Native.',
+  },
+  en: {
+    title: 'About Đặng Văn Tiến — Mobile Software Engineer · Android & React Native',
+    description: 'Đặng Văn Tiến is a Mobile Software Engineer at South Telecom working on native Android, Kotlin SDKs and cross-platform React Native apps.',
+  },
+};
+
 // Keep server-rendered metadata and client navigation on the same public identity.
 export const AUTHOR_SCHEMA = {
   '@type': 'Person',

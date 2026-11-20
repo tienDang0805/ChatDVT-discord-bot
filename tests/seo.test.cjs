@@ -32,9 +32,10 @@ test('public VI/EN pages contain visible content without executing JavaScript', 
   }
   const en = renderPublicHtml(template, '/en/me');
   const vi = renderPublicHtml(template, '/me');
-  assert.match(en, /About Đặng Văn Tiến — React Native/);
-  assert.match(vi, /Về Đặng Văn Tiến — Kỹ sư/);
-  assert.match(renderPublicHtml(template, '/en/me'), /About Đặng Văn Tiến — React Native/);
+  assert.match(en, /About Đặng Văn Tiến — Mobile Software Engineer · Android (?:&amp;|&) React Native/);
+  assert.match(vi, /Về Đặng Văn Tiến — Mobile Software Engineer · Android (?:&amp;|&) React Native/);
+  assert.match(rootContent(en), /Learning goal.*Study toward.*AWS Certified Developer - Associate/);
+  assert.match(rootContent(vi), /Mục tiêu học tiếp.*Học để thi.*AWS Certified Developer - Associate/);
   assert.doesNotMatch(generateSitemapXml(), /<loc>https:\/\/devtiendang.blog\/(en\/)?(?:mobile|cicd-visualizer)<\/loc>/);
   for (const route of ['/cicd-visualizer', '/en/cicd-visualizer']) {
     const html = injectSeoMeta(template, route);
@@ -55,7 +56,9 @@ test('public identity and ChatDVT history remain readable and agree with structu
       assert.ok(rootContent(about).includes(fact), `Visible profile is missing ${fact}`);
     }
     assert.ok(rootContent(about).includes(prefix ? 'Woni Robot SDK Integration' : 'Tích hợp SDK robot Woni'));
-    assert.doesNotMatch(rootContent(about), /Vikki/);
+    assert.doesNotMatch(rootContent(about), /Vikki|class="me-contact|class="me-arrow"/);
+    assert.match(rootContent(about), /Android 6\.0 \(API 23\)/);
+    assert.match(rootContent(about), /Redux/);
     assert.match(rootContent(home), /Mobile Developer/);
     assert.match(rootContent(home), /React Native/);
     for (const fact of ['discord.js', 'Gemini API', 'AWS EC2', 'Antigravity', 'Codex']) {
