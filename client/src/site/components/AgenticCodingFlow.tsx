@@ -16,7 +16,7 @@ const STEP_SECONDS = 3.4;
 
 export function AgenticCodingFlow() {
   const { locale } = useLanguage(), en = locale === 'en';
-  const { enabled } = useSiteMotion();
+  const { demoEnabled } = useSiteMotion();
   const panel = useRef<HTMLDivElement>(null);
   const visible = useInView(panel, { amount: .2 });
   const [playing, setPlaying] = useState(true);
@@ -25,7 +25,7 @@ export function AgenticCodingFlow() {
   const elapsed = useRef(0), currentStage = useRef(0);
   const curveRefs = useRef<(SVGPathElement | null)[]>([]);
   const cx = useMotionValue(140), cy = useMotionValue(80);
-  const running = enabled && visible && foreground && playing;
+  const running = demoEnabled && visible && foreground && playing;
 
   useEffect(() => {
     const update = () => setForeground(!document.hidden);
@@ -64,9 +64,9 @@ export function AgenticCodingFlow() {
   const Icon = stage.icon;
   return <section id="agentic-flow" className="lh-section layered-container agentic-section" aria-labelledby="agentic-title">
     <Reveal className="lh-section-intro"><p className="lh-kicker"><span className="lh-section-number">↻</span>DEVELOPMENT / WORKFLOW</p><div className="lh-section-heading"><h2 id="agentic-title">Agentic coding.<br /><span className="agentic-tool agentic-tool--antigravity">Antigravity</span><b className="agentic-tool-divider"> / </b><span className="agentic-tool agentic-tool--codex">Codex</span></h2><p>{en ? 'I use Antigravity and Codex to read code, plan changes, implement and review them. Select a step to see the workflow.' : 'Mình dùng Antigravity và Codex để đọc code, lên kế hoạch, triển khai và review thay đổi. Chọn từng bước để xem cách mình làm.'}</p></div></Reveal>
-    <Reveal><div className="agentic-panel" ref={panel} data-running={running}>
+    <Reveal><div className="agentic-panel" data-demo-motion ref={panel} data-running={running}>
       <div className="agentic-diagram">
-        <div className="agentic-topline"><span><i />AGENTIC CODING FLOW</span><button type="button" className="agentic-play" onClick={() => setPlaying(value => !value)} aria-pressed={!playing} disabled={!enabled} aria-label={playing ? (en ? 'Pause workflow animation' : 'Dừng animation workflow') : (en ? 'Play workflow animation' : 'Chạy animation workflow')}>{playing && enabled ? <Pause size={13} /> : <Play size={13} />}<span>{!enabled ? (en ? 'Static view' : 'Chế độ tĩnh') : playing ? (en ? 'Auto loop' : 'Tự động') : (en ? 'Resume' : 'Chạy tiếp')}</span></button></div>
+        <div className="agentic-topline"><span><i />AGENTIC CODING FLOW</span><button type="button" className="agentic-play" onClick={() => setPlaying(value => !value)} aria-pressed={!playing} disabled={!demoEnabled} aria-label={playing ? (en ? 'Pause workflow animation' : 'Dừng animation workflow') : (en ? 'Play workflow animation' : 'Chạy animation workflow')}>{playing && demoEnabled ? <Pause size={13} /> : <Play size={13} />}<span>{!demoEnabled ? (en ? 'Static view' : 'Chế độ tĩnh') : playing ? (en ? 'Auto loop' : 'Tự động') : (en ? 'Resume' : 'Chạy tiếp')}</span></button></div>
         <div className="agentic-canvas" role="tablist" aria-label={en ? 'Workflow steps' : 'Các bước quy trình'}>
           <svg viewBox="0 0 600 320" aria-hidden="true"><defs><filter id="flow-dot-glow"><feGaussianBlur stdDeviation="4" /></filter></defs>{paths.map((path, index) => <path key={path} ref={element => { curveRefs.current[index] = element; }} d={path} fill="none" className={'agentic-path' + (active === index ? ' is-active' : '')} />)}<motion.circle cx={cx} cy={cy} r="9" className="agentic-dot-glow" filter="url(#flow-dot-glow)" /><motion.circle cx={cx} cy={cy} r="4" className="agentic-dot" /></svg>
           {stages.map((item,index) => <button type="button" role="tab" key={item.name} className={'agentic-node agentic-node--' + index + (active === index ? ' is-active' : '')} aria-selected={active === index} onClick={() => inspect(index)}><small>0{index + 1}</small>{item.name}<span aria-hidden="true">{active === index ? '↗' : '·'}</span></button>)}

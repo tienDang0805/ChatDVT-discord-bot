@@ -28,7 +28,7 @@ function ScannerDemo({ en }: { en: boolean }) {
 
 export function WorkVisual({ kind }: { kind: keyof typeof titles }) {
   const { locale } = useLanguage(), en = locale === 'en';
-  const { enabled } = useSiteMotion();
+  const { demoEnabled } = useSiteMotion();
   const element = useRef<HTMLDivElement>(null);
   const visible = useInView(element, { amount: .25 });
   const [foreground, setForeground] = useState(true);
@@ -38,9 +38,9 @@ export function WorkVisual({ kind }: { kind: keyof typeof titles }) {
     document.addEventListener('visibilitychange', update);
     return () => document.removeEventListener('visibilitychange', update);
   }, []);
-  const running = enabled && visible && foreground;
+  const running = demoEnabled && visible && foreground;
 
-  return <div ref={element} className={'work-visual work-visual--' + kind} data-running={running} data-motion={enabled}>
+  return <div ref={element} className={'work-visual work-visual--' + kind} data-demo-motion data-running={running} data-motion={demoEnabled}>
     <div className="work-visual-top">
       <span>{titles[kind][en ? 1 : 0]}</span>
       {kind === 'scanner' && <small>{en ? 'Sample data' : 'Dữ liệu mẫu'}</small>}
@@ -48,6 +48,6 @@ export function WorkVisual({ kind }: { kind: keyof typeof titles }) {
     </div>
     {kind === 'scanner' ? <ScannerDemo en={en} />
       : kind === 'systems' ? <MobileSystemsDemo en={en} />
-      : <WoniLobbyDemo animate={enabled} inView={visible && foreground} en={en} />}
+      : <WoniLobbyDemo animate={demoEnabled} inView={visible && foreground} en={en} />}
   </div>;
 }

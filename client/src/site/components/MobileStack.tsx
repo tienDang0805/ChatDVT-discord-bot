@@ -190,7 +190,7 @@ function TechLogo({ id }: { id: TechnologyId }) {
 
 export function MobileStack() {
   const { locale } = useLanguage();
-  const { enabled } = useSiteMotion();
+  const { demoEnabled } = useSiteMotion();
   const en = locale === 'en';
   const languageIndex = en ? 1 : 0;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -207,7 +207,7 @@ export function MobileStack() {
   }, []);
 
   return (
-    <div className="mobile-stack mobile-stack--constellation" style={{ '--msc-accent': activeOrb.color } as CSSProperties}>
+    <div className="mobile-stack mobile-stack--constellation" data-demo-motion style={{ '--msc-accent': activeOrb.color } as CSSProperties}>
       <div className="msc-stage">
         <svg className="msc-streams" viewBox="0 0 540 460" preserveAspectRatio="none" aria-hidden="true">
           {ORBS.map((orb) => {
@@ -217,7 +217,7 @@ export function MobileStack() {
           })}
         </svg>
 
-        <div className="msc-device-wrap" ref={device} data-running={enabled && visible && foreground}>
+        <div className="msc-device-wrap" ref={device} data-running={demoEnabled && visible && foreground}>
           <div className="msc-device">
             <div className="msc-screen">
               <div className="msc-system-bar" aria-hidden="true">

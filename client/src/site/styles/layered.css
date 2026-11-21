@@ -176,7 +176,10 @@
   .site-layered .command-heading { padding: 20px; }
   .site-root.site-layered .hybrid-b .play-opening { padding-top: 44px; padding-bottom: 30px; }
 }
-.site-layered[data-motion=off] *, .site-layered[data-motion=off] *::before, .site-layered[data-motion=off] *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+/* The header control pauses page effects. Project demos follow system motion settings. */
+.site-layered[data-motion=off] :not(:where([data-demo-motion], [data-demo-motion] *)),
+.site-layered[data-motion=off] :not(:where([data-demo-motion], [data-demo-motion] *))::before,
+.site-layered[data-motion=off] :not(:where([data-demo-motion], [data-demo-motion] *))::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 @media (prefers-reduced-motion: reduce) {
   .site-layered *, .site-layered *::before, .site-layered *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

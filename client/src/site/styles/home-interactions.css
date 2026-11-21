@@ -447,7 +447,7 @@ html:has(.site-layered) { scroll-behavior: auto; }
   text-decoration: underline;
 }
 .site-layered[data-motion=on] .chatdvt-guide { animation: guide-enter .24s var(--layered-ease) both; }
-.site-layered[data-motion=on] .agentic-stage-detail, .site-layered[data-motion=on] .stack-detail { animation: detail-enter .4s var(--layered-ease) both; }
+[data-demo-motion] .agentic-stage-detail, .site-layered[data-motion=on] .stack-detail { animation: detail-enter .4s var(--layered-ease) both; }
 @keyframes guide-enter { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes detail-enter { from { opacity: .3; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 960px) {

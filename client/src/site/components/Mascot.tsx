@@ -8,7 +8,7 @@ type Action = 'idle' | 'wave' | 'talk' | 'coffee' | 'tablet-show';
 interface Strip { file: string; frames: number; fps: number; loop: boolean }
 interface Metadata { pageMascot: { directions: string; grid: { rows: number; cols: number } }; animations: Record<string, Strip> }
 const metadata = new Map<Character, Promise<Metadata | null>>();
-const Motion = createContext({ enabled: false, reduced: false, paused: false, toggle: () => {} });
+const Motion = createContext({ enabled: false, demoEnabled: false, reduced: false, paused: false, toggle: () => {} });
 const PAUSE_KEY = 'portfolio-motion-paused';
 
 export function MascotMotion({ children }: { children: ReactNode }) {
@@ -27,7 +27,8 @@ export function MascotMotion({ children }: { children: ReactNode }) {
   function toggle() {
     setPaused(value => { const next = !value; try { sessionStorage.setItem(PAUSE_KEY, next ? '1' : '0'); } catch { /* Storage is optional. */ } return next; });
   }
-  return <Motion.Provider value={{ enabled: ready && !paused && !reduced, reduced, paused, toggle }}>{children}</Motion.Provider>;
+  const demoEnabled = ready && !reduced;
+  return <Motion.Provider value={{ enabled: demoEnabled && !paused, demoEnabled, reduced, paused, toggle }}>{children}</Motion.Provider>;
 }
 
 export function useSiteMotion() { return useContext(Motion); }
@@ -36,7 +37,7 @@ export function MotionControl() {
   const { enabled, reduced, toggle } = useContext(Motion);
   const { locale } = useLanguage();
   const en = locale === 'en';
-  const label = reduced ? (en ? 'Motion reduced by your device' : 'Chuyển động đã giảm theo máy') : enabled ? (en ? 'Reduce motion' : 'Giảm chuyển động') : (en ? 'Enable motion' : 'Bật chuyển động');
+  const label = reduced ? (en ? 'Motion reduced by your device' : 'Chuyển động đã giảm theo máy') : enabled ? (en ? 'Pause page effects' : 'Tắt hiệu ứng trang') : (en ? 'Enable page effects' : 'Bật hiệu ứng trang');
   return <button type="button" className="site-motion-control" aria-label={label} title={label} aria-pressed={!enabled} disabled={reduced} onClick={toggle}>
     {enabled ? <Waves size={17} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}<span className="motion-label">{label}</span>
   </button>;

@@ -37,7 +37,7 @@ function Connections({ kind, mobile, running }: { kind: Kind; mobile: boolean; r
 
 export function ProjectArchitecture({ kind }: { kind: Kind }) {
   const { locale } = useLanguage(), en = locale === 'en';
-  const { enabled } = useSiteMotion();
+  const { demoEnabled } = useSiteMotion();
   const element = useRef<HTMLDivElement>(null);
   const visible = useInView(element, { amount: .25 });
   const [foreground, setForeground] = useState(true), [compact, setCompact] = useState(false), [playing, setPlaying] = useState(true);
@@ -50,12 +50,12 @@ export function ProjectArchitecture({ kind }: { kind: Kind }) {
     media.addEventListener('change', resize); document.addEventListener('visibilitychange', visibility);
     return () => { media.removeEventListener('change', resize); document.removeEventListener('visibilitychange', visibility); };
   }, []);
-  const running = enabled && visible && foreground && playing;
+  const running = demoEnabled && visible && foreground && playing;
   const nodes = kind === 'chatdvt' ? chatNodes : wallpaperNodes;
   const detail = nodes[selected];
   const product = kind === 'chatdvt' ? 'ChatDVT' : 'TD-WallpaperEngine';
-  return <div ref={element} className={'project-architecture project-architecture--' + kind} data-running={running}>
-    <div className="architecture-top"><span>{kind === 'chatdvt' ? 'CHATDVT / MESSAGE FLOW' : 'TD-WALLPAPERENGINE / PLAYBACK'}</span><button type="button" disabled={!enabled} onClick={() => setPlaying(value => !value)} aria-pressed={!playing} aria-label={(playing ? (en ? 'Pause ' : 'Dừng sơ đồ ') : (en ? 'Play ' : 'Chạy sơ đồ ')) + product}>{playing && enabled ? <Pause size={13} /> : <Play size={13} />}</button></div>
+  return <div ref={element} className={'project-architecture project-architecture--' + kind} data-demo-motion data-running={running}>
+    <div className="architecture-top"><span>{kind === 'chatdvt' ? 'CHATDVT / MESSAGE FLOW' : 'TD-WALLPAPERENGINE / PLAYBACK'}</span><button type="button" disabled={!demoEnabled} onClick={() => setPlaying(value => !value)} aria-pressed={!playing} aria-label={(playing ? (en ? 'Pause ' : 'Dừng sơ đồ ') : (en ? 'Play ' : 'Chạy sơ đồ ')) + product}>{playing && demoEnabled ? <Pause size={13} /> : <Play size={13} />}</button></div>
     <div className="architecture-canvas" role="tablist" aria-label={product + (en ? ' architecture components' : ' thành phần kiến trúc')}>
       <Connections kind={kind} mobile={false} running={running && !compact} /><Connections kind={kind} mobile running={running && compact} />
       <span className="architecture-host-label">{kind === 'chatdvt' ? 'AWS EC2' : 'WINDOWS APP'}</span>
