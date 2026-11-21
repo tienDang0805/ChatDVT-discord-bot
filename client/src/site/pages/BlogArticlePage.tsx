@@ -11,6 +11,7 @@ import { getBlogCategoryMeta, type BlogPost } from '../../shared/types/blog';
 import { sanitizeBlogHtml } from '../../shared/utils/sanitizeBlogHtml';
 import { enhanceBlogCodeBlocks } from '../../shared/utils/blogCodeHighlight';
 import { SiteLayout } from '../components/SiteLayout';
+import { profile } from '../content/profileData';
 import { BlogArticleSkeleton } from '../components/SiteLoadingFallback';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../../shared/i18n/LanguageContext';
@@ -160,7 +161,7 @@ export function BlogArticlePage() {
             <img src="/images/tien-dang-profile.jpg" alt="Đặng Văn Tiến" width={38} height={38} loading="eager" decoding="async" />
             <div>
               <strong>Đặng Văn Tiến</strong>
-              <span>Mobile Developer</span>
+              <span>{profile.role}</span>
             </div>
           </Link>
           <div className="blog-article__stats">

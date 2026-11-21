@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUpRight, ArrowRight, Braces, ScanLine, Bot, MessageCircle, Clock } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, MessageCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getPublishedBlogPosts } from '../../shared/api';
 import { BLOG_COVER_IMAGES, DEFAULT_BLOG_POST, FALLBACK_BLOG_SUMMARIES } from '../../shared/data/defaultBlogPost';
@@ -18,20 +18,13 @@ import { MobileStack } from '../components/MobileStack';
 import { AgenticCodingFlow } from '../components/AgenticCodingFlow';
 import { AnimatedHeadline } from '../components/AnimatedHeadline';
 import { HomeSectionRail } from '../components/HomeSectionRail';
-import { WorkVisual } from '../components/WorkVisual';
+import { SelectedWork } from '../components/SelectedWork';
 import { ProjectArchitecture } from '../components/ProjectArchitecture';
 const LazyChatWidget = lazy(() => import('../../shared/components/ChatWidget').then(m => ({ default: m.ChatWidget })));
 import { Reveal } from '../components/Reveal';
 import { Mascot, useSiteMotion } from '../components/Mascot';
-import { contributions, profile } from '../content/profileData';
 import { WALLPAPER_APP } from '../../../../src/shared/desktopApps';
-
-const workSummaries = [
-  ['TensorFlow Lite tìm nhiều hộp trong một ảnh, ML Kit đọc nhiều mã trong từng hộp. Team tích hợp SDK Kotlin bằng dependency Gradle có phiên bản từ kho Maven riêng trên Repsy.', 'TensorFlow Lite finds multiple boxes in one image and ML Kit decodes multiple barcodes per box. Teams integrate the Kotlin SDK as a versioned Gradle dependency from a private Maven repository on Repsy.'],
-  ['Ứng dụng CRM B2B, analytics SDK hỗ trợ offline và những lần nâng cấp React Native.', 'B2B CRM apps, an analytics SDK with offline support and upgrades to existing React Native applications.'],
-  ['Phát triển app trên tablet Android của Woni, tích hợp SDK hãng để in phiếu và dẫn khách đến quầy. Triển khai robot tại ngân hàng, hỗ trợ vận hành và sự kiện, bàn giao và hướng dẫn đội FSE.', 'Developed Woni’s Android tablet app and integrated the vendor SDK for ticket printing and counter guidance. Deployed the robots at the bank, supported operations and events, and trained the field service team during handover.'],
-];
-const workIcons = [ScanLine, Braces, Bot];
+import { HOME_PAGE_META, MOBILE_ENGINEER_TITLE } from '../../../../src/shared/siteIdentity';
 
 function formatHomeDate(value: string | null, locale: 'vi' | 'en'): string {
   if (!value) return locale === 'en' ? 'Draft' : 'Bản nháp';
@@ -43,10 +36,6 @@ function formatHomeDate(value: string | null, locale: 'vi' | 'en'): string {
   })
     .format(new Date(value))
     .replaceAll('/', '.');
-}
-
-function WorkSummary({ text }: { text: string }) {
-  return <p className="lh-work-summary">{text.split(/(Kotlin|TensorFlow Lite|ML Kit|Repsy|React Native|offline|Woni)/g).map((part, index) => index % 2 ? <strong key={index}>{part}</strong> : part)}</p>;
 }
 
 function HomeContent() {
@@ -105,9 +94,9 @@ function HomeContent() {
   return <div className="layered-home" lang={locale}>
     <section id="home" className="lh-hero layered-container" aria-labelledby="home-title">
       <div className="lh-intro">
-        <p className="lh-kicker lh-identity lh-enter"><span className="lh-status" aria-hidden="true" /><span className="lh-identity-text">DANG VAN TIEN <span className="lh-divider" aria-hidden="true">·</span> MOBILE DEV <span className="lh-divider" aria-hidden="true">·</span> SOUTH TELECOM</span></p>
+        <p className="lh-kicker lh-identity lh-enter"><span className="lh-status" aria-hidden="true" /><span className="lh-identity-text">DANG VAN TIEN <span className="lh-divider" aria-hidden="true">·</span> {MOBILE_ENGINEER_TITLE} <span className="lh-divider" aria-hidden="true">·</span> SOUTH TELECOM</span></p>
         <AnimatedHeadline id="home-title" lines={en ? ['From the UI.', 'To the native layer.'] : ['Từ giao diện.', 'Đến lớp native.']} />
-        <p className="lh-description lh-enter">{en ? <>I’m Tiến, a <strong>Mobile Developer (3.5+ YOE)</strong> at Southtelecom in Ho Chi Minh City. I work with <strong>React Native</strong> and <strong>Android/Kotlin</strong>. Outside work, I build tools, games and the occasional side project.</> : <>Mình là Tiến, <strong>Mobile Developer (3.5+ YOE)</strong> tại Southtelecom, TP.HCM. Mình làm ứng dụng với <strong>React Native</strong> và <strong>Android/Kotlin</strong>. Ngoài giờ làm mình có tìm hiểu và nghịch thêm các side project.</>}</p>
+        <p className="lh-description lh-enter">{en ? <>I’m Tiến, a <strong>{MOBILE_ENGINEER_TITLE} (3.5+ YOE)</strong> at Southtelecom in Ho Chi Minh City. I work with <strong>React Native</strong> and <strong>Android/Kotlin</strong>. Outside work, I build tools, games and the occasional side project.</> : <>Mình là Tiến, <strong>{MOBILE_ENGINEER_TITLE} (3.5+ YOE)</strong> tại Southtelecom, TP.HCM. Mình làm ứng dụng với <strong>React Native</strong> và <strong>Android/Kotlin</strong>. Ngoài giờ làm mình có tìm hiểu và nghịch thêm các side project.</>}</p>
         <div className="lh-actions lh-enter"><a className="layered-button layered-button--primary" href="#work" onClick={discover}>{en ? 'Explore my work' : 'Xem công việc'}<ArrowDown size={17} aria-hidden="true" /></a><button type="button" className="layered-button lh-guide-trigger" aria-haspopup="dialog" aria-controls="chatdvt-guide" onClick={() => window.dispatchEvent(new Event('open-chat-widget'))}><MessageCircle size={17} aria-hidden="true" />{en ? 'Ask ChatDVT to guide you' : 'Nhờ ChatDVT dẫn đường'}<span>↗</span></button></div>
         <a className="lh-scroll lh-enter" href="#work" onClick={discover}><span aria-hidden="true" />{en ? 'Scroll a little further' : 'Cuộn xuống, còn nhiều thứ để xem'}</a>
       </div>
@@ -117,12 +106,7 @@ function HomeContent() {
 
     <section id="work" className="lh-section layered-container" aria-labelledby="work-title">
       <Reveal className="lh-section-intro"><p className="lh-kicker"><span className="lh-section-number">01</span>{en ? 'MOBILE / SELECTED WORK' : 'MOBILE / NHỮNG VIỆC ĐÃ LÀM'}</p><div className="lh-section-heading"><h2 id="work-title">{en ? <>Selected<br /><span>work.</span></> : <>Công việc<br /><span>đã làm.</span></>}</h2><p>{en ? 'At Southtelecom, I work on React Native applications, Android SDKs and device integrations. These are some of the projects I have contributed to.' : 'Tại Southtelecom, mình phát triển ứng dụng React Native, SDK Android và tích hợp thiết bị. Đây là một số công việc mình đã tham gia.'}</p></div></Reveal>
-      <div className="lh-work-grid">{contributions.map((item, index) => {
-        const Icon = workIcons[index];
-        return <Reveal key={item.title[0]}><article className={'lh-work-card lh-work-card--' + index}><div className="lh-card-top"><span>0{index + 1} / {item.category.toUpperCase()}</span><Icon size={22} strokeWidth={1.35} aria-hidden="true" /></div><h3>{item.title[en ? 1 : 0]}</h3><WorkSummary text={workSummaries[index][en ? 1 : 0]} />
-          <WorkVisual kind={index} />
-          <div className="lh-tags">{item.tags.map(tag => <span key={tag}>{tag}</span>)}</div></article></Reveal>;
-      })}</div>
+      <SelectedWork />
       <Link className="layered-text-link lh-section-link" to={pathFor('/me#experience')}>{en ? 'More about the work' : 'Thêm về công việc của mình'}<ArrowUpRight size={17} aria-hidden="true" /></Link>
     </section>
 
@@ -138,45 +122,30 @@ function HomeContent() {
     </section>
 
     <section id="writing" className="lh-section lh-writing-c layered-container" aria-labelledby="writing-title">
-      <Reveal>
+      <Reveal className="lh-section-intro">
         <p className="lh-kicker">
           <span className="lh-section-number">03</span>
           {en ? 'NOTES / BEHIND THE CODE' : 'GHI CHÉP / PHÍA SAU NHỮNG DÒNG CODE'}
         </p>
-
-        <div className="lh-writing-c__header">
-          <div>
-            <h2 id="writing-title" className="lh-writing-title">
-              {en ? (
-                <>
-                  Things worth <span>writing down.</span>
-                </>
-              ) : (
-                <>
-                  Viết lại <span>những lần mày mò.</span>
-                </>
-              )}
-            </h2>
-            <p className="lh-writing-c__subtitle">
-              {activeCategoryMeta
-                ? activeCategoryMeta.description[locale]
-                : en
-                  ? 'Hands-on articles on AI Agents, MCP Harnesses, React Native/Android and behind-the-scenes stories.'
-                  : 'Ghi chép thực chiến về AI Agent, MCP Harness, Mobile và chuyện hậu trường làm sản phẩm.'}
-            </p>
+        <div className="lh-section-heading">
+          <h2 id="writing-title">
+            {en ? <>Things worth<br /><span>writing down.</span></> : <>Viết lại<br /><span>những lần mày mò.</span></>}
+          </h2>
+          <div className="lh-writing-intro">
+            <p>{en ? 'Practical notes on mobile, AI tools and stories from building products.' : 'Ghi chép thực tế về mobile, công cụ AI và chuyện hậu trường làm sản phẩm.'}</p>
+            <Link className="layered-text-link" to={pathFor('/blog')}>
+              {en ? 'All articles' : 'Tất cả bài viết'}<ArrowUpRight size={16} aria-hidden="true" />
+            </Link>
           </div>
-          <Link className="layered-button lh-writing-c__all-btn" to={pathFor('/blog')}>
-            {en ? 'All articles' : 'Tất cả bài viết'}
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
         </div>
+      </Reveal>
 
-        <div className="lh-segmented-wrap">
-          <div className="lh-segmented-control" role="tablist" aria-label={en ? 'Filter articles by category' : 'Lọc bài viết theo chuyên mục'}>
+      <Reveal>
+        {BLOG_CATEGORIES.filter(cat => countsByCategory[cat.id] > 0).length > 1 && <div className="lh-segmented-wrap">
+          <div className="lh-segmented-control" role="group" aria-label={en ? 'Filter articles by category' : 'Lọc bài viết theo chuyên mục'}>
             <button
               type="button"
-              role="tab"
-              aria-selected={activeCategory === 'all'}
+              aria-pressed={activeCategory === 'all'}
               className={'lh-segmented-btn' + (activeCategory === 'all' ? ' is-active' : '')}
               onClick={() => setActiveCategory('all')}
             >
@@ -191,9 +160,8 @@ function HomeContent() {
                 <button
                   key={cat.id}
                   type="button"
-                  role="tab"
                   data-cat={cat.id}
-                  aria-selected={isSelected}
+                  aria-pressed={isSelected}
                   className={'lh-segmented-btn' + (isSelected ? ' is-active' : '')}
                   onClick={() => setActiveCategory(cat.id)}
                 >
@@ -204,21 +172,11 @@ function HomeContent() {
               );
             })}
           </div>
-          <div className="lh-segmented-status" aria-live="polite">
-            <i className="lh-segmented-status-dot" aria-hidden="true" />
-            <span>
-              {en ? 'CATEGORY:' : 'CHUYÊN MỤC:'}{' '}
-              <strong>
-                {activeCategoryMeta ? activeCategoryMeta.label[locale] : en ? 'All' : 'Tất cả'}
-              </strong>{' '}
-              ({filteredPosts.length})
-            </span>
-          </div>
-        </div>
+        </div>}
 
         {filteredPosts.length > 0 ? (
           <div className="lh-blog-grid-c">
-            {filteredPosts.map((post, idx) => {
+            {filteredPosts.map(post => {
               const catMeta = getBlogCategoryMeta(post.category, post);
               const cover = BLOG_COVER_IMAGES[post.slug];
               return (
@@ -230,7 +188,7 @@ function HomeContent() {
                   <div className="lh-blog-card-c__preview">
                     <div className="lh-blog-card-c__hud">
                       <span className="lh-blog-card-c__badge">{catMeta.shortBadge[locale]}</span>
-                      <small>{cover ? cover.badge : `#0${idx + 1} · ${catMeta.label[locale].toUpperCase()}`}</small>
+                      {cover && <small>{cover.badge}</small>}
                     </div>
                     {cover ? (
                       <div className="lh-blog-card-c__img-wrap">
@@ -290,29 +248,6 @@ function HomeContent() {
           </div>
         )}
 
-        <aside className="lh-about lh-about--bar">
-          <img
-            src="/images/tien-dang-profile.jpg"
-            width={320}
-            height={320}
-            alt={en ? 'Portrait of Đặng Văn Tiến' : 'Chân dung Đặng Văn Tiến'}
-            loading="lazy"
-            decoding="async"
-          />
-          <div className="lh-about__identity">
-            <h3>{profile.name}</h3>
-            <p>{profile.role}</p>
-          </div>
-          <p className="lh-about__bio">
-            {en
-              ? 'I work on mobile apps and usually keep tinkering after work. This is where I keep the things I build and find interesting.'
-              : 'Mình làm mobile, và thường tiếp tục mày mò sau giờ làm. Đây là góc mình lưu lại những gì đã làm và thấy hay.'}
-          </p>
-          <Link className="layered-text-link lh-about__link" to={pathFor('/me')}>
-            {en ? 'Get to know me' : 'Làm quen một chút'}
-            <ArrowRight size={17} aria-hidden="true" />
-          </Link>
-        </aside>
       </Reveal>
     </section>
 
@@ -322,8 +257,9 @@ function HomeContent() {
 }
 
 export function HomePage() {
-  const { locale } = useLanguage(), en = locale === 'en';
-  usePageMeta('Đặng Văn Tiến — Mobile Developer', { description: en ? 'Đặng Văn Tiến is a Mobile Developer at Southtelecom in Ho Chi Minh City, working with React Native and Android/Kotlin. Notes, tools, games and side projects.' : 'Đặng Văn Tiến là Mobile Developer tại Southtelecom, TP.HCM, chủ yếu làm React Native và Android/Kotlin. Blog, tool, game và các side project của mình.', schema: 'website' });
+  const { locale } = useLanguage();
+  const { title, description } = HOME_PAGE_META[locale];
+  usePageMeta(title, { description, schema: 'website' });
   usePageTracker('Home');
   return <SiteLayout><HomeContent /></SiteLayout>;
 }

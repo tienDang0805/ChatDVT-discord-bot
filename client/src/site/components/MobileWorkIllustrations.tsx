@@ -7,14 +7,16 @@ const parcels = [
 ];
 const bars = [2, 6, 9, 14, 17, 22, 26, 29, 34, 37, 41, 45, 49, 54];
 
-export function MultiBoxScan({ en }: { en: boolean }) {
+export function MultiBoxScan({ en, single = false }: { en: boolean; single?: boolean }) {
+  const boxes = single ? [parcels[0]] : parcels;
+  const samples = boxes.map(({ serial, pid }) => `${serial}, PID ${pid}`).join('; ');
   return (
     <svg className="vision-diagram" viewBox="0 0 360 210" fill="none" role="img"
-      aria-label={en ? 'Scan illustration: capture three boxes, confirm six barcodes, then show the serial number and PID for each box.' : 'Minh hoạ quét: chụp ba hộp, xác nhận sáu mã vạch, rồi xem Serial Number và PID theo từng hộp.'}>
+      aria-label={en ? `Scan preview and sample results: ${samples}` : `Minh hoạ quét và kết quả mẫu: ${samples}`}>
       <g className="vision-preview" aria-hidden="true">
         <path d="M14 43V25h18m296 0h18v18m0 122v18h-18m-296 0H14v-18" className="vision-frame" />
-        {parcels.map(({ x, y }, boxIndex) => (
-          <g key={x} transform={`translate(${x} ${y})`}>
+        {boxes.map(({ x, y }, boxIndex) => (
+          <g key={x} transform={`translate(${single ? 136 : x} ${single ? 48 : y})`}>
             <rect className="vision-package" x="4" y="7" width="80" height="101" rx="4" />
             <path className="vision-seam" d="m4 23 80 0M35 7v16h17V7" />
             <rect className="vision-bound" width="88" height="112" rx="5" />
@@ -32,6 +34,7 @@ export function MultiBoxScan({ en }: { en: boolean }) {
             ))}
           </g>
         ))}
+        <rect x="19" y="29" width="322" height="2" rx="1" className="vision-scan-sweep" />
         <circle className="vision-shutter-ring" cx="180" cy="193" r="11" />
         <circle className="vision-shutter" cx="180" cy="193" r="7" />
         <rect className="vision-capture" x="15" y="26" width="330" height="156" rx="9" />
@@ -41,7 +44,7 @@ export function MultiBoxScan({ en }: { en: boolean }) {
         <text className="vision-results-note" x="345" y="26" textAnchor="end">{en ? 'Sample data' : 'Dữ liệu mẫu'}</text>
         <text className="vision-results-label" x="80" y="57">Serial Number</text>
         <text className="vision-results-label" x="230" y="57">PID (EAN)</text>
-        {parcels.map(({ serial, pid }, index) => {
+        {boxes.map(({ serial, pid }, index) => {
           const row = 67 + index * 43;
           return (
             <g key={serial}>

@@ -123,7 +123,6 @@ function SiteFrame({ children, hideFooter = false, hideFooterContact = false }: 
               <div className="footer-ducmai__topline">
                 <span className="footer-ducmai__kicker">
                   <b>04</b>
-                  <i aria-hidden="true" />
                   {locale === 'en' ? 'CONTACT / DEVTIENDANG.BLOG' : 'LIÊN HỆ / DEVTIENDANG.BLOG'}
                 </span>
                 <span className="footer-ducmai__status">

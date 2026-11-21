@@ -16,11 +16,9 @@ export function FrameMonitor({ placement = 'floating' }: { placement?: 'floating
   useEffect(() => {
     setMounted(true);
     try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      const isDesktop = window.innerWidth > 960;
-      setOpen(saved === null ? isDesktop : saved === '1');
+      setOpen(window.localStorage.getItem(STORAGE_KEY) === '1');
     } catch {
-      setOpen(window.innerWidth > 960);
+      /* Start with the panel closed if storage is unavailable. */
     }
   }, []);
 

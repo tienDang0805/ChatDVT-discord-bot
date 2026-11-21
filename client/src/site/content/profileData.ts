@@ -1,6 +1,8 @@
+import { MOBILE_ENGINEER_TITLE } from '../../../../src/shared/siteIdentity';
+
 export const profile = {
   name: 'Đặng Văn Tiến',
-  role: 'Mobile Developer',
+  role: MOBILE_ENGINEER_TITLE,
   company: 'South Telecom',
   period: '04/2023',
   email: 'dvtien0805@gmail.com',

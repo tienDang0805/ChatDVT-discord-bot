@@ -212,24 +212,16 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  font: 700 12px/1.5 var(--layered-mono);
-  letter-spacing: .1em;
+  font: 500 12px/1.5 var(--layered-mono);
+  letter-spacing: .075em;
   text-transform: uppercase;
   color: var(--label-mint);
 }
 .footer-ducmai__kicker b {
-  font-weight: 700;
+  font-weight: 500;
   color: var(--label-mint);
   padding-right: 12px;
   border-right: 1px solid var(--site-line);
-}
-.footer-ducmai__kicker i {
-  width: 22px;
-  height: 2px;
-  border-radius: 99px;
-  background: var(--label-mint);
-  box-shadow: 0 0 10px var(--label-mint);
-  display: inline-block;
 }
 .footer-ducmai__status {
   display: inline-flex;

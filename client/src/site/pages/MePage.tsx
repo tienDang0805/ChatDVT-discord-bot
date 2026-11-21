@@ -20,7 +20,7 @@ export function MePage() {
       <div className="me-hero-copy">
         <AnimatedHeadline id="me-heading" lines={[profile.name]} className="page-title" />
         <p className="me-role">
-          Mobile Software Engineer
+          {profile.role}
           <span>{en ? 'Native Android / Cross-platform React Native' : 'Android native / React Native đa nền tảng'}</span>
         </p>
         <p>{en ? 'At South Telecom, I build Android SDKs in Kotlin and React Native apps for businesses. I integrate and debug hardware on real devices, from phones to the Woni robot’s Android tablet.' : 'Tại South Telecom, mình phát triển SDK Android bằng Kotlin và ứng dụng React Native cho doanh nghiệp. Mình tích hợp và debug trên thiết bị thật, từ điện thoại đến tablet Android của robot Woni.'}</p>

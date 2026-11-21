@@ -4,12 +4,12 @@ import { useLanguage } from '../../shared/i18n/LanguageContext';
 import { useSiteMotion } from './Mascot';
 
 const sections = [
-  { id: 'home', code: '00', label: ['Mở đầu', 'Overview'] },
-  { id: 'work', code: '01', label: ['Công việc', 'Work'] },
-  { id: 'agentic-flow', code: 'AI', label: ['Agentic Flow', 'Agentic flow'] },
-  { id: 'projects', code: '02', label: ['Dự án', 'Projects'] },
-  { id: 'writing', code: '03', label: ['Ghi chép', 'Writing'] },
-  { id: 'contact', code: '04', label: ['Liên hệ', 'Contact'] },
+  { id: 'home', label: ['Mở đầu', 'Overview'] },
+  { id: 'work', label: ['Công việc', 'Work'] },
+  { id: 'agentic-flow', label: ['Quy trình', 'Workflow'] },
+  { id: 'projects', label: ['Dự án', 'Projects'] },
+  { id: 'writing', label: ['Ghi chép', 'Writing'] },
+  { id: 'contact', label: ['Liên hệ', 'Contact'] },
 ] as const;
 
 export function HomeSectionRail() {
@@ -71,16 +71,8 @@ export function HomeSectionRail() {
             href={'#' + section.id}
             onClick={(event) => go(event, section.id)}
             aria-current={isCurrent ? 'location' : undefined}
-            aria-label={`${section.code} · ${name}`}
-            className={isCurrent ? 'is-active' : undefined}
           >
-            <span className="rail-tooltip" aria-hidden="true">
-              <i className="rail-status-dot" />
-              <b>{name}</b>
-            </span>
-            <span className="rail-circle" aria-hidden="true">
-              {section.code}
-            </span>
+            <span className="rail-label">{name}</span>
           </a>
         );
       })}

@@ -3,16 +3,16 @@ import { Request, Response, Router } from 'express';
 import path from 'path';
 import { prisma } from '../database/prisma';
 import { isFeatureIndexable } from '../shared/featureCatalog';
-import { AUTHOR_SCHEMA, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL, ME_PAGE_META } from '../shared/siteIdentity';
+import { AUTHOR_SCHEMA, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL, HOME_PAGE_META, ME_PAGE_META, MOBILE_ENGINEER_TITLE } from '../shared/siteIdentity';
 import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../shared/desktopApps';
 import { CHATDVT_META, CHATDVT_HISTORY_PATH, CHATDVT_HISTORY_DESCRIPTION, CHATDVT_ARTICLE_SUBJECT } from '../shared/chatdvt';
 
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
 const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog'];
-const HOME_TITLE = 'Đặng Văn Tiến — Mobile Developer';
-const HOME_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer ở TP.HCM, chủ yếu làm React Native và Android/Kotlin. Blog, tool, game và các side project của mình.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/site-og.png`;
+const HOME_LAST_MODIFIED = '2026-11-22';
+const ME_LAST_MODIFIED = '2026-11-22';
 const INDEXABLE_PATHS = new Set([
   '/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/me', '/blog', '/blog/chatdvt-phan-1', '/chat',
   '/mermaid-tutorial',
@@ -55,11 +55,9 @@ const ROUTE_META: Record<string, RouteMeta> = {
     pageType: 'software', lastmod: WALLPAPER_APP.updatedAt, changefreq: 'monthly',
   },
   '/': {
-    title: HOME_TITLE,
-    description: HOME_DESCRIPTION,
-    keywords: 'Đặng Văn Tiến, Tiến Đặng, devtiendang, Mobile Developer, React Native, Android, Kotlin, ChatDVT',
+    ...HOME_PAGE_META.vi,
     pageType: 'website',
-    lastmod: '2026-10-06',
+    lastmod: HOME_LAST_MODIFIED,
     priority: 1.0,
     changefreq: 'weekly',
   },
@@ -113,9 +111,8 @@ const ROUTE_META: Record<string, RouteMeta> = {
   },
   '/me': {
     ...ME_PAGE_META.vi,
-    keywords: 'Đặng Văn Tiến, Tiến Đặng, Tien Dang, mobile developer, React Native developer, Android developer, Kotlin developer',
     pageType: 'profile',
-    lastmod: '2026-10-09',
+    lastmod: ME_LAST_MODIFIED,
     priority: 0.8,
     changefreq: 'monthly',
   },
@@ -569,13 +566,13 @@ const EN_ROUTE_META: Record<string, RouteMeta> = {
   '/cicd-visualizer': { title: 'CI/CD Visualizer', description: 'Import or paste GitHub Actions YAML and explore jobs, steps and dependencies in an interactive diagram in your browser.', pageType: 'webapp', indexable: false, lastmod: '2026-10-13' },
   '/apps': { title: 'Apps & software', description: 'Apps and software built by Đặng Văn Tiến. TD-WallpaperEngine for Windows, with screenshots, downloads and source code.', pageType: 'collection', lastmod: WALLPAPER_APP.updatedAt, changefreq: 'monthly' },
   [WALLPAPER_APP.path]: { title: 'TD-WallpaperEngine — Image & video wallpapers for Windows', description: WALLPAPER_APP.description.en, image: `${SITE_URL}${WALLPAPER_APP.image}`, schemaName: WALLPAPER_APP.name, pageType: 'software', lastmod: WALLPAPER_APP.updatedAt, changefreq: 'monthly' },
-  '/': { title: 'Đặng Văn Tiến — Mobile Developer', description: 'Đặng Văn Tiến is a Mobile Developer in Ho Chi Minh City, working with React Native and Android/Kotlin. Notes, tools, games and side projects.', pageType: 'website', lastmod: '2026-10-06', priority: 1, changefreq: 'weekly' },
+  '/': { ...HOME_PAGE_META.en, pageType: 'website', lastmod: HOME_LAST_MODIFIED, priority: 1, changefreq: 'weekly' },
   '/ecosystem': { title: 'The ChatDVT Ecosystem — AI, tools, learning and games', description: 'Explore the ChatDVT ecosystem: an AI chatbot for Discord and the web, developer tools, English learning, games and community experiences.', schemaName: 'The ChatDVT Ecosystem', pageType: 'collection', lastmod: '2026-09-30', priority: 0.9, changefreq: 'weekly' },
   '/playground': { title: 'Projects & Lab — Products and developer tools', description: 'Selected products, developer tools, AI experiments, learning apps and web games built by Đặng Văn Tiến.', pageType: 'collection', lastmod: '2026-10-06', priority: 0.9, changefreq: 'weekly' },
   '/mobile': { indexable: false, title: 'Mobile Utility — React Native & Android', description: 'Practical Android, deep-link, WebView and QR tools used in day-to-day mobile development.', pageType: 'collection', priority: 0.9, changefreq: 'weekly' },
   '/discord': { title: `${CHATDVT_META.en.title} | Đặng Văn Tiến`, description: CHATDVT_META.en.description, schemaName: 'ChatDVT', pageType: 'software', lastmod: '2026-10-09', priority: 0.8, changefreq: 'weekly' },
   '/chat': { title: 'ChatDVT Chat — Talk directly with AI', description: 'Chat with ChatDVT, an AI bot built by Đặng Văn Tiến using Google Gemini. Ask about Tiến and his projects, or have a conversation on the web.', schemaName: 'ChatDVT Chat', pageType: 'webapp', lastmod: '2026-10-06', priority: 0.9, changefreq: 'weekly' },
-  '/me': { ...ME_PAGE_META.en, pageType: 'profile', lastmod: '2026-10-09', priority: 0.8, changefreq: 'monthly' },
+  '/me': { ...ME_PAGE_META.en, pageType: 'profile', lastmod: ME_LAST_MODIFIED, priority: 0.8, changefreq: 'monthly' },
 };
 
 function normalizePathname(pathname: string): string {
@@ -878,7 +875,7 @@ export function injectSeoMeta(html: string, pathname: string, overrideMeta?: Rou
   const structuredData = buildStructuredData(meta, canonicalUrl, ogImage, isEnglishBlog ? 'vi' : locale);
   result = result.replace(/\s*<script id="page-structured-data" type="application\/ld\+json">[\s\S]*?<\/script>/, '');
 
-  const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · Mobile Developer · devtiendang.blog</p></div></noscript>`;
+  const noscriptBlock = `<noscript><div style="padding:40px;font-family:sans-serif;"><h1>${escapeHtml(meta.title)}</h1><p>${safeDesc}</p><p>Đặng Văn Tiến · ${MOBILE_ENGINEER_TITLE} · devtiendang.blog</p></div></noscript>`;
   result = result.replace('</head>', () => `    <script id="page-structured-data" type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>\n  </head>`);
 
   result = result.replace('<div id="root"></div>', () => `<div id="root"></div>\n    ${noscriptBlock}`);

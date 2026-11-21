@@ -32,8 +32,8 @@ test('public VI/EN pages contain visible content without executing JavaScript', 
   }
   const en = renderPublicHtml(template, '/en/me');
   const vi = renderPublicHtml(template, '/me');
-  assert.match(en, /About Đặng Văn Tiến — Mobile Software Engineer · Android (?:&amp;|&) React Native/);
-  assert.match(vi, /Về Đặng Văn Tiến — Mobile Software Engineer · Android (?:&amp;|&) React Native/);
+  assert.match(en, /About Đặng Văn Tiến — Mobile software engineer/);
+  assert.match(vi, /Về Đặng Văn Tiến — Mobile software engineer/);
   assert.match(rootContent(en), /Learning goal.*Study toward.*AWS Certified Developer - Associate/);
   assert.match(rootContent(vi), /Mục tiêu học tiếp.*Học để thi.*AWS Certified Developer - Associate/);
   assert.doesNotMatch(generateSitemapXml(), /<loc>https:\/\/devtiendang.blog\/(en\/)?(?:mobile|cicd-visualizer)<\/loc>/);
@@ -59,17 +59,29 @@ test('public identity and ChatDVT history remain readable and agree with structu
     assert.doesNotMatch(rootContent(about), /Vikki|class="me-contact|class="me-arrow"/);
     assert.match(rootContent(about), /Android 6\.0 \(API 23\)/);
     assert.match(rootContent(about), /Redux/);
-    assert.match(rootContent(home), /Mobile Developer/);
+    assert.match(rootContent(home), /Mobile software engineer/);
+    assert.match(rootContent(about), /Mobile software engineer/);
     assert.match(rootContent(home), /React Native/);
+    const scanModes = prefix ? ['Single Mode', 'Multiple Mode'] : ['Chế độ đơn', 'Chế độ nhiều'];
+    for (const mode of scanModes) assert.ok(rootContent(home).includes(`>${mode}</button>`));
     for (const fact of ['discord.js', 'Gemini API', 'AWS EC2', 'Antigravity', 'Codex']) {
       assert.ok(rootContent(home).includes(fact), `Homepage is missing ${fact}`);
     }
-    for (const html of [home, about]) assert.match(html, /name="robots" content="index, follow/);
+    for (const [html, route] of [[home, prefix || '/'], [about, `${prefix}/me`]]) {
+      const title = html.match(/<title>([^<]+)<\/title>/)[1];
+      assert.ok(title.endsWith('Mobile software engineer'));
+      assert.ok(html.includes(`<meta property="og:title" content="${title}"`));
+      assert.ok(html.includes(`<meta name="twitter:title" content="${title}"`));
+      assert.ok(html.includes(`rel="canonical" href="https://devtiendang.blog${route}"`));
+      assert.match(html, /rel="icon" type="image\/png" href="\/dvt-mark-192\.png" sizes="192x192"/);
+      assert.match(html, /name="robots" content="index, follow/);
+    }
     assert.match(rootContent(bot), /Đặng Văn Tiến/);
     assert.match(rootContent(bot), /8D/);
     assert.match(rootContent(bot), /Telegram/);
     assert.match(rootContent(bot), /href="\/(en\/)?blog\/chatdvt-phan-1"/);
     const person = schema(about).mainEntity;
+    assert.equal(person.jobTitle, 'Mobile software engineer');
     assert.equal(person.worksFor.name, 'South Telecom');
     assert.equal(person.alumniOf.name, 'PTIT HCM');
     for (const name of ['Tiến Đặng', 'Tien Dang', 'Dang Van Tien', 'devtiendang']) assert.ok(person.alternateName.includes(name));
@@ -89,7 +101,7 @@ test('public identity and ChatDVT history remain readable and agree with structu
     assert.match(schema(bot).description, /8D/);
     const sitemap = generateSitemapXml();
     for (const route of [prefix || '/', `${prefix}/me`, `${prefix}/discord`]) {
-      const lastmod = route.endsWith('/me') || route.endsWith('/discord') ? '2026-10-09' : '2026-10-06';
+      const lastmod = route.endsWith('/discord') ? '2026-10-09' : '2026-11-22';
       assert.ok(sitemap.includes(`<loc>https://devtiendang.blog${route}</loc>\n    <lastmod>${lastmod}</lastmod>`));
     }
   }
@@ -99,7 +111,7 @@ test('ChatDVT has a linked product and history identity while Home remains a per
   const schema = html => JSON.parse(html.match(/<script id="page-structured-data" type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
   for (const prefix of ['', '/en']) {
     const home = renderPublicHtml(template, prefix || '/');
-    assert.match(home, /<title>Đặng Văn Tiến — Mobile Developer<\/title>/);
+    assert.match(home, /<title>Đặng Văn Tiến — Mobile software engineer<\/title>/);
     assert.equal(schema(home)['@graph'].find(node => node['@type'] === 'WebSite').name, 'Đặng Văn Tiến');
 
     const product = renderPublicHtml(template, `${prefix}/discord`);

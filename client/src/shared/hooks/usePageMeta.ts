@@ -2,7 +2,7 @@ import { PageMetaCollector } from '../contexts/PageMetaCollector';
 import { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { isFeatureIndexable } from '../../../../src/shared/featureCatalog';
-import { AUTHOR_SCHEMA as AUTHOR, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL } from '../../../../src/shared/siteIdentity';
+import { AUTHOR_SCHEMA as AUTHOR, CHATDVT_ENTITY_ID, CHATDVT_FEATURES, CHATDVT_SOURCE_URL, HOME_PAGE_META } from '../../../../src/shared/siteIdentity';
 import { WALLPAPER_APP, wallpaperSoftwareProperties } from '../../../../src/shared/desktopApps';
 import { CHATDVT_HISTORY_PATH, CHATDVT_ARTICLE_SUBJECT } from '../../../../src/shared/chatdvt';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -11,7 +11,7 @@ import { stripLocalePrefix } from '../i18n';
 const SITE_URL = 'https://devtiendang.blog';
 const SITE_NAME = 'Đặng Văn Tiến';
 const SITE_ALTERNATE_NAMES = ['Tiến Đặng', 'Tien Dang', 'devtiendang.blog'];
-const DEFAULT_DESCRIPTION = 'Đặng Văn Tiến là Mobile Developer chuyên React Native và Android/Kotlin tại TP.HCM, người phát triển devtiendang.blog và AI chatbot ChatDVT.';
+const DEFAULT_DESCRIPTION = HOME_PAGE_META.vi.description;
 const DEFAULT_IMAGE = `${SITE_URL}/site-og.png`;
 const INDEXABLE_PATHS = new Set([
   '/', '/ecosystem', '/playground', '/apps', WALLPAPER_APP.path, '/me', '/blog', '/mermaid-tutorial',

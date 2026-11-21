@@ -169,7 +169,7 @@ function ChatContent() {
           : 'Hỏi về 3.5+ năm kinh nghiệm Mobile, SDK Android & công việc của Tiến...',
         prefix: en ? '[Context: Asking about Đặng Văn Tiến’s profile & work] ' : '[Ngữ cảnh: Hỏi về hồ sơ & công việc của Đặng Văn Tiến] ',
         starters: [
-          en ? 'Summarize Tiến’s 3.5+ years of Mobile Developer experience.' : 'Tóm tắt 3.5+ năm kinh nghiệm Mobile Developer của Tiến.',
+          en ? 'Summarize Tiến’s 3.5+ years of mobile development experience.' : 'Tóm tắt 3.5+ năm kinh nghiệm phát triển ứng dụng mobile của Tiến.',
           en ? 'Tell me about the Multi-barcode & Multi-box Android SDK project.' : 'Kể chi tiết về dự án SDK Android nhận diện nhiều barcode & hộp sản phẩm.',
           en ? 'How did Tiến design the offline-first mobile Analytics SDK?' : 'Tiến đã thiết kế Analytics SDK hỗ trợ offline cho ứng dụng mobile như thế nào?',
           en ? 'How can I contact Tiến for React Native or Kotlin roles?' : 'Làm sao để liên hệ Tiến cho dự án React Native hoặc Kotlin?',
